@@ -7,6 +7,7 @@ This repository powers the official 6MM documentation site.
 - Website: https://www.6mm.com
 - Documentation: https://docs.6mm.com
 - App: https://app.6mm.com
+- Official GitHub: https://github.com/6mm-com
 
 ## Documentation Scope
 
