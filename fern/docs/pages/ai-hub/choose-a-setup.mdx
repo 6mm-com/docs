@@ -4,7 +4,29 @@ subtitle: "Choose between Hosted MCP, Local MCP, CLI, Remote MCP, and Agentic Sk
 slug: ai-hub/choose-a-setup
 ---
 
-AI Hub has several entrypoints because different AI clients have different security models and execution capabilities.
+Choose a setup based on two questions:
+
+1. Which AI client do you want to use?
+2. Do you need public data only, private account access, or trading workflows?
+
+If you are not sure, start with Hosted MCP for public data or Local MCP for private account workflows.
+
+<h2 id="pick-by-use-case">Pick by use case</h2>
+
+<CardGroup cols={2}>
+<Card title="I only need public market data" icon="fa-duotone fa-cloud" href="/ai-hub/hosted-mcp">
+Use Hosted MCP. No local install, no user API key, and no private account access.
+</Card>
+<Card title="I want my AI client to read my account" icon="fa-duotone fa-computer" href="/ai-hub/local-mcp">
+Use Local MCP with read-only credentials. Start in testnet or read-only mode.
+</Card>
+<Card title="My agent can run terminal commands" icon="fa-duotone fa-terminal" href="/ai-hub/cli">
+Use 6MM CLI. This is simple for Codex, Claude Code, Gemini CLI, scripts, and CI tasks.
+</Card>
+<Card title="My team needs a managed endpoint" icon="fa-duotone fa-server" href="/ai-hub/remote-mcp">
+Use Remote MCP. Deploy the server in infrastructure controlled by your team.
+</Card>
+</CardGroup>
 
 <h2 id="quick-decision-table">Quick decision table</h2>
 
@@ -16,7 +38,21 @@ AI Hub has several entrypoints because different AI clients have different secur
 | Provide a company-managed MCP endpoint | Remote MCP | The institution controls hosting, credentials, access, and logs. |
 | Standardize repeated analysis or risk workflows | Agentic Skills | Templates define tool usage, guardrails, and output format. |
 
-<h2 id="setup-comparison">Setup comparison</h2>
+<h2 id="pick-by-ai-client">Pick by AI client</h2>
+
+| AI client | Hosted MCP | Local MCP | CLI | Notes |
+| --- | --- | --- | --- | --- |
+| Claude Desktop | Possible | Recommended | Possible | Use Local MCP when account context is needed. |
+| Claude.ai Web | Recommended when supported | Not applicable | Not applicable | Best for public market data only. |
+| ChatGPT Desktop | Possible | Recommended | Possible | Local MCP is preferred for private account tools. |
+| Cursor | Possible | Recommended | Possible | Local MCP works well with coding workflows. |
+| Codex CLI | Possible | Possible | Recommended | CLI is usually the most direct path. |
+| Claude Code CLI | Possible | Possible | Recommended | CLI or Local MCP depending on workflow. |
+| VS Code / Copilot | Possible | Recommended | Possible | Depends on MCP and terminal support. |
+| Gemini CLI | Possible | Possible | Recommended | CLI is the simplest first setup. |
+| Windsurf | Possible | Recommended | Possible | Local MCP is preferred. |
+
+<h2 id="pick-by-setup-path">Pick by setup path</h2>
 
 | Setup | Installation | API key location | Best initial scope | Account and trading scope |
 | --- | --- | --- | --- | --- |
@@ -26,7 +62,16 @@ AI Hub has several entrypoints because different AI clients have different secur
 | Remote MCP | User deploys server | User cloud or institution cloud | Public data or account-read | Possible when the user controls deployment |
 | Skills | Docs or installable templates | Depends on underlying tools | Analysis workflows | Must follow tool permissions |
 
-<h2 id="recommended-rollout">Recommended rollout</h2>
+<h2 id="security-rule-of-thumb">Security rule of thumb</h2>
 
-Start with market data and rule resources everywhere. Add account-read tools only where credentials remain under user control. Add order preview before any order creation. Enable real trading only after service-side risk limits, idempotency, explicit confirmation, and audit logging are available.
+Use the lowest-risk setup that supports the task:
+
+- Public market data: Hosted MCP is enough.
+- Private account data: Local MCP or user-managed Remote MCP.
+- Trading preview: Local MCP or CLI, preferably testnet first.
+- Real trading: only after explicit permission, preview, confirmation, limits, and audit logs.
+
+<h2 id="next-step">Next step</h2>
+
+After choosing a path, open the matching guide and complete one verification prompt before adding sensitive credentials.
 
