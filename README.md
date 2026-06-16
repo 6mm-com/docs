@@ -1,8 +1,12 @@
 # 6MM Docs
 
-This repository uses Fern for the hosted documentation site.
+Official 6MM documentation for crypto infrastructure, embedded trading, SDKs, APIs, AI Hub, and partner integration.
 
 The production docs are edited and published from the `fern/` directory through Fern.
+
+- Website: https://www.6mm.com
+- Documentation: https://docs.6mm.com
+- App demo: https://app.6mm.com
 
 ## Fern Files
 
@@ -17,6 +21,16 @@ The production docs are edited and published from the `fern/` directory through 
 npm install
 npm run fern:check
 npm run fern:dev
+```
+
+## Contributing
+
+Use the **Edit this page** link in the published docs or open a pull request directly against this repository.
+
+Before submitting a documentation change, run:
+
+```bash
+npm run fern:check
 ```
 
 Local Fern preview:
