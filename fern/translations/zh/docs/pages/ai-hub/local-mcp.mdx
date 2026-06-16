@@ -1,16 +1,16 @@
 ---
 title: "Local MCP"
-subtitle: "在本机运行 6MM MCP server，让 AI 客户端访问行情、账户和未来交易工具，同时凭证留在用户本机。"
+subtitle: "在本机运行 6MM MCP 服务，让 AI 客户端访问行情、账户和未来交易工具，同时凭证留在用户本机。"
 slug: ai-hub/local-mcp
 ---
 
 Local MCP 是 AI 客户端需要私有账户上下文或未来受控交易工具时的推荐方式。
 
-MCP server 运行在用户本机。AI 客户端调用本地 6MM tools，本地 server 再使用用户配置的凭证访问 6MM API。
+MCP 服务 运行在用户本机。AI 客户端调用本地 6MM 工具，本地服务 再使用用户配置的凭证访问 6MM API。
 
 <h2 id="what-your-ai-client-can-do">AI 客户端可以做什么</h2>
 
-通过 Local MCP，AI 客户端可以在受控方式下使用 6MM tools：
+通过 Local MCP，AI 客户端可以在受控方式下使用 6MM 工具：
 
 - 查询实时和历史市场数据。
 - 在启用只读凭证后，读取账户余额、仓位、当前委托、成交和资金费记录。
@@ -51,35 +51,35 @@ AI 客户端
 | 层级 | 工具 | 说明 |
 | --- | --- | --- |
 | 公开数据 | markets、ticker、orderbook、klines、trades、funding | 不访问私有账户。 |
-| 账户只读 | balances、positions、open orders、fills | 需要只读 API key scope。 |
-| 交易预览 | preview order、保证金影响、费用估算 | 不执行真实下单。 |
+| 账户只读 | balances、positions、open orders、fills | 需要只读 API key 权限范围。 |
+| 交易预览 | 订单预览、保证金影响、费用估算 | 不执行真实下单。 |
 | 受控交易 | 创建、撤销、修改订单 | 需要明确权限、用户确认和风控限制。 |
 
 <h2 id="first-setup-checklist">首次配置检查</h2>
 
 1. 安装 MCP 包。
 2. 创建或配置只读 API key。
-3. 从 testnet 开始。
-4. 在 AI 客户端中添加 MCP server 配置。
-5. 让客户端列出可用 6MM tools。
+3. 从测试网开始。
+4. 在 AI 客户端中添加 MCP 服务配置。
+5. 让客户端列出可用 6MM 工具。
 6. 先执行公开市场数据查询。
 7. 确认需要后，再加入账户只读凭证。
 
-<h2 id="example-prompts">示例 prompt</h2>
+<h2 id="example-prompts">示例提示词</h2>
 
 ```text
 使用 6MM 列出可交易的永续合约市场。
 ```
 
 ```text
-使用 6MM testnet 查询我的当前仓位，并解释清算风险。
+使用 6MM 测试网 查询我的当前仓位，并解释清算风险。
 ```
 
 ```text
-在 6MM testnet 预览一笔小额 BTC 多单，并解释保证金影响。不要下单。
+在 6MM 测试网 预览一笔小额 BTC 多单，并解释保证金影响。不要下单。
 ```
 
 <h2 id="security-notes">安全说明</h2>
 
-Local MCP 默认应为只读和 testnet。交易工具应要求订单预览、用户确认、幂等键、订单金额限制和服务端风险检查。
+Local MCP 默认应为只读和测试网。交易工具应要求订单预览、用户确认、幂等键、订单金额限制和服务端风险检查。
 
