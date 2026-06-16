@@ -1,0 +1,62 @@
+---
+title: "Java Quick Start"
+subtitle: "Install and initialize the Java SDK from a backend service."
+slug: sdk/agent-sdk/java/quick-start
+---
+
+<h2 id="install">Install</h2>
+
+```xml
+<dependency>
+    <groupId>com.sixmm.agent</groupId>
+    <artifactId>sixmm-agent-sdk</artifactId>
+    <version>VERSION_PROVIDED_BY_6MM</version>
+</dependency>
+```
+
+> **Package access**
+>
+> 6MM provides the approved package coordinates and version during partner onboarding. Use the package source configured for your organization.
+
+<h2 id="before-you-start">Before you start</h2>
+
+- Confirm your production Agent API base URL with the 6MM team.
+- Store apiSecret in backend secret management only.
+- Prepare a stable mapping between platformUserId and agentUserId.
+- Enable structured logs around bind, transfer, order, and webhook flows.
+
+<h2 id="initialize-client">Initialize client</h2>
+
+```java
+AgentClient client = new AgentClient(AgentClientConfig.builder()
+        .baseUrl("https://api.6mm.com/agent")
+        .agentCode("AGENT001")
+        .apiSecret("your-api-secret")
+        .defaultCurrency("USDT")
+        .build());
+```
+
+> **Backend only**
+>
+> Do not initialize the Agent SDK from browser, mobile, or desktop client code. The SDK signs privileged Agent API requests.
+
+<h2 id="example-transfer-funds-in">Example: transfer funds in</h2>
+
+```java
+TransferResponse resp = client.transfer(TransferRequest.fixed(
+        "AGT-ORDER-1001",
+        "agent-user-001",
+        Direction.IN,
+        "USDT",
+        "10.00"));
+```
+
+Use a unique partner-side order number for each transfer request. If a request times out, query the original order before creating a new one.
+
+<h2 id="next-steps">Next steps</h2>
+
+| Need | Next page |
+| --- | --- |
+| Issue a Trading Widget credential | Create Embed Token |
+| Verify callbacks from 6MM | Webhooks & Idempotency |
+| Review signing behavior | Secrets & Signing |

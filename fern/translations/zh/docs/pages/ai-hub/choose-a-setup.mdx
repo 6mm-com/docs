@@ -1,0 +1,32 @@
+---
+title: "选择接入方式"
+subtitle: "根据安全边界和使用场景，在 Hosted MCP、Local MCP、CLI、Remote MCP 和 Agentic Skills 中选择合适方式。"
+slug: ai-hub/choose-a-setup
+---
+
+AI Hub 提供多种入口，是因为不同 AI 客户端的安全模型、执行能力和部署方式不一样。
+
+<h2 id="quick-decision-table">快速选择表</h2>
+
+| 目标 | 推荐方式 | 原因 |
+| --- | --- | --- |
+| 让 AI 客户端查询公开市场数据 | Hosted MCP | 无需本地安装，也不需要用户 API key。 |
+| 让 Claude Desktop、Cursor、ChatGPT Desktop 调用 6MM 工具 | Local MCP | AI 通过用户本机 MCP server 调用工具。 |
+| 让 Codex、Claude Code、Gemini CLI 或脚本调用 6MM | CLI | 命令输出可使用 JSON，方便 agent 解析。 |
+| 给公司内部提供统一 MCP endpoint | Remote MCP | 机构自己控制部署、凭证、访问和日志。 |
+| 标准化重复的分析或风控流程 | Agentic Skills | 模板定义工具使用、风控边界和输出格式。 |
+
+<h2 id="setup-comparison">方式对比</h2>
+
+| 方式 | 安装方式 | API key 位置 | 第一阶段范围 | 账户与交易范围 |
+| --- | --- | --- | --- | --- |
+| Hosted MCP | 无需安装 | 公开数据不需要用户 API key | 公开市场数据 | 第一阶段不建议开放 |
+| Local MCP | 用户安装本地包 | 用户本机 | 公开数据和账户只读 | 未来交易能力的推荐路径 |
+| CLI | 用户安装命令行包 | 用户本机 | 公开数据和脚本 | 适合订单预览和自动化 |
+| Remote MCP | 用户自己部署服务 | 用户云或机构云 | 公开数据或账户只读 | 用户控制部署时可逐步开放 |
+| Skills | 文档模板或可安装模板 | 取决于底层工具 | 分析工作流 | 必须遵循工具权限 |
+
+<h2 id="recommended-rollout">推荐上线顺序</h2>
+
+所有入口先提供市场数据和规则资源。账户只读工具优先放在用户凭证自控的环境中。任何真实下单前都应先提供订单预览。真实交易必须依赖服务端风险限制、幂等键、明确确认和审计日志。
+

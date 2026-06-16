@@ -1,0 +1,44 @@
+---
+title: "开发者接入总览"
+subtitle: "规划 6MM API 接入路径，覆盖环境、鉴权、签名、REST API、WebSocket 推送与排查。"
+slug: developer-api/overview
+---
+
+开发者接入面向直接集成 6MM API 的后端工程师和平台团队，说明生产接入前需要理解的请求约定、安全模型、REST 资源、实时推送和运营检查项。
+
+<h2 id="recommended-integration-path">推荐接入路径</h2>
+
+<CardGroup cols={2}>
+<Card title="接入概览" icon="fa-duotone fa-diagram-project" href="/zh/developer-api/integration-overview">
+理解 API 访问模型和推荐接入顺序。
+</Card>
+<Card title="环境与通用约定" icon="fa-duotone fa-server" href="/zh/developer-api/environments-and-common-conventions">
+查看服务地址、时间戳、数字字段和响应格式。
+</Card>
+<Card title="鉴权与签名" icon="fa-duotone fa-shield-keyhole" href="/zh/developer-api/request-signing">
+准备 JWT、API Key 和 HMAC 签名。
+</Card>
+<Card title="REST API" icon="fa-duotone fa-brackets-curly" href="/zh/developer-api/rest-api">
+查看账户、订单、仓位和行情接口。
+</Card>
+</CardGroup>
+
+<h2 id="documentation-areas">文档范围</h2>
+
+| 领域 | 覆盖内容 |
+| --- | --- |
+| 接入准备 | 服务地址、请求约定、响应结构和访问方式。 |
+| 鉴权与安全 | JWT、API Key 权限、HMAC 签名、防重放和时间同步。 |
+| REST API | 公开接口、用户与账户、订单、仓位和行情。 |
+| WebSocket | 连接生命周期、公共行情推送和私有用户推送。 |
+| 参考与排查 | 常用枚举、错误码和接入建议。 |
+
+<h2 id="production-checklist">生产检查</h2>
+
+- API Secret 只保存在后端。
+- 签名请求前同步服务端时间。
+- 金额、价格、数量等精度敏感字段默认按字符串处理。
+- 订单流程需要 requestId、结构化日志和幂等处理。
+- 需要实时状态的运营系统应订阅 WebSocket 推送。
+- 上线前确认错误码、重试和降级处理策略。
+

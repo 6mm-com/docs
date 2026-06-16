@@ -1,0 +1,144 @@
+---
+title: "Request Signing"
+slug: developer-api/request-signing
+---
+
+<h2 id="request-format">Request Format</h2>
+
+| Location | Field       | Required            | Description                                   |
+| -------- | ----------- | ------------------- | --------------------------------------------- |
+| Header   | `X-API-KEY` | Yes                 | `apiKey` returned when the API Key is created |
+| Query    | `timestamp` | Yes                 | Unix millisecond timestamp                    |
+| Query    | `signature` | Yes                 | HMAC-SHA256 signature, lowercase hex string   |
+| Body     | JSON        | Depends on endpoint | POST / PUT / DELETE request body              |
+
+<h2 id="signature-payload">Signature Payload</h2>
+
+```
+payload = queryStringWithoutSignature + requestBody
+signature = HMAC-SHA256(apiSecret, payload)
+```
+
+Key rules:
+
+* `timestamp` must be a Unix millisecond timestamp. The server tolerance window is ±10 seconds.
+* `signature` is placed in the URL query string, but is not included in the signature payload.
+* The server verifies the original query string after removing `signature`; it does not reorder query parameters.
+* The query parameter order used for signing must match the actual request URL.
+* If a request body exists, the JSON string used for signing must exactly match the actual transmitted body.
+* Order-related paths perform signature replay checks. Reusing the same signature within a short period returns `Signature replay detected`.
+
+<h2 id="server-time">Server Time</h2>
+
+```http
+GET /v1/time
+```
+
+Response example:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "timestamp": 1780473256,
+    "timestampMs": 1780473256708,
+    "iso": "2026-06-03T07:54:16Z",
+    "timezone": "UTC"
+  },
+  "requestId": "req-7cad3113"
+}
+```
+
+Clients should calculate `timeOffsetMs = serverTimestampMs - localTimestampMs`, then use `timestamp = nowMs + timeOffsetMs` for subsequent signed requests. If the server returns `Timestamp outside of tolerance window`, immediately resync time and regenerate the signature.
+
+<h2 id="get-signing-example">GET Signing Example</h2>
+
+Actual request:
+
+```
+GET /v1/private/order/current?symbol=BTCUSDT&timestamp=1772710377808&signature=...
+```
+
+Signature payload:
+
+```
+symbol=BTCUSDT&timestamp=1772710377808
+```
+
+<h2 id="post-signing-example">POST Signing Example</h2>
+
+Actual request:
+
+```
+POST /v1/private/order/place?timestamp=1772710377808&signature=...
+```
+
+Request body:
+
+```json
+{"symbol":"BTCUSDT","type":"LIMIT","side":"BUY","price":"85000","quantity":"0.1","timeInForce":"GTC","makerOnly":true,"clientOrderId":"ext-1772710377808-001"}
+```
+
+Signature payload:
+
+```
+timestamp=1772710377808{"symbol":"BTCUSDT","type":"LIMIT","side":"BUY","price":"85000","quantity":"0.1","timeInForce":"GTC","makerOnly":true,"clientOrderId":"ext-1772710377808-001"}
+```
+
+<h2 id="python-signing-example">Python Signing Example</h2>
+
+```python
+import hashlib
+import hmac
+import json
+import time
+from urllib.parse import urlencode
+
+import requests
+
+BASE_URL = "https://api.6mm.com"
+API_KEY = "YOUR_API_KEY"
+API_SECRET = "YOUR_API_SECRET"
+TIME_OFFSET_MS = 0
+
+def sign(payload: str) -> str:
+    return hmac.new(
+        API_SECRET.encode("utf-8"),
+        payload.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+
+def sync_time_offset():
+    global TIME_OFFSET_MS
+    before = int(time.time() * 1000)
+    resp = requests.get(f"{BASE_URL}/v1/time", timeout=5)
+    after = int(time.time() * 1000)
+    resp.raise_for_status()
+
+    server_ts = int(resp.json()["data"]["timestampMs"])
+    local_midpoint = (before + after) // 2
+    TIME_OFFSET_MS = server_ts - local_midpoint
+
+def signed_request(method: str, path: str, params=None, body=None):
+    params = dict(params or {})
+    params["timestamp"] = str(int(time.time() * 1000) + TIME_OFFSET_MS)
+
+    query_string = urlencode(params)
+    body_string = ""
+    if body is not None:
+        body_string = json.dumps(body, separators=(",", ":"), ensure_ascii=False)
+
+    signature = sign(query_string + body_string)
+    url = f"{BASE_URL}{path}?{query_string}&signature={signature}"
+    headers = {
+        "X-API-KEY": API_KEY,
+        "Content-Type": "application/json",
+    }
+    resp = requests.request(method, url, headers=headers, data=body_string if body is not None else None, timeout=10)
+    resp.raise_for_status()
+    return resp.json()
+
+sync_time_offset()
+print(signed_request("GET", "/v1/private/order/current", {"symbol": "BTCUSDT"}))
+```

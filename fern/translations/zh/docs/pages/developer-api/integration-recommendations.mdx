@@ -1,0 +1,11 @@
+---
+title: "接入建议"
+slug: developer-api/integration-recommendations
+---
+
+* 服务端程序优先使用 API Key 签名调用交易接口，前端用户操作优先使用 JWT。
+* 下单前先读取 `/v1/public/market/symbols`，按 `tickSize`、`stepSize`、最小名义价值和最大数量做本地校验。
+* 对订单写操作生成唯一 `clientOrderId`，用于断线恢复后对账。
+* 撤单、全撤、改单后的最终状态以 WebSocket 推送或查询接口为准。
+* WebSocket 订单簿按 `endVersion` 检查连续性，发现版本跳跃时重新订阅。
+* API Key 的 `apiSecret` 只展示一次，泄露后应立即禁用或删除对应 API Key。

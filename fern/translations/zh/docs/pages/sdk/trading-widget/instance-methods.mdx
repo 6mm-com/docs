@@ -1,0 +1,127 @@
+---
+title: "实例方法"
+subtitle: "在 TradingWidget.create() 创建实例后，控制已嵌入的交易 iframe。"
+slug: sdk/trading-widget/instance-methods
+---
+
+<h2 id="method-summary">方法总览</h2>
+
+| 方法 | 用途 |
+| --- | --- |
+| destroy() | 移除 iframe 并释放事件监听。 |
+| getState() | 读取当前 SDK 生命周期状态。 |
+| whenReady() | 等待 iframe 完成初始化。 |
+| setSymbol(symbol) | 切换 iframe 内交易对。 |
+| setTheme(theme) | 更新 iframe 主题参数。 |
+| setLocale(locale) | 切换 iframe 语言。 |
+| setSize(width, height) | 调整 iframe 尺寸。 |
+| reload() | 重新加载当前 iframe。 |
+| refreshAuth(reason) | 触发 widget 鉴权刷新流程。 |
+| setTokenProvider(provider) | 替换 partner-token 模式使用的 provider。 |
+| on(event, handler) | 订阅运行时事件，并返回取消订阅函数。 |
+
+<h2 id="destroy">destroy()</h2>
+
+移除 iframe、清理监听，并对当前实例触发一次 destroyed。
+
+```js
+widget.destroy()
+```
+
+<h2 id="getstate">getState()</h2>
+
+读取当前 widget 实例的生命周期状态。
+
+```js
+const state = widget.getState()
+```
+
+返回值包括 loading、authenticating、ready、error 和 destroyed。
+
+<h2 id="whenready">whenReady()</h2>
+
+等待 iframe 初始化完成后，再执行依赖交易 iframe 的页面逻辑。
+
+```js
+await widget.whenReady()
+```
+
+<h2 id="setsymbol-symbol">setSymbol(symbol)</h2>
+
+切换 iframe 内交易对。如果 iframe 仍在初始化，SDK 会先缓存指令，ready 后再发送。
+
+```js
+widget.setSymbol('ETHUSDT')
+```
+
+<h2 id="settheme-theme">setTheme(theme)</h2>
+
+更新嵌入交易 iframe 使用的主题参数。
+
+```js
+widget.setTheme('dark')
+widget.setTheme('light')
+```
+
+<h2 id="setlocale-locale">setLocale(locale)</h2>
+
+切换 iframe 语言。支持 en、en-US 和 zh-CN。
+
+```js
+widget.setLocale('en')
+widget.setLocale('en-US')
+widget.setLocale('zh-CN')
+```
+
+<h2 id="setsize-width-height">setSize(width, height)</h2>
+
+调整 iframe DOM 尺寸，并通知 iframe 当前外层尺寸。数字会转成 px。
+
+```js
+widget.setSize('100%', 720)
+```
+
+<h2 id="reload">reload()</h2>
+
+重新加载当前 iframe，并等待它再次初始化完成。
+
+```js
+widget.reload()
+```
+
+<h2 id="refreshauth-reason">refreshAuth(reason)</h2>
+
+要求 iframe 刷新当前鉴权流程。可选 reason 会传入流程中用于日志和状态处理。
+
+```js
+widget.refreshAuth('manual')
+```
+
+<h2 id="settokenprovider-provider">setTokenProvider(provider)</h2>
+
+替换 partner-token 模式下使用的 tokenProvider。iframe 请求新 embed token 时，SDK 会调用该 provider。
+
+```js
+widget.setTokenProvider(async ({ channelId, symbol, reason }) => {
+  const resp = await fetch('/api/trading/embed-token', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ channelId, symbol, reason }),
+  })
+
+  return resp.json()
+})
+```
+
+<h2 id="on-event-handler">on(event, handler)</h2>
+
+订阅运行时事件。返回的函数用于移除该监听。
+
+```js
+const off = widget.on('order_created', (event) => {
+  console.log(event)
+})
+
+off()
+```

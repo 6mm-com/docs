@@ -1,0 +1,24 @@
+---
+title: "安全架构"
+subtitle: "了解 6MM 交易基础设施、API、SDK、Webhook 和合作方接入中的安全分层。"
+slug: security-compliance/security-architecture
+---
+
+6MM 安全文档重点服务于合作方生产上线。目标是在保持交易基础设施稳定的同时，把责任边界说明清楚。
+
+<h2 id="security-layers">安全分层</h2>
+
+| 层级 | 关注点 |
+| --- | --- |
+| 基础设施 | 网络隔离、服务间加密通信、监控和故障切换。 |
+| 交易系统 | 确定性撮合、保证金校验、风控和滥用防护。 |
+| 接入安全 | API Key、HMAC 签名、Webhook 签名、防重放和后端密钥保存。 |
+| 合作方运营 | 用户会话校验、资产托管、用户支持和本地合规控制。 |
+
+<h2 id="partner-responsibilities">合作方责任</h2>
+
+- API Secret 和签名密钥不得进入浏览器或移动端。
+- 发放交易入口凭证前，先校验 Partner 用户登录状态。
+- Webhook 必须做幂等和终态检查。
+- 账户、订单、划转和 Webhook 流程需要保留运营日志。
+

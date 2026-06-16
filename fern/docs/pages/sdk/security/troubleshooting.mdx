@@ -1,0 +1,23 @@
+---
+title: "Troubleshooting"
+subtitle: "Common integration checks for Trading Widget and Agent SDKs."
+slug: sdk/security/troubleshooting
+---
+
+<h2 id="trading-widget-issues">Trading Widget issues</h2>
+
+| Symptom | Likely cause | Fix |
+| --- | --- | --- |
+| iframe requests partner local domain | baseUrl is missing | Pass baseUrl: 'https://app.6mm.com'. |
+| iframe is invisible or very short | Parent container has no height | Set container height or pass height. |
+| token_provider_missing | partner-token mode has no provider | Add auth.tokenProvider. |
+| auth_exchange_failed | Invalid, expired, or mismatched embed token | Check backend token response and channelId. |
+
+<h2 id="agent-sdk-issues">Agent SDK issues</h2>
+
+| Symptom | Likely cause | Fix |
+| --- | --- | --- |
+| Signature rejected | Wrong secret, clock drift, or manually changed signed fields | Let SDK generate signing fields and sync server time. |
+| Duplicate funds movement risk | New order number used after timeout | Query by original agentOrderNo first. |
+| PROCESSING treated as failure | Pending state misunderstood | Wait for webhook or call queryOrder. |
+| Webhook processed multiple times | Retry behavior without idempotency | Add idempotency key and final-state checks. |

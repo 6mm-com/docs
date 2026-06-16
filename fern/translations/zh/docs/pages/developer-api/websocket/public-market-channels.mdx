@@ -1,0 +1,39 @@
+---
+title: "公共行情频道"
+slug: developer-api/websocket/public-market-channels
+---
+
+<h2 id="connection-url">连接地址</h2>
+
+```
+wss://6mm.com/ws
+```
+
+公共 WebSocket 不需要鉴权。
+
+<h2 id="common-channels">常用频道</h2>
+
+| 频道                                 | 说明                 |
+| ---------------------------------- | ------------------ |
+| `market.depth.{symbol}`            | 订单簿深度，订阅后先推快照，再推增量 |
+| `market.trade.{symbol}`            | 最新成交               |
+| `market.kline.{symbol}.{interval}` | K 线                |
+| `market.ticker.{symbol}`           | 单交易对行情摘要           |
+| `market.tickers`                   | 全交易对行情摘要           |
+
+<h2 id="subscription-example">订阅示例</h2>
+
+```json
+{ "id": "1772007814666", "op": "subscribe", "args": ["market.depth.BTCUSDT"] }
+```
+
+<h2 id="push-message-wrapper">推送外层格式</h2>
+
+```json
+{
+  "topic": "market.depth.BTCUSDT",
+  "event": "data",
+  "ts": 1772007815000,
+  "data": {}
+}
+```

@@ -1,0 +1,66 @@
+---
+title: "连接订阅与心跳"
+subtitle: "连接 6MM WebSocket 推送，订阅主题，维护心跳，并安全处理推送外层格式。"
+slug: developer-api/websocket/connection-subscription-and-heartbeat
+---
+
+WebSocket 适用于行情数据和需要保持实时更新的私有用户状态，避免通过轮询获取高频变化。
+
+<h2 id="connection-url">连接地址</h2>
+
+```text
+wss://6mm.com/ws
+```
+
+私有推送需要携带 listenKey 或 access token 等鉴权上下文，具体见私有用户频道文档。
+
+<h2 id="subscribe">订阅</h2>
+
+```json
+{ "id": "1772007814666", "op": "subscribe", "args": ["market.depth.BTCUSDT"] }
+```
+
+订阅成功回执：
+
+```json
+{
+  "id": "1772007814666",
+  "event": "subscribe",
+  "success": true,
+  "data": ["market.depth.BTCUSDT"]
+}
+```
+
+<h2 id="unsubscribe">取消订阅</h2>
+
+```json
+{ "id": "1772007814667", "op": "unsubscribe", "args": ["market.depth.BTCUSDT"] }
+```
+
+<h2 id="application-ping">应用层 ping</h2>
+
+```json
+{ "id": "1772007814668", "op": "ping", "args": [] }
+```
+
+<h2 id="message-envelope">推送外层格式</h2>
+
+公共推送使用统一外层结构：
+
+```json
+{
+  "topic": "market.depth.BTCUSDT",
+  "event": "data",
+  "ts": 1772007815000,
+  "data": {}
+}
+```
+
+<h2 id="operational-recommendations">运营建议</h2>
+
+- 每次 subscribe、unsubscribe 和 ping 都生成唯一客户端 `id`。
+- 重连后视为新会话，需要重新订阅必要主题。
+- 校验返回的 `topic` 是否符合服务预期。
+- 私有订单或账户事件处理应保持幂等。
+- 记录连接状态变化、订阅回执和异常断开日志。
+

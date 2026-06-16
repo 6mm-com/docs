@@ -1,0 +1,52 @@
+---
+title: "6MM CLI"
+subtitle: "Use the 6MM command-line interface from terminals, scripts, and AI coding agents."
+slug: ai-hub/cli
+---
+
+6MM CLI is the command-line entrypoint for users, scripts, and AI agents that can execute shell commands.
+
+It should provide stable JSON output by default so agents can parse results without relying on terminal formatting.
+
+<h2 id="example-commands">Example commands</h2>
+
+```bash
+6mm markets
+6mm ticker BTC-USDT-PERP
+6mm orderbook BTC-USDT-PERP --depth 20
+6mm klines BTC-USDT-PERP --interval 1h --limit 100
+6mm account summary
+6mm positions
+6mm orders open
+6mm order preview --symbol BTC-USDT-PERP --side buy --type limit --price 65000 --size 0.01
+6mm order create --symbol BTC-USDT-PERP --side buy --type limit --price 65000 --size 0.01
+6mm order cancel --order-id xxx
+```
+
+<h2 id="output-modes">Output modes</h2>
+
+| Mode | Use case |
+| --- | --- |
+| JSON | Default for AI agents, scripts, and automation. |
+| Table | Human-readable terminal review. |
+| Raw | Debugging and integration tests. |
+
+<h2 id="recommended-safety-defaults">Recommended safety defaults</h2>
+
+- Default environment is testnet.
+- Default output is JSON.
+- Trading commands require explicit opt-in.
+- Mainnet order creation requires confirmation.
+- Preview mode is available before create.
+- Errors include stable codes and clear messages.
+
+<h2 id="agent-usage">Agent usage</h2>
+
+AI agents should prefer read-only commands unless the user explicitly asks for preview or trading actions.
+
+Example prompt:
+
+```text
+Use the 6MM CLI to fetch BTC-USDT-PERP orderbook depth and return a short liquidity summary.
+```
+

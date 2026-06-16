@@ -1,0 +1,87 @@
+---
+title: "Authentication"
+subtitle: "Use partner-token for new embedded trading SSO integrations."
+slug: sdk/trading-widget/authentication
+---
+
+<h2 id="recommended-mode-partner-token">Recommended mode: partner-token</h2>
+
+partner-token avoids putting short tokens in URLs and keeps apiSecret on the partner backend.
+
+```js
+const widget = TradingWidget.create('#trading-widget', {
+  baseUrl: 'https://app.6mm.com',
+  auth: {
+    mode: 'partner-token',
+    tokenProvider: async ({ channelId, symbol, reason }) => {
+      const resp = await fetch('/api/trading/embed-token', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ channelId, symbol, reason }),
+      })
+
+      if (!resp.ok) {
+        throw new Error('Failed to request embed token')
+      }
+
+      return resp.json()
+    },
+  },
+})
+```
+
+<h2 id="backend-flow">Backend flow</h2>
+
+```text
+1. Partner frontend receives auth_request from the iframe.
+2. SDK calls tokenProvider.
+3. Partner frontend calls its own backend.
+4. Partner backend validates the partner session.
+5. Partner backend calls 6MM Agent API or Java SDK createEmbedToken.
+6. SDK sends embedToken to the iframe through postMessage.
+7. iframe exchanges embedToken for a 6MM access token.
+8. iframe continues initialization and emits ready.
+```
+
+<h2 id="tokenprovider-contract">tokenProvider contract</h2>
+
+| Field | Direction | Description |
+| --- | --- | --- |
+| channelId | SDK -> Partner backend | Unique widget session identifier. The backend should pass it to createEmbedToken. |
+| symbol | SDK -> Partner backend | Current requested trading symbol. Use it to scope the token when needed. |
+| reason | SDK -> Partner backend | Why the SDK is requesting a token, such as initial load or refresh. |
+| embedToken | Partner backend -> SDK | Short-lived token created by the Agent SDK or Agent API. |
+| expireAt | Partner backend -> SDK | Token expiration timestamp returned by 6MM. |
+
+<h2 id="failure-handling">Failure handling</h2>
+
+| Condition | Recommended handling |
+| --- | --- |
+| Partner session expired | Return 401 from the partner endpoint and ask the user to sign in again. |
+| Token creation failed temporarily | Throw an error in tokenProvider and allow the widget to surface an auth error. |
+| channelId mismatch | Reject the request and recreate the widget instance. |
+| User is not allowed to trade | Return a partner-controlled error and do not create an embed token. |
+
+<h2 id="compatibility-mode-agent-sso">Compatibility mode: agent-sso</h2>
+
+agent-sso keeps the older /agent-entry ticket flow. Prefer partner-token for new integrations.
+
+```js
+const widget = TradingWidget.create('#trading-widget', {
+  baseUrl: 'https://app.6mm.com',
+  auth: {
+    mode: 'agent-sso',
+    entryUrlProvider: async ({ redirectPath }) => {
+      const resp = await fetch('/api/trading-entry', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ redirectPath }),
+      })
+      const data = await resp.json()
+      return data.webUrl
+    },
+  },
+})
+```

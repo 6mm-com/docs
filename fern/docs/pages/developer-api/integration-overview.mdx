@@ -1,0 +1,41 @@
+---
+title: "Integration Overview"
+slug: developer-api/integration-overview
+---
+
+> REST Base URL: `https://api.6mm.com`\
+> WebSocket URL: `wss://6mm.com/ws`
+
+This documentation is intended for external systems integrating with the 6MM API service. It covers login, JWT authentication, API Key management, API Key HMAC signing, account queries, orders, positions, market data, and WebSocket streams.
+
+Account provisioning and funding preparation are handled through platform-side processes. This documentation only describes externally callable API service endpoints.
+
+<h2 id="service-endpoints">Service Endpoints</h2>
+
+| Type      | Endpoint              |
+| --------- | --------------------- |
+| REST API  | `https://api.6mm.com` |
+| WebSocket | `wss://6mm.com/ws`    |
+
+<h2 id="integration-flow">Integration Flow</h2>
+
+Recommended integration sequence:
+
+1. Log in with the account provided by the platform and obtain an `accessToken`.
+2. For server-side programmatic access, create an API Key with JWT first, and securely store the one-time returned `apiSecret`.
+3. Private queries, order endpoints, and position endpoints can be called with either `Authorization: Bearer <accessToken>` or API Key signing.
+4. For private WebSocket streams, create a `listenKey` first, then connect to `wss://6mm.com/ws?listenKey=...`.
+5. Market data REST endpoints and public WebSocket channels do not require authentication.
+
+<h2 id="authentication-choice">Authentication Choice</h2>
+
+| Scenario                               | Recommended method         |
+| -------------------------------------- | -------------------------- |
+| Frontend user actions                  | JWT                        |
+| Server-side programmatic calls         | API Key + HMAC signature   |
+| API Key creation, update, and deletion | JWT                        |
+| Public market REST / public WebSocket  | No authentication required |
+
+<h2 id="documentation-scope">Documentation Scope</h2>
+
+This documentation covers login, JWT authentication, API Key management, API Key HMAC signing, account queries, orders, positions, market data, and WebSocket streams.

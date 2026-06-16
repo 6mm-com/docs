@@ -1,0 +1,188 @@
+---
+title: "用户与账户"
+slug: developer-api/rest-api/user-and-account
+---
+
+<h2 id="user-info">用户信息</h2>
+
+```http
+GET /v1/private/user/info
+```
+
+响应字段：
+
+| 字段                     | 类型     | 说明      |
+| ---------------------- | ------ | ------- |
+| `userInfo.userId`      | string | 对外用户 ID |
+| `userInfo.username`    | string | 用户名     |
+| `userInfo.agentId`     | int64  | 代理商 ID  |
+| `userInfo.vipLevel`    | int64  | VIP 等级  |
+| `userInfo.lastLoginAt` | int64  | 最近登录时间  |
+| `userInfo.lastLoginIp` | string | 最近登录 IP |
+
+<h2 id="user-assets">用户资产</h2>
+
+```http
+GET /v1/private/user/asset
+```
+
+响应字段：
+
+| 字段                        | 类型     | 说明      |
+| ------------------------- | ------ | ------- |
+| `userAsset.userId`        | string | 对外用户 ID |
+| `userAsset.assetType`     | string | 资产类型    |
+| `userAsset.walletBalance` | string | 钱包余额    |
+| `userAsset.frozenMargin`  | string | 挂单冻结保证金 |
+| `userAsset.usedMargin`    | string | 持仓占用保证金 |
+
+<h2 id="create-listenkey">资金流水</h2>
+
+```http
+GET /v1/private/user/account-change-log?assetType=USDT&page=1&pageSize=20
+```
+
+请求参数：
+
+| 参数           | 类型     | 必填 | 说明            |
+| ------------ | ------ | -- | ------------- |
+| `assetType`  | string | 否  | 资产类型，如 `USDT` |
+| `changeType` | string | 否  | 变动类型          |
+| `startTime`  | int64  | 否  | 开始时间          |
+| `endTime`    | int64  | 否  | 结束时间          |
+| `page`       | int32  | 否  | 页码，默认 `1`     |
+| `pageSize`   | int32  | 否  | 每页数量，默认 `20`  |
+
+响应字段：
+
+| 字段                           | 类型     | 说明      |
+| ---------------------------- | ------ | ------- |
+| `list[].assetType`           | string | 资产类型    |
+| `list[].amount`              | string | 变动金额    |
+| `list[].walletBalanceBefore` | string | 变动前钱包余额 |
+| `list[].walletBalanceAfter`  | string | 变动后钱包余额 |
+| `list[].frozenBalanceBefore` | string | 变动前冻结余额 |
+| `list[].frozenBalanceAfter`  | string | 变动后冻结余额 |
+| `list[].changeType`          | string | 变动类型    |
+| `list[].referenceId`         | string | 关联业务 ID |
+| `list[].createdAt`           | int64  | 创建时间    |
+| `total`                      | int64  | 总数量     |
+
+<h2 id="renew-listenkey">30 天交易量统计</h2>
+
+```http
+GET /v1/private/user/volume-stats
+```
+
+响应字段：
+
+| 字段            | 类型     | 说明          |
+| ------------- | ------ | ----------- |
+| `volume30d`   | string | 近 30 天累计成交额 |
+| `feeTotal30d` | string | 近 30 天累计手续费 |
+
+<h2 id="close-listenkey">余额历史</h2>
+
+```http
+GET /v1/private/user/balance-history?period=1D&limit=30
+```
+
+请求参数：
+
+| 参数       | 类型     | 必填 | 说明                 |
+| -------- | ------ | -- | ------------------ |
+| `period` | string | 是  | `1D` / `1W` / `1M` |
+| `limit`  | int    | 否  | 返回数量，默认 `30`       |
+
+响应字段：
+
+| 字段                | 类型     | 说明      |
+| ----------------- | ------ | ------- |
+| `items[].date`    | string | 聚合日期    |
+| `items[].balance` | string | 钱包余额    |
+| `items[].pnl`     | string | 当期已实现盈亏 |
+
+<h2 id="account-change-logs">交易概览</h2>
+
+```http
+GET /v1/private/user/trade-overview?type=1M
+```
+
+请求参数：
+
+| 参数     | 类型     | 必填 | 说明                                 |
+| ------ | ------ | -- | ---------------------------------- |
+| `type` | string | 是  | 趋势范围：`1D`、`1W`、`1M`、`3M`、`6M`、`1Y` |
+
+响应字段：
+
+| 字段                   | 类型     | 说明                       |
+| -------------------- | ------ | ------------------------ |
+| `todayPnl`           | string | 今日已实现盈亏                  |
+| `todayVolume`        | string | 今日合约交易量                  |
+| `totalVolume`        | string | 合约累计交易量                  |
+| `totalPnl`           | string | 累计已实现盈亏                  |
+| `maxDrawdown30d`     | string | 近 30 日最大回撤金额             |
+| `maxDrawdown30dRate` | string | 近 30 日最大回撤率，`0` - `1` 小数 |
+| `transferIn`         | string | 累计资金划入                   |
+| `transferOut`        | string | 累计资金划出                   |
+| `items[]`            | array  | 资产趋势数据                   |
+
+<h2 id="30-day-volume-statistics">资产概览汇总</h2>
+
+```http
+GET /v1/private/user/asset/overview/summary
+```
+
+响应字段同交易概览汇总字段，不包含 `items[]`。
+
+<h2 id="balance-history">资产概览趋势</h2>
+
+```http
+GET /v1/private/user/asset/overview/trend?type=1M
+```
+
+请求参数：
+
+| 参数     | 类型     | 必填 | 说明                                 |
+| ------ | ------ | -- | ---------------------------------- |
+| `type` | string | 是  | 趋势范围：`1D`、`1W`、`1M`、`3M`、`6M`、`1Y` |
+
+响应字段：
+
+| 字段                     | 类型     | 说明      |
+| ---------------------- | ------ | ------- |
+| `items[].snapshotTime` | int64  | 快照时间    |
+| `items[].balance`      | string | 当前账户余额  |
+| `items[].pnl`          | string | 当前周期盈亏  |
+| `items[].pnlRate`      | string | 当前周期盈亏率 |
+| `items[].totalPnl`     | string | 累计盈亏    |
+
+<h2 id="trade-overview">收藏交易对</h2>
+
+保存：
+
+```http
+POST /v1/private/user/favorite-symbols
+Content-Type: application/json
+```
+
+请求体：
+
+```json
+{
+  "symbols": ["BTCUSDT", "ETHUSDT"]
+}
+```
+
+查询：
+
+```http
+GET /v1/private/user/favorite-symbols
+```
+
+响应字段：
+
+| 字段        | 类型        | 说明      |
+| --------- | --------- | ------- |
+| `symbols` | string\[] | 收藏交易对列表 |

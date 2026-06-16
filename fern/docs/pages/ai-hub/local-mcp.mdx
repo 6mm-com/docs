@@ -1,0 +1,73 @@
+---
+title: "Local MCP"
+subtitle: "Run the 6MM MCP server locally so AI clients can access market, account, and future trading tools while credentials remain on the user machine."
+slug: ai-hub/local-mcp
+---
+
+Local MCP is the preferred path for AI clients that need private account context or future controlled trading tools.
+
+The MCP server runs on the user's machine and communicates with 6MM APIs using the user's configured credentials.
+
+<h2 id="architecture">Architecture</h2>
+
+```text
+AI client
+  -> local 6mm-mcp process
+  -> 6MM REST / WebSocket API
+```
+
+<h2 id="example-configuration">Example configuration</h2>
+
+```json
+{
+  "mcpServers": {
+    "6mm": {
+      "command": "uvx",
+      "args": ["6mm-mcp"],
+      "env": {
+        "SIXMM_ENVIRONMENT": "testnet",
+        "SIXMM_API_KEY": "your_api_key",
+        "SIXMM_API_SECRET": "your_api_secret"
+      }
+    }
+  }
+}
+```
+
+<h2 id="recommended-permission-tiers">Recommended permission tiers</h2>
+
+| Tier | Tools | Notes |
+| --- | --- | --- |
+| Public data | Markets, ticker, orderbook, klines, trades, funding | No private account access. |
+| Account read | Balances, positions, open orders, fills | Requires read-only API key scope. |
+| Trading preview | Preview order, margin impact, fee estimate | Does not place orders. |
+| Controlled trading | Create, cancel, amend orders | Requires explicit permission, confirmation, and risk controls. |
+
+<h2 id="first-setup-checklist">First setup checklist</h2>
+
+1. Install the MCP package.
+2. Create or configure a read-only API key.
+3. Start in testnet.
+4. Add the MCP server to the AI client configuration.
+5. Ask the client to list available 6MM tools.
+6. Run a public market data query.
+7. Only then add account-read credentials if needed.
+
+<h2 id="example-prompts">Example prompts</h2>
+
+```text
+Use 6MM to list available perpetual markets.
+```
+
+```text
+Use 6MM testnet to check my open positions and explain liquidation risk.
+```
+
+```text
+Preview a small BTC long order on 6MM testnet and explain margin impact. Do not place the order.
+```
+
+<h2 id="security-notes">Security notes</h2>
+
+Local MCP should default to read-only and testnet. Trading tools should require preview, user confirmation, idempotency keys, notional limits, and service-side risk checks.
+

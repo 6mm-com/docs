@@ -1,0 +1,26 @@
+---
+title: "Webhooks & Idempotency"
+subtitle: "Verify 6MM webhook signatures and process repeated notifications safely."
+slug: sdk/security/webhooks-idempotency
+---
+
+<h2 id="webhook-headers">Webhook headers</h2>
+
+| Header | Description |
+| --- | --- |
+| X-Agent-Timestamp | Unix timestamp in seconds. |
+| X-Agent-Nonce | Replay-protection nonce. |
+| X-Agent-Signature | HMAC-SHA256 signature. |
+
+```text
+timestamp + nonce + rawBody
+```
+
+<h2 id="order-idempotency">Order idempotency</h2>
+
+| Case | Handling |
+| --- | --- |
+| Initial transfer request | Create one globally unique agentOrderNo. |
+| HTTP timeout | Query the original agentOrderNo before creating a new one. |
+| PROCESSING response | Wait for webhook or query order status. |
+| Repeated webhook | Deduplicate by idempotency key and final status. |

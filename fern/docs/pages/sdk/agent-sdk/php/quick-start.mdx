@@ -1,0 +1,68 @@
+---
+title: "PHP Quick Start"
+subtitle: "Install and initialize the PHP SDK from a backend service."
+slug: sdk/agent-sdk/php/quick-start
+---
+
+<h2 id="install">Install</h2>
+
+```json
+{
+  "require": {
+    "sixmm/agent-sdk": "VERSION_PROVIDED_BY_6MM"
+  }
+}
+```
+
+> **Package access**
+>
+> 6MM provides the approved Composer package name, source, and version during partner onboarding.
+
+<h2 id="before-you-start">Before you start</h2>
+
+- Confirm the Agent API base URL with 6MM.
+- Load apiSecret from environment variables or secret management.
+- Keep SDK usage inside backend services only.
+- Prepare idempotent handling for transfer and webhook flows.
+
+<h2 id="initialize-client">Initialize client</h2>
+
+```php
+<?php
+
+use Sixmm\Agent\AgentClient;
+use Sixmm\Agent\AgentConfig;
+
+$client = new AgentClient(new AgentConfig(
+    'https://api.6mm.com/agent',
+    'AGENT001',
+    getenv('AGENT_API_SECRET') ?: '',
+    'USDT'
+));
+```
+
+> **Backend only**
+>
+> The PHP SDK signs Agent API requests and must not be exposed through public source code or frontend runtime environments.
+
+<h2 id="example-transfer-funds-in">Example: transfer funds in</h2>
+
+```php
+$response = $client->transfer([
+    'agentOrderNo' => 'AGT-ORDER-1001',
+    'agentUserId' => 'agent-user-001',
+    'direction' => 'IN',
+    'currency' => 'USDT',
+    'amount' => '10.00',
+]);
+```
+
+Use decimal strings for amounts and preserve the original agentOrderNo when retrying or querying transfer status.
+
+<h2 id="next-steps">Next steps</h2>
+
+| Need | Next page |
+| --- | --- |
+| Understand Agent SDK capabilities | Agent SDK Overview |
+| Review signing behavior | Secrets & Signing |
+| Verify callback delivery | Webhooks & Idempotency |

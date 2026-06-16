@@ -1,0 +1,69 @@
+---
+title: "Hosted MCP"
+subtitle: "连接 6MM 官方托管 MCP endpoint，读取公开行情和交易规则上下文。"
+slug: ai-hub/hosted-mcp
+---
+
+Hosted MCP 是由 6MM 官方托管的远程 MCP 服务，用于公开数据访问。
+
+它适合支持远程 MCP endpoint 的 AI 客户端，用户无需在本机安装服务即可读取 6MM 公开行情和规则上下文。
+
+<h2 id="endpoint">Endpoint</h2>
+
+```text
+https://mcp.6mm.com/mcp
+```
+
+健康检查：
+
+```text
+https://mcp.6mm.com/health
+```
+
+<h2 id="recommended-first-release-scope">第一阶段推荐范围</h2>
+
+Hosted MCP 第一阶段应只暴露公开和只读信息：
+
+- 市场列表。
+- 行情 ticker。
+- 盘口。
+- 最新成交。
+- K 线。
+- 资金费率。
+- 系统状态。
+- 交易费率。
+- 合约规格。
+- 风险和保证金规则资源。
+
+<h2 id="not-supported-in-the-first-release">第一阶段不支持</h2>
+
+Hosted MCP 不应作为以下能力的第一入口：
+
+- 账户余额。
+- 仓位。
+- 当前委托。
+- 创建订单。
+- 撤单。
+- 划转或提现。
+- 用户 API key 托管。
+
+<h2 id="why-public-data-first">为什么先做公开数据</h2>
+
+Hosted MCP 由 6MM 托管并通过网络访问，使用方便，但不应该成为用户提交私有 API key 的默认位置。敏感账户和交易流程应优先通过 Local MCP、CLI 或用户自托管 Remote MCP 实现。
+
+<h2 id="example-user-prompt">示例 prompt</h2>
+
+```text
+使用 6MM 查询 BTC-USDT-PERP 的盘口深度，并总结当前流动性。
+```
+
+<h2 id="operational-requirements">运营要求</h2>
+
+- 所有 endpoint 使用 TLS。
+- 请求限流。
+- 滥用保护。
+- 结构化日志和指标。
+- 健康检查。
+- 清晰的 tool 描述和 schema。
+- 面向 AI 客户端的稳定错误返回。
+

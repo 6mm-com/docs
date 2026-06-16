@@ -1,0 +1,11 @@
+---
+title: "Integration Recommendations"
+slug: developer-api/integration-recommendations
+---
+
+* Server-side programs should preferably use API Key signing for trading endpoints. Frontend user actions should preferably use JWT.
+* Before placing orders, query `/v1/public/market/symbols` and perform local validation against `tickSize`, `stepSize`, minimum notional value, and maximum quantity.
+* Generate a unique `clientOrderId` for order write operations so that reconciliation is possible after disconnects.
+* Final status after cancel, cancel-all, or amend operations should be determined by WebSocket streams or query endpoints.
+* For WebSocket order book data, check continuity with `endVersion`. If a version gap is detected, resubscribe to obtain a fresh snapshot.
+* `apiSecret` is shown only once. If it is leaked, immediately disable or delete the corresponding API Key.

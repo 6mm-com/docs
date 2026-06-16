@@ -1,0 +1,97 @@
+---
+title: "私有用户频道"
+slug: developer-api/websocket/private-user-channel
+---
+
+先创建 `listenKey`：
+
+```http
+POST /v1/private/user/listen-key
+```
+
+响应示例：
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "listenKey": "f57cb61ef604ce76be09e753a5dbdd8c",
+    "expireAt": 1777539918867
+  },
+  "requestId": "req-listen-key"
+}
+```
+
+`listenKey` 默认有效期为 60 分钟，建议每 30 分钟续期一次。
+
+续期：
+
+```http
+PUT /v1/private/user/listen-key
+Content-Type: application/json
+```
+
+```json
+{ "listenKey": "f57cb61ef604ce76be09e753a5dbdd8c" }
+```
+
+关闭：
+
+```http
+DELETE /v1/private/user/listen-key
+Content-Type: application/json
+```
+
+```json
+{ "listenKey": "f57cb61ef604ce76be09e753a5dbdd8c" }
+```
+
+连接私有 WebSocket：
+
+```
+wss://6mm.com/ws?listenKey=YOUR_LISTEN_KEY
+```
+
+兼容 JWT 连接方式：
+
+```
+wss://6mm.com/ws?token=YOUR_ACCESS_TOKEN
+```
+
+鉴权成功后，服务端会自动订阅当前用户私有频道，无需手动订阅。
+
+鉴权成功回执：
+
+```json
+{ "event": "auth", "success": true, "data": "1188041528" }
+```
+
+常用私有事件：
+
+| 事件                   | 说明                   |
+| -------------------- | -------------------- |
+| `ORDER_TRADE_UPDATE` | 订单状态变更，包括挂单、改单、成交、撤单 |
+| `ACCOUNT_UPDATE`     | 账户余额和持仓变化            |
+
+私有推送外层格式：
+
+```json
+{
+  "topic": "user.5794",
+  "ts": 1771047000000,
+  "data": {
+    "eventType": "ORDER_TRADE_UPDATE"
+  }
+}
+```
+
+REST 查询接口和 WebSocket 私有推送是两套独立 schema，客户端应按各自字段解析，不要假设字段完全同名。
+
+常见差异：
+
+| 域     | REST 字段        | WebSocket 字段            |
+| ----- | -------------- | ----------------------- |
+| 订单状态  | `status`       | `orderStatus`           |
+| 冻结余额  | `frozenMargin` | `frozenBalance`         |
+| 保证金模式 | `marginMode`   | `marginMode`，持仓和推送使用字符串 |

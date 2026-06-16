@@ -1,0 +1,32 @@
+---
+title: "鉴权方式"
+slug: developer-api/authentication
+---
+
+<h2 id="jwt">JWT</h2>
+
+登录后返回 `accessToken`。调用私有接口时携带：
+
+```http
+Authorization: Bearer YOUR_ACCESS_TOKEN
+```
+
+<h2 id="api-key">API Key</h2>
+
+带 `X-API-KEY` 请求头时，服务端使用 API Key HMAC 鉴权：
+
+```http
+X-API-KEY: YOUR_API_KEY
+```
+
+API Key 管理接口必须使用 JWT，不接受 API Key 自我管理。
+
+<h2 id="api-key-permissions">API Key 权限</h2>
+
+| 值   | 权限 | 说明                                                     |
+| --- | -- | ------------------------------------------------------ |
+| `1` | 读取 | 用户信息、资产、资金流水、统计、listenKey、收藏交易对等；订单和仓位相关接口（包括查询）需要交易权限 |
+| `2` | 交易 | 订单和仓位写操作，以及订单、仓位相关查询                                   |
+| `4` | 提币 | 预留资金权限                                                 |
+
+如需同时拥有读取和交易权限，传 `permissions=3`。

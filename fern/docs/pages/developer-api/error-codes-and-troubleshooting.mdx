@@ -1,0 +1,51 @@
+---
+title: "Error Codes and Troubleshooting"
+slug: developer-api/error-codes-and-troubleshooting
+---
+
+<h2 id="error-response-format">Error Response Format</h2>
+
+```json
+{
+  "code": 1003,
+  "message": "Invalid token",
+  "requestId": "req-12345678"
+}
+```
+
+Business errors usually still return the unified JSON structure. Integrators should check `code` first. Authentication failures may return HTTP `401`; rate limiting may return HTTP `429`.
+
+<h2 id="common-error-codes">Common Error Codes</h2>
+
+| Error code      | Description                                  |
+| --------------- | -------------------------------------------- |
+| `0`             | Success                                      |
+| `1001`          | No valid authentication information provided |
+| `1002`          | Token expired                                |
+| `1003`          | Invalid Token, API Key, or signature         |
+| `1004`          | Token revoked                                |
+| `1006`          | Source IP mismatch                           |
+| `2001`          | Missing required parameter                   |
+| `2002`          | Invalid parameter value                      |
+| `2003`          | Parameter out of range                       |
+| `3001`          | Insufficient balance                         |
+| `3003`          | Order not found                              |
+| `3004`          | Duplicate request                            |
+| `3005`          | Order cannot be canceled                     |
+| `3006`          | Permission denied                            |
+| `3100` - `3112` | Condition order parameter validation error   |
+| `5001`          | Internal server error                        |
+| `5002`          | Service temporarily unavailable              |
+| `5003`          | Rate limit triggered                         |
+
+<h2 id="troubleshooting">Troubleshooting</h2>
+
+| Problem                                     | Recommendation                                                                                   |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `1001` no valid authentication information  | Check whether `Authorization: Bearer <accessToken>` or `X-API-KEY` is included.                  |
+| `1002` Token expired                        | Refresh Token or log in again before retrying.                                                   |
+| `1003` invalid Token, API Key, or signature | Check API Key, signature payload, request body JSON string, and query parameter order.           |
+| `1006` source IP mismatch                   | Check the API Key IP whitelist configuration.                                                    |
+| `3004` duplicate request                    | Do not reuse the same signature for order-related paths. Regenerate `timestamp` and `signature`. |
+| `5003` rate limit triggered                 | Reduce request frequency and use exponential backoff if retrying.                                |
+| `Timestamp outside of tolerance window`     | Call `/v1/time` to calibrate time offset and sign the request again.                             |

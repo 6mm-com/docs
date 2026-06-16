@@ -1,0 +1,119 @@
+---
+title: "API Key 管理"
+slug: developer-api/api-key-management
+---
+
+<h2 id="create-api-key">创建 API Key</h2>
+
+```http
+POST /v1/private/user/api-key/create
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+请求参数：
+
+| 参数            | 类型        | 必填 | 说明                          |
+| ------------- | --------- | -- | --------------------------- |
+| `label`       | string    | 是  | API Key 标签，长度 1 - 64 位      |
+| `permissions` | int       | 否  | 权限位掩码，默认 `1`，范围 `1` - `7`   |
+| `ipWhitelist` | string\[] | 否  | IP 白名单，最多 20 个；不传表示不限制来源 IP |
+
+请求示例：
+
+```bash
+curl -X POST https://api.6mm.com/v1/private/user/api-key/create \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -d '{
+    "label": "external-service-prod",
+    "permissions": 3,
+    "ipWhitelist": ["203.0.113.10"]
+  }'
+```
+
+响应示例：
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "apiKey": "fx_xxxxxxxxxxxxxxxxxxxxxxxx",
+    "apiSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  },
+  "requestId": "req-api-key"
+}
+```
+
+> **Warning**
+>
+> `apiSecret` 仅在创建时返回一次，请立即保存到密钥管理系统，禁止写入代码仓库或日志。
+
+每个用户最多可创建 30 个 API Key。
+
+<h2 id="list-api-keys">查询 API Key 列表</h2>
+
+```http
+GET /v1/private/user/api-key/list
+Authorization: Bearer YOUR_ACCESS_TOKEN
+```
+
+响应字段：
+
+| 字段                   | 类型        | 说明               |
+| -------------------- | --------- | ---------------- |
+| `list[].id`          | string    | API Key ID       |
+| `list[].label`       | string    | 标签               |
+| `list[].apiKey`      | string    | API Key 公开标识     |
+| `list[].permissions` | int       | 权限位掩码            |
+| `list[].ipWhitelist` | string\[] | IP 白名单           |
+| `list[].status`      | int       | 状态，`1` 启用，`0` 禁用 |
+| `list[].lastUsedAt`  | int64     | 最近使用时间           |
+| `list[].createdAt`   | int64     | 创建时间             |
+
+<h2 id="update-api-key">更新 API Key</h2>
+
+```http
+PUT /v1/private/user/api-key/update
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+请求参数：
+
+| 参数            | 类型        | 必填 | 说明            |
+| ------------- | --------- | -- | ------------- |
+| `id`          | string    | 是  | API Key ID    |
+| `label`       | string    | 否  | 新标签           |
+| `permissions` | int       | 否  | 新权限位掩码        |
+| `ipWhitelist` | string\[] | 否  | 新 IP 白名单      |
+| `status`      | int       | 否  | `1` 启用，`0` 禁用 |
+
+<h2 id="delete-api-key">删除 API Key</h2>
+
+```http
+POST /v1/private/user/api-key/delete
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+请求体：
+
+```json
+{ "id": "1001" }
+```
+
+<h2 id="delete-all-api-keys">删除全部 API Key</h2>
+
+```http
+POST /v1/private/user/api-key/delete-all
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+响应字段：
+
+| 字段        | 类型    | 说明   |
+| --------- | ----- | ---- |
+| `deleted` | int64 | 删除数量 |

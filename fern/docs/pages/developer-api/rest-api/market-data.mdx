@@ -1,0 +1,103 @@
+---
+title: "Market Data"
+slug: developer-api/rest-api/market-data
+---
+
+Market data REST endpoints do not require authentication.
+
+<h2 id="symbol-configuration">Symbol Configuration</h2>
+
+```http
+GET /v1/public/market/symbols
+```
+
+Common response fields:
+
+| Field                      | Type   | Description                   |
+| -------------------------- | ------ | ----------------------------- |
+| `list[].symbol`            | string | Symbol                        |
+| `list[].baseAsset`         | string | Base asset                    |
+| `list[].quoteAsset`        | string | Quote asset                   |
+| `list[].minQuantity`       | string | Minimum order quantity        |
+| `list[].minNotional`       | string | Minimum notional value        |
+| `list[].tickSize`          | string | Price tick size               |
+| `list[].stepSize`          | string | Quantity step size            |
+| `list[].pricePrecision`    | int64  | Price precision               |
+| `list[].maxLimitOrderQty`  | string | Maximum limit order quantity  |
+| `list[].maxMarketOrderQty` | string | Maximum market order quantity |
+| `list[].maxOpenOrders`     | int64  | Maximum open orders per user  |
+| `list[].defaultLeverage`   | int64  | Default leverage              |
+| `list[].defaultMarginMode` | int64  | Default margin mode           |
+| `list[].leverageTiers[]`   | array  | Leverage margin tiers         |
+| `handlingFeeLevelConfig[]` | array  | Fee tier configuration        |
+
+<h2 id="funding-rate-configuration">Funding Rate Configuration</h2>
+
+```http
+GET /v1/public/market/funding-rate?symbol=BTCUSDT
+```
+
+Request parameters:
+
+| Parameter | Type   | Required | Description                     |
+| --------- | ------ | -------- | ------------------------------- |
+| `symbol`  | string | No       | If omitted, returns all symbols |
+
+<h2 id="current-funding-rate">Current Funding Rate</h2>
+
+```http
+GET /v1/public/market/funding-rate/current?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+Request parameters:
+
+| Parameter  | Type   | Required | Description                  |
+| ---------- | ------ | -------- | ---------------------------- |
+| `symbol`   | string | No       | Symbol                       |
+| `page`     | int32  | No       | Page number, default `1`     |
+| `pageSize` | int32  | No       | Items per page, default `20` |
+
+<h2 id="funding-rate-history">Funding Rate History</h2>
+
+```http
+GET /v1/public/market/funding-rate/history?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+Request parameters:
+
+| Parameter   | Type   | Required | Description                  |
+| ----------- | ------ | -------- | ---------------------------- |
+| `symbol`    | string | Yes      | Symbol                       |
+| `startTime` | int64  | No       | Start time                   |
+| `endTime`   | int64  | No       | End time                     |
+| `page`      | int32  | No       | Page number, default `1`     |
+| `pageSize`  | int32  | No       | Items per page, default `20` |
+
+<h2 id="klines">Klines</h2>
+
+```http
+GET /v1/public/market/klines?symbol=BTCUSDT&interval=1m&limit=500
+```
+
+Request parameters:
+
+| Parameter   | Type   | Required | Description                                                              |
+| ----------- | ------ | -------- | ------------------------------------------------------------------------ |
+| `symbol`    | string | Yes      | Symbol                                                                   |
+| `interval`  | string | Yes      | Interval, such as `1m`, `5m`, `15m`, `30m`, `1h`, `4h`, `1d`, `1w`, `1M` |
+| `priceType` | string | No       | `indexPrice` / `markPrice`. If omitted, returns trade price Klines       |
+| `startTime` | int64  | No       | Start time                                                               |
+| `endTime`   | int64  | No       | End time                                                                 |
+| `limit`     | int32  | No       | Number of returned items, default `500`, maximum `1000`                  |
+
+Response fields:
+
+| Field              | Type   | Description |
+| ------------------ | ------ | ----------- |
+| `list[].openTime`  | int64  | Open time   |
+| `list[].open`      | string | Open price  |
+| `list[].high`      | string | High price  |
+| `list[].low`       | string | Low price   |
+| `list[].close`     | string | Close price |
+| `list[].volume`    | string | Volume      |
+| `list[].closeTime` | int64  | Close time  |

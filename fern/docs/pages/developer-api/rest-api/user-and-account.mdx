@@ -1,0 +1,214 @@
+---
+title: "User and Account"
+slug: developer-api/rest-api/user-and-account
+---
+
+Unless otherwise specified, the following endpoints can use JWT or API Key signing.
+
+<h2 id="user-info">User Info</h2>
+
+```http
+GET /v1/private/user/info
+```
+
+Response fields:
+
+| Field                  | Type   | Description      |
+| ---------------------- | ------ | ---------------- |
+| `userInfo.userId`      | string | External user ID |
+| `userInfo.username`    | string | Username         |
+| `userInfo.agentId`     | int64  | Agent ID         |
+| `userInfo.vipLevel`    | int64  | VIP level        |
+| `userInfo.lastLoginAt` | int64  | Last login time  |
+| `userInfo.lastLoginIp` | string | Last login IP    |
+
+<h2 id="user-assets">User Assets</h2>
+
+```http
+GET /v1/private/user/asset
+```
+
+Response fields:
+
+| Field                     | Type   | Description                     |
+| ------------------------- | ------ | ------------------------------- |
+| `userAsset.userId`        | string | External user ID                |
+| `userAsset.assetType`     | string | Asset type                      |
+| `userAsset.walletBalance` | string | Wallet balance                  |
+| `userAsset.frozenMargin`  | string | Margin frozen by pending orders |
+| `userAsset.usedMargin`    | string | Margin used by positions        |
+
+<h2 id="create-listenkey">Create listenKey</h2>
+
+```http
+POST /v1/private/user/listen-key
+```
+
+Creates an authentication key for private WebSocket streams.
+
+<h2 id="renew-listenkey">Renew listenKey</h2>
+
+```http
+PUT /v1/private/user/listen-key
+```
+
+Extends listenKey validity.
+
+<h2 id="close-listenkey">Close listenKey</h2>
+
+```http
+DELETE /v1/private/user/listen-key
+```
+
+Closes the specified listenKey.
+
+<h2 id="account-change-logs">Account Change Logs</h2>
+
+```http
+GET /v1/private/user/account-change-log?assetType=USDT&page=1&pageSize=20
+```
+
+Request parameters:
+
+| Parameter    | Type   | Required | Description                  |
+| ------------ | ------ | -------- | ---------------------------- |
+| `assetType`  | string | No       | Asset type, such as `USDT`   |
+| `changeType` | string | No       | Change type                  |
+| `startTime`  | int64  | No       | Start time                   |
+| `endTime`    | int64  | No       | End time                     |
+| `page`       | int32  | No       | Page number, default `1`     |
+| `pageSize`   | int32  | No       | Items per page, default `20` |
+
+Response fields:
+
+| Field                        | Type   | Description                  |
+| ---------------------------- | ------ | ---------------------------- |
+| `list[].assetType`           | string | Asset type                   |
+| `list[].amount`              | string | Changed amount               |
+| `list[].walletBalanceBefore` | string | Wallet balance before change |
+| `list[].walletBalanceAfter`  | string | Wallet balance after change  |
+| `list[].frozenBalanceBefore` | string | Frozen balance before change |
+| `list[].frozenBalanceAfter`  | string | Frozen balance after change  |
+| `list[].changeType`          | string | Change type                  |
+| `list[].referenceId`         | string | Related business ID          |
+| `list[].createdAt`           | int64  | Creation time                |
+| `total`                      | int64  | Total count                  |
+
+<h2 id="30-day-volume-statistics">30-Day Volume Statistics</h2>
+
+```http
+GET /v1/private/user/volume-stats
+```
+
+Response fields:
+
+| Field         | Type   | Description                                     |
+| ------------- | ------ | ----------------------------------------------- |
+| `volume30d`   | string | Cumulative trading volume over the last 30 days |
+| `feeTotal30d` | string | Cumulative fees over the last 30 days           |
+
+<h2 id="balance-history">Balance History</h2>
+
+```http
+GET /v1/private/user/balance-history?period=1D&limit=30
+```
+
+Request parameters:
+
+| Parameter | Type   | Required | Description                            |
+| --------- | ------ | -------- | -------------------------------------- |
+| `period`  | string | Yes      | `1D` / `1W` / `1M`                     |
+| `limit`   | int    | No       | Number of items returned, default `30` |
+
+Response fields:
+
+| Field             | Type   | Description                 |
+| ----------------- | ------ | --------------------------- |
+| `items[].date`    | string | Aggregation date            |
+| `items[].balance` | string | Wallet balance              |
+| `items[].pnl`     | string | Realized PnL for the period |
+
+<h2 id="trade-overview">Trade Overview</h2>
+
+```http
+GET /v1/private/user/trade-overview?type=1M
+```
+
+Request parameters:
+
+| Parameter | Type   | Required | Description                                     |
+| --------- | ------ | -------- | ----------------------------------------------- |
+| `type`    | string | Yes      | Trend range: `1D`, `1W`, `1M`, `3M`, `6M`, `1Y` |
+
+Response fields:
+
+| Field                | Type   | Description                                                          |
+| -------------------- | ------ | -------------------------------------------------------------------- |
+| `todayPnl`           | string | Today's realized PnL                                                 |
+| `todayVolume`        | string | Today's contract trading volume                                      |
+| `totalVolume`        | string | Cumulative contract trading volume                                   |
+| `totalPnl`           | string | Cumulative realized PnL                                              |
+| `maxDrawdown30d`     | string | Maximum drawdown amount over the last 30 days                        |
+| `maxDrawdown30dRate` | string | Maximum drawdown rate over the last 30 days, decimal from `0` to `1` |
+| `transferIn`         | string | Cumulative transferred-in funds                                      |
+| `transferOut`        | string | Cumulative transferred-out funds                                     |
+| `items[]`            | array  | Asset trend data                                                     |
+
+<h2 id="asset-overview-summary">Asset Overview Summary</h2>
+
+```http
+GET /v1/private/user/asset/overview/summary
+```
+
+Response fields are the same as the trade overview summary fields, excluding `items[]`.
+
+<h2 id="asset-overview-trend">Asset Overview Trend</h2>
+
+```http
+GET /v1/private/user/asset/overview/trend?type=1M
+```
+
+Request parameters:
+
+| Parameter | Type   | Required | Description                                     |
+| --------- | ------ | -------- | ----------------------------------------------- |
+| `type`    | string | Yes      | Trend range: `1D`, `1W`, `1M`, `3M`, `6M`, `1Y` |
+
+Response fields:
+
+| Field                  | Type   | Description                     |
+| ---------------------- | ------ | ------------------------------- |
+| `items[].snapshotTime` | int64  | Snapshot time                   |
+| `items[].balance`      | string | Current account balance         |
+| `items[].pnl`          | string | PnL for the current period      |
+| `items[].pnlRate`      | string | PnL rate for the current period |
+| `items[].totalPnl`     | string | Cumulative PnL                  |
+
+<h2 id="favorite-symbols">Favorite Symbols</h2>
+
+<h2 id="save">Save</h2>
+
+```http
+POST /v1/private/user/favorite-symbols
+Content-Type: application/json
+```
+
+Request body:
+
+```json
+{
+  "symbols": ["BTCUSDT", "ETHUSDT"]
+}
+```
+
+<h2 id="query">Query</h2>
+
+```http
+GET /v1/private/user/favorite-symbols
+```
+
+Response fields:
+
+| Field     | Type      | Description          |
+| --------- | --------- | -------------------- |
+| `symbols` | string\[] | Favorite symbol list |

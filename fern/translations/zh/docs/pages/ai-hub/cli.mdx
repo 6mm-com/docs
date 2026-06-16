@@ -1,0 +1,52 @@
+---
+title: "6MM CLI"
+subtitle: "在终端、脚本和 AI coding agent 中使用 6MM 命令行工具。"
+slug: ai-hub/cli
+---
+
+6MM CLI 是面向用户、脚本和能够执行 shell 命令的 AI agent 的命令行入口。
+
+CLI 默认应提供稳定 JSON 输出，方便 agent 解析结果，而不是依赖终端展示格式。
+
+<h2 id="example-commands">命令示例</h2>
+
+```bash
+6mm markets
+6mm ticker BTC-USDT-PERP
+6mm orderbook BTC-USDT-PERP --depth 20
+6mm klines BTC-USDT-PERP --interval 1h --limit 100
+6mm account summary
+6mm positions
+6mm orders open
+6mm order preview --symbol BTC-USDT-PERP --side buy --type limit --price 65000 --size 0.01
+6mm order create --symbol BTC-USDT-PERP --side buy --type limit --price 65000 --size 0.01
+6mm order cancel --order-id xxx
+```
+
+<h2 id="output-modes">输出模式</h2>
+
+| 模式 | 使用场景 |
+| --- | --- |
+| JSON | AI agent、脚本和自动化默认使用。 |
+| Table | 人类在终端中查看。 |
+| Raw | 调试和集成测试。 |
+
+<h2 id="recommended-safety-defaults">推荐安全默认值</h2>
+
+- 默认环境为 testnet。
+- 默认输出为 JSON。
+- 交易命令必须显式开启。
+- Mainnet 下单必须确认。
+- 创建订单前提供 preview 模式。
+- 错误返回包含稳定错误码和清晰描述。
+
+<h2 id="agent-usage">Agent 使用方式</h2>
+
+除非用户明确要求预览或交易动作，AI agent 应优先使用只读命令。
+
+示例 prompt：
+
+```text
+使用 6MM CLI 查询 BTC-USDT-PERP 的盘口深度，并输出简短流动性总结。
+```
+

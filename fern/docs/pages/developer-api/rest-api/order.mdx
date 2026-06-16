@@ -1,0 +1,411 @@
+---
+title: "Order"
+slug: developer-api/rest-api/order
+---
+
+> **Note**
+>
+> Order endpoints require trade permission.
+
+<h2 id="place-order">Place Order</h2>
+
+```http
+POST /v1/private/order/place
+Content-Type: application/json
+```
+
+**Request parameters:**
+
+| Parameter       | Type   | Required               | Description                                                                                                                   |
+| --------------- | ------ | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `symbol`        | string | Yes                    | Symbol                                                                                                                        |
+| `type`          | string | Yes                    | `LIMIT` / `MARKET`                                                                                                            |
+| `side`          | string | Yes                    | `BUY` / `SELL`                                                                                                                |
+| `positionSide`  | string | No                     | `BOTH` / `LONG` / `SHORT`, default `BOTH`                                                                                     |
+| `price`         | string | Conditionally required | Required for limit orders                                                                                                     |
+| `quantity`      | string | Conditionally required | Quantity. Can be omitted when `closePosition=true`                                                                            |
+| `timeInForce`   | string | No                     | `GTC` / `IOC` / `FOK`, default `GTC`                                                                                          |
+| `reduceOnly`    | bool   | No                     | Reduce-only, default `false`                                                                                                  |
+| `makerOnly`     | bool   | No                     | Maker-only, default `false`                                                                                                   |
+| `closePosition` | bool   | No                     | Close the entire position, default `false`                                                                                    |
+| `clientOrderId` | string | No                     | Client-defined order ID                                                                                                       |
+| `placeType`     | string | No                     | Order placement type marker                                                                                                   |
+| `priceType`     | int32  | No                     | BBO price type: `0` specified price, `1` opponent price 1, `2` opponent price 5, `3` same-side price 1, `4` same-side price 5 |
+
+**Request example:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "type": "LIMIT",
+  "side": "BUY",
+  "price": "85000",
+  "quantity": "0.1",
+  "timeInForce": "GTC",
+  "makerOnly": true,
+  "clientOrderId": "ext-1772710377808-001"
+}
+```
+
+**Response fields:**
+
+| Field           | Type   | Description             |
+| --------------- | ------ | ----------------------- |
+| `orderId`       | string | Server order ID         |
+| `clientOrderId` | string | Client-defined order ID |
+| `status`        | string | Order status            |
+| `timestamp`     | int64  | Timestamp               |
+
+<h2 id="batch-place-orders">Batch Place Orders</h2>
+
+```http
+POST /v1/private/order/batch-place
+Content-Type: application/json
+```
+
+**Request body:**
+
+```json
+{
+  "orders": [
+    {
+      "symbol": "BTCUSDT",
+      "type": "LIMIT",
+      "side": "BUY",
+      "price": "85000",
+      "quantity": "0.1",
+      "clientOrderId": "ext-buy-001"
+    }
+  ]
+}
+```
+
+**Response fields:**
+
+| Field          | Type  | Description                 |
+| -------------- | ----- | --------------------------- |
+| `successCount` | int32 | Number of successful orders |
+| `failedCount`  | int32 | Number of failed orders     |
+| `results[]`    | array | Result for each order       |
+
+<h2 id="place-condition-order">Place Condition Order</h2>
+
+```http
+POST /v1/private/order/place-condition
+Content-Type: application/json
+```
+
+**Request parameters:**
+
+| Parameter       | Type   | Required               | Description                                                                                 |
+| --------------- | ------ | ---------------------- | ------------------------------------------------------------------------------------------- |
+| `symbol`        | string | Yes                    | Symbol                                                                                      |
+| `type`          | string | Yes                    | `STOP_MARKET` / `TAKE_PROFIT_MARKET` / `STOP_LIMIT` / `TAKE_PROFIT_LIMIT` / `TRAILING_STOP` |
+| `side`          | string | Yes                    | `BUY` / `SELL`                                                                              |
+| `positionSide`  | string | No                     | `BOTH` / `LONG` / `SHORT`                                                                   |
+| `price`         | string | Conditionally required | Required for `STOP_LIMIT` / `TAKE_PROFIT_LIMIT`                                             |
+| `quantity`      | string | Conditionally required | Quantity. Can be omitted when `closePosition=true`                                          |
+| `timeInForce`   | string | No                     | `GTC` / `IOC` / `FOK` / `GTE_GTC`                                                           |
+| `reduceOnly`    | bool   | No                     | Reduce-only                                                                                 |
+| `clientOrderId` | string | No                     | Client-defined order ID                                                                     |
+| `stopPrice`     | string | Conditionally required | Trigger price                                                                               |
+| `workingType`   | string | No                     | `MARK_PRICE` / `CONTRACT_PRICE`, default `CONTRACT_PRICE`                                   |
+| `priceProtect`  | bool   | No                     | Whether price protection is enabled                                                         |
+| `activatePrice` | string | Conditionally required | Trailing order activation price                                                             |
+| `callbackRate`  | string | Conditionally required | Trailing order callback rate                                                                |
+| `closePosition` | bool   | No                     | Close the entire position                                                                   |
+
+**Response fields:**
+
+| Field             | Type   | Description            |
+| ----------------- | ------ | ---------------------- |
+| `conditionId`     | string | Condition order ID     |
+| `conditionStatus` | string | Condition order status |
+| `timestamp`       | int64  | Timestamp              |
+
+<h2 id="place-strategy-order">Place Strategy Order</h2>
+
+```http
+POST /v1/private/order/place-strategy
+Content-Type: application/json
+```
+
+**Request parameters:**
+
+| Parameter      | Type   | Required | Description             |
+| -------------- | ------ | -------- | ----------------------- |
+| `strategyType` | string | Yes      | `OTOCO` / `OTO` / `OCO` |
+| `subOrderList` | array  | Yes      | Sub-order list          |
+
+Fields in `subOrderList[]` are mostly the same as normal orders and condition orders, with additional dependency fields:
+
+| Parameter        | Type   | Description                                     |
+| ---------------- | ------ | ----------------------------------------------- |
+| `strategySubId`  | int64  | Sub-order ID                                    |
+| `firstDrivenId`  | int64  | First driving order ID. `0` means no dependency |
+| `firstDrivenOn`  | string | First trigger condition                         |
+| `firstTrigger`   | string | First trigger action                            |
+| `secondDrivenId` | int64  | Second driving order ID                         |
+| `secondDrivenOn` | string | Second trigger condition                        |
+| `secondTrigger`  | string | Second trigger action                           |
+
+**Response fields:**
+
+| Field            | Type   | Description     |
+| ---------------- | ------ | --------------- |
+| `strategyId`     | string | Strategy ID     |
+| `strategyStatus` | string | Strategy status |
+| `timestamp`      | int64  | Timestamp       |
+
+<h2 id="query-single-order">Query Single Order</h2>
+
+```http
+GET /v1/private/order?symbol=BTCUSDT&orderId=2022543809547603968
+```
+
+**Request parameters:**
+
+| Parameter       | Type   | Required | Description             |
+| --------------- | ------ | -------- | ----------------------- |
+| `symbol`        | string | Yes      | Symbol                  |
+| `orderId`       | string | No       | Server order ID         |
+| `clientOrderId` | string | No       | Client-defined order ID |
+
+At least one of `orderId` and `clientOrderId` must be provided. If both are provided, the server performs an exact match on both conditions.
+
+<h2 id="current-normal-orders">Current Normal Orders</h2>
+
+```http
+GET /v1/private/order/current?symbol=BTCUSDT
+```
+
+**Request parameters:**
+
+| Parameter     | Type   | Required | Description        |
+| ------------- | ------ | -------- | ------------------ |
+| `symbol`      | string | No       | Symbol             |
+| `limit`       | int32  | No       | Return count limit |
+| `lastOrderId` | int64  | No       | Cursor field       |
+
+**Response fields:**
+
+| Field    | Type  | Description               |
+| -------- | ----- | ------------------------- |
+| `list[]` | array | Current normal order list |
+| `total`  | int32 | Count                     |
+
+<h2 id="current-condition-orders">Current Condition Orders</h2>
+
+```http
+GET /v1/private/order/current-condition?symbol=BTCUSDT
+```
+
+**Request parameters:**
+
+| Parameter | Type   | Required | Description |
+| --------- | ------ | -------- | ----------- |
+| `symbol`  | string | No       | Symbol      |
+
+<h2 id="historical-normal-orders">Historical Normal Orders</h2>
+
+```http
+GET /v1/private/order/history?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+**Request parameters:**
+
+| Parameter       | Type   | Required | Description                              |
+| --------------- | ------ | -------- | ---------------------------------------- |
+| `symbol`        | string | No       | Symbol                                   |
+| `orderId`       | string | No       | Exact order ID filter                    |
+| `clientOrderId` | string | No       | Exact client order ID filter             |
+| `type`          | int32  | No       | Order type filter: `1` limit, `2` market |
+| `side`          | int32  | No       | Side filter: `1` buy, `2` sell           |
+| `status`        | int32  | No       | Status filter                            |
+| `startTime`     | int64  | No       | Start time                               |
+| `endTime`       | int64  | No       | End time                                 |
+| `page`          | int64  | No       | Page number, default `1`                 |
+| `pageSize`      | int64  | No       | Items per page, default `20`             |
+
+<h2 id="historical-condition-orders">Historical Condition Orders</h2>
+
+```http
+GET /v1/private/order/history-condition?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+**Request parameters:**
+
+| Parameter   | Type   | Required | Description                    |
+| ----------- | ------ | -------- | ------------------------------ |
+| `symbol`    | string | No       | Symbol                         |
+| `side`      | int32  | No       | Side filter: `1` buy, `2` sell |
+| `status`    | int32  | No       | Status filter                  |
+| `startTime` | int64  | No       | Start time                     |
+| `endTime`   | int64  | No       | End time                       |
+| `page`      | int64  | No       | Page number, default `1`       |
+| `pageSize`  | int64  | No       | Items per page, default `20`   |
+
+<h2 id="trade-records">Trade Records</h2>
+
+```http
+GET /v1/private/order/trades?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+**Request parameters:**
+
+| Parameter   | Type   | Required | Description                  |
+| ----------- | ------ | -------- | ---------------------------- |
+| `symbol`    | string | No       | Symbol                       |
+| `orderId`   | string | No       | Order ID filter              |
+| `startTime` | int64  | No       | Start time                   |
+| `endTime`   | int64  | No       | End time                     |
+| `page`      | int64  | No       | Page number, default `1`     |
+| `pageSize`  | int64  | No       | Items per page, default `20` |
+
+**Response fields:**
+
+| Field                 | Type   | Description       |
+| --------------------- | ------ | ----------------- |
+| `list[].fillId`       | string | Fill detail ID    |
+| `list[].tradeId`      | string | Trade record ID   |
+| `list[].orderId`      | string | Order ID          |
+| `list[].symbol`       | string | Symbol            |
+| `list[].side`         | string | Side              |
+| `list[].roleType`     | string | `maker` / `taker` |
+| `list[].price`        | string | Filled price      |
+| `list[].quantity`     | string | Filled quantity   |
+| `list[].tradeValue`   | string | Trade value       |
+| `list[].handlingFee`  | string | Handling fee      |
+| `list[].realizedPnl`  | string | Realized PnL      |
+| `list[].positionSide` | string | Position side     |
+| `list[].createdAt`    | int64  | Trade time        |
+| `total`               | int64  | Total count       |
+
+<h2 id="cancel-order">Cancel Order</h2>
+
+```http
+POST /v1/private/order/cancel
+Content-Type: application/json
+```
+
+**Request body:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "orderId": "2022543809547603968"
+}
+```
+
+`clientOrderId` can also be used to cancel an order.
+
+<h2 id="amend-order">Amend Order</h2>
+
+```http
+POST /v1/private/order/move
+Content-Type: application/json
+```
+
+**Request body:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "orderId": "2022543809547603968",
+  "price": "85100",
+  "quantity": "0.2"
+}
+```
+
+`quantity` is the final total order quantity after amendment, not the remaining quantity.
+
+<h2 id="batch-amend-orders">Batch Amend Orders</h2>
+
+```http
+POST /v1/private/order/batch-move
+Content-Type: application/json
+```
+
+**Request body:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "orders": [
+    {
+      "orderId": "2022543809547603968",
+      "price": "85100",
+      "quantity": "0.2"
+    }
+  ]
+}
+```
+
+<h2 id="batch-cancel-orders">Batch Cancel Orders</h2>
+
+```http
+POST /v1/private/order/batch-cancel
+Content-Type: application/json
+```
+
+**Request body:**
+
+```json
+{
+  "orders": [
+    {
+      "symbol": "BTCUSDT",
+      "orderId": "2022543809547603968"
+    }
+  ]
+}
+```
+
+<h2 id="cancel-all">Cancel All</h2>
+
+```http
+POST /v1/private/order/batch-cancel-all
+Content-Type: application/json
+```
+
+**Request parameters:**
+
+| Parameter    | Type   | Required | Description                                                                         |
+| ------------ | ------ | -------- | ----------------------------------------------------------------------------------- |
+| `symbol`     | string | No       | Symbol                                                                              |
+| `cancelType` | int32  | No       | `0` all normal orders, `1` limit orders only, `2` all condition orders. Default `0` |
+
+Cancel-all for normal orders is accepted asynchronously. Final status should be determined by WebSocket `ORDER_TRADE_UPDATE` or query endpoints.
+
+<h2 id="cancel-condition-order">Cancel Condition Order</h2>
+
+```http
+POST /v1/private/order/cancel-condition
+Content-Type: application/json
+```
+
+**Request body:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "conditionId": "2022543809547603968"
+}
+```
+
+<h2 id="strategy-order-detail">Strategy Order Detail</h2>
+
+```http
+GET /v1/private/order/strategy?strategyId=2022543809547603968
+```
+
+**Response fields:**
+
+| Field            | Type   | Description                          |
+| ---------------- | ------ | ------------------------------------ |
+| `strategyId`     | string | Strategy ID                          |
+| `strategyType`   | string | `OTOCO` / `OTO` / `OCO`              |
+| `strategyStatus` | string | `WORKING` / `ALL_DONE` / `CANCELLED` |
+| `bookTime`       | int64  | Creation time                        |
+| `subOrders[]`    | array  | Sub-order details                    |
+| `updateTime`     | int64  | Update time                          |

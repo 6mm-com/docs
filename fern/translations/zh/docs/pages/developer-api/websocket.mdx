@@ -1,0 +1,47 @@
+---
+title: "WebSocket"
+slug: developer-api/websocket
+---
+
+<h2 id="service-endpoint">服务地址</h2>
+
+```
+wss://6mm.com/ws
+```
+
+WebSocket 分为公共频道和私有频道：
+
+| 类型   | 鉴权                   | 说明                     |
+| ---- | -------------------- | ---------------------- |
+| 公共频道 | 不需要                  | 行情数据，如深度、成交、K 线、ticker |
+| 私有频道 | 需要 `listenKey` 或 JWT | 用户订单、账户、持仓相关推送         |
+
+<h2 id="public-channels">公共频道</h2>
+
+公共 WebSocket 不需要鉴权，连接后可发送 `subscribe` 请求订阅行情频道。
+
+常用频道：
+
+| 频道                                 | 说明                 |
+| ---------------------------------- | ------------------ |
+| `market.depth.{symbol}`            | 订单簿深度，订阅后先推快照，再推增量 |
+| `market.trade.{symbol}`            | 最新成交               |
+| `market.kline.{symbol}.{interval}` | K 线                |
+| `market.ticker.{symbol}`           | 单交易对行情摘要           |
+| `market.tickers`                   | 全交易对行情摘要           |
+
+<h2 id="private-channels">私有频道</h2>
+
+私有 WebSocket 需要先通过 REST 接口创建 `listenKey`，再连接：
+
+```
+wss://6mm.com/ws?listenKey=YOUR_LISTEN_KEY
+```
+
+兼容 JWT 连接方式：
+
+```
+wss://6mm.com/ws?token=YOUR_ACCESS_TOKEN
+```
+
+鉴权成功后，服务端会自动订阅当前用户私有频道，无需手动订阅。

@@ -1,0 +1,90 @@
+---
+title: "REST API"
+slug: developer-api/rest-api
+---
+
+<h2 id="public-endpoints">Public Endpoints</h2>
+
+| Endpoint                   | Method | Path                                        | Description                                                    |
+| -------------------------- | ------ | ------------------------------------------- | -------------------------------------------------------------- |
+| Service version            | GET    | `/v1/version`                               | Get service version information                                |
+| Server time                | GET    | `/v1/time`                                  | Get server time                                                |
+| User login                 | POST   | `/v1/public/user/login`                     | Use username and password to obtain `accessToken`              |
+| Refresh Token              | POST   | `/v1/public/user/refresh-token`             | Refresh login state via Cookie                                 |
+| Agent Ticket exchange      | POST   | `/v1/public/agent-sso/exchange-ticket`      | Exchange an agent entrance ticket for login state              |
+| Agent Embed Token exchange | POST   | `/v1/public/agent-sso/exchange-embed-token` | Exchange an embedded trading short-lived token for login state |
+| Symbol configuration       | GET    | `/v1/public/market/symbols`                 | Get symbols, trading rules, and fee tier configuration         |
+| Funding rate configuration | GET    | `/v1/public/market/funding-rate`            | Query funding rate configuration                               |
+| Current funding rate       | GET    | `/v1/public/market/funding-rate/current`    | Paginate current funding rates                                 |
+| Funding rate history       | GET    | `/v1/public/market/funding-rate/history`    | Query funding rate history                                     |
+| Klines                     | GET    | `/v1/public/market/klines`                  | Query trade price, index price, or mark price Klines           |
+| PnL leaderboard            | GET    | `/v1/public/leaderboard/pnl`                | Query 7 / 30 / 90 day PnL leaderboard                          |
+
+<h2 id="private-user-endpoints">Private User Endpoints</h2>
+
+Unless otherwise specified, the following endpoints can use JWT or API Key signing.
+
+| Endpoint                 | Method | Path                                      | Permission   | Description                                 |
+| ------------------------ | ------ | ----------------------------------------- | ------------ | ------------------------------------------- |
+| User info                | GET    | `/v1/private/user/info`                   | Read         | Query current user profile                  |
+| User assets              | GET    | `/v1/private/user/asset`                  | Read         | Query wallet balance and margin usage       |
+| Create listenKey         | POST   | `/v1/private/user/listen-key`             | Read         | Create private WebSocket authentication key |
+| Renew listenKey          | PUT    | `/v1/private/user/listen-key`             | Read         | Extend listenKey validity                   |
+| Close listenKey          | DELETE | `/v1/private/user/listen-key`             | Read         | Close listenKey                             |
+| Account change logs      | GET    | `/v1/private/user/account-change-log`     | Read         | Query fund movement records                 |
+| 30-day volume statistics | GET    | `/v1/private/user/volume-stats`           | Read         | Query recent 30-day trading volume and fees |
+| Balance history          | GET    | `/v1/private/user/balance-history`        | Read         | Query balance history                       |
+| Trade overview           | GET    | `/v1/private/user/trade-overview`         | Read         | Query PnL, volume, and asset trend          |
+| Asset overview summary   | GET    | `/v1/private/user/asset/overview/summary` | Read         | Query asset summary metrics                 |
+| Asset overview trend     | GET    | `/v1/private/user/asset/overview/trend`   | Read         | Query asset trend                           |
+| Save favorite symbols    | POST   | `/v1/private/user/favorite-symbols`       | Read         | Overwrite favorite symbols                  |
+| Get favorite symbols     | GET    | `/v1/private/user/favorite-symbols`       | Read         | Query favorite symbols                      |
+| Logout                   | POST   | `/v1/private/user/logout`                 | JWT + Cookie | Clear login state                           |
+
+<h2 id="api-key-management-endpoints">API Key Management Endpoints</h2>
+
+API Key management endpoints only accept JWT.
+
+| Endpoint            | Method | Path                                  | Description                                         |
+| ------------------- | ------ | ------------------------------------- | --------------------------------------------------- |
+| Create API Key      | POST   | `/v1/private/user/api-key/create`     | Create API Key; `apiSecret` is returned only once   |
+| API Key list        | GET    | `/v1/private/user/api-key/list`       | Query current user's API Keys                       |
+| Update API Key      | PUT    | `/v1/private/user/api-key/update`     | Update label, permissions, IP whitelist, and status |
+| Delete API Key      | POST   | `/v1/private/user/api-key/delete`     | Delete a specified API Key                          |
+| Delete all API Keys | POST   | `/v1/private/user/api-key/delete-all` | Delete all API Keys of the current user             |
+
+<h2 id="order-endpoints">Order Endpoints</h2>
+
+Order endpoints require trade permission.
+
+| Endpoint                    | Method | Path                                  | Description                                                       |
+| --------------------------- | ------ | ------------------------------------- | ----------------------------------------------------------------- |
+| Query single order          | GET    | `/v1/private/order`                   | Exact query by `symbol + orderId/clientOrderId`                   |
+| Place order                 | POST   | `/v1/private/order/place`             | Limit or market order                                             |
+| Place condition order       | POST   | `/v1/private/order/place-condition`   | Stop loss, take profit, trailing stop, and other condition orders |
+| Place strategy order        | POST   | `/v1/private/order/place-strategy`    | OTO / OCO / OTOCO strategy order                                  |
+| Batch place orders          | POST   | `/v1/private/order/batch-place`       | Submit multiple normal orders                                     |
+| Cancel order                | POST   | `/v1/private/order/cancel`            | Cancel a specified normal order                                   |
+| Amend order                 | POST   | `/v1/private/order/move`              | Modify normal pending order price and quantity                    |
+| Batch amend orders          | POST   | `/v1/private/order/batch-move`        | Batch modify normal pending orders for the same symbol            |
+| Batch cancel orders         | POST   | `/v1/private/order/batch-cancel`      | Batch cancel normal orders                                        |
+| Cancel all                  | POST   | `/v1/private/order/batch-cancel-all`  | Batch cancel orders by type                                       |
+| Cancel condition order      | POST   | `/v1/private/order/cancel-condition`  | Cancel a specified condition order                                |
+| Current normal orders       | GET    | `/v1/private/order/current`           | Query current normal pending orders                               |
+| Current condition orders    | GET    | `/v1/private/order/current-condition` | Query current untriggered condition orders                        |
+| Historical normal orders    | GET    | `/v1/private/order/history`           | Paginate historical normal orders                                 |
+| Historical condition orders | GET    | `/v1/private/order/history-condition` | Paginate historical condition orders                              |
+| Trade records               | GET    | `/v1/private/order/trades`            | Paginate trade records                                            |
+| Strategy order detail       | GET    | `/v1/private/order/strategy`          | Query strategy order and sub-orders                               |
+
+<h2 id="position-endpoints">Position Endpoints</h2>
+
+Position endpoints require trade permission.
+
+| Endpoint          | Method | Path                               | Description                                  |
+| ----------------- | ------ | ---------------------------------- | -------------------------------------------- |
+| Set margin mode   | POST   | `/v1/private/position/margin-mode` | Switch isolated / cross margin               |
+| Set leverage      | POST   | `/v1/private/position/leverage`    | Set symbol leverage                          |
+| Position settings | GET    | `/v1/private/position/settings`    | Query leverage and margin mode for a symbol  |
+| Current positions | GET    | `/v1/private/position/positions`   | Query current positions                      |
+| Position history  | GET    | `/v1/private/position/history`     | Query historical positions and close records |

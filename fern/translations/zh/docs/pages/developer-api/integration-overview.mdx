@@ -1,0 +1,41 @@
+---
+title: "接入概览"
+slug: developer-api/integration-overview
+---
+
+> 示例 REST 地址：`https://api.6mm.com`\
+> 示例 WebSocket 地址：`wss://6mm.com/ws`
+
+本文面向外部系统接入 6MM API 服务，覆盖登录、JWT 鉴权、API Key 管理、API Key HMAC 签名、账户查询、订单、仓位、行情和 WebSocket 推送。
+
+账号开通和资金准备由平台侧流程完成，本文只描述 6MM API 对外可调用接口。
+
+<h2 id="service-endpoints">服务地址</h2>
+
+| 类型        | 地址                    |
+| --------- | --------------------- |
+| REST API  | `https://api.6mm.com` |
+| WebSocket | `wss://6mm.com/ws`    |
+
+<h2 id="integration-flow">接入流程</h2>
+
+推荐接入顺序：
+
+1. 使用平台提供的账号登录，获取 `accessToken`。
+2. 如需服务端程序调用，先用 JWT 创建 API Key，并保存一次性返回的 `apiSecret`。
+3. 私有查询、订单、仓位等接口可使用 `Authorization: Bearer <accessToken>` 或 API Key 签名调用。
+4. 如需私有 WebSocket 推送，先创建 `listenKey`，再连接 `wss://6mm.com/ws?listenKey=...`。
+5. 行情类 REST 和公共 WebSocket 频道无需鉴权。
+
+<h2 id="authentication-choice">鉴权选择</h2>
+
+| 场景                       | 推荐方式              |
+| ------------------------ | ----------------- |
+| 前端用户操作                   | JWT               |
+| 服务端程序调用                  | API Key + HMAC 签名 |
+| API Key 创建、更新、删除         | JWT               |
+| 公开行情 REST / 公共 WebSocket | 无需鉴权              |
+
+<h2 id="documentation-scope">文档范围</h2>
+
+本文档覆盖登录、JWT 鉴权、API Key 管理、API Key HMAC 签名、账户查询、订单、仓位、行情和 WebSocket 推送。

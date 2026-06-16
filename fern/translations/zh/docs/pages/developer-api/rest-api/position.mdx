@@ -1,0 +1,128 @@
+---
+title: "仓位"
+slug: developer-api/rest-api/position
+---
+
+<h2 id="set-leverage">设置杠杆</h2>
+
+```http
+POST /v1/private/position/leverage
+Content-Type: application/json
+```
+
+请求体：
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "leverage": 20
+}
+```
+
+响应字段：
+
+| 字段          | 类型     | 说明   |
+| ----------- | ------ | ---- |
+| `symbol`    | string | 交易对  |
+| `leverage`  | int32  | 杠杆倍数 |
+| `timestamp` | int64  | 时间戳  |
+
+<h2 id="set-margin-mode">设置保证金模式</h2>
+
+```http
+POST /v1/private/position/margin-mode
+Content-Type: application/json
+```
+
+请求体：
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "marginMode": 1
+}
+```
+
+`marginMode`：`1` 全仓，`2` 逐仓。
+
+<h2 id="position-settings">持仓设置</h2>
+
+```http
+GET /v1/private/position/settings?symbol=BTCUSDT
+```
+
+响应字段：
+
+| 字段           | 类型     | 说明            |
+| ------------ | ------ | ------------- |
+| `symbol`     | string | 交易对           |
+| `marginMode` | int32  | `1` 全仓，`2` 逐仓 |
+| `leverage`   | int32  | 杠杆倍数          |
+
+<h2 id="current-positions">当前持仓</h2>
+
+```http
+GET /v1/private/position/positions?symbol=BTCUSDT
+```
+
+请求参数：
+
+| 参数       | 类型     | 必填 | 说明  |
+| -------- | ------ | -- | --- |
+| `symbol` | string | 否  | 交易对 |
+
+响应字段：
+
+| 字段                            | 类型     | 说明      |
+| ----------------------------- | ------ | ------- |
+| `positions[].symbol`          | string | 交易对     |
+| `positions[].marginMode`      | string | 保证金模式   |
+| `positions[].positionSide`    | string | 持仓方向    |
+| `positions[].leverage`        | int32  | 杠杆倍数    |
+| `positions[].quantity`        | string | 持仓数量    |
+| `positions[].entryPrice`      | string | 开仓均价    |
+| `positions[].breakEvenPrice`  | string | 盈亏平衡价   |
+| `positions[].liqPrice`        | string | 强平价格    |
+| `positions[].marginRatio`     | string | 保证金率    |
+| `positions[].unrealizedPnl`   | string | 未实现盈亏   |
+| `positions[].roe`             | string | 收益率     |
+| `positions[].nextFundingFee`  | string | 下次资金费预估 |
+| `positions[].fundingFeeAccum` | string | 累计资金费   |
+| `positions[].tpPrice`         | string | 止盈价     |
+| `positions[].slPrice`         | string | 止损价     |
+
+<h2 id="position-history">历史持仓</h2>
+
+```http
+GET /v1/private/position/history?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+请求参数：
+
+| 参数          | 类型     | 必填 | 说明               |
+| ----------- | ------ | -- | ---------------- |
+| `symbol`    | string | 否  | 交易对              |
+| `side`      | string | 否  | `long` / `short` |
+| `startTime` | int64  | 否  | 开始时间             |
+| `endTime`   | int64  | 否  | 结束时间             |
+| `page`      | int64  | 否  | 页码，默认 `1`        |
+| `pageSize`  | int64  | 否  | 每页数量，默认 `20`     |
+
+响应字段：
+
+| 字段                       | 类型     | 说明     |
+| ------------------------ | ------ | ------ |
+| `list[].symbol`          | string | 交易对    |
+| `list[].positionSide`    | string | 持仓方向   |
+| `list[].leverage`        | int32  | 杠杆倍数   |
+| `list[].maxQuantity`     | string | 最大持仓量  |
+| `list[].entryPrice`      | string | 开仓均价   |
+| `list[].closePrice`      | string | 平仓均价   |
+| `list[].pnl`             | string | 已实现盈亏  |
+| `list[].roe`             | string | 收益率    |
+| `list[].marginMode`      | string | 保证金模式  |
+| `list[].triggerMode`     | int32  | 平仓触发模式 |
+| `list[].fundingFeeAccum` | string | 累计资金费  |
+| `list[].openedAt`        | int64  | 开仓时间   |
+| `list[].closedAt`        | int64  | 平仓时间   |
+| `total`                  | int64  | 总数量    |

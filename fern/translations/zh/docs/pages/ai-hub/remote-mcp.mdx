@@ -1,0 +1,46 @@
+---
+title: "Remote MCP 部署"
+subtitle: "在用户或机构自管基础设施中部署 6MM MCP endpoint。"
+slug: ai-hub/remote-mcp
+---
+
+Remote MCP 面向希望在自有基础设施中运行长期在线 MCP endpoint 的用户或机构。
+
+与 Hosted MCP 不同，Remote MCP 不是 6MM 帮用户托管服务。6MM 提供代码、镜像、模板和文档，用户自己控制部署和凭证。
+
+<h2 id="architecture">架构</h2>
+
+```text
+AI 客户端
+  -> 用户自管 MCP HTTP endpoint
+  -> 6MM REST / WebSocket API
+```
+
+<h2 id="deployment-targets">部署目标</h2>
+
+- Docker 或 Docker Compose。
+- VPS 加反向代理。
+- Railway。
+- Render。
+- Fly.io。
+- AWS ECS 或 Lambda。
+- 内部 Kubernetes。
+
+<h2 id="required-files">必需文件</h2>
+
+- Dockerfile。
+- docker-compose.yml。
+- .env.template。
+- HTTP transport 模式。
+- /mcp endpoint。
+- /health endpoint。
+- 反向代理和 TLS 说明。
+
+<h2 id="credential-model">凭证模型</h2>
+
+凭证应存储在用户自管环境中，不应写入 AI 客户端 prompt。机构自管部署应限制允许访问的客户端和网络。
+
+<h2 id="recommended-first-release">第一阶段建议</h2>
+
+先支持公开市场数据。账户只读应在鉴权、key scope、日志和访问控制到位后再开放。真实交易应在受控交易要求满足前保持关闭。
+

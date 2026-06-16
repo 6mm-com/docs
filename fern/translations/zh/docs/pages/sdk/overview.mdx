@@ -1,0 +1,52 @@
+---
+title: "SDK 总览"
+subtitle: "为嵌入式交易、后端发 Token、账户联动、Webhook 和生产运维选择合适的 6MM SDK 接入路径。"
+slug: sdk/overview
+---
+
+<h2 id="choose-an-sdk-path">选择 SDK 路径</h2>
+
+<CardGroup cols={3}>
+<Card title="Trading Widget SDK" icon="duotone chart-line" href="/sdk/trading-widget/quick-start">
+  把 6MM 交易终端嵌入现有网站、钱包、经纪商门户或合作方产品页面。
+</Card>
+<Card title="Agent SDK" icon="duotone server" href="/sdk/agent-sdk/overview">
+  让 Partner 后端完成用户绑定、Embed Token、入口 URL、资金划转、订单查询和 Webhook。
+</Card>
+<Card title="安全与运维" icon="duotone shield-check" href="/sdk/security/secrets-signing">
+  准备密钥保存、请求签名、Webhook 幂等、监控和上线排查。
+</Card>
+</CardGroup>
+
+<h2 id="recommended-combination">推荐组合</h2>
+
+| 合作方目标 | 前端 | 后端 | 说明 |
+| --- | --- | --- | --- |
+| 增加内嵌交易终端 | Trading Widget SDK | Agent SDK | Widget 负责交易 UI，Partner 后端负责发 Token 并保管密钥。 |
+| 创建 App 原生入口 | 原生或 H5 入口 | Agent SDK | Partner 校验用户登录后打开 6MM 入口 URL。 |
+| 构建自定义交易流程 | Partner 自有 UI | Developer API + 部分 SDK 流程 | 账户、订单、仓位和行情走 API，运营控制保留在服务端。 |
+
+<h2 id="reference-architecture">参考架构</h2>
+
+```text
+Partner Web App
+  -> TradingWidget.create()
+  -> tokenProvider()
+  -> Partner Backend
+  -> 6MM Agent SDK
+  -> 6MM Agent API
+  -> 6MM Trading iframe
+```
+
+> **密钥只放后端**
+>
+> 浏览器端只请求 Partner 自己的后端接口。Agent API 的 apiSecret 不能下发到前端。
+
+<h2 id="production-checklist">上线检查</h2>
+
+- apiSecret 只保存在后端基础设施中。
+- Agent API 和 Webhook 都使用 HTTPS。
+- 持久化保存 agentUserId、platformUserId、agentOrderNo 映射。
+- 金额使用十进制字符串，不使用浮点数。
+- PROCESSING 表示待确认，不是成功也不是失败。
+- Webhook 可能重复推送，必须做幂等。

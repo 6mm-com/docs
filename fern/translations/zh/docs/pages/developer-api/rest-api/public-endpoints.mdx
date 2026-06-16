@@ -1,0 +1,151 @@
+---
+title: "公开接口"
+slug: developer-api/rest-api/public-endpoints
+---
+
+<h2 id="base-url">基础地址</h2>
+
+```
+https://api.6mm.com
+```
+
+<h2 id="service-version">服务版本</h2>
+
+```http
+GET /v1/version
+```
+
+获取服务版本信息。
+
+<h2 id="server-time">服务时间</h2>
+
+```http
+GET /v1/time
+```
+
+获取服务端时间。该接口可用于 API Key 签名前的客户端时间校准。
+
+<h2 id="user-login">用户登录</h2>
+
+```http
+POST /v1/public/user/login
+```
+
+请求参数：
+
+| 参数           | 类型     | 必填 | 说明              |
+| ------------ | ------ | -- | --------------- |
+| `username`   | string | 是  | 用户名，长度 3 - 32 位 |
+| `password`   | string | 是  | 密码，长度 1 - 64 位  |
+| `deviceId`   | string | 否  | 设备指纹，最多 64 位    |
+| `deviceName` | string | 否  | 设备名称，最多 128 位   |
+
+请求示例：
+
+```bash
+curl -X POST https://api.6mm.com/v1/public/user/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "alice",
+    "password": "yourPassword",
+    "deviceId": "device-001",
+    "deviceName": "server-001"
+  }'
+```
+
+响应示例：
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "accessToken": "YOUR_ACCESS_TOKEN",
+    "accessExpire": 1769676656
+  },
+  "requestId": "req-login"
+}
+```
+
+<h2 id="refresh-token">刷新 Token</h2>
+
+```http
+POST /v1/public/user/refresh-token
+```
+
+普通接入场景下通过 Cookie 刷新登录态，请保留登录响应返回的 Cookie。
+
+响应字段：
+
+| 字段             | 类型     | 说明            |
+| -------------- | ------ | ------------- |
+| `accessToken`  | string | 新的访问 Token    |
+| `accessExpire` | int64  | 访问 Token 过期时间 |
+
+<h2 id="agent-sso">代理商 SSO</h2>
+
+<h2 id="ticket-exchange">Ticket 换 Token</h2>
+
+```http
+POST /v1/public/agent-sso/exchange-ticket
+```
+
+请求参数：
+
+| 参数         | 类型     | 必填 | 说明                 |
+| ---------- | ------ | -- | ------------------ |
+| `ticket`   | string | 是  | 代理商服务签发的一次性 ticket |
+| `deviceId` | string | 否  | 设备指纹，最多 64 位       |
+
+响应字段：
+
+| 字段             | 类型     | 说明            |
+| -------------- | ------ | ------------- |
+| `accessToken`  | string | 访问 Token      |
+| `accessExpire` | int64  | 访问 Token 过期时间 |
+| `redirectPath` | string | 建议跳转路径        |
+
+<h2 id="embed-token-exchange">Embed Token 换 Token</h2>
+
+```http
+POST /v1/public/agent-sso/exchange-embed-token
+```
+
+请求参数：
+
+| 参数           | 类型     | 必填 | 说明                       |
+| ------------ | ------ | -- | ------------------------ |
+| `embedToken` | string | 是  | 代理商服务签发的内嵌交易短期 token     |
+| `channelId`  | string | 是  | 内嵌 iframe 通道 ID，最多 128 位 |
+| `deviceId`   | string | 否  | 设备指纹，最多 64 位             |
+
+响应字段：
+
+| 字段             | 类型     | 说明            |
+| -------------- | ------ | ------------- |
+| `accessToken`  | string | 访问 Token      |
+| `accessExpire` | int64  | 访问 Token 过期时间 |
+
+<h2 id="pnl-leaderboard">盈利排行榜</h2>
+
+```http
+GET /v1/public/leaderboard/pnl?period=30d
+```
+
+请求参数：
+
+| 参数       | 类型     | 必填 | 说明                   |
+| -------- | ------ | -- | -------------------- |
+| `period` | string | 是  | `7d` / `30d` / `90d` |
+
+响应字段：
+
+| 字段                 | 类型     | 说明                    |
+| ------------------ | ------ | --------------------- |
+| `list[].rank`      | int32  | 排名                    |
+| `list[].userId`    | string | 对外用户 ID               |
+| `list[].trader`    | string | 脱敏交易者名称               |
+| `list[].volume`    | string | 窗口内成交量                |
+| `list[].pnlAmount` | string | 窗口内已实现盈亏              |
+| `list[].pnlPct`    | string | 盈亏比例，`0` - `1` 小数     |
+| `myRank`           | int32  | 当前用户排名；未登录或未上榜时返回 `0` |

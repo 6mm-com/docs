@@ -1,0 +1,90 @@
+---
+title: "REST API"
+slug: developer-api/rest-api
+---
+
+<h2 id="public-endpoints">公开接口</h2>
+
+| 接口                      | 方法   | 路径                                          | 说明                     |
+| ----------------------- | ---- | ------------------------------------------- | ---------------------- |
+| 服务版本                    | GET  | `/v1/version`                               | 获取服务版本信息               |
+| 服务时间                    | GET  | `/v1/time`                                  | 获取服务端时间                |
+| 用户登录                    | POST | `/v1/public/user/login`                     | 使用账号密码获取 `accessToken` |
+| 刷新 Token                | POST | `/v1/public/user/refresh-token`             | 使用 Cookie 刷新登录态        |
+| 代理商 Ticket 换 Token      | POST | `/v1/public/agent-sso/exchange-ticket`      | 使用代理商入口 ticket 换取登录态   |
+| 代理商 Embed Token 换 Token | POST | `/v1/public/agent-sso/exchange-embed-token` | 使用内嵌交易短期 token 换取登录态   |
+| 交易对配置                   | GET  | `/v1/public/market/symbols`                 | 获取交易对、交易规则、手续费等级       |
+| 资金费率配置                  | GET  | `/v1/public/market/funding-rate`            | 查询资金费率配置               |
+| 当前资金费率                  | GET  | `/v1/public/market/funding-rate/current`    | 分页查询当前资金费率             |
+| 资金费率历史                  | GET  | `/v1/public/market/funding-rate/history`    | 查询历史资金费率               |
+| K 线数据                   | GET  | `/v1/public/market/klines`                  | 查询成交价、指数价或标记价 K 线      |
+| 盈利排行榜                   | GET  | `/v1/public/leaderboard/pnl`                | 查询 7 / 30 / 90 天盈利榜    |
+
+<h2 id="private-user-endpoints">私有用户接口</h2>
+
+除特别说明外，下列接口可使用 JWT 或 API Key 签名。
+
+| 接口           | 方法     | 路径                                        | 权限           | 说明                    |
+| ------------ | ------ | ----------------------------------------- | ------------ | --------------------- |
+| 用户信息         | GET    | `/v1/private/user/info`                   | 读取           | 查询当前用户资料              |
+| 用户资产         | GET    | `/v1/private/user/asset`                  | 读取           | 查询钱包余额和保证金占用          |
+| 创建 listenKey | POST   | `/v1/private/user/listen-key`             | 读取           | 创建私有 WebSocket 鉴权 key |
+| 续期 listenKey | PUT    | `/v1/private/user/listen-key`             | 读取           | 延长 listenKey 有效期      |
+| 关闭 listenKey | DELETE | `/v1/private/user/listen-key`             | 读取           | 关闭 listenKey          |
+| 资金流水         | GET    | `/v1/private/user/account-change-log`     | 读取           | 查询资金变动记录              |
+| 30 天交易量统计    | GET    | `/v1/private/user/volume-stats`           | 读取           | 查询近 30 天成交额和手续费       |
+| 余额历史         | GET    | `/v1/private/user/balance-history`        | 读取           | 查询余额历史                |
+| 交易概览         | GET    | `/v1/private/user/trade-overview`         | 读取           | 查询盈亏、成交量和资产趋势         |
+| 资产概览汇总       | GET    | `/v1/private/user/asset/overview/summary` | 读取           | 查询资产汇总指标              |
+| 资产概览趋势       | GET    | `/v1/private/user/asset/overview/trend`   | 读取           | 查询资产趋势                |
+| 保存收藏交易对      | POST   | `/v1/private/user/favorite-symbols`       | 读取           | 覆盖保存收藏交易对             |
+| 获取收藏交易对      | GET    | `/v1/private/user/favorite-symbols`       | 读取           | 查询收藏交易对               |
+| 登出           | POST   | `/v1/private/user/logout`                 | JWT + Cookie | 清理登录态                 |
+
+<h2 id="api-key-management-endpoints">API Key 管理接口</h2>
+
+API Key 管理接口只接受 JWT。
+
+| 接口           | 方法   | 路径                                    | 说明                           |
+| ------------ | ---- | ------------------------------------- | ---------------------------- |
+| 创建 API Key   | POST | `/v1/private/user/api-key/create`     | 创建 API Key，`apiSecret` 仅返回一次 |
+| API Key 列表   | GET  | `/v1/private/user/api-key/list`       | 查询当前用户 API Key               |
+| 更新 API Key   | PUT  | `/v1/private/user/api-key/update`     | 更新标签、权限、IP 白名单、状态            |
+| 删除 API Key   | POST | `/v1/private/user/api-key/delete`     | 删除指定 API Key                 |
+| 删除全部 API Key | POST | `/v1/private/user/api-key/delete-all` | 删除当前用户全部 API Key             |
+
+<h2 id="order-endpoints">订单接口</h2>
+
+订单接口需要交易权限。
+
+| 接口     | 方法   | 路径                                    | 说明                                      |
+| ------ | ---- | ------------------------------------- | --------------------------------------- |
+| 查询单个订单 | GET  | `/v1/private/order`                   | 按 `symbol + orderId/clientOrderId` 精确查询 |
+| 普通下单   | POST | `/v1/private/order/place`             | 限价单或市价单                                 |
+| 条件单下单  | POST | `/v1/private/order/place-condition`   | 止盈止损、跟踪止损等条件单                           |
+| 策略单下单  | POST | `/v1/private/order/place-strategy`    | OTO / OCO / OTOCO 策略订单                  |
+| 批量下单   | POST | `/v1/private/order/batch-place`       | 批量提交普通订单                                |
+| 撤单     | POST | `/v1/private/order/cancel`            | 撤销指定普通订单                                |
+| 改单     | POST | `/v1/private/order/move`              | 修改普通挂单价格和数量                             |
+| 批量改单   | POST | `/v1/private/order/batch-move`        | 批量修改同一交易对普通挂单                           |
+| 批量撤单   | POST | `/v1/private/order/batch-cancel`      | 批量撤销普通订单                                |
+| 全撤     | POST | `/v1/private/order/batch-cancel-all`  | 按类型批量撤销订单                               |
+| 条件单撤单  | POST | `/v1/private/order/cancel-condition`  | 撤销指定条件单                                 |
+| 当前普通委托 | GET  | `/v1/private/order/current`           | 查询当前普通挂单                                |
+| 当前条件单  | GET  | `/v1/private/order/current-condition` | 查询当前未触发条件单                              |
+| 历史普通订单 | GET  | `/v1/private/order/history`           | 分页查询历史普通订单                              |
+| 历史条件单  | GET  | `/v1/private/order/history-condition` | 分页查询历史条件单                               |
+| 成交记录   | GET  | `/v1/private/order/trades`            | 分页查询成交记录                                |
+| 策略订单详情 | GET  | `/v1/private/order/strategy`          | 查询策略订单和子订单                              |
+
+<h2 id="position-endpoints">仓位接口</h2>
+
+仓位接口需要交易权限。
+
+| 接口      | 方法   | 路径                                 | 说明              |
+| ------- | ---- | ---------------------------------- | --------------- |
+| 设置保证金模式 | POST | `/v1/private/position/margin-mode` | 切换逐仓 / 全仓       |
+| 设置杠杆倍数  | POST | `/v1/private/position/leverage`    | 设置交易对杠杆         |
+| 持仓设置    | GET  | `/v1/private/position/settings`    | 查询指定交易对杠杆和保证金模式 |
+| 当前持仓    | GET  | `/v1/private/position/positions`   | 查询当前持仓          |
+| 历史持仓    | GET  | `/v1/private/position/history`     | 查询历史持仓和平仓记录     |

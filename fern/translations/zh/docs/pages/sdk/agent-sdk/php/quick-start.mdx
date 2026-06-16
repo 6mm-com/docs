@@ -1,0 +1,68 @@
+---
+title: "PHP 快速开始"
+subtitle: "在后端服务中安装并初始化 PHP SDK。"
+slug: sdk/agent-sdk/php/quick-start
+---
+
+<h2 id="install">安装</h2>
+
+```json
+{
+  "require": {
+    "sixmm/agent-sdk": "VERSION_PROVIDED_BY_6MM"
+  }
+}
+```
+
+> **包访问说明**
+>
+> 6MM 会在合作方接入阶段提供确认后的 Composer 包名、包源和版本。
+
+<h2 id="before-you-start">开始前准备</h2>
+
+- 向 6MM 确认 Agent API base URL。
+- 从环境变量或密钥管理系统加载 apiSecret。
+- SDK 只能在后端服务中使用。
+- 为划转和 Webhook 流程准备幂等处理。
+
+<h2 id="initialize-client">初始化客户端</h2>
+
+```php
+<?php
+
+use Sixmm\Agent\AgentClient;
+use Sixmm\Agent\AgentConfig;
+
+$client = new AgentClient(new AgentConfig(
+    'https://api.6mm.com/agent',
+    'AGENT001',
+    getenv('AGENT_API_SECRET') ?: '',
+    'USDT'
+));
+```
+
+> **仅后端使用**
+>
+> PHP SDK 会签名 Agent API 请求，不应暴露在公开源码、浏览器或前端运行环境中。
+
+<h2 id="example-transfer-funds-in">资金划入示例</h2>
+
+```php
+$response = $client->transfer([
+    'agentOrderNo' => 'AGT-ORDER-1001',
+    'agentUserId' => 'agent-user-001',
+    'direction' => 'IN',
+    'currency' => 'USDT',
+    'amount' => '10.00',
+]);
+```
+
+金额使用十进制字符串。重试或查询划转状态时，应保留原始 agentOrderNo。
+
+<h2 id="next-steps">下一步</h2>
+
+| 需求 | 下一页 |
+| --- | --- |
+| 了解 Agent SDK 能力 | Agent SDK 概览 |
+| 查看签名行为 | 密钥与签名 |
+| 验证回调投递 | Webhook 与幂等 |

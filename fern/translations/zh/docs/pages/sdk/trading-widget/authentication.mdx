@@ -1,0 +1,87 @@
+---
+title: "鉴权"
+subtitle: "新接入建议使用 partner-token 模式。"
+slug: sdk/trading-widget/authentication
+---
+
+<h2 id="recommended-mode-partner-token">推荐模式：partner-token</h2>
+
+partner-token 不会把短 token 放到 URL，也不会让 Partner 前端持有 apiSecret。
+
+```js
+const widget = TradingWidget.create('#trading-widget', {
+  baseUrl: 'https://app.6mm.com',
+  auth: {
+    mode: 'partner-token',
+    tokenProvider: async ({ channelId, symbol, reason }) => {
+      const resp = await fetch('/api/trading/embed-token', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ channelId, symbol, reason }),
+      })
+
+      if (!resp.ok) {
+        throw new Error('Failed to request embed token')
+      }
+
+      return resp.json()
+    },
+  },
+})
+```
+
+<h2 id="backend-flow">后端流程</h2>
+
+```text
+1. iframe 向父页面发送 auth_request
+2. SDK 调用 tokenProvider
+3. Partner 前端请求 Partner 后端
+4. Partner 后端校验自己的用户登录态
+5. Partner 后端调用 6MM Agent API 或 Java SDK createEmbedToken
+6. SDK 通过 postMessage 把 embedToken 发给 iframe
+7. iframe 用 embedToken 换取 6MM access token
+8. iframe 继续初始化并触发 ready
+```
+
+<h2 id="tokenprovider-contract">tokenProvider 约定</h2>
+
+| 字段 | 方向 | 说明 |
+| --- | --- | --- |
+| channelId | SDK -> Partner 后端 | 唯一 Widget 会话标识。后端创建 embedToken 时应传入该值。 |
+| symbol | SDK -> Partner 后端 | 当前请求的交易对，可用于限制 token 范围。 |
+| reason | SDK -> Partner 后端 | SDK 请求 token 的原因，例如初始化或刷新。 |
+| embedToken | Partner 后端 -> SDK | 由 Agent SDK 或 Agent API 创建的短期 token。 |
+| expireAt | Partner 后端 -> SDK | 6MM 返回的 token 过期时间。 |
+
+<h2 id="failure-handling">失败处理</h2>
+
+| 情况 | 建议处理 |
+| --- | --- |
+| Partner 登录态过期 | Partner 接口返回 401，并要求用户重新登录。 |
+| Token 创建临时失败 | tokenProvider 抛出错误，让 Widget 展示鉴权错误。 |
+| channelId 不匹配 | 拒绝请求并重新创建 Widget 实例。 |
+| 用户不允许交易 | 返回 Partner 可控错误，不创建 embedToken。 |
+
+<h2 id="compatibility-mode-agent-sso">兼容模式：agent-sso</h2>
+
+agent-sso 保留旧的 /agent-entry ticket 流程。新接入建议优先使用 partner-token。
+
+```js
+const widget = TradingWidget.create('#trading-widget', {
+  baseUrl: 'https://app.6mm.com',
+  auth: {
+    mode: 'agent-sso',
+    entryUrlProvider: async ({ redirectPath }) => {
+      const resp = await fetch('/api/trading-entry', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ redirectPath }),
+      })
+      const data = await resp.json()
+      return data.webUrl
+    },
+  },
+})
+```

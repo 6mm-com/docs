@@ -1,0 +1,39 @@
+---
+title: "Public Market Channels"
+slug: developer-api/websocket/public-market-channels
+---
+
+<h2 id="connection-url">Connection URL</h2>
+
+```
+wss://6mm.com/ws
+```
+
+Public WebSocket does not require authentication.
+
+<h2 id="common-channels">Common Channels</h2>
+
+| Channel                            | Description                                                        |
+| ---------------------------------- | ------------------------------------------------------------------ |
+| `market.depth.{symbol}`            | Order book depth. Sends a snapshot first, then incremental updates |
+| `market.trade.{symbol}`            | Latest trades                                                      |
+| `market.kline.{symbol}.{interval}` | Klines                                                             |
+| `market.ticker.{symbol}`           | Single-symbol ticker summary                                       |
+| `market.tickers`                   | All-symbol ticker summary                                          |
+
+<h2 id="subscription-example">Subscription Example</h2>
+
+```json
+{ "id": "1772007814666", "op": "subscribe", "args": ["market.depth.BTCUSDT"] }
+```
+
+<h2 id="push-message-wrapper">Push Message Wrapper</h2>
+
+```json
+{
+  "topic": "market.depth.BTCUSDT",
+  "event": "data",
+  "ts": 1772007815000,
+  "data": {}
+}
+```

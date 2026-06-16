@@ -1,0 +1,62 @@
+---
+title: "Java 快速开始"
+subtitle: "在后端服务中安装并初始化 Java SDK。"
+slug: sdk/agent-sdk/java/quick-start
+---
+
+<h2 id="install">安装</h2>
+
+```xml
+<dependency>
+    <groupId>com.sixmm.agent</groupId>
+    <artifactId>sixmm-agent-sdk</artifactId>
+    <version>VERSION_PROVIDED_BY_6MM</version>
+</dependency>
+```
+
+> **包访问说明**
+>
+> 6MM 会在合作方接入阶段提供确认后的包坐标、版本和包源配置。
+
+<h2 id="before-you-start">开始前准备</h2>
+
+- 向 6MM 确认生产 Agent API base URL。
+- apiSecret 只保存在后端密钥管理中。
+- 准备 platformUserId 与 agentUserId 的稳定映射。
+- 为 bind、transfer、order 和 webhook 流程开启结构化日志。
+
+<h2 id="initialize-client">初始化客户端</h2>
+
+```java
+AgentClient client = new AgentClient(AgentClientConfig.builder()
+        .baseUrl("https://api.6mm.com/agent")
+        .agentCode("AGENT001")
+        .apiSecret("your-api-secret")
+        .defaultCurrency("USDT")
+        .build());
+```
+
+> **仅后端使用**
+>
+> 不要在浏览器、移动端或桌面客户端中初始化 Agent SDK。Agent SDK 会签名高权限 Agent API 请求。
+
+<h2 id="example-transfer-funds-in">资金划入示例</h2>
+
+```java
+TransferResponse resp = client.transfer(TransferRequest.fixed(
+        "AGT-ORDER-1001",
+        "agent-user-001",
+        Direction.IN,
+        "USDT",
+        "10.00"));
+```
+
+每次划转请求都应使用唯一的合作方订单号。如果请求超时，请先查询原订单状态，再决定是否重试。
+
+<h2 id="next-steps">下一步</h2>
+
+| 需求 | 下一页 |
+| --- | --- |
+| 签发 Trading Widget 凭据 | 创建 Embed Token |
+| 验证 6MM 回调 | Webhook 与幂等 |
+| 查看签名行为 | 密钥与签名 |

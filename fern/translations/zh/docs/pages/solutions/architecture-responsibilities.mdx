@@ -1,0 +1,39 @@
+---
+title: "架构与职责边界"
+subtitle: "明确嵌入式交易部署中合作方系统负责什么，6MM 基础设施提供什么。"
+slug: solutions/architecture-responsibilities
+---
+
+清晰的职责边界，是嵌入式交易稳定上线的前提。合作方系统应保留用户与业务所有权，6MM 提供交易基础设施和交易生命周期能力。
+
+<h2 id="responsibility-model">职责模型</h2>
+
+| 领域 | 合作方系统 | 6MM 基础设施 |
+| --- | --- | --- |
+| 用户关系 | 负责用户账户、登录态、客服身份和准入校验。 | 接收已校验的交易入口上下文，并维护交易侧状态。 |
+| 密钥与签名 | 在后端保存 Partner API Key，并完成服务端签名。 | 校验签名请求并处理授权动作。 |
+| 交易体验 | 提供入口、导航和业务上下文。 | 提供交易 UI、订单生命周期、行情、仓位、风控和结算能力。 |
+| 运营流程 | 处理客服、业务分析和内部升级流程。 | 输出事件、Webhook 和状态信息，供合作方系统集成。 |
+
+<h2 id="production-principles">生产原则</h2>
+
+- 所有 Partner 密钥都保存在后端。
+- 将 embedToken 视为短期入口凭证。
+- Webhook 必须幂等处理并保存事件 ID。
+- 对 token 签发、划转流程和订单状态变化做好监控。
+- 入口页、交易页和客服页的用户说明保持一致。
+
+<h2 id="related-docs">相关文档</h2>
+
+<CardGroup cols={3}>
+<Card title="鉴权方式" icon="fa-duotone fa-user-shield" href="/zh/developer-api/authentication">
+查看后端鉴权要求。
+</Card>
+<Card title="请求签名" icon="fa-duotone fa-signature" href="/zh/developer-api/request-signing">
+了解 API 签名调用。
+</Card>
+<Card title="Webhook 安全" icon="fa-duotone fa-webhook" href="/zh/sdk/security/webhooks-idempotency">
+安全处理事件投递。
+</Card>
+</CardGroup>
+

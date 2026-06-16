@@ -1,0 +1,119 @@
+---
+title: "API Key Management"
+slug: developer-api/api-key-management
+---
+
+API Key management endpoints only accept JWT authentication.
+
+<h2 id="create-api-key">Create API Key</h2>
+
+```http
+POST /v1/private/user/api-key/create
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+Request parameters:
+
+| Parameter     | Type      | Required | Description                                                           |
+| ------------- | --------- | -------- | --------------------------------------------------------------------- |
+| `label`       | string    | Yes      | API Key label, length 1 - 64                                          |
+| `permissions` | int       | No       | Permission bitmask, default `1`, range `1` - `7`                      |
+| `ipWhitelist` | string\[] | No       | IP whitelist, up to 20 entries. If omitted, source IP is unrestricted |
+
+Request example:
+
+```bash
+curl -X POST https://api.6mm.com/v1/private/user/api-key/create \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -d '{
+    "label": "external-service-prod",
+    "permissions": 3,
+    "ipWhitelist": ["203.0.113.10"]
+  }'
+```
+
+Response example:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "apiKey": "fx_xxxxxxxxxxxxxxxxxxxxxxxx",
+    "apiSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  },
+  "requestId": "req-api-key"
+}
+```
+
+`apiSecret` is returned only once when the API Key is created. Store it immediately in a secret management system. Do not write it into source code repositories or logs.
+
+Each user can create up to 30 API Keys.
+
+<h2 id="list-api-keys">List API Keys</h2>
+
+```http
+GET /v1/private/user/api-key/list
+Authorization: Bearer YOUR_ACCESS_TOKEN
+```
+
+Response fields:
+
+| Field                | Type      | Description                       |
+| -------------------- | --------- | --------------------------------- |
+| `list[].id`          | string    | API Key ID                        |
+| `list[].label`       | string    | Label                             |
+| `list[].apiKey`      | string    | Public API Key identifier         |
+| `list[].permissions` | int       | Permission bitmask                |
+| `list[].ipWhitelist` | string\[] | IP whitelist                      |
+| `list[].status`      | int       | Status: `1` enabled, `0` disabled |
+| `list[].lastUsedAt`  | int64     | Last used time                    |
+| `list[].createdAt`   | int64     | Creation time                     |
+
+<h2 id="update-api-key">Update API Key</h2>
+
+```http
+PUT /v1/private/user/api-key/update
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+Request parameters:
+
+| Parameter     | Type      | Required | Description               |
+| ------------- | --------- | -------- | ------------------------- |
+| `id`          | string    | Yes      | API Key ID                |
+| `label`       | string    | No       | New label                 |
+| `permissions` | int       | No       | New permission bitmask    |
+| `ipWhitelist` | string\[] | No       | New IP whitelist          |
+| `status`      | int       | No       | `1` enabled, `0` disabled |
+
+<h2 id="delete-api-key">Delete API Key</h2>
+
+```http
+POST /v1/private/user/api-key/delete
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+Request body:
+
+```json
+{ "id": "1001" }
+```
+
+<h2 id="delete-all-api-keys">Delete All API Keys</h2>
+
+```http
+POST /v1/private/user/api-key/delete-all
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+Response fields:
+
+| Field     | Type  | Description                |
+| --------- | ----- | -------------------------- |
+| `deleted` | int64 | Number of deleted API Keys |

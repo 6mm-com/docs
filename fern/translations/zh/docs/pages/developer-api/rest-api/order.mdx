@@ -1,0 +1,407 @@
+---
+title: "订单"
+slug: developer-api/rest-api/order
+---
+
+<h2 id="place-order">普通下单</h2>
+
+```http
+POST /v1/private/order/place
+Content-Type: application/json
+```
+
+请求参数：
+
+| 参数              | 类型     | 必填   | 说明                                                        |
+| --------------- | ------ | ---- | --------------------------------------------------------- |
+| `symbol`        | string | 是    | 交易对                                                       |
+| `type`          | string | 是    | `LIMIT` / `MARKET`                                        |
+| `side`          | string | 是    | `BUY` / `SELL`                                            |
+| `positionSide`  | string | 否    | `BOTH` / `LONG` / `SHORT`，默认 `BOTH`                       |
+| `price`         | string | 条件必填 | 限价单必填                                                     |
+| `quantity`      | string | 条件必填 | 数量；`closePosition=true` 时可省                               |
+| `timeInForce`   | string | 否    | `GTC` / `IOC` / `FOK`，默认 `GTC`                            |
+| `reduceOnly`    | bool   | 否    | 是否只减仓，默认 `false`                                          |
+| `makerOnly`     | bool   | 否    | 是否只做 Maker，默认 `false`                                     |
+| `closePosition` | bool   | 否    | 是否平掉整个仓位，默认 `false`                                       |
+| `clientOrderId` | string | 否    | 客户端自定义订单 ID                                               |
+| `placeType`     | string | 否    | 下单类型标识                                                    |
+| `priceType`     | int32  | 否    | BBO 价格类型：`0` 指定价格，`1` 对手价 1，`2` 对手价 5，`3` 同向价 1，`4` 同向价 5 |
+
+请求示例：
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "type": "LIMIT",
+  "side": "BUY",
+  "price": "85000",
+  "quantity": "0.1",
+  "timeInForce": "GTC",
+  "makerOnly": true,
+  "clientOrderId": "ext-1772710377808-001"
+}
+```
+
+响应字段：
+
+| 字段              | 类型     | 说明          |
+| --------------- | ------ | ----------- |
+| `orderId`       | string | 服务端订单 ID    |
+| `clientOrderId` | string | 客户端自定义订单 ID |
+| `status`        | string | 订单状态        |
+| `timestamp`     | int64  | 时间戳         |
+
+<h2 id="batch-place-orders">批量下单</h2>
+
+```http
+POST /v1/private/order/batch-place
+Content-Type: application/json
+```
+
+请求体：
+
+```json
+{
+  "orders": [
+    {
+      "symbol": "BTCUSDT",
+      "type": "LIMIT",
+      "side": "BUY",
+      "price": "85000",
+      "quantity": "0.1",
+      "clientOrderId": "ext-buy-001"
+    }
+  ]
+}
+```
+
+响应字段：
+
+| 字段             | 类型    | 说明     |
+| -------------- | ----- | ------ |
+| `successCount` | int32 | 成功数量   |
+| `failedCount`  | int32 | 失败数量   |
+| `results[]`    | array | 每条订单结果 |
+
+<h2 id="place-condition-order">条件单下单</h2>
+
+```http
+POST /v1/private/order/place-condition
+Content-Type: application/json
+```
+
+请求参数：
+
+| 参数              | 类型     | 必填   | 说明                                                                                          |
+| --------------- | ------ | ---- | ------------------------------------------------------------------------------------------- |
+| `symbol`        | string | 是    | 交易对                                                                                         |
+| `type`          | string | 是    | `STOP_MARKET` / `TAKE_PROFIT_MARKET` / `STOP_LIMIT` / `TAKE_PROFIT_LIMIT` / `TRAILING_STOP` |
+| `side`          | string | 是    | `BUY` / `SELL`                                                                              |
+| `positionSide`  | string | 否    | `BOTH` / `LONG` / `SHORT`                                                                   |
+| `price`         | string | 条件必填 | `STOP_LIMIT` / `TAKE_PROFIT_LIMIT` 必填                                                       |
+| `quantity`      | string | 条件必填 | 数量；`closePosition=true` 时可省                                                                 |
+| `timeInForce`   | string | 否    | `GTC` / `IOC` / `FOK` / `GTE_GTC`                                                           |
+| `reduceOnly`    | bool   | 否    | 是否只减仓                                                                                       |
+| `clientOrderId` | string | 否    | 客户端自定义订单 ID                                                                                 |
+| `stopPrice`     | string | 条件必填 | 触发价格                                                                                        |
+| `workingType`   | string | 否    | `MARK_PRICE` / `CONTRACT_PRICE`，默认 `CONTRACT_PRICE`                                         |
+| `priceProtect`  | bool   | 否    | 是否开启价格保护                                                                                    |
+| `activatePrice` | string | 条件必填 | 跟踪委托激活价格                                                                                    |
+| `callbackRate`  | string | 条件必填 | 跟踪委托回调比率                                                                                    |
+| `closePosition` | bool   | 否    | 是否平掉整个仓位                                                                                    |
+
+响应字段：
+
+| 字段                | 类型     | 说明     |
+| ----------------- | ------ | ------ |
+| `conditionId`     | string | 条件单 ID |
+| `conditionStatus` | string | 条件单状态  |
+| `timestamp`       | int64  | 时间戳    |
+
+<h2 id="place-strategy-order">策略单下单</h2>
+
+```http
+POST /v1/private/order/place-strategy
+Content-Type: application/json
+```
+
+请求参数：
+
+| 参数             | 类型     | 必填 | 说明                      |
+| -------------- | ------ | -- | ----------------------- |
+| `strategyType` | string | 是  | `OTOCO` / `OTO` / `OCO` |
+| `subOrderList` | array  | 是  | 子订单列表                   |
+
+`subOrderList[]` 中的订单字段与普通单、条件单字段基本一致，并额外支持依赖字段：
+
+| 参数               | 类型     | 说明                  |
+| ---------------- | ------ | ------------------- |
+| `strategySubId`  | int64  | 子订单 ID              |
+| `firstDrivenId`  | int64  | 第一驱动订单 ID，`0` 表示无依赖 |
+| `firstDrivenOn`  | string | 第一触发条件              |
+| `firstTrigger`   | string | 第一触发动作              |
+| `secondDrivenId` | int64  | 第二驱动订单 ID           |
+| `secondDrivenOn` | string | 第二触发条件              |
+| `secondTrigger`  | string | 第二触发动作              |
+
+响应字段：
+
+| 字段               | 类型     | 说明    |
+| ---------------- | ------ | ----- |
+| `strategyId`     | string | 策略 ID |
+| `strategyStatus` | string | 策略状态  |
+| `timestamp`      | int64  | 时间戳   |
+
+<h2 id="query-single-order">查询单个订单</h2>
+
+```http
+GET /v1/private/order?symbol=BTCUSDT&orderId=2022543809547603968
+```
+
+请求参数：
+
+| 参数              | 类型     | 必填 | 说明          |
+| --------------- | ------ | -- | ----------- |
+| `symbol`        | string | 是  | 交易对         |
+| `orderId`       | string | 否  | 服务端订单 ID    |
+| `clientOrderId` | string | 否  | 客户端自定义订单 ID |
+
+> `orderId` 和 `clientOrderId` 至少传一个。如果同时传入，服务端会按两个条件一起精确匹配。
+
+<h2 id="current-normal-orders">当前普通委托</h2>
+
+```http
+GET /v1/private/order/current?symbol=BTCUSDT
+```
+
+请求参数：
+
+| 参数            | 类型     | 必填 | 说明     |
+| ------------- | ------ | -- | ------ |
+| `symbol`      | string | 否  | 交易对    |
+| `limit`       | int32  | 否  | 返回数量限制 |
+| `lastOrderId` | int64  | 否  | 游标字段   |
+
+响应字段：
+
+| 字段       | 类型    | 说明       |
+| -------- | ----- | -------- |
+| `list[]` | array | 当前普通委托列表 |
+| `total`  | int32 | 数量       |
+
+<h2 id="current-condition-orders">当前条件单</h2>
+
+```http
+GET /v1/private/order/current-condition?symbol=BTCUSDT
+```
+
+请求参数：
+
+| 参数       | 类型     | 必填 | 说明  |
+| -------- | ------ | -- | --- |
+| `symbol` | string | 否  | 交易对 |
+
+<h2 id="historical-normal-orders">历史普通订单</h2>
+
+```http
+GET /v1/private/order/history?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+请求参数：
+
+| 参数              | 类型     | 必填 | 说明                   |
+| --------------- | ------ | -- | -------------------- |
+| `symbol`        | string | 否  | 交易对                  |
+| `orderId`       | string | 否  | 订单 ID 精确筛选           |
+| `clientOrderId` | string | 否  | 客户端订单 ID 精确筛选        |
+| `type`          | int32  | 否  | 订单类型筛选，`1` 限价，`2` 市价 |
+| `side`          | int32  | 否  | 方向筛选，`1` 买，`2` 卖     |
+| `status`        | int32  | 否  | 状态筛选                 |
+| `startTime`     | int64  | 否  | 开始时间                 |
+| `endTime`       | int64  | 否  | 结束时间                 |
+| `page`          | int64  | 否  | 页码，默认 `1`            |
+| `pageSize`      | int64  | 否  | 每页数量，默认 `20`         |
+
+<h2 id="historical-condition-orders">历史条件单</h2>
+
+```http
+GET /v1/private/order/history-condition?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+请求参数：
+
+| 参数          | 类型     | 必填 | 说明               |
+| ----------- | ------ | -- | ---------------- |
+| `symbol`    | string | 否  | 交易对              |
+| `side`      | int32  | 否  | 方向筛选，`1` 买，`2` 卖 |
+| `status`    | int32  | 否  | 状态筛选             |
+| `startTime` | int64  | 否  | 开始时间             |
+| `endTime`   | int64  | 否  | 结束时间             |
+| `page`      | int64  | 否  | 页码，默认 `1`        |
+| `pageSize`  | int64  | 否  | 每页数量，默认 `20`     |
+
+<h2 id="trade-records">成交记录</h2>
+
+```http
+GET /v1/private/order/trades?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+请求参数：
+
+| 参数          | 类型     | 必填 | 说明           |
+| ----------- | ------ | -- | ------------ |
+| `symbol`    | string | 否  | 交易对          |
+| `orderId`   | string | 否  | 订单 ID 筛选     |
+| `startTime` | int64  | 否  | 开始时间         |
+| `endTime`   | int64  | 否  | 结束时间         |
+| `page`      | int64  | 否  | 页码，默认 `1`    |
+| `pageSize`  | int64  | 否  | 每页数量，默认 `20` |
+
+响应字段：
+
+| 字段                    | 类型     | 说明                |
+| --------------------- | ------ | ----------------- |
+| `list[].fillId`       | string | 成交明细 ID           |
+| `list[].tradeId`      | string | 交易记录 ID           |
+| `list[].orderId`      | string | 订单 ID             |
+| `list[].symbol`       | string | 交易对               |
+| `list[].side`         | string | 方向                |
+| `list[].roleType`     | string | `maker` / `taker` |
+| `list[].price`        | string | 成交价格              |
+| `list[].quantity`     | string | 成交数量              |
+| `list[].tradeValue`   | string | 成交金额              |
+| `list[].handlingFee`  | string | 手续费               |
+| `list[].realizedPnl`  | string | 已实现盈亏             |
+| `list[].positionSide` | string | 持仓方向              |
+| `list[].createdAt`    | int64  | 成交时间              |
+| `total`               | int64  | 总数量               |
+
+<h2 id="cancel-order">撤单</h2>
+
+```http
+POST /v1/private/order/cancel
+Content-Type: application/json
+```
+
+请求体：
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "orderId": "2022543809547603968"
+}
+```
+
+也可使用 `clientOrderId` 撤单。
+
+<h2 id="amend-order">改单</h2>
+
+```http
+POST /v1/private/order/move
+Content-Type: application/json
+```
+
+请求体：
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "orderId": "2022543809547603968",
+  "price": "85100",
+  "quantity": "0.2"
+}
+```
+
+`quantity` 是修改后的订单总数量，不是剩余数量。
+
+<h2 id="batch-amend-orders">批量改单</h2>
+
+```http
+POST /v1/private/order/batch-move
+Content-Type: application/json
+```
+
+请求体：
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "orders": [
+    {
+      "orderId": "2022543809547603968",
+      "price": "85100",
+      "quantity": "0.2"
+    }
+  ]
+}
+```
+
+<h2 id="batch-cancel-orders">批量撤单</h2>
+
+```http
+POST /v1/private/order/batch-cancel
+Content-Type: application/json
+```
+
+请求体：
+
+```json
+{
+  "orders": [
+    {
+      "symbol": "BTCUSDT",
+      "orderId": "2022543809547603968"
+    }
+  ]
+}
+```
+
+<h2 id="cancel-all">全撤</h2>
+
+```http
+POST /v1/private/order/batch-cancel-all
+Content-Type: application/json
+```
+
+请求参数：
+
+| 参数           | 类型     | 必填 | 说明                                  |
+| ------------ | ------ | -- | ----------------------------------- |
+| `symbol`     | string | 否  | 交易对                                 |
+| `cancelType` | int32  | 否  | `0` 全部普通单，`1` 仅限价单，`2` 全部条件单；默认 `0` |
+
+普通单全撤为异步受理模式，最终状态请以 WebSocket `ORDER_TRADE_UPDATE` 或查询接口结果为准。
+
+<h2 id="cancel-condition-order">条件单撤单</h2>
+
+```http
+POST /v1/private/order/cancel-condition
+Content-Type: application/json
+```
+
+请求体：
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "conditionId": "2022543809547603968"
+}
+```
+
+<h2 id="strategy-order-detail">策略订单详情</h2>
+
+```http
+GET /v1/private/order/strategy?strategyId=2022543809547603968
+```
+
+响应字段：
+
+| 字段               | 类型     | 说明                                   |
+| ---------------- | ------ | ------------------------------------ |
+| `strategyId`     | string | 策略 ID                                |
+| `strategyType`   | string | `OTOCO` / `OTO` / `OCO`              |
+| `strategyStatus` | string | `WORKING` / `ALL_DONE` / `CANCELLED` |
+| `bookTime`       | int64  | 创建时间                                 |
+| `subOrders[]`    | array  | 子订单详情                                |
+| `updateTime`     | int64  | 更新时间                                 |

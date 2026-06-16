@@ -1,0 +1,46 @@
+---
+title: "Remote MCP Deployment"
+subtitle: "Deploy a 6MM MCP endpoint in user-managed or institution-managed infrastructure."
+slug: ai-hub/remote-mcp
+---
+
+Remote MCP is for users or institutions that want a long-running MCP endpoint under their own control.
+
+Unlike Hosted MCP, Remote MCP is not operated by 6MM for the user. 6MM provides code, images, templates, and documentation; the user controls hosting and credentials.
+
+<h2 id="architecture">Architecture</h2>
+
+```text
+AI client
+  -> user-managed MCP HTTP endpoint
+  -> 6MM REST / WebSocket API
+```
+
+<h2 id="deployment-targets">Deployment targets</h2>
+
+- Docker or Docker Compose.
+- VPS with a reverse proxy.
+- Railway.
+- Render.
+- Fly.io.
+- AWS ECS or Lambda.
+- Internal Kubernetes.
+
+<h2 id="required-files">Required files</h2>
+
+- Dockerfile.
+- docker-compose.yml.
+- .env.template.
+- HTTP transport mode.
+- /mcp endpoint.
+- /health endpoint.
+- Reverse proxy and TLS notes.
+
+<h2 id="credential-model">Credential model</h2>
+
+Credentials should be stored in the user-managed environment, not in the AI client prompt. For institution-managed deployments, restrict access to approved clients and networks.
+
+<h2 id="recommended-first-release">Recommended first release</h2>
+
+Start with public market data. Add account-read only after authentication, key scoping, logs, and access controls are available. Trading should remain disabled until controlled trading requirements are met.
+

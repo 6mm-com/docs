@@ -1,0 +1,128 @@
+---
+title: "Trading Workflow"
+slug: trading/getting-started/trading-workflow
+---
+
+<h2 id="u-margined-perpetual-contracts">U-Margined Perpetual Contracts</h2>
+
+6MM supports U-margined perpetual contracts, allowing users to trade perpetual futures settled and margined in stablecoins (e.g. USDT).
+
+This section explains the core trading workflow and key mechanisms involved in placing and managing perpetual contract orders on 6MM.
+
+***
+
+<h2 id="contract-overview">Contract Overview</h2>
+
+* Contract Type: U-Margined Perpetual Contracts
+* Settlement Asset: Stablecoin (e.g. USDT)
+* No Expiry: Positions do not expire and can be held indefinitely
+* Mark Price–Based Risk Control: Used for margin calculation and liquidation
+
+***
+
+<h2 id="order-types">Order Types</h2>
+
+6MM supports commonly used order types to accommodate different trading strategies:
+
+<h2 id="market-order">Market Order</h2>
+
+* Executes immediately at the best available market price
+* Prioritizes execution speed over price precision
+* Suitable for fast entry or exit
+
+<h2 id="limit-order">Limit Order</h2>
+
+* Executes only at the specified price or better
+* Provides price control
+* May remain open until filled or canceled
+
+<h2 id="stop-order">Stop Order</h2>
+
+* Triggers a market or limit order once the trigger price is reached
+* Commonly used for stop-loss or breakout strategies
+
+> Order availability may vary by trading pair and integration mode.
+
+***
+
+<h2 id="leverage-and-margin">Leverage and Margin</h2>
+
+* Leverage allows users to control larger positions with less capital
+* Margin is calculated based on:
+  * Position size
+  * Leverage level
+  * Mark price
+
+Higher leverage increases potential returns but also increases liquidation risk.
+
+***
+
+<h2 id="funding-rate-mechanism">Funding Rate Mechanism</h2>
+
+Perpetual contracts use a funding rate mechanism to keep contract prices aligned with the spot market.
+
+* Funding payments occur at scheduled intervals
+* If the funding rate is positive:
+  * Long positions pay shorts
+* If the funding rate is negative:
+  * Short positions pay longs
+
+Funding fees are exchanged directly between traders.
+
+6MM does not collect funding payments as revenue.
+
+***
+
+<h2 id="fees-and-slippage">Fees and Slippage</h2>
+
+<h2 id="trading-fees">Trading Fees</h2>
+
+* Fees are charged when orders are executed
+* Fee rates may differ for:
+  * Maker orders
+  * Taker orders
+
+Fee schedules are defined by the partner platform and may vary.
+
+<h2 id="slippage">Slippage</h2>
+
+* Slippage occurs when market liquidity is insufficient to fill an order at the expected price
+* More common during high volatility or when using market orders
+
+Users can reduce slippage by using limit orders and managing order size.
+
+***
+
+<h2 id="position-lifecycle">Position Lifecycle</h2>
+
+1. Funds are allocated to the Perpetual Account
+2. An order is placed and matched by the 6MM matching engine
+3. A position is opened upon execution
+4. Margin and PnL update in real time
+5. Funding fees are applied at scheduled intervals
+6. Position is closed manually or via TP/SL
+7. Final PnL is settled to the Perpetual Account
+
+***
+
+<h2 id="risk-management-and-liquidation">Risk Management and Liquidation</h2>
+
+* 6MM monitors margin ratios in real time
+* When margin falls below the maintenance threshold:
+  * Positions may be partially or fully liquidated
+* Liquidation prices are calculated using the mark price, not the last traded price
+
+This mechanism helps reduce unnecessary liquidations caused by short-term market volatility.
+
+***
+
+<h2 id="summary">Summary</h2>
+
+The U-margined perpetual trading workflow on 6MM is designed to:
+
+* Provide familiar and flexible order types
+* Maintain price alignment through funding rates
+* Offer transparent fee and settlement mechanisms
+* Deliver institutional-grade risk control
+
+This structure enables partners to offer professional perpetual trading while maintaining a seamless user experience.

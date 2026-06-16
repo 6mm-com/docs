@@ -1,0 +1,47 @@
+---
+title: "Environments and Common Conventions"
+slug: developer-api/environments-and-common-conventions
+---
+
+<h2 id="service-endpoints">Service Endpoints</h2>
+
+| Type      | Endpoint              |
+| --------- | --------------------- |
+| REST API  | `https://api.6mm.com` |
+| WebSocket | `wss://6mm.com/ws`    |
+
+<h2 id="time-and-numeric-values">Time and Numeric Values</h2>
+
+* Unless otherwise specified, time fields are Unix millisecond timestamps.
+* Daily statistics, balance snapshots, and trading volume statistics use UTC day boundaries by default.
+* Precision-sensitive fields such as amount, price, quantity, and rate are transmitted as strings.
+* Large integer IDs such as `orderId`, `conditionId`, and `strategyId` are returned as strings in JSON.
+
+<h2 id="response-format">Response Format</h2>
+
+Successful response:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {},
+  "requestId": "req-12345678"
+}
+```
+
+Error response:
+
+```json
+{
+  "code": 1003,
+  "message": "Invalid token",
+  "requestId": "req-12345678"
+}
+```
+
+Notes:
+
+* Business errors usually still return the unified JSON structure. Integrators should check `code` first.
+* Authentication failures may return HTTP `401`; rate limiting may return HTTP `429`.
+* You may send `X-Request-ID` in the request header. The server will return it as `requestId` in the response.

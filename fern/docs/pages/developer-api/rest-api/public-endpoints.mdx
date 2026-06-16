@@ -1,0 +1,151 @@
+---
+title: "Public Endpoints"
+slug: developer-api/rest-api/public-endpoints
+---
+
+<h2 id="base-url">Base URL</h2>
+
+```
+https://api.6mm.com
+```
+
+<h2 id="service-version">Service Version</h2>
+
+```http
+GET /v1/version
+```
+
+Get service version information.
+
+<h2 id="server-time">Server Time</h2>
+
+```http
+GET /v1/time
+```
+
+Get server time. This endpoint can be used to calibrate client time before API Key signing.
+
+<h2 id="user-login">User Login</h2>
+
+```http
+POST /v1/public/user/login
+```
+
+Request parameters:
+
+| Parameter    | Type   | Required | Description                             |
+| ------------ | ------ | -------- | --------------------------------------- |
+| `username`   | string | Yes      | Username, length 3 - 32                 |
+| `password`   | string | Yes      | Password, length 1 - 64                 |
+| `deviceId`   | string | No       | Device fingerprint, up to 64 characters |
+| `deviceName` | string | No       | Device name, up to 128 characters       |
+
+Request example:
+
+```bash
+curl -X POST https://api.6mm.com/v1/public/user/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "alice",
+    "password": "yourPassword",
+    "deviceId": "device-001",
+    "deviceName": "server-001"
+  }'
+```
+
+Response example:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "accessToken": "YOUR_ACCESS_TOKEN",
+    "accessExpire": 1769676656
+  },
+  "requestId": "req-login"
+}
+```
+
+<h2 id="refresh-token">Refresh Token</h2>
+
+```http
+POST /v1/public/user/refresh-token
+```
+
+In normal integration scenarios, login state is refreshed via Cookie. Keep the Cookie returned by the login response.
+
+Response fields:
+
+| Field          | Type   | Description              |
+| -------------- | ------ | ------------------------ |
+| `accessToken`  | string | New access Token         |
+| `accessExpire` | int64  | Access Token expiry time |
+
+<h2 id="agent-sso">Agent SSO</h2>
+
+<h2 id="ticket-exchange">Ticket Exchange</h2>
+
+```http
+POST /v1/public/agent-sso/exchange-ticket
+```
+
+Request parameters:
+
+| Parameter  | Type   | Required | Description                                 |
+| ---------- | ------ | -------- | ------------------------------------------- |
+| `ticket`   | string | Yes      | One-time ticket issued by the agent service |
+| `deviceId` | string | No       | Device fingerprint, up to 64 characters     |
+
+Response fields:
+
+| Field          | Type   | Description              |
+| -------------- | ------ | ------------------------ |
+| `accessToken`  | string | Access Token             |
+| `accessExpire` | int64  | Access Token expiry time |
+| `redirectPath` | string | Suggested redirect path  |
+
+<h2 id="embed-token-exchange">Embed Token Exchange</h2>
+
+```http
+POST /v1/public/agent-sso/exchange-embed-token
+```
+
+Request parameters:
+
+| Parameter    | Type   | Required | Description                                                    |
+| ------------ | ------ | -------- | -------------------------------------------------------------- |
+| `embedToken` | string | Yes      | Short-lived embedded trading token issued by the agent service |
+| `channelId`  | string | Yes      | Embedded iframe channel ID, up to 128 characters               |
+| `deviceId`   | string | No       | Device fingerprint, up to 64 characters                        |
+
+Response fields:
+
+| Field          | Type   | Description              |
+| -------------- | ------ | ------------------------ |
+| `accessToken`  | string | Access Token             |
+| `accessExpire` | int64  | Access Token expiry time |
+
+<h2 id="pnl-leaderboard">PnL Leaderboard</h2>
+
+```http
+GET /v1/public/leaderboard/pnl?period=30d
+```
+
+Request parameters:
+
+| Parameter | Type   | Required | Description          |
+| --------- | ------ | -------- | -------------------- |
+| `period`  | string | Yes      | `7d` / `30d` / `90d` |
+
+Response fields:
+
+| Field              | Type   | Description                                                       |
+| ------------------ | ------ | ----------------------------------------------------------------- |
+| `list[].rank`      | int32  | Rank                                                              |
+| `list[].userId`    | string | External user ID                                                  |
+| `list[].trader`    | string | Masked trader name                                                |
+| `list[].volume`    | string | Trading volume in the window                                      |
+| `list[].pnlAmount` | string | Realized PnL in the window                                        |
+| `list[].pnlPct`    | string | PnL ratio, decimal from `0` to `1`                                |
+| `myRank`           | int32  | Current user's rank. Returns `0` if unauthenticated or not ranked |

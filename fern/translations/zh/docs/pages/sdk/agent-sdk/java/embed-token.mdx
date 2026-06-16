@@ -1,0 +1,48 @@
+---
+title: "创建 Embed Token"
+subtitle: "为 Trading Widget partner-token 模式签发短期 embedToken。"
+slug: sdk/agent-sdk/java/embed-token
+---
+
+<h2 id="sdk-call">SDK 调用</h2>
+
+Embed Token 必须由 Partner 后端在校验用户登录态之后创建。浏览器只调用 Partner 自己的接口，Partner 后端再通过 Agent SDK 调用 6MM。
+
+```java
+CreateEmbedTokenResponse resp = client.createEmbedToken(
+        CreateEmbedTokenRequest.of("agent-user-001", "tw_abc123")
+                .withSymbol("ETHUSDT"));
+
+System.out.println(resp.embedToken);
+System.out.println(resp.expireAt);
+```
+
+> **一次性凭据**
+>
+> embedToken 是短期一次性 token，不能放到 URL query 中。
+
+<h2 id="backend-endpoint-example">后端接口示例</h2>
+
+```java
+@PostMapping("/api/trading/embed-token")
+public EmbedTokenView createEmbedToken(@RequestBody EmbedTokenRequest request,
+                                       PartnerSession session) {
+    String agentUserId = session.getAgentUserId();
+    CreateEmbedTokenResponse resp = agentClient.createEmbedToken(
+            CreateEmbedTokenRequest.of(agentUserId, request.getChannelId())
+                    .withSymbol(request.getSymbol()));
+
+    return new EmbedTokenView(resp.embedToken, resp.expireAt, request.getChannelId());
+}
+```
+
+只向前端返回 Trading Widget tokenProvider 需要的字段。不要返回 apiSecret、原始签名字段或内部服务配置。
+
+<h2 id="failure-handling">失败处理</h2>
+
+| 情况 | 建议处理 |
+| --- | --- |
+| 用户会话不存在或已过期 | Partner 接口返回 401，并要求用户重新登录。 |
+| Agent 用户尚未绑定 | 先绑定用户，再重试创建 token。 |
+| 6MM 返回临时错误 | 向前端返回可重试错误，并记录 requestId 便于支持排查。 |
+| channelId 与 Widget 实例不匹配 | 拒绝请求并重新创建 Widget 会话。 |

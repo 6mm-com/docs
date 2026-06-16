@@ -1,0 +1,26 @@
+---
+title: "Webhook 与幂等"
+subtitle: "校验 6MM Webhook 签名，并安全处理重复通知。"
+slug: sdk/security/webhooks-idempotency
+---
+
+<h2 id="webhook-headers">Webhook 请求头</h2>
+
+| Header | 说明 |
+| --- | --- |
+| X-Agent-Timestamp | Unix 秒级时间戳。 |
+| X-Agent-Nonce | 防重放随机串。 |
+| X-Agent-Signature | HMAC-SHA256 签名。 |
+
+```text
+timestamp + nonce + rawBody
+```
+
+<h2 id="order-idempotency">订单幂等</h2>
+
+| 场景 | 处理方式 |
+| --- | --- |
+| 首次划转请求 | 生成一个全局唯一 agentOrderNo。 |
+| HTTP 超时 | 先查原 agentOrderNo，不要直接生成新订单号。 |
+| PROCESSING 响应 | 等待 Webhook 或查询订单状态。 |
+| Webhook 重复推送 | 按幂等键和终态去重。 |

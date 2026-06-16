@@ -1,0 +1,32 @@
+---
+title: "Authentication"
+slug: developer-api/authentication
+---
+
+<h2 id="jwt">JWT</h2>
+
+After login, the API returns an `accessToken`. When calling private endpoints, include:
+
+```http
+Authorization: Bearer YOUR_ACCESS_TOKEN
+```
+
+<h2 id="api-key">API Key</h2>
+
+When the `X-API-KEY` request header is present, the server uses API Key HMAC authentication:
+
+```http
+X-API-KEY: YOUR_API_KEY
+```
+
+API Key management endpoints must use JWT. API Keys cannot manage themselves.
+
+<h2 id="api-key-permissions">API Key Permissions</h2>
+
+| Value | Permission | Description                                                                                                                                                                                    |
+| ----- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `1`   | Read       | User info, assets, account change logs, statistics, listenKey, favorite symbols, and related user/account endpoints. Order and position endpoints, including queries, require Trade permission |
+| `2`   | Trade      | Order and position endpoints, including both query and write operations                                                                                                                        |
+| `4`   | Withdraw   | Reserved fund permission                                                                                                                                                                       |
+
+To grant both read and trade permissions, use `permissions=3`.

@@ -1,0 +1,23 @@
+---
+title: "排查"
+subtitle: "Trading Widget 和 Agent SDK 常见接入问题。"
+slug: sdk/security/troubleshooting
+---
+
+<h2 id="trading-widget-issues">Trading Widget 问题</h2>
+
+| 现象 | 可能原因 | 处理方式 |
+| --- | --- | --- |
+| iframe 请求 Partner 本地域名 | 未传 baseUrl | 传 baseUrl: 'https://app.6mm.com'。 |
+| iframe 不显示或高度很小 | 父容器没有高度 | 设置容器高度或传 height。 |
+| token_provider_missing | partner-token 模式没有 provider | 补充 auth.tokenProvider。 |
+| auth_exchange_failed | token 无效、过期或 channelId 不一致 | 检查后端返回和 channelId。 |
+
+<h2 id="agent-sdk-issues">Agent SDK 问题</h2>
+
+| 现象 | 可能原因 | 处理方式 |
+| --- | --- | --- |
+| 签名失败 | 密钥错误、时间漂移或手动改签名字段 | 让 SDK 自动生成签名字段并同步服务器时间。 |
+| 有重复资金变动风险 | 超时后换了新订单号 | 先用原 agentOrderNo 查单。 |
+| 把 PROCESSING 当失败 | 对待确认状态理解错误 | 等待 Webhook 或调用 queryOrder。 |
+| Webhook 重复入账 | 没有幂等处理 | 增加幂等键和终态检查。 |

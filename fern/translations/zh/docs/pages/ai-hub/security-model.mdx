@@ -1,0 +1,43 @@
+---
+title: "安全模型"
+subtitle: "了解 AI 辅助接入的权限模型、默认安全姿态和交易风控边界。"
+slug: ai-hub/security-model
+---
+
+AI 辅助交易接入必须比普通自动化更安全，因为用户意图通常通过自然语言表达。
+
+<h2 id="required-permission-scopes">必需权限 scope</h2>
+
+| Scope | 允许能力 |
+| --- | --- |
+| market:read | 公开行情和规则资源。 |
+| account:read | 余额、仓位、当前委托、成交和账户摘要。 |
+| order:write | 创建、修改和撤销订单。 |
+
+<h2 id="default-safety-posture">默认安全姿态</h2>
+
+- 默认只读。
+- 默认 testnet。
+- 不通过 AI tools 暴露提现或划转。
+- create 前必须 preview。
+- Mainnet 交易前必须明确确认。
+- 交易动作使用幂等键。
+- 设置最大订单金额和杠杆限制。
+- 保留完整审计日志。
+
+<h2 id="controlled-trading-flow">受控交易流程</h2>
+
+```text
+用户自然语言意图
+  -> AI 将意图映射为 tool 参数
+  -> 6mm_preview_order 校验订单
+  -> 服务返回风险检查和保证金影响
+  -> 用户明确确认
+  -> 6mm_create_order 提交订单
+  -> 审计日志记录完整链路
+```
+
+<h2 id="prompt-injection-protection">Prompt injection 防护</h2>
+
+AI 客户端和 MCP server 应将外部内容视为不可信。市场页面、复制文本、文档和网页内容不能覆盖工具权限、确认规则或交易限制。
+

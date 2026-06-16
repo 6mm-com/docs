@@ -1,0 +1,47 @@
+---
+title: "环境与通用约定"
+slug: developer-api/environments-and-common-conventions
+---
+
+<h2 id="service-endpoints">服务地址</h2>
+
+| 类型        | 地址                    |
+| --------- | --------------------- |
+| REST API  | `https://api.6mm.com` |
+| WebSocket | `wss://6mm.com/ws`    |
+
+<h2 id="time-and-numeric-values">时间与数字</h2>
+
+* 除特别说明外，时间字段均为 Unix 毫秒时间戳。
+* 涉及日统计、余额快照、成交量统计等口径默认使用 UTC 日切。
+* 金额、价格、数量、费率等精度敏感字段均使用字符串传输。
+* `orderId`、`conditionId`、`strategyId` 等大整数 ID 在 JSON 中按字符串返回。
+
+<h2 id="response-format">响应格式</h2>
+
+成功响应：
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {},
+  "requestId": "req-12345678"
+}
+```
+
+错误响应：
+
+```json
+{
+  "code": 1003,
+  "message": "Invalid token",
+  "requestId": "req-12345678"
+}
+```
+
+说明：
+
+* 业务错误通常仍返回统一 JSON 结构，接入方应优先判断 `code`。
+* 鉴权失败类错误可能返回 HTTP `401`；限流可能返回 HTTP `429`。
+* 可以在请求头传 `X-Request-ID`，服务端会透传到响应的 `requestId`。

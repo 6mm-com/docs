@@ -1,0 +1,66 @@
+---
+title: "Connection, Subscription & Heartbeat"
+subtitle: "Connect to 6MM WebSocket streams, subscribe to topics, keep connections alive, and process message envelopes safely."
+slug: developer-api/websocket/connection-subscription-and-heartbeat
+---
+
+Use WebSocket streams for market data and private user-state updates that must stay current without polling.
+
+<h2 id="connection-url">Connection URL</h2>
+
+```text
+wss://6mm.com/ws
+```
+
+Private streams require authentication context such as a listenKey or access token as described in the private channel documentation.
+
+<h2 id="subscribe">Subscribe</h2>
+
+```json
+{ "id": "1772007814666", "op": "subscribe", "args": ["market.depth.BTCUSDT"] }
+```
+
+Successful subscription acknowledgement:
+
+```json
+{
+  "id": "1772007814666",
+  "event": "subscribe",
+  "success": true,
+  "data": ["market.depth.BTCUSDT"]
+}
+```
+
+<h2 id="unsubscribe">Unsubscribe</h2>
+
+```json
+{ "id": "1772007814667", "op": "unsubscribe", "args": ["market.depth.BTCUSDT"] }
+```
+
+<h2 id="application-ping">Application ping</h2>
+
+```json
+{ "id": "1772007814668", "op": "ping", "args": [] }
+```
+
+<h2 id="message-envelope">Message envelope</h2>
+
+Public pushes use a consistent envelope:
+
+```json
+{
+  "topic": "market.depth.BTCUSDT",
+  "event": "data",
+  "ts": 1772007815000,
+  "data": {}
+}
+```
+
+<h2 id="operational-recommendations">Operational recommendations</h2>
+
+- Generate a unique client-side `id` for every subscribe, unsubscribe, and ping request.
+- Treat reconnect as a new session and resubscribe to required topics.
+- Validate that the returned `topic` matches the channel your service expects.
+- Keep message processing idempotent where private order or account events are involved.
+- Log connection state changes, subscription acknowledgements, and abnormal disconnects.
+

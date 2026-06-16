@@ -1,0 +1,48 @@
+---
+title: "Create Embed Token"
+subtitle: "Issue short-lived embed tokens for Trading Widget partner-token mode."
+slug: sdk/agent-sdk/java/embed-token
+---
+
+<h2 id="sdk-call">SDK call</h2>
+
+Create embed tokens from your backend after validating the partner user session. The browser should call your endpoint, and your endpoint should call 6MM through the Agent SDK.
+
+```java
+CreateEmbedTokenResponse resp = client.createEmbedToken(
+        CreateEmbedTokenRequest.of("agent-user-001", "tw_abc123")
+                .withSymbol("ETHUSDT"));
+
+System.out.println(resp.embedToken);
+System.out.println(resp.expireAt);
+```
+
+> **One-time credential**
+>
+> embedToken is short-lived and one-time use. Do not place it in a URL query string.
+
+<h2 id="backend-endpoint-example">Backend endpoint example</h2>
+
+```java
+@PostMapping("/api/trading/embed-token")
+public EmbedTokenView createEmbedToken(@RequestBody EmbedTokenRequest request,
+                                       PartnerSession session) {
+    String agentUserId = session.getAgentUserId();
+    CreateEmbedTokenResponse resp = agentClient.createEmbedToken(
+            CreateEmbedTokenRequest.of(agentUserId, request.getChannelId())
+                    .withSymbol(request.getSymbol()));
+
+    return new EmbedTokenView(resp.embedToken, resp.expireAt, request.getChannelId());
+}
+```
+
+Return only the fields needed by the Trading Widget token provider. Do not return apiSecret, raw signing fields, or internal service configuration.
+
+<h2 id="failure-handling">Failure handling</h2>
+
+| Condition | Recommended handling |
+| --- | --- |
+| User session is missing or expired | Return 401 from the partner endpoint and ask the user to sign in again. |
+| Agent user is not bound | Bind the user first, then retry token creation. |
+| 6MM returns a temporary error | Return a retryable error to the frontend and log requestId for support. |
+| channelId does not match the widget instance | Reject the request and recreate the widget session. |

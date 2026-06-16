@@ -1,0 +1,132 @@
+---
+title: "Position"
+slug: developer-api/rest-api/position
+---
+
+> **Note**
+>
+> Position endpoints require trade permission.
+
+<h2 id="set-leverage">Set Leverage</h2>
+
+```http
+POST /v1/private/position/leverage
+Content-Type: application/json
+```
+
+Request body:
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "leverage": 20
+}
+```
+
+Response fields:
+
+| Field       | Type   | Description |
+| ----------- | ------ | ----------- |
+| `symbol`    | string | Symbol      |
+| `leverage`  | int32  | Leverage    |
+| `timestamp` | int64  | Timestamp   |
+
+<h2 id="set-margin-mode">Set Margin Mode</h2>
+
+```http
+POST /v1/private/position/margin-mode
+Content-Type: application/json
+```
+
+Request body:
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "marginMode": 1
+}
+```
+
+`marginMode`: `1` cross, `2` isolated.
+
+<h2 id="position-settings">Position Settings</h2>
+
+```http
+GET /v1/private/position/settings?symbol=BTCUSDT
+```
+
+Response fields:
+
+| Field        | Type   | Description             |
+| ------------ | ------ | ----------------------- |
+| `symbol`     | string | Symbol                  |
+| `marginMode` | int32  | `1` cross, `2` isolated |
+| `leverage`   | int32  | Leverage                |
+
+<h2 id="current-positions">Current Positions</h2>
+
+```http
+GET /v1/private/position/positions?symbol=BTCUSDT
+```
+
+Request parameters:
+
+| Parameter | Type   | Required | Description |
+| --------- | ------ | -------- | ----------- |
+| `symbol`  | string | No       | Symbol      |
+
+Response fields:
+
+| Field                         | Type   | Description                |
+| ----------------------------- | ------ | -------------------------- |
+| `positions[].symbol`          | string | Symbol                     |
+| `positions[].marginMode`      | string | Margin mode                |
+| `positions[].positionSide`    | string | Position side              |
+| `positions[].leverage`        | int32  | Leverage                   |
+| `positions[].quantity`        | string | Position quantity          |
+| `positions[].entryPrice`      | string | Entry price                |
+| `positions[].breakEvenPrice`  | string | Break-even price           |
+| `positions[].liqPrice`        | string | Liquidation price          |
+| `positions[].marginRatio`     | string | Margin ratio               |
+| `positions[].unrealizedPnl`   | string | Unrealized PnL             |
+| `positions[].roe`             | string | Return on equity           |
+| `positions[].nextFundingFee`  | string | Estimated next funding fee |
+| `positions[].fundingFeeAccum` | string | Accumulated funding fee    |
+| `positions[].tpPrice`         | string | Take-profit price          |
+| `positions[].slPrice`         | string | Stop-loss price            |
+
+<h2 id="position-history">Position History</h2>
+
+```http
+GET /v1/private/position/history?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+Request parameters:
+
+| Parameter   | Type   | Required | Description                  |
+| ----------- | ------ | -------- | ---------------------------- |
+| `symbol`    | string | No       | Symbol                       |
+| `side`      | string | No       | `long` / `short`             |
+| `startTime` | int64  | No       | Start time                   |
+| `endTime`   | int64  | No       | End time                     |
+| `page`      | int64  | No       | Page number, default `1`     |
+| `pageSize`  | int64  | No       | Items per page, default `20` |
+
+Response fields:
+
+| Field                    | Type   | Description               |
+| ------------------------ | ------ | ------------------------- |
+| `list[].symbol`          | string | Symbol                    |
+| `list[].positionSide`    | string | Position side             |
+| `list[].leverage`        | int32  | Leverage                  |
+| `list[].maxQuantity`     | string | Maximum position quantity |
+| `list[].entryPrice`      | string | Entry price               |
+| `list[].closePrice`      | string | Close price               |
+| `list[].pnl`             | string | Realized PnL              |
+| `list[].roe`             | string | Return on equity          |
+| `list[].marginMode`      | string | Margin mode               |
+| `list[].triggerMode`     | int32  | Close trigger mode        |
+| `list[].fundingFeeAccum` | string | Accumulated funding fee   |
+| `list[].openedAt`        | int64  | Open time                 |
+| `list[].closedAt`        | int64  | Close time                |
+| `total`                  | int64  | Total count               |

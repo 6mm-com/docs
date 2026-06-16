@@ -1,0 +1,49 @@
+---
+title: "WebSocket"
+slug: developer-api/websocket
+---
+
+<h2 id="service-endpoint">Service Endpoint</h2>
+
+```
+wss://6mm.com/ws
+```
+
+WebSocket channels are divided into public channels and private channels:
+
+| Type             | Authentication              | Description                                            |
+| ---------------- | --------------------------- | ------------------------------------------------------ |
+| Public channels  | Not required                | Market data, such as depth, trades, Klines, and ticker |
+| Private channels | `listenKey` or JWT required | User order, account, and position streams              |
+
+<h2 id="public-channels">Public Channels</h2>
+
+Public WebSocket does not require authentication. After connecting, send a `subscribe` request to subscribe to market channels.
+
+Common channels:
+
+| Channel                            | Description                                                        |
+| ---------------------------------- | ------------------------------------------------------------------ |
+| `market.depth.{symbol}`            | Order book depth. Sends a snapshot first, then incremental updates |
+| `market.trade.{symbol}`            | Latest trades                                                      |
+| `market.kline.{symbol}.{interval}` | Klines                                                             |
+| `market.ticker.{symbol}`           | Single-symbol ticker summary                                       |
+| `market.tickers`                   | All-symbol ticker summary                                          |
+
+<h2 id="private-channels">Private Channels</h2>
+
+<h2 id="listenkey">listenKey</h2>
+For private WebSocket streams, create a `listenKey` through the REST API first, then connect to:
+
+```
+wss://6mm.com/ws?listenKey=YOUR_LISTEN_KEY
+```
+
+<h2 id="jwt">JWT</h2>
+Compatible JWT connection method:
+
+```
+wss://6mm.com/ws?token=YOUR_ACCESS_TOKEN
+```
+
+After authentication succeeds, the server automatically subscribes the connection to the current user's private channel. No manual subscription is required.

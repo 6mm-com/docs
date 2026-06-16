@@ -1,0 +1,127 @@
+---
+title: "Instance Methods"
+subtitle: "Control a created widget instance after TradingWidget.create()."
+slug: sdk/trading-widget/instance-methods
+---
+
+<h2 id="method-summary">Method Summary</h2>
+
+| Method | Purpose |
+| --- | --- |
+| destroy() | Remove the iframe and release event listeners. |
+| getState() | Read the current SDK lifecycle state. |
+| whenReady() | Wait until the iframe finishes initialization. |
+| setSymbol(symbol) | Switch the trading pair inside the iframe. |
+| setTheme(theme) | Update the iframe theme parameter. |
+| setLocale(locale) | Switch the iframe language. |
+| setSize(width, height) | Update iframe dimensions. |
+| reload() | Reload the current iframe. |
+| refreshAuth(reason) | Trigger the widget auth refresh flow. |
+| setTokenProvider(provider) | Replace the provider used by partner-token mode. |
+| on(event, handler) | Subscribe to runtime events and receive an unsubscribe function. |
+
+<h2 id="destroy">destroy()</h2>
+
+Remove the iframe, clear listeners, and emit destroyed once for the current instance.
+
+```js
+widget.destroy()
+```
+
+<h2 id="getstate">getState()</h2>
+
+Read the current lifecycle state of the widget instance.
+
+```js
+const state = widget.getState()
+```
+
+Return values include loading, authenticating, ready, error, and destroyed.
+
+<h2 id="whenready">whenReady()</h2>
+
+Wait for the iframe to finish initialization before running dependent UI logic.
+
+```js
+await widget.whenReady()
+```
+
+<h2 id="setsymbol-symbol">setSymbol(symbol)</h2>
+
+Switch the trading pair inside the iframe. If the iframe is still initializing, the SDK queues the command and sends it after ready.
+
+```js
+widget.setSymbol('ETHUSDT')
+```
+
+<h2 id="settheme-theme">setTheme(theme)</h2>
+
+Update the theme parameter used by the embedded trading iframe.
+
+```js
+widget.setTheme('dark')
+widget.setTheme('light')
+```
+
+<h2 id="setlocale-locale">setLocale(locale)</h2>
+
+Switch the iframe language. Supported values are en, en-US, and zh-CN.
+
+```js
+widget.setLocale('en')
+widget.setLocale('en-US')
+widget.setLocale('zh-CN')
+```
+
+<h2 id="setsize-width-height">setSize(width, height)</h2>
+
+Update the iframe DOM size and notify the iframe about the new outer size. Numeric values are converted to px.
+
+```js
+widget.setSize('100%', 720)
+```
+
+<h2 id="reload">reload()</h2>
+
+Reload the current iframe and wait for it to initialize again.
+
+```js
+widget.reload()
+```
+
+<h2 id="refreshauth-reason">refreshAuth(reason)</h2>
+
+Ask the iframe to refresh the current authentication flow. The optional reason value is forwarded for logging and flow control.
+
+```js
+widget.refreshAuth('manual')
+```
+
+<h2 id="settokenprovider-provider">setTokenProvider(provider)</h2>
+
+Replace the tokenProvider used by partner-token mode. The SDK calls the provider when the iframe requests a fresh embed token.
+
+```js
+widget.setTokenProvider(async ({ channelId, symbol, reason }) => {
+  const resp = await fetch('/api/trading/embed-token', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ channelId, symbol, reason }),
+  })
+
+  return resp.json()
+})
+```
+
+<h2 id="on-event-handler">on(event, handler)</h2>
+
+Subscribe to a runtime event. The returned function removes the listener.
+
+```js
+const off = widget.on('order_created', (event) => {
+  console.log(event)
+})
+
+off()
+```

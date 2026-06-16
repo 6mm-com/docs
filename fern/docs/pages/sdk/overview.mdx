@@ -1,0 +1,52 @@
+---
+title: "SDK Overview"
+subtitle: "Choose the right 6MM SDK path for embedded trading, backend token issuance, account linkage, webhooks, and production operations."
+slug: sdk/overview
+---
+
+<h2 id="choose-an-sdk-path">Choose an SDK path</h2>
+
+<CardGroup cols={3}>
+<Card title="Trading Widget SDK" icon="duotone chart-line" href="/sdk/trading-widget/quick-start">
+  Embed the 6MM trading terminal into an existing website, wallet, broker portal, or partner product surface.
+</Card>
+<Card title="Agent SDK" icon="duotone server" href="/sdk/agent-sdk/overview">
+  Connect a partner backend to 6MM for user binding, embed tokens, entry URLs, transfers, order queries, and webhooks.
+</Card>
+<Card title="Security & Operations" icon="duotone shield-check" href="/sdk/security/secrets-signing">
+  Prepare secret storage, request signing, webhook idempotency, monitoring, and launch troubleshooting.
+</Card>
+</CardGroup>
+
+<h2 id="recommended-combination">Recommended combination</h2>
+
+| Partner goal | Frontend | Backend | Why it matters |
+| --- | --- | --- | --- |
+| Add an embedded trading terminal | Trading Widget SDK | Agent SDK | The widget handles the trading UI while the partner backend issues tokens and keeps secrets private. |
+| Create a native app entry point | Native or H5 entry | Agent SDK | The app opens a 6MM entry URL after the partner validates the user session. |
+| Build a custom trading flow | Partner UI | Developer API + selected SDK flows | Use APIs for account, order, position, and market data while keeping operational controls server-side. |
+
+<h2 id="reference-architecture">Reference architecture</h2>
+
+```text
+Partner Web App
+  -> TradingWidget.create()
+  -> tokenProvider()
+  -> Partner Backend
+  -> 6MM Agent SDK
+  -> 6MM Agent API
+  -> 6MM Trading iframe
+```
+
+> **Keep secrets server-side**
+>
+> Browser code should only call partner-owned endpoints. The Agent API secret must never be shipped to frontend code.
+
+<h2 id="production-checklist">Production checklist</h2>
+
+- Store apiSecret only in backend infrastructure.
+- Use HTTPS for Agent API requests and webhook URLs.
+- Persist agentUserId, platformUserId, and agentOrderNo mappings.
+- Represent monetary amounts as decimal strings instead of floating-point values.
+- Handle PROCESSING as pending, not as success or failure.
+- Process webhooks idempotently because retries are expected.

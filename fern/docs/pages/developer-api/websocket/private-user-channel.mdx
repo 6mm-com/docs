@@ -1,0 +1,97 @@
+---
+title: "Private User Channel"
+slug: developer-api/websocket/private-user-channel
+---
+
+Create a `listenKey` first:
+
+```http
+POST /v1/private/user/listen-key
+```
+
+Response example:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "listenKey": "f57cb61ef604ce76be09e753a5dbdd8c",
+    "expireAt": 1777539918867
+  },
+  "requestId": "req-listen-key"
+}
+```
+
+`listenKey` is valid for 60 minutes by default. Renewal every 30 minutes is recommended.
+
+<h2 id="renew">Renew</h2>
+
+```http
+PUT /v1/private/user/listen-key
+Content-Type: application/json
+```
+
+```json
+{ "listenKey": "f57cb61ef604ce76be09e753a5dbdd8c" }
+```
+
+<h2 id="close">Close</h2>
+
+```http
+DELETE /v1/private/user/listen-key
+Content-Type: application/json
+```
+
+```json
+{ "listenKey": "f57cb61ef604ce76be09e753a5dbdd8c" }
+```
+
+<h2 id="connect-to-private-websocket">Connect to private WebSocket</h2>
+
+```
+wss://6mm.com/ws?listenKey=YOUR_LISTEN_KEY
+```
+
+Compatible JWT connection method:
+
+```
+wss://6mm.com/ws?token=YOUR_ACCESS_TOKEN
+```
+
+After authentication succeeds, the server automatically subscribes the connection to the current user's private channel. No manual subscription is required.
+
+Successful authentication acknowledgement:
+
+```json
+{ "event": "auth", "success": true, "data": "1188041528" }
+```
+
+<h2 id="common-private-events">Common private events</h2>
+
+| Event                | Description                                                                   |
+| -------------------- | ----------------------------------------------------------------------------- |
+| `ORDER_TRADE_UPDATE` | Order status changes, including new order, amendment, trade, and cancellation |
+| `ACCOUNT_UPDATE`     | Account balance and position changes                                          |
+
+Private push message wrapper:
+
+```json
+{
+  "topic": "user.5794",
+  "ts": 1771047000000,
+  "data": {
+    "eventType": "ORDER_TRADE_UPDATE"
+  }
+}
+```
+
+REST query endpoints and WebSocket private streams use separate schemas. Clients should parse each schema independently and should not assume field names are identical.
+
+<h2 id="common-differences">Common differences</h2>
+
+| Domain         | REST field     | WebSocket field                                             |
+| -------------- | -------------- | ----------------------------------------------------------- |
+| Order status   | `status`       | `orderStatus`                                               |
+| Frozen balance | `frozenMargin` | `frozenBalance`                                             |
+| Margin mode    | `marginMode`   | `marginMode`, returned as a string in positions and streams |

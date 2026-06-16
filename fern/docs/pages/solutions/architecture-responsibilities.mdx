@@ -1,0 +1,39 @@
+---
+title: "Architecture & Responsibilities"
+subtitle: "Clarify what the partner system owns and what 6MM infrastructure provides in embedded trading deployments."
+slug: solutions/architecture-responsibilities
+---
+
+A clean embedded trading launch depends on clear responsibility boundaries. Partner systems should keep sensitive business ownership, while 6MM provides the trading infrastructure and lifecycle capabilities.
+
+<h2 id="responsibility-model">Responsibility model</h2>
+
+| Area | Partner system | 6MM infrastructure |
+| --- | --- | --- |
+| User relationship | Owns the user account, login state, customer support identity, and eligibility checks. | Receives validated trading entry context and maintains trading-side state. |
+| Secrets and signing | Stores partner API keys on the backend and signs server-side requests. | Verifies signed requests and processes authorized actions. |
+| Trading experience | Provides entry points, navigation, and product context. | Provides trading UI, order lifecycle, market data, positions, risk, and settlement behavior. |
+| Operations | Handles support workflows, business analytics, and internal escalation. | Emits events, webhooks, and status information needed for integration. |
+
+<h2 id="production-principles">Production principles</h2>
+
+- Keep all partner secrets on the backend.
+- Treat embed tokens as short-lived entry credentials.
+- Process webhooks idempotently and store event IDs.
+- Use monitoring around token issuing, transfer flows, and order-state changes.
+- Keep customer-facing copy consistent across entry, trading, and support pages.
+
+<h2 id="related-docs">Related docs</h2>
+
+<CardGroup cols={3}>
+<Card title="Authentication" icon="fa-duotone fa-user-shield" href="/developer-api/authentication">
+Review backend authentication expectations.
+</Card>
+<Card title="Request Signing" icon="fa-duotone fa-signature" href="/developer-api/request-signing">
+Understand signed API calls.
+</Card>
+<Card title="Webhook Security" icon="fa-duotone fa-webhook" href="/sdk/security/webhooks-idempotency">
+Handle event delivery safely.
+</Card>
+</CardGroup>
+
