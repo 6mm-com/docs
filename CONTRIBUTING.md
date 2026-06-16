@@ -1,38 +1,63 @@
-# Contributing to 6MM Docs
+# Contributing to 6MM Documentation
 
-Thank you for helping improve the 6MM documentation.
+Thank you for improving the 6MM documentation.
 
-## Editing Pages
+This repository is public so developers, partners, and readers can suggest improvements. All changes are reviewed before they are merged into `main`.
+
+## How to Contribute
+
+For small fixes, use **Edit this page** from the hosted documentation. GitHub will open a pull request if you do not have direct write access.
+
+For larger updates, open a pull request directly against this repository.
+
+## Source Files
 
 Documentation source files live under:
 
 - `fern/docs/pages/` for English pages
 - `fern/translations/zh/docs/pages/` for Simplified Chinese pages
-- `fern/docs.yml` and `fern/translations/zh/docs.yml` for navigation
-
-For small fixes, use the **Edit this page** link in the hosted docs. GitHub will create a pull request if you do not have direct write access.
+- `fern/docs.yml` for English navigation, tabs, redirects, and site configuration
+- `fern/translations/zh/docs.yml` for Simplified Chinese navigation
 
 ## Validation
 
-Run the Fern check before opening a pull request:
+Run Fern validation before opening a pull request:
 
 ```bash
 npm install
 npm run fern:check
 ```
 
-## Content Guidelines
+## Content Standards
 
-- Keep public docs accurate, partner-facing, and implementation-focused.
-- Do not include private credentials, internal-only endpoints, unreleased secrets, or customer data.
-- Keep code identifiers, API paths, SDK method names, and headers unchanged when translating.
-- Update both English and Chinese pages when the change affects both languages.
+Good 6MM documentation should be:
 
-## Pull Requests
+- Accurate and current
+- Clear enough for engineering teams to implement
+- Precise about security, signing, credentials, custody, and trading risk
+- Written for partners, developers, and operators rather than for marketing copy
+- Consistent across English and Chinese where both languages apply
 
-Pull requests should explain:
+Do not include:
 
-- What changed
-- Which pages were updated
-- Whether the change affects navigation
-- Whether `npm run fern:check` passed
+- API secrets, private keys, tokens, passwords, or credentials
+- Internal-only endpoints, dashboards, logs, or unreleased infrastructure details
+- Customer data, partner-specific business terms, or private operational incidents
+- Unsupported SDK methods or behavior that has not been released
+
+## Pull Request Checklist
+
+Before requesting review:
+
+- Confirm the affected pages and navigation entries are correct.
+- Update both English and Chinese pages when required.
+- Run `npm run fern:check`.
+- Add screenshots or context when the change affects layout, navigation, or downloads.
+
+Maintainers may ask for product, engineering, security, or legal review depending on the content area.
+
+## Contribution Terms
+
+By submitting a contribution, you agree that 6MM may use, edit, publish, and
+distribute your contribution as part of the official 6MM documentation and
+related materials.
