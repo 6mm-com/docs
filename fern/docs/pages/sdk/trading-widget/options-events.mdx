@@ -13,7 +13,38 @@ slug: sdk/trading-widget/options-events
 | theme | dark \| light | dark | Initial theme parameter. |
 | locale | en \| en-US \| zh-CN | Browser/default | English and Simplified Chinese are supported. |
 | layout | default \| compact | default | Reserved layout option. |
+| display | object | `showHeader: false`, `showTicker: false`, `hidden: []` | Controls embed shell areas and high-level trading containers. |
 | auth | object | none | Use partner-token for new SSO integrations. |
+
+<h2 id="display-controls">Display controls</h2>
+
+`display` controls the embedded trading page shell and high-level containers. In partner embeds, the PC header and bottom market ticker are hidden by default.
+
+```js
+display: {
+  showHeader: false,
+  showTicker: false,
+  hidden: ['chart', 'orderBook'],
+}
+```
+
+| Field | Type | Default | Notes |
+| --- | --- | --- | --- |
+| showHeader | boolean | false | Whether to show the PC embed header inside the iframe. |
+| showTicker | boolean | false | Whether to show the bottom market ticker in the embed shell. |
+| hidden | string[] | [] | Hides high-level containers in the trading page. |
+
+Supported `display.hidden` values:
+
+| Value | Container |
+| --- | --- |
+| chart | Chart container |
+| orderBook | Order book container |
+| orderForm | Order form panel |
+| positions | Bottom positions and open orders panel |
+| account | Account assets container |
+
+`display.hidden` hides whole containers only. It does not hide individual buttons, fields, or tools inside a container. Values that do not map to the current viewport are ignored.
 
 <h2 id="events">Events</h2>
 

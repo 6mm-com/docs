@@ -13,7 +13,38 @@ slug: sdk/trading-widget/options-events
 | theme | dark \| light | dark | 初始主题参数。 |
 | locale | en \| en-US \| zh-CN | 浏览器或默认语言 | 支持英文和简体中文。 |
 | layout | default \| compact | default | 预留布局参数。 |
+| display | object | `showHeader: false`, `showTicker: false`, `hidden: []` | 控制 embed shell 区域和交易页大容器显示。 |
 | auth | object | 无 | 新 SSO 接入建议使用 partner-token。 |
+
+<h2 id="display-controls">显示控制</h2>
+
+`display` 用于控制嵌入式交易页的 shell 区域和大容器。Partner 嵌入场景下，PC 顶部栏和底部行情跑马灯默认隐藏。
+
+```js
+display: {
+  showHeader: false,
+  showTicker: false,
+  hidden: ['chart', 'orderBook'],
+}
+```
+
+| 字段 | 类型 | 默认值 | 说明 |
+| --- | --- | --- | --- |
+| showHeader | boolean | false | 是否显示 iframe 内的 PC embed 顶部栏。 |
+| showTicker | boolean | false | 是否显示 embed shell 底部行情跑马灯。 |
+| hidden | string[] | [] | 隐藏交易页的大容器。 |
+
+`display.hidden` 支持值：
+
+| 值 | 容器 |
+| --- | --- |
+| chart | 图表容器 |
+| orderBook | 盘口容器 |
+| orderForm | 下单面板容器 |
+| positions | 持仓和当前委托等底部面板 |
+| account | 账户资产容器 |
+
+`display.hidden` 只隐藏整块容器，不隐藏容器内部的单个按钮、字段或工具入口。没有对应当前视口容器的值会被忽略。
 
 <h2 id="events">事件</h2>
 
