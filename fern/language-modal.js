@@ -30,6 +30,8 @@
   });
   window.__sixmmDocsLocales = locales;
   var scheduled = false;
+  var localeNavigationId = 0;
+  var themeNavigationId = 0;
 
   function optionLocale(option) {
     var pathname = new URL(option.href, window.location.origin).pathname;
@@ -129,121 +131,197 @@
     var selectors = Array.from(
       document.querySelectorAll(".fern-language-selector"),
     );
-    return (
-      selectors.find(function (selector) {
-        return selector.isConnected && selector.offsetParent !== null;
-      }) ||
-      selectors.find(function (selector) {
-        return selector.isConnected;
-      })
-    );
+    return selectors.find(isVisible);
   }
 
   function visibleThemeTrigger() {
     var triggers = Array.from(
-      document.querySelectorAll(".sixmm-theme-trigger"),
+      document.querySelectorAll(
+        ".sixmm-theme-trigger, .fern-language-selector + button",
+      ),
     );
-    return (
-      triggers.find(function (trigger) {
-        return trigger.isConnected && trigger.offsetParent !== null;
-      }) ||
-      triggers.find(function (trigger) {
-        return trigger.isConnected;
-      })
+    return triggers.find(function (trigger) {
+      return (
+        isVisible(trigger) &&
+        Boolean(
+          trigger.querySelector(
+            "svg.lucide-sun, svg.lucide-moon, svg.lucide-monitor",
+          ),
+        )
+      );
+    });
+  }
+
+  function isVisible(element) {
+    return Boolean(
+      element &&
+        element.isConnected &&
+        (element.offsetParent !== null ||
+          (typeof element.getClientRects === "function" &&
+            element.getClientRects().length > 0)),
     );
   }
 
-  function syncThemeTriggerAppearance(theme) {
-    Array.from(document.querySelectorAll(".sixmm-theme-trigger")).forEach(
-      function (trigger) {
-        var svg = trigger.querySelector(
-          "svg.lucide-sun, svg.lucide-moon, svg.lucide-monitor",
-        );
-        if (svg) {
-          svg.setAttribute(
-            "class",
-            "lucide " + (theme === "dark" ? "lucide-moon" : "lucide-sun"),
-          );
-          svg.innerHTML =
-            theme === "dark"
-              ? '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>'
-              : '<circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path>';
-        }
-        Array.from(trigger.childNodes).forEach(function (node) {
-          if (node.nodeType === 3 && node.textContent.trim()) {
-            node.textContent = theme === "dark" ? "Dark" : "Light";
-          }
-        });
-        trigger.setAttribute(
-          "aria-label",
-          theme === "dark" ? "Dark" : "Light",
-        );
-      },
-    );
+  function controlledMenu(trigger) {
+    var menuId = trigger && trigger.getAttribute("aria-controls");
+    if (menuId) {
+      var controlled = document.getElementById(menuId);
+      if (controlled && isVisible(controlled)) return controlled;
+    }
+    return Array.from(
+      document.querySelectorAll(
+        '.fern-language-dropdown-content, [role="menu"][data-state="open"]',
+      ),
+    ).find(isVisible);
   }
 
-  function navigateDocsTheme(theme) {
-    if (theme !== "light" && theme !== "dark") return false;
+  function waitFor(resolveValue, timeout) {
+    return new Promise(function (resolve) {
+      var finished = false;
+      var observer = new MutationObserver(check);
+      var timer = window.setTimeout(function () {
+        finish(null);
+      }, timeout);
 
-    syncThemeTriggerAppearance(theme);
+      function finish(value) {
+        if (finished) return;
+        finished = true;
+        observer.disconnect();
+        window.clearTimeout(timer);
+        resolve(value);
+      }
+
+      function check() {
+        var value = resolveValue();
+        if (value) finish(value);
+      }
+
+      observer.observe(document.documentElement, {
+        attributes: true,
+        childList: true,
+        subtree: true,
+      });
+      check();
+    });
+  }
+
+  function currentPathLocale() {
+    var firstSegment =
+      window.location.pathname.split("/").filter(Boolean)[0] || "";
+    return Object.prototype.hasOwnProperty.call(localeLabels, firstSegment)
+      ? firstSegment
+      : "";
+  }
+
+  function currentDocumentTheme() {
+    var root = document.documentElement;
+    if (root.classList.contains("dark")) return "dark";
+    if (root.classList.contains("light")) return "light";
+    return root.dataset.theme === "dark" ? "dark" : "light";
+  }
+
+  function themeAppearanceMatches(theme) {
     var trigger = visibleThemeTrigger();
-    if (!trigger) return false;
-    trigger.click();
+    var iconSelector =
+      theme === "dark" ? "svg.lucide-moon" : "svg.lucide-sun";
+    return Boolean(
+      currentDocumentTheme() === theme &&
+        trigger &&
+        trigger.querySelector(iconSelector),
+    );
+  }
 
-    var attempts = 0;
-    function selectOption() {
+  function waitForLocaleOption(trigger, locale) {
+    return waitFor(function () {
+      enhanceMenus();
+      var menu = controlledMenu(trigger);
+      if (!menu) return null;
+      return Array.from(
+        menu.querySelectorAll('[role="menuitemradio"], a[href]'),
+      ).find(function (candidate) {
+        var link =
+          candidate.matches && candidate.matches("a[href]")
+            ? candidate
+            : candidate.querySelector("a[href]");
+        return link && optionLocale(link) === locale ? link : false;
+      });
+    }, 4000);
+  }
+
+  function waitForThemeOption(trigger, theme) {
+    return waitFor(function () {
+      var menu = controlledMenu(trigger);
+      if (!menu) return null;
       var iconSelector =
         theme === "dark" ? "svg.lucide-moon" : "svg.lucide-sun";
-      var option = Array.from(
-        document.querySelectorAll(
-          '[role="menuitemradio"], [role="menuitem"]',
+      return Array.from(
+        menu.querySelectorAll(
+          '[role="menuitemradio"], [role="menuitem"], button',
         ),
       ).find(function (candidate) {
         var label = (candidate.textContent || "").trim().toLowerCase();
-        return (
-          candidate.isConnected &&
-          candidate !== trigger &&
-          (label === theme || Boolean(candidate.querySelector(iconSelector)))
-        );
+        return label === theme || Boolean(candidate.querySelector(iconSelector));
       });
-
-      if (option) {
-        option.click();
-        return;
-      }
-      attempts += 1;
-      if (attempts < 20) window.requestAnimationFrame(selectOption);
-    }
-    window.requestAnimationFrame(selectOption);
-    return true;
+    }, 4000);
   }
 
-  function navigateDocsLocale(locale) {
-    if (!Object.prototype.hasOwnProperty.call(localeLabels, locale)) return;
-
-    var selector = visibleSelector();
-    if (!selector) return;
-    selector.click();
-
-    var attempts = 0;
-    function selectOption() {
-      enhanceMenus();
-      var option = Array.from(
-        document.querySelectorAll(
-          '.fern-language-dropdown-content [role="menuitemradio"]',
-        ),
-      ).find(function (candidate) {
-        return optionLocale(candidate) === locale;
-      });
-
-      if (option) {
-        option.click();
-        return;
-      }
-      attempts += 1;
-      if (attempts < 20) window.requestAnimationFrame(selectOption);
+  async function navigateDocsLocale(locale) {
+    if (!Object.prototype.hasOwnProperty.call(localeLabels, locale)) {
+      return false;
     }
-    window.requestAnimationFrame(selectOption);
+    if (currentPathLocale() === locale) return true;
+
+    var navigationId = ++localeNavigationId;
+    for (var attempt = 0; attempt < 2; attempt += 1) {
+      var selector = await waitFor(visibleSelector, 4000);
+      if (navigationId !== localeNavigationId) return false;
+      if (!selector) return false;
+      if (
+        selector.getAttribute("aria-expanded") !== "true" &&
+        selector.dataset.state !== "open"
+      ) {
+        selector.click();
+      }
+
+      var option = await waitForLocaleOption(selector, locale);
+      if (navigationId !== localeNavigationId) return false;
+      if (!option) continue;
+      option.click();
+      var changed = await waitFor(function () {
+        return currentPathLocale() === locale ? true : null;
+      }, 4000);
+      if (navigationId !== localeNavigationId) return false;
+      if (changed) return true;
+    }
+    return false;
+  }
+
+  async function navigateDocsTheme(theme) {
+    if (theme !== "light" && theme !== "dark") return false;
+
+    var navigationId = ++themeNavigationId;
+    for (var attempt = 0; attempt < 2; attempt += 1) {
+      var trigger = await waitFor(visibleThemeTrigger, 4000);
+      if (navigationId !== themeNavigationId) return false;
+      if (!trigger) return false;
+      if (
+        trigger.getAttribute("aria-expanded") !== "true" &&
+        trigger.dataset.state !== "open"
+      ) {
+        trigger.click();
+      }
+
+      var option = await waitForThemeOption(trigger, theme);
+      if (navigationId !== themeNavigationId) return false;
+      if (!option) continue;
+      option.click();
+      var changed = await waitFor(function () {
+        return themeAppearanceMatches(theme) ? true : null;
+      }, 4000);
+      if (navigationId !== themeNavigationId) return false;
+      if (changed) return true;
+    }
+    return false;
   }
 
   function sync() {

@@ -62,11 +62,16 @@
     return true;
   }
 
-  function syncWidgetLanguageFromHost() {
-    callWidget('setLang', currentLang());
+  function syncWidgetLanguageFromHost(retries) {
+    if (callWidget('setLang', currentLang())) return;
+    if (retries > 0) {
+      window.setTimeout(function () {
+        syncWidgetLanguageFromHost(retries - 1);
+      }, 100);
+    }
   }
 
-  function syncWidgetThemeFromHost() {
+  function syncWidgetThemeFromHost(retries, force) {
     var theme = currentTheme();
     if (pendingWidgetTheme === theme) {
       pendingWidgetTheme = null;
@@ -74,8 +79,14 @@
       return;
     }
     pendingWidgetTheme = null;
-    if (theme !== lastTheme && callWidget('setTheme', theme)) {
-      lastTheme = theme;
+    if (force || theme !== lastTheme) {
+      if (callWidget('setTheme', theme)) {
+        lastTheme = theme;
+      } else if (retries > 0) {
+        window.setTimeout(function () {
+          syncWidgetThemeFromHost(retries - 1, force);
+        }, 100);
+      }
     }
   }
 
@@ -106,28 +117,28 @@
     }
 
     if (typeof window.__sixmmNavigateDocsLocale === 'function') {
-      window.__sixmmNavigateDocsLocale(route);
+      Promise.resolve(window.__sixmmNavigateDocsLocale(route)).then(function (success) {
+        if (!success && pendingWidgetDocsLocale === route) {
+          pendingWidgetDocsLocale = null;
+        }
+      });
+    } else {
+      pendingWidgetDocsLocale = null;
     }
   }
 
   function switchHostTheme(theme) {
     if (theme !== 'light' && theme !== 'dark') return;
 
-    lastTheme = theme;
-    var root = document.documentElement;
-    root.dataset.theme = theme;
-    root.classList.remove('light', 'dark');
-    root.classList.add(theme);
-    root.style.colorScheme = theme;
-
-    try {
-      window.localStorage.setItem('theme', theme);
-    } catch (_error) {
-      // Theme still changes for the current page when storage is unavailable.
-    }
-
     if (typeof window.__sixmmNavigateDocsTheme === 'function') {
-      window.__sixmmNavigateDocsTheme(theme);
+      Promise.resolve(window.__sixmmNavigateDocsTheme(theme)).then(function (success) {
+        if (pendingWidgetTheme === theme) {
+          pendingWidgetTheme = null;
+          if (success) lastTheme = theme;
+        }
+      });
+    } else {
+      pendingWidgetTheme = null;
     }
   }
 
@@ -160,6 +171,9 @@
     script.dataset.appId = APP_ID;
     script.onload = function () {
       document.documentElement.classList.remove('sixmm-support-widget-loading');
+      // The host may have changed while widget.js was loading.
+      syncWidgetLanguageFromHost(20);
+      syncWidgetThemeFromHost(20, true);
     };
     script.onerror = function () {
       document.documentElement.classList.remove('sixmm-support-widget-loading');
@@ -174,7 +188,9 @@
 
     loadWidget();
 
-    var observer = new MutationObserver(syncWidgetThemeFromHost);
+    var observer = new MutationObserver(function () {
+      syncWidgetThemeFromHost(20, false);
+    });
     observer.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ['class', 'data-theme']
@@ -191,7 +207,7 @@
           return;
         }
         pendingWidgetDocsLocale = null;
-        syncWidgetLanguageFromHost();
+        syncWidgetLanguageFromHost(20);
       }
     }, 600);
   }
