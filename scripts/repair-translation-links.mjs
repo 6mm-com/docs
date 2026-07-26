@@ -49,7 +49,7 @@ const relatedPageLabels = {
   fil: "Mga kaugnay na pahina",
   az: "Əlaqəli səhifələr",
 };
-const standaloneLocaleCodes = new Set(["en-Asia", "es-419", "pt-BR", "pt", "es", "es-AR", "uz", "fil", "az"]);
+const standaloneLocaleCodes = new Set(["en-Asia", "uz", "fil", "az"]);
 const standaloneRoutes = {
   "en-Asia": "en-Asia",
   "es-419": "es-419",

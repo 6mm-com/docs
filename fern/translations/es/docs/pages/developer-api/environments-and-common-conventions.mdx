@@ -1,0 +1,56 @@
+---
+title: "Entornos y convenciones comunes"
+description: "Revisa 6MM API entornos y convenciones compartidas para URLs base, marcas de tiempo, campos numéricos, símbolos, IDs de solicitudes, paginación y respuestas."
+slug: developer-api/environments-and-common-conventions
+canonical-url: https://docs.6mm.com/es/developer-api/environments-and-common-conventions
+---
+
+<h2 id="service-endpoints">Puntos finales de servicio</h2>
+
+| Tipo      | Punto final              |
+| --------- | --------------------- |
+| REST API  | `https://api.6mm.com` |
+| WebSocket | `wss://ws.6mm.com/ws`    |
+
+<h2 id="time-and-numeric-values">Tiempo y valores numéricos</h2>
+
+* Salvo que se especifique lo contrario, los campos de tiempo son marcas de tiempo de milisegundos de Unix.
+* Las estadísticas diarias, instantáneas de saldo y estadísticas de volumen de operaciones utilizan por defecto los límites UTC días.
+* Los campos sensibles a la precisión como cantidad, precio, cantidad y tasa se transmiten como cadenas.
+* Los IDs enteros grandes como `orderId`, `conditionId`y `strategyId` se devuelven como cadenas en JSON.
+
+<h2 id="response-format">Formato de respuesta</h2>
+
+Respuesta exitosa:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {},
+  "requestId": "req-12345678"
+}
+```
+
+Respuesta al error:
+
+```json
+{
+  "code": 1003,
+  "message": "Invalid token",
+  "requestId": "req-12345678"
+}
+```
+
+Notas:
+
+* Los errores de negocio suelen seguir devolviendo la estructura unificada de JSON . Los integradores deberían comprobar `code` primero.
+* Los fallos de autenticación pueden devolver HTTP `401`; La limitación de velocidad puede devolver HTTP `429`.
+* Puedes enviar `X-Request-ID` en la cabecera de la solicitud. El servidor lo devolverá como `requestId` en la respuesta.
+
+<h2 id="related-documentation">Documentación relacionada</h2>
+
+- [Autenticación](/es/developer-api/authentication): elige JWT o API Key firma.
+- [Firma de solicitudes](/es/developer-api/request-signing): construir y verificar las solicitudes firmadas.
+- [REST API](/es/developer-api/rest-api): aplicar estas convenciones a los grupos de extremos.
+- [Códigos de error y resolución de problemas](/es/developer-api/error-codes-and-troubleshooting): diagnosticar errores de HTTP y de negocio.

@@ -3,15 +3,20 @@
     "": "English",
     ja: "日本語",
     ru: "Русский",
+    "es-419": "Español (Latinoamérica)",
     it: "Italiano",
     fr: "Français",
     de: "Deutsch",
     "zh-CN": "简体中文",
     "zh-TW": "繁體中文",
+    "pt-BR": "Português (Brasil)",
     id: "Bahasa Indonesia",
     pl: "Polski",
     vi: "Tiếng Việt",
     uk: "Українська",
+    pt: "Português (Internacional)",
+    es: "Español (Internacional)",
+    "es-AR": "Español (Argentina)",
     ar: "العربية",
   };
   var extraLocales = [
@@ -21,11 +26,6 @@
       label: "English (Asia)",
       prefix: "en-Asia",
     },
-    { code: "es-419", label: "Español (Latinoamérica)", prefix: "es-419" },
-    { code: "pt-BR", label: "Português (Brasil)", prefix: "pt-BR" },
-    { code: "pt", label: "Português (Internacional)", prefix: "pt" },
-    { code: "es", label: "Español (Internacional)", prefix: "es" },
-    { code: "es-AR", label: "Español (Argentina)", prefix: "es-AR" },
     { code: "uz", label: "O‘zbek", prefix: "uz" },
     { code: "fil", label: "Filipino", prefix: "fil" },
     { code: "az", label: "Azərbaycan", prefix: "az" },
@@ -35,20 +35,20 @@
     "extra:en-Asia",
     "native:ja",
     "native:ru",
-    "extra:es-419",
+    "native:es-419",
     "native:it",
     "native:fr",
     "native:de",
     "native:zh-CN",
     "native:zh-TW",
-    "extra:pt-BR",
+    "native:pt-BR",
     "native:id",
     "native:pl",
     "native:vi",
     "native:uk",
-    "extra:pt",
-    "extra:es",
-    "extra:es-AR",
+    "native:pt",
+    "native:es",
+    "native:es-AR",
     "extra:uz",
     "native:ar",
     "extra:fil",
@@ -63,11 +63,6 @@
     .filter(Boolean);
   var standaloneSectionLabels = {
     "en-Asia": "English (Asia)",
-    "es-419": "Español (Latinoamérica)",
-    "pt-BR": "Português (Brasil)",
-    pt: "Português (Internacional)",
-    es: "Español (Internacional)",
-    "es-AR": "Español (Argentina)",
     uz: "O‘zbek",
     fil: "Filipino",
     az: "Azərbaycan dili",
@@ -288,7 +283,7 @@
 
   function syncExtraOptions(group, route) {
     var isStandalone =
-      ["en-Asia", "es-419", "pt-BR", "pt", "es", "es-AR", "uz", "fil", "az"].indexOf(route.prefix) >= 0;
+      ["en-Asia", "uz", "fil", "az"].indexOf(route.prefix) >= 0;
     if (isStandalone) {
       var englishOption = Array.from(
         group.querySelectorAll('[role="menuitemradio"]'),
@@ -377,11 +372,6 @@
         var isStandalone =
           [
             "en-Asia",
-            "es-419",
-            "pt-BR",
-            "pt",
-            "es",
-            "es-AR",
             "uz",
             "fil",
             "az",

@@ -31,7 +31,7 @@ const expectedLocales = [
   "fil",
   "az",
 ];
-const standaloneLocaleCodes = new Set(["en-Asia", "es-419", "pt-BR", "pt", "es", "es-AR", "uz", "fil", "az"]);
+const standaloneLocaleCodes = new Set(["en-Asia", "uz", "fil", "az"]);
 const aliasLocaleCodes = new Set();
 const standaloneRoutes = {
   "en-Asia": "en-Asia",

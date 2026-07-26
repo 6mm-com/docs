@@ -1,0 +1,140 @@
+---
+title: "Métodos de Instância"
+subtitle: "Controle uma instância de widget criada após TradingWidget.create()."
+slug: sdk/trading-widget/instance-methods
+canonical-url: https://docs.6mm.com/pt-BR/sdk/trading-widget/instance-methods
+---
+
+<h2 id="method-summary">Resumo do Método</h2>
+
+| Método | Propósito |
+| --- | --- |
+| destruir() | Remova o iframe e libere os ouvintes do evento. |
+| getState() | Leia o estado atual do ciclo de vida SDK . |
+| whenReady() | Espere até o iframe terminar de inicializar. |
+| setSymbol(símbolo) | Troque o par de negociação dentro do iframe. |
+| setTheme(tema) | Atualize o parâmetro do tema do iframe. |
+| setLocale(localidade) | Troque o idioma do iframe. |
+| setSize(largura, altura) | Atualize as dimensões do iframe. |
+| reload() | Recarregue o iframe atual. |
+| refreshAuth(motivo) | Acione o fluxo de atualização de autenticação do widget. |
+| setTokenProvider(provedor) | Substitua o provedor usado pelo modo partner-token. |
+| ligado (evento, manipulador) | Assine eventos em tempo real e receba uma função de cancelamento da inscrição. |
+
+<h2 id="destroy">destruir()</h2>
+
+Remova o iframe, limpe os ouvintes e emita destruído uma vez para a instância atual.
+
+```js
+widget.destroy()
+```
+
+<h2 id="getstate">getState()</h2>
+
+Leia o estado atual do ciclo de vida da instância do widget.
+
+```js
+const state = widget.getState()
+```
+
+Valores de retorno incluem carregamento, autenticação, pronto, erro e destruido.
+
+<h2 id="whenready">whenReady()</h2>
+
+Espere o iframe terminar a inicialização antes de executar a lógica dependente da interface.
+
+```js
+await widget.whenReady()
+```
+
+<h2 id="setsymbol-symbol">setSymbol(símbolo)</h2>
+
+Troque o par de negociação dentro do iframe. Se o iframe ainda estiver inicializando, o SDK coloca o comando em fila e o envia após ready.
+
+```js
+widget.setSymbol('ETHUSDT')
+```
+
+<h2 id="settheme-theme">setTheme(tema)</h2>
+
+Atualize o parâmetro de tema usado pelo iframe de negociação embutido.
+
+```js
+widget.setTheme('dark')
+widget.setTheme('light')
+```
+
+<h2 id="setlocale-locale">setLocale(localidade)</h2>
+
+Troque o idioma do iframe. Os valores suportados são en, en-US e zh-CN.
+
+```js
+widget.setLocale('en')
+widget.setLocale('en-US')
+widget.setLocale('zh-CN')
+```
+
+<h2 id="setsize-width-height">setSize(largura, altura)</h2>
+
+Atualize o tamanho do iframe DOM e avise o iframe sobre o novo tamanho externo. Os valores numéricos são convertidos para px.
+
+```js
+widget.setSize('100%', 720)
+```
+
+<h2 id="reload">reload()</h2>
+
+Recarregue o iframe atual e espere ele inicializar novamente.
+
+```js
+widget.reload()
+```
+
+<h2 id="refreshauth-reason">refreshAuth(motivo)</h2>
+
+Peça ao iframe para atualizar o fluxo de autenticação atual. O valor opcional da razão é encaminhado para registro e controle de fluxo.
+
+```js
+widget.refreshAuth('manual')
+```
+
+<h2 id="settokenprovider-provider">setTokenProvider(provedor)</h2>
+
+Substitua o tokenProvider usado pelo modo partner-token. O SDK chama o provedor quando o iframe solicita um token de embed novo.
+
+```js
+widget.setTokenProvider(async ({ channelId, symbol, reason }) => {
+  const resp = await fetch('/api/trading/embed-token', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ channelId, symbol, reason }),
+  })
+
+  return resp.json()
+})
+```
+
+<h2 id="on-event-handler">ligado (evento, manipulador)</h2>
+
+Assine um evento em tempo real. A função retornada remove o ouvinte.
+
+```js
+const off = widget.on('order_created', (event) => {
+  console.log(event)
+})
+
+off()
+```
+
+<h2 id="related-widget-guides">Guias relacionados de widgets</h2>
+
+- [Trading Widget Início Rápido] (/sdk/trading-widget/quick-start)
+- [Opções & Eventos](/pt-BR/sdk/trading-widget/options-events)
+- [Autenticação](/pt-BR/sdk/trading-widget/authentication)
+- [Solução de Problemas](/pt-BR/sdk/security/troubleshooting)
+{/* sixmm-localized-link-repair:start */}
+<h2 id="localized-page-links">Páginas relacionadas</h2>
+
+- [Incorpore o 6MM Trading Widget: Início Rápido](/pt-BR/sdk/trading-widget/quick-start)
+{/* sixmm-localized-link-repair:end */}

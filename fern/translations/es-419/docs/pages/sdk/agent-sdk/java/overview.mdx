@@ -1,0 +1,48 @@
+---
+title: "Agent Java SDK"
+subtitle: "Instala el 6MM Agent Java SDK y usa APIs backend firmado para vinculación de usuarios, transferencias, credenciales de entrada y verificación de webhook."
+slug: sdk/agent-sdk/java/overview
+canonical-url: https://docs.6mm.com/es-419/sdk/agent-sdk/java/overview
+---
+
+<h2 id="official-repository">Repositorio oficial</h2>
+
+El repositorio Java SDK es la fuente de verdad para SDK código fuente, notas de versión, ejemplos de uso y detalles de implementación:
+
+[6mm-com/agent-java-sdk](https://github.com/6mm-com/agent-java-sdk)
+
+<h2 id="runtime">Duración</h2>
+
+| Ítem | Valor |
+| --- | --- |
+| Versión mínima Java | Java 8+ |
+| Herramienta de construcción recomendada | Maven 3.9+ |
+| Grupo Maven | `com.sixmm.exchange.sdk` |
+| Artefacto Maven | `agent` |
+| Etiqueta de fuente documentada | `v0.1.1` |
+
+El repositorio público de GitHub es alojamiento fuente, no un repositorio de dependencias de Maven. Compila e instala el código fuente etiquetado localmente o publica el artefacto aprobado en el repositorio privado de Maven de tu organización antes de usarlo en compilaciones de equipos.
+
+<h2 id="typical-backend-responsibilities">Responsabilidades típicas de backend</h2>
+
+- Validar la sesión de usuario asociada.
+- Mapear al usuario socio a agentUserId.
+- Vinculación de llamadas antes de los flujos de primera operación o transferencia.
+- Llama a createEntryUrl para un SSOcompleto único en el sitio .
+- Llamar createEmbedToken para Trading Widget modo de token de compañero.
+- Verificar los webhooks de transferencia y procesarlos idempotentemente.
+
+<h2 id="security-and-operational-rules">Reglas de seguridad y operativas</h2>
+
+- Almacenar `apiSecret` solo en un gestor de secretos de backend o en una variable de entorno protegido.
+- Mantener sincronizada la hora del servidor porque las solicitudes firmadas contienen marcas de tiempo.
+- Tratar `agentOrderNo` como una clave de idempotencia duradera y mantenerla única a nivel global.
+- Almacenar `platformUserId` como una cadena y persistir su relación con `agentUserId`.
+- Consulta la transferencia original antes de intentarlo de nuevo después de un tiempo de espera o un resultado de red incierto.
+
+<h2 id="next-steps">Próximos pasos</h2>
+
+- [Java Inicio Rápido](/es-419/sdk/agent-sdk/java/quick-start): instala la fuente etiquetada e inicializa `AgentClient`.
+- [Create Embed Token](/es-419/sdk/agent-sdk/java/embed-token): emitir credenciales de corta duración para Trading Widget.
+- [Secretos y Firmas](/es-419/sdk/security/secrets-signing): entiende HMAC automático de firmas y manejo secreto.
+- [Webhooks & Idempotency](/es-419/sdk/security/webhooks-idempotency): verifica callbacks y evita el procesamiento duplicado.

@@ -34,7 +34,7 @@ const localeSpecs = [
   { code: "fil", route: "fil", sourceLanguage: "en", targetLanguage: "fil", label: "Filipino" },
   { code: "az", route: "az", sourceLanguage: "en", targetLanguage: "az", label: "Azərbaycan dili" },
 ];
-const standaloneLocaleCodes = new Set(["en-Asia", "es-419", "pt-BR", "pt", "es", "es-AR", "uz", "fil", "az"]);
+const standaloneLocaleCodes = new Set(["en-Asia", "uz", "fil", "az"]);
 
 const args = new Set(process.argv.slice(2));
 const force = args.has("--force");

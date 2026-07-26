@@ -1,0 +1,159 @@
+---
+title: "Puntos Finales Públicos"
+description: "Accede a endpoints públicos de 6MM API para instrumentos, tickers, libros de órdenes, operaciones y otra información de mercado no autenticada."
+slug: developer-api/rest-api/public-endpoints
+canonical-url: https://docs.6mm.com/es-419/developer-api/rest-api/public-endpoints
+---
+
+<h2 id="base-url">Base URL</h2>
+
+```
+https://api.6mm.com
+```
+
+<h2 id="service-version">Versión de servicio</h2>
+
+```http
+GET /v1/version
+```
+
+Obtén información sobre la versión del servicio.
+
+<h2 id="server-time">Hora del servidor</h2>
+
+```http
+GET /v1/time
+```
+
+Consigue tiempo en el servidor. Este endpoint puede usarse para calibrar el tiempo del cliente antes de API Key firma.
+
+<h2 id="user-login">Inicio de sesión de usuario</h2>
+
+```http
+POST /v1/public/user/login
+```
+
+Parámetros de la solicitud:
+
+| Parámetro    | Tipo   | Obligatorio | Descripción                             |
+| ------------ | ------ | -------- | --------------------------------------- |
+| `username`   | string | Sí      | Nombre de usuario, longitud 3 - 32                 |
+| `password`   | string | Sí      | Contraseña, longitud 1 - 64                 |
+| `deviceId`   | string | No       | Huella digital del dispositivo, hasta 64 caracteres |
+| `deviceName` | string | No       | Nombre del dispositivo, hasta 128 caracteres       |
+
+Ejemplo de solicitud:
+
+```bash
+curl -X POST https://api.6mm.com/v1/public/user/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "alice",
+    "password": "yourPassword",
+    "deviceId": "device-001",
+    "deviceName": "server-001"
+  }'
+```
+
+Ejemplo de respuesta:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "accessToken": "YOUR_ACCESS_TOKEN",
+    "accessExpire": 1769676656
+  },
+  "requestId": "req-login"
+}
+```
+
+<h2 id="refresh-token">Token de actualización</h2>
+
+```http
+POST /v1/public/user/refresh-token
+```
+
+En escenarios normales de integración, el estado de inicio de sesión se actualiza mediante Cookie. Mantén la Cookie devuelta por la respuesta de inicio de sesión.
+
+Campos de respuesta:
+
+| Campo          | Tipo   | Descripción              |
+| -------------- | ------ | ------------------------ |
+| `accessToken`  | string | Nuevo Token de acceso         |
+| `accessExpire` | int64  | Hora de vencimiento del Token de Acceso |
+
+<h2 id="agent-sso">Agente SSO</h2>
+
+<h2 id="ticket-exchange">Intercambio de boletos</h2>
+
+```http
+POST /v1/public/agent-sso/exchange-ticket
+```
+
+Parámetros de la solicitud:
+
+| Parámetro  | Tipo   | Obligatorio | Descripción                                 |
+| ---------- | ------ | -------- | ------------------------------------------- |
+| `ticket`   | string | Sí      | Boleto único emitido por el servicio de agentes |
+| `deviceId` | string | No       | Huella digital del dispositivo, hasta 64 caracteres     |
+
+Campos de respuesta:
+
+| Campo          | Tipo   | Descripción              |
+| -------------- | ------ | ------------------------ |
+| `accessToken`  | string | Token de acceso             |
+| `accessExpire` | int64  | Hora de vencimiento del Token de Acceso |
+| `redirectPath` | string | Ruta de redirección sugerida  |
+
+<h2 id="embed-token-exchange">Embed Token Exchange</h2>
+
+```http
+POST /v1/public/agent-sso/exchange-embed-token
+```
+
+Parámetros de la solicitud:
+
+| Parámetro    | Tipo   | Obligatorio | Descripción                                                    |
+| ------------ | ------ | -------- | -------------------------------------------------------------- |
+| `embedToken` | string | Sí      | Token de trading embebido de corta duración emitido por el servicio de agentes |
+| `channelId`  | string | Sí      | ID de canal de iframe incrustado, hasta 128 caracteres               |
+| `deviceId`   | string | No       | Huella digital del dispositivo, hasta 64 caracteres                        |
+
+Campos de respuesta:
+
+| Campo          | Tipo   | Descripción              |
+| -------------- | ------ | ------------------------ |
+| `accessToken`  | string | Token de acceso             |
+| `accessExpire` | int64  | Hora de vencimiento del Token de Acceso |
+
+<h2 id="pnl-leaderboard">Tabla de Clasificación de PnL</h2>
+
+```http
+GET /v1/public/leaderboard/pnl?period=30d
+```
+
+Parámetros de la solicitud:
+
+| Parámetro | Tipo   | Obligatorio | Descripción          |
+| --------- | ------ | -------- | -------------------- |
+| `period`  | string | Sí      | `7d` / `30d` / `90d` |
+
+Campos de respuesta:
+
+| Campo              | Tipo   | Descripción                                                       |
+| ------------------ | ------ | ----------------------------------------------------------------- |
+| `list[].rank`      | int32  | Rango                                                              |
+| `list[].userId`    | string | ID de usuario externo                                                  |
+| `list[].trader`    | string | Nombre de comerciante enmascarado                                                |
+| `list[].volume`    | string | Volumen de operaciones en la ventana                                      |
+| `list[].pnlAmount` | string | PnL realizado en la ventana                                        |
+| `list[].pnlPct`    | string | Razón PnL, decimal de `0` a `1`                                |
+| `myRank`           | int32  | Rango actual del usuario. Devuelve `0` si no está autenticado o no clasificado |
+
+<h2 id="related-documentation">Documentación relacionada</h2>
+
+- [Datos de mercado](/es-419/developer-api/rest-api/market-data)
+- [Canales de WebSocket Público](/es-419/developer-api/websocket/public-market-channels)
+- [Entornos y Convenciones Comunes](/es-419/developer-api/environments-and-common-conventions)

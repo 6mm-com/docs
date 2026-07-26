@@ -1,0 +1,78 @@
+---
+title: "PHP Início Rápido"
+subtitle: "Instale e inicialize o PHP SDK a partir de um serviço backend."
+slug: sdk/agent-sdk/php/quick-start
+canonical-url: https://docs.6mm.com/pt-BR/sdk/agent-sdk/php/quick-start
+---
+
+<h2 id="install">Instalação</h2>
+
+```json
+{
+  "require": {
+    "sixmm/agent-sdk": "VERSION_PROVIDED_BY_6MM"
+  }
+}
+```
+
+> **Acesso ao pacote**
+>
+> 6MM fornece o nome aprovado do pacote Composer, repositório e versão durante a integração do parceiro. O pacote não deve ser assumido como existindo no Packagist público.
+
+<h2 id="before-you-start">Antes de começar</h2>
+
+- Confirme o Agente API base URL com 6MM.
+- Carregar apiSecret a partir de variáveis de ambiente ou gerenciamento de segredos.
+- Mantenha SDK uso apenas dentro dos serviços backend.
+- Preparar o manuseio de idempotentes para transferências e fluxos de webhook.
+
+<h2 id="initialize-client">Inicializar cliente</h2>
+
+```php
+<?php
+
+use Sixmm\Agent\AgentClient;
+use Sixmm\Agent\AgentConfig;
+
+$client = new AgentClient(new AgentConfig(
+    'https://agent-api.6mm.com',
+    'AGENT001',
+    getenv('AGENT_API_SECRET') ?: '',
+    'USDT'
+));
+```
+
+> **Apenas backend**
+>
+> O PHP SDK assina solicitações de API do Agente e não deve ser exposto por meio de código-fonte público ou ambientes de runtime frontend.
+
+<h2 id="example-transfer-funds-in">Exemplo: transferir fundos para</h2>
+
+```php
+$response = $client->transfer([
+    'agentOrderNo' => 'AGT-ORDER-1001',
+    'agentUserId' => 'agent-user-001',
+    'direction' => 'IN',
+    'currency' => 'USDT',
+    'amount' => '10.00',
+]);
+```
+
+Use cadeias decimais para os valores e preserve o agentOrderNo original ao tentar novamente ou consultar o status da transferência.
+
+<h2 id="next-steps">Próximos passos</h2>
+
+| Need | Próxima página |
+| --- | --- |
+| Entenda Agent SDK capacidades | [Agent SDK Visão geral ] (/sdk/agent-sdk/overview) |
+| Revise o comportamento de assinatura | [Segredos e Assinaturas] (/sdk/security/secrets-signing) |
+| Verificar a entrega de retorno de chamada | [Ganchos de Teia & Idempotência] (/sdk/security/webhooks-idempotency) |
+| Diagnosticar um problema de integração | [SDK Solucionando problemas ] (/sdk/security/troubleshooting) |
+{/* sixmm-localized-link-repair:start */}
+<h2 id="localized-page-links">Páginas relacionadas</h2>
+
+- [6MM Agent SDK para Java e PHP](/pt-BR/sdk/agent-sdk/overview)
+- [Agent SDK Segredos e HMAC Assinatura](/pt-BR/sdk/security/secrets-signing)
+- [Verificação de Assinatura em Webhook e Idempotência](/pt-BR/sdk/security/webhooks-idempotency)
+- [SDK Solução de Problemas de Integração](/pt-BR/sdk/security/troubleshooting)
+{/* sixmm-localized-link-repair:end */}

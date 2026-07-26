@@ -1,0 +1,112 @@
+---
+title: "Canal Privado de Usuário"
+description: "Assine eventos de 6MM WebSocket autenticados para ordens, posições, saldos e alterações de conta criando e mantendo uma chave de escuta."
+slug: developer-api/websocket/private-user-channel
+canonical-url: https://docs.6mm.com/pt-BR/developer-api/websocket/private-user-channel
+---
+
+Crie um `listenKey` primeiro:
+
+```http
+POST /v1/private/user/listen-key
+```
+
+Exemplo de resposta:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "listenKey": "f57cb61ef604ce76be09e753a5dbdd8c",
+    "expireAt": 1777539918867
+  },
+  "requestId": "req-listen-key"
+}
+```
+
+`listenKey` é válido por 60 minutos por padrão. Recomenda-se renovar a cada 30 minutos.
+
+<h2 id="renew">Renovar</h2>
+
+```http
+PUT /v1/private/user/listen-key
+Content-Type: application/json
+```
+
+```json
+{ "listenKey": "f57cb61ef604ce76be09e753a5dbdd8c" }
+```
+
+<h2 id="close">Fechar</h2>
+
+```http
+DELETE /v1/private/user/listen-key
+Content-Type: application/json
+```
+
+```json
+{ "listenKey": "f57cb61ef604ce76be09e753a5dbdd8c" }
+```
+
+<h2 id="connect-to-private-websocket">Conecte-se ao WebSocket privado</h2>
+
+```
+wss://ws.6mm.com/ws?listenKey=YOUR_LISTEN_KEY
+```
+
+Método de conexão JWT compatível:
+
+```
+wss://ws.6mm.com/ws?token=YOUR_ACCESS_TOKEN
+```
+
+Após o sucesso da autenticação, o servidor automaticamente assina a conexão no canal privado do usuário atual. Não é necessária assinatura manual.
+
+Confirmação de autenticação bem-sucedida:
+
+```json
+{ "event": "auth", "success": true, "data": "1188041528" }
+```
+
+<h2 id="common-private-events">Eventos privados comuns</h2>
+
+| Evento                | Descrição                                                                   |
+| -------------------- | ----------------------------------------------------------------------------- |
+| `ORDER_TRADE_UPDATE` | Mudanças no status do pedido, incluindo nova ordem, emenda, troca e cancelamento |
+| `ACCOUNT_UPDATE`     | Alterações no saldo da conta e na posição                                          |
+
+Envolvente de mensagem push privada:
+
+```json
+{
+  "topic": "user.5794",
+  "ts": 1771047000000,
+  "data": {
+    "eventType": "ORDER_TRADE_UPDATE"
+  }
+}
+```
+
+REST endpoints de consulta e WebSocket fluxos privados usam esquemas separados. Os clientes devem analisar cada esquema independentemente e não devem assumir que os nomes dos campos são idênticos.
+
+<h2 id="common-differences">Diferenças comuns</h2>
+
+| Domínio         | REST campo     | WebSocket campo                                             |
+| -------------- | -------------- | ----------------------------------------------------------- |
+| Status da ordem   | `status`       | `orderStatus`                                               |
+| Saldo congelado | `frozenMargin` | `frozenBalance`                                             |
+| Modo margem    | `marginMode`   | `marginMode`, retornado como uma sequência nas posições e fluxos |
+
+<h2 id="recovery-and-reconciliation">Recuperação e reconciliação</h2>
+
+- Renovar o listenKey antes do vencimento e criar um novo caso a renovação não funcione.
+- Reconectar, reautenticar e tratar o novo socket como uma nova sessão de eventos.
+- Deduplicar eventos antes de alterar saldos de parceiros ou registros de pedidos.
+- Se eventos puderam ter sido perdidos, consulte [ordens](/pt-BR/developer-api/rest-api/order), [posições](/pt-BR/developer-api/rest-api/position) e [estado da conta](/pt-BR/developer-api/rest-api/user-and-account) até REST.
+- Siga o [guia de conexão e batimento] (/developer-api/websocket/connection-subscription-and-heartbeat) para retentar e lidar com conexão obsoleta.
+{/* sixmm-localized-link-repair:start */}
+<h2 id="localized-page-links">Páginas relacionadas</h2>
+
+- [Conexão, Assinatura e Batimentos cardíacos](/pt-BR/developer-api/websocket/connection-subscription-and-heartbeat)
+{/* sixmm-localized-link-repair:end */}

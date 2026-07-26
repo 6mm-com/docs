@@ -1,0 +1,68 @@
+---
+title: "SDK Resolução de Problemas de Integração"
+subtitle: "Diagnostica Trading Widget, Agent SDK, assinatura, webhook, timeout e problemas de ambiente antes de escalar um pedido de suporte."
+slug: sdk/security/troubleshooting
+canonical-url: https://docs.6mm.com/pt/sdk/security/troubleshooting
+---
+
+Comece pelo ambiente, carimbo temporal e identificador de negócio da operação falhada. Uma verificação estruturada geralmente separa problemas de configuração de autenticação, rede e processamento assíncrono.
+
+<h2 id="diagnostic-order">Ordem diagnóstica recomendada</h2>
+
+1. Confirmar o ambiente afetado e a URLbase.
+2. Registar o intervalo de tempo UTC e o primeiro pedido falhado.
+3. Identificar o módulo: Trading Widget, Agent SDK, REST API, WebSocket, ou webhook.
+4. Capturar o ID do pedido, ID do utilizador do parceiro, `agentOrderNo`, ID da encomenda ou ID do evento webhook.
+5. Verifique o código recente, credencial, IP whitelist ou alterações de implementação.
+6. Reproduzir com o menor caso de teste seguro.
+
+<h2 id="trading-widget-issues">Trading Widget questões</h2>
+
+| Sintoma | Causa provável | Corrigir |
+| --- | --- | --- |
+| O iframe solicita domínio local parceiro | baseUrl falta | Passe baseUrl: 'https://app.6mm.com'. |
+| O iframe é invisível ou muito baixo | O recipiente principal não tem altura | Defina a altura do recipiente ou a altura de passagem. |
+| token_provider_missing | O modo partner-token não tem fornecedor | Adicione autorizaçãotokenProvider. |
+| auth_exchange_failed | Token embed inválido, expirado ou incompatível | Verifique a resposta do token no backend e channelId. |
+
+<h2 id="agent-sdk-issues">Agent SDK questões</h2>
+
+| Sintoma | Causa provável | Corrigir |
+| --- | --- | --- |
+| Assinatura rejeitada | Segredo errado, desvio de relógio ou campos de assinatura alterados manualmente | Deixa- SDK gerar campos de assinatura e sincronizar o tempo do servidor. |
+| Risco de movimento de fundos duplicados | Novo número de encomenda usado após o tempo de espera | Consulta por agentOrderNo original primeiro. |
+| PROCESSING tratado como fracasso | Estado pendente mal interpretado | Espera pelo webhook ou liga para queryOrder. |
+| Webhook processado várias vezes | Comportamento de retentar sem idempotência | Adiciona chaves de idempotência e verificações de estado final. |
+
+<h2 id="evidence-to-capture">Provas a capturar</h2>
+
+| Integração | Evidências úteis |
+| --- | --- |
+| Trading Widget | Página URL, SDK caminho de versão, consola do navegador, pedidos de rede falhados, carga útil `onError` e dimensões do contentor. |
+| Agent SDK | SDK linguagem/versão, URLbase, carimbo temporal UTC , ID do pedido, `agentOrderNo`, código de resposta e registos sanitizados. |
+| Webhook | Tempo de entrega, chave de evento ou negócio, resultado de validação de assinatura, estado de processamento e hash do corpo bruto sanitizado. |
+| REST API | Método, caminho, ambiente, ID do pedido, código de resposta e parâmetros sanitizados. |
+
+Nunca inclua palavras-passe, tokens de acesso, API segredos, assinaturas completas, chaves privadas ou dados pessoais não censurados nos diagnósticos.
+
+<h2 id="before-escalating">Antes de escalar</h2>
+
+- Tentar novamente apenas quando a operação estiver documentada como segura para tentar novamente.
+- Após um timeout, consultar o identificador original da empresa em vez de criar um novo.
+- Confirmar o relógio do sistema e o ambiente de credenciais para erros de assinatura.
+- Preservar o primeiro fracasso e quaisquer resultados de tentativas posteriores.
+- Utilizar o [Modelo de Pedido de Suporte](/pt/resources/support-request-template) para enviar um relatório completo e censurado.
+
+<h2 id="related-docs">Documentação relacionada</h2>
+
+<CardGroup cols={3}>
+<Card title="Trading Widget Início Rápido" icon="fa-duotone fa-chart-line" href="/pt/sdk/trading-widget/quick-start">
+Verifique o carregamento do script, tamanho do contentor, configuração e callbacks.
+</Card>
+<Card title="Segredos e Assinatura" icon="fa-duotone fa-shield-keyhole" href="/pt/sdk/security/secrets-signing">
+Verifique Agent SDK credenciais, relógios e campos assinados.
+</Card>
+<Card title="Webhooks & Idempotência" icon="fa-duotone fa-webhook" href="/pt/sdk/security/webhooks-idempotency">
+Revise a verificação de callback e o tratamento de eventos duplicados.
+</Card>
+</CardGroup>

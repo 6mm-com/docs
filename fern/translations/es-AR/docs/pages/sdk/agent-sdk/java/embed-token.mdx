@@ -1,0 +1,56 @@
+---
+title: "Crear Token de Embed"
+subtitle: "Emitir tokens embed de corta duración para Trading Widget modo partner-token."
+slug: sdk/agent-sdk/java/embed-token
+canonical-url: https://docs.6mm.com/es-AR/sdk/agent-sdk/java/embed-token
+---
+
+<h2 id="sdk-call">SDK llamada</h2>
+
+Crea tokens embebidos desde tu backend después de validar la sesión de usuario del socio. El navegador debería llamar a tu endpoint, y tu endpoint debería llamar a 6MM a través del Agent SDK.
+
+```java
+CreateEmbedTokenResponse resp = client.createEmbedToken(
+        CreateEmbedTokenRequest.of("agent-user-001", "tw_abc123")
+                .withSymbol("ETHUSDT"));
+
+System.out.println(resp.embedToken);
+System.out.println(resp.expireAt);
+```
+
+> **Credencial única**
+>
+> embedToken es de corta duración y de uso único. No lo pongas en una cadena de consulta URL .
+
+<h2 id="backend-endpoint-example">Ejemplo de endpoint backend</h2>
+
+```java
+@PostMapping("/api/trading/embed-token")
+public EmbedTokenView createEmbedToken(@RequestBody EmbedTokenRequest request,
+                                       PartnerSession session) {
+    String agentUserId = session.getAgentUserId();
+    CreateEmbedTokenResponse resp = agentClient.createEmbedToken(
+            CreateEmbedTokenRequest.of(agentUserId, request.getChannelId())
+                    .withSymbol(request.getSymbol()));
+
+    return new EmbedTokenView(resp.embedToken, resp.expireAt, request.getChannelId());
+}
+```
+
+Devuelva solo los campos necesarios para el proveedor de tokens Trading Widget . No devuelvas apiSecret, campos de firma en bruto ni configuración interna del servicio.
+
+<h2 id="failure-handling">Manejo de fallos</h2>
+
+| Estado | Manipulación recomendada |
+| --- | --- |
+| La sesión de usuario falta o está expirada | Devuelve el 401 desde el endpoint del socio y pide al usuario que inicie sesión de nuevo. |
+| El usuario agente no está vinculado | Vincula primero al usuario y luego vuelve a intentar crear el token. |
+| 6MM devuelve un error temporal | Devuelve un error reintentable al frontend y registra requestId para soporte. |
+| channelId no coincide con la instancia del widget | Rechaza la petición y recrea la sesión del widget. |
+
+<h2 id="related-documentation">Documentación relacionada</h2>
+
+- [Trading Widget Autenticación](/es-AR/sdk/trading-widget/authentication): conecta `tokenProvider` al punto final del socio.
+- [Java Inicio rápido](/es-AR/sdk/agent-sdk/java/quick-start): instalar e inicializar `AgentClient`.
+- [Secretos y Firmas](/es-AR/sdk/security/secrets-signing): protege al Agente API secreto.
+- [Webhooks & Idempotency](/es-AR/sdk/security/webhooks-idempotency): asegura el lado de callback de la integración.
