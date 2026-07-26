@@ -68,7 +68,7 @@
     if (lastDocsLocale !== currentDocsLocale()) {
       // setLang can synchronously or asynchronously echo a language-change
       // event. Ignore that echo so regional aliases do not bounce routes.
-      ignoreWidgetLanguageEventsUntil = Date.now() + 1500;
+      ignoreWidgetLanguageEventsUntil = Date.now() + 750;
     }
     if (
       lastDocsLocale !== currentDocsLocale() &&
@@ -113,6 +113,13 @@
     if (theme !== 'light' && theme !== 'dark') return;
 
     lastTheme = theme;
+    if (
+      typeof window.__sixmmNavigateDocsTheme === 'function' &&
+      window.__sixmmNavigateDocsTheme(theme)
+    ) {
+      return;
+    }
+
     if (currentTheme() === theme) return;
 
     var root = document.documentElement;
@@ -162,7 +169,6 @@
     };
     lastLang = initialLang;
     lastTheme = initialTheme;
-    ignoreWidgetLanguageEventsUntil = Date.now() + 2000;
     document.body.appendChild(script);
   }
 

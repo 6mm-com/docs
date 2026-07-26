@@ -139,6 +139,55 @@
     );
   }
 
+  function visibleThemeTrigger() {
+    var triggers = Array.from(
+      document.querySelectorAll(".sixmm-theme-trigger"),
+    );
+    return (
+      triggers.find(function (trigger) {
+        return trigger.isConnected && trigger.offsetParent !== null;
+      }) ||
+      triggers.find(function (trigger) {
+        return trigger.isConnected;
+      })
+    );
+  }
+
+  function navigateDocsTheme(theme) {
+    if (theme !== "light" && theme !== "dark") return false;
+
+    var trigger = visibleThemeTrigger();
+    if (!trigger) return false;
+    trigger.click();
+
+    var attempts = 0;
+    function selectOption() {
+      var iconSelector =
+        theme === "dark" ? "svg.lucide-moon" : "svg.lucide-sun";
+      var option = Array.from(
+        document.querySelectorAll(
+          '[role="menuitemradio"], [role="menuitem"]',
+        ),
+      ).find(function (candidate) {
+        var label = (candidate.textContent || "").trim().toLowerCase();
+        return (
+          candidate.isConnected &&
+          candidate !== trigger &&
+          (label === theme || Boolean(candidate.querySelector(iconSelector)))
+        );
+      });
+
+      if (option) {
+        option.click();
+        return;
+      }
+      attempts += 1;
+      if (attempts < 20) window.requestAnimationFrame(selectOption);
+    }
+    window.requestAnimationFrame(selectOption);
+    return true;
+  }
+
   function navigateDocsLocale(locale) {
     if (!Object.prototype.hasOwnProperty.call(localeLabels, locale)) return;
 
@@ -180,6 +229,7 @@
   }
 
   window.__sixmmNavigateDocsLocale = navigateDocsLocale;
+  window.__sixmmNavigateDocsTheme = navigateDocsTheme;
   document.addEventListener("DOMContentLoaded", scheduleSync);
   window.addEventListener("pageshow", scheduleSync);
   window.addEventListener("popstate", scheduleSync);
