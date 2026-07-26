@@ -24,8 +24,8 @@
   });
   var lastPathname = window.location.pathname;
   var lastTheme = null;
-  var lastLang = null;
-  var syncingWidgetLanguage = false;
+  var pendingWidgetDocsLocale = null;
+  var pendingWidgetTheme = null;
 
   function currentDocsLocale() {
     var firstSegment = window.location.pathname.split('/').filter(Boolean)[0] || '';
@@ -62,23 +62,18 @@
     return true;
   }
 
-  function syncWidget() {
-    var lang = currentLang();
-    var lastDocsLocale = routeForWidgetLanguage(lastLang);
-    if (lastDocsLocale !== currentDocsLocale()) {
-      // Ignore only the event emitted by this host-initiated API call. The
-      // guard is released on the next task so real Widget clicks are never
-      // blocked by a time window.
-      syncingWidgetLanguage = true;
-      if (callWidget('setLang', lang)) {
-        lastLang = lang;
-      }
-      window.setTimeout(function () {
-        syncingWidgetLanguage = false;
-      }, 0);
-    }
+  function syncWidgetLanguageFromHost() {
+    callWidget('setLang', currentLang());
+  }
 
+  function syncWidgetThemeFromHost() {
     var theme = currentTheme();
+    if (pendingWidgetTheme === theme) {
+      pendingWidgetTheme = null;
+      lastTheme = theme;
+      return;
+    }
+    pendingWidgetTheme = null;
     if (theme !== lastTheme && callWidget('setTheme', theme)) {
       lastTheme = theme;
     }
@@ -101,9 +96,14 @@
     var route = routeForWidgetLanguage(lang);
     if (route === null) return;
 
-    lastLang = lang;
+    // This navigation originated inside the Widget. When the pathname changes,
+    // consume this marker instead of writing the locale back with setLang().
+    pendingWidgetDocsLocale = route;
     var targetPath = (route ? '/' + route : '') + currentPagePath();
-    if (targetPath === window.location.pathname) return;
+    if (targetPath === window.location.pathname) {
+      pendingWidgetDocsLocale = null;
+      return;
+    }
 
     if (typeof window.__sixmmNavigateDocsLocale === 'function') {
       window.__sixmmNavigateDocsLocale(route);
@@ -132,12 +132,14 @@
   }
 
   function onWidgetLanguageChange(event) {
-    if (syncingWidgetLanguage) return;
     switchHostLanguage(event && event.detail ? event.detail.lang : '');
   }
 
   function onWidgetThemeChange(event) {
-    switchHostTheme(event && event.detail ? event.detail.theme : '');
+    var theme = event && event.detail ? event.detail.theme : '';
+    if (theme !== 'light' && theme !== 'dark') return;
+    pendingWidgetTheme = theme;
+    switchHostTheme(theme);
   }
 
   function loadWidget() {
@@ -158,12 +160,10 @@
     script.dataset.appId = APP_ID;
     script.onload = function () {
       document.documentElement.classList.remove('sixmm-support-widget-loading');
-      syncWidget();
     };
     script.onerror = function () {
       document.documentElement.classList.remove('sixmm-support-widget-loading');
     };
-    lastLang = initialLang;
     lastTheme = initialTheme;
     document.body.appendChild(script);
   }
@@ -174,7 +174,7 @@
 
     loadWidget();
 
-    var observer = new MutationObserver(syncWidget);
+    var observer = new MutationObserver(syncWidgetThemeFromHost);
     observer.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ['class', 'data-theme']
@@ -183,7 +183,15 @@
     window.setInterval(function () {
       if (window.location.pathname !== lastPathname) {
         lastPathname = window.location.pathname;
-        syncWidget();
+        if (
+          pendingWidgetDocsLocale !== null &&
+          pendingWidgetDocsLocale === currentDocsLocale()
+        ) {
+          pendingWidgetDocsLocale = null;
+          return;
+        }
+        pendingWidgetDocsLocale = null;
+        syncWidgetLanguageFromHost();
       }
     }, 600);
   }
