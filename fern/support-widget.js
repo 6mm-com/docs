@@ -25,11 +25,20 @@
   var lastPathname = window.location.pathname;
   var lastTheme = null;
   var lastLang = null;
+  var ignoreWidgetLanguageEventsUntil = 0;
 
-  function currentLang() {
+  function currentDocsLocale() {
     var firstSegment = window.location.pathname.split('/').filter(Boolean)[0] || '';
     var locale = localeRoutes.find(function (item) {
       return item.route === firstSegment;
+    });
+    return locale ? locale.route : '';
+  }
+
+  function currentLang() {
+    var docsLocale = currentDocsLocale();
+    var locale = localeRoutes.find(function (item) {
+      return item.route === docsLocale;
     });
     return locale ? locale.widget : 'en';
   }
@@ -55,7 +64,16 @@
 
   function syncWidget() {
     var lang = currentLang();
-    if (lang !== lastLang && callWidget('setLang', lang)) {
+    var lastDocsLocale = routeForWidgetLanguage(lastLang);
+    if (lastDocsLocale !== currentDocsLocale()) {
+      // setLang can synchronously or asynchronously echo a language-change
+      // event. Ignore that echo so regional aliases do not bounce routes.
+      ignoreWidgetLanguageEventsUntil = Date.now() + 1500;
+    }
+    if (
+      lastDocsLocale !== currentDocsLocale() &&
+      callWidget('setLang', lang)
+    ) {
       lastLang = lang;
     }
 
@@ -111,6 +129,7 @@
   }
 
   function onWidgetLanguageChange(event) {
+    if (Date.now() < ignoreWidgetLanguageEventsUntil) return;
     switchHostLanguage(event && event.detail ? event.detail.lang : '');
   }
 
@@ -143,6 +162,7 @@
     };
     lastLang = initialLang;
     lastTheme = initialTheme;
+    ignoreWidgetLanguageEventsUntil = Date.now() + 2000;
     document.body.appendChild(script);
   }
 
