@@ -7,15 +7,15 @@
     it: "Italiano",
     fr: "Français",
     de: "Deutsch",
-    zh: "中文",
+    zh: "简体中文",
     "zh-TW": "繁體中文",
-    "pt-BR": "Português (BR)",
+    "pt-BR": "Português (Brasil)",
     id: "Bahasa Indonesia",
     pl: "Polski",
     vi: "Tiếng Việt",
     uk: "Українська",
-    "pt-PT": "Português (Portugal)",
-    "es-ES": "Español (España)",
+    "pt-PT": "Português (Internacional)",
+    "es-ES": "Español (Internacional)",
     "es-AR": "Español (Argentina)",
     ar: "العربية",
   };
@@ -23,7 +23,31 @@
     { code: "en-SG", label: "English (Asia)", prefix: "" },
     { code: "uz-UZ", label: "O‘zbek", prefix: "uz" },
     { code: "fil-PH", label: "Filipino", prefix: "fil" },
-    { code: "az-AZ", label: "Azərbaycan dili", prefix: "az" },
+    { code: "az-AZ", label: "Azərbaycan", prefix: "az" },
+  ];
+  var menuOrder = [
+    "native:",
+    "extra:en-SG",
+    "native:ja",
+    "native:ru",
+    "native:es-419",
+    "native:it",
+    "native:fr",
+    "native:de",
+    "native:zh",
+    "native:zh-TW",
+    "native:pt-BR",
+    "native:id",
+    "native:pl",
+    "native:vi",
+    "native:uk",
+    "native:pt-PT",
+    "native:es-ES",
+    "native:es-AR",
+    "extra:uz-UZ",
+    "native:ar",
+    "extra:fil-PH",
+    "extra:az-AZ",
   ];
   var routePrefixes = Object.keys(nativeLocaleLabels)
     .concat(
@@ -33,17 +57,6 @@
     )
     .filter(Boolean);
   var scheduled = false;
-
-  function globeIcon() {
-    return (
-      '<span class="sixmm-language-trigger-icon" aria-hidden="true">' +
-      '<svg viewBox="0 0 24 24" fill="none">' +
-      '<circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>' +
-      '<path d="M3.4 9h17.2M3.4 15h17.2M12 3c2.35 2.45 3.55 5.45 3.55 9S14.35 18.55 12 21M12 3C9.65 5.45 8.45 8.45 8.45 12S9.65 18.55 12 21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>' +
-      "</svg>" +
-      "</span>"
-    );
-  }
 
   function currentRoute() {
     var segments = window.location.pathname.split("/").filter(Boolean);
@@ -79,7 +92,6 @@
         selector.classList.add("sixmm-language-globe");
         selector.setAttribute("aria-label", "Choose language");
         selector.title = "Choose language";
-        selector.insertAdjacentHTML("beforeend", globeIcon());
       },
     );
   }
@@ -99,14 +111,50 @@
     link.dataset.state = isActive ? "checked" : "unchecked";
     link.setAttribute("role", "menuitemradio");
     link.setAttribute("aria-checked", isActive ? "true" : "false");
-    link.textContent = locale.label;
+    link.tabIndex = -1;
+
+    var content = document.createElement("div");
+    content.className = "flex w-full items-start gap-2";
+    var label = document.createElement("div");
+    label.className =
+      "fern-language-dropdown-item-label sixmm-extra-language-label";
+    label.textContent = locale.label;
+    content.appendChild(label);
+    link.appendChild(content);
     return link;
   }
 
-  function syncExtraOptions(menu) {
-    var route = currentRoute();
-    var group = menu.querySelector(".fern-language-selector-radio-group");
-    if (!group) return;
+  function nativePrefixFromOption(option) {
+    var pathname = new URL(option.href, window.location.origin).pathname;
+    var firstSegment = pathname.split("/").filter(Boolean)[0] || "";
+    return Object.prototype.hasOwnProperty.call(
+      nativeLocaleLabels,
+      firstSegment,
+    )
+      ? firstSegment
+      : "";
+  }
+
+  function syncNativeOptions(group) {
+    Array.from(group.querySelectorAll('[role="menuitemradio"]')).forEach(
+      function (option) {
+        if (option.dataset.extraLocale) return;
+
+        var prefix = nativePrefixFromOption(option);
+        var label = nativeLocaleLabels[prefix];
+        option.dataset.sixmmLocaleKey = "native:" + prefix;
+
+        var labelElement = option.querySelector(
+          ".fern-language-dropdown-item-label",
+        );
+        if (labelElement && labelElement.textContent !== label) {
+          labelElement.textContent = label;
+        }
+      },
+    );
+  }
+
+  function syncExtraOptions(group, route) {
 
     var isStandalone = ["uz", "fil", "az"].indexOf(route.prefix) >= 0;
     if (isStandalone) {
@@ -125,13 +173,60 @@
       var existing = group.querySelector(
         '[data-extra-locale="' + locale.code + '"]',
       );
-      var replacement = createExtraOption(locale, route);
-      if (existing) {
-        existing.replaceWith(replacement);
-      } else {
-        group.appendChild(replacement);
+      var option = existing || createExtraOption(locale, route);
+      var isActive = route.prefix === locale.prefix && locale.prefix !== "";
+
+      option.href = extraLocaleHref(locale, route.pagePath);
+      option.dataset.state = isActive ? "checked" : "unchecked";
+      option.dataset.sixmmLocaleKey = "extra:" + locale.code;
+      option.setAttribute("aria-checked", isActive ? "true" : "false");
+
+      var label = option.querySelector(".sixmm-extra-language-label");
+      if (label && label.textContent !== locale.label) {
+        label.textContent = locale.label;
+      }
+
+      if (!existing) {
+        group.appendChild(option);
       }
     });
+  }
+
+  function reorderOptions(group) {
+    var options = Array.from(
+      group.querySelectorAll('[role="menuitemradio"]'),
+    );
+    var byKey = {};
+    options.forEach(function (option) {
+      byKey[option.dataset.sixmmLocaleKey] = option;
+    });
+
+    var ordered = menuOrder
+      .map(function (key) {
+        return byKey[key];
+      })
+      .filter(Boolean);
+    var alreadyOrdered =
+      ordered.length === options.length &&
+      ordered.every(function (option, index) {
+        return options[index] === option;
+      });
+    if (alreadyOrdered) return;
+
+    ordered.forEach(function (option) {
+      group.appendChild(option);
+    });
+  }
+
+  function syncMenuOptions(menu) {
+    var group = menu.querySelector(".fern-language-selector-radio-group");
+    if (!group) return;
+
+    var route = currentRoute();
+    syncNativeOptions(group);
+    syncExtraOptions(group, route);
+    syncNativeOptions(group);
+    reorderOptions(group);
   }
 
   function enhanceMenus() {
@@ -145,7 +240,7 @@
         heading.textContent = "Choose language";
         menu.insertBefore(heading, menu.firstChild);
       }
-      syncExtraOptions(menu);
+      syncMenuOptions(menu);
     });
   }
 
