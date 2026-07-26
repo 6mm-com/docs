@@ -1,6 +1,6 @@
 ---
 title: "Agent PHP SDK"
-subtitle: "Use PHP services for user binding, transfers, entry URLs, and webhook verification."
+subtitle: "Use the approved 6MM Agent PHP package from backend services for user binding, transfers, entry URLs, and webhook verification."
 slug: sdk/agent-sdk/php/overview
 ---
 
@@ -13,6 +13,8 @@ slug: sdk/agent-sdk/php/overview
 | Recommended PHP version | PHP 8.1+ or currently supported versions |
 | Required extensions | ext-json, ext-curl |
 
+The PHP SDK package source and approved version are provided during partner onboarding. Do not assume that the package is available from public Packagist; configure the Composer repository supplied for your organization.
+
 <h2 id="supported-scenarios">Supported scenarios</h2>
 
 | Scenario | SDK method |
@@ -24,3 +26,18 @@ slug: sdk/agent-sdk/php/overview
 | Query order | queryOrder |
 | Create entry URL | createEntryUrl |
 | Webhook verification | WebhookVerifier::verify |
+
+<h2 id="backend-integration-rules">Backend integration rules</h2>
+
+- Load `apiSecret` from a secret manager or protected environment variable.
+- Keep user binding, transfer, signing, and webhook logic out of browser code.
+- Use decimal strings for asset amounts to avoid floating-point rounding.
+- Reuse the original `agentOrderNo` when querying an uncertain transfer result.
+- Verify webhook signatures against the raw request body before decoding or changing it.
+
+<h2 id="next-steps">Next steps</h2>
+
+- [PHP Quick Start](/sdk/agent-sdk/php/quick-start): configure Composer and initialize the client.
+- [Agent SDK Overview](/sdk/agent-sdk/overview): review the complete backend integration flow.
+- [Secrets & Signing](/sdk/security/secrets-signing): protect credentials and understand HMAC signing.
+- [Webhooks & Idempotency](/sdk/security/webhooks-idempotency): process repeated callbacks safely.

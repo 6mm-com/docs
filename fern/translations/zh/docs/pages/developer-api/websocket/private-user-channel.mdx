@@ -27,7 +27,7 @@ POST /v1/private/user/listen-key
 
 `listenKey` 默认有效期为 60 分钟，建议每 30 分钟续期一次。
 
-续期：
+<h2 id="renew">续期</h2>
 
 ```http
 PUT /v1/private/user/listen-key
@@ -38,7 +38,7 @@ Content-Type: application/json
 { "listenKey": "f57cb61ef604ce76be09e753a5dbdd8c" }
 ```
 
-关闭：
+<h2 id="close">关闭</h2>
 
 ```http
 DELETE /v1/private/user/listen-key
@@ -49,7 +49,7 @@ Content-Type: application/json
 { "listenKey": "f57cb61ef604ce76be09e753a5dbdd8c" }
 ```
 
-连接私有 WebSocket：
+<h2 id="connect-to-private-websocket">连接私有 WebSocket</h2>
 
 ```
 wss://ws.6mm.com/ws?listenKey=YOUR_LISTEN_KEY
@@ -69,7 +69,7 @@ wss://ws.6mm.com/ws?token=YOUR_ACCESS_TOKEN
 { "event": "auth", "success": true, "data": "1188041528" }
 ```
 
-常用私有事件：
+<h2 id="common-private-events">常用私有事件</h2>
 
 | 事件                   | 说明                   |
 | -------------------- | -------------------- |
@@ -90,10 +90,18 @@ wss://ws.6mm.com/ws?token=YOUR_ACCESS_TOKEN
 
 REST 查询接口和 WebSocket 私有推送是两套独立 schema，客户端应按各自字段解析，不要假设字段完全同名。
 
-常见差异：
+<h2 id="common-differences">常见差异</h2>
 
 | 域     | REST 字段        | WebSocket 字段            |
 | ----- | -------------- | ----------------------- |
 | 订单状态  | `status`       | `orderStatus`           |
 | 冻结余额  | `frozenMargin` | `frozenBalance`         |
 | 保证金模式 | `marginMode`   | `marginMode`，持仓和推送使用字符串 |
+
+<h2 id="recovery-and-reconciliation">恢复与对账</h2>
+
+- listenKey 到期前主动续期；续期失败时创建新 listenKey。
+- 重连后重新鉴权，并把新连接视为新的事件会话。
+- 更新合作方余额或订单记录前，先对事件去重。
+- 如果可能遗漏事件，通过 REST 查询[订单](/zh/developer-api/rest-api/order)、[仓位](/zh/developer-api/rest-api/position)和[账户状态](/zh/developer-api/rest-api/user-and-account)完成对账。
+- 重试和失效连接处理参见[连接订阅与心跳](/zh/developer-api/websocket/connection-subscription-and-heartbeat)。

@@ -4,9 +4,38 @@ description: "Apply recommended 6MM practices for authentication, retries, idemp
 slug: developer-api/integration-recommendations
 ---
 
-* Server-side programs should preferably use API Key signing for trading endpoints. Frontend user actions should preferably use JWT.
-* Before placing orders, query `/v1/public/market/symbols` and perform local validation against `tickSize`, `stepSize`, minimum notional value, and maximum quantity.
-* Generate a unique `clientOrderId` for order write operations so that reconciliation is possible after disconnects.
-* Final status after cancel, cancel-all, or amend operations should be determined by WebSocket streams or query endpoints.
-* For WebSocket order book data, check continuity with `endVersion`. If a version gap is detected, resubscribe to obtain a fresh snapshot.
-* `apiSecret` is shown only once. If it is leaked, immediately disable or delete the corresponding API Key.
+Use these recommendations as a production-readiness baseline. They complement the endpoint reference and help integrations recover safely from timeouts, reconnects, duplicate requests, and credential incidents.
+
+<h2 id="authentication-and-secrets">Authentication and secrets</h2>
+
+- Prefer [API Key signing](/developer-api/authentication) for server-side trading programs and JWT for user-driven frontend actions.
+- Keep `apiSecret` in backend secret management. It is shown only once and must never be sent to a browser or mobile client.
+- Apply the minimum required API Key permissions and restrict source IPs when the integration environment supports stable egress addresses.
+- Disable or delete a leaked key immediately, then review request logs before issuing a replacement.
+
+<h2 id="request-validation-and-idempotency">Request validation and idempotency</h2>
+
+- Before placing orders, query `/v1/public/market/symbols` and validate `tickSize`, `stepSize`, minimum notional value, and maximum quantity locally.
+- Generate a unique `clientOrderId` for every order write so requests can be reconciled after a disconnect.
+- Preserve the original identifier when an HTTP result is uncertain. Query the existing order before creating a replacement request.
+- Treat decimal amounts and prices as strings or decimal types, not binary floating-point values.
+
+<h2 id="order-and-websocket-state">Order and WebSocket state</h2>
+
+- Determine final state after cancel, cancel-all, or amend operations from [private WebSocket events](/developer-api/websocket/private-user-channel) or a REST query.
+- Treat every reconnect as a new WebSocket session and restore all required subscriptions.
+- Check order-book continuity with `endVersion`. If a version gap appears, discard the local book and resubscribe for a fresh snapshot.
+- Deduplicate private order and account events before applying them to balances, positions, or partner records.
+
+<h2 id="logging-monitoring-and-retries">Logging, monitoring, and retries</h2>
+
+- Record request ID, client order ID, HTTP status, API business code, latency, and retry count without logging secrets or full tokens.
+- Retry only operations documented as safe, using bounded exponential backoff and jitter.
+- Alert on authentication failures, signature errors, rate-limit responses, WebSocket reconnect loops, sequence gaps, and order reconciliation differences.
+- Keep server clocks synchronized because authentication and signing depend on timestamps.
+
+<h2 id="before-production">Before production</h2>
+
+- Exercise timeout, duplicate request, reconnect, key rotation, and webhook retry scenarios in a non-production environment.
+- Assign owners for credential rotation, trading incidents, webhook failures, and reconciliation.
+- Complete the [production launch checklist](/resources/production-launch-checklist) and use the [support request template](/resources/support-request-template) when escalation is required.

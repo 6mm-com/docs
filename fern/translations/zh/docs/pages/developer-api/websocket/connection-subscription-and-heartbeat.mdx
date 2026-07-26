@@ -65,3 +65,25 @@ wss://ws.6mm.com/ws
 - 私有订单或账户事件处理应保持幂等。
 - 记录连接状态变化、订阅回执和异常断开日志。
 
+<h2 id="reconnect-workflow">重连流程</h2>
+
+1. 关闭或丢弃旧连接，并创建新的 WebSocket 连接。
+2. 私有推送使用仍然有效的 listenKey 或 access token 重新鉴权。
+3. 重新订阅全部必要主题，并等待成功回执。
+4. 获取新快照替换本地订单簿，再处理增量更新。
+5. 如果可能遗漏私有事件，通过 REST 查询对账未完成订单、仓位和余额。
+
+重连应使用有次数和时间上限的指数退避，并加入随机抖动。客户端持续重连时应触发运营告警，不能在无监控的情况下无限重试。
+
+<h2 id="heartbeat-and-stale-connections">心跳与失效连接</h2>
+
+- 记录最近一次收到消息和收到成功 ping 回执的时间。
+- 使用生产环境确认的心跳间隔和空闲阈值。
+- 超过配置阈值时，即使 TCP 连接看似仍然存在，也应按失效连接处理。
+- 不要复用旧连接的订阅状态；每次重连后都要显式重新订阅。
+
+<h2 id="related-documentation">相关文档</h2>
+
+- [公共行情频道](/zh/developer-api/websocket/public-market-channels)：主题、订单簿连续性、成交、K 线和 Ticker。
+- [私有用户频道](/zh/developer-api/websocket/private-user-channel)：listenKey 生命周期和鉴权事件。
+- [接入建议](/zh/developer-api/integration-recommendations)：重试、幂等、监控和上线测试。

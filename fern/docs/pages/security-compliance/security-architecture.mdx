@@ -21,3 +21,27 @@ slug: security-compliance/security-architecture
 - Validate partner user sessions before issuing trading entry credentials.
 - Implement webhook idempotency and terminal state checks.
 - Maintain operational logs for account, order, transfer, and webhook flows.
+
+<h2 id="integration-trust-boundaries">Integration trust boundaries</h2>
+
+| Boundary | Required control |
+| --- | --- |
+| Browser or app to partner backend | Validate the partner session before issuing any trading credential. |
+| Partner backend to 6MM API | Use scoped credentials, request signing, time synchronization, and protected secret storage. |
+| 6MM webhook to partner endpoint | Verify the signature against the raw request body, reject stale or invalid messages, and deduplicate retries. |
+| Trading state to partner records | Reconcile orders, positions, balances, and transfers using durable identifiers and terminal-state checks. |
+
+<h2 id="production-verification">Production verification</h2>
+
+- Test expired, revoked, and incorrectly scoped credentials.
+- Test altered webhook bodies, duplicate callbacks, delayed callbacks, and endpoint timeouts.
+- Confirm that logs redact secrets, access tokens, and sensitive request payloads.
+- Alert on repeated signature failures, abnormal order activity, reconciliation differences, and connection instability.
+- Document the owner and response path for credential exposure, webhook failure, and trading incidents.
+
+<h2 id="related-security-guides">Related security guides</h2>
+
+- [Secrets & Signing](/sdk/security/secrets-signing)
+- [Webhooks & Idempotency](/sdk/security/webhooks-idempotency)
+- [Incident Response](/security-compliance/incident-response)
+- [Partner Responsibility Matrix](/security-compliance/partner-responsibilities)

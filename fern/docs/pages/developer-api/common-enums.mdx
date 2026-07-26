@@ -25,3 +25,25 @@ slug: developer-api/common-enums
 | Margin mode request value | `1` cross, `2` isolated                                     |
 | Margin mode string        | `ISOLATED` / `CROSS`                                        |
 | Close trigger mode        | `1` manual, `2` take profit, `3` stop loss, `4` liquidation |
+
+<h2 id="integration-rules">Integration rules</h2>
+
+- Treat enum values as case-sensitive wire values.
+- Preserve unknown values in logs and fail safely instead of silently mapping them to a known state.
+- Do not infer that every non-final order state is safe to retry. Query the order or reconcile it with a private WebSocket event.
+- Store both the original API value and the partner-facing display label so new values can be supported without changing historical records.
+
+<h2 id="order-state-handling">Order state handling</h2>
+
+| State group | Values | Recommended handling |
+| --- | --- | --- |
+| Accepted or open | `NEW`, `PENDING`, `PARTIALLY_FILLED` | Keep the order active and reconcile with WebSocket or REST updates. |
+| Completed | `FILLED` | Apply the final filled quantity and execution records. |
+| Closed without full fill | `CANCELED`, `REJECTED`, `PARTIALLY_FILLED_CANCELED` | Stop active processing and preserve the reason and any executed quantity. |
+
+<h2 id="related-documentation">Related documentation</h2>
+
+- [Order API](/developer-api/rest-api/order): request fields and order lifecycle operations.
+- [Order Types](/trading/order-types): product behavior for limit, market, and conditional orders.
+- [Private User Channel](/developer-api/websocket/private-user-channel): real-time order and account state.
+- [Error Codes & Troubleshooting](/developer-api/error-codes-and-troubleshooting): business codes and diagnostic workflow.

@@ -6,17 +6,28 @@ slug: sdk/agent-sdk/java/quick-start
 
 <h2 id="install">Install</h2>
 
+The public SDK source currently documents tag `v0.1.1` with these Maven coordinates:
+
 ```xml
 <dependency>
-    <groupId>com.sixmm.agent</groupId>
-    <artifactId>sixmm-agent-sdk</artifactId>
-    <version>VERSION_PROVIDED_BY_6MM</version>
+    <groupId>com.sixmm.exchange.sdk</groupId>
+    <artifactId>agent</artifactId>
+    <version>0.1.1</version>
 </dependency>
 ```
 
-> **Package access**
+GitHub does not act as a Maven dependency repository. Install the tagged source locally before resolving the dependency:
+
+```bash
+git clone https://github.com/6mm-com/agent-java-sdk.git
+cd agent-java-sdk
+git checkout v0.1.1
+mvn install
+```
+
+> **Team builds**
 >
-> 6MM provides the approved package coordinates and version during partner onboarding. Use the package source configured for your organization.
+> Publish the approved artifact to your organization's Maven repository for CI, testing, and production builds. Confirm the approved version with 6MM before production deployment.
 
 Source code and usage examples are available in the official Java SDK repository:
 
@@ -32,6 +43,9 @@ Source code and usage examples are available in the official Java SDK repository
 <h2 id="initialize-client">Initialize client</h2>
 
 ```java
+import com.sixmm.agent.AgentClient;
+import com.sixmm.agent.AgentClientConfig;
+
 AgentClient client = new AgentClient(AgentClientConfig.builder()
         .baseUrl("https://agent-api.6mm.com")
         .agentCode("AGENT001")
@@ -61,6 +75,7 @@ Use a unique partner-side order number for each transfer request. If a request t
 
 | Need | Next page |
 | --- | --- |
-| Issue a Trading Widget credential | Create Embed Token |
-| Verify callbacks from 6MM | Webhooks & Idempotency |
-| Review signing behavior | Secrets & Signing |
+| Issue a Trading Widget credential | [Create Embed Token](/sdk/agent-sdk/java/embed-token) |
+| Verify callbacks from 6MM | [Webhooks & Idempotency](/sdk/security/webhooks-idempotency) |
+| Review signing behavior | [Secrets & Signing](/sdk/security/secrets-signing) |
+| Diagnose an integration problem | [SDK Troubleshooting](/sdk/security/troubleshooting) |

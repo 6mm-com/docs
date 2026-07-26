@@ -5,6 +5,8 @@ slug: developer-api/rest-api/user-and-account
 canonical-url: https://docs.6mm.com/zh/developer-api/rest-api/user-and-account
 ---
 
+除非接口说明另有标注，以下私有接口可使用 JWT 或 API Key 签名。
+
 <h2 id="user-info">用户信息</h2>
 
 ```http
@@ -38,7 +40,41 @@ GET /v1/private/user/asset
 | `userAsset.frozenMargin`  | string | 挂单冻结保证金 |
 | `userAsset.usedMargin`    | string | 持仓占用保证金 |
 
-<h2 id="create-listenkey">资金流水</h2>
+<h2 id="create-listenkey">创建 listenKey</h2>
+
+```http
+POST /v1/private/user/listen-key
+```
+
+创建用于订阅私有 WebSocket 数据流的认证凭据。默认有效期为 60 分钟，建议每 30 分钟续期一次。
+
+<h2 id="renew-listenkey">续期 listenKey</h2>
+
+```http
+PUT /v1/private/user/listen-key
+Content-Type: application/json
+```
+
+```json
+{ "listenKey": "f57cb61ef604ce76be09e753a5dbdd8c" }
+```
+
+延长现有 listenKey 的有效期。合作方应在凭据过期前续期，并在重连时复用仍然有效的 listenKey。
+
+<h2 id="close-listenkey">关闭 listenKey</h2>
+
+```http
+DELETE /v1/private/user/listen-key
+Content-Type: application/json
+```
+
+```json
+{ "listenKey": "f57cb61ef604ce76be09e753a5dbdd8c" }
+```
+
+不再使用私有数据流时主动关闭 listenKey，减少无效凭据和连接。
+
+<h2 id="account-change-logs">资金流水</h2>
 
 ```http
 GET /v1/private/user/account-change-log?assetType=USDT&page=1&pageSize=20
@@ -70,7 +106,7 @@ GET /v1/private/user/account-change-log?assetType=USDT&page=1&pageSize=20
 | `list[].createdAt`           | int64  | 创建时间    |
 | `total`                      | int64  | 总数量     |
 
-<h2 id="renew-listenkey">30 天交易量统计</h2>
+<h2 id="30-day-volume-statistics">30 天交易量统计</h2>
 
 ```http
 GET /v1/private/user/volume-stats
@@ -83,7 +119,7 @@ GET /v1/private/user/volume-stats
 | `volume30d`   | string | 近 30 天累计成交额 |
 | `feeTotal30d` | string | 近 30 天累计手续费 |
 
-<h2 id="close-listenkey">余额历史</h2>
+<h2 id="balance-history">余额历史</h2>
 
 ```http
 GET /v1/private/user/balance-history?period=1D&limit=30
@@ -104,7 +140,7 @@ GET /v1/private/user/balance-history?period=1D&limit=30
 | `items[].balance` | string | 钱包余额    |
 | `items[].pnl`     | string | 当期已实现盈亏 |
 
-<h2 id="account-change-logs">交易概览</h2>
+<h2 id="trade-overview">交易概览</h2>
 
 ```http
 GET /v1/private/user/trade-overview?type=1M
@@ -130,7 +166,7 @@ GET /v1/private/user/trade-overview?type=1M
 | `transferOut`        | string | 累计资金划出                   |
 | `items[]`            | array  | 资产趋势数据                   |
 
-<h2 id="30-day-volume-statistics">资产概览汇总</h2>
+<h2 id="asset-overview-summary">资产概览汇总</h2>
 
 ```http
 GET /v1/private/user/asset/overview/summary
@@ -138,7 +174,7 @@ GET /v1/private/user/asset/overview/summary
 
 响应字段同交易概览汇总字段，不包含 `items[]`。
 
-<h2 id="balance-history">资产概览趋势</h2>
+<h2 id="asset-overview-trend">资产概览趋势</h2>
 
 ```http
 GET /v1/private/user/asset/overview/trend?type=1M
@@ -160,9 +196,9 @@ GET /v1/private/user/asset/overview/trend?type=1M
 | `items[].pnlRate`      | string | 当前周期盈亏率 |
 | `items[].totalPnl`     | string | 累计盈亏    |
 
-<h2 id="trade-overview">收藏交易对</h2>
+<h2 id="favorite-symbols">收藏交易对</h2>
 
-保存：
+<h3 id="save">保存</h3>
 
 ```http
 POST /v1/private/user/favorite-symbols
@@ -177,7 +213,7 @@ Content-Type: application/json
 }
 ```
 
-查询：
+<h3 id="query">查询</h3>
 
 ```http
 GET /v1/private/user/favorite-symbols
@@ -188,3 +224,9 @@ GET /v1/private/user/favorite-symbols
 | 字段        | 类型        | 说明      |
 | --------- | --------- | ------- |
 | `symbols` | string\[] | 收藏交易对列表 |
+
+<h2 id="related-documentation">相关文档</h2>
+
+- [私有用户频道](/zh/developer-api/websocket/private-user-channel)：使用 listenKey 接收订单、仓位和余额事件。
+- [身份认证](/zh/developer-api/authentication)：选择 JWT 或 API Key 签名方式。
+- [错误码与故障排查](/zh/developer-api/error-codes-and-troubleshooting)：处理鉴权、参数和服务端错误。

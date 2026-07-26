@@ -22,3 +22,27 @@ canonical-url: https://docs.6mm.com/zh/security-compliance/security-architecture
 - 发放交易入口凭证前，先校验 Partner 用户登录状态。
 - Webhook 必须做幂等和终态检查。
 - 账户、订单、划转和 Webhook 流程需要保留运营日志。
+
+<h2 id="integration-trust-boundaries">接入信任边界</h2>
+
+| 边界 | 必要控制 |
+| --- | --- |
+| 浏览器或 App 到合作方后端 | 签发任何交易凭据前，先校验合作方用户登录状态。 |
+| 合作方后端到 6MM API | 使用最小权限凭据、请求签名、时间同步和受保护的密钥存储。 |
+| 6MM Webhook 到合作方端点 | 使用原始请求体验签，拒绝过期或无效消息，并对重试回调去重。 |
+| 交易状态到合作方记录 | 使用持久标识和终态检查，对账订单、仓位、余额和划转。 |
+
+<h2 id="production-verification">生产验证</h2>
+
+- 测试过期、已撤销和权限范围错误的凭据。
+- 测试被修改的 Webhook 请求体、重复回调、延迟回调和端点超时。
+- 确认日志会脱敏密钥、Access Token 和敏感请求内容。
+- 对重复签名失败、异常订单活动、对账差异和连接不稳定设置告警。
+- 明确凭据泄露、Webhook 故障和交易异常的负责人及响应路径。
+
+<h2 id="related-security-guides">相关安全指南</h2>
+
+- [密钥与签名](/zh/sdk/security/secrets-signing)
+- [Webhook 与幂等](/zh/sdk/security/webhooks-idempotency)
+- [事件响应](/zh/security-compliance/incident-response)
+- [合作方责任矩阵](/zh/security-compliance/partner-responsibilities)

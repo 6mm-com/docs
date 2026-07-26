@@ -96,3 +96,11 @@ REST query endpoints and WebSocket private streams use separate schemas. Clients
 | Order status   | `status`       | `orderStatus`                                               |
 | Frozen balance | `frozenMargin` | `frozenBalance`                                             |
 | Margin mode    | `marginMode`   | `marginMode`, returned as a string in positions and streams |
+
+<h2 id="recovery-and-reconciliation">Recovery and reconciliation</h2>
+
+- Renew the listenKey before expiry and create a new one if renewal fails.
+- Reconnect, re-authenticate, and treat the new socket as a new event session.
+- Deduplicate events before changing partner balances or order records.
+- If events may have been missed, query [orders](/developer-api/rest-api/order), [positions](/developer-api/rest-api/position), and [account state](/developer-api/rest-api/user-and-account) through REST.
+- Follow the [connection and heartbeat guide](/developer-api/websocket/connection-subscription-and-heartbeat) for retry and stale-connection handling.

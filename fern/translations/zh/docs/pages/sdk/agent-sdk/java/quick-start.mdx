@@ -7,17 +7,28 @@ canonical-url: https://docs.6mm.com/zh/sdk/agent-sdk/java/quick-start
 
 <h2 id="install">安装</h2>
 
+公开 SDK 源码当前使用 `v0.1.1` 标签，对应 Maven 坐标如下：
+
 ```xml
 <dependency>
-    <groupId>com.sixmm.agent</groupId>
-    <artifactId>sixmm-agent-sdk</artifactId>
-    <version>VERSION_PROVIDED_BY_6MM</version>
+    <groupId>com.sixmm.exchange.sdk</groupId>
+    <artifactId>agent</artifactId>
+    <version>0.1.1</version>
 </dependency>
 ```
 
-> **包访问说明**
+GitHub 不是 Maven 依赖仓库。引用依赖前，先在本地安装对应标签的源码：
+
+```bash
+git clone https://github.com/6mm-com/agent-java-sdk.git
+cd agent-java-sdk
+git checkout v0.1.1
+mvn install
+```
+
+> **团队构建**
 >
-> 6MM 会在合作方接入阶段提供确认后的包坐标、版本和包源配置。
+> CI、测试和生产构建应把确认后的构件发布到组织内部 Maven 仓库。生产上线前向 6MM 确认批准使用的版本。
 
 源码和使用示例可在官方 Java SDK 仓库查看：
 
@@ -33,6 +44,9 @@ canonical-url: https://docs.6mm.com/zh/sdk/agent-sdk/java/quick-start
 <h2 id="initialize-client">初始化客户端</h2>
 
 ```java
+import com.sixmm.agent.AgentClient;
+import com.sixmm.agent.AgentClientConfig;
+
 AgentClient client = new AgentClient(AgentClientConfig.builder()
         .baseUrl("https://agent-api.6mm.com")
         .agentCode("AGENT001")
@@ -62,6 +76,7 @@ TransferResponse resp = client.transfer(TransferRequest.fixed(
 
 | 需求 | 下一页 |
 | --- | --- |
-| 签发 Trading Widget 凭据 | 创建 Embed Token |
-| 验证 6MM 回调 | Webhook 与幂等 |
-| 查看签名行为 | 密钥与签名 |
+| 签发 Trading Widget 凭据 | [创建 Embed Token](/zh/sdk/agent-sdk/java/embed-token) |
+| 验证 6MM 回调 | [Webhook 与幂等](/zh/sdk/security/webhooks-idempotency) |
+| 查看签名行为 | [密钥与签名](/zh/sdk/security/secrets-signing) |
+| 排查接入问题 | [SDK 故障排查](/zh/sdk/security/troubleshooting) |

@@ -64,3 +64,25 @@ Public pushes use a consistent envelope:
 - Keep message processing idempotent where private order or account events are involved.
 - Log connection state changes, subscription acknowledgements, and abnormal disconnects.
 
+<h2 id="reconnect-workflow">Reconnect workflow</h2>
+
+1. Close or discard the previous socket and create a new connection.
+2. Re-authenticate private streams with a valid listenKey or access token.
+3. Resubscribe to every required topic and wait for successful acknowledgements.
+4. Replace local order-book state with a new snapshot before applying incremental updates.
+5. Reconcile open orders, positions, and balances through REST if private events may have been missed.
+
+Use bounded exponential backoff with jitter for reconnect attempts. A continuously reconnecting client should alert operators instead of retrying indefinitely without visibility.
+
+<h2 id="heartbeat-and-stale-connections">Heartbeat and stale connections</h2>
+
+- Track the most recent inbound message and successful ping acknowledgement.
+- Use the heartbeat interval and idle threshold approved for the production environment.
+- Treat a connection as stale when the configured threshold is exceeded, even if the TCP socket still appears open.
+- Do not reuse subscriptions from an old socket; resubscribe explicitly after every reconnect.
+
+<h2 id="related-documentation">Related documentation</h2>
+
+- [Public Market Channels](/developer-api/websocket/public-market-channels): topics, order-book continuity, trades, candles, and tickers.
+- [Private User Channel](/developer-api/websocket/private-user-channel): listenKey lifecycle and authenticated events.
+- [Integration Recommendations](/developer-api/integration-recommendations): retries, idempotency, monitoring, and launch testing.
