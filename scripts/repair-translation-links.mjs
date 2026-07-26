@@ -49,8 +49,8 @@ const relatedPageLabels = {
   fil: "Mga kaugnay na pahina",
   az: "Əlaqəli səhifələr",
 };
-const repairStart = "<!-- sixmm-localized-link-repair:start -->";
-const repairEnd = "<!-- sixmm-localized-link-repair:end -->";
+const repairStart = "{/* sixmm-localized-link-repair:start */}";
+const repairEnd = "{/* sixmm-localized-link-repair:end */}";
 
 function loadYamlAsJson(filePath) {
   const ruby = [

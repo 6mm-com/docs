@@ -181,6 +181,9 @@ for (const relativePagePath of activePages) {
     if (/(?:noindex|nofollow|ZXQ|XXQ|ZZQ|\[\[\[(?:ph|attr|seg)|class="notranslate")/i.test(translated)) {
       pushError(`[${locale}] indexing directive or translation placeholder in ${relativePagePath}`);
     }
+    if (/<!--|-->/.test(translated)) {
+      pushError(`[${locale}] unsupported HTML comment syntax in ${relativePagePath}`);
+    }
 
     if (generatedLocales.includes(locale)) {
       if (!sameArray(codeBlocks(translated), sourceBlocks)) {
