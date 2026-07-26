@@ -15,15 +15,21 @@ export const locales = [
   { code: "pl", label: "Polski", sourceLanguage: "en", targetLanguage: "pl" },
   { code: "vi", label: "Tiếng Việt", sourceLanguage: "en", targetLanguage: "vi" },
   { code: "uk", label: "Українська", sourceLanguage: "en", targetLanguage: "uk" },
-  { code: "pt", label: "Português (Internacional)", sourceLanguage: "en", targetLanguage: "pt-PT" },
-  { code: "es", label: "Español (Internacional)", sourceLanguage: "en", targetLanguage: "es" },
-  { code: "uz", label: "O‘zbek", sourceLanguage: "en", targetLanguage: "uz" },
+  { code: "pt", label: "Português (Internacional)", sourceLanguage: "en", targetLanguage: "pt-PT", standalone: true },
+  { code: "es", label: "Español (Internacional)", sourceLanguage: "en", targetLanguage: "es", standalone: true },
+  { code: "uz", label: "O‘zbek", sourceLanguage: "en", targetLanguage: "uz", standalone: true },
   { code: "ar", label: "العربية", sourceLanguage: "en", targetLanguage: "ar" },
-  { code: "fil", label: "Filipino", sourceLanguage: "en", targetLanguage: "fil" },
-  { code: "az", label: "Azərbaycan", sourceLanguage: "en", targetLanguage: "az" },
+  { code: "fil", label: "Filipino", sourceLanguage: "en", targetLanguage: "fil", standalone: true },
+  { code: "az", label: "Azərbaycan", sourceLanguage: "en", targetLanguage: "az", standalone: true },
 ];
 
 export const expectedLocales = locales.map((locale) => locale.code);
+export const standaloneLocaleCodes = new Set(
+  locales.filter((locale) => locale.standalone).map((locale) => locale.code),
+);
+export const nativeLocaleCodes = expectedLocales.filter(
+  (locale) => !standaloneLocaleCodes.has(locale),
+);
 export const generatedLocaleSpecs = locales.filter(
   (locale) => !locale.default && !locale.manual,
 );

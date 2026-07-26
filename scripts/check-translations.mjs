@@ -7,6 +7,8 @@ import {
   expectedLocales,
   generatedLocaleSpecs,
   generatorVersion,
+  nativeLocaleCodes,
+  standaloneLocaleCodes,
   widgetLocaleAliases,
 } from "./locale-config.mjs";
 
@@ -22,7 +24,7 @@ const generatedLocaleTargetLanguages = Object.fromEntries(
     locale.targetLanguage ?? "copy",
   ]),
 );
-const nativeLocales = expectedLocales;
+const nativeLocales = nativeLocaleCodes;
 const translatedLocales = expectedLocales.filter((locale) => locale !== "en");
 const generatedLocales = generatedLocaleSpecs.map((locale) => locale.code);
 const errors = [];
@@ -72,7 +74,15 @@ function imageSources(content) {
 }
 
 function comparableImageSources(content, locale) {
-  return imageSources(content);
+  return imageSources(content).map((source) => {
+    if (!standaloneLocaleCodes.has(locale)) return source;
+    return source
+      .replace("../../../../../docs/assets/", "../../assets/")
+      .replace(
+        "../../../../../docs/pages/design-and-assets/",
+        "./",
+      );
+  });
 }
 
 function internalDestinations(content) {
@@ -152,10 +162,10 @@ if (activePages.length !== 87) {
 }
 
 const configuredStandaloneDirectories = collectFolderPaths(config)
-  .map((folder) => folder.match(/^docs\/locales\/([^/]+)\/docs\/pages$/)?.[1])
+  .map((folder) => folder.match(/^translations\/([^/]+)\/docs\/pages$/)?.[1])
   .filter(Boolean)
   .sort();
-const expectedStandaloneDirectories = [];
+const expectedStandaloneDirectories = [...standaloneLocaleCodes].sort();
 if (!sameArray(configuredStandaloneDirectories, expectedStandaloneDirectories)) {
   pushError(
     `Configured standalone locale folders do not match expected locales.\nExpected: ${expectedStandaloneDirectories.join(", ")}\nActual: ${configuredStandaloneDirectories.join(", ")}`,
@@ -203,7 +213,7 @@ const translationDirectories = (
 )
   .filter(Boolean)
   .sort();
-const expectedDirectories = nativeLocales.filter((locale) => locale !== "en").sort();
+const expectedDirectories = expectedLocales.filter((locale) => locale !== "en").sort();
 if (!sameArray(translationDirectories, expectedDirectories)) {
   pushError(
     `Translation directories do not match configured locales.\nExpected: ${expectedDirectories.join(", ")}\nActual: ${translationDirectories.join(", ")}`,
@@ -248,7 +258,9 @@ for (const relativePagePath of activePages) {
     if (!meta.title || !(meta.description || meta.subtitle) || !meta.slug) {
       pushError(`[${locale}] incomplete SEO frontmatter in ${relativePagePath}`);
     }
-    const expectedSlug = sourceMeta.slug;
+    const expectedSlug = standaloneLocaleCodes.has(locale)
+      ? `${route}/${sourceMeta.slug}`
+      : sourceMeta.slug;
     if (meta.slug !== expectedSlug) {
       pushError(`[${locale}] slug mismatch in ${relativePagePath}: ${meta.slug ?? "missing"}`);
     }

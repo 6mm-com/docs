@@ -28,17 +28,76 @@
   var localeOrder = locales.map(function (locale) {
     return locale.code;
   });
+  var standaloneLocaleCodes = ["pt", "es", "uz", "fil", "az"];
+  var standaloneSectionLabels = {
+    pt: "Português (Internacional)",
+    es: "Español (Internacional)",
+    uz: "O‘zbek",
+    fil: "Filipino",
+    az: "Azərbaycan",
+  };
   window.__sixmmDocsLocales = locales;
   var scheduled = false;
   var localeNavigationId = 0;
   var themeNavigationId = 0;
+  var nativeLocaleClick = null;
+  var localeNavigationTimeout = 10000;
 
-  function optionLocale(option) {
-    var pathname = new URL(option.href, window.location.origin).pathname;
+  function normalizedText(element) {
+    return (element && element.textContent ? element.textContent : "")
+      .trim()
+      .replace(/\s+/g, " ");
+  }
+
+  function isStandaloneLocale(locale) {
+    return standaloneLocaleCodes.indexOf(locale) >= 0;
+  }
+
+  function currentRoute() {
+    var segments = window.location.pathname.split("/").filter(Boolean);
+    var firstSegment = segments[0] || "";
+    var locale = Object.prototype.hasOwnProperty.call(
+      localeLabels,
+      firstSegment,
+    )
+      ? firstSegment
+      : "";
+    if (locale) segments.shift();
+    return {
+      locale: locale,
+      pagePath: "/" + (segments.join("/") || "home"),
+    };
+  }
+
+  function localizedPath(locale, pagePath) {
+    return (locale ? "/" + locale : "") + pagePath;
+  }
+
+  function linkPathname(link) {
+    return new URL(link.href, window.location.origin).pathname;
+  }
+
+  function localeFromHref(option) {
+    var pathname = linkPathname(option);
     var firstSegment = pathname.split("/").filter(Boolean)[0] || "";
     return Object.prototype.hasOwnProperty.call(localeLabels, firstSegment)
       ? firstSegment
       : "";
+  }
+
+  function nativeOptionLocale(option) {
+    var existing = option.dataset.sixmmLocale;
+    if (existing !== undefined && !isStandaloneLocale(existing)) {
+      return existing;
+    }
+
+    var label = normalizedText(
+      option.querySelector(".fern-language-dropdown-item-label") || option,
+    );
+    var byLabel = locales.find(function (locale) {
+      return !isStandaloneLocale(locale.code) && locale.label === label;
+    });
+    return byLabel ? byLabel.code : localeFromHref(option);
   }
 
   function enhanceTriggers() {
@@ -79,15 +138,23 @@
     var group = menu.querySelector(".fern-language-selector-radio-group");
     if (!group) return;
 
+    var route = currentRoute();
     var options = Array.from(
       group.querySelectorAll('[role="menuitemradio"]'),
     );
     var byLocale = {};
 
     options.forEach(function (option) {
-      var locale = optionLocale(option);
+      if (option.dataset.sixmmStandaloneLocale) return;
+      var locale = nativeOptionLocale(option);
       option.dataset.sixmmLocale = locale;
       byLocale[locale] = option;
+      option.href = localizedPath(locale, route.pagePath);
+      option.dataset.state = route.locale === locale ? "checked" : "unchecked";
+      option.setAttribute(
+        "aria-checked",
+        route.locale === locale ? "true" : "false",
+      );
 
       var label = option.querySelector(".fern-language-dropdown-item-label");
       if (label && label.textContent !== localeLabels[locale]) {
@@ -95,6 +162,40 @@
       }
     });
 
+    standaloneLocaleCodes.forEach(function (locale) {
+      var option = group.querySelector(
+        '[data-sixmm-standalone-locale="' + locale + '"]',
+      );
+      if (!option) {
+        option = document.createElement("a");
+        option.className =
+          "[&_svg]:size-icon fern-dropdown-item fern-language-dropdown-item sixmm-extra-language-option";
+        option.dataset.sixmmStandaloneLocale = locale;
+        option.dataset.sixmmLocale = locale;
+        option.setAttribute("role", "menuitemradio");
+        option.tabIndex = -1;
+
+        var content = document.createElement("div");
+        content.className = "flex w-full items-start gap-2";
+        var label = document.createElement("div");
+        label.className =
+          "fern-language-dropdown-item-label sixmm-extra-language-label";
+        label.textContent = localeLabels[locale];
+        content.appendChild(label);
+        option.appendChild(content);
+        group.appendChild(option);
+      }
+
+      option.href = localizedPath(locale, route.pagePath);
+      option.dataset.state = route.locale === locale ? "checked" : "unchecked";
+      option.setAttribute(
+        "aria-checked",
+        route.locale === locale ? "true" : "false",
+      );
+      byLocale[locale] = option;
+    });
+
+    options = Array.from(group.querySelectorAll('[role="menuitemradio"]'));
     var ordered = localeOrder
       .map(function (locale) {
         return byLocale[locale];
@@ -112,6 +213,29 @@
     }
   }
 
+  function guardLocaleMenu(menu) {
+    if (menu.dataset.sixmmLocaleGuard === "true") return;
+    menu.dataset.sixmmLocaleGuard = "true";
+    menu.addEventListener(
+      "click",
+      function (event) {
+        var option =
+          event.target && event.target.closest
+            ? event.target.closest('[role="menuitemradio"]')
+            : null;
+        if (!option || option === nativeLocaleClick) return;
+        var locale = option.dataset.sixmmLocale;
+        if (locale === undefined) return;
+
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+        navigateDocsLocale(locale);
+      },
+      true,
+    );
+  }
+
   function enhanceMenus() {
     Array.from(
       document.querySelectorAll(".fern-language-dropdown-content"),
@@ -123,6 +247,7 @@
         heading.textContent = "Choose language";
         menu.insertBefore(heading, menu.firstChild);
       }
+      guardLocaleMenu(menu);
       syncMenu(menu);
     });
   }
@@ -205,12 +330,83 @@
     });
   }
 
-  function currentPathLocale() {
-    var firstSegment =
-      window.location.pathname.split("/").filter(Boolean)[0] || "";
-    return Object.prototype.hasOwnProperty.call(localeLabels, firstSegment)
-      ? firstSegment
-      : "";
+  function notifyLocaleNavigation(type, detail) {
+    if (
+      typeof window.dispatchEvent !== "function" ||
+      typeof window.CustomEvent !== "function"
+    ) {
+      return;
+    }
+    window.dispatchEvent(
+      new window.CustomEvent("sixmm-docs-locale-navigation-" + type, {
+        detail: detail,
+      }),
+    );
+  }
+
+  function tabLabelForPage(pagePath) {
+    if (pagePath === "/home") return "Home";
+    if (pagePath.indexOf("/solutions/") === 0) return "Solutions";
+    if (
+      pagePath.indexOf("/trading/") === 0 ||
+      pagePath.indexOf("/getting-started/") === 0
+    ) {
+      return "Trading";
+    }
+    if (pagePath.indexOf("/developer-api/") === 0) return "Developers";
+    if (pagePath.indexOf("/sdk/") === 0) return "SDKs";
+    if (
+      pagePath.indexOf("/security/") === 0 ||
+      pagePath.indexOf("/security-compliance/") === 0 ||
+      pagePath.indexOf("/legal/") === 0
+    ) {
+      return "Security & Compliance";
+    }
+    return "Resources & Support";
+  }
+
+  function syncStandaloneLayout() {
+    var route = currentRoute();
+    var activeLabel = standaloneSectionLabels[route.locale] || "";
+    document.documentElement.classList.toggle(
+      "sixmm-standalone-locale",
+      Boolean(activeLabel),
+    );
+    document.documentElement.classList.toggle(
+      "sixmm-standalone-home",
+      Boolean(activeLabel) && route.pagePath === "/home",
+    );
+
+    Array.from(
+      document.querySelectorAll(
+        "#fern-sidebar-scroll-area ul.fern-sidebar-group.space-y-6",
+      ),
+    ).forEach(function (group) {
+      Array.from(group.children).forEach(function (section) {
+        var heading = section.querySelector(
+          ":scope > .fern-sidebar-heading > .fern-sidebar-heading-content",
+        );
+        var label = normalizedText(heading);
+        var isStandalone = Object.values(standaloneSectionLabels).includes(
+          label,
+        );
+        section.classList.toggle(
+          "sixmm-hidden-sidebar-section",
+          activeLabel ? label !== activeLabel : isStandalone,
+        );
+      });
+    });
+
+    if (!activeLabel) return;
+    var activeTabLabel = tabLabelForPage(route.pagePath);
+    Array.from(document.querySelectorAll('[role="tab"]')).forEach(
+      function (tab) {
+        var isActive = normalizedText(tab) === activeTabLabel;
+        tab.setAttribute("aria-selected", isActive ? "true" : "false");
+        tab.dataset.state = isActive ? "active" : "inactive";
+        tab.tabIndex = isActive ? 0 : -1;
+      },
+    );
   }
 
   function currentDocumentTheme() {
@@ -236,16 +432,10 @@
       enhanceMenus();
       var menu = controlledMenu(trigger);
       if (!menu) return null;
-      return Array.from(
-        menu.querySelectorAll('[role="menuitemradio"], a[href]'),
-      ).find(function (candidate) {
-        var link =
-          candidate.matches && candidate.matches("a[href]")
-            ? candidate
-            : candidate.querySelector("a[href]");
-        return link && optionLocale(link) === locale ? link : false;
-      });
-    }, 4000);
+      return menu.querySelector(
+        '[role="menuitemradio"][data-sixmm-locale="' + locale + '"]',
+      );
+    }, localeNavigationTimeout);
   }
 
   function waitForThemeOption(trigger, theme) {
@@ -265,15 +455,57 @@
     }, 4000);
   }
 
-  async function navigateDocsLocale(locale) {
-    if (!Object.prototype.hasOwnProperty.call(localeLabels, locale)) {
-      return false;
-    }
-    if (currentPathLocale() === locale) return true;
+  function fernLinkForPath(pathname) {
+    return Array.from(
+      document.querySelectorAll(
+        '#fern-sidebar-scroll-area a[href], a[role="tab"][href]',
+      ),
+    ).find(function (link) {
+      return link.isConnected && linkPathname(link) === pathname;
+    });
+  }
 
-    var navigationId = ++localeNavigationId;
+  async function clickFernLink(link, pathname, navigationId) {
+    if (!link || navigationId !== localeNavigationId) return false;
+    link.click();
+    var changed = await waitFor(function () {
+      return window.location.pathname === pathname ? true : null;
+    }, localeNavigationTimeout);
+    return navigationId === localeNavigationId && Boolean(changed);
+  }
+
+  function tabLandingPath(pagePath) {
+    if (pagePath === "/home") return "/home";
+    if (pagePath.indexOf("/solutions/") === 0) {
+      return "/solutions/overview";
+    }
+    if (
+      pagePath.indexOf("/trading/") === 0 ||
+      pagePath.indexOf("/getting-started/") === 0
+    ) {
+      return "/trading/overview";
+    }
+    if (pagePath.indexOf("/developer-api/") === 0) {
+      return "/developer-api/overview";
+    }
+    if (pagePath.indexOf("/sdk/") === 0) return "/sdk/overview";
+    if (
+      pagePath.indexOf("/security/") === 0 ||
+      pagePath.indexOf("/security-compliance/") === 0 ||
+      pagePath.indexOf("/legal/") === 0
+    ) {
+      return "/security-compliance/overview";
+    }
+    return "/resources/overview";
+  }
+
+  async function navigateNativeLocale(locale, navigationId) {
+    var route = currentRoute();
+    var targetPath = localizedPath(locale, route.pagePath);
+    if (window.location.pathname === targetPath) return true;
+
     for (var attempt = 0; attempt < 2; attempt += 1) {
-      var selector = await waitFor(visibleSelector, 4000);
+      var selector = await waitFor(visibleSelector, localeNavigationTimeout);
       if (navigationId !== localeNavigationId) return false;
       if (!selector) return false;
       if (
@@ -286,14 +518,127 @@
       var option = await waitForLocaleOption(selector, locale);
       if (navigationId !== localeNavigationId) return false;
       if (!option) continue;
-      option.click();
+      nativeLocaleClick = option;
+      try {
+        option.click();
+      } finally {
+        nativeLocaleClick = null;
+      }
       var changed = await waitFor(function () {
-        return currentPathLocale() === locale ? true : null;
-      }, 4000);
+        return window.location.pathname === targetPath ? true : null;
+      }, localeNavigationTimeout);
       if (navigationId !== localeNavigationId) return false;
       if (changed) return true;
     }
     return false;
+  }
+
+  async function navigateToBasePage(pagePath, navigationId) {
+    if (window.location.pathname === pagePath) return true;
+
+    var direct = fernLinkForPath(pagePath);
+    if (direct && (await clickFernLink(direct, pagePath, navigationId))) {
+      return true;
+    }
+
+    var landingPath = tabLandingPath(pagePath);
+    var tab = await waitFor(function () {
+      return fernLinkForPath(landingPath);
+    }, localeNavigationTimeout);
+    if (!tab) return false;
+    if (
+      window.location.pathname !== landingPath &&
+      !(await clickFernLink(tab, landingPath, navigationId))
+    ) {
+      return false;
+    }
+    if (pagePath === landingPath) return true;
+
+    var pageLink = await waitFor(function () {
+      return fernLinkForPath(pagePath);
+    }, localeNavigationTimeout);
+    return clickFernLink(pageLink, pagePath, navigationId);
+  }
+
+  async function navigateStandaloneLocale(locale, pagePath, navigationId) {
+    var targetPath = localizedPath(locale, pagePath);
+    if (window.location.pathname === targetPath) return true;
+
+    var direct = fernLinkForPath(targetPath);
+    if (direct && (await clickFernLink(direct, targetPath, navigationId))) {
+      return true;
+    }
+
+    var route = currentRoute();
+    if (!isStandaloneLocale(route.locale) && route.locale) {
+      if (!(await navigateNativeLocale("", navigationId))) return false;
+    }
+    if (navigationId !== localeNavigationId) return false;
+
+    direct = fernLinkForPath(targetPath);
+    if (direct && (await clickFernLink(direct, targetPath, navigationId))) {
+      return true;
+    }
+
+    var resourcesPath = "/resources/overview";
+    if (window.location.pathname !== resourcesPath) {
+      var resourcesTab = await waitFor(function () {
+        return fernLinkForPath(resourcesPath);
+      }, localeNavigationTimeout);
+      if (
+        !resourcesTab ||
+        !(await clickFernLink(resourcesTab, resourcesPath, navigationId))
+      ) {
+        return false;
+      }
+    }
+
+    var targetLink = await waitFor(function () {
+      return fernLinkForPath(targetPath);
+    }, localeNavigationTimeout);
+    return clickFernLink(targetLink, targetPath, navigationId);
+  }
+
+  async function navigateDocsLocale(locale) {
+    if (!Object.prototype.hasOwnProperty.call(localeLabels, locale)) {
+      return false;
+    }
+
+    var navigationId = ++localeNavigationId;
+    var route = currentRoute();
+    var success = false;
+    notifyLocaleNavigation("start", {
+      id: navigationId,
+      locale: locale,
+    });
+
+    try {
+      if (route.locale === locale) {
+        success = true;
+        return true;
+      }
+      if (isStandaloneLocale(locale)) {
+        success = await navigateStandaloneLocale(
+          locale,
+          route.pagePath,
+          navigationId,
+        );
+        return success;
+      }
+      if (isStandaloneLocale(route.locale)) {
+        if (!(await navigateToBasePage(route.pagePath, navigationId))) {
+          return false;
+        }
+      }
+      success = await navigateNativeLocale(locale, navigationId);
+      return success;
+    } finally {
+      notifyLocaleNavigation("settled", {
+        id: navigationId,
+        locale: locale,
+        success: success,
+      });
+    }
   }
 
   async function navigateDocsTheme(theme) {
@@ -328,6 +673,7 @@
     scheduled = false;
     enhanceTriggers();
     enhanceMenus();
+    syncStandaloneLayout();
   }
 
   function scheduleSync() {

@@ -6,6 +6,7 @@ import process from "node:process";
 import {
   generatedLocaleSpecs as localeSpecs,
   generatorVersion,
+  standaloneLocaleCodes,
 } from "./locale-config.mjs";
 
 const projectRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
@@ -112,6 +113,26 @@ function canonicalForLocale(content, locale) {
     /^slug:.*$/m,
     (line) => `${line}\ncanonical-url: ${canonical}`,
   );
+}
+
+function prefixStandaloneSlug(content, locale) {
+  if (!standaloneLocaleCodes.has(locale)) return content;
+  return content.replace(
+    /^slug:\s*["']?([^"'\n]+)["']?\s*$/m,
+    (line, slug) => `slug: ${locale}/${slug.replace(/^\/+|\/+$/g, "")}`,
+  );
+}
+
+function rewriteStandaloneAssetPaths(content) {
+  return content
+    .replace(
+      /\.\.\/\.\.\/assets\//g,
+      "../../../../../docs/assets/",
+    )
+    .replace(
+      /src="\.\/(6mm-(?:logo|entry-banner|card-entry)-assets-(?:en|zh)\.zip|6mm-logo-assets\.zip)"/g,
+      'src="../../../../../docs/pages/design-and-assets/$1"',
+    );
 }
 
 function protectText(value) {
@@ -532,7 +553,10 @@ function regionalize(value, locale) {
 async function translateDocument(content, locale) {
   const route = locale.route ?? locale.code;
   if (!locale.targetLanguage) {
-    return canonicalForLocale(localizeInternalLinks(content, route), route);
+    return prefixStandaloneSlug(
+      canonicalForLocale(localizeInternalLinks(content, route), route),
+      locale.code,
+    );
   }
   const document = extractDocumentRecords(content);
   const translated = await translateRecords(
@@ -556,6 +580,7 @@ async function translateDocument(content, locale) {
   let output = document.lines.join("\n");
   output = localizeInternalLinks(output, route);
   output = canonicalForLocale(output, route);
+  output = prefixStandaloneSlug(output, locale.code);
   if (locale.code === "vi" && /^slug:\s*legal\/privacy-policy\s*$/m.test(output)) {
     output = output.replace(/^title:.*$/m, 'title: "Chính sách quyền riêng tư"');
   }
@@ -687,7 +712,10 @@ for (const locale of selectedLocales) {
       skippedCount += 1;
       return;
     }
-    const translated = await translateDocument(source, locale);
+    let translated = await translateDocument(source, locale);
+    if (standaloneLocaleCodes.has(locale.code)) {
+      translated = rewriteStandaloneAssetPaths(translated);
+    }
     await mkdir(path.dirname(outputPath), { recursive: true });
     await writeFile(outputPath, translated, "utf8");
     localeManifest.pages[relativePagePath] = sourceHash;

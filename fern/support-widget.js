@@ -19,13 +19,12 @@
       widgetLanguageRoutes[String(alias).toLowerCase()] = locale.code;
     });
   });
-  var routePrefixes = localeRoutes.map(function (locale) {
-    return locale.route;
-  });
   var lastPathname = window.location.pathname;
   var lastTheme = null;
   var pendingWidgetDocsLocale = null;
   var pendingWidgetTheme = null;
+  var docsLocaleNavigation = null;
+  var widgetDocsRequestId = 0;
 
   function currentDocsLocale() {
     var firstSegment = window.location.pathname.split('/').filter(Boolean)[0] || '';
@@ -90,12 +89,6 @@
     }
   }
 
-  function currentPagePath() {
-    var segments = window.location.pathname.split('/').filter(Boolean);
-    if (routePrefixes.indexOf(segments[0]) >= 0) segments.shift();
-    return '/' + (segments.join('/') || 'home');
-  }
-
   function routeForWidgetLanguage(lang) {
     var normalized = typeof lang === 'string' ? lang.trim().replace(/_/g, '-').toLowerCase() : '';
     return Object.prototype.hasOwnProperty.call(widgetLanguageRoutes, normalized)
@@ -106,25 +99,54 @@
   function switchHostLanguage(lang) {
     var route = routeForWidgetLanguage(lang);
     if (route === null) return;
+    var requestId = ++widgetDocsRequestId;
 
     // This navigation originated inside the Widget. When the pathname changes,
     // consume this marker instead of writing the locale back with setLang().
     pendingWidgetDocsLocale = route;
-    var targetPath = (route ? '/' + route : '') + currentPagePath();
-    if (targetPath === window.location.pathname) {
-      pendingWidgetDocsLocale = null;
-      return;
-    }
 
     if (typeof window.__sixmmNavigateDocsLocale === 'function') {
       Promise.resolve(window.__sixmmNavigateDocsLocale(route)).then(function (success) {
-        if (!success && pendingWidgetDocsLocale === route) {
+        if (
+          !success &&
+          requestId === widgetDocsRequestId &&
+          pendingWidgetDocsLocale === route
+        ) {
           pendingWidgetDocsLocale = null;
         }
       });
     } else {
       pendingWidgetDocsLocale = null;
     }
+  }
+
+  function onDocsLocaleNavigationStart(event) {
+    var detail = event && event.detail ? event.detail : {};
+    if (typeof detail.id !== 'number') return;
+    docsLocaleNavigation = {
+      id: detail.id,
+      locale: detail.locale
+    };
+  }
+
+  function onDocsLocaleNavigationSettled(event) {
+    var detail = event && event.detail ? event.detail : {};
+    if (!docsLocaleNavigation || docsLocaleNavigation.id !== detail.id) return;
+
+    docsLocaleNavigation = null;
+    lastPathname = window.location.pathname;
+    if (
+      detail.success &&
+      pendingWidgetDocsLocale !== null &&
+      pendingWidgetDocsLocale === detail.locale &&
+      currentDocsLocale() === detail.locale
+    ) {
+      pendingWidgetDocsLocale = null;
+      return;
+    }
+
+    pendingWidgetDocsLocale = null;
+    syncWidgetLanguageFromHost(20);
   }
 
   function switchHostTheme(theme) {
@@ -185,6 +207,14 @@
   function boot() {
     window.addEventListener('cs-widget-lang-change', onWidgetLanguageChange);
     window.addEventListener('cs-widget-theme-change', onWidgetThemeChange);
+    window.addEventListener(
+      'sixmm-docs-locale-navigation-start',
+      onDocsLocaleNavigationStart
+    );
+    window.addEventListener(
+      'sixmm-docs-locale-navigation-settled',
+      onDocsLocaleNavigationSettled
+    );
 
     loadWidget();
 
@@ -199,6 +229,7 @@
     window.setInterval(function () {
       if (window.location.pathname !== lastPathname) {
         lastPathname = window.location.pathname;
+        if (docsLocaleNavigation !== null) return;
         if (
           pendingWidgetDocsLocale !== null &&
           pendingWidgetDocsLocale === currentDocsLocale()
