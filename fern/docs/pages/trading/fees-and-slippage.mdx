@@ -1,12 +1,14 @@
 ---
-title: "Fees & Slippage"
-description: "When trading perpetual contracts, costs mainly come from trading fees and slippage."
+title: "Trading Costs: Fees & Slippage"
+description: "Estimate perpetual trading costs by understanding execution fees, order-book slippage, liquidity, order size, and order type."
 slug: trading/fees-and-slippage
 ---
 
-When trading perpetual contracts, costs mainly come from trading fees and slippage.
+The final cost of a perpetual trade depends on both explicit fees and the difference between the expected and actual execution price.
 
 Understanding these costs helps users better estimate trade outcomes and manage risk.
+
+This page focuses on execution quality and total trading cost. For maker, taker, funding, liquidation, and settlement rules, see the [Perpetual Trading Fee Structure](/trading/fee-structure).
 
 ***
 
@@ -36,6 +38,21 @@ Fee rates may vary by trading pair and partner configuration.
 * Fees are deducted from the Perpetual Account
 
 Unfilled or canceled orders do not incur fees.
+
+***
+
+<h2 id="estimate-total-execution-cost">Estimate Total Execution Cost</h2>
+
+Before placing a large order, consider:
+
+```text
+estimated trading cost = trading fee + estimated slippage cost
+slippage cost = |average execution price - expected price| × executed quantity
+```
+
+Funding payments may also affect the cost of holding a perpetual position across a funding event. Liquidation-related charges apply only when liquidation rules are triggered.
+
+The estimate is not a guaranteed execution result. Available order-book depth and market volatility can change between estimation and execution.
 
 ***
 
@@ -73,6 +90,18 @@ Slippage is more noticeable during fast-moving markets.
 | Slippage     | During execution | Yes               |
 
 While fees are predictable, slippage depends on market conditions and order behavior.
+
+***
+
+<h2 id="cost-scenarios">Common Cost Scenarios</h2>
+
+| Scenario | Main cost consideration |
+| --- | --- |
+| Resting limit order | Maker fee and whether the order fills. |
+| Market order | Taker fee and available order-book depth. |
+| Large order | Slippage across multiple price levels. |
+| Fast-moving market | Execution-price uncertainty and wider effective spread. |
+| Position held across funding | Trading cost plus applicable funding payment. |
 
 ***
 

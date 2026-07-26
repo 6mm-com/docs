@@ -1,9 +1,11 @@
 ---
-title: "公共行情频道"
-description: "订阅 6MM 行情、订单簿、成交和市场更新等公开 WebSocket 频道及对应消息格式。"
+title: "WebSocket 公共行情频道"
+description: "通过 6MM 公共 WebSocket 频道实时接收订单簿、成交、K 线和行情数据，并正确处理订阅与重连。"
 slug: developer-api/websocket/public-market-channels
 canonical-url: https://docs.6mm.com/zh/developer-api/websocket/public-market-channels
 ---
+
+当应用需要持续更新价格、成交、K 线或订单簿深度，并希望避免频繁轮询 REST 接口时，可使用公共行情频道。这些数据流适用于交易界面、价格展示、行情提醒和市场监控。
 
 <h2 id="connection-url">连接地址</h2>
 
@@ -12,6 +14,8 @@ wss://ws.6mm.com/ws
 ```
 
 公共 WebSocket 不需要鉴权。
+
+连接生命周期、取消订阅、Ping 和重连方式请参阅[连接、订阅与心跳](/zh/developer-api/websocket/connection-subscription-and-heartbeat)。
 
 <h2 id="common-channels">常用频道</h2>
 
@@ -22,6 +26,16 @@ wss://ws.6mm.com/ws
 | `market.kline.{symbol}.{interval}` | K 线                |
 | `market.ticker.{symbol}`           | 单交易对行情摘要           |
 | `market.tickers`                   | 全交易对行情摘要           |
+
+<h2 id="choose-a-channel">选择频道</h2>
+
+| 应用需求 | 频道 |
+| --- | --- |
+| 构建或维护订单簿 | `market.depth.{symbol}` |
+| 展示实时成交记录 | `market.trade.{symbol}` |
+| 绘制 K 线图 | `market.kline.{symbol}.{interval}` |
+| 展示单个市场摘要 | `market.ticker.{symbol}` |
+| 维护全市场行情列表 | `market.tickers` |
 
 <h2 id="subscription-example">订阅示例</h2>
 
@@ -39,3 +53,32 @@ wss://ws.6mm.com/ws
   "data": {}
 }
 ```
+
+通过 `topic` 将消息分发给正确的处理程序，并使用 `ts` 观察传输延迟。`data` 对象包含所订阅频道的具体数据。
+
+<h2 id="order-book-handling">订单簿处理</h2>
+
+深度频道会先发送快照，再发送增量更新。应用本地订单簿前应先用快照初始化。连接中断后应建立新会话、重新订阅，并使用下一份快照重建本地订单簿，不要继续使用已经过期的内存状态。
+
+<h2 id="production-recommendations">生产环境建议</h2>
+
+- 为每次订阅、取消订阅和 Ping 请求生成唯一 `id`。
+- 收到订阅确认后，再将频道标记为可用。
+- 重连后重新订阅全部必要频道。
+- 将网络读取与耗时较长的数据库或界面处理分开。
+- 监控断线频率、消息处理延迟和异常数据。
+- 需要账户和订单更新时，使用[私有用户频道](/zh/developer-api/websocket/private-user-channel)。
+
+<h2 id="related-api-docs">相关 API 文档</h2>
+
+<CardGroup cols={3}>
+<Card title="WebSocket 总览" icon="fa-duotone fa-wave-pulse" href="/zh/developer-api/websocket">
+了解公共与私有数据流的使用方式。
+</Card>
+<Card title="连接与心跳" icon="fa-duotone fa-heart-pulse" href="/zh/developer-api/websocket/connection-subscription-and-heartbeat">
+实现订阅、取消订阅、Ping 和重连处理。
+</Card>
+<Card title="REST 行情接口" icon="fa-duotone fa-chart-line" href="/zh/developer-api/rest-api/market-data">
+结合请求式接口与实时行情数据流。
+</Card>
+</CardGroup>
