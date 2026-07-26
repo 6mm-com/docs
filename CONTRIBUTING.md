@@ -15,17 +15,22 @@ For larger updates, open a pull request directly against this repository.
 Documentation source files live under:
 
 - `fern/docs/pages/` for English pages
-- `fern/translations/zh/docs/pages/` for Simplified Chinese pages
 - `fern/docs.yml` for English navigation, tabs, redirects, and site configuration
-- `fern/translations/zh/docs.yml` for Simplified Chinese navigation
+- `fern/translations/<locale>/` for Fern-native translation overlays
+- `fern/docs/locales/<locale>/` for standalone locales that Fern does not support natively
+
+English is the source of truth. If an English page changes, regenerate the affected
+locales with `npm run translations:generate -- --locales=<locale>`. For a deliberate
+manual translation, refresh its source hash with
+`npm run translations:refresh-manifest -- --locales=<locale>`.
 
 ## Validation
 
 Run Fern validation before opening a pull request:
 
 ```bash
-npm install
-npm run fern:check
+npm ci
+npm run check
 ```
 
 ## Content Standards
@@ -36,7 +41,7 @@ Good 6MM documentation should be:
 - Clear enough for engineering teams to implement
 - Precise about security, signing, credentials, custody, and trading risk
 - Written for partners, developers, and operators rather than for marketing copy
-- Consistent across English and Chinese where both languages apply
+- Consistent across all supported locales
 
 Do not include:
 
@@ -50,8 +55,8 @@ Do not include:
 Before requesting review:
 
 - Confirm the affected pages and navigation entries are correct.
-- Update both English and Chinese pages when required.
-- Run `npm run fern:check`.
+- Update or regenerate all affected locales.
+- Run `npm run check`.
 - Add screenshots or context when the change affects layout, navigation, or downloads.
 
 Maintainers may ask for product, engineering, security, or legal review depending on the content area.

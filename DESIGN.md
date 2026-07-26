@@ -45,10 +45,13 @@ Use:
 docs.6mm.com
 ```
 
-The root path serves English documentation. Simplified Chinese is served under:
+The root path serves English documentation. Localized documentation uses locale
+prefixes, for example:
 
 ```text
-/zh/
+/zh-CN/
+/ja/
+/es-419/
 ```
 
 ## Information Architecture
@@ -67,14 +70,18 @@ The homepage should briefly explain the recommended architecture:
 Partner Web App -> Trading Widget SDK -> Partner Backend -> Agent SDK -> 6MM Agent API
 ```
 
-## Bilingual Strategy
+## Localization Strategy
 
 Use separate language routes:
 
 - `/` for English
-- `/zh/` for Simplified Chinese
+- `/<locale>/` for each localized version
 
-Do not mix Chinese and English in the same page. Translate by concept, not sentence-by-sentence. Keep API names, method names, event names, headers, and code identifiers unchanged.
+English is the source of truth. Fern-native translation overlays live under
+`fern/translations/`; unsupported standalone locale trees live under
+`fern/docs/locales/`. Do not mix languages in one page. Translate by concept,
+not sentence-by-sentence, and keep API names, method names, event names, headers,
+and code identifiers unchanged.
 
 ## Content Cleanup Before Launch
 

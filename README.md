@@ -16,7 +16,6 @@ The documentation covers:
 - Embedded trading and partner integration flows
 - Trading Widget SDK and Agent SDK usage
 - REST API and WebSocket integration
-- AI Hub, MCP, CLI, and agentic workflow guides
 - Perpetual trading concepts, margin, risk, fees, and order behavior
 - Brand assets, launch resources, support paths, and security reporting
 
@@ -26,9 +25,12 @@ The documentation covers:
 fern/
   docs.yml                         # English docs configuration, navigation, theme, redirects
   docs/pages/                      # English documentation pages
-  translations/zh/docs.yml         # Simplified Chinese navigation
-  translations/zh/docs/pages/      # Simplified Chinese documentation pages
+  translations/<locale>/           # Fern-native translation overlays
+  docs/locales/<locale>/            # Standalone locale trees unsupported by Fern
   docs/assets/                     # Logos, favicon, brand assets, and downloads
+scripts/
+  generate-translations.mjs        # Translation generation and manifest refresh
+  check-translations.mjs           # Locale, SEO, link, asset, and manifest validation
 ```
 
 The production documentation source of truth is the `fern/` directory.
@@ -38,13 +40,13 @@ The production documentation source of truth is the `fern/` directory.
 Install dependencies:
 
 ```bash
-npm install
+npm ci
 ```
 
 Run validation:
 
 ```bash
-npm run fern:check
+npm run check
 ```
 
 Start a local Fern preview:
@@ -57,7 +59,7 @@ Preview routes:
 
 ```text
 English: http://127.0.0.1:3000/home
-Chinese: http://127.0.0.1:3000/zh/home
+Chinese: http://127.0.0.1:3000/zh-CN/home
 ```
 
 ## Contributing
@@ -67,9 +69,9 @@ Use the **Edit this page** link on the documentation site or open a pull request
 Before submitting a pull request:
 
 - Keep changes accurate, partner-facing, and implementation-focused.
-- Update both English and Chinese pages when the change affects both languages.
+- Update the English source first, then regenerate or intentionally update affected translations.
 - Do not include credentials, private endpoints, unreleased secrets, customer data, or internal-only operational details.
-- Run `npm run fern:check`.
+- Run `npm run check`.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the full contribution guide.
 

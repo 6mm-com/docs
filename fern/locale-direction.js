@@ -1,29 +1,32 @@
 (function () {
-  var locales = [
-    "en-Asia",
-    "zh-TW",
-    "ja",
-    "ru",
-    "it",
-    "fr",
-    "de",
-    "zh-CN",
-    "id",
-    "pl",
-    "vi",
-    "uk",
-    "ar",
-  ];
-  var standaloneLocales = {
+  var localeHtmlLanguages = {
     "en-Asia": "en-SG",
-    pt: "pt",
-    es: "es",
     "es-419": "es-419",
     "pt-BR": "pt-BR",
     "es-AR": "es-AR",
+    "zh-TW": "zh-TW",
+    ja: "ja",
+    ru: "ru",
+    it: "it",
+    fr: "fr",
+    de: "de",
+    "zh-CN": "zh-CN",
+    id: "id",
+    pl: "pl",
+    vi: "vi",
+    uk: "uk",
+    pt: "pt",
+    es: "es",
     uz: "uz",
     fil: "fil",
     az: "az",
+    ar: "ar",
+  };
+  var standaloneRoutes = {
+    "en-Asia": true,
+    uz: true,
+    fil: true,
+    az: true,
   };
   var lastPathname;
 
@@ -32,8 +35,8 @@
     var nativeLocale = segments[0];
     var standaloneRoute = segments[1];
     if (
-      locales.indexOf(nativeLocale) < 0 ||
-      !standaloneLocales[standaloneRoute]
+      !localeHtmlLanguages[nativeLocale] ||
+      !standaloneRoutes[standaloneRoute]
     ) {
       return false;
     }
@@ -47,8 +50,7 @@
 
   function localeFromPathname(pathname) {
     var firstSegment = pathname.split("/").filter(Boolean)[0];
-    if (standaloneLocales[firstSegment]) return standaloneLocales[firstSegment];
-    return locales.indexOf(firstSegment) >= 0 ? firstSegment : "en";
+    return localeHtmlLanguages[firstSegment] || "en";
   }
 
   function syncLocale() {

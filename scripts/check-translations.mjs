@@ -1,4 +1,5 @@
 import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { readFile, readdir, stat } from "node:fs/promises";
 import path from "node:path";
 
@@ -7,6 +8,8 @@ const fernRoot = path.join(projectRoot, "fern");
 const configPath = path.join(fernRoot, "docs.yml");
 const sourceRoot = path.join(fernRoot, "docs");
 const translationsRoot = path.join(fernRoot, "translations");
+const manifestPath = path.join(translationsRoot, ".translation-manifest.json");
+const generatorVersion = 3;
 const expectedLocales = [
   "en",
   "en-Asia",
@@ -35,12 +38,29 @@ const standaloneLocaleCodes = new Set(["en-Asia", "uz", "fil", "az"]);
 const aliasLocaleCodes = new Set();
 const standaloneRoutes = {
   "en-Asia": "en-Asia",
-  "es-419": "es-419",
+  uz: "uz",
+  fil: "fil",
+  az: "az",
+};
+const generatedLocaleTargetLanguages = {
+  "en-Asia": "copy",
+  ja: "ja",
+  ru: "ru",
+  "es-419": "es-MX",
+  it: "it",
+  fr: "fr",
+  de: "de",
+  "zh-TW": "zh-TW",
   "pt-BR": "pt-BR",
-  pt: "pt",
+  id: "id",
+  pl: "pl",
+  vi: "vi",
+  uk: "uk",
+  pt: "pt-PT",
   es: "es",
   "es-AR": "es-AR",
   uz: "uz",
+  ar: "ar",
   fil: "fil",
   az: "az",
 };
@@ -134,6 +154,32 @@ function sameArray(left, right) {
   return left.length === right.length && left.every((value, index) => value === right[index]);
 }
 
+function sha256(value) {
+  return createHash("sha256").update(value).digest("hex");
+}
+
+function collectFolderPaths(value, result = []) {
+  if (Array.isArray(value)) {
+    value.forEach((item) => collectFolderPaths(item, result));
+  } else if (value && typeof value === "object") {
+    if (typeof value.folder === "string") result.push(value.folder);
+    Object.values(value).forEach((item) => collectFolderPaths(item, result));
+  }
+  return result;
+}
+
+async function validateRepositoryAssetUrls(content, context) {
+  const rawAssetPattern =
+    /https:\/\/raw\.githubusercontent\.com\/6mm-com\/docs\/main\/(fern\/[^)\s"']+)/g;
+  for (const match of content.matchAll(rawAssetPattern)) {
+    try {
+      await stat(path.join(projectRoot, match[1]));
+    } catch {
+      pushError(`[${context}] missing repository asset ${match[1]}`);
+    }
+  }
+}
+
 function localizedDestination(destination, locale) {
   if (destination.startsWith("/docs/") || destination.startsWith("/assets/")) {
     return destination;
@@ -164,6 +210,64 @@ const activePages = [
 ];
 if (activePages.length !== 87) {
   pushError(`Expected 87 active pages, found ${activePages.length}`);
+}
+
+const configuredStandaloneDirectories = collectFolderPaths(config)
+  .map((folder) => folder.match(/^docs\/locales\/([^/]+)\/docs\/pages$/)?.[1])
+  .filter(Boolean)
+  .sort();
+const expectedStandaloneDirectories = [...standaloneLocaleCodes].sort();
+if (!sameArray(configuredStandaloneDirectories, expectedStandaloneDirectories)) {
+  pushError(
+    `Configured standalone locale folders do not match expected locales.\nExpected: ${expectedStandaloneDirectories.join(", ")}\nActual: ${configuredStandaloneDirectories.join(", ")}`,
+  );
+}
+
+const standaloneDirectories = (
+  await Promise.all(
+    (await readdir(path.join(sourceRoot, "locales"))).map(async (entry) => {
+      const entryPath = path.join(sourceRoot, "locales", entry);
+      return (await stat(entryPath)).isDirectory() ? entry : null;
+    }),
+  )
+)
+  .filter(Boolean)
+  .sort();
+if (!sameArray(standaloneDirectories, expectedStandaloneDirectories)) {
+  pushError(
+    `Standalone locale directories do not match expected locales.\nExpected: ${expectedStandaloneDirectories.join(", ")}\nActual: ${standaloneDirectories.join(", ")}`,
+  );
+}
+
+let manifest;
+try {
+  manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+} catch (error) {
+  pushError(`Translation manifest cannot be read: ${error.message}`);
+  manifest = { locales: {} };
+}
+if (manifest.version !== generatorVersion) {
+  pushError(
+    `Translation manifest version is ${manifest.version ?? "missing"}; expected ${generatorVersion}`,
+  );
+}
+
+for (const locale of generatedLocales) {
+  const pages = manifest.locales?.[locale]?.pages ?? {};
+  if (Object.keys(pages).length !== activePages.length) {
+    pushError(
+      `[${locale}] manifest contains ${Object.keys(pages).length} pages; expected ${activePages.length}`,
+    );
+  }
+  for (const relativePagePath of activePages) {
+    const source = await readFile(path.join(fernRoot, relativePagePath), "utf8");
+    const expectedHash = sha256(
+      `${generatorVersion}\0${locale}\0${generatedLocaleTargetLanguages[locale]}\0${source}`,
+    );
+    if (pages[relativePagePath] !== expectedHash) {
+      pushError(`[${locale}] stale manifest entry for ${relativePagePath}`);
+    }
+  }
 }
 
 const translationDirectories = (
@@ -203,6 +307,7 @@ for (const relativePagePath of activePages) {
   const sourceImages = imageSources(source);
   const sourceTables = tableSignatures(source);
   const sourceDestinations = internalDestinations(source);
+  await validateRepositoryAssetUrls(source, `en:${relativePagePath}`);
 
   for (const locale of translatedLocales) {
     const route = localeRoute(locale);
@@ -214,6 +319,7 @@ for (const relativePagePath of activePages) {
       pushError(`[${locale}] missing ${relativePagePath}`);
       continue;
     }
+    await validateRepositoryAssetUrls(translated, `${locale}:${relativePagePath}`);
 
     const meta = frontmatter(translated);
     if (!meta.title || !(meta.description || meta.subtitle) || !meta.slug) {

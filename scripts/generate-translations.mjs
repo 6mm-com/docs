@@ -39,6 +39,7 @@ const standaloneLocaleCodes = new Set(["en-Asia", "uz", "fil", "az"]);
 const args = new Set(process.argv.slice(2));
 const force = args.has("--force");
 const labelsOnly = args.has("--labels-only");
+const refreshManifestOnly = args.has("--refresh-manifest");
 const requestedLocaleArgument = process.argv.find((argument) => argument.startsWith("--locales="));
 const requestedLocales = requestedLocaleArgument
   ? new Set(requestedLocaleArgument.slice("--locales=".length).split(",").filter(Boolean))
@@ -51,6 +52,10 @@ if (requestedLocales != null && selectedLocales.length !== requestedLocales.size
   const known = new Set(localeSpecs.map((locale) => locale.code));
   const unknown = [...requestedLocales].filter((locale) => !known.has(locale));
   throw new Error(`Unknown locale(s): ${unknown.join(", ")}`);
+}
+
+if (refreshManifestOnly && (force || labelsOnly)) {
+  throw new Error("--refresh-manifest cannot be combined with --force or --labels-only");
 }
 
 function loadYamlAsJson(filePath) {
@@ -680,8 +685,25 @@ for (const locale of selectedLocales) {
     ? path.join(sourceRoot, "locales", locale.code)
     : path.join(translationsRoot, locale.code);
   const localeManifest = (manifest.locales[locale.code] ??= { pages: {} });
-  const labels = await translatedLabelMap(config, locale);
   await mkdir(localeRoot, { recursive: true });
+
+  if (refreshManifestOnly) {
+    localeManifest.pages = {};
+    for (const relativePagePath of activePages) {
+      const source = await readFile(path.join(fernRoot, relativePagePath), "utf8");
+      await readFile(path.join(localeRoot, relativePagePath), "utf8");
+      localeManifest.pages[relativePagePath] = sha256(
+        `${generatorVersion}\0${locale.code}\0${locale.targetLanguage ?? "copy"}\0${source}`,
+      );
+    }
+    localeManifest.manifestRefreshedAt = new Date().toISOString();
+    localeManifest.label = locale.label;
+    await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
+    console.log(`[${locale.code}] ${locale.label}: manifest refreshed`);
+    continue;
+  }
+
+  const labels = await translatedLabelMap(config, locale);
   if (!standalone) {
     await writeFile(
       path.join(localeRoot, "docs.yml"),

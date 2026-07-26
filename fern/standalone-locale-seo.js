@@ -2,8 +2,6 @@
   var siteUrl = "https://docs.6mm.com";
   var routeLocaleOverrides = {
     "en-Asia": "en-SG",
-    pt: "pt",
-    es: "es",
     uz: "uz",
     fil: "fil",
     az: "az",

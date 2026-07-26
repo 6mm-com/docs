@@ -5,7 +5,6 @@
     "es-419",
     "pt-BR",
     "es-AR",
-    "en-Asia",
     "zh-TW",
     "ja",
     "ru",
@@ -24,7 +23,6 @@
     "az",
     "ar",
   ];
-  var standaloneLocales = {};
   var homeNames = {
     en: "Home",
     "en-Asia": "Home",
@@ -52,10 +50,7 @@
 
   function localeForPathname(pathname) {
     var firstSegment = pathname.split("/").filter(Boolean)[0];
-    var standaloneCode = standaloneLocales[firstSegment];
-    var code =
-      standaloneCode ||
-      (localeCodes.indexOf(firstSegment) >= 0 ? firstSegment : "en");
+    var code = localeCodes.indexOf(firstSegment) >= 0 ? firstSegment : "en";
     return {
       code: code,
       prefix: code === "en" ? "" : "/" + firstSegment,
