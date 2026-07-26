@@ -1,0 +1,51 @@
+---
+title: "Tổng quan về tích hợp"
+description: "Bắt đầu tích hợp 6MM API với môi trường được khuyến nghị, xác thực, ký, REST, WebSocket, kiểm thử và trình tự sẵn sàng sản xuất."
+slug: developer-api/integration-overview
+canonical-url: https://docs.6mm.com/vi/developer-api/integration-overview
+---
+
+> REST URLcơ bản: `https://api.6mm.com`\
+> WebSocket URL: `wss://ws.6mm.com/ws`
+
+Tài liệu này dành cho các hệ thống bên ngoài tích hợp với dịch vụ 6MM API . Nó bao gồm đăng nhập, xác thực JWT , quản lý API Key , ký API Key HMAC , truy vấn tài khoản, lệnh, vị thế, dữ liệu thị trường và luồng WebSocket .
+
+Việc cấp phát tài khoản và chuẩn bị tài trợ được xử lý thông qua các quy trình phía nền tảng. Tài liệu này chỉ mô tả các điểm cuối API dịch vụ có thể gọi bên ngoài.
+
+<h2 id="service-endpoints">Điểm cuối dịch vụ</h2>
+
+| Loại      | Điểm cuối              |
+| --------- | --------------------- |
+| REST API  | `https://api.6mm.com` |
+| WebSocket | `wss://ws.6mm.com/ws`    |
+
+<h2 id="integration-flow">Quy trình tích hợp</h2>
+
+Trình tự tích hợp được khuyến nghị:
+
+1. Đăng nhập bằng tài khoản do nền tảng cung cấp và nhận `accessToken`.
+2. Để truy cập lập trình phía máy chủ, tạo API Key với JWT trước, và lưu trữ an toàn `apiSecret`trả lại một lần.
+3. Các truy vấn riêng tư, endpoint lệnh và endpoint vị thế có thể được gọi bằng `Authorization: Bearer <accessToken>` hoặc chữ ký API Key.
+4. Đối với các luồng WebSocket riêng tư, tạo một `listenKey` trước, sau đó kết nối với `wss://ws.6mm.com/ws?listenKey=...`.
+5. Dữ liệu thị trường REST các điểm cuối và kênh WebSocket công cộng không yêu cầu xác thực.
+
+<h2 id="authentication-choice">Lựa chọn xác thực</h2>
+
+| Kịch bản                               | Phương pháp được khuyến nghị         |
+| -------------------------------------- | -------------------------- |
+| Hành động của người dùng frontend                  | JWT                        |
+| Gọi chương trình phía máy chủ         | API Key + chữ ký HMAC   |
+| API Key tạo, cập nhật và xóa | JWT                        |
+| Thị trường công cộng REST / WebSocket công cộng  | Không cần xác thực |
+
+<h2 id="documentation-scope">Phạm vi tài liệu</h2>
+
+Tài liệu này bao gồm đăng nhập, xác thực JWT , quản lý API Key , ký API Key HMAC , truy vấn tài khoản, đơn hàng, vị thế, dữ liệu thị trường và luồng WebSocket .
+
+<h2 id="recommended-reading-order">Thứ tự đọc được khuyến nghị</h2>
+
+1. [Môi trường & Quy ước Chung](/vi/developer-api/environments-and-common-conventions)
+2. [Xác thực](/vi/developer-api/authentication) và [Ký yêu cầu](/vi/developer-api/request-signing)
+3. [REST API](/vi/developer-api/rest-api) và [WebSocket](/vi/developer-api/websocket)
+4. [Khuyến nghị tích hợp](/vi/developer-api/integration-recommendations)
+5. [Danh sách kiểm tra khởi động sản xuất](/vi/resources/production-launch-checklist)

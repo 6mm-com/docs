@@ -1,0 +1,143 @@
+---
+title: "實例方法"
+subtitle: "在 TradingWidget.create（） 之後控制已建立的小工具實例。"
+slug: sdk/trading-widget/instance-methods
+canonical-url: https://docs.6mm.com/zh-TW/sdk/trading-widget/instance-methods
+---
+
+<h2 id="method-summary">方法摘要</h2>
+
+| 方法 | 目的 |
+| --- | --- |
+| 摧毀（） | 移除 iframe 並釋放事件聽眾。 |
+| getState（） | 閱讀目前 SDK 生命週期狀態。 |
+| whenReady（） | 等 iframe 初始化完成再說。 |
+| setSymbol（符號） | 在 iframe 內交換交易對。 |
+| setTheme（主題曲） | 更新 iframe 主題參數。 |
+| setLocale（地點） | 切換 iframe 語言。 |
+| setSize（寬度、高度） | 更新 iframe 尺寸。 |
+| 重新裝填（） | 重新載入目前的 iframe。 |
+| refreshAuth（理由） | 觸發 widget 認證刷新流程。 |
+| setTokenProvider（提供者） | 替換合作夥伴代幣模式所使用的提供者。 |
+| on（事件，處理者） | 訂閱執行時事件並獲得取消訂閱功能。 |
+
+<h2 id="destroy">摧毀（）</h2>
+
+移除 iframe，清除監聽器，並針對當前實例發送一次 disroyed。
+
+```js
+widget.destroy()
+```
+
+<h2 id="getstate">getState（）</h2>
+
+讀取 widget 實例目前的生命週期狀態。
+
+```js
+const state = widget.getState()
+```
+
+回傳值包括載入、認證、準備、錯誤與銷毀。
+
+<h2 id="whenready">whenReady（）</h2>
+
+等 iframe 初始化完成後再執行相依的 UI 邏輯。
+
+```js
+await widget.whenReady()
+```
+
+<h2 id="setsymbol-symbol">setSymbol（符號）</h2>
+
+在 iframe 內交換交易對。如果 iframe 仍在初始化， SDK 會排隊該指令並在準備好後再發送。
+
+```js
+widget.setSymbol('ETHUSDT')
+```
+
+<h2 id="settheme-theme">setTheme（主題曲）</h2>
+
+更新嵌入交易 iframe 所使用的主題參數。
+
+```js
+widget.setTheme('dark')
+widget.setTheme('light')
+```
+
+<h2 id="setlocale-locale">setLocale（地點）</h2>
+
+切換 iframe 語言。支援的值為 en、en-US 和 zh-CN。
+
+```js
+widget.setLocale('en')
+widget.setLocale('en-US')
+widget.setLocale('zh-CN')
+```
+
+<h2 id="setsize-width-height">setSize（寬度、高度）</h2>
+
+更新 iframe DOM 大小，並通知 iframe 新的外部尺寸。數值會轉換成 px。
+
+```js
+widget.setSize('100%', 720)
+```
+
+<h2 id="reload">重新裝填（）</h2>
+
+重新載入目前的 iframe，然後等它再次初始化。
+
+```js
+widget.reload()
+```
+
+<h2 id="refreshauth-reason">refreshAuth（理由）</h2>
+
+請 iframe 重新整理目前的認證流程。可選的理由值會被轉發用於日誌記錄和流量控制。
+
+```js
+widget.refreshAuth('manual')
+```
+
+<h2 id="settokenprovider-provider">setTokenProvider（提供者）</h2>
+
+替換搭檔標記模式所用的 tokenProvider 。當 iframe 請求新的嵌入令牌時， SDK 會呼叫提供者。
+
+```js
+widget.setTokenProvider(async ({ channelId, symbol, reason }) => {
+  const resp = await fetch('/api/trading/embed-token', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ channelId, symbol, reason }),
+  })
+
+  return resp.json()
+})
+```
+
+<h2 id="on-event-handler">on（事件，處理者）</h2>
+
+訂閱執行時事件。回傳函式會移除監聽器。
+
+```js
+const off = widget.on('order_created', (event) => {
+  console.log(event)
+})
+
+off()
+```
+
+<h2 id="related-widget-guides">相關小工具指南</h2>
+
+- [Trading Widget 快速入門 ]（/sdk/trading-widget/quick-start）
+- [選擇與事件]（/sdk/trading-widget/options-events）
+- [認證]（/sdk/trading-widget/authentication）
+- [故障排除]（/sdk/security/troubleshooting）
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">相關頁面</h2>
+
+- [嵌入 6MM Trading Widget：快速開始](/zh-TW/sdk/trading-widget/quick-start)
+- [選項與活動](/zh-TW/sdk/trading-widget/options-events)
+- [Trading Widget 認證](/zh-TW/sdk/trading-widget/authentication)
+- [SDK 整合故障排除](/zh-TW/sdk/security/troubleshooting)
+<!-- sixmm-localized-link-repair:end -->

@@ -1,0 +1,132 @@
+---
+title: "Chi phí giao dịch: Phí & Trượt"
+description: "Ước tính chi phí giao dịch liên tục bằng cách hiểu phí thực hiện, trượt lệnh, thanh khoản, kích thước lệnh và loại lệnh."
+slug: trading/fees-and-slippage
+canonical-url: https://docs.6mm.com/vi/trading/fees-and-slippage
+---
+
+Chi phí cuối cùng của một giao dịch vĩnh cửu phụ thuộc vào cả phí rõ ràng và sự chênh lệch giữa giá thực hiện và giá thực tế.
+
+Hiểu rõ các chi phí này giúp người dùng ước tính tốt hơn kết quả giao dịch và quản lý rủi ro.
+
+Trang này tập trung vào chất lượng thực hiện và tổng chi phí giao dịch. Để biết các quy tắc về maker, taker, funding, liquidation và settlement, xem [Perpetual Fee Structure](/vi/trading/fee-structure).
+
+***
+
+<h2 id="trading-fees">Phí giao dịch</h2>
+
+Phí giao dịch chỉ được tính khi lệnh được thực hiện.
+
+<h2 id="maker-and-taker-fees">Phí nhà sản xuất và người nhận</h2>
+
+6MM sử dụng mô hình phí Maker / Taker:
+
+* Phí sản xuất
+  * Áp dụng khi đơn hàng của bạn thêm thanh khoản vào sổ lệnh
+  * Thông thường xuất phát từ các lệnh giới hạn không được xử lý ngay lập tức
+* Phí người nhận
+  * Áp dụng khi lệnh của bạn loại bỏ thanh khoản khỏi sổ lệnh
+  * Thường đến từ các lệnh thị trường hoặc lệnh giới hạn được thực hiện ngay lập tức
+
+Mức phí có thể khác nhau tùy theo cặp giao dịch và cấu hình đối tác.
+
+***
+
+<h2 id="when-are-fees-charged">Khi nào các khoản phí được tính?</h2>
+
+* Phí được tính khi thực hiện lệnh
+* Phí được tính dựa trên giá trị giao dịch đã thực hiện
+* Phí được trừ từ Tài khoản Vĩnh viễn
+
+Đơn hàng chưa hoàn thành hoặc hủy sẽ không phát sinh phí.
+
+***
+
+<h2 id="estimate-total-execution-cost">Ước tính tổng chi phí thực thi</h2>
+
+Trước khi đặt đơn hàng lớn, hãy cân nhắc:
+
+```text
+estimated trading cost = trading fee + estimated slippage cost
+slippage cost = |average execution price - expected price| × executed quantity
+```
+
+Các khoản thanh toán tài trợ cũng có thể ảnh hưởng đến chi phí giữ vị trí vĩnh viễn trong suốt một sự kiện tài trợ. Các khoản phí liên quan đến thanh lý chỉ áp dụng khi các quy định thanh lý được kích hoạt.
+
+Ước tính này không đảm bảo kết quả thực thi. Độ sâu sổ lệnh hiện có và độ biến động thị trường có thể thay đổi giữa ước tính và thực hiện.
+
+***
+
+<h2 id="slippage">trượt</h2>
+
+Trượt giá là sự chênh lệch giữa giá kỳ vọng và giá thực tế khi thực hiện.
+
+<h2 id="why-slippage-happens">Tại sao trượt giá xảy ra</h2>
+
+Trượt có thể xảy ra do:
+
+* Thanh khoản thị trường thấp
+* Số lượng đơn hàng lớn
+* Biến động thị trường cao
+* Sử dụng lệnh thị trường
+
+Trượt giá dễ nhận thấy hơn trong các thị trường biến động nhanh.
+
+***
+
+<h2 id="how-to-reduce-slippage">Cách giảm trượt</h2>
+
+* Sử dụng lệnh giới hạn thay vì lệnh thị trường
+* Giao dịch trong các giai đoạn thanh khoản cao
+* Tránh đặt đơn hàng lớn cùng lúc
+* Theo dõi độ sâu sổ lệnh trước khi giao dịch
+
+***
+
+<h2 id="fees-vs-slippage">Phí so với Trượt</h2>
+
+| Loại chi phí    | Khi nó xảy ra   | Có thể kiểm soát |
+| ------------ | ---------------- | ----------------- |
+| Phí giao dịch | Khi thi hành   | một phần         |
+| trượt     | Trong quá trình thi hành án | Đúng vậy               |
+
+Mặc dù phí có thể dự đoán được, nhưng sự trượt giảm phụ thuộc vào điều kiện thị trường và hành vi lệnh.
+
+***
+
+<h2 id="cost-scenarios">Các kịch bản chi phí phổ biến</h2>
+
+| Kịch bản | Yếu tố chi phí chính |
+| --- | --- |
+| Thứ tự giới hạn nghỉ | Phí nhà sản xuất và việc đơn hàng có được đáp ứng hay không. |
+| Lệnh thị trường | Phí người nhận và độ sâu trong sổ đặt hàng có sẵn. |
+| Đơn hàng lớn | Trượt giá qua nhiều cấp giá. |
+| Thị trường biến động nhanh | Sự không chắc chắn về giá thực hiện và chênh lệch hiệu quả rộng hơn. |
+| Vị trí đảm nhiệm trong lĩnh vực tài trợ | Chi phí giao dịch cộng với khoản thanh toán tài trợ áp dụng. |
+
+***
+
+<h2 id="beginner-tips">Mẹo cho người mới bắt đầu</h2>
+
+* Kiểm tra mức phí trước khi giao dịch
+* Tránh giao dịch nhỏ thường xuyên để giảm phí tích lũy
+* Sử dụng lệnh giới hạn để quản lý giá thực hiện
+* Xem xét cả phí và trượt khi thiết lập mức TP/SL
+
+***
+
+<h2 id="summary">Tóm tắt</h2>
+
+Về 6MM:
+
+* Phí minh bạch và dựa trên thực hiện
+* Trượt giảm phụ thuộc vào thanh khoản và loại lệnh
+* Nhận thức về chi phí là điều thiết yếu để giao dịch ổn định
+
+Quản lý phí và trượt phí hiệu quả là phần quan trọng của giao dịch liên tục thành công.
+
+<h2 id="related-cost-guides">Hướng dẫn chi phí liên quan</h2>
+
+- [Cấu trúc phí](/vi/trading/fee-structure): phí tạo ra, người nhận, phí tài trợ, thanh lý và thanh toán.
+- [Độ sâu & Chênh lệch thị trường](/vi/solutions/market-depth-spread): cách thanh khoản ảnh hưởng đến tác động giá.
+- [Loại lệnh](/vi/trading/order-types): hành vi thực thi thay đổi trượt.

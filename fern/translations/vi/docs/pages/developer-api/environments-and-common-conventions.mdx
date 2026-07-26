@@ -1,0 +1,56 @@
+---
+title: "Môi trường và quy ước chung"
+description: "Xem xét môi trường 6MM API và quy ước chung cho URL cơ sở, dấu thời gian, trường số, ký hiệu, ID yêu cầu, phân trang và phản hồi."
+slug: developer-api/environments-and-common-conventions
+canonical-url: https://docs.6mm.com/vi/developer-api/environments-and-common-conventions
+---
+
+<h2 id="service-endpoints">Điểm cuối dịch vụ</h2>
+
+| Loại      | Điểm cuối              |
+| --------- | --------------------- |
+| REST API  | `https://api.6mm.com` |
+| WebSocket | `wss://ws.6mm.com/ws`    |
+
+<h2 id="time-and-numeric-values">Thời gian và giá trị số</h2>
+
+* Trừ khi được chỉ định khác, trường thời gian là dấu thời gian mili giây của Unix.
+* Thống kê hàng ngày, tổng số dư và khối lượng giao dịch mặc định sử dụng ranh giới UTC ngày.
+* Các trường nhạy độ chính xác như số lượng, giá cả, số lượng và tỷ lệ được truyền dưới dạng chuỗi.
+* Các ID số nguyên lớn như `orderId`, `conditionId`, và `strategyId` được trả về dưới dạng chuỗi trong JSON.
+
+<h2 id="response-format">Định dạng phản hồi</h2>
+
+Phản hồi thành công:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {},
+  "requestId": "req-12345678"
+}
+```
+
+Phản hồi lỗi:
+
+```json
+{
+  "code": 1003,
+  "message": "Invalid token",
+  "requestId": "req-12345678"
+}
+```
+
+Ghi chú:
+
+* Lỗi kinh doanh thường vẫn trả về cấu trúc JSON thống nhất. Các nhà tích hợp nên kiểm tra `code` trước.
+* Lỗi xác thực có thể trả về HTTP `401`; giới hạn tốc độ có thể trả về HTTP `429`.
+* Bạn có thể gửi `X-Request-ID` trong phần đầu yêu cầu. Máy chủ sẽ trả về như `requestId` trong phản hồi.
+
+<h2 id="related-documentation">Tài liệu liên quan</h2>
+
+- [Xác thực](/vi/developer-api/authentication): chọn JWT hoặc API Key ký.
+- [Ký yêu cầu](/vi/developer-api/request-signing): xây dựng và xác minh các yêu cầu đã ký.
+- [REST API](/vi/developer-api/rest-api): áp dụng các quy ước này cho các nhóm điểm cuối.
+- [Mã lỗi & Khắc phục sự cố](/vi/developer-api/error-codes-and-troubleshooting): chẩn đoán lỗi HTTP và lỗi kinh doanh.

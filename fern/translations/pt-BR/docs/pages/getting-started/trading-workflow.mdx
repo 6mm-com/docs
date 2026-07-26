@@ -1,0 +1,137 @@
+---
+title: "Fluxo de Trabalho de Negociação"
+description: "6MM suporta contratos perpétuos com margem U, permitindo que usuários negociem futuros perpétuos liquidados e marginados em stablecoins (por exemplo, USDT)."
+slug: trading/getting-started/trading-workflow
+canonical-url: https://docs.6mm.com/pt-BR/trading/getting-started/trading-workflow
+---
+
+<h2 id="u-margined-perpetual-contracts">Contratos Perpétuos com Margem U</h2>
+
+6MM suporta contratos perpétuos com margem U, permitindo que usuários negociem futuros perpétuos liquidados e marginados em stablecoins (por exemplo, USDT).
+
+Esta seção explica o fluxo de trabalho central de negociação e os principais mecanismos envolvidos na colocação e gestão de ordens de contrato perpétuo em 6MM.
+
+***
+
+<h2 id="contract-overview">Visão Geral do Contrato</h2>
+
+* Tipo de contrato: Contratos perpétuos com margem em U
+* Ativo de Assentamento: Stablecoin (por exemplo, USDT)
+* Sem Expiração: As vagas não expiram e podem ser mantidas indefinidamente
+* Controle de Risco Baseado em Preço Marcado: Usado para cálculo e liquidação de margem
+
+***
+
+<h2 id="order-types">Tipos de Ordem</h2>
+
+6MM suporta tipos de ordens comumente usados para acomodar diferentes estratégias de negociação:
+
+<h2 id="market-order">Ordem de Mercado</h2>
+
+* Executa imediatamente pelo melhor preço disponível de mercado
+* Prioriza a velocidade de execução em detrimento da precisão do preço
+* Adequado para entrada ou saída rápida
+
+<h2 id="limit-order">Ordem Limitada</h2>
+
+* Executa apenas pelo preço especificado ou melhor
+* Fornece controle de preços
+* Pode permanecer aberto até ser preenchido ou cancelado
+
+<h2 id="stop-order">Ordem de Parada</h2>
+
+* Aciona uma ordem de mercado ou limite quando o preço de gatilho é atingido
+* Comumente usado para estratégias de stop-loss ou breakout
+
+> disponibilidade de ordens pode variar conforme o par de negociação e o modo de integração.
+
+***
+
+<h2 id="leverage-and-margin">Alavancagem e Margem</h2>
+
+* Alavancagem permite que os usuários controlem posições maiores com menos capital
+* A margem é calculada com base em:
+  * Tamanho da posição
+  * Nível de alavancagem
+  * Mark Price
+
+Alavancagem maior aumenta os retornos potenciais, mas também aumenta o risco de liquidação.
+
+***
+
+<h2 id="funding-rate-mechanism">Mecanismo de Taxa de Financiamento</h2>
+
+Contratos perpétuos utilizam um mecanismo de taxa de financiamento para manter os preços dos contratos alinhados com o mercado à vista.
+
+* Os pagamentos de financiamento ocorrem em intervalos programados
+* Se a taxa de financiamento for positiva:
+  * Posições longas pagam a curto prazo
+* Se a taxa de financiamento for negativa:
+  * Posições curtas pagam longos
+
+As taxas de financiamento são trocadas diretamente entre os traders.
+
+6MM não arrecada pagamentos de financiamento como receita.
+
+***
+
+<h2 id="fees-and-slippage">Taxas e Slippage</h2>
+
+<h2 id="trading-fees">Taxas de Negociação</h2>
+
+* Taxas são cobradas quando as ordens são executadas
+* As taxas podem variar para:
+  * Ordens do fabricante
+  * Ordens de recebedor
+
+As tabelas de taxas são definidas pela plataforma parceira e podem variar.
+
+<h2 id="slippage">Deslizamento</h2>
+
+* O deslizamento ocorre quando a liquidez do mercado é insuficiente para cumprir uma ordem pelo preço esperado
+* Mais comum durante alta volatilidade ou ao usar ordens de mercado
+
+Os usuários podem reduzir o slippage usando ordens limitadas e gerenciando o tamanho das ordens.
+
+***
+
+<h2 id="position-lifecycle">Ciclo de Vida da Posição</h2>
+
+1. Os fundos são alocados para a Conta Perpétua
+2. Um pedido é feito e combinado pelo 6MM motor de correspondência
+3. Uma vaga é aberta após a execução
+4. Atualização de margem e PnL em tempo real
+5. Taxas de financiamento são aplicadas em intervalos programados
+6. A posição é fechada manualmente ou via TP/SL
+7. O PnL final é liquidado na Conta Perpétua
+
+***
+
+<h2 id="risk-management-and-liquidation">Gestão de Riscos e Liquidação</h2>
+
+* 6MM monitora as razões de margem em tempo real
+* Quando a margem cai abaixo do limiar de manutenção:
+  * As posições podem ser parcial ou totalmente liquidadas
+* Os preços de liquidação são calculados usando o preço de marca, e não o último preço negociado
+
+Esse mecanismo ajuda a reduzir liquidações desnecessárias causadas pela volatilidade do mercado de curto prazo.
+
+***
+
+<h2 id="summary">Resumo</h2>
+
+O fluxo de trabalho de negociação perpétua com margem U no 6MM foi projetado para:
+
+* Fornecer tipos de ordem familiares e flexíveis
+* Manter o alinhamento de preços por meio das taxas de financiamento
+* Oferecer mecanismos transparentes de taxas e liquidação
+* Implementar controle de risco em nível institucional
+
+Essa estrutura permite que os parceiros ofereçam trading profissional e perpétuo enquanto mantêm uma experiência de usuário fluida.
+
+<h2 id="related-trading-guides">Guias de negociação relacionados</h2>
+
+- [Contratos Perpétuos](/pt-BR/trading/perpetual-contracts): conceitos básicos de contrato, financiamento, margem e acordo.
+- [Tipos de Ordem](/pt-BR/trading/order-types): limite, comportamentos de mercado, condicional e de tempo em vigor.
+- [Taxas e Deslizamento](/pt-BR/trading/fees-and-slippage): custo de execução e impacto na liquidez.
+- [Risco & Liquidações](/pt-BR/trading/risk-and-liquidations): risco de margem e comportamento forçado de fechamento.

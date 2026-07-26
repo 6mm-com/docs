@@ -1,0 +1,230 @@
+---
+title: "المستخدم والحساب"
+description: "استخدم نقاط نهاية 6MM المستخدم والحساب لاسترجاع الملفات الشخصية، الأرصدة، حالة الحساب، الأفعال، ومعلومات الحساب المرتبطة بالشريك."
+slug: developer-api/rest-api/user-and-account
+canonical-url: https://docs.6mm.com/ar/developer-api/rest-api/user-and-account
+---
+
+ما لم يذكر خلاف ذلك، يمكن للنقاط النهائية التالية استخدام توقيع JWT أو API Key .
+
+<h2 id="user-info">معلومات المستخدم</h2>
+
+```http
+GET /v1/private/user/info
+```
+
+حقول الاستجابة:
+
+| الميدان                  | النوع   | الوصف      |
+| ---------------------- | ------ | ---------------- |
+| `userInfo.userId`      | string | معرف المستخدم الخارجي |
+| `userInfo.username`    | string | اسم المستخدم         |
+| `userInfo.agentId`     | int64  | معرف الوكيل         |
+| `userInfo.vipLevel`    | int64  | VIP المستوى        |
+| `userInfo.lastLoginAt` | int64  | آخر وقت تسجيل دخول  |
+| `userInfo.lastLoginIp` | string | آخر تسجيل IP    |
+
+<h2 id="user-assets">أصول المستخدمين</h2>
+
+```http
+GET /v1/private/user/asset
+```
+
+حقول الاستجابة:
+
+| الميدان                     | النوع   | الوصف                     |
+| ------------------------- | ------ | ------------------------------- |
+| `userAsset.userId`        | string | معرف المستخدم الخارجي                |
+| `userAsset.assetType`     | string | نوع الأصل                      |
+| `userAsset.walletBalance` | string | رصيد المحفظة                  |
+| `userAsset.frozenMargin`  | string | الهامش مجمد بسبب الأوامر المعلقة |
+| `userAsset.usedMargin`    | string | الهامش المستخدم من قبل المراكز        |
+
+<h2 id="create-listenkey">أنشئ listenKey</h2>
+
+```http
+POST /v1/private/user/listen-key
+```
+
+ينشئ مفتاح مصادقة لتدفقات WebSocket الخاصة.
+
+<h2 id="renew-listenkey">تجديد listenKey</h2>
+
+```http
+PUT /v1/private/user/listen-key
+```
+
+يمدد صلاحية listenKey .
+
+<h2 id="close-listenkey">إغلاق listenKey</h2>
+
+```http
+DELETE /v1/private/user/listen-key
+```
+
+يغلق listenKeyالمحدد.
+
+<h2 id="account-change-logs">سجلات تغيير الحساب</h2>
+
+```http
+GET /v1/private/user/account-change-log?assetType=USDT&page=1&pageSize=20
+```
+
+معايير الطلب:
+
+| المعلمة    | النوع   | مطلوب | الوصف                  |
+| ------------ | ------ | -------- | ---------------------------- |
+| `assetType`  | string | لا       | نوع الأصل، مثل `USDT`   |
+| `changeType` | string | لا       | تغيير النوع                  |
+| `startTime`  | int64  | لا       | وقت البدء                   |
+| `endTime`    | int64  | لا       | نهاية الزمن                     |
+| `page`       | int32  | لا       | رقم الصفحة، `1` الافتراضي     |
+| `pageSize`   | int32  | لا       | العناصر في كل صفحة، `20` الافتراضي |
+
+حقول الاستجابة:
+
+| الميدان                        | النوع   | الوصف                  |
+| ---------------------------- | ------ | ---------------------------- |
+| `list[].assetType`           | string | نوع الأصل                   |
+| `list[].amount`              | string | المبلغ المتغير               |
+| `list[].walletBalanceBefore` | string | رصيد المحفظة قبل التغيير |
+| `list[].walletBalanceAfter`  | string | رصيد المحفظة بعد التغيير  |
+| `list[].frozenBalanceBefore` | string | تجمد التوازن قبل التغيير |
+| `list[].frozenBalanceAfter`  | string | توازن متجمد بعد التغيير  |
+| `list[].changeType`          | string | تغيير النوع                  |
+| `list[].referenceId`         | string | معرف الأعمال ذات الصلة          |
+| `list[].createdAt`           | int64  | زمن الخلق                |
+| `total`                      | int64  | إجمالي العدد                  |
+
+<h2 id="30-day-volume-statistics">إحصائيات حجم الثلاثين يوما</h2>
+
+```http
+GET /v1/private/user/volume-stats
+```
+
+حقول الاستجابة:
+
+| الميدان         | النوع   | الوصف                                     |
+| ------------- | ------ | ----------------------------------------------- |
+| `volume30d`   | string | حجم التداول التراكمي خلال الثلاثين يوما الماضية |
+| `feeTotal30d` | string | الرسوم التراكمية خلال آخر 30 يوما           |
+
+<h2 id="balance-history">تاريخ التوازن</h2>
+
+```http
+GET /v1/private/user/balance-history?period=1D&limit=30
+```
+
+معايير الطلب:
+
+| المعلمة | النوع   | مطلوب | الوصف                            |
+| --------- | ------ | -------- | -------------------------------------- |
+| `period`  | string | نعم      | `1D` / `1W` / `1M`                     |
+| `limit`   | الاستخبارات    | لا       | عدد العناصر التي تم إرجاعها، `30` الافتراضي |
+
+حقول الاستجابة:
+
+| الميدان             | النوع   | الوصف                 |
+| ----------------- | ------ | --------------------------- |
+| `items[].date`    | string | تاريخ التجميع            |
+| `items[].balance` | string | رصيد المحفظة              |
+| `items[].pnl`     | string | تم تحقيق PnL لتلك الفترة |
+
+<h2 id="trade-overview">نظرة عامة على التجارة</h2>
+
+```http
+GET /v1/private/user/trade-overview?type=1M
+```
+
+معايير الطلب:
+
+| المعلمة | النوع   | مطلوب | الوصف                                     |
+| --------- | ------ | -------- | ----------------------------------------------- |
+| `type`    | string | نعم      | نطاق الاتجاهات: `1D`، `1W`، `1M`، `3M`، `6M`، `1Y` |
+
+حقول الاستجابة:
+
+| الميدان                | النوع   | الوصف                                                          |
+| -------------------- | ------ | -------------------------------------------------------------------- |
+| `todayPnl`           | string | PnL الذي تم تحقيقه اليوم                                                 |
+| `todayVolume`        | string | حجم تداول العقود اليوم                                      |
+| `totalVolume`        | string | حجم تداول العقود التراكمي                                   |
+| `totalPnl`           | string | الأرباح التراكمية المحققة                                              |
+| `maxDrawdown30d`     | string | أقصى مبلغ سحب خلال آخر 30 يوما                        |
+| `maxDrawdown30dRate` | string | أقصى معدل سحب خلال آخر 30 يوما، عشري من `0` إلى `1` |
+| `transferIn`         | string | الأموال المحولة التراكمية                                      |
+| `transferOut`        | string | الأموال المحولة التراكمية                                     |
+| `items[]`            | array  | بيانات اتجاهات الأصول                                                     |
+
+<h2 id="asset-overview-summary">ملخص نظرة عامة على الأصول</h2>
+
+```http
+GET /v1/private/user/asset/overview/summary
+```
+
+حقول الاستجابة هي نفسها حقول ملخص التبادل العام، باستثناء `items[]`.
+
+<h2 id="asset-overview-trend">نظرة عامة على الأصول الاتجاه</h2>
+
+```http
+GET /v1/private/user/asset/overview/trend?type=1M
+```
+
+معايير الطلب:
+
+| المعلمة | النوع   | مطلوب | الوصف                                     |
+| --------- | ------ | -------- | ----------------------------------------------- |
+| `type`    | string | نعم      | نطاق الاتجاهات: `1D`، `1W`، `1M`، `3M`، `6M`، `1Y` |
+
+حقول الاستجابة:
+
+| الميدان                  | النوع   | الوصف                     |
+| ---------------------- | ------ | ------------------------------- |
+| `items[].snapshotTime` | int64  | وقت اللقطة                   |
+| `items[].balance`      | string | رصيد الحساب الجاري         |
+| `items[].pnl`          | string | PnL للفترة الحالية      |
+| `items[].pnlRate`      | string | معدل الأرباح الربحية للفترة الحالية |
+| `items[].totalPnl`     | string | الرقم التراكمي لبيع الأرباح                  |
+
+<h2 id="favorite-symbols">الرموز المفضلة</h2>
+
+<h2 id="save">حفظ</h2>
+
+```http
+POST /v1/private/user/favorite-symbols
+Content-Type: application/json
+```
+
+نص الطلب:
+
+```json
+{
+  "symbols": ["BTCUSDT", "ETHUSDT"]
+}
+```
+
+<h2 id="query">استعلام</h2>
+
+```http
+GET /v1/private/user/favorite-symbols
+```
+
+حقول الاستجابة:
+
+| الميدان     | النوع      | الوصف          |
+| --------- | --------- | -------------------- |
+| `symbols` | الوترية\[] | قائمة الرموز المفضلة |
+
+<h2 id="related-documentation">وثائق ذات صلة</h2>
+
+- [قناة المستخدمين الخاصة] (/developer-api/websocket/private-user-channel)
+- [توثيق](/ar/developer-api/authentication)
+- [نقل الأصول] (/trading/getting-started/asset-transfer)
+- [رموز الخطأ واستكشاف الأخطاء] (/developer-api/error-codes-and-troubleshooting)
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">صفحات ذات صلة</h2>
+
+- [قناة المستخدم الخاص](/ar/developer-api/websocket/private-user-channel)
+- [نقل الأصول](/ar/trading/getting-started/asset-transfer)
+- [رموز الأخطاء واستكشاف الأخطاء](/ar/developer-api/error-codes-and-troubleshooting)
+<!-- sixmm-localized-link-repair:end -->

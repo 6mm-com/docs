@@ -1,0 +1,58 @@
+---
+title: "WebSocket"
+description: "Połącz się z usługą 6MM WebSocket dla publicznych transmisji rynkowych i wydarzeń prywatnych kont, korzystając z porad dotyczących bicia serca i subskrypcji."
+slug: developer-api/websocket
+canonical-url: https://docs.6mm.com/pl/developer-api/websocket
+---
+
+<h2 id="service-endpoint">Punkt końcowy usługi</h2>
+
+```
+wss://ws.6mm.com/ws
+```
+
+WebSocket kanały dzielą się na kanały publiczne i prywatne:
+
+| Typ             | Uwierzytelnianie              | Opis                                            |
+| ---------------- | --------------------------- | ------------------------------------------------------ |
+| Kanały publiczne  | Nie jest wymagane                | Dane rynkowe, takie jak głębokość, transakcje, Kliny i ticker |
+| Kanały prywatne | `listenKey` lub JWT wymagane | Kolejność użytkowników, strumienie kont i pozycji              |
+
+<h2 id="public-channels">Kanały publiczne</h2>
+
+Publiczne WebSocket nie wymagają uwierzytelniania. Po połączeniu wyślij `subscribe` zapytanie o subskrypcję kanałów rynkowych.
+
+Wspólne kanały:
+
+| Kanał                            | Opis                                                        |
+| ---------------------------------- | ------------------------------------------------------------------ |
+| `market.depth.{symbol}`            | Zamów książkę na głębokość. Najpierw wysyła migawkę, potem stopniowe aktualizacje |
+| `market.trade.{symbol}`            | Najnowsze wydania                                                      |
+| `market.kline.{symbol}.{interval}` | Klines                                                             |
+| `market.ticker.{symbol}`           | Podsumowanie pojedynczego symbolu                                       |
+| `market.tickers`                   | Podsumowanie wszystkich symbolicznych sercówek                                          |
+
+<h2 id="private-channels">Kanały prywatne</h2>
+
+<h2 id="listenkey">listenKey</h2>
+W przypadku prywatnych strumieni WebSocket najpierw stwórz `listenKey` przez REST API , a następnie połącz się z:
+
+```
+wss://ws.6mm.com/ws?listenKey=YOUR_LISTEN_KEY
+```
+
+<h2 id="jwt">JWT</h2>
+Kompatybilna metoda JWT połączenia:
+
+```
+wss://ws.6mm.com/ws?token=YOUR_ACCESS_TOKEN
+```
+
+Po udanym uwierzytelnieniu serwer automatycznie subskrybuje połączenie z prywatnym kanałem obecnego użytkownika. Nie jest wymagana ręczna subskrypcja.
+
+<h2 id="choose-the-next-guide">Wybierz następny przewodnik</h2>
+
+- [Połączenie, subskrypcja i bicie serca](/pl/developer-api/websocket/connection-subscription-and-heartbeat): cykl życia połączenia, ping, ponowne połączenie i ponowne subskrypcja.
+- [Public Market Channels](/pl/developer-api/websocket/public-market-channels): głębokość, wymiany, Kline, tickery i obsługa sekwencji.
+- [Prywatny kanał użytkownika](/pl/developer-api/websocket/private-user-channel): listenKey cyklu życia i zdarzenia uwierzytelnionego konta.
+- [Rekomendacje integracyjne](/pl/developer-api/integration-recommendations): monitorowanie, idempotencja, próby i testy produkcyjne.

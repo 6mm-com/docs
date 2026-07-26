@@ -1,0 +1,89 @@
+---
+title: "Połączenie, subskrypcja i bicie serca"
+subtitle: "Łącz się z 6MM WebSocket strumieniami, subskrybuj tematy, utrzymuj kontakty i bezpiecznie przetwarzaj koperty wiadomości."
+slug: developer-api/websocket/connection-subscription-and-heartbeat
+canonical-url: https://docs.6mm.com/pl/developer-api/websocket/connection-subscription-and-heartbeat
+---
+
+Korzystaj WebSocket strumieni do danych rynkowych oraz prywatnych aktualizacji stanów użytkowników, które muszą być aktualne bez konieczności ankietowania.
+
+<h2 id="connection-url">Połączenie URL</h2>
+
+```text
+wss://ws.6mm.com/ws
+```
+
+Prywatne strumienie wymagają kontekstu uwierzytelniania, takiego jak listenKey lub token dostępu, opisany w dokumentacji kanału prywatnego.
+
+<h2 id="subscribe">Subskrybuj</h2>
+
+```json
+{ "id": "1772007814666", "op": "subscribe", "args": ["market.depth.BTCUSDT"] }
+```
+
+Pomyślne potwierdzenie subskrypcji:
+
+```json
+{
+  "id": "1772007814666",
+  "event": "subscribe",
+  "success": true,
+  "data": ["market.depth.BTCUSDT"]
+}
+```
+
+<h2 id="unsubscribe">Zrezygnuj z subskrypcji</h2>
+
+```json
+{ "id": "1772007814667", "op": "unsubscribe", "args": ["market.depth.BTCUSDT"] }
+```
+
+<h2 id="application-ping">Ping aplikacji</h2>
+
+```json
+{ "id": "1772007814668", "op": "ping", "args": [] }
+```
+
+<h2 id="message-envelope">Koperta z wiadomością</h2>
+
+Publiczne inicjatywy stosują spójną granicę:
+
+```json
+{
+  "topic": "market.depth.BTCUSDT",
+  "event": "data",
+  "ts": 1772007815000,
+  "data": {}
+}
+```
+
+<h2 id="operational-recommendations">Zalecenia operacyjne</h2>
+
+- Generowanie unikalnego `id` po stronie klienta dla każdego zgłoszenia, wypisania i pinga.
+- Traktuj ponowne połączenie jako nową sesję i ponownie subskrybuj wymagane tematy.
+- Sprawdź, czy zwrócony `topic` odpowiada kanałowi, którego oczekuje usługa.
+- Utrzymanie idempotencji przetwarzania wiadomości, gdy w grę wchodzą zdarzenia prywatnego zamówienia lub konta.
+- Rejestruj zmiany stanu połączenia, potwierdzenia subskrypcji oraz nieprawidłowe rozłączenia.
+
+<h2 id="reconnect-workflow">Workflow Reconnect</h2>
+
+1. Zamknąć lub odrzucić poprzednie gniazdo i utworzyć nowe połączenie.
+2. Ponowne uwierzytelnienie prywatnych strumieni za pomocą ważnego listenKey lub tokena dostępu.
+3. Ponownie subskrybuj każdy wymagany temat i czekaj na udane podziękowania.
+4. Zastąpienie lokalnego stanu księgi zamówień nowym snapshotem przed wprowadzeniem aktualizacji przyrostowych.
+5. Uzgadnianie otwartych zamówień, pozycji i bilansów poprzez REST jeśli mogły przegapić prywatne wydarzenia.
+
+Używaj ograniczonego wykładniczego cofania z jitterem do prób ponownego połączenia. Ciągłe ponowne łączenie klienta powinno ostrzegać operatorów, zamiast próbować w nieskończoność bez widoczności.
+
+<h2 id="heartbeat-and-stale-connections">Bicie serca i przestarzałe połączenia</h2>
+
+- Śledzenie najnowszej wiadomości przychodzącej i pomyślnego potwierdzenia pingu.
+- Używanie interwału serca i progu bezczynności zatwierdzonych dla środowiska produkcyjnego.
+- Traktuj połączenie jako przestarzałe, gdy przekroczony jest skonfigurowany próg, nawet jeśli gniazdo TCP nadal wydaje się otwarte.
+- Nie używaj ponownie subskrypcji ze starego gniazda; Ponownie subskrybuj wyraźnie po każdym ponownym połączeniu.
+
+<h2 id="related-documentation">Powiązana dokumentacja</h2>
+
+- [Kanały Rynku Publicznego](/pl/developer-api/websocket/public-market-channels): tematy, ciągłość księgi zamówień, transakcje, świece i tickery.
+- [Prywatny kanał użytkownika](/pl/developer-api/websocket/private-user-channel): listenKey cyklu życia i zdarzenia uwierzytelnione.
+- [Rekomendacje integracyjne](/pl/developer-api/integration-recommendations): próby, identyfikacja, monitorowanie i testy startowe.

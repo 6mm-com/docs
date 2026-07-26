@@ -1,0 +1,115 @@
+---
+title: "私人用戶通道"
+description: "訂閱經過認證的 6MM WebSocket 事件，透過建立並維護監聽金鑰，以獲取訂單、持倉、餘額及帳戶變動。"
+slug: developer-api/websocket/private-user-channel
+canonical-url: https://docs.6mm.com/zh-TW/developer-api/websocket/private-user-channel
+---
+
+先建立 `listenKey` ：
+
+```http
+POST /v1/private/user/listen-key
+```
+
+回應範例：
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "listenKey": "f57cb61ef604ce76be09e753a5dbdd8c",
+    "expireAt": 1777539918867
+  },
+  "requestId": "req-listen-key"
+}
+```
+
+`listenKey` 預設有效期為60分鐘。建議每30分鐘續訂一次。
+
+<h2 id="renew">續約</h2>
+
+```http
+PUT /v1/private/user/listen-key
+Content-Type: application/json
+```
+
+```json
+{ "listenKey": "f57cb61ef604ce76be09e753a5dbdd8c" }
+```
+
+<h2 id="close">結束</h2>
+
+```http
+DELETE /v1/private/user/listen-key
+Content-Type: application/json
+```
+
+```json
+{ "listenKey": "f57cb61ef604ce76be09e753a5dbdd8c" }
+```
+
+<h2 id="connect-to-private-websocket">連接私人 WebSocket</h2>
+
+```
+wss://ws.6mm.com/ws?listenKey=YOUR_LISTEN_KEY
+```
+
+相容 JWT 連接方式：
+
+```
+wss://ws.6mm.com/ws?token=YOUR_ACCESS_TOKEN
+```
+
+認證成功後，伺服器會自動訂閱目前使用者的私人通道連線。不需要手動訂閱。
+
+成功認證確認：
+
+```json
+{ "event": "auth", "success": true, "data": "1188041528" }
+```
+
+<h2 id="common-private-events">常見的私人活動</h2>
+
+| 活動                | 描述                                                                   |
+| -------------------- | ----------------------------------------------------------------------------- |
+| `ORDER_TRADE_UPDATE` | 訂單狀態變更，包括新訂單、變更、交易及取消 |
+| `ACCOUNT_UPDATE`     | 帳戶餘額與持倉變動                                          |
+
+私人推送訊息包裝器：
+
+```json
+{
+  "topic": "user.5794",
+  "ts": 1771047000000,
+  "data": {
+    "eventType": "ORDER_TRADE_UPDATE"
+  }
+}
+```
+
+REST 查詢端點與 WebSocket 私有串流使用不同的結構結構。用戶端應獨立解析每個結構，且不應假設欄位名稱相同。
+
+<h2 id="common-differences">共同差異</h2>
+
+| 領域         | REST 場     | WebSocket 場                                             |
+| -------------- | -------------- | ----------------------------------------------------------- |
+| 修會狀態   | `status`       | `orderStatus`                                               |
+| 凍結餘額 | `frozenMargin` | `frozenBalance`                                             |
+| 邊際模式    | `marginMode`   | `marginMode`，以一串字節的形式回歸於位置與流中 |
+
+<h2 id="recovery-and-reconciliation">復原與和解</h2>
+
+- 在 listenKey 到期前續約，若續期失敗則重新建立新。
+- 重新連接、重新認證，並將新套接字視為新的事件會話。
+- 在更改合作夥伴餘額或訂單紀錄前，先進行重複事件。
+- 若事件可能未被漏接，請查詢 [orders]（/developer-api/rest-api/order）、[positions]（/developer-api/rest-api/position）、以及[account state]（/developer-api/rest-api/user-and-account） 透過 REST查詢。
+- 請依照[連線與心跳指南]（/developer-api/websocket/connection-subscription-and-heartbeat）進行重試及連線過期處理。
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">相關頁面</h2>
+
+- [秩序](/zh-TW/developer-api/rest-api/order)
+- [職位](/zh-TW/developer-api/rest-api/position)
+- [使用者與帳號](/zh-TW/developer-api/rest-api/user-and-account)
+- [連結、訂閱與心跳](/zh-TW/developer-api/websocket/connection-subscription-and-heartbeat)
+<!-- sixmm-localized-link-repair:end -->

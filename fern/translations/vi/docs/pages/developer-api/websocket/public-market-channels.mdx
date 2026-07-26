@@ -1,0 +1,84 @@
+---
+title: "WebSocket Kênh Dữ Liệu Thị Trường Công"
+description: "Phát trực tuyến sổ lệnh, giao dịch, nến và dữ liệu chứng khoán 6MM qua các kênh WebSocket công khai với hướng dẫn đăng ký và kết nối lại."
+slug: developer-api/websocket/public-market-channels
+canonical-url: https://docs.6mm.com/vi/developer-api/websocket/public-market-channels
+---
+
+Sử dụng các kênh thị trường công khai khi ứng dụng cần được cập nhật liên tục về giá, giao dịch, nến hoặc độ sâu sổ lệnh mà không liên tục kiểm tra REST điểm cuối. Các luồng này có thể hỗ trợ màn hình giao dịch, hiển thị giá, cảnh báo và giám sát thị trường.
+
+<h2 id="connection-url">Kết nối URL</h2>
+
+```
+wss://ws.6mm.com/ws
+```
+
+WebSocket công khai không yêu cầu xác thực.
+
+Đối với vòng đời kết nối, hủy đăng ký, ping và kết nối lại, xem [Kết nối, Đăng ký & Nhịp tim](/vi/developer-api/websocket/connection-subscription-and-heartbeat).
+
+<h2 id="common-channels">Các kênh chung</h2>
+
+| Kênh                            | Mô tả                                                        |
+| ---------------------------------- | ------------------------------------------------------------------ |
+| `market.depth.{symbol}`            | Độ sâu sách đặt hàng. Gửi snapshot trước, sau đó cập nhật từng phần |
+| `market.trade.{symbol}`            | Giao dịch mới nhất                                                      |
+| `market.kline.{symbol}.{interval}` | Klines                                                             |
+| `market.ticker.{symbol}`           | Tóm tắt mã chứng khoán đơn                                       |
+| `market.tickers`                   | Tóm tắt mã chứng khoán toàn bộ ký hiệu                                          |
+
+<h2 id="choose-a-channel">Chọn kênh</h2>
+
+| Nhu cầu ứng dụng | Kênh |
+| --- | --- |
+| Xây dựng hoặc duy trì sổ đơn hàng | `market.depth.{symbol}` |
+| Hiển thị nguồn cấp giao dịch trực tiếp | `market.trade.{symbol}` |
+| Vẽ biểu đồ nến | `market.kline.{symbol}.{interval}` |
+| Hiển thị một tóm tắt thị trường | `market.ticker.{symbol}` |
+| Duy trì cái nhìn tổng quan về thị trường | `market.tickers` |
+
+<h2 id="subscription-example">Ví dụ đăng ký</h2>
+
+```json
+{ "id": "1772007814666", "op": "subscribe", "args": ["market.depth.BTCUSDT"] }
+```
+
+<h2 id="push-message-wrapper">Trình Bao Bọc Tin Nhắn Đẩy</h2>
+
+```json
+{
+  "topic": "market.depth.BTCUSDT",
+  "event": "data",
+  "ts": 1772007815000,
+  "data": {}
+}
+```
+
+Sử dụng `topic` để định tuyến mỗi tin nhắn đến đúng người xử lý và `ts` để quan sát thời gian gửi. Đối tượng `data` chứa payload cho kênh đã đăng ký.
+
+<h2 id="order-book-handling">Xử lý sổ đặt hàng</h2>
+
+Kênh chiều sâu gửi ảnh chụp trước rồi mới cập nhật từng bước. Khởi tạo sổ cục bộ từ snapshot trước khi áp dụng cập nhật. Sau khi kết nối lại, tạo phiên mới, đăng ký lại và xây dựng lại cuốn sách cục bộ từ snapshot tiếp theo thay vì tiếp tục từ trạng thái cũ trong bộ nhớ.
+
+<h2 id="production-recommendations">Khuyến nghị sản xuất</h2>
+
+- Tạo một `id` duy nhất cho mỗi yêu cầu đăng ký, hủy đăng ký và ping.
+- Xác nhận xác nhận đăng ký trước khi coi kênh là đang hoạt động.
+- Đăng ký lại mọi chủ đề bắt buộc sau khi kết nối lại.
+- Giữ các lần đọc mạng tách biệt với xử lý cơ sở dữ liệu hoặc giao diện người dùng chậm hơn.
+- Giám sát tần suất ngắt kết nối, độ trễ xử lý tin nhắn và các tải trọng bị lỗi.
+- Sử dụng [Kênh Người dùng Riêng tư](/vi/developer-api/websocket/private-user-channel) để cập nhật tài khoản và đơn hàng đã xác thực.
+
+<h2 id="related-api-docs">Tài liệu API liên quan</h2>
+
+<CardGroup cols={3}>
+<Card title="Tổng quan WebSocket" icon="fa-duotone fa-wave-pulse" href="/vi/developer-api/websocket">
+Chọn giữa kết nối phát trực tuyến công khai và riêng tư.
+</Card>
+<Card title="Kết nối & Nhịp tim" icon="fa-duotone fa-heart-pulse" href="/vi/developer-api/websocket/connection-subscription-and-heartbeat">
+Triển khai xử lý đăng ký, hủy đăng ký, ping và kết nối lại.
+</Card>
+<Card title="Dữ liệu thị trường REST" icon="fa-duotone fa-chart-line" href="/vi/developer-api/rest-api/market-data">
+Sử dụng dữ liệu thị trường dựa trên yêu cầu cùng với các kênh phát trực tuyến.
+</Card>
+</CardGroup>

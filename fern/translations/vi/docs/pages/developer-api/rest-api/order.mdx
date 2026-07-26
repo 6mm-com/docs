@@ -1,0 +1,420 @@
+---
+title: "Thứ tự"
+description: "Sử dụng 6MM đầu cuối đơn hàng để tạo, truy vấn, hủy và quản lý các đơn hàng vĩnh viễn đồng thời xử lý quyền, định danh và trạng thái vòng đời."
+slug: developer-api/rest-api/order
+canonical-url: https://docs.6mm.com/vi/developer-api/rest-api/order
+---
+
+> **Lưu ý**
+>
+> Các điểm cuối đơn hàng yêu cầu quyền giao dịch.
+
+<h2 id="place-order">đặt hàng</h2>
+
+```http
+POST /v1/private/order/place
+Content-Type: application/json
+```
+
+**Tham số yêu cầu:**
+
+| Tham số       | Loại   | Bắt buộc               | Mô tả                                                                                                                   |
+| --------------- | ------ | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `symbol`        | string | Đúng vậy                    | Biểu tượng                                                                                                                        |
+| `type`          | string | Đúng vậy                    | `LIMIT` / `MARKET`                                                                                                            |
+| `side`          | string | Đúng vậy                    | `BUY` / `SELL`                                                                                                                |
+| `positionSide`  | string | Không                     | `BOTH` / `LONG` / `SHORT`, `BOTH` mặc định                                                                                     |
+| `price`         | string | Yêu cầu có điều kiện | Yêu cầu cho lệnh giới hạn                                                                                                     |
+| `quantity`      | string | Yêu cầu có điều kiện | Số lượng. Có thể bỏ qua khi `closePosition=true`                                                                            |
+| `timeInForce`   | string | Không                     | `GTC` / `IOC` / `FOK`, `GTC` mặc định                                                                                          |
+| `reduceOnly`    | bool   | Không                     | Chỉ giảm, `false` mặc định                                                                                                  |
+| `makerOnly`     | bool   | Không                     | Chỉ dành cho nhà sản xuất, `false` mặc định                                                                                                   |
+| `closePosition` | bool   | Không                     | Đóng toàn bộ vị trí, mặc định `false`                                                                                    |
+| `clientOrderId` | string | Không                     | ID đơn hàng do khách hàng định nghĩa                                                                                                       |
+| `placeType`     | string | Không                     | Dấu hiệu loại đặt hàng                                                                                                   |
+| `priceType`     | int32  | Không                     | BBO loại giá: `0` giá xác định, `1` đối thủ là 1, `2` đối thủ 5, `3` cùng  1, `4` cùng đội 5 |
+
+**Yêu cầu ví dụ:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "type": "LIMIT",
+  "side": "BUY",
+  "price": "85000",
+  "quantity": "0.1",
+  "timeInForce": "GTC",
+  "makerOnly": true,
+  "clientOrderId": "ext-1772710377808-001"
+}
+```
+
+**Trường phản hồi:**
+
+| Lĩnh vực           | Loại   | Mô tả             |
+| --------------- | ------ | ----------------------- |
+| `orderId`       | string | ID đơn hàng máy chủ         |
+| `clientOrderId` | string | ID đơn hàng do khách hàng định nghĩa |
+| `status`        | string | Tình trạng đơn hàng            |
+| `timestamp`     | int64  | dấu thời gian               |
+
+<h2 id="batch-place-orders">Đặt hàng theo lô</h2>
+
+```http
+POST /v1/private/order/batch-place
+Content-Type: application/json
+```
+
+**Yêu cầu nội dung:**
+
+```json
+{
+  "orders": [
+    {
+      "symbol": "BTCUSDT",
+      "type": "LIMIT",
+      "side": "BUY",
+      "price": "85000",
+      "quantity": "0.1",
+      "clientOrderId": "ext-buy-001"
+    }
+  ]
+}
+```
+
+**Trường phản hồi:**
+
+| Lĩnh vực          | Loại  | Mô tả                 |
+| -------------- | ----- | --------------------------- |
+| `successCount` | int32 | Số lượng đơn hàng thành công |
+| `failedCount`  | int32 | Số lượng đơn hàng thất bại     |
+| `results[]`    | array | Kết quả cho mỗi đơn hàng       |
+
+<h2 id="place-condition-order">Thứ tự Điều kiện Đặt hàng</h2>
+
+```http
+POST /v1/private/order/place-condition
+Content-Type: application/json
+```
+
+**Tham số yêu cầu:**
+
+| Tham số       | Loại   | Bắt buộc               | Mô tả                                                                                 |
+| --------------- | ------ | ---------------------- | ------------------------------------------------------------------------------------------- |
+| `symbol`        | string | Đúng vậy                    | Biểu tượng                                                                                      |
+| `type`          | string | Đúng vậy                    | `STOP_MARKET` / `TAKE_PROFIT_MARKET` / `STOP_LIMIT` / `TAKE_PROFIT_LIMIT` / `TRAILING_STOP` |
+| `side`          | string | Đúng vậy                    | `BUY` / `SELL`                                                                              |
+| `positionSide`  | string | Không                     | `BOTH` / `LONG` / `SHORT`                                                                   |
+| `price`         | string | Yêu cầu có điều kiện | Bắt buộc cho `STOP_LIMIT` / `TAKE_PROFIT_LIMIT`                                             |
+| `quantity`      | string | Yêu cầu có điều kiện | Số lượng. Có thể bỏ qua khi `closePosition=true`                                          |
+| `timeInForce`   | string | Không                     | `GTC` / `IOC` / `FOK` / `GTE_GTC`                                                           |
+| `reduceOnly`    | bool   | Không                     | Chỉ giảm                                                                                 |
+| `clientOrderId` | string | Không                     | ID đơn hàng do khách hàng định nghĩa                                                                     |
+| `stopPrice`     | string | Yêu cầu có điều kiện | Giá kích hoạt                                                                               |
+| `workingType`   | string | Không                     | `MARK_PRICE` / `CONTRACT_PRICE`, `CONTRACT_PRICE` mặc định                                   |
+| `priceProtect`  | bool   | Không                     | Việc bảo vệ giá có được kích hoạt hay không                                                         |
+| `activatePrice` | string | Yêu cầu có điều kiện | Giá kích hoạt lệnh theo dõi                                                             |
+| `callbackRate`  | string | Yêu cầu có điều kiện | Tỷ lệ gọi lại theo lệnh cuối cùng                                                                |
+| `closePosition` | bool   | Không                     | Đóng toàn bộ vị trí                                                                   |
+
+**Trường phản hồi:**
+
+| Lĩnh vực             | Loại   | Mô tả            |
+| ----------------- | ------ | ---------------------- |
+| `conditionId`     | string | Mã thứ tự điều kiện     |
+| `conditionStatus` | string | Tình trạng đơn hàng tình trạng |
+| `timestamp`       | int64  | dấu thời gian              |
+
+<h2 id="place-strategy-order">Đặt lệnh Chiến lược</h2>
+
+```http
+POST /v1/private/order/place-strategy
+Content-Type: application/json
+```
+
+**Tham số yêu cầu:**
+
+| Tham số      | Loại   | Bắt buộc | Mô tả             |
+| -------------- | ------ | -------- | ----------------------- |
+| `strategyType` | string | Đúng vậy      | `OTOCO` / `OTO` / `OCO` |
+| `subOrderList` | array  | Đúng vậy      | Danh sách các đơn vị phụ          |
+
+Các trường trong `subOrderList[]` phần lớn giống với thứ tự chuẩn và thứ tự điều kiện, với các trường phụ thuộc bổ sung:
+
+| Tham số        | Loại   | Mô tả                                     |
+| ---------------- | ------ | ----------------------------------------------- |
+| `strategySubId`  | int64  | ID đơn hàng con                                    |
+| `firstDrivenId`  | int64  | ID lệnh lái xe đầu tiên. `0` nghĩa là không phụ thuộc |
+| `firstDrivenOn`  | string | Điều kiện kích hoạt đầu tiên                         |
+| `firstTrigger`   | string | Hành động kích hoạt đầu tiên                            |
+| `secondDrivenId` | int64  | ID lệnh lái xe thứ hai                         |
+| `secondDrivenOn` | string | Điều kiện kích hoạt thứ hai                        |
+| `secondTrigger`  | string | Hành động kích hoạt thứ hai                           |
+
+**Trường phản hồi:**
+
+| Lĩnh vực            | Loại   | Mô tả     |
+| ---------------- | ------ | --------------- |
+| `strategyId`     | string | ID Chiến lược     |
+| `strategyStatus` | string | Tình trạng chiến lược |
+| `timestamp`      | int64  | dấu thời gian       |
+
+<h2 id="query-single-order">Truy vấn Đơn hàng Đơn lẻ</h2>
+
+```http
+GET /v1/private/order?symbol=BTCUSDT&orderId=2022543809547603968
+```
+
+**Tham số yêu cầu:**
+
+| Tham số       | Loại   | Bắt buộc | Mô tả             |
+| --------------- | ------ | -------- | ----------------------- |
+| `symbol`        | string | Đúng vậy      | Biểu tượng                  |
+| `orderId`       | string | Không       | ID đơn hàng máy chủ         |
+| `clientOrderId` | string | Không       | ID đơn hàng do khách hàng định nghĩa |
+
+Ít nhất một trong hai `orderId` và `clientOrderId` phải được cung cấp. Nếu cả hai đều được cung cấp, máy chủ sẽ thực hiện sự trùng khớp chính xác với cả hai điều kiện.
+
+<h2 id="current-normal-orders">Đơn hàng bình thường hiện tại</h2>
+
+```http
+GET /v1/private/order/current?symbol=BTCUSDT
+```
+
+**Tham số yêu cầu:**
+
+| Tham số     | Loại   | Bắt buộc | Mô tả        |
+| ------------- | ------ | -------- | ------------------ |
+| `symbol`      | string | Không       | Biểu tượng             |
+| `limit`       | int32  | Không       | Giới hạn số lần trả về |
+| `lastOrderId` | int64  | Không       | Trường con trỏ       |
+
+**Trường phản hồi:**
+
+| Lĩnh vực    | Loại  | Mô tả               |
+| -------- | ----- | ------------------------- |
+| `list[]` | array | Danh sách đơn hàng bình thường hiện tại |
+| `total`  | int32 | Count                     |
+
+<h2 id="current-condition-orders">Đơn hàng tình trạng hiện tại</h2>
+
+```http
+GET /v1/private/order/current-condition?symbol=BTCUSDT
+```
+
+**Tham số yêu cầu:**
+
+| Tham số | Loại   | Bắt buộc | Mô tả |
+| --------- | ------ | -------- | ----------- |
+| `symbol`  | string | Không       | Biểu tượng      |
+
+<h2 id="historical-normal-orders">Lệnh Bình thường Lịch sử</h2>
+
+```http
+GET /v1/private/order/history?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+**Tham số yêu cầu:**
+
+| Tham số       | Loại   | Bắt buộc | Mô tả                              |
+| --------------- | ------ | -------- | ---------------------------------------- |
+| `symbol`        | string | Không       | Biểu tượng                                   |
+| `orderId`       | string | Không       | Bộ lọc ID đơn hàng chính xác                    |
+| `clientOrderId` | string | Không       | Bộ lọc ID đơn hàng khách hàng chính xác             |
+| `type`          | int32  | Không       | Bộ lọc loại lệnh: giới hạn `1` , `2` thị trường |
+| `side`          | int32  | Không       | Bộ lọc bên: `1` mua, `2` bán           |
+| `status`        | int32  | Không       | Bộ lọc trạng thái                            |
+| `startTime`     | int64  | Không       | Thời gian bắt đầu                               |
+| `endTime`       | int64  | Không       | Thời gian kết thúc                                 |
+| `page`          | int64  | Không       | Số trang, `1` mặc định                 |
+| `pageSize`      | int64  | Không       | Số lượng mục trên mỗi trang, `20` mặc định             |
+
+<h2 id="historical-condition-orders">Đơn hàng tình trạng lịch sử</h2>
+
+```http
+GET /v1/private/order/history-condition?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+**Tham số yêu cầu:**
+
+| Tham số   | Loại   | Bắt buộc | Mô tả                    |
+| ----------- | ------ | -------- | ------------------------------ |
+| `symbol`    | string | Không       | Biểu tượng                         |
+| `side`      | int32  | Không       | Bộ lọc bên: `1` mua, `2` bán |
+| `status`    | int32  | Không       | Bộ lọc trạng thái                  |
+| `startTime` | int64  | Không       | Thời gian bắt đầu                     |
+| `endTime`   | int64  | Không       | Thời gian kết thúc                       |
+| `page`      | int64  | Không       | Số trang, `1` mặc định       |
+| `pageSize`  | int64  | Không       | Số lượng mục trên mỗi trang, `20` mặc định   |
+
+<h2 id="trade-records">Hồ sơ Thương mại</h2>
+
+```http
+GET /v1/private/order/trades?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+**Tham số yêu cầu:**
+
+| Tham số   | Loại   | Bắt buộc | Mô tả                  |
+| ----------- | ------ | -------- | ---------------------------- |
+| `symbol`    | string | Không       | Biểu tượng                       |
+| `orderId`   | string | Không       | Bộ lọc Order ID              |
+| `startTime` | int64  | Không       | Thời gian bắt đầu                   |
+| `endTime`   | int64  | Không       | Thời gian kết thúc                     |
+| `page`      | int64  | Không       | Số trang, `1` mặc định     |
+| `pageSize`  | int64  | Không       | Số lượng mục trên mỗi trang, `20` mặc định |
+
+**Trường phản hồi:**
+
+| Lĩnh vực                 | Loại   | Mô tả       |
+| --------------------- | ------ | ----------------- |
+| `list[].fillId`       | string | ID chi tiết điền    |
+| `list[].tradeId`      | string | Mã hồ sơ thương mại   |
+| `list[].orderId`      | string | Mã đơn hàng          |
+| `list[].symbol`       | string | Biểu tượng            |
+| `list[].side`         | string | Bên hông              |
+| `list[].roleType`     | string | `maker` / `taker` |
+| `list[].price`        | string | Giá đã hoàn thành      |
+| `list[].quantity`     | string | Số lượng đã được điền   |
+| `list[].tradeValue`   | string | Giá trị thương mại       |
+| `list[].handlingFee`  | string | Phí xử lý      |
+| `list[].realizedPnl`  | string | PnL đã thực hiện      |
+| `list[].positionSide` | string | Phía vị trí     |
+| `list[].createdAt`    | int64  | Thời gian giao dịch        |
+| `total`               | int64  | Tổng số lượng       |
+
+<h2 id="cancel-order">Hủy đơn hàng</h2>
+
+```http
+POST /v1/private/order/cancel
+Content-Type: application/json
+```
+
+**Yêu cầu nội dung:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "orderId": "2022543809547603968"
+}
+```
+
+`clientOrderId` cũng có thể được sử dụng để hủy đơn hàng.
+
+<h2 id="amend-order">Sửa đổi Lệnh</h2>
+
+```http
+POST /v1/private/order/move
+Content-Type: application/json
+```
+
+**Yêu cầu nội dung:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "orderId": "2022543809547603968",
+  "price": "85100",
+  "quantity": "0.2"
+}
+```
+
+`quantity` là tổng số lượng đặt hàng cuối cùng sau khi sửa đổi, không phải số lượng còn lại.
+
+<h2 id="batch-amend-orders">Đơn hàng sửa đổi theo lô</h2>
+
+```http
+POST /v1/private/order/batch-move
+Content-Type: application/json
+```
+
+**Yêu cầu nội dung:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "orders": [
+    {
+      "orderId": "2022543809547603968",
+      "price": "85100",
+      "quantity": "0.2"
+    }
+  ]
+}
+```
+
+<h2 id="batch-cancel-orders">Hủy đơn hàng theo lô</h2>
+
+```http
+POST /v1/private/order/batch-cancel
+Content-Type: application/json
+```
+
+**Yêu cầu nội dung:**
+
+```json
+{
+  "orders": [
+    {
+      "symbol": "BTCUSDT",
+      "orderId": "2022543809547603968"
+    }
+  ]
+}
+```
+
+<h2 id="cancel-all">Hủy tất cả</h2>
+
+```http
+POST /v1/private/order/batch-cancel-all
+Content-Type: application/json
+```
+
+**Tham số yêu cầu:**
+
+| Tham số    | Loại   | Bắt buộc | Mô tả                                                                         |
+| ------------ | ------ | -------- | ----------------------------------------------------------------------------------- |
+| `symbol`     | string | Không       | Biểu tượng                                                                              |
+| `cancelType` | int32  | Không       | `0` tất cả các lệnh thông thường, chỉ `1` lệnh giới hạn `2` tất cả các lệnh điều kiện. `0` mặc định |
+
+Cancel-all cho các đơn hàng bình thường được chấp nhận không đồng bộ. Trạng thái cuối cùng nên được xác định bởi các WebSocket `ORDER_TRADE_UPDATE` hoặc điểm cuối truy vấn.
+
+<h2 id="cancel-condition-order">Hủy Đơn Hàng Điều Kiện</h2>
+
+```http
+POST /v1/private/order/cancel-condition
+Content-Type: application/json
+```
+
+**Yêu cầu nội dung:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "conditionId": "2022543809547603968"
+}
+```
+
+<h2 id="strategy-order-detail">Chi tiết lệnh chiến lược</h2>
+
+```http
+GET /v1/private/order/strategy?strategyId=2022543809547603968
+```
+
+**Trường phản hồi:**
+
+| Lĩnh vực            | Loại   | Mô tả                          |
+| ---------------- | ------ | ------------------------------------ |
+| `strategyId`     | string | ID Chiến lược                          |
+| `strategyType`   | string | `OTOCO` / `OTO` / `OCO`              |
+| `strategyStatus` | string | `WORKING` / `ALL_DONE` / `CANCELLED` |
+| `bookTime`       | int64  | Thời gian sáng tạo                        |
+| `subOrders[]`    | array  | Chi tiết đơn hàng phụ                    |
+| `updateTime`     | int64  | Thời gian cập nhật                          |
+
+<h2 id="related-documentation">Tài liệu liên quan</h2>
+
+- [Loại Đơn hàng](/vi/trading/order-types)
+- [Enum thường](/vi/developer-api/common-enums)
+- [Kênh Người dùng Riêng tư](/vi/developer-api/websocket/private-user-channel)
+- [Khuyến nghị tích hợp](/vi/developer-api/integration-recommendations)

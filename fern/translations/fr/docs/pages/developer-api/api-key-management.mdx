@@ -1,0 +1,128 @@
+---
+title: "API Key Gestion"
+description: "Créez, inspectez, mettez à jour et révoquez 6MM API clés tout en appliquant les autorisations appropriées, les restrictions de IP , le stockage secret et les pratiques de rotation."
+slug: developer-api/api-key-management
+canonical-url: https://docs.6mm.com/fr/developer-api/api-key-management
+---
+
+API Key terminaux de gestion n’acceptent que JWT authentification.
+
+<h2 id="create-api-key">Créez API Key</h2>
+
+```http
+POST /v1/private/user/api-key/create
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+Paramètres de la demande :
+
+| Paramètre     | Type      | Obligatoire | Description                                                           |
+| ------------- | --------- | -------- | --------------------------------------------------------------------- |
+| `label`       | string    | Oui      | API Key étiquette, longueur 1 - 64                                          |
+| `permissions` | int       | Non       | Masque de bitage de permission, `1`par défaut, plage `1` - `7`                      |
+| `ipWhitelist` | ficelle\[] | Non       | IP liste blanche, jusqu’à 20 entrées. Si elle est omise, la IP source est non restreinte |
+
+Exemple de demande :
+
+```bash
+curl -X POST https://api.6mm.com/v1/private/user/api-key/create \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -d '{
+    "label": "external-service-prod",
+    "permissions": 3,
+    "ipWhitelist": ["203.0.113.10"]
+  }'
+```
+
+Exemple de réponse :
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "apiKey": "fx_xxxxxxxxxxxxxxxxxxxxxxxx",
+    "apiSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  },
+  "requestId": "req-api-key"
+}
+```
+
+`apiSecret` n’est retourné qu’une seule fois lors de la création du API Key . Stockez-le immédiatement dans un système de gestion secrète. Ne l’écrivez pas dans les dépôts ou journaux du code source.
+
+Chaque utilisateur peut créer jusqu’à 30 API Clés.
+
+<h2 id="list-api-keys">Liste API clés</h2>
+
+```http
+GET /v1/private/user/api-key/list
+Authorization: Bearer YOUR_ACCESS_TOKEN
+```
+
+Champs de réponse :
+
+| Terrain                | Type      | Description                       |
+| -------------------- | --------- | --------------------------------- |
+| `list[].id`          | string    | API Key ID                        |
+| `list[].label`       | string    | Label                             |
+| `list[].apiKey`      | string    | Identifiant public API Key         |
+| `list[].permissions` | int       | Masque de bitmask de permission                |
+| `list[].ipWhitelist` | ficelle\[] | IP liste blanche                      |
+| `list[].status`      | int       | Statut : `1` activé, `0` désactivé |
+| `list[].lastUsedAt`  | int64     | Dernière utilisation                    |
+| `list[].createdAt`   | int64     | Temps de création                     |
+
+<h2 id="update-api-key">Mise à jour API Key</h2>
+
+```http
+PUT /v1/private/user/api-key/update
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+Paramètres de la demande :
+
+| Paramètre     | Type      | Obligatoire | Description               |
+| ------------- | --------- | -------- | ------------------------- |
+| `id`          | string    | Oui      | API Key ID                |
+| `label`       | string    | Non       | Nouveau label                 |
+| `permissions` | int       | Non       | Nouveau masque bitman de permission    |
+| `ipWhitelist` | ficelle\[] | Non       | Liste blanche de la Nouvelle IP          |
+| `status`      | int       | Non       | `1` activé, `0` désactivé |
+
+<h2 id="delete-api-key">Supprimer API Key</h2>
+
+```http
+POST /v1/private/user/api-key/delete
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+Corps de la demande :
+
+```json
+{ "id": "1001" }
+```
+
+<h2 id="delete-all-api-keys">Supprimer toutes les API clés</h2>
+
+```http
+POST /v1/private/user/api-key/delete-all
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+Champs de réponse :
+
+| Terrain     | Type  | Description                |
+| --------- | ----- | -------------------------- |
+| `deleted` | int64 | Nombre de clés API supprimées |
+
+<h2 id="related-security-guides">Guides de sécurité associés</h2>
+
+- [Authentification](/fr/developer-api/authentication)
+- [Demande de signature](/fr/developer-api/request-signing)
+- [Secrets et Signatures](/fr/sdk/security/secrets-signing)
+- [Recommandations d’intégration](/fr/developer-api/integration-recommendations)

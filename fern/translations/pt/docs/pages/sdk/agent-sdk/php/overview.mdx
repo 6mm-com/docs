@@ -1,0 +1,44 @@
+---
+title: "Agent PHP SDK"
+subtitle: "Use o pacote aprovado 6MM Agent PHP dos serviços de backend para vinculação de utilizadores, transferências, URLs de entrada e verificação de webhooks."
+slug: sdk/agent-sdk/php/overview
+canonical-url: https://docs.6mm.com/pt/sdk/agent-sdk/php/overview
+---
+
+<h2 id="runtime">Duração</h2>
+
+| Item | Valor |
+| --- | --- |
+| Pacote | Sixmm/agente-SDK |
+| Versão mínima PHP | PHP 7,4+ |
+| Versão PHP recomendada | PHP 8.1+ ou versões atualmente suportadas |
+| Extensões obrigatórias | ext-json, ext-curl |
+
+A fonte do pacote PHP SDK e a versão aprovada são fornecidas durante a integração do parceiro. Não presuma que o pacote está disponível na Packagist pública; Configure o repositório Composer fornecido para a sua organização.
+
+<h2 id="supported-scenarios">Cenários suportados</h2>
+
+| Cenário | SDK método |
+| --- | --- |
+| Associar utilizador | Vincular |
+| Transferência de montante fixo | Transferência |
+| Transferir tudo para fora | transferAllOut |
+| Transferência inversa | Reverso |
+| Ordem da consulta | queryOrder |
+| Criar entrada URL | createEntryUrl |
+| Verificação por Webhook | WebhookVerifier::verify |
+
+<h2 id="backend-integration-rules">Regras de integração backend</h2>
+
+- Carregar `apiSecret` a partir de um gestor secreto ou variável de ambiente protegido.
+- Manter a ligação do utilizador, transferência, assinatura e lógica de webhook fora do código do navegador.
+- Utilizar cadeias decimais para os montantes dos ativos para evitar arredondamento em ponto flutuante.
+- Reutilizar o `agentOrderNo` original ao consultar um resultado de transferência incerto.
+- Verificar as assinaturas do webhook em relação ao corpo bruto do pedido antes de o descodificar ou alterar.
+
+<h2 id="next-steps">Próximos passos</h2>
+
+- [PHP Quick Start](/pt/sdk/agent-sdk/php/quick-start): configure o Composer e inicialize o cliente.
+- [Agent SDK Visão Geral](/pt/sdk/agent-sdk/overview): reveja o fluxo completo de integração do backend.
+- [Segredos & Assinatura](/pt/sdk/security/secrets-signing): proteja as credenciais e compreenda HMAC assinatura.
+- [Webhooks & Idempotency](/pt/sdk/security/webhooks-idempotency): processam callbacks repetidos de forma segura.

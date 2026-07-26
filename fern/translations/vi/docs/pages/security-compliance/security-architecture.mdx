@@ -1,0 +1,48 @@
+---
+title: "Kiến trúc bảo mật nền tảng"
+subtitle: "Hiểu các lớp bảo mật được sử dụng trên hạ tầng giao dịch 6MM , APIs, SDKs, webhook và tích hợp đối tác."
+slug: security-compliance/security-architecture
+canonical-url: https://docs.6mm.com/vi/security-compliance/security-architecture
+---
+
+Tài liệu bảo mật 6MM tập trung vào sự sẵn sàng sản xuất của đối tác. Mục tiêu là giữ cho hạ tầng thương mại ổn định đồng thời làm rõ ranh giới trách nhiệm.
+
+<h2 id="security-layers">Các lớp bảo mật</h2>
+
+| Lớp | Trọng tâm |
+| --- | --- |
+| Cơ sở hạ tầng | Cách ly mạng, giao tiếp dịch vụ mã hóa, giám sát và chuyển đổi dự phòng. |
+| Hệ thống giao dịch | Khớp xác định, kiểm tra biên lợi nhuận, kiểm soát rủi ro và phòng ngừa lạm dụng. |
+| Bảo mật tích hợp | API khóa, ký HMAC , chữ ký webhook, bảo vệ phát lại và các bí mật chỉ dùng backend. |
+| Hoạt động đối tác | Xác thực phiên người dùng, lưu giữ tài sản, hỗ trợ khách hàng và kiểm soát tuân thủ cục bộ. |
+
+<h2 id="partner-responsibilities">Trách nhiệm của đối tác</h2>
+
+- Giữ bí mật API và đăng khóa ra khỏi trình duyệt và ứng dụng di động.
+- Xác thực các phiên của người dùng đối tác trước khi cấp thông tin đăng nhập giao dịch.
+- Triển khai kiểm tra idempotency webhook và trạng thái terminal.
+- Duy trì nhật ký vận hành cho các luồng tài khoản, đơn hàng, chuyển giao và webhook.
+
+<h2 id="integration-trust-boundaries">Ranh giới niềm tin tích hợp</h2>
+
+| Ranh giới | Kiểm soát cần thiết |
+| --- | --- |
+| Backend từ trình duyệt hoặc ứng dụng đến đối tác | Xác thực phiên đối tác trước khi cấp bất kỳ thông tin đăng nhập giao dịch nào. |
+| Backend đối tác đến 6MM API | Sử dụng thông tin xác thực có phạm vi, ký yêu cầu, đồng bộ thời gian và lưu trữ bí mật được bảo vệ. |
+| 6MM webhook đến điểm cuối đối tác | Xác minh chữ ký với phần thân yêu cầu thô, từ chối các thư cũ hoặc không hợp lệ, và loại bỏ các lần thử lại. |
+| Bản ghi trạng thái giao dịch với đối tác | Đối chiếu các lệnh, vị thế, số dư và chuyển giao bằng các định danh bền vững và kiểm tra trạng thái cuối cùng. |
+
+<h2 id="production-verification">Xác minh sản xuất</h2>
+
+- Kiểm tra thông tin đăng nhập đã hết hạn, bị thu hồi và phạm vi sai.
+- Kiểm tra các thân webhook bị thay đổi, các callback trùng lặp, callback bị trì hoãn và timeout của điểm cuối.
+- Xác nhận rằng nhật ký sẽ che giấu bí mật, mã truy cập và các payload yêu cầu nhạy cảm.
+- Cảnh báo khi lỗi chữ ký lặp lại, hoạt động lệnh bất thường, sự khác biệt trong đối chiếu và sự không ổn định kết nối.
+- Ghi lại chủ sở hữu và đường phản hồi cho các trường hợp lộ thông tin đăng nhập, lỗi webhook và các sự cố giao dịch.
+
+<h2 id="related-security-guides">Hướng dẫn bảo mật liên quan</h2>
+
+- [Bí mật & Ký kết](/vi/sdk/security/secrets-signing)
+- [Webhooks & Idempotency](/vi/sdk/security/webhooks-idempotency)
+- [Phản ứng sự cố](/vi/security-compliance/incident-response)
+- [Ma trận Trách nhiệm Đối tác](/vi/security-compliance/partner-responsibilities)

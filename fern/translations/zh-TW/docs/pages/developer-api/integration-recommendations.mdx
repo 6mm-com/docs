@@ -1,0 +1,50 @@
+---
+title: "整合建議"
+description: "應用推薦的 6MM 實務，涵蓋認證、重試、冪性、日誌記錄、速率處理、監控、安全性及發射準備。"
+slug: developer-api/integration-recommendations
+canonical-url: https://docs.6mm.com/zh-TW/developer-api/integration-recommendations
+---
+
+將這些建議作為生產準備度的基準。它們補充端點參考，並協助整合安全從逾時、重新連線、重複請求及憑證事件中恢復。
+
+<h2 id="authentication-and-secrets">認證與秘密</h2>
+
+- 偏好使用 [API Key 簽署]（/developer-api/authentication）用於伺服器端交易程式， JWT 用於使用者驅動的前端操作。
+- 將 `apiSecret` 置於後端秘密管理中。此訊息只會顯示一次，且絕不可傳送至瀏覽器或行動用戶端。
+- 當整合環境支援穩定的出口位址時，套用最低要求的 API Key 權限並限制來源 IP。
+- 立即停用或刪除洩漏金鑰，然後在發出替換金鑰前檢視請求日誌。
+
+<h2 id="request-validation-and-idempotency">請求驗證與冪性</h2>
+
+- 在下訂單前，查詢 `/v1/public/market/symbols` 並驗證 `tickSize`、 `stepSize`、最小名義值及最大數量。
+- 為每次訂單寫入產生唯一 `clientOrderId` ，以便在斷線後能對帳請求。
+- 當 HTTP 結果不確定時，保留原始識別碼。在建立替換請求前，先查詢現有訂單。
+- 將十進位數值與價格視為字串或十進位類型，而非二進位浮點數值。
+
+<h2 id="order-and-websocket-state">秩序與 WebSocket 狀態</h2>
+
+- 在取消、取消全部或修正[私人 WebSocket 事件]（/developer-api/websocket/private-user-channel）或 REST 查詢後，判定最終狀態。
+- 將每次重新連線視為新的 WebSocket 工作階段，並恢復所有必要的訂閱。
+- 檢查訂單簿與 `endVersion`的連續性。若出現版本缺口，丟棄本地書並重新訂閱以取得新的快照。
+- 在將私人訂單和帳戶事件套用到餘額、部位或合作夥伴紀錄前，先將其去重。
+
+<h2 id="logging-monitoring-and-retries">日誌記錄、監控與重試</h2>
+
+- 記錄請求 ID、客戶端訂單 ID、 HTTP 狀態、 API 商業代碼、延遲及重試計數，且不記錄秘密或完整令牌。
+- 僅重試記錄為安全的操作，使用有界指數退回與抖動。
+- 對認證失敗、簽章錯誤、速率限制回應、 WebSocket 重連迴圈、序列間隙及順序調和差異發出警示。
+- 保持伺服器時鐘同步，因為認證與簽署依賴時間戳記。
+
+<h2 id="before-production">製作前</h2>
+
+- 在非生產環境中執行逾時、重複請求、重新連線、金鑰輪換及 webhook 重試情境。
+- 指派擁有者進行憑證輪換、交易事件、Webhook 失敗及對帳。
+- 完成[生產啟動檢查清單]（/resources/production-launch-checklist）並在需要升級時使用[支援請求模板]（/resources/support-request-template）。
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">相關頁面</h2>
+
+- [6MM API 認證： JWT 與 API 金鑰](/zh-TW/developer-api/authentication)
+- [私人用戶通道](/zh-TW/developer-api/websocket/private-user-channel)
+- [合作夥伴生產啟動清單](/zh-TW/resources/production-launch-checklist)
+- [技術支援申請範本](/zh-TW/resources/support-request-template)
+<!-- sixmm-localized-link-repair:end -->

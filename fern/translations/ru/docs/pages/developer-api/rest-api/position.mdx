@@ -1,0 +1,141 @@
+---
+title: "Положение"
+description: "Используйте 6MM конечные точки позиций для запроса открытых позиций, деталей маржи, кредитного плеча, нереализованной прибыли и убытков, а также операций, связанных с позициями."
+slug: developer-api/rest-api/position
+canonical-url: https://docs.6mm.com/ru/developer-api/rest-api/position
+---
+
+> **Примечание**
+>
+> Конечные точки позиции требуют разрешения на торговлю.
+
+<h2 id="set-leverage">Рычаг сета</h2>
+
+```http
+POST /v1/private/position/leverage
+Content-Type: application/json
+```
+
+Запрос:
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "leverage": 20
+}
+```
+
+Поля ответов:
+
+| Поле       | Тип   | Описание |
+| ----------- | ------ | ----------- |
+| `symbol`    | string | Символ      |
+| `leverage`  | int32  | Кредитное плечо    |
+| `timestamp` | int64  | Временная метка   |
+
+<h2 id="set-margin-mode">Режим настройки поля</h2>
+
+```http
+POST /v1/private/position/margin-mode
+Content-Type: application/json
+```
+
+Запрос:
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "marginMode": 1
+}
+```
+
+`marginMode`: `1` скрест, `2` изолирован.
+
+<h2 id="position-settings">Настройки позиции</h2>
+
+```http
+GET /v1/private/position/settings?symbol=BTCUSDT
+```
+
+Поля ответов:
+
+| Поле        | Тип   | Описание             |
+| ------------ | ------ | ----------------------- |
+| `symbol`     | string | Символ                  |
+| `marginMode` | int32  | `1` крест `2` изолирован |
+| `leverage`   | int32  | Кредитное плечо                |
+
+<h2 id="current-positions">Текущие должности</h2>
+
+```http
+GET /v1/private/position/positions?symbol=BTCUSDT
+```
+
+Параметры запроса:
+
+| Параметр | Тип   | Обязательно | Описание |
+| --------- | ------ | -------- | ----------- |
+| `symbol`  | string | Нет       | Символ      |
+
+Поля ответов:
+
+| Поле                         | Тип   | Описание                |
+| ----------------------------- | ------ | -------------------------- |
+| `positions[].symbol`          | string | Символ                     |
+| `positions[].marginMode`      | string | Режим margin                |
+| `positions[].positionSide`    | string | Сторона позиции              |
+| `positions[].leverage`        | int32  | Кредитное плечо                   |
+| `positions[].quantity`        | string | Количество позиции          |
+| `positions[].entryPrice`      | string | Входная цена                |
+| `positions[].breakEvenPrice`  | string | Цена в безубыточности           |
+| `positions[].liqPrice`        | string | Цена ликвидации          |
+| `positions[].marginRatio`     | string | Коэффициент маржи               |
+| `positions[].unrealizedPnl`   | string | Нереализованный PnL             |
+| `positions[].roe`             | string | Доходность собственного капитала           |
+| `positions[].nextFundingFee`  | string | Предполагаемая следующая плата за финансирование |
+| `positions[].fundingFeeAccum` | string | Накопленная плата за финансирование    |
+| `positions[].tpPrice`         | string | Цена тейк-профита          |
+| `positions[].slPrice`         | string | Стоп-лосс цена            |
+
+<h2 id="position-history">История позиций</h2>
+
+```http
+GET /v1/private/position/history?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+Параметры запроса:
+
+| Параметр   | Тип   | Обязательно | Описание                  |
+| ----------- | ------ | -------- | ---------------------------- |
+| `symbol`    | string | Нет       | Символ                       |
+| `side`      | string | Нет       | `long` / `short`             |
+| `startTime` | int64  | Нет       | Время начала                   |
+| `endTime`   | int64  | Нет       | Конец                     |
+| `page`      | int64  | Нет       | Номер страницы, по умолчанию `1`     |
+| `pageSize`  | int64  | Нет       | Пункты на странице, по умолчанию `20` |
+
+Поля ответов:
+
+| Поле                    | Тип   | Описание               |
+| ------------------------ | ------ | ------------------------- |
+| `list[].symbol`          | string | Символ                    |
+| `list[].positionSide`    | string | Сторона позиции             |
+| `list[].leverage`        | int32  | Кредитное плечо                  |
+| `list[].maxQuantity`     | string | Максимальное количество позиции |
+| `list[].entryPrice`      | string | Входная цена               |
+| `list[].closePrice`      | string | Цена закрытия               |
+| `list[].pnl`             | string | Реализованный PnL              |
+| `list[].roe`             | string | Доходность собственного капитала          |
+| `list[].marginMode`      | string | Режим margin               |
+| `list[].triggerMode`     | int32  | Режим закрытия спуска        |
+| `list[].fundingFeeAccum` | string | Накопленная плата за финансирование   |
+| `list[].openedAt`        | int64  | Время открытия                 |
+| `list[].closedAt`        | int64  | Время закрытия                |
+| `total`                  | int64  | Общее количество               |
+
+<h2 id="related-documentation">Связанная документация</h2>
+
+- [Правила поля](/ru/trading/margin-rules)
+- [Механика рычага](/ru/trading/leverage-mechanics)
+- [Риски и ликвидации](/ru/trading/risk-and-liquidations)
+- [Частный пользовательский канал](/ru/developer-api/websocket/private-user-channel)

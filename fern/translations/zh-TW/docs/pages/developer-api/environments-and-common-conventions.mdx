@@ -1,0 +1,64 @@
+---
+title: "環境與常見慣例"
+description: "檢視 6MM API 環境及共用慣例，涵蓋基礎網址、時間戳、數值欄位、符號、請求ID、分頁及回應。"
+slug: developer-api/environments-and-common-conventions
+canonical-url: https://docs.6mm.com/zh-TW/developer-api/environments-and-common-conventions
+---
+
+<h2 id="service-endpoints">服務端點</h2>
+
+| 類型      | 終點              |
+| --------- | --------------------- |
+| REST API  | `https://api.6mm.com` |
+| WebSocket | `wss://ws.6mm.com/ws`    |
+
+<h2 id="time-and-numeric-values">時間與數值</h2>
+
+* 除非另有說明，時間欄位為 Unix 毫秒的時間戳記。
+* 每日統計、餘額快照及交易量統計預設使用 UTC 日邊界。
+* 精確敏感欄位如數量、價格、數量與速率以字串形式傳送。
+* 大型整數 ID，如 `orderId`、 `conditionId`和 `strategyId` ，則以字串形式回傳於 JSON中。
+
+<h2 id="response-format">回應格式</h2>
+
+成功回應：
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {},
+  "requestId": "req-12345678"
+}
+```
+
+錯誤回應：
+
+```json
+{
+  "code": 1003,
+  "message": "Invalid token",
+  "requestId": "req-12345678"
+}
+```
+
+備註：
+
+* 商業錯誤通常仍會回傳統一的 JSON 結構。整合商應先檢查 `code` 。
+* 認證失敗可能會返回 HTTP `401`;速率限制可能會返回 HTTP `429`。
+* 你可以在請求標頭中傳送 `X-Request-ID` 。伺服器會在回應中回傳 `requestId` 。
+
+<h2 id="related-documentation">相關文件</h2>
+
+- [認證]（/developer-api/authentication）：選擇 JWT 或 API Key 簽名。
+- [請求簽署]（/developer-api/request-signing）：構造並驗證已簽署的請求。
+- [REST API]（/developer-api/rest-api）：將這些慣例應用於端點群。
+- [錯誤代碼與故障排除]（/developer-api/error-codes-and-troubleshooting）：診斷 HTTP 及業務錯誤。
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">相關頁面</h2>
+
+- [6MM API 認證： JWT 與 API 金鑰](/zh-TW/developer-api/authentication)
+- [請求簽署](/zh-TW/developer-api/request-signing)
+- [REST API](/zh-TW/developer-api/rest-api)
+- [錯誤代碼與故障排除](/zh-TW/developer-api/error-codes-and-troubleshooting)
+<!-- sixmm-localized-link-repair:end -->

@@ -1,0 +1,66 @@
+---
+title: "Arsitektur Keamanan Integrasi Mitra"
+subtitle: "Rancang batas kepercayaan dan kontrol produksi untuk integrasi perdagangan tertanam, API, SDK, webhook, transfer aset, dan operasional."
+slug: solutions/security-architecture
+canonical-url: https://docs.6mm.com/id/solutions/security-architecture
+---
+
+Halaman ini berfokus pada bagaimana mitra harus merancang integrasi 6MM yang aman. Untuk lapisan keamanan yang lebih luas yang digunakan di seluruh platform perdagangan, lihat [Arsitektur Keamanan Platform](/id/security-compliance/security-architecture).
+
+Arsitektur keamanan harus disepakati sebelum integrasi produksi dimulai. Ini memengaruhi bagaimana sistem mitra memvalidasi pengguna, mengeluarkan token, menyimpan rahasia, menerima event, memantau operasi, dan merespons insiden.
+
+<h2 id="recommended-trust-boundary">Batas kepercayaan yang direkomendasikan</h2>
+
+| Komponen | Dapat mengandung | Tidak boleh mengandung |
+| --- | --- | --- |
+| Frontend mitra | Konfigurasi publik, hasil entri singkat, status UI yang tidak sensitif | Rahasia API mitra, kunci penandatanganan, kredensial backend yang diprivilese |
+| Backend mitra | Pemetaan pengguna, kredensial terlindungi, logika penandatanganan, pemrosesan webhook | Rahasia yang terungkap melalui respons klien atau log publik |
+| 6MM endpoint integrasi | Permintaan bertanda tangan, token, dan pengiriman webhook yang disetujui | Asumsi pengguna di sisi mitra yang belum terverifikasi |
+
+Frontend mitra harus memanggil backend mitra untuk operasi yang diberi hak istimewa. Backend memvalidasi pengguna mitra, memanggil 6MM melalui API atau SDKyang disetujui, dan hanya mengembalikan hasil jangka pendek yang dibutuhkan oleh frontend.
+
+<h2 id="security-layers">Lapisan keamanan</h2>
+
+| lapisan | Fokus yang dibutuhkan |
+| --- | --- |
+| API kredensial | Penyimpanan hanya backend, rencana rotasi, dan kontrol akses. |
+| Penandatanganan permintaan | Penanganan timestamp, tanda tangan, dan perlindungan replay yang konsisten. |
+| Sematkan token | Penerbitan yang singkat, pemeriksaan kelayakan, dan perilaku pembatalan yang jelas. |
+| Webhook | Verifikasi tanda tangan, idempotensi, retry, dan log audit event. |
+| Operasi | Peran akses, eskalasi insiden, pemantauan, dan retensi bukti. |
+
+<h2 id="production-control-plan">Rencana kontrol produksi</h2>
+
+| Area kontrol | Bukti implementasi minimum |
+| --- | --- |
+| Penyimpanan kredensial | Lokasi secret-manager, pemilik akses, pemisahan lingkungan, dan proses rotasi. |
+| Entri pengguna | Validasi sesi, pemeriksaan kelayakan, alur token singkat, dan penanganan kegagalan. |
+| Permintaan yang ditandatangani | Lingkungan yang benar, waktu sinkronisasi, pencatatan permintaan, dan peringatan kesalahan tanda tangan. |
+| Operasi aset | ID bisnis unik, rekonsiliasi timeout, kueri status, dan jalur tinjauan operator. |
+| Webhook | Verifikasi tanda tangan bodi mentah, kontrol replay, penyimpanan idempotensi, dan pemrosesan aman untuk mencoba ulang. |
+| Pemantauan | Peringatan untuk kegagalan autentikasi, pengulangan abnormal, jeda webhook, dan kesalahan operasional. |
+| Respons insiden | Pemilik yang ditunjuk, saluran eskalasi, penyimpanan bukti, dan prosedur pencabutan kredensial. |
+
+<h2 id="launch-review">Tinjauan peluncuran</h2>
+
+Sebelum produksi:
+
+1. Gambar aliran data pengguna, token, permintaan, aset, dan webhook.
+2. Tandai di mana setiap kredensial dibuat, disimpan, digunakan, dicatat, diputar, dan dicabut.
+3. Uji token yang kedaluwarsa, tanda tangan tidak valid, timeout, webhook duplikat, dan perilaku reconnect.
+4. Konfirmasi bahwa tim dukungan dapat menemukan operasi dari permintaan atau identifikasi bisnisnya.
+5. Lengkapi [Daftar Periksa Peluncuran Produksi](/id/solutions/production-launch-checklist).
+
+<h2 id="recommended-docs">Dokumen yang direkomendasikan</h2>
+
+<CardGroup cols={3}>
+<Card title="Rahasia & Penandatanganan" icon="fa-duotone fa-key" href="/id/sdk/security/secrets-signing">
+Lindungi kredensial Agent SDK dan permintaan yang telah ditandatangani.
+</Card>
+<Card title="Penandatanganan Permintaan" icon="fa-duotone fa-signature" href="/id/developer-api/request-signing">
+Terapkan penandatanganan permintaan langsung dari Pengembang API .
+</Card>
+<Card title="Webhook & Idempotensi" icon="fa-duotone fa-webhook" href="/id/sdk/security/webhooks-idempotency">
+Proses kejadian dengan aman.
+</Card>
+</CardGroup>

@@ -1,0 +1,118 @@
+---
+title: "市場數據"
+description: "利用未認證的 6MM 市場資料 REST 端點來取得符號、行情、訂單簿、交易及其他公開交易資訊。"
+slug: developer-api/rest-api/market-data
+canonical-url: https://docs.6mm.com/zh-TW/developer-api/rest-api/market-data
+---
+
+市場資料 REST 端點不需要認證。
+
+<h2 id="symbol-configuration">符號配置</h2>
+
+```http
+GET /v1/public/market/symbols
+```
+
+常見的回應欄位：
+
+| 場地                      | 類型   | 描述                   |
+| -------------------------- | ------ | ----------------------------- |
+| `list[].symbol`            | string | 象徵                        |
+| `list[].baseAsset`         | string | 基礎資產                    |
+| `list[].quoteAsset`        | string | 報價資產                   |
+| `list[].minQuantity`       | string | 最小訂單數量        |
+| `list[].minNotional`       | string | 最小名義價值        |
+| `list[].tickSize`          | string | 價格刻度大小               |
+| `list[].stepSize`          | string | 步長            |
+| `list[].pricePrecision`    | int64  | 價格精確度               |
+| `list[].maxLimitOrderQty`  | string | 最大限價單數量  |
+| `list[].maxMarketOrderQty` | string | 最大市價單數量 |
+| `list[].maxOpenOrders`     | int64  | 每位用戶最大未完成訂單  |
+| `list[].defaultLeverage`   | int64  | 預設槓桿              |
+| `list[].defaultMarginMode` | int64  | 預設邊距模式           |
+| `list[].leverageTiers[]`   | array  | 槓桿保證金層級         |
+| `handlingFeeLevelConfig[]` | array  | 費用層級配置        |
+
+<h2 id="funding-rate-configuration">資金利率配置</h2>
+
+```http
+GET /v1/public/market/funding-rate?symbol=BTCUSDT
+```
+
+請求參數：
+
+| 參數 | 類型   | 必修 | 描述                     |
+| --------- | ------ | -------- | ------------------------------- |
+| `symbol`  | string | 不       | 若省略，則回傳所有符號 |
+
+<h2 id="current-funding-rate">目前資金率</h2>
+
+```http
+GET /v1/public/market/funding-rate/current?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+請求參數：
+
+| 參數  | 類型   | 必修 | 描述                  |
+| ---------- | ------ | -------- | ---------------------------- |
+| `symbol`   | string | 不       | 象徵                       |
+| `page`     | int32  | 不       | 頁碼，預設 `1`     |
+| `pageSize` | int32  | 不       | 每頁項目數，預設 `20` |
+
+<h2 id="funding-rate-history">資金利率歷史</h2>
+
+```http
+GET /v1/public/market/funding-rate/history?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+請求參數：
+
+| 參數   | 類型   | 必修 | 描述                  |
+| ----------- | ------ | -------- | ---------------------------- |
+| `symbol`    | string | 是的      | 象徵                       |
+| `startTime` | int64  | 不       | 開賽時間                   |
+| `endTime`   | int64  | 不       | 終結時間                     |
+| `page`      | int32  | 不       | 頁碼，預設 `1`     |
+| `pageSize`  | int32  | 不       | 每頁項目數，預設 `20` |
+
+<h2 id="klines">克萊恩</h2>
+
+```http
+GET /v1/public/market/klines?symbol=BTCUSDT&interval=1m&limit=500
+```
+
+請求參數：
+
+| 參數   | 類型   | 必修 | 描述                                                              |
+| ----------- | ------ | -------- | ------------------------------------------------------------------------ |
+| `symbol`    | string | 是的      | 象徵                                                                   |
+| `interval`  | string | 是的      | 區間，例如 `1m`、 `5m`、 `15m`、 `30m`、 `1h`、 `4h`、 `1d`、 `1w`、 `1M` |
+| `priceType` | string | 不       | `indexPrice` / `markPrice`。若省略，則回傳交易價格為Klines。       |
+| `startTime` | int64  | 不       | 開賽時間                                                               |
+| `endTime`   | int64  | 不       | 終結時間                                                                 |
+| `limit`     | int32  | 不       | 退回物品數量、預設 `500`、最大 `1000`                  |
+
+回應欄位：
+
+| 場地              | 類型   | 描述 |
+| ------------------ | ------ | ----------- |
+| `list[].openTime`  | int64  | 開放時間   |
+| `list[].open`      | string | 公開價  |
+| `list[].high`      | string | 高價  |
+| `list[].low`       | string | 低價   |
+| `list[].close`     | string | 收盤價 |
+| `list[].volume`    | string | 音量      |
+| `list[].closeTime` | int64  | 收工時間  |
+
+<h2 id="related-documentation">相關文件</h2>
+
+- [公共端點]（/developer-api/rest-api/public-endpoints）
+- [公共 WebSocket 頻道]（/developer-api/websocket/public-market-channels）
+- [市場深度與利差]（/solutions/market-depth-spread）
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">相關頁面</h2>
+
+- [公共端點](/zh-TW/developer-api/rest-api/public-endpoints)
+- [WebSocket 公開市場資料管道](/zh-TW/developer-api/websocket/public-market-channels)
+- [市場深度與利差](/zh-TW/solutions/market-depth-spread)
+<!-- sixmm-localized-link-repair:end -->

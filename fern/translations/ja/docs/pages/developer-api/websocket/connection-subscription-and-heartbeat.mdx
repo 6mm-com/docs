@@ -1,0 +1,89 @@
+---
+title: "コネクション、サブスクリプション、そしてハートビート"
+subtitle: "6MM WebSocketストリームに接続し、トピックを購読し、つながりを維持し、メッセージ封筒を安全に処理しましょう。"
+slug: developer-api/websocket/connection-subscription-and-heartbeat
+canonical-url: https://docs.6mm.com/ja/developer-api/websocket/connection-subscription-and-heartbeat
+---
+
+市場データや、ポーリングなしで最新の状態を保つ必要があるプライベートなユーザー状態の更新には WebSocket ストリームを活用しましょう。
+
+<h2 id="connection-url">接続 URL</h2>
+
+```text
+wss://ws.6mm.com/ws
+```
+
+プライベートストリームには、プライベートチャネルドキュメントに記載されている listenKey やアクセストークンなどの認証コンテキストが必要です。
+
+<h2 id="subscribe">購読</h2>
+
+```json
+{ "id": "1772007814666", "op": "subscribe", "args": ["market.depth.BTCUSDT"] }
+```
+
+購読確認の成功:
+
+```json
+{
+  "id": "1772007814666",
+  "event": "subscribe",
+  "success": true,
+  "data": ["market.depth.BTCUSDT"]
+}
+```
+
+<h2 id="unsubscribe">購読解除</h2>
+
+```json
+{ "id": "1772007814667", "op": "unsubscribe", "args": ["market.depth.BTCUSDT"] }
+```
+
+<h2 id="application-ping">アプリケーションping(アプリケーションping)</h2>
+
+```json
+{ "id": "1772007814668", "op": "ping", "args": [] }
+```
+
+<h2 id="message-envelope">メッセージ封筒</h2>
+
+パブリックプッシュは一貫したエンベロープを使用します:
+
+```json
+{
+  "topic": "market.depth.BTCUSDT",
+  "event": "data",
+  "ts": 1772007815000,
+  "data": {}
+}
+```
+
+<h2 id="operational-recommendations">運用上の提言</h2>
+
+- すべての購読、解約、pingリクエストに対して一意のクライアント側 `id` を生成する。
+- reconnectを新しいセッションとして扱い、必要なトピックを再購読する。
+- 返送された `topic` がサービスが期待するチャネルと一致していることを検証する。
+- プライベートな注文やアカウントイベントが関与する場合、メッセージ処理を冪等に保つこと。
+- 接続状態の変化、サブスクリプションの確認、異常な切断をログ記録する。
+
+<h2 id="reconnect-workflow">Reconnectワークフロー</h2>
+
+1. 前のソケットを閉じるか破棄し、新しい接続を作成する。
+2. 有効な listenKey またはアクセストークンでプライベートストリームを再認証する。
+3. 必要なトピックをすべて再登録し、承認応答を待つこと。
+4. インクリメンタル更新を適用する前に、ローカルの注文簿状態を新しいスナップショットに置き換えます。
+5. 私的なイベントが見逃された可能性がある場合、未解決の命令、ポジション、バランスを REST で調整すること。
+
+再接続試行にはジッター付きの有界指数バックオフを使いましょう。継続的に再接続するクライアントは、無期限に再接続するのではなくオペレーターに通知すべきです。
+
+<h2 id="heartbeat-and-stale-connections">心拍と古い繋がり</h2>
+
+- 最新の受信メッセージと成功したping確認を追跡する。
+- 生産環境で承認された心拍間隔とアイドル閾値を使用。
+- 設定済みの閾値を超えた場合、 TCP ソケットが開いているように見えても接続をステールとみなす。
+- 古いソケットからのサブスクリプションを再利用しないでください;再接続のたびに明示的に再購読してください。
+
+<h2 id="related-documentation">関連文書</h2>
+
+- [パブリックマーケットチャネル](/ja/developer-api/websocket/public-market-channels):トピック、注文簿の連続性、取引、キャンドル、ティッカー。
+- [プライベートユーザーチャネル](/ja/developer-api/websocket/private-user-channel)listenKeyライフサイクルと認証されたイベント。
+- [統合推奨事項](/ja/developer-api/integration-recommendations):再試行、冪等性、監視、打ち上げ試験。

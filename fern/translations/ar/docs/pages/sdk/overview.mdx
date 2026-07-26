@@ -1,0 +1,53 @@
+---
+title: "6MM SDKs"
+subtitle: "اختر المسار الصحيح 6MM SDK للتداول المدمج، إصدار الرموز الخلفية، ربط الحسابات، الويبهوكس، وعمليات الإنتاج."
+slug: sdk/overview
+canonical-url: https://docs.6mm.com/ar/sdk/overview
+---
+
+<h2 id="choose-an-sdk-path">اختر طريقا SDK</h2>
+
+<CardGroup cols={3}>
+<Card title="Trading Widget SDK" icon="duotone chart-line" href="/ar/sdk/trading-widget/quick-start">
+  دمج محطة التداول 6MM في موقع إلكتروني أو محفظة أو بوابة وسيط أو سطح منتج شريك موجود.
+</Card>
+<Card title="Agent SDK" icon="duotone server" href="/ar/sdk/agent-sdk/overview">
+  ربط خلفية شريك ب 6MM لربط المستخدمين، وتضمين الرموز، وعناوين الإدخال (URLs)، والتحويلات، واستعلامات الطلبات، والويبهوكس.
+</Card>
+<Card title="الأمن والعمليات" icon="duotone shield-check" href="/ar/sdk/security/secrets-signing">
+  جهز التخزين السري، توقيع الطلبات، صلاحية webhook، المراقبة، وإطلاق استكشاف المشكلة.
+</Card>
+</CardGroup>
+
+<h2 id="recommended-combination">التركيبة الموصى بها</h2>
+
+| هدف الشريك | الواجهة الأمامية | الخلفية | لماذا يهم ذلك |
+| --- | --- | --- | --- |
+| إضافة محطة تداول مدمجة | Trading Widget SDK | Agent SDK | تتولى الأداة واجهة التداول بينما يصدر الطرف الخلفي الشريك الرموز ويحافظ على الأسرار الخاصة. |
+| أنشئ نقطة دخول أصلية للتطبيق | مدخل أصلي أو H5 | Agent SDK | يفتح التطبيق URL إدخال 6MM بعد أن يتحقق الشريك من جلسة المستخدم. |
+| بناء تدفق تداول مخصص | واجهة المستخدم الشريكة | المطور API + تدفقات SDK المختارة | استخدم APIs لبيانات الحساب، والطلب، والموقع، وبيانات السوق مع الحفاظ على الضوابط التشغيلية على جانب الخادم. |
+
+<h2 id="reference-architecture">الهيكل المرجعي</h2>
+
+```text
+Partner Web App
+  -> TradingWidget.create()
+  -> tokenProvider()
+  -> Partner Backend
+  -> 6MM Agent SDK
+  -> 6MM Agent API
+  -> 6MM Trading iframe
+```
+
+> **احتفظ بالأسرار على جانب الخادم**
+>
+يجب > أن يتصل كود المتصفح فقط بنقاط النهاية المملوكة للشريك. يجب ألا يشحن سر العميل API أبدا إلى كود الواجهة الأمامية.
+
+<h2 id="production-checklist">قائمة تحقق الإنتاج</h2>
+
+- تخزين apiSecret فقط في البنية التحتية الخلفية.
+- استخدم HTTPS لطلبات API الوكيل وروابط webhook.
+- الاستمرار في agentUserIdو platformUserIdو agentOrderNo التعيينات.
+- تمثيل المبالغ النقدية كسلاسل عشرية بدلا من القيم العائمة.
+- التعامل مع PROCESSING كأنه قيد الانتظار، وليس كنجاح أو فشل.
+- معالجة خطافات الويب بشكل متطابق لأن إعادة المحاولات متوقعة.

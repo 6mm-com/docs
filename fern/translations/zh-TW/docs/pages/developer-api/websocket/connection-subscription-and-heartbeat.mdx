@@ -1,0 +1,96 @@
+---
+title: "連結、訂閱與心跳"
+subtitle: "連結 6MM WebSocket 串流、訂閱主題、維持連結，並安全處理訊息信封。"
+slug: developer-api/websocket/connection-subscription-and-heartbeat
+canonical-url: https://docs.6mm.com/zh-TW/developer-api/websocket/connection-subscription-and-heartbeat
+---
+
+利用 WebSocket 串流來接收市場資料和必須保持用戶狀態更新的私密狀態，且這些更新必須保持最新且不需輪詢。
+
+<h2 id="connection-url">連結 URL</h2>
+
+```text
+wss://ws.6mm.com/ws
+```
+
+私有串流需要認證上下文，如私有通道文件中描述的 listenKey 或存取權杖。
+
+<h2 id="subscribe">訂閱</h2>
+
+```json
+{ "id": "1772007814666", "op": "subscribe", "args": ["market.depth.BTCUSDT"] }
+```
+
+成功訂閱確認：
+
+```json
+{
+  "id": "1772007814666",
+  "event": "subscribe",
+  "success": true,
+  "data": ["market.depth.BTCUSDT"]
+}
+```
+
+<h2 id="unsubscribe">取消訂閱</h2>
+
+```json
+{ "id": "1772007814667", "op": "unsubscribe", "args": ["market.depth.BTCUSDT"] }
+```
+
+<h2 id="application-ping">應用程式 ping</h2>
+
+```json
+{ "id": "1772007814668", "op": "ping", "args": [] }
+```
+
+<h2 id="message-envelope">訊息信封</h2>
+
+公開推送使用一致的信封：
+
+```json
+{
+  "topic": "market.depth.BTCUSDT",
+  "event": "data",
+  "ts": 1772007815000,
+  "data": {}
+}
+```
+
+<h2 id="operational-recommendations">營運建議</h2>
+
+- 為每個訂閱、取消訂閱及 ping 請求產生唯一的客戶端 `id` 。
+- 將 reconnect 視為新會議，並重新訂閱必要的主題。
+- 驗證回傳的 `topic` 是否符合您的服務所期望的通道。
+- 在涉及私人訂單或帳戶事件時，保持訊息處理冪分。
+- 記錄連線狀態變更、訂閱確認及異常斷線。
+
+<h2 id="reconnect-workflow">Reconnect 工作流程</h2>
+
+1. 關閉或丟棄先前的插座並建立新的連線。
+2. 使用有效的 listenKey 或存取權杖重新認證私有串流。
+3. 重新訂閱所有必修主題，並等待成功確認。
+4. 在套用增量更新前，先以新的快照取代本地訂單簿狀態。
+5. 若私人事件未被遺漏，應透過 REST 調和未決訂單、立場及平衡。
+
+用有界指數退回搭配抖動來嘗試重連。持續重新連線的客戶端應該會提醒接線員，而不是無限期重試且無法看到。
+
+<h2 id="heartbeat-and-stale-connections">心跳與陳舊連結</h2>
+
+- 追蹤最近的入站訊息及成功回應 ping。
+- 使用生產環境核准的心跳間隔與空閒閾值。
+- 當設定的閾值超過時，即使 TCP socket 仍然顯示開啟，仍將連線視為過時。
+- 不要重複使用舊套接字的訂閱;每次重新連線後都要明確重新訂閱。
+
+<h2 id="related-documentation">相關文件</h2>
+
+- [公開市場通道]（/developer-api/websocket/public-market-channels）：主題、訂單簿連續性、交易、蠟燭及股票行情。
+- [私人用戶通道]（/developer-api/websocket/private-user-channel）： listenKey 生命週期與認證事件。
+- [整合建議]（/developer-api/integration-recommendations）：重試、冪性、監控及發射測試。
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">相關頁面</h2>
+
+- [WebSocket 公開市場資料管道](/zh-TW/developer-api/websocket/public-market-channels)
+- [私人用戶通道](/zh-TW/developer-api/websocket/private-user-channel)
+- [整合建議](/zh-TW/developer-api/integration-recommendations)
+<!-- sixmm-localized-link-repair:end -->

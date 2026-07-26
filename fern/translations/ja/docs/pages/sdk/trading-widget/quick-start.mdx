@@ -1,0 +1,108 @@
+---
+title: "6MM Trading Widgetを埋め込む:クイックスタート"
+subtitle: "コンテナ、v1スクリプト、TradingWidget.create()を使って、ウェブページに取引端末を追加します。"
+slug: sdk/trading-widget/quick-start
+canonical-url: https://docs.6mm.com/ja/sdk/trading-widget/quick-start
+---
+
+Trading Widget SDKは、6MM取引インターフェースをパートナー所有のウェブページ内に埋め込みます。最も迅速な統合には、目に見えるコンテナ、本番SDKスクリプト、そして`TradingWidget.create()`への呼び出しが必要です。
+
+<h2 id="before-you-start">始める前に</h2>
+
+- `https://app.6mm.com`からリソースを読み込めるウェブページから例を実行する。
+- ウィジェットコンテナに明示的な幅と高さを割り当てる。
+- SDK を装填してから `TradingWidget.create()`。
+- 計画を立てる [認証の流れ](/ja/sdk/trading-widget/authentication) 本格的なアカウントや取引機能を有効にする前に。
+
+<h2 id="minimal-example">最小例</h2>
+
+```html
+<div id="trading-widget" style="width: 100%; height: 720px"></div>
+
+<script src="https://app.6mm.com/sdk/trading-widget/v1/index.js"></script>
+<script>
+  const widget = TradingWidget.create('#trading-widget', {
+    baseUrl: 'https://app.6mm.com',
+    symbol: 'BTCUSDT',
+    theme: 'dark',
+    locale: 'en',
+    layout: 'default',
+    display: {
+      showHeader: false,
+      showTicker: false,
+      hidden: [],
+    },
+    onReady(event) {
+      console.log('ready', event)
+    },
+    onError(error) {
+      console.error('error', error)
+    },
+  })
+</script>
+```
+
+統合が成功すると、 SDK は `#trading-widget` 内にiframeを作成し、 `onReady`を呼び出します。開発中に `onError` をキャプチャし、設定やロードの失敗を目に見えます。
+
+<h2 id="sdk-urls">SDK URL</h2>
+
+| 環境 | 脚本 URL |
+| --- | --- |
+| 制作 | https://app.6mm.com/sdk/trading-widget/v1/index.js |
+
+> **明示的に baseUrl 設定**
+>
+> パートナー所有のページからテストする際は、iframeが常に6MMウェブドメインを指すように、baseUrlパスしてください。
+
+<h2 id="display-controls">表示コントロール</h2>
+
+パートナーの埋め込みはデフォルトでPCのヘッダーとボトムマーケットのティッカーを隠します。シェルエリアを見せる必要がある時や、埋め込みトレーディングページで高レベルのコンテナを隠す必要がある場合は `display` を使いましょう。
+
+```js
+display: {
+  showHeader: false,
+  showTicker: false,
+  hidden: ['account'],
+}
+```
+
+<h2 id="container-size">容器サイズ</h2>
+
+| 表面 | 推奨最低限の基準 |
+| --- | --- |
+| デスクトップ | 1024 x 720 |
+| モバイル | 390 x 700 |
+
+レスポンシブレイアウトでは、幅を流動的に保ち、各ブレークポイントに適切な最小高さを設定しましょう。高さゼロのコンテナでも、取引インターフェースを見えなさずに SDK を正常にロードできます。
+
+<h2 id="verify-the-integration">統合の検証</h2>
+
+1. SDK スクリプトがブラウザネットワークパネルで正常に戻っているか確認します。
+2. iframeが初期化されたら `onReady` が発射されることを確認します。
+3. 設定済み `symbol`、 `locale`、テーマ、隠しセクションをテストします。
+4. デスクトップとモバイルのブレークポイント間でページのサイズ変更。
+5. リリース前に非本番ユーザーとの認証済みテストを完了すること。
+
+<h2 id="common-issues">一般的な問題</h2>
+
+| 症状 | 確認すべき点 |
+| --- | --- |
+| 空白のウィジェット領域 | コンテナの幅と高さが見えるか確認してください。 |
+| `TradingWidget` は定義されていません | createコールの前にv1スクリプトが読み込まれていることを確認します。 |
+| 間違ったページや環境 | `baseUrl`を明示的に設定し、設定された環境を確認してください。 |
+| 準備イベントは決して発射されません | `onError`をキャプチャし、ブロックされたiframeやスクリプトリクエストを点検します。 |
+| アカウントデータは利用できません | サポートされたウィジェット認証フローを完成させます。 |
+
+<h2 id="next-steps">今後のステップ</h2>
+
+<CardGroup cols={3}>
+<Card title="ウィジェット認証" icon="fa-duotone fa-user-shield" href="/ja/sdk/trading-widget/authentication">
+組み込み端末を承認されたユーザーセッションに接続します。
+</Card>
+<Card title="オプションとイベント" icon="fa-duotone fa-sliders" href="/ja/sdk/trading-widget/options-events">
+シンボル、ロケーション、表示動作、ライフサイクルコールバックの設定を行います。
+</Card>
+<Card title="インスタンスメソッド" icon="fa-duotone fa-code" href="/ja/sdk/trading-widget/instance-methods">
+初期化後に作成されたウィジェットインスタンスを制御します。
+</Card>
+</CardGroup>

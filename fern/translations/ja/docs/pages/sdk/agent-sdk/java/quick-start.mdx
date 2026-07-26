@@ -1,0 +1,82 @@
+---
+title: "Java クイックスタート"
+subtitle: "バックエンドサービスから Java SDK をインストールして初期化してください。"
+slug: sdk/agent-sdk/java/quick-start
+canonical-url: https://docs.6mm.com/ja/sdk/agent-sdk/java/quick-start
+---
+
+<h2 id="install">設置</h2>
+
+公開 SDK ソースは現在、以下のMaven座標でタグ `v0.1.1` を記録しています。
+
+```xml
+<dependency>
+    <groupId>com.sixmm.exchange.sdk</groupId>
+    <artifactId>agent</artifactId>
+    <version>0.1.1</version>
+</dependency>
+```
+
+GitHubはMaven依存関係のリポジトリとして機能しません。依存関係を解決する前にタグ付けされたソースをローカルにインストールしてください:
+
+```bash
+git clone https://github.com/6mm-com/agent-java-sdk.git
+cd agent-java-sdk
+git checkout v0.1.1
+mvn install
+```
+
+> **チームビルド**
+>
+> 承認されたアーティファクトを組織のMavenリポジトリに公開し、CI、テスト、本番ビルドを行ってください。本番展開前に承認されたバージョンを 6MM で確認してください。
+
+ソースコードおよび使用例は公式 Java SDK リポジトリで入手可能です:
+
+[6mm-com/agent-java-sdk](https://github.com/6mm-com/agent-java-sdk)
+
+<h2 id="before-you-start">始める前に</h2>
+
+- 6MMチームにAPI拠点URLの制作エージェントを確認してください。
+- apiSecret をバックエンドの秘密管理のみに保存します。
+- platformUserId と agentUserId間の安定した写像を作成する。
+- バインド、転送、秩序、ウェブフックのフローに関する構造化ログを有効にします。
+
+<h2 id="initialize-client">クライアントの初期化</h2>
+
+```java
+import com.sixmm.agent.AgentClient;
+import com.sixmm.agent.AgentClientConfig;
+
+AgentClient client = new AgentClient(AgentClientConfig.builder()
+        .baseUrl("https://agent-api.6mm.com")
+        .agentCode("AGENT001")
+        .apiSecret("your-api-secret")
+        .defaultCurrency("USDT")
+        .build());
+```
+
+> **バックエンドのみ**
+>
+> ブラウザ、モバイル、デスクトップのクライアントコードから Agent SDK を初期化しないでください。 SDK は特権エージェント API リクエストに署名します。
+
+<h2 id="example-transfer-funds-in">例:資金の振替</h2>
+
+```java
+TransferResponse resp = client.transfer(TransferRequest.fixed(
+        "AGT-ORDER-1001",
+        "agent-user-001",
+        Direction.IN,
+        "USDT",
+        "10.00"));
+```
+
+各転送リクエストには、パートナー側の注文番号を一意に設定してください。リクエストがタイムアウトした場合は、新しい注文を作成する前に元の注文にクエリを送りましょう。
+
+<h2 id="next-steps">今後のステップ</h2>
+
+| 必要性 | 次のページ |
+| --- | --- |
+| Trading Widget認証を発行してください | [埋め込みトークンの作成](/ja/sdk/agent-sdk/java/embed-token) |
+| 6MMからの折り返しの確認 | [ウェブフックと冪等性](/ja/sdk/security/webhooks-idempotency) |
+| 署名行動のレビュー | [秘密と署名](/ja/sdk/security/secrets-signing) |
+| 積分問題の診断 | [SDK トラブルシューティング](/ja/sdk/security/troubleshooting) |

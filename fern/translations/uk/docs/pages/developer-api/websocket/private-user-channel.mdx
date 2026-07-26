@@ -1,0 +1,107 @@
+---
+title: "Приватний користувацький канал"
+description: "Підпишіться на автентифіковані 6MM WebSocket події щодо замовлень, позицій, балансів і змін у рахунку, створюючи та підтримуючи ключ прослуховування."
+slug: developer-api/websocket/private-user-channel
+canonical-url: https://docs.6mm.com/uk/developer-api/websocket/private-user-channel
+---
+
+Спочатку створіть `listenKey` :
+
+```http
+POST /v1/private/user/listen-key
+```
+
+Приклад відповіді:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "listenKey": "f57cb61ef604ce76be09e753a5dbdd8c",
+    "expireAt": 1777539918867
+  },
+  "requestId": "req-listen-key"
+}
+```
+
+`listenKey` за замовчуванням дійсний 60 хвилин. Рекомендується поновлювати кожні 30 хвилин.
+
+<h2 id="renew">Оновлення</h2>
+
+```http
+PUT /v1/private/user/listen-key
+Content-Type: application/json
+```
+
+```json
+{ "listenKey": "f57cb61ef604ce76be09e753a5dbdd8c" }
+```
+
+<h2 id="close">Закриття</h2>
+
+```http
+DELETE /v1/private/user/listen-key
+Content-Type: application/json
+```
+
+```json
+{ "listenKey": "f57cb61ef604ce76be09e753a5dbdd8c" }
+```
+
+<h2 id="connect-to-private-websocket">Підключіться до приватного WebSocket</h2>
+
+```
+wss://ws.6mm.com/ws?listenKey=YOUR_LISTEN_KEY
+```
+
+Сумісний JWT метод підключення:
+
+```
+wss://ws.6mm.com/ws?token=YOUR_ACCESS_TOKEN
+```
+
+Після успішної автентифікації сервер автоматично підписується на приватний канал поточного користувача. Ручна підписка не потрібна.
+
+Успішне підтвердження автентифікації:
+
+```json
+{ "event": "auth", "success": true, "data": "1188041528" }
+```
+
+<h2 id="common-private-events">Поширені приватні заходи</h2>
+
+| Подія                | Опис                                                                   |
+| -------------------- | ----------------------------------------------------------------------------- |
+| `ORDER_TRADE_UPDATE` | Зміни статусу замовлень, включно з новим замовленням, поправками, обміном і скасуванням |
+| `ACCOUNT_UPDATE`     | Баланс рахунку та зміни позицій                                          |
+
+Обгортка приватних push-повідомлень:
+
+```json
+{
+  "topic": "user.5794",
+  "ts": 1771047000000,
+  "data": {
+    "eventType": "ORDER_TRADE_UPDATE"
+  }
+}
+```
+
+REST кінцеві точки запитів і WebSocket приватні потоки використовують окремі схеми. Клієнти повинні розбирати кожну схему незалежно і не повинні вважати, що імена полів ідентичні.
+
+<h2 id="common-differences">Спільні відмінності</h2>
+
+| Домен         | REST поле     | WebSocket поле                                             |
+| -------------- | -------------- | ----------------------------------------------------------- |
+| Статус ордену   | `status`       | `orderStatus`                                               |
+| Заморожений баланс | `frozenMargin` | `frozenBalance`                                             |
+| Режим margin    | `marginMode`   | `marginMode`, повертається як рядок у позиціях і потоках |
+
+<h2 id="recovery-and-reconciliation">Відновлення та примирення</h2>
+
+- Поновити listenKey до закінчення терміну дії та створити новий, якщо продовження не вдасться.
+- Повторне підключення, повторна автентифікація та обробка нового сокета як нову сесію події.
+- Дедуплікація подій перед зміною балансу партнерів або записів замовлень.
+- Якщо події були пропущені, запитуйте [orders](/uk/developer-api/rest-api/order), [positions](/uk/developer-api/rest-api/position) та [account state](/uk/developer-api/rest-api/user-and-account) через REST.
+- Дотримуйтесь [гайд по з'єднанню та серцебиттю](/uk/developer-api/websocket/connection-subscription-and-heartbeat) для повторної спроби та обробки застійного з'єднання.

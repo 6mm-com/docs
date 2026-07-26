@@ -1,0 +1,102 @@
+---
+title: "Trading Widget المصادقة"
+subtitle: "استخدم رمز الشريك لتكاملات جديدة مدمجة SSO تداول."
+slug: sdk/trading-widget/authentication
+canonical-url: https://docs.6mm.com/ar/sdk/trading-widget/authentication
+---
+
+<h2 id="recommended-mode-partner-token">الوضع الموصى به: رمز الشريك</h2>
+
+يتجنب الشريك-الرمز وضع رموز قصيرة في عناوين URL ويبقي apiSecret في خلفية الشريك.
+
+```js
+const widget = TradingWidget.create('#trading-widget', {
+  baseUrl: 'https://app.6mm.com',
+  auth: {
+    mode: 'partner-token',
+    tokenProvider: async ({ channelId, symbol, reason }) => {
+      const resp = await fetch('/api/trading/embed-token', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ channelId, symbol, reason }),
+      })
+
+      if (!resp.ok) {
+        throw new Error('Failed to request embed token')
+      }
+
+      return resp.json()
+    },
+  },
+})
+```
+
+<h2 id="related-documentation">وثائق ذات صلة</h2>
+
+- [إنشاء رمز تضمين] (/sdk/agent-sdk/java/embed-token): مثال على إصدار الرمز الخلفي.
+- [Trading Widget Quick Start] (/sdk/trading-widget/quick-start): تدفق تهيئة كامل.
+- [أسرار وتوقيع] (/sdk/security/secrets-signing): احتفظ ببيانات اعتماد العميل المميزة في الخلفية.
+- [استكشاف الأخطاء](/ar/sdk/security/troubleshooting): تشخيص فشل الجلسة، الرمز، المصدر، والتهيئة الصحيحة.
+
+<h2 id="backend-flow">تدفق الخلفية</h2>
+
+```text
+1. Partner frontend receives auth_request from the iframe.
+2. SDK calls tokenProvider.
+3. Partner frontend calls its own backend.
+4. Partner backend validates the partner session.
+5. Partner backend calls 6MM Agent API or Java SDK createEmbedToken.
+6. SDK sends embedToken to the iframe through postMessage.
+7. iframe exchanges embedToken for a 6MM access token.
+8. iframe continues initialization and emits ready.
+```
+
+<h2 id="tokenprovider-contract">tokenProvider العقد</h2>
+
+| الميدان | الإخراج | الوصف |
+| --- | --- | --- |
+| channelId | SDK -> الخلفية الشريكة | معرف جلسة الويدجت الفريد. يجب أن يمررها الخلف إلى createEmbedToken. |
+| الرمز | SDK -> الخلفية الشريكة | رمز التداول المطلوب حاليا. استخدمه لتحديد نطاق الرمز عند الحاجة. |
+| السبب | SDK -> الخلفية الشريكة | لماذا يطلب SDK رمزا، مثل التحميل الأولي أو التحديث. |
+| embedToken | خلفية الشريك -> SDK | رمز قصير العمر تم إنشاؤه بواسطة Agent SDK أو الوكيل API. |
+| expireAt | خلفية الشريك -> SDK | تم إعادة ختم انتهاء صلاحية الرمز بواسطة 6MM. |
+
+<h2 id="failure-handling">التعامل مع الأعطال</h2>
+
+| الحالة | التعامل الموصى به |
+| --- | --- |
+| انتهت صلاحية جلسة الشريك | أعد 401 من نقطة نهاية الشريك واطلب من المستخدم تسجيل الدخول مرة أخرى. |
+| فشل إنشاء الرموز مؤقتا | ضع خطأ في tokenProvider ويسمح للأداة بظهور خطأ في المصادقة. |
+| channelId عدم التوافق | ارفض الطلب وأعد إنشاء نسخة الويدجت. |
+| المستخدم غير مسموح له بالتداول | أعيد خطأ يتحكم به الشريك ولا تنشئ رمز تضمين. |
+
+<h2 id="compatibility-mode-agent-sso">وضع التوافق: agent-sso</h2>
+
+Agent-SSO يحافظ على تدفق تذاكر الدخول القديمة /وكيل. أفضل الشريك الرمزي للتكاملات الجديدة.
+
+```js
+const widget = TradingWidget.create('#trading-widget', {
+  baseUrl: 'https://app.6mm.com',
+  auth: {
+    mode: 'agent-sso',
+    entryUrlProvider: async ({ redirectPath }) => {
+      const resp = await fetch('/api/trading-entry', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ redirectPath }),
+      })
+      const data = await resp.json()
+      return data.webUrl
+    },
+  },
+})
+```
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">صفحات ذات صلة</h2>
+
+- [إنشاء رمز التضمين](/ar/sdk/agent-sdk/java/embed-token)
+- [تضمين 6MM Trading Widget: البدء السريع](/ar/sdk/trading-widget/quick-start)
+- [Agent SDK أسرار وتوقيع HMAC](/ar/sdk/security/secrets-signing)
+<!-- sixmm-localized-link-repair:end -->

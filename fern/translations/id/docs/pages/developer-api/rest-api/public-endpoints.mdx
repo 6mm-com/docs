@@ -1,0 +1,159 @@
+---
+title: "Titik Akhir Publik"
+description: "Akses titik akhir 6MM API publik untuk instrumen, ticker, buku order, perdagangan, dan informasi pasar lain yang belum terautentikasi."
+slug: developer-api/rest-api/public-endpoints
+canonical-url: https://docs.6mm.com/id/developer-api/rest-api/public-endpoints
+---
+
+<h2 id="base-url">URL dasar</h2>
+
+```
+https://api.6mm.com
+```
+
+<h2 id="service-version">Versi Layanan</h2>
+
+```http
+GET /v1/version
+```
+
+Dapatkan informasi versi layanan.
+
+<h2 id="server-time">Waktu Server</h2>
+
+```http
+GET /v1/time
+```
+
+Dapatkan waktu server. Endpoint ini dapat digunakan untuk mengkalibrasi waktu klien sebelum API Key penandatanganan.
+
+<h2 id="user-login">Login Pengguna</h2>
+
+```http
+POST /v1/public/user/login
+```
+
+Parameter permintaan:
+
+| Parameter    | Tipe   | Wajib | Deskripsi                             |
+| ------------ | ------ | -------- | --------------------------------------- |
+| `username`   | string | Ya      | Nama pengguna, panjang 3 - 32                 |
+| `password`   | string | Ya      | Kata sandi, panjang 1 - 64                 |
+| `deviceId`   | string | Tidak       | Sidik jari perangkat, hingga 64 karakter |
+| `deviceName` | string | Tidak       | Nama perangkat, hingga 128 karakter       |
+
+Contoh permintaan:
+
+```bash
+curl -X POST https://api.6mm.com/v1/public/user/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "alice",
+    "password": "yourPassword",
+    "deviceId": "device-001",
+    "deviceName": "server-001"
+  }'
+```
+
+Contoh respons:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "accessToken": "YOUR_ACCESS_TOKEN",
+    "accessExpire": 1769676656
+  },
+  "requestId": "req-login"
+}
+```
+
+<h2 id="refresh-token">Refresh Token</h2>
+
+```http
+POST /v1/public/user/refresh-token
+```
+
+Dalam skenario integrasi normal, status login diperbarui melalui Cookie. Simpan Cookie yang dikembalikan berdasarkan respons login.
+
+Bidang respons:
+
+| Lapangan          | Tipe   | Deskripsi              |
+| -------------- | ------ | ------------------------ |
+| `accessToken`  | string | Token akses baru         |
+| `accessExpire` | int64  | Waktu kedaluwarsa Token Akses |
+
+<h2 id="agent-sso">Agen SSO</h2>
+
+<h2 id="ticket-exchange">penukaran tiket</h2>
+
+```http
+POST /v1/public/agent-sso/exchange-ticket
+```
+
+Parameter permintaan:
+
+| Parameter  | Tipe   | Wajib | Deskripsi                                 |
+| ---------- | ------ | -------- | ------------------------------------------- |
+| `ticket`   | string | Ya      | Tiket sekali pakai yang dikeluarkan oleh layanan agen |
+| `deviceId` | string | Tidak       | Sidik jari perangkat, hingga 64 karakter     |
+
+Bidang respons:
+
+| Lapangan          | Tipe   | Deskripsi              |
+| -------------- | ------ | ------------------------ |
+| `accessToken`  | string | token akses             |
+| `accessExpire` | int64  | Waktu kedaluwarsa Token Akses |
+| `redirectPath` | string | Jalur pengalihan yang disarankan  |
+
+<h2 id="embed-token-exchange">Pertukaran Token Sematkan</h2>
+
+```http
+POST /v1/public/agent-sso/exchange-embed-token
+```
+
+Parameter permintaan:
+
+| Parameter    | Tipe   | Wajib | Deskripsi                                                    |
+| ------------ | ------ | -------- | -------------------------------------------------------------- |
+| `embedToken` | string | Ya      | Token trading embedded berumur pendek yang diterbitkan oleh layanan agen |
+| `channelId`  | string | Ya      | ID saluran iframe tertanam, hingga 128 karakter               |
+| `deviceId`   | string | Tidak       | Sidik jari perangkat, hingga 64 karakter                        |
+
+Bidang respons:
+
+| Lapangan          | Tipe   | Deskripsi              |
+| -------------- | ------ | ------------------------ |
+| `accessToken`  | string | token akses             |
+| `accessExpire` | int64  | Waktu kedaluwarsa Token Akses |
+
+<h2 id="pnl-leaderboard">Papan Peringkat PnL</h2>
+
+```http
+GET /v1/public/leaderboard/pnl?period=30d
+```
+
+Parameter permintaan:
+
+| Parameter | Tipe   | Wajib | Deskripsi          |
+| --------- | ------ | -------- | -------------------- |
+| `period`  | string | Ya      | `7d` / `30d` / `90d` |
+
+Bidang respons:
+
+| Lapangan              | Tipe   | Deskripsi                                                       |
+| ------------------ | ------ | ----------------------------------------------------------------- |
+| `list[].rank`      | int32  | Pangkat                                                              |
+| `list[].userId`    | string | ID pengguna eksternal                                                  |
+| `list[].trader`    | string | Nama pedagang bertopeng                                                |
+| `list[].volume`    | string | Volume perdagangan di jendela                                      |
+| `list[].pnlAmount` | string | Menyadari PnL di jendela                                        |
+| `list[].pnlPct`    | string | Rasio PnL, desimal dari `0` ke `1`                                |
+| `myRank`           | int32  | Peringkat pengguna saat ini. Mengembalikan `0` jika tidak terautentikasi atau tidak diberi peringkat |
+
+<h2 id="related-documentation">Dokumentasi terkait</h2>
+
+- [Data Pasar](/id/developer-api/rest-api/market-data)
+- [Saluran WebSocket Publik](/id/developer-api/websocket/public-market-channels)
+- [Lingkungan & Konvensi Umum](/id/developer-api/environments-and-common-conventions)

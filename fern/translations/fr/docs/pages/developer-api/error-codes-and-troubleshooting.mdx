@@ -1,0 +1,65 @@
+---
+title: "Codes d’erreur et dépannage"
+description: "Diagnostiquez les erreurs 6MM API à l’aide de codes de réponse, messages, identifiants de requête, conseils de réessayage, vérifications d’authentification et étapes de dépannage d’intégration."
+slug: developer-api/error-codes-and-troubleshooting
+canonical-url: https://docs.6mm.com/fr/developer-api/error-codes-and-troubleshooting
+---
+
+<h2 id="error-response-format">Format de réponse à l’erreur</h2>
+
+```json
+{
+  "code": 1003,
+  "message": "Invalid token",
+  "requestId": "req-12345678"
+}
+```
+
+Les erreurs métier renvoient généralement toujours la structure JSON unifiée. Les intégrateurs devraient vérifier `code` d’abord. Les échecs d’authentification peuvent retourner HTTP `401`; La limitation de taux peut revenir HTTP `429`.
+
+<h2 id="common-error-codes">Codes d’erreur courants</h2>
+
+| Code d’erreur      | Description                                  |
+| --------------- | -------------------------------------------- |
+| `0`             | Succès                                      |
+| `1001`          | Aucune information d’authentification valide fournie |
+| `1002`          | Jeton expiré                                |
+| `1003`          | Jeton, API Keyou signature invalides         |
+| `1004`          | Jeton révoqué                                |
+| `1006`          | Source IP décalage                           |
+| `2001`          | Paramètre requis manquant                   |
+| `2002`          | Valeur de paramètre invalide                      |
+| `2003`          | Paramètre hors plage                       |
+| `3001`          | Équilibre insuffisant                         |
+| `3003`          | Ordre non trouvé                              |
+| `3004`          | Demande de doublons                            |
+| `3005`          | La commande ne peut pas être annulée                     |
+| `3006`          | Autorisation refusée                            |
+| `3100` - `3112` | Erreur de validation des paramètres d’ordre de condition   |
+| `5001`          | Erreur interne du serveur                        |
+| `5002`          | Service temporairement indisponible              |
+| `5003`          | Limite de taux déclenchée                         |
+
+<h2 id="troubleshooting">Dépannage</h2>
+
+| Problème                                     | Recommandation                                                                                   |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `1001` aucune information d’authentification valide  | Vérifiez si `Authorization: Bearer <accessToken>` ou `X-API-KEY` est inclus.                  |
+| `1002` Jeton expiré                        | Rafraîchissez le jeton ou reconnectez-vous avant de réessayer.                                                   |
+| `1003` Jeton, API Keyou signature invalides | Vérifiez API Key, la charge utile de signature, le corps JSON chaîne de requête, et l’ordre des paramètres de requête.           |
+| `1006` source IP décalage                   | Vérifiez la configuration API Key IP liste blanche.                                                    |
+| `3004` demande de doublons                    | Ne réutilisez pas la même signature pour les chemins liés à l’ordre. Régénérer `timestamp` et `signature`. |
+| `5003` limite de taux déclenchée                 | Réduisez la fréquence des requêtes et utilisez un recul exponentiel si vous réessayez.                                |
+| `Timestamp outside of tolerance window`     | Appelez `/v1/time` pour calibrer le décalage temporel et signez à nouveau la demande.                             |
+
+<h2 id="related-diagnostic-guides">Guides de diagnostic associés</h2>
+
+- [Environnements et conventions courantes] (/developer-api/environments-and-common-conventions)
+- [Authentification](/fr/developer-api/authentication)
+- [Recommandations d’intégration](/fr/developer-api/integration-recommendations)
+- [Modèle de demande de support](/fr/resources/support-request-template)
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">Pages associées</h2>
+
+- [Environnements et conventions communes](/fr/developer-api/environments-and-common-conventions)
+<!-- sixmm-localized-link-repair:end -->

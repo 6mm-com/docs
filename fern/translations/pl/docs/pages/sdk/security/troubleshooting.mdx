@@ -1,0 +1,68 @@
+---
+title: "SDK Rozwiązywanie problemów z integracją"
+subtitle: "Zdiagnozuj Trading Widget, Agent SDK, problemy z podpisywaniem, webhookiem, timeoutem i środowiskiem przed eskalowaniem prośby o wsparcie."
+slug: sdk/security/troubleshooting
+canonical-url: https://docs.6mm.com/pl/sdk/security/troubleshooting
+---
+
+Zacznij od środowiska, znacznika czasu i identyfikatora biznesowego dla nieudanej operacji. Kontrola strukturalna zazwyczaj oddziela problemy konfiguracyjne od uwierzytelniania, sieci i przetwarzania asynchronicznego.
+
+<h2 id="diagnostic-order">Zalecana kolejność diagnostyki</h2>
+
+1. Potwierdź środowisko dotknięte i bazuj URL.
+2. Zapisz UTC przedział czasowy oraz pierwsze nieudane żądanie.
+3. Zidentyfikuj moduł: Trading Widget, Agent SDK, REST API, WebSocketlub webhook.
+4. Uchwyć identyfikator żądania, identyfikator użytkownika partnera, `agentOrderNo`, identyfikator zamówienia lub identyfikator zdarzenia webhooka.
+5. Sprawdź ostatni kod, dane uwierzytelniające, IP białą listę lub zmiany wdrożenia.
+6. Rozmnoś się z najmniejszym bezpiecznym przypadkiem testowym.
+
+<h2 id="trading-widget-issues">Trading Widget kwestie</h2>
+
+| Objawy | Prawdopodobna przyczyna | Fix |
+| --- | --- | --- |
+| iframe żąda partnerskiej domeny lokalnej | baseUrl brakuje | Pass baseUrl: 'https://app.6mm.com'. |
+| iframe jest niewidoczny lub bardzo krótki | Kontener nadrzędny nie ma wysokości | Ustaw wysokość pojemnika lub wysokość przejścia. |
+| token_provider_missing | Tryb token partnera nie ma dostawcy | Dodaj autoryzację.tokenProvider. |
+| auth_exchange_failed | Nieprawidłowy, wygasły lub niedopasowany token osadzony | Sprawdź odpowiedź tokenów backendowych i channelId. |
+
+<h2 id="agent-sdk-issues">Agent SDK kwestie</h2>
+
+| Objawy | Prawdopodobna przyczyna | Fix |
+| --- | --- | --- |
+| Podpis odrzucony | Zły sekret, przesunięcie zegara lub ręczna zmiana znakowanych pól | Pozwól SDK generować pola podpisu i synchronizować czas na serwerze. |
+| Ryzyko podwójnego ruchu środków | Nowy numer zamówienia używany po przerwie | Najpierw zapytanie przez oryginalnego agentOrderNo . |
+| PROCESSING traktowana jako porażka | Stan oczekujący na nieporozumienie | Poczekaj na webhook lub zadzwoń do queryOrder. |
+| Webhook przetwarzany wielokrotnie | Zachowanie powtórne bez idempotencji | Dodaj klucz idempotencji i sprawdzenie stanu końcowego. |
+
+<h2 id="evidence-to-capture">Dowody do przechwycenia</h2>
+
+| Integracja | Przydatne dowody |
+| --- | --- |
+| Trading Widget | Strona URL, SDK ścieżka wersji, konsola przeglądarki, nieudane żądania sieciowe, `onError` payload oraz wymiary kontenera. |
+| Agent SDK | SDK język/wersję, URLbazową, UTC znaczniki czasu, identyfikator żądania, `agentOrderNo`, kod odpowiedzi oraz oczyszczone logi. |
+| Webhook | Czas dostawy, klucz zdarzenia lub firmy, wynik weryfikacji podpisu, stan przetwarzania oraz oczyszczony hash surowego ciała. |
+| REST API | Metoda, ścieżka, środowisko, identyfikator żądania, kod odpowiedzi oraz oczyszczone parametry. |
+
+Nigdy nie umieszczaj haseł, tokenów dostępu, API sekretów, pełnych podpisów, kluczy prywatnych ani nieocenzurowanych danych osobowych w diagnostyce.
+
+<h2 id="before-escalating">Przed eskalacją</h2>
+
+- Próba ponowna tylko wtedy, gdy operacja zostanie udokumentowana jako bezpieczna do ponownej próby.
+- Po upływie czasu zapytania o oryginalny identyfikator firmy zamiast tworzenia nowego.
+- Potwierdzaj system zegara i środowiska uwierzytelniania pod kątem błędów sygnatury.
+- Zachowuj pierwsze niepowodzenie oraz ewentualne późniejsze wyniki powtórek.
+- Użyj [Szablonu Żądania Wsparcia](/pl/resources/support-request-template), aby wysłać kompletny, zredagowany raport.
+
+<h2 id="related-docs">Powiązane dokumenty</h2>
+
+<CardGroup cols={3}>
+<Card title="Trading Widget Szybki Początek" icon="fa-duotone fa-chart-line" href="/pl/sdk/trading-widget/quick-start">
+Zweryfikować ładowanie skryptów, rozmiar kontenera, konfigurację i wywołania zwrotne.
+</Card>
+<Card title="Sekrety i podpisywanie" icon="fa-duotone fa-shield-keyhole" href="/pl/sdk/security/secrets-signing">
+Sprawdź Agent SDK dane uwierzytelniające, zegary i pola podpisane.
+</Card>
+<Card title="Webhooki i Idempotencja" icon="fa-duotone fa-webhook" href="/pl/sdk/security/webhooks-idempotency">
+Przejrzyj weryfikację oddzwonienia i obsługę podwójnych zdarzeń.
+</Card>
+</CardGroup>

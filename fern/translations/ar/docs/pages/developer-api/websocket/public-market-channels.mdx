@@ -1,0 +1,84 @@
+---
+title: "WebSocket قنوات بيانات السوق العامة"
+description: "قم ببث دفاتر الطلبات 6MM والتداولات وبيانات الشموع وبيانات التداول عبر قنوات WebSocket العامة مع إرشادات الاشتراك وإعادة الاتصال."
+slug: developer-api/websocket/public-market-channels
+canonical-url: https://docs.6mm.com/ar/developer-api/websocket/public-market-channels
+---
+
+استخدم قنوات السوق العامة عندما يحتاج التطبيق إلى تحديث مستمر للأسعار أو الصفقات أو شموع الدموع أو عمق دفتر الطلبات دون تكرار استطلاعات REST نقاط النهاية. يمكن لهذه التدفقات دعم شاشات التداول، وعرض الأسعار، والتنبيهات، ومراقبة السوق.
+
+<h2 id="connection-url">URL الاتصال</h2>
+
+```
+wss://ws.6mm.com/ws
+```
+
+WebSocket العام لا يتطلب التحقق من المصادقة.
+
+لدورة حياة الاتصال، إلغاء الاشتراك، التنبيه، وإعادة الاتصال، راجع [اتصال، اشتراك & نبضات القلب](/ar/developer-api/websocket/connection-subscription-and-heartbeat).
+
+<h2 id="common-channels">القنوات المشتركة</h2>
+
+| القناة                            | الوصف                                                        |
+| ---------------------------------- | ------------------------------------------------------------------ |
+| `market.depth.{symbol}`            | عمق دفتر الطلبات. يرسل لقطة أولا، ثم تحديثات تدريجية |
+| `market.trade.{symbol}`            | أحدث الصفقات                                                      |
+| `market.kline.{symbol}.{interval}` | كلاينز                                                             |
+| `market.ticker.{symbol}`           | ملخص رمز واحد                                       |
+| `market.tickers`                   | ملخص رموز كاملة                                          |
+
+<h2 id="choose-a-channel">اختر قناة</h2>
+
+| الحاجة إلى التطبيق | القناة |
+| --- | --- |
+| بناء أو صيانة دفتر الطلبات | `market.depth.{symbol}` |
+| عرض بث تداول مباشر | `market.trade.{symbol}` |
+| ارسم مخطط الشمعدان | `market.kline.{symbol}.{interval}` |
+| عرض ملخص السوق | `market.ticker.{symbol}` |
+| حافظ على نظرة عامة على السوق | `market.tickers` |
+
+<h2 id="subscription-example">مثال على الاشتراك</h2>
+
+```json
+{ "id": "1772007814666", "op": "subscribe", "args": ["market.depth.BTCUSDT"] }
+```
+
+<h2 id="push-message-wrapper">غلاف الرسالة الدفعية</h2>
+
+```json
+{
+  "topic": "market.depth.BTCUSDT",
+  "event": "data",
+  "ts": 1772007815000,
+  "data": {}
+}
+```
+
+استخدم `topic` لتوجيه كل رسالة إلى المعالج الصحيح `ts` لمراقبة توقيت التسليم. يحتوي كائن `data` على الحمولة الخاصة بالقناة المشتركة.
+
+<h2 id="order-book-handling">التعامل مع دفتر الأوامر</h2>
+
+قناة العمق ترسل لقطة أولا ثم تحديثات تدريجية. قم بتهيئة الكتاب المحلي من اللقطة قبل تطبيق التحديثات. بعد إعادة الاتصال، أنشئ جلسة جديدة، اشترك مرة أخرى، وأعد بناء الكتاب المحلي من اللقطة التالية بدلا من الاستمرار من حالة الذاكرة القديمة.
+
+<h2 id="production-recommendations">توصيات الإنتاج</h2>
+
+- إنشاء `id` فريد لكل طلب اشتراك، إلغاء الاشتراك، وطلب ping.
+- تأكيد تأكيدات الاشتراك قبل اعتبار القناة كقناة نشطة.
+- إعادة الاشتراك في كل موضوع مطلوب بعد إعادة الاتصال.
+- الحفاظ على قراءة الشبكة منفصلة عن معالجة قواعد البيانات أو واجهة المستخدم الأبطأ.
+- مراقبة تردد الانقطاع، وتأخر معالجة الرسائل، والحمولات المشوهة.
+- استخدم [قناة المستخدم الخاصة](/ar/developer-api/websocket/private-user-channel) لتحديثات الحساب والطلبات المصادقة.
+
+<h2 id="related-api-docs">وثائق API ذات صلة</h2>
+
+<CardGroup cols={3}>
+<Card title="نظرة عامة WebSocket" icon="fa-duotone fa-wave-pulse" href="/ar/developer-api/websocket">
+اختر بين اتصالات البث العامة والخاصة.
+</Card>
+<Card title="الاتصال & نبض القلب" icon="fa-duotone fa-heart-pulse" href="/ar/developer-api/websocket/connection-subscription-and-heartbeat">
+نفذ إدارة الاشتراك، إلغاء الاشتراك، التنبيه، وإعادة الاتصال.
+</Card>
+<Card title="REST بيانات السوق" icon="fa-duotone fa-chart-line" href="/ar/developer-api/rest-api/market-data">
+استخدم بيانات السوق القائمة على الطلبات جنبا إلى جنب مع قنوات البث.
+</Card>
+</CardGroup>

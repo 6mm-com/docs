@@ -1,0 +1,60 @@
+---
+title: "Kody błędów i rozwiązywanie problemów"
+description: "Diagnozuj 6MM API błędów za pomocą kodów odpowiedzi, wiadomości, identyfikatorów żądań, wskazówek dotyczących ponownej próby, kontroli uwierzytelniania oraz kroków rozwiązywania problemów z integracją."
+slug: developer-api/error-codes-and-troubleshooting
+canonical-url: https://docs.6mm.com/pl/developer-api/error-codes-and-troubleshooting
+---
+
+<h2 id="error-response-format">Format odpowiedzi na błędy</h2>
+
+```json
+{
+  "code": 1003,
+  "message": "Invalid token",
+  "requestId": "req-12345678"
+}
+```
+
+Błędy biznesowe zazwyczaj nadal zwracają zunifikowaną strukturę JSON . Integratory powinny najpierw `code` sprawdzić. Niepowodzenia uwierzytelniania mogą zwracać HTTP `401`; ograniczenie szybkości może zwracać HTTP `429`.
+
+<h2 id="common-error-codes">Typowe kody błędów</h2>
+
+| Kod błędu      | Opis                                  |
+| --------------- | -------------------------------------------- |
+| `0`             | Sukces                                      |
+| `1001`          | Brak podanych ważnych informacji uwierzytelniających |
+| `1002`          | Token wygasł                                |
+| `1003`          | Nieprawidłowy token, API Keylub sygnatura         |
+| `1004`          | Token cofnięty                                |
+| `1006`          | Źródło IP niezgodności                           |
+| `2001`          | Brakujący wymagany parametr                   |
+| `2002`          | Nieprawidłowa wartość parametru                      |
+| `2003`          | Parametr poza zakresem                       |
+| `3001`          | Niewystarczająca równowaga                         |
+| `3003`          | Nie znaleziono porządku                              |
+| `3004`          | Podwójne żądanie                            |
+| `3005`          | Zamówienia nie można anulować                     |
+| `3006`          | Pozwolenie odrzucone                            |
+| `3100` - `3112` | Błąd walidacji parametrów kolejności warunków   |
+| `5001`          | Wewnętrzny błąd serwera                        |
+| `5002`          | Usługa tymczasowo niedostępna              |
+| `5003`          | Uruchomienie limitu stawek                         |
+
+<h2 id="troubleshooting">Rozwiązywanie problemów</h2>
+
+| Problem                                     | Rekomendacja                                                                                   |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `1001` brak ważnych informacji uwierzytelniających  | Sprawdź, czy `Authorization: Bearer <accessToken>` czy `X-API-KEY` jest w cenie.                  |
+| `1002` Token wygasł                        | Odśwież Token lub zaloguj się ponownie, zanim spróbujesz ponownie.                                                   |
+| `1003` nieprawidłowy Token, API Keylub sygnatura | Sprawdź API Key, ładunek podpisu, ciało żądania JSON ciąg oraz zapytanie o kolejność parametrów.           |
+| `1006` źródło IP niezgodności                   | Sprawdź konfigurację API Key IP białej listy.                                                    |
+| `3004` duplikat prośby                    | Nie używaj tego samego podpisu ponownie dla ścieżek związanych z porządkiem. Generuj `timestamp` i `signature`. |
+| `5003` uruchomiony limit prędkości                 | Zmniejsz częstotliwość żądań i stosuj wykładnicze cofanie się przy ponownych próbach.                                |
+| `Timestamp outside of tolerance window`     | Zadzwoń do `/v1/time` , aby skalibrować przesunięcie czasu i podpisz wniosek ponownie.                             |
+
+<h2 id="related-diagnostic-guides">Powiązane przewodniki diagnostyczne</h2>
+
+- [Środowiska i wspólne konwencje](/pl/developer-api/environments-and-common-conventions)
+- [Uwierzytelnianie](/pl/developer-api/authentication)
+- [Rekomendacje integracyjne](/pl/developer-api/integration-recommendations)
+- [Szablon Request Wsparcia](/pl/resources/support-request-template)

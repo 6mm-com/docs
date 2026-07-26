@@ -1,0 +1,137 @@
+---
+title: "Flux de travail de trading"
+description: "6MM prend en charge les contrats perpétuels à marge U, permettant aux utilisateurs de trader des contrats à terme perpétuels réglés et margés dans les stablecoins (par exemple USDT)."
+slug: trading/getting-started/trading-workflow
+canonical-url: https://docs.6mm.com/fr/trading/getting-started/trading-workflow
+---
+
+<h2 id="u-margined-perpetual-contracts">Contrats perpétuels à marge en U</h2>
+
+6MM prend en charge les contrats perpétuels à marge U, permettant aux utilisateurs de trader des contrats à terme perpétuels réglés et margés dans les stablecoins (par exemple USDT).
+
+Cette section explique le flux de travail principal du trading et les mécanismes clés impliqués dans le placement et la gestion des ordres contractuels perpétuels sur 6MM.
+
+***
+
+<h2 id="contract-overview">Aperçu du contrat</h2>
+
+* Type de contrat : Contrats perpétuels à marge en U
+* Actif de règlement : stablecoin (par exemple USDT)
+* Pas d’expiration : Les postes n’expirent pas et peuvent être conservés indéfiniment
+* Contrôle du risque basé sur le prix Mark : utilisé pour le calcul et la liquidation des marges
+
+***
+
+<h2 id="order-types">Types d’ordre</h2>
+
+6MM prend en charge les types d’ordres couramment utilisés pour s’adapter à différentes stratégies de trading :
+
+<h2 id="market-order">Ordre du marché</h2>
+
+* Exécute immédiatement au meilleur prix disponible sur le marché
+* Privilégie la rapidité d’exécution plutôt que la précision des prix
+* Adapté à une entrée ou sortie rapide
+
+<h2 id="limit-order">Ordre Limite</h2>
+
+* Exécute uniquement au prix spécifié ou mieux
+* Assure le contrôle des prix
+* Peut rester ouvert jusqu’à ce qu’il soit rempli ou annulé
+
+<h2 id="stop-order">Ordre d’arrêt</h2>
+
+* Déclenche un ordre à marché ou à limite une fois le prix déclencheur atteint
+* Couramment utilisé pour les stratégies stop-loss ou breakout
+
+> disponibilité des ordres peut varier selon la paire de trading et le mode d’intégration.
+
+***
+
+<h2 id="leverage-and-margin">Levier et marge</h2>
+
+* L’effet de levier permet aux utilisateurs de contrôler des positions plus importantes avec moins de capital
+* La marge est calculée sur la base de :
+  * Taille de la position
+  * Niveau de levier
+  * Marque prix
+
+Un levier plus élevé augmente les rendements potentiels mais aussi le risque de liquidation.
+
+***
+
+<h2 id="funding-rate-mechanism">Mécanisme de taux de financement</h2>
+
+Les contrats perpétuels utilisent un mécanisme de taux de financement pour maintenir les prix des contrats alignés avec le marché au comptant.
+
+* Les paiements de financement ont lieu à intervalles programmés
+* Si le taux de financement est positif :
+  * Les positions longues rémunèrent à court
+* Si le taux de financement est négatif :
+  * Les positions courtes paient les positions longues
+
+Les frais de financement sont échangés directement entre les traders.
+
+6MM ne perçoit pas les paiements de financement comme revenus.
+
+***
+
+<h2 id="fees-and-slippage">Frais et dégagements</h2>
+
+<h2 id="trading-fees">Frais de négociation</h2>
+
+* Les frais sont facturés lors de l’exécution des ordres
+* Les tarifs peuvent différer pour :
+  * Ordres de fabricant
+  * Ordres de preneur
+
+Les grilles tarifaires sont définies par la plateforme partenaire et peuvent varier.
+
+<h2 id="slippage">Glissement</h2>
+
+* Le glissement se produit lorsque la liquidité du marché est insuffisante pour exécuter un ordre au prix attendu
+* Plus fréquent en période de forte volatilité ou lors d’ordres au marché
+
+Les utilisateurs peuvent réduire le glissement en utilisant des ordres à durée limitée et en gérant la taille des commandes.
+
+***
+
+<h2 id="position-lifecycle">Cycle de vie de la position</h2>
+
+1. Les fonds sont alloués au Compte Perpétuel
+2. Une commande est passée et appariée par le moteur de correspondance 6MM
+3. Un poste est ouvert lors de son exécution
+4. Mise à jour des marges et PnL en temps réel
+5. Les frais de financement sont appliqués à des intervalles programmés
+6. La position est fermée manuellement ou via TP/SL
+7. Le PnL final est réglé au compte perpétuel
+
+***
+
+<h2 id="risk-management-and-liquidation">Gestion des risques et liquidation</h2>
+
+* 6MM surveille les rapports de marge en temps réel
+* Lorsque la marge tombe en dessous du seuil de maintenance :
+  * Les positions peuvent être partiellement ou totalement liquidées
+* Les prix de liquidation sont calculés en utilisant le prix de marque, et non le dernier prix négocié
+
+Ce mécanisme aide à réduire les liquidations inutiles causées par la volatilité du marché à court terme.
+
+***
+
+<h2 id="summary">Résumé</h2>
+
+Le flux de travail de trading perpétuel à marge U sur 6MM est conçu pour :
+
+* Fournir des types d’ordre familiers et flexibles
+* Maintenir l’alignement des prix grâce aux taux de financement
+* Offrir des mécanismes transparents de frais et de règlement
+* Mettre en œuvre un contrôle des risques de niveau institutionnel
+
+Cette structure permet aux partenaires d’offrir un trading perpétuel professionnel tout en maintenant une expérience utilisateur fluide.
+
+<h2 id="related-trading-guides">Guides de trading connexes</h2>
+
+- [Contrats perpétuels](/fr/trading/perpetual-contracts) : notions de base sur les contrats, le financement, la marge et le règlement.
+- [Types d’ordre](/fr/trading/order-types) : comportements limites, de marché, conditionnels et temporel.
+- [Frais & Glissement des charges](/fr/trading/fees-and-slippage) : coût d’exécution et impact sur la liquidité.
+- [Risque & Liquidations](/fr/trading/risk-and-liquidations) : risque de marge et comportement de fermeture forcée.

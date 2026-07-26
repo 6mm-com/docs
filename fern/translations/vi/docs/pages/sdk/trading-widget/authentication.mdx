@@ -1,0 +1,95 @@
+---
+title: "Trading Widget Xác thực"
+subtitle: "Sử dụng partner-token cho các tích hợp SSO giao dịch nhúng mới."
+slug: sdk/trading-widget/authentication
+canonical-url: https://docs.6mm.com/vi/sdk/trading-widget/authentication
+---
+
+<h2 id="recommended-mode-partner-token">Chế độ khuyến nghị: partner-token</h2>
+
+partner-token tránh đặt token ngắn trong URL và giữ apiSecret trên backend đối tác.
+
+```js
+const widget = TradingWidget.create('#trading-widget', {
+  baseUrl: 'https://app.6mm.com',
+  auth: {
+    mode: 'partner-token',
+    tokenProvider: async ({ channelId, symbol, reason }) => {
+      const resp = await fetch('/api/trading/embed-token', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ channelId, symbol, reason }),
+      })
+
+      if (!resp.ok) {
+        throw new Error('Failed to request embed token')
+      }
+
+      return resp.json()
+    },
+  },
+})
+```
+
+<h2 id="related-documentation">Tài liệu liên quan</h2>
+
+- [Create Embed Token](/vi/sdk/agent-sdk/java/embed-token): ví dụ phát hành token backend.
+- [Trading Widget Khởi động nhanh](/vi/sdk/trading-widget/quick-start): quy trình khởi tạo hoàn chỉnh.
+- [Secrets & Signing](/vi/sdk/security/secrets-signing): giữ thông tin đăng nhập Privileged Agent ở backend.
+- [Khắc phục sự cố](/vi/sdk/security/troubleshooting): chẩn đoán các lỗi phiên làm việc, token, nguồn gốc và khởi tạo.
+
+<h2 id="backend-flow">Quy trình phía sau</h2>
+
+```text
+1. Partner frontend receives auth_request from the iframe.
+2. SDK calls tokenProvider.
+3. Partner frontend calls its own backend.
+4. Partner backend validates the partner session.
+5. Partner backend calls 6MM Agent API or Java SDK createEmbedToken.
+6. SDK sends embedToken to the iframe through postMessage.
+7. iframe exchanges embedToken for a 6MM access token.
+8. iframe continues initialization and emits ready.
+```
+
+<h2 id="tokenprovider-contract">hợp đồng tokenProvider</h2>
+
+| Lĩnh vực | Hướng đi | Mô tả |
+| --- | --- | --- |
+| channelId | SDK -> Đối tác phía sau | Định danh phiên widget duy nhất. Backend nên chuyển cho createEmbedToken. |
+| biểu tượng | SDK -> Đối tác phía sau | Biểu tượng giao dịch được yêu cầu hiện tại. Dùng nó để kiểm tra token khi cần. |
+| lý do | SDK -> Đối tác phía sau | Tại sao SDK lại yêu cầu token, chẳng hạn như tải ban đầu hoặc làm mới. |
+| embedToken | Backend đối tác -> SDK | Token tồn tại ngắn hạn được tạo bởi Agent SDK hoặc Agent API. |
+| expireAt | Backend đối tác -> SDK | Dấu thời gian hết hạn của token được trả về bởi 6MM. |
+
+<h2 id="failure-handling">Xử lý lỗi</h2>
+
+| Tình trạng | Khuyến nghị sử dụng |
+| --- | --- |
+| Phiên đối tác đã hết hạn | Trả về 401 từ điểm cuối đối tác và yêu cầu người dùng đăng nhập lại. |
+| Việc tạo token tạm thời thất bại | Hiển thị lỗi trong tokenProvider và cho phép widget xuất hiện lỗi xác thực. |
+| channelId sự không khớp | Từ chối yêu cầu và tạo lại phiên bản widget. |
+| Người dùng không được phép giao dịch | Trả về lỗi do đối tác kiểm soát và không tạo token nhúng. |
+
+<h2 id="compatibility-mode-agent-sso">Chế độ tương thích: agent-sso</h2>
+
+agent-sso giữ lại luồng vé /agent-entry cũ hơn. Ưu tiên token đối tác cho các tích hợp mới.
+
+```js
+const widget = TradingWidget.create('#trading-widget', {
+  baseUrl: 'https://app.6mm.com',
+  auth: {
+    mode: 'agent-sso',
+    entryUrlProvider: async ({ redirectPath }) => {
+      const resp = await fetch('/api/trading-entry', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ redirectPath }),
+      })
+      const data = await resp.json()
+      return data.webUrl
+    },
+  },
+})
+```

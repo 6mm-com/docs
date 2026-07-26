@@ -1,0 +1,111 @@
+---
+title: "Dữ liệu thị trường"
+description: "Sử dụng dữ liệu thị trường 6MM chưa xác thực REST điểm cuối để truy xuất các biểu tượng, mã số, sổ lệnh, giao dịch và các thông tin giao dịch công khai khác."
+slug: developer-api/rest-api/market-data
+canonical-url: https://docs.6mm.com/vi/developer-api/rest-api/market-data
+---
+
+Dữ liệu thị trường REST điểm cuối không yêu cầu xác thực.
+
+<h2 id="symbol-configuration">Cấu hình ký hiệu</h2>
+
+```http
+GET /v1/public/market/symbols
+```
+
+Các trường phản hồi phổ biến:
+
+| Lĩnh vực                      | Loại   | Mô tả                   |
+| -------------------------- | ------ | ----------------------------- |
+| `list[].symbol`            | string | Biểu tượng                        |
+| `list[].baseAsset`         | string | Tài sản cơ sở                    |
+| `list[].quoteAsset`        | string | Tài sản báo giá                   |
+| `list[].minQuantity`       | string | Số lượng đặt hàng tối thiểu        |
+| `list[].minNotional`       | string | Giá trị lý tưởng tối thiểu        |
+| `list[].tickSize`          | string | Kích thước tick giá               |
+| `list[].stepSize`          | string | Kích thước bước số lượng            |
+| `list[].pricePrecision`    | int64  | Độ chính xác giá cả               |
+| `list[].maxLimitOrderQty`  | string | Giới hạn số lượng đặt hàng tối đa  |
+| `list[].maxMarketOrderQty` | string | Số lượng đặt hàng tối đa trên thị trường |
+| `list[].maxOpenOrders`     | int64  | Số lệnh mở tối đa trên mỗi người dùng  |
+| `list[].defaultLeverage`   | int64  | Đòn bẩy mặc định              |
+| `list[].defaultMarginMode` | int64  | Chế độ lề mặc định           |
+| `list[].leverageTiers[]`   | array  | Các cấp ký quỹ đòn bẩy         |
+| `handlingFeeLevelConfig[]` | array  | Cấu hình cấp phí        |
+
+<h2 id="funding-rate-configuration">Cấu hình lãi suất tài trợ</h2>
+
+```http
+GET /v1/public/market/funding-rate?symbol=BTCUSDT
+```
+
+Tham số yêu cầu:
+
+| Tham số | Loại   | Bắt buộc | Mô tả                     |
+| --------- | ------ | -------- | ------------------------------- |
+| `symbol`  | string | Không       | Nếu bỏ qua, trả về tất cả các ký hiệu |
+
+<h2 id="current-funding-rate">Tỷ lệ tài trợ hiện tại</h2>
+
+```http
+GET /v1/public/market/funding-rate/current?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+Tham số yêu cầu:
+
+| Tham số  | Loại   | Bắt buộc | Mô tả                  |
+| ---------- | ------ | -------- | ---------------------------- |
+| `symbol`   | string | Không       | Biểu tượng                       |
+| `page`     | int32  | Không       | Số trang, `1` mặc định     |
+| `pageSize` | int32  | Không       | Số lượng mục trên mỗi trang, `20` mặc định |
+
+<h2 id="funding-rate-history">Lịch sử tỷ lệ tài trợ</h2>
+
+```http
+GET /v1/public/market/funding-rate/history?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+Tham số yêu cầu:
+
+| Tham số   | Loại   | Bắt buộc | Mô tả                  |
+| ----------- | ------ | -------- | ---------------------------- |
+| `symbol`    | string | Đúng vậy      | Biểu tượng                       |
+| `startTime` | int64  | Không       | Thời gian bắt đầu                   |
+| `endTime`   | int64  | Không       | Thời gian kết thúc                     |
+| `page`      | int32  | Không       | Số trang, `1` mặc định     |
+| `pageSize`  | int32  | Không       | Số lượng mục trên mỗi trang, `20` mặc định |
+
+<h2 id="klines">Klines</h2>
+
+```http
+GET /v1/public/market/klines?symbol=BTCUSDT&interval=1m&limit=500
+```
+
+Tham số yêu cầu:
+
+| Tham số   | Loại   | Bắt buộc | Mô tả                                                              |
+| ----------- | ------ | -------- | ------------------------------------------------------------------------ |
+| `symbol`    | string | Đúng vậy      | Biểu tượng                                                                   |
+| `interval`  | string | Đúng vậy      | Quãng, như `1m`, `5m`, `15m`, `30m`, `1h`, `4h`, `1d`, `1w`, `1M` |
+| `priceType` | string | Không       | `indexPrice` / `markPrice`. Nếu bỏ sót, giá sẽ trả về Klines       |
+| `startTime` | int64  | Không       | Thời gian bắt đầu                                                               |
+| `endTime`   | int64  | Không       | Thời gian kết thúc                                                                 |
+| `limit`     | int32  | Không       | Số lượng mặt hàng trả lại, `500`mặc định, tối đa `1000`                  |
+
+Trường phản hồi:
+
+| Lĩnh vực              | Loại   | Mô tả |
+| ------------------ | ------ | ----------- |
+| `list[].openTime`  | int64  | Thời gian mở cửa   |
+| `list[].open`      | string | Giá mở cửa  |
+| `list[].high`      | string | Giá cao  |
+| `list[].low`       | string | Giá thấp   |
+| `list[].close`     | string | Giá đóng cửa |
+| `list[].volume`    | string | Thể tích      |
+| `list[].closeTime` | int64  | Thời gian đóng cửa  |
+
+<h2 id="related-documentation">Tài liệu liên quan</h2>
+
+- [Điểm cuối công khai](/vi/developer-api/rest-api/public-endpoints)
+- [Kênh WebSocket công cộng](/vi/developer-api/websocket/public-market-channels)
+- [Độ sâu thị trường & Chênh lệch](/vi/solutions/market-depth-spread)

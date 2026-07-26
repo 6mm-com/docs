@@ -1,0 +1,89 @@
+---
+title: "Kết nối, Đăng ký & Nhịp tim"
+subtitle: "Kết nối với các luồng 6MM WebSocket , đăng ký theo dõi chủ đề, giữ kết nối duy trì và xử lý phong bì tin nhắn một cách an toàn."
+slug: developer-api/websocket/connection-subscription-and-heartbeat
+canonical-url: https://docs.6mm.com/vi/developer-api/websocket/connection-subscription-and-heartbeat
+---
+
+Sử dụng luồng WebSocket cho dữ liệu thị trường và cập nhật trạng thái người dùng riêng tư phải luôn cập nhật mà không cần thăm dò.
+
+<h2 id="connection-url">Kết nối URL</h2>
+
+```text
+wss://ws.6mm.com/ws
+```
+
+Luồng riêng tư yêu cầu ngữ cảnh xác thực như listenKey hoặc mã truy cập như được mô tả trong tài liệu kênh riêng.
+
+<h2 id="subscribe">Đăng ký</h2>
+
+```json
+{ "id": "1772007814666", "op": "subscribe", "args": ["market.depth.BTCUSDT"] }
+```
+
+Xác nhận đăng ký thành công:
+
+```json
+{
+  "id": "1772007814666",
+  "event": "subscribe",
+  "success": true,
+  "data": ["market.depth.BTCUSDT"]
+}
+```
+
+<h2 id="unsubscribe">Hủy đăng ký</h2>
+
+```json
+{ "id": "1772007814667", "op": "unsubscribe", "args": ["market.depth.BTCUSDT"] }
+```
+
+<h2 id="application-ping">Ping ứng dụng</h2>
+
+```json
+{ "id": "1772007814668", "op": "ping", "args": [] }
+```
+
+<h2 id="message-envelope">Phong bì tin nhắn</h2>
+
+Các đợt đẩy công khai sử dụng giới hạn nhất quán:
+
+```json
+{
+  "topic": "market.depth.BTCUSDT",
+  "event": "data",
+  "ts": 1772007815000,
+  "data": {}
+}
+```
+
+<h2 id="operational-recommendations">Khuyến nghị vận hành</h2>
+
+- Tạo một `id` phía khách hàng duy nhất cho mỗi yêu cầu đăng ký, hủy đăng ký và ping.
+- Xem reconnect như một phiên mới và đăng ký lại các chủ đề bắt buộc.
+- Xác minh rằng `topic` trả về phù hợp với kênh mà dịch vụ của bạn mong đợi.
+- Giữ cho xử lý tin nhắn luôn hiệu quả khi liên quan đến các sự kiện đơn hàng riêng tư hoặc tài khoản.
+- Ghi lại thay đổi trạng thái kết nối, xác nhận đăng ký và ngắt kết nối bất thường.
+
+<h2 id="reconnect-workflow">Kết nối lại quy trình làm việc</h2>
+
+1. Đóng hoặc loại bỏ socket trước đó và tạo kết nối mới.
+2. Xác thực lại luồng riêng tư bằng listenKey hoặc mã truy cập hợp lệ.
+3. Đăng ký lại tất cả các chủ đề bắt buộc và chờ đợi các phần xác nhận thành công.
+4. Thay thế trạng thái sổ đơn hàng cục bộ bằng một snapshot mới trước khi áp dụng cập nhật tăng dần.
+5. Đối chiếu các lệnh mở, vị thế và số dư thông qua REST nếu có thể đã bỏ sót các sự kiện riêng tư.
+
+Sử dụng lùi theo hàm mũ bị giới hạn với jitter cho các lần thử kết nối lại. Một thiết bị khách liên tục kết nối lại nên cảnh báo cho nhà điều hành thay vì thử lại vô thời hạn mà không có khả năng hiển thị.
+
+<h2 id="heartbeat-and-stale-connections">Nhịp tim và những kết nối cũ kỹ</h2>
+
+- Theo dõi tin nhắn đến gần đây nhất và xác nhận ping thành công.
+- Sử dụng khoảng nhịp tim và ngưỡng nhàn rỗi đã được phê duyệt cho môi trường sản xuất.
+- Coi kết nối là lỗi khi vượt ngưỡng đã cấu hình, ngay cả khi socket TCP vẫn còn mở.
+- Không tái sử dụng các gói đăng ký từ ổ cắm cũ; Đăng ký lại một cách rõ ràng sau mỗi lần kết nối lại.
+
+<h2 id="related-documentation">Tài liệu liên quan</h2>
+
+- [Kênh Thị trường Công khai](/vi/developer-api/websocket/public-market-channels): chủ đề, tính liên tục của sổ lệnh, giao dịch, nến và mã chứng khoán.
+- [Kênh Người dùng Riêng tư](/vi/developer-api/websocket/private-user-channel): listenKey vòng đời và sự kiện đã xác thực.
+- [Khuyến nghị tích hợp](/vi/developer-api/integration-recommendations): thử lại, tính đồng thời, giám sát và thử nghiệm khởi động.

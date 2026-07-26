@@ -1,0 +1,141 @@
+---
+title: "Poste"
+description: "Utilisez les points de terminaison 6MM positions pour interroger les positions ouvertes, les détails des marges, l’effet de levier, les profits et pertes non réalisés, ainsi que les opérations liées aux positions."
+slug: developer-api/rest-api/position
+canonical-url: https://docs.6mm.com/fr/developer-api/rest-api/position
+---
+
+> **Note**
+>
+> Les points de terminaison de position nécessitent une autorisation commerciale.
+
+<h2 id="set-leverage">Levier de set</h2>
+
+```http
+POST /v1/private/position/leverage
+Content-Type: application/json
+```
+
+Corps de la demande :
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "leverage": 20
+}
+```
+
+Champs de réponse :
+
+| Terrain       | Type   | Description |
+| ----------- | ------ | ----------- |
+| `symbol`    | string | Symbole      |
+| `leverage`  | int32  | Levier    |
+| `timestamp` | int64  | Horodatage   |
+
+<h2 id="set-margin-mode">Définir le mode marge</h2>
+
+```http
+POST /v1/private/position/margin-mode
+Content-Type: application/json
+```
+
+Corps de la demande :
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "marginMode": 1
+}
+```
+
+`marginMode`: `1` croisée, `2` isolée.
+
+<h2 id="position-settings">Paramètres de position</h2>
+
+```http
+GET /v1/private/position/settings?symbol=BTCUSDT
+```
+
+Champs de réponse :
+
+| Terrain        | Type   | Description             |
+| ------------ | ------ | ----------------------- |
+| `symbol`     | string | Symbole                  |
+| `marginMode` | int32  | `1` croix, `2` isolée |
+| `leverage`   | int32  | Levier                |
+
+<h2 id="current-positions">Postes actuels</h2>
+
+```http
+GET /v1/private/position/positions?symbol=BTCUSDT
+```
+
+Paramètres de la demande :
+
+| Paramètre | Type   | Obligatoire | Description |
+| --------- | ------ | -------- | ----------- |
+| `symbol`  | string | Non       | Symbole      |
+
+Champs de réponse :
+
+| Terrain                         | Type   | Description                |
+| ----------------------------- | ------ | -------------------------- |
+| `positions[].symbol`          | string | Symbole                     |
+| `positions[].marginMode`      | string | Mode marge                |
+| `positions[].positionSide`    | string | Côté position              |
+| `positions[].leverage`        | int32  | Levier                   |
+| `positions[].quantity`        | string | Quantité de position          |
+| `positions[].entryPrice`      | string | Prix d’entrée                |
+| `positions[].breakEvenPrice`  | string | Prix d’équilibre           |
+| `positions[].liqPrice`        | string | Prix de liquidation          |
+| `positions[].marginRatio`     | string | Ratio de marge               |
+| `positions[].unrealizedPnl`   | string | PnL non réalisé             |
+| `positions[].roe`             | string | Rendement des capitaux propres           |
+| `positions[].nextFundingFee`  | string | Prochain frais de financement estimé |
+| `positions[].fundingFeeAccum` | string | Frais de financement accumulés    |
+| `positions[].tpPrice`         | string | Prix de prise de profit          |
+| `positions[].slPrice`         | string | Prix de stop-loss            |
+
+<h2 id="position-history">Historique des postes</h2>
+
+```http
+GET /v1/private/position/history?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+Paramètres de la demande :
+
+| Paramètre   | Type   | Obligatoire | Description                  |
+| ----------- | ------ | -------- | ---------------------------- |
+| `symbol`    | string | Non       | Symbole                       |
+| `side`      | string | Non       | `long` / `short`             |
+| `startTime` | int64  | Non       | Heure de début                   |
+| `endTime`   | int64  | Non       | Fin des temps                     |
+| `page`      | int64  | Non       | Numéro de page, `1` par défaut     |
+| `pageSize`  | int64  | Non       | Éléments par page, `20` par défaut |
+
+Champs de réponse :
+
+| Terrain                    | Type   | Description               |
+| ------------------------ | ------ | ------------------------- |
+| `list[].symbol`          | string | Symbole                    |
+| `list[].positionSide`    | string | Côté position             |
+| `list[].leverage`        | int32  | Levier                  |
+| `list[].maxQuantity`     | string | Quantité maximale de position |
+| `list[].entryPrice`      | string | Prix d’entrée               |
+| `list[].closePrice`      | string | Prix proche               |
+| `list[].pnl`             | string | PnL réalisé              |
+| `list[].roe`             | string | Rendement des capitaux propres          |
+| `list[].marginMode`      | string | Mode marge               |
+| `list[].triggerMode`     | int32  | Mode de détente fermée        |
+| `list[].fundingFeeAccum` | string | Frais de financement accumulés   |
+| `list[].openedAt`        | int64  | Heures ouvertes                 |
+| `list[].closedAt`        | int64  | Temps de fermeture                |
+| `total`                  | int64  | Comptage total               |
+
+<h2 id="related-documentation">Documentation associée</h2>
+
+- [Règles de marge](/fr/trading/margin-rules)
+- [Mécanique de levier](/fr/trading/leverage-mechanics)
+- [Risques & Liquidations](/fr/trading/risk-and-liquidations)
+- [Canal utilisateur privé](/fr/developer-api/websocket/private-user-channel)

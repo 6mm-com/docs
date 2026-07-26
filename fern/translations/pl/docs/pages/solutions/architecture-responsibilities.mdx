@@ -1,0 +1,39 @@
+---
+title: "Architektura i obowiązki"
+subtitle: "Wyjaśnij, co posiada system partnerski i co 6MM infrastruktura zapewnia w wdrożeniach handlu wbudowanego."
+slug: solutions/architecture-responsibilities
+canonical-url: https://docs.6mm.com/pl/solutions/architecture-responsibilities
+---
+
+Czyste wprowadzenie wbudowanego handlu zależy od jasno określonych granic odpowiedzialności. Systemy partnerskie powinny utrzymywać wrażliwą własność biznesu, jednocześnie 6MM zapewniać infrastrukturę handlową i możliwości cyklu życia.
+
+<h2 id="responsibility-model">Model odpowiedzialności</h2>
+
+| Obszar | System partnerski | 6MM infrastruktura |
+| --- | --- | --- |
+| Relacje użytkownika | Posiada konto użytkownika, stan logowania, tożsamość obsługi klienta oraz sprawdzenie kwalifikacji. | Otrzymuje zweryfikowany kontekst wejścia do handlu i utrzymuje stan po stronie handlowej. |
+| Sekrety i podpisywanie | Partner magazynowy API klucze na zapleczu i podpisuje żądania po stronie serwera. | Weryfikuje podpisane żądania i przetwarza autoryzowane działania. |
+| Doświadczenie handlowe | Zapewnia punkty wejścia, nawigację oraz kontekst produktu. | Zapewnia interfejs handlowy, cykl życia zlecenia, dane rynkowe, pozycje, ryzyko oraz zachowanie rozliczeniowe. |
+| Eksploatacja | Zajmuje się przepływami wsparcia, analityką biznesową oraz eskalacją wewnętrzną. | Emituje zdarzenia, webhooki i informacje o statusie potrzebne do integracji. |
+
+<h2 id="production-principles">Zasady produkcji</h2>
+
+- Zachowaj wszystkie sekrety partnerów na zapleczu.
+- Traktuj tokeny osadzania jako krótkotrwałe dane do wejścia.
+- Przetwarzanie webhooków idempotentnie i przechowywanie identyfikatorów zdarzeń.
+- Stosowanie monitoringu dotyczącego wydawania tokenów, przepływów transferów oraz zmian stanu zamówienia.
+- Utrzymanie spójności tekstów skierowanych do klientów na stronach wejściowych, handlowych i wsparcia.
+
+<h2 id="related-docs">Powiązane dokumenty</h2>
+
+<CardGroup cols={3}>
+<Card title="Uwierzytelnianie" icon="fa-duotone fa-user-shield" href="/pl/developer-api/authentication">
+Przeanalizuj oczekiwania dotyczące uwierzytelniania backendu.
+</Card>
+<Card title="Podpisywanie wniosków" icon="fa-duotone fa-signature" href="/pl/developer-api/request-signing">
+Zrozum API rozmowy z sygnałem.
+</Card>
+<Card title="Bezpieczeństwo Webhooka" icon="fa-duotone fa-webhook" href="/pl/sdk/security/webhooks-idempotency">
+Bezpiecznie realizuj wydarzenia.
+</Card>
+</CardGroup>

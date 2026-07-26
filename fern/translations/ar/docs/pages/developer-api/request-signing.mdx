@@ -1,0 +1,160 @@
+---
+title: "توقيع طلبات التوقيع"
+description: "توقيع 6MM API الطلبات باستخدام HMAC-SHA256 باستخدام الحمولة المطلوبة، والطابع الزمني، ومفتاح API ، ورؤوس التوقيع، وقواعد التحقق."
+slug: developer-api/request-signing
+canonical-url: https://docs.6mm.com/ar/developer-api/request-signing
+---
+
+<h2 id="request-format">تنسيق الطلب</h2>
+
+| الموقع | الميدان       | مطلوب            | الوصف                                   |
+| -------- | ----------- | ------------------- | --------------------------------------------- |
+| الرأس   | `X-API-KEY` | نعم                 | `apiKey` يعود عند إنشاء API Key |
+| استعلام    | `timestamp` | نعم                 | طابع زمني بمللي ثانية يونكس                    |
+| استعلام    | `signature` | نعم                 | HMAC- توقيعSHA256 ، وتر سداسي صغير   |
+| الجسم     | JSON        | يعتمد على نقطة النهاية | POST / PUT / DELETE هيئة الطلب              |
+
+<h2 id="signature-payload">الحمولة المميزة</h2>
+
+```
+payload = queryStringWithoutSignature + requestBody
+signature = HMAC-SHA256(apiSecret, payload)
+```
+
+القواعد الرئيسية:
+
+* يجب أن يكون `timestamp` طابع زمني بحجم يونكس بمقدار مللي ثانية. نافذة تحمل الخادم هي ±10 ثوان.
+* `signature` توضع في سلسلة الاستعلام URL ، لكنها غير مدرجة في حمولة التوقيع.
+* يتحقق الخادم من سلسلة الاستعلام الأصلية بعد إزالة `signature`; لا يعيد ترتيب معلمات الاستعلام.
+* يجب أن يتطابق ترتيب معلمات الاستعلام المستخدم للتوقيع مع الطلب الفعلي URL.
+* إذا كان هناك جسم طلب، يجب أن يتطابق السلسلة JSON المستخدمة للتوقيع تماما مع الجسم المرسل الفعلي.
+* المسارات المتعلقة بالترتيب تقوم بفحص إعادة تشغيل التوقيع. إعادة استخدام نفس التوقيع خلال فترة قصيرة تعود `Signature replay detected`.
+
+<h2 id="server-time">وقت الخادم</h2>
+
+```http
+GET /v1/time
+```
+
+مثال على الرد:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "timestamp": 1780473256,
+    "timestampMs": 1780473256708,
+    "iso": "2026-06-03T07:54:16Z",
+    "timezone": "UTC"
+  },
+  "requestId": "req-7cad3113"
+}
+```
+
+يجب على العملاء حساب `timeOffsetMs = serverTimestampMs - localTimestampMs`، ثم استخدام `timestamp = nowMs + timeOffsetMs` للطلبات الموقعة لاحقا. إذا أعاد الخادم `Timestamp outside of tolerance window`، يعيد المزامنة فورا ويعيد توليد التوقيع.
+
+<h2 id="get-signing-example">مثال GET على الإشارة</h2>
+
+الطلب الفعلي:
+
+```
+GET /v1/private/order/current?symbol=BTCUSDT&timestamp=1772710377808&signature=...
+```
+
+الحمولة المميزة:
+
+```
+symbol=BTCUSDT&timestamp=1772710377808
+```
+
+<h2 id="post-signing-example">مثال POST على الإشارة</h2>
+
+الطلب الفعلي:
+
+```
+POST /v1/private/order/place?timestamp=1772710377808&signature=...
+```
+
+نص الطلب:
+
+```json
+{"symbol":"BTCUSDT","type":"LIMIT","side":"BUY","price":"85000","quantity":"0.1","timeInForce":"GTC","makerOnly":true,"clientOrderId":"ext-1772710377808-001"}
+```
+
+الحمولة المميزة:
+
+```
+timestamp=1772710377808{"symbol":"BTCUSDT","type":"LIMIT","side":"BUY","price":"85000","quantity":"0.1","timeInForce":"GTC","makerOnly":true,"clientOrderId":"ext-1772710377808-001"}
+```
+
+<h2 id="python-signing-example">مثال على توقيع بايثون</h2>
+
+```python
+import hashlib
+import hmac
+import json
+import time
+from urllib.parse import urlencode
+
+import requests
+
+BASE_URL = "https://api.6mm.com"
+API_KEY = "YOUR_API_KEY"
+API_SECRET = "YOUR_API_SECRET"
+TIME_OFFSET_MS = 0
+
+def sign(payload: str) -> str:
+    return hmac.new(
+        API_SECRET.encode("utf-8"),
+        payload.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+
+def sync_time_offset():
+    global TIME_OFFSET_MS
+    before = int(time.time() * 1000)
+    resp = requests.get(f"{BASE_URL}/v1/time", timeout=5)
+    after = int(time.time() * 1000)
+    resp.raise_for_status()
+
+    server_ts = int(resp.json()["data"]["timestampMs"])
+    local_midpoint = (before + after) // 2
+    TIME_OFFSET_MS = server_ts - local_midpoint
+
+def signed_request(method: str, path: str, params=None, body=None):
+    params = dict(params or {})
+    params["timestamp"] = str(int(time.time() * 1000) + TIME_OFFSET_MS)
+
+    query_string = urlencode(params)
+    body_string = ""
+    if body is not None:
+        body_string = json.dumps(body, separators=(",", ":"), ensure_ascii=False)
+
+    signature = sign(query_string + body_string)
+    url = f"{BASE_URL}{path}?{query_string}&signature={signature}"
+    headers = {
+        "X-API-KEY": API_KEY,
+        "Content-Type": "application/json",
+    }
+    resp = requests.request(method, url, headers=headers, data=body_string if body is not None else None, timeout=10)
+    resp.raise_for_status()
+    return resp.json()
+
+sync_time_offset()
+print(signed_request("GET", "/v1/private/order/current", {"symbol": "BTCUSDT"}))
+```
+
+<h2 id="related-security-guides">أدلة أمنية ذات صلة</h2>
+
+- [توثيق](/ar/developer-api/authentication)
+- [API Key الإدارة] (/developer-api/api-key-management)
+- [أسرار وإشارة] (/sdk/security/secrets-signing)
+- [رموز الخطأ واستكشاف الأخطاء] (/developer-api/error-codes-and-troubleshooting)
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">صفحات ذات صلة</h2>
+
+- [إدارة API Key](/ar/developer-api/api-key-management)
+- [Agent SDK أسرار وتوقيع HMAC](/ar/sdk/security/secrets-signing)
+- [رموز الأخطاء واستكشاف الأخطاء](/ar/developer-api/error-codes-and-troubleshooting)
+<!-- sixmm-localized-link-repair:end -->

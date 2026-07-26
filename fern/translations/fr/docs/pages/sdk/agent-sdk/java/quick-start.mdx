@@ -1,0 +1,90 @@
+---
+title: "Java Départ rapide"
+subtitle: "Installez et initialisez le Java SDK depuis un service backend."
+slug: sdk/agent-sdk/java/quick-start
+canonical-url: https://docs.6mm.com/fr/sdk/agent-sdk/java/quick-start
+---
+
+<h2 id="install">Installation</h2>
+
+La source publique SDK documente actuellement les `v0.1.1` avec ces coordonnées Maven :
+
+```xml
+<dependency>
+    <groupId>com.sixmm.exchange.sdk</groupId>
+    <artifactId>agent</artifactId>
+    <version>0.1.1</version>
+</dependency>
+```
+
+GitHub ne sert pas de dépôt de dépendances Maven. Installez localement le code source balisé avant de résoudre la dépendance :
+
+```bash
+git clone https://github.com/6mm-com/agent-java-sdk.git
+cd agent-java-sdk
+git checkout v0.1.1
+mvn install
+```
+
+> **Construction d’équipe**
+>
+> Publiez l’artefact approuvé dans le dépôt Maven de votre organisation pour les CI, les tests et les compilations en production. Confirmez la version approuvée avec 6MM avant le déploiement en production.
+
+Des exemples de code source et d’utilisation sont disponibles dans le dépôt officiel Java SDK :
+
+[6mm-com/agent-java-sdk] (https://github.com/6mm-com/agent-java-sdk)
+
+<h2 id="before-you-start">Avant que tu commences</h2>
+
+- Confirmez votre agent de production API URL de base avec l’équipe 6MM .
+- Stocker apiSecret uniquement dans la gestion des secrets en arrière-plan.
+- Préparer une application stable entre platformUserId et agentUserId.
+- Permettre des journaux structurés autour des flux de liaison, de transfert, d’ordre et de webhook.
+
+<h2 id="initialize-client">Initialisation du client</h2>
+
+```java
+import com.sixmm.agent.AgentClient;
+import com.sixmm.agent.AgentClientConfig;
+
+AgentClient client = new AgentClient(AgentClientConfig.builder()
+        .baseUrl("https://agent-api.6mm.com")
+        .agentCode("AGENT001")
+        .apiSecret("your-api-secret")
+        .defaultCurrency("USDT")
+        .build());
+```
+
+> **Uniquement en arrière-plan**
+>
+> Ne pas initialiser le Agent SDK depuis le code client du navigateur, mobile ou bureau. Le SDK signe les requêtes privilégiées de l’Agent API .
+
+<h2 id="example-transfer-funds-in">Exemple : transférer des fonds dans</h2>
+
+```java
+TransferResponse resp = client.transfer(TransferRequest.fixed(
+        "AGT-ORDER-1001",
+        "agent-user-001",
+        Direction.IN,
+        "USDT",
+        "10.00"));
+```
+
+Utilisez un numéro de commande unique côté partenaire pour chaque demande de transfert. Si une demande expire, interrogez la commande originale avant d’en créer une nouvelle.
+
+<h2 id="next-steps">Prochaines étapes</h2>
+
+| Besoin | Page suivante |
+| --- | --- |
+| Délivrez une Trading Widget de certification | [Créer un jeton d’intégration] (/sdk/agent-sdk/java/embed-token) |
+| Vérifiez les rappels depuis 6MM | [Crochets et Idempotence] (/sdk/security/webhooks-idempotency) |
+| Examiner le comportement de signature | [Secrets & Signes] (/sdk/security/secrets-signing) |
+| Diagnostiquer un problème d’intégration | [SDK Dépannage ] (/sdk/security/troubleshooting) |
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">Pages associées</h2>
+
+- [Créer un jeton d’intégration](/fr/sdk/agent-sdk/java/embed-token)
+- [Vérification de la signature Webhook et Idempotence](/fr/sdk/security/webhooks-idempotency)
+- [Agent SDK Secrets & HMAC Signature](/fr/sdk/security/secrets-signing)
+- [SDK Dépannage de l’intégration](/fr/sdk/security/troubleshooting)
+<!-- sixmm-localized-link-repair:end -->

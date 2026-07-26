@@ -1,0 +1,39 @@
+---
+title: "Architettura e responsabilità"
+subtitle: "Chiarisci cosa possiede il sistema partner e cosa offre 6MM infrastruttura nelle implementazioni di trading embedded."
+slug: solutions/architecture-responsibilities
+canonical-url: https://docs.6mm.com/it/solutions/architecture-responsibilities
+---
+
+Un lancio di trading embedded pulito dipende da limiti chiari di responsabilità. I sistemi partner dovrebbero mantenere la proprietà aziendale sensibile, mentre 6MM fornisce l'infrastruttura di trading e le capacità del ciclo di vita.
+
+<h2 id="responsibility-model">Modello di responsabilità</h2>
+
+| Area | Sistema partner | 6MM infrastrutture |
+| --- | --- | --- |
+| Relazione con l'utente | Possiede l'account utente, lo stato di accesso, l'identità del supporto clienti e i controlli di idoneità. | Riceve il contesto di ingresso validato e mantiene lo stato di trading side. |
+| Segreti e firma | Memorizza le chiavi API partner nel backend e firma le richieste lato server. | Verifica le richieste firmate e processa le azioni autorizzate. |
+| Esperienza nel trading | Fornisce punti di ingresso, navigazione e contesto del prodotto. | Fornisce interfaccia di trading, ciclo di vita degli ordini, dati di mercato, posizioni, rischio e comportamento di liquidazione. |
+| Operazioni | Si occupa di supportare flussi di lavoro, analisi aziendali e escalation interna. | Emette eventi, webhook e informazioni di stato necessarie per l'integrazione. |
+
+<h2 id="production-principles">Principi di produzione</h2>
+
+- Tieni tutti i segreti dei partner in segreto.
+- Trattare i token di incorporamento come credenziali di ingresso di breve durata.
+- Elaborare webhook in modo idempotente e memorizzare gli ID degli eventi.
+- Utilizzare il monitoraggio riguardo all'emissione dei token, ai flussi di trasferimento e ai cambiamenti di stato dell'ordine.
+- Mantenere coerente la copertura rivolta al cliente tra le pagine di accesso, trading e supporto.
+
+<h2 id="related-docs">Documentazione correlata</h2>
+
+<CardGroup cols={3}>
+<Card title="Autenticazione" icon="fa-duotone fa-user-shield" href="/it/developer-api/authentication">
+Rivedi le aspettative di autenticazione del backend.
+</Card>
+<Card title="Firma della richiesta" icon="fa-duotone fa-signature" href="/it/developer-api/request-signing">
+Comprende le chiamate API firmate.
+</Card>
+<Card title="Sicurezza Webhook" icon="fa-duotone fa-webhook" href="/it/sdk/security/webhooks-idempotency">
+Gestisci la consegna degli eventi in sicurezza.
+</Card>
+</CardGroup>

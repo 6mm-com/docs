@@ -1,0 +1,68 @@
+---
+title: "SDK Integrationsfehlerbehebung"
+subtitle: "Diagnostizieren Sie Trading Widget, Agent SDK, Signing, Webhook, Timeout und Umweltprobleme, bevor Sie eine Supportanfrage eskalieren."
+slug: sdk/security/troubleshooting
+canonical-url: https://docs.6mm.com/de/sdk/security/troubleshooting
+---
+
+Beginnen Sie mit der Umgebung, dem Zeitstempel und der Geschäftskennung für die fehlgeschlagene Operation. Eine strukturierte Überprüfung trennt in der Regel Konfigurationsprobleme von Authentifizierungs-, Netzwerk- und asynchronen Verarbeitungsproblemen.
+
+<h2 id="diagnostic-order">Empfohlene Diagnosereihenfolge</h2>
+
+1. Bestätigen Sie die betroffene Umgebung und die Basis URL.
+2. Die UTC Zeitspanne und die erste fehlschlagende Anfrage notieren.
+3. Identifizieren Sie das Modul: Trading Widget, Agent SDK, REST API, WebSocket, oder Webhook.
+4. Erfassen Sie die Anfrage-ID, Partnerbenutzer-ID, `agentOrderNo`, Bestell-ID oder Webhook-Ereignis-ID.
+5. Überprüfen Sie aktuelle Code-, Zugangsdaten-, IP -Whitelist- oder Deployment-Änderungen.
+6. Reproduzieren Sie mit dem kleinsten sicheren Testfall.
+
+<h2 id="trading-widget-issues">Trading Widget Probleme</h2>
+
+| Symptom | Wahrscheinliche Ursache | Fix |
+| --- | --- | --- |
+| iframe bittet Partner-lokale Domain an | baseUrl fehlt | Pass baseUrl: 'https://app.6mm.com'. |
+| iframe ist unsichtbar oder sehr kurz | Der Elternbehälter hat keine Höhe | Stellen Sie die Behälterhöhe oder Passhöhe ein. |
+| token_provider_missing | Partner-Token-Modus hat keinen Anbieter | AuthentifizierungtokenProviderhinzufügen. |
+| auth_exchange_failed | Ungültiger, abgelaufener oder nicht übereinstimmender Embed-Token | Überprüfe die Backend-Token-Antwort und channelId. |
+
+<h2 id="agent-sdk-issues">Agent SDK Probleme</h2>
+
+| Symptom | Wahrscheinliche Ursache | Fix |
+| --- | --- | --- |
+| Unterschrift abgelehnt | Falsches Geheimnis, Taktdrift oder manuell geänderte signierte Felder | Lass SDK Signing-Felder generieren und Serverzeit synchronisieren. |
+| Risiko der Bewegung von doppelten Mitteln | Neue Bestellnummer nach Timeout verwendet | Abfrage zuerst nach Original agentOrderNo . |
+| PROCESSING als Misserfolg behandelt | Offener Staat missverstanden | Warte auf Webhook oder ruf queryOrderan. |
+| Webhook wurde mehrfach verarbeitet | Versuche Verhalten ohne Idempotenz erneut | Fügen Sie Idempotenz-Schlüssel- und Endzustandsprüfungen hinzu. |
+
+<h2 id="evidence-to-capture">Beweise zur Festnahme</h2>
+
+| Integration | Nützliche Belege |
+| --- | --- |
+| Trading Widget | Seite URL, SDK Versionspfad, Browser-Konsole, fehlgeschlagene Netzwerkanfragen, `onError` Nutzlast und Containerdimensionen. |
+| Agent SDK | SDK Sprache/Version, Basis URL, UTC Zeitstempel, Anfrage-ID, `agentOrderNo`, Antwortcode und bereinigte Protokolle. |
+| Webhook | Lieferzeit, Ereignis- oder Geschäftsschlüssel, Signaturvalidierungsergebnis, Verarbeitungszustand und bereinigter Rohkörper-Hash. |
+| REST API | Methode, Weg, Umgebung, Anfrage-ID, Antwortcode und bereinigte Parameter. |
+
+Fügen Sie niemals Passwörter, Zugriffstoken, API Geheimnisse, vollständige Signaturen, private Schlüssel oder ungeschwärzte persönliche Daten in Diagnostiken ein.
+
+<h2 id="before-escalating">Vor der Eskalation</h2>
+
+- Versuchen Sie es nur, wenn die Operation als sicher dokumentiert ist.
+- Nach einem Timeout sollten Sie die ursprüngliche Unternehmenskennung abfragen, anstatt eine neue zu erstellen.
+- Überprüfen Sie die Systemuhr und die Zugangsdaten auf Signaturfehler.
+- Bewahren Sie den ersten Fehlschlag und spätere Nachversuchsergebnisse.
+- Verwenden Sie die [Support Request Template](/de/resources/support-request-template), um einen vollständigen, geschwärzten Bericht zu senden.
+
+<h2 id="related-docs">Verwandte Dokumente</h2>
+
+<CardGroup cols={3}>
+<Card title="Trading Widget Schneller Start" icon="fa-duotone fa-chart-line" href="/de/sdk/trading-widget/quick-start">
+Überprüfen Sie das Laden von Skripten, die Containergröße, die Konfiguration und die Rückrufe.
+</Card>
+<Card title="Geheimnisse & Signieren" icon="fa-duotone fa-shield-keyhole" href="/de/sdk/security/secrets-signing">
+Überprüfe Agent SDK Zugangsdaten, Uhren und signierte Felder.
+</Card>
+<Card title="Webhooks & Idempotenz" icon="fa-duotone fa-webhook" href="/de/sdk/security/webhooks-idempotency">
+Überprüfen Sie die Rückrufverifizierung und den Umgang mit doppelten Ereignissen.
+</Card>
+</CardGroup>

@@ -1,0 +1,79 @@
+---
+title: "6MM Agent SDK dla Java i PHP"
+subtitle: "Integruj podpisane połączenia agenta API , wiązanie użytkowników, transfery, adresy URL wejściowe oraz weryfikację webhooków z usług backendowych partnerów."
+slug: sdk/agent-sdk/overview
+canonical-url: https://docs.6mm.com/pl/sdk/agent-sdk/overview
+---
+
+6MM Agent SDK jest przeznaczony dla partnerskich usług backendowych, które muszą wywoływać uprzywilejowane Agent APIs bez konieczności wdrażania podpisywania i obsługi żądań od zera. Nie może działać w przeglądarce, telefonie komórkowym ani publicznym kodzie desktopowym, ponieważ integracja korzysta z partnera API tajemnicy.
+
+<h2 id="when-to-use-the-agent-sdk">Kiedy używać Agent SDK</h2>
+
+Używaj Agent SDK , gdy backend musi związać użytkownika partnera, przenosić aktywa przez zatwierdzony workflow, zapytywać rekordy handlowe, tworzyć wbudowany URLwpisów handlowych lub weryfikować powiadomienia webhook. Używaj [Trading Widget SDK](/pl/sdk/trading-widget/overview) osobno, gdy frontend partnera musi wyświetlić interfejs handlowy.
+
+<h2 id="capabilities">Możliwości</h2>
+
+| Scenariusz | Java SDK | PHP SDK |
+| --- | --- | --- |
+| Użytkownik przypisania | Wspierane | Wspierane |
+| Transfer o stałej kwotie | Wspierane | Wspierane |
+| Przenieś wszystkich na zewnątrz | Wspierane | Wspierane |
+| Transfer wsteczny | Wspierane | Wspierane |
+| Kolejność zapytań | Wspierane | Wspierane |
+| Utwórz URL | Wspierane | Wspierane |
+| Weryfikacja Webhook | Wspierane | Wspierane |
+
+<h2 id="common-configuration">Typowa konfiguracja</h2>
+
+| Klucz | Przykład | Opis |
+| --- | --- | --- |
+| baseUrl | `https://agent-api.6mm.com` | 6MM Agent API URL służby bez śladu ukośnika. |
+| agentCode | AGENT001 | Kod agenta partnera. |
+| apiSecret | twój-api-sekret | API sekret podpisu przechowywany tylko na backendzie. |
+| defaultCurrency | USDT | Domyślna waluta do przelewów i APIskonta. |
+| webhookUrl | https://partner.example.com/6mm/webhook | Partner endpoint for 6MM webhook notifications. |
+
+<h2 id="typical-integration-flow">Typowy przepływ całkowania</h2>
+
+1. Frontend partnera uwierzytelnia użytkownika za pośrednictwem własnego systemu kont partnera.
+2. Backend partnera mapuje użytkownika na stabilny identyfikator po stronie partnera.
+3. Zaplecze dzwoni do Agent SDK z `agentCode` i chronionym API tajnym.
+4. SDK podpisuje i wysyła Agentowi API prośbę.
+5. Backend przechowuje zwrócony identyfikator biznesowy i przetwarza kolejne webhooki w sposób idempotencjalny.
+6. Frontend otrzymuje tylko krótkotrwały wynik lub poświadczenie wejściowe, którego potrzebuje.
+
+<h2 id="choose-an-sdk">Wybierz SDK</h2>
+
+| Stos backend | Zacznij tutaj |
+| --- | --- |
+| Java | [Java SDK Przegląd ] (/sdk/agent-sdk/java/overview) oraz [Java Szybki Start] (/sdk/agent-sdk/java/quick-start) |
+| PHP | [PHP SDK Przegląd ] (/sdk/agent-sdk/php/overview) oraz [PHP Szybki Start] (/sdk/agent-sdk/php/quick-start) |
+
+<h2 id="production-checklist">Lista kontrolna produkcji</h2>
+
+- Ładuj `apiSecret` z backendowego menedżera sekretów, a nie z kodu źródłowego.
+- Utrzymywanie oddzielnych uprawnień do rozwoju, etapu i produkcji.
+- Używanie stabilnego mapowania użytkownika partnera oraz unikalnych identyfikatorów zamówień biznesowych.
+- Zachowuj oryginalny identyfikator podczas sprawdzania statusu żądania z limitem czasu.
+- Weryfikacja podpisów webhooków i przechowywanie przetworzonych identyfikatorów zdarzeń.
+- Cenzurowanie sekretów i sygnatur z logów, zachowując identyfikatory żądań dla wsparcia.
+
+<h2 id="next-steps">Kolejne kroki</h2>
+
+<CardGroup cols={3}>
+<Card title="Java Szybki Początek" icon="fa-brands fa-java" href="/pl/sdk/agent-sdk/java/quick-start">
+Zainstaluj i zainicjalizuj Agent SDK w Java backendzie.
+</Card>
+<Card title="PHP Szybki Początek" icon="fa-brands fa-php" href="/pl/sdk/agent-sdk/php/quick-start">
+Zainstaluj i zainicjalizuj Agent SDK w PHP backendzie.
+</Card>
+<Card title="Webhooki i Idempotencja" icon="fa-duotone fa-webhook" href="/pl/sdk/security/webhooks-idempotency">
+Weryfikuj oddzwonienia i zapobiegaj duplikatowi przetwarzania biznesowego.
+</Card>
+</CardGroup>
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">Powiązane strony</h2>
+
+- [Agent Java SDK](/pl/sdk/agent-sdk/java/overview)
+- [Agent PHP SDK](/pl/sdk/agent-sdk/php/overview)
+<!-- sixmm-localized-link-repair:end -->

@@ -1,0 +1,48 @@
+---
+title: "Agent Java SDK"
+subtitle: "Installez le 6MM Agent Java SDK et utilisez des APIs backend signés pour la liaison utilisateur, les transferts, les identifiants d’entrée et la vérification des webhooks."
+slug: sdk/agent-sdk/java/overview
+canonical-url: https://docs.6mm.com/fr/sdk/agent-sdk/java/overview
+---
+
+<h2 id="official-repository">Dépôt officiel</h2>
+
+Le dépôt Java SDK est la source de vérité pour SDK code source, les notes de version, les exemples d’utilisation et les détails d’implémentation :
+
+[6mm-com/agent-java-sdk](https://github.com/6mm-com/agent-java-sdk)
+
+<h2 id="runtime">Durée d’exécution</h2>
+
+| Objet | Valeur |
+| --- | --- |
+| Version Java minimum | Java 8+ |
+| Outil de construction recommandé | Maven 3.9+ |
+| Groupe Maven | `com.sixmm.exchange.sdk` |
+| Artefact Maven | `agent` |
+| Balise source documentée | `v0.1.1` |
+
+Le dépôt public GitHub héberge des sources, pas un dépôt de dépendance Maven. Construisez et installez localement le code source tagué ou publiez l’artefact approuvé dans le dépôt Maven privé de votre organisation avant de l’utiliser dans les équipes de compilation.
+
+<h2 id="typical-backend-responsibilities">Responsabilités typiques en backend</h2>
+
+- Valider la session utilisateur partenaire.
+- Mapper l’utilisateur partenaire à agentUserId.
+- Liaison d’appels avant les premiers flux de trading ou de transfert.
+- Appelez createEntryUrl pour une SSOcomplète unique en site.
+- Appeler createEmbedToken pour Trading Widget mode jeton partenaire.
+- Vérifier les webhooks de transfert et les traiter de manière homogénère.
+
+<h2 id="security-and-operational-rules">Sécurité et règles opérationnelles</h2>
+
+- Stocker `apiSecret` uniquement dans un gestionnaire de secrets backend ou une variable d’environnement protégé.
+- Garder l’heure du serveur synchronisée car les requêtes signées contiennent des horodatages.
+- Considérer `agentOrderNo` comme une clé d’idempotence durable et la garder unique à l’échelle mondiale.
+- Stocker `platformUserId` comme une chaîne et maintenir sa relation avec `agentUserId`.
+- Interroger le transfert original avant de réessayer après un délai d’expiration ou un résultat réseau incertain.
+
+<h2 id="next-steps">Prochaines étapes</h2>
+
+- [Java Démarrage rapide](/fr/sdk/agent-sdk/java/quick-start) : installez la source balisée et initialisez `AgentClient`.
+- [Créer un jeton d’intégration](/fr/sdk/agent-sdk/java/embed-token) : émettre des identifiants éphémères pour Trading Widget.
+- [Secrets & Signing](/fr/sdk/security/secrets-signing) : comprenez la signature automatique HMAC et la gestion des secrets.
+- [Webhooks & Idempotency](/fr/sdk/security/webhooks-idempotency) : vérifiez les rappels et empêchez le traitement des doublons.

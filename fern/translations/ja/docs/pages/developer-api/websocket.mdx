@@ -1,0 +1,58 @@
+---
+title: "WebSocket"
+description: "6MM WebSocketサービスに接続して、公開市場ストリームやプライベートアカウントイベント、そしてHeartbeatとサブスクリプションのガイダンスを受けられます。"
+slug: developer-api/websocket
+canonical-url: https://docs.6mm.com/ja/developer-api/websocket
+---
+
+<h2 id="service-endpoint">サービスエンドポイント</h2>
+
+```
+wss://ws.6mm.com/ws
+```
+
+WebSocket チャンネルは公共チャンネルとプライベートチャンネルに分かれています。
+
+| 種類             | 認証              | 概要                                            |
+| ---------------- | --------------------------- | ------------------------------------------------------ |
+| 公共チャンネル  | 必須ではありません                | 市場データ(深さ、取引、クライン、ティッカーなど) |
+| プライベートチャンネル | 必須`listenKey`またはJWT | ユーザーオーダー、アカウント、ポジションストリーム              |
+
+<h2 id="public-channels">公共チャンネル</h2>
+
+パブリック WebSocket 認証は不要です。接続後、マーケットチャネルへの購読リクエストを `subscribe` 送信してください。
+
+共通チャンネル:
+
+| チャンネル                            | 概要                                                        |
+| ---------------------------------- | ------------------------------------------------------------------ |
+| `market.depth.{symbol}`            | ブックの深さを注文します。まずスナップショットを送信し、その後に段階的な更新を行います |
+| `market.trade.{symbol}`            | 最新取引                                                      |
+| `market.kline.{symbol}.{interval}` | クラインズ                                                             |
+| `market.ticker.{symbol}`           | 単一シンボルのティッカー概要                                       |
+| `market.tickers`                   | 全記号ティッカー概要                                          |
+
+<h2 id="private-channels">プライベートチャンネル</h2>
+
+<h2 id="listenkey">listenKey</h2>
+プライベートWebSocketストリームの場合は、まずREST APIを通じて`listenKey`を作成し、その後に接続します:
+
+```
+wss://ws.6mm.com/ws?listenKey=YOUR_LISTEN_KEY
+```
+
+<h2 id="jwt">JWT</h2>
+互換性のある JWT 接続方法:
+
+```
+wss://ws.6mm.com/ws?token=YOUR_ACCESS_TOKEN
+```
+
+認証が成功すると、サーバーは自動的に現在のユーザーのプライベートチャネルへの接続を購読します。手動のサブスクリプションは不要です。
+
+<h2 id="choose-the-next-guide">次のガイドを選んでください</h2>
+
+- [コネクション、サブスクリプション、そしてハートビート](/ja/developer-api/websocket/connection-subscription-and-heartbeat): 接続ライフサイクル、ping、再接続、再購読。
+- [パブリックマーケットチャネル](/ja/developer-api/websocket/public-market-channels): depths、trades、Klines、ティッカー、シーケンス処理。
+- [プライベートユーザーチャネル](/ja/developer-api/websocket/private-user-channel): listenKey ライフサイクルおよび認証済みアカウントイベント。
+- [統合推奨事項](/ja/developer-api/integration-recommendations)監視、冪等性、再試行、生産試験。

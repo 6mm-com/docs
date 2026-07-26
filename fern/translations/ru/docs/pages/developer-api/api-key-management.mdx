@@ -1,0 +1,128 @@
+---
+title: "API Key Управление"
+description: "Создавайте, проверяйте, обновляйте и отзывайте 6MM API ключи, применяя соответствующие права, ограничения IP , хранение секретов и практики ротации."
+slug: developer-api/api-key-management
+canonical-url: https://docs.6mm.com/ru/developer-api/api-key-management
+---
+
+API Key конечные точки управления принимают только JWT аутентификацию.
+
+<h2 id="create-api-key">Создайте API Key</h2>
+
+```http
+POST /v1/private/user/api-key/create
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+Параметры запроса:
+
+| Параметр     | Тип      | Обязательно | Описание                                                           |
+| ------------- | --------- | -------- | --------------------------------------------------------------------- |
+| `label`       | string    | Да      | API Key этикетка, длина 1 - 64                                          |
+| `permissions` | int       | Нет       | Битовая маска разрешения, по умолчанию `1`, диапазон `1` - `7`                      |
+| `ipWhitelist` | String\[] | Нет       | IP белый список, до 20 записей. Если он опущен, IP источника не ограничен |
+
+Пример запроса:
+
+```bash
+curl -X POST https://api.6mm.com/v1/private/user/api-key/create \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -d '{
+    "label": "external-service-prod",
+    "permissions": 3,
+    "ipWhitelist": ["203.0.113.10"]
+  }'
+```
+
+Пример ответа:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "apiKey": "fx_xxxxxxxxxxxxxxxxxxxxxxxx",
+    "apiSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  },
+  "requestId": "req-api-key"
+}
+```
+
+`apiSecret` возвращается только один раз при создании API Key . Храните его сразу в секретной системе управления. Не записывайте его в репозитории исходного кода или журналы.
+
+Каждый пользователь может создавать до 30 API ключей.
+
+<h2 id="list-api-keys">Список API ключей</h2>
+
+```http
+GET /v1/private/user/api-key/list
+Authorization: Bearer YOUR_ACCESS_TOKEN
+```
+
+Поля ответов:
+
+| Поле                | Тип      | Описание                       |
+| -------------------- | --------- | --------------------------------- |
+| `list[].id`          | string    | API Key ID                        |
+| `list[].label`       | string    | Лейбл                             |
+| `list[].apiKey`      | string    | Публичный API Key идентификатор         |
+| `list[].permissions` | int       | Битовая маска разрешения                |
+| `list[].ipWhitelist` | String\[] | IP белый список                      |
+| `list[].status`      | int       | Статус: `1` включён, `0` отключён |
+| `list[].lastUsedAt`  | int64     | Время последнего использования                    |
+| `list[].createdAt`   | int64     | Время создания                     |
+
+<h2 id="update-api-key">Обновление API Key</h2>
+
+```http
+PUT /v1/private/user/api-key/update
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+Параметры запроса:
+
+| Параметр     | Тип      | Обязательно | Описание               |
+| ------------- | --------- | -------- | ------------------------- |
+| `id`          | string    | Да      | API Key ID                |
+| `label`       | string    | Нет       | Новый лейбл                 |
+| `permissions` | int       | Нет       | Новая битовая маска разрешения    |
+| `ipWhitelist` | String\[] | Нет       | Новый IP белый список          |
+| `status`      | int       | Нет       | `1` включён, `0` отключён |
+
+<h2 id="delete-api-key">Удалить API Key</h2>
+
+```http
+POST /v1/private/user/api-key/delete
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+Запрос:
+
+```json
+{ "id": "1001" }
+```
+
+<h2 id="delete-all-api-keys">Удалить все API ключи</h2>
+
+```http
+POST /v1/private/user/api-key/delete-all
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+Поля ответов:
+
+| Поле     | Тип  | Описание                |
+| --------- | ----- | -------------------------- |
+| `deleted` | int64 | Количество удалённых API ключей |
+
+<h2 id="related-security-guides">Связанные руководства по безопасности</h2>
+
+- [Аутентификация](/ru/developer-api/authentication)
+- [Запрос на подпись](/ru/developer-api/request-signing)
+- [Секреты и автографы](/ru/sdk/security/secrets-signing)
+- [Рекомендации по интеграции](/ru/developer-api/integration-recommendations)

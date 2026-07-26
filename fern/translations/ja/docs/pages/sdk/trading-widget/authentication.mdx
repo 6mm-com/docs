@@ -1,0 +1,95 @@
+---
+title: "Trading Widget 認証"
+subtitle: "新しい組み込み取引 SSO 統合にはpartner-tokenを活用しましょう。"
+slug: sdk/trading-widget/authentication
+canonical-url: https://docs.6mm.com/ja/sdk/trading-widget/authentication
+---
+
+<h2 id="recommended-mode-partner-token">推奨モード:パートナートークン</h2>
+
+Partner-TokenはURLに短いトークンを置かず、パートナーのバックエンドに保持 apiSecret 。
+
+```js
+const widget = TradingWidget.create('#trading-widget', {
+  baseUrl: 'https://app.6mm.com',
+  auth: {
+    mode: 'partner-token',
+    tokenProvider: async ({ channelId, symbol, reason }) => {
+      const resp = await fetch('/api/trading/embed-token', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ channelId, symbol, reason }),
+      })
+
+      if (!resp.ok) {
+        throw new Error('Failed to request embed token')
+      }
+
+      return resp.json()
+    },
+  },
+})
+```
+
+<h2 id="related-documentation">関連文書</h2>
+
+- [埋め込みトークンの作成](/ja/sdk/agent-sdk/java/embed-token): バックエンドトークン発行の例。
+- [Trading Widget クイックスタート](/ja/sdk/trading-widget/quick-start):完全な初期化フロー。
+- [秘密と署名](/ja/sdk/security/secrets-signing):特権エージェントの認証情報をバックエンドに保管してください。
+- [トラブルシューティング](/ja/sdk/security/troubleshooting)セッション、トークン、起源、初期化の失敗を診断します。
+
+<h2 id="backend-flow">バックエンドフロー</h2>
+
+```text
+1. Partner frontend receives auth_request from the iframe.
+2. SDK calls tokenProvider.
+3. Partner frontend calls its own backend.
+4. Partner backend validates the partner session.
+5. Partner backend calls 6MM Agent API or Java SDK createEmbedToken.
+6. SDK sends embedToken to the iframe through postMessage.
+7. iframe exchanges embedToken for a 6MM access token.
+8. iframe continues initialization and emits ready.
+```
+
+<h2 id="tokenprovider-contract">tokenProvider 契約</h2>
+
+| フィールド | 演出 | 概要 |
+| --- | --- | --- |
+| channelId | SDK -> パートナーバックエンド | 一意のウィジェットセッション識別子。バックエンドはそれを createEmbedTokenに渡すべきです。 |
+| シンボル | SDK -> パートナーバックエンド | 現在リクエストされている取引シンボル。必要に応じてトークンの範囲に使ってください。 |
+| 理由 | SDK -> パートナーバックエンド | なぜ SDK が初期ロードやリフレッシュなどのトークンを要求しているのか。 |
+| embedToken | パートナーバックエンド -> SDK | Agent SDKまたはエージェントAPIによって作成された短命トークン。 |
+| expireAt | パートナーバックエンド -> SDK | トークンの有効期限タイムスタンプは 6MMによって返されます。 |
+
+<h2 id="failure-handling">故障処理</h2>
+
+| 状態 | 推奨取り扱い |
+| --- | --- |
+| パートナーセッションが終了しました | パートナーエンドポイントから401を返し、ユーザーに再度サインインを求めます。 |
+| トークン作成は一時的に失敗しました | tokenProviderにエラーを投げ入れ、ウィジェットに認証エラーを表示させます。 |
+| channelId ミスマッチ | リクエストを拒否してウィジェットインスタンスを再作成してください。 |
+| ユーザーは取引を許可されていません | パートナー制御エラーを返し、埋め込みトークンを作成しないこと。 |
+
+<h2 id="compatibility-mode-agent-sso">互換モード:エージェント-SSO</h2>
+
+agent-SSOは古い/agent-entryのチケットフローを維持します。新しい統合にはパートナートークンを優先してください。
+
+```js
+const widget = TradingWidget.create('#trading-widget', {
+  baseUrl: 'https://app.6mm.com',
+  auth: {
+    mode: 'agent-sso',
+    entryUrlProvider: async ({ redirectPath }) => {
+      const resp = await fetch('/api/trading-entry', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ redirectPath }),
+      })
+      const data = await resp.json()
+      return data.webUrl
+    },
+  },
+})
+```

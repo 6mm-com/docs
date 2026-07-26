@@ -1,0 +1,53 @@
+---
+title: "6MM SDKs"
+subtitle: "組み込み取引、バックエンドトークン発行、アカウント連携、ウェブフック、本番運用において適切な 6MM SDK パスを選択してください。"
+slug: sdk/overview
+canonical-url: https://docs.6mm.com/ja/sdk/overview
+---
+
+<h2 id="choose-an-sdk-path">SDK道を選びましょう</h2>
+
+<CardGroup cols={3}>
+<Card title="Trading Widget SDK" icon="duotone chart-line" href="/ja/sdk/trading-widget/quick-start">
+6MM取引端末を既存のウェブサイト、ウォレット、ブローカーポータル、またはパートナー商品の表面に組み込みましょう。
+</Card>
+<Card title="Agent SDK" icon="duotone server" href="/ja/sdk/agent-sdk/overview">
+  パートナーバックエンドをユーザーバインディング、埋め込みトークン、エントリーURL、転送、注文クエリ、ウェブフックのために 6MM に接続します。
+</Card>
+<Card title="セキュリティと作戦" icon="duotone shield-check" href="/ja/sdk/security/secrets-signing">
+  秘密ストレージの準備、リクエスト署名、ウェブフックの冪起等性、監視、起動トラブルシューティングの準備をします。
+</Card>
+</CardGroup>
+
+<h2 id="recommended-combination">推奨の組み合わせ</h2>
+
+| パートナーの目標 | フロントエンド | バックエンド | なぜ重要なのか |
+| --- | --- | --- | --- |
+| 組み込みトレーディング端末を追加してください | Trading Widget SDK | Agent SDK | ウィジェットは取引UIを担当し、パートナーのバックエンドがトークンを発行し秘密を守ります。 |
+| ネイティブアプリのエントリポイントを作成する | ネイティブまたはH5エントリー | Agent SDK | パートナーがユーザーセッションを検証した後、アプリは 6MM エントリー URL を開きます。 |
+| カスタム取引フローを構築する | パートナーUIです | 開発者 API +選択された SDK フロー | アカウント、注文、ポジション、市場データには APIs を使用しつつ、運用管理はサーバー側に留めましょう。 |
+
+<h2 id="reference-architecture">参照アーキテクチャ</h2>
+
+```text
+Partner Web App
+  -> TradingWidget.create()
+  -> tokenProvider()
+  -> Partner Backend
+  -> 6MM Agent SDK
+  -> 6MM Agent API
+  -> 6MM Trading iframe
+```
+
+> **サーバー側で秘密を保持**
+>
+>ブラウザのコードはパートナー所有のエンドポイントのみを呼び出すべきです。エージェント API シークレットは決してフロントエンドコードに送ってはなりません。
+
+<h2 id="production-checklist">生産チェックリスト</h2>
+
+- apiSecret をバックエンドインフラにのみ保存します。
+- エージェントAPIリクエストおよびウェブフックURLにHTTPSを使用すること。
+- agentUserId、 platformUserId、 agentOrderNo マッピングを永続化します。
+- 金額を浮動小数点の代わりに小数点列で表現すること。
+- PROCESSING を成功や失敗としてではなく、保留中として扱うこと。
+- 再試行が期待されるため、ウェブフックを冪等的に処理する。

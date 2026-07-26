@@ -1,0 +1,56 @@
+---
+title: "環境と一般的な慣習"
+description: "6MM API環境や共通の基準、URL、タイムスタンプ、数値フィールド、シンボル、リクエストID、ページ割り当て、レスポンスを確認しましょう。"
+slug: developer-api/environments-and-common-conventions
+canonical-url: https://docs.6mm.com/ja/developer-api/environments-and-common-conventions
+---
+
+<h2 id="service-endpoints">サービスエンドポイント</h2>
+
+| 種類      | 終着点              |
+| --------- | --------------------- |
+| REST API  | `https://api.6mm.com` |
+| WebSocket | `wss://ws.6mm.com/ws`    |
+
+<h2 id="time-and-numeric-values">時間と数値</h2>
+
+* 特に指定がない限り、タイムフィールドはUnixのミリ秒タイムスタンプです。
+* 日々の統計、バランススナップショット、取引量統計はデフォルトで日 UTC 境界を使用しています。
+* 量、価格、数量、レートなどの精度に敏感なフィールドは文字列として送信されます。
+* `orderId`、 `conditionId`、 `strategyId` のような大きな整数IDは JSONの文字列として返されます。
+
+<h2 id="response-format">応答フォーマット</h2>
+
+成功した対応:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {},
+  "requestId": "req-12345678"
+}
+```
+
+エラー応答:
+
+```json
+{
+  "code": 1003,
+  "message": "Invalid token",
+  "requestId": "req-12345678"
+}
+```
+
+注記:
+
+* ビジネスエラーは通常、統一された JSON 構造を返します。インテグレーターはまずこの `code` を確認するべきです。
+* 認証失敗は HTTP `401`を返すことがあります;レートリミットは HTTP `429`を返すことがあります。
+* リクエストヘッダーで `X-Request-ID` を送信できます。サーバーは応答で `requestId` として返します。
+
+<h2 id="related-documentation">関連文書</h2>
+
+- [認証](/ja/developer-api/authentication): JWT か API Key 署名かを選べ。
+- [リクエスト署名](/ja/developer-api/request-signing)署名されたリクエストを構成し検証します。
+- [REST API](/ja/developer-api/rest-api)これらの慣習をエンドポイント群に適用します。
+- [エラーコードとトラブルシューティング](/ja/developer-api/error-codes-and-troubleshooting)HTTPやビジネス上の誤りを診断する。

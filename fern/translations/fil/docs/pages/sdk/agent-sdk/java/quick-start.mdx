@@ -1,0 +1,90 @@
+---
+title: "Java Mabilisang Simula"
+subtitle: "I-install at i-initialize ang Java SDK mula sa isang backend service."
+slug: sdk/agent-sdk/java/quick-start
+canonical-url: https://docs.6mm.com/fil/sdk/agent-sdk/java/quick-start
+---
+
+<h2 id="install">I-install</h2>
+
+Sa kasalukuyan, ang pampublikong SDK source ay nagdodokumento ng tag `v0.1.1` ng mga coordinate ng Maven na ito:
+
+```xml
+<dependency>
+    <groupId>com.sixmm.exchange.sdk</groupId>
+    <artifactId>agent</artifactId>
+    <version>0.1.1</version>
+</dependency>
+```
+
+Hindi gumagana ang GitHub bilang Maven dependency repository. I-install ang tagged source nang lokal bago lutasin ang dependency:
+
+```bash
+git clone https://github.com/6mm-com/agent-java-sdk.git
+cd agent-java-sdk
+git checkout v0.1.1
+mvn install
+```
+
+> **Team builds**
+>
+> I-publish ang aprubadong artifact sa Maven repository ng iyong organisasyon para sa CI, testing, at production builds. Kumpirmahin ang aprubadong bersyon gamit ang 6MM bago ang deployment ng produksyon.
+
+Ang mga halimbawa ng source code at paggamit ay makikita sa opisyal na Java SDK repository:
+
+[6mm-com/agent-java-sdk] (https://github.com/6mm-com/agent-java-sdk)
+
+<h2 id="before-you-start">Bago ka magsimula</h2>
+
+- Kumpirmahin ang iyong production Agent API base URL sa 6MM team.
+- Itago ang apiSecret sa backend secret management lamang.
+- Maghanda ng matatag na mapping sa pagitan ng platformUserId at agentUserId.
+- I-enable ang structured logs sa bind, transfer, order, at webhook flows.
+
+<h2 id="initialize-client">I-initialize ang kliyente</h2>
+
+```java
+import com.sixmm.agent.AgentClient;
+import com.sixmm.agent.AgentClientConfig;
+
+AgentClient client = new AgentClient(AgentClientConfig.builder()
+        .baseUrl("https://agent-api.6mm.com")
+        .agentCode("AGENT001")
+        .apiSecret("your-api-secret")
+        .defaultCurrency("USDT")
+        .build());
+```
+
+> **Backend lamang**
+>
+> Huwag i-initialize ang Agent SDK mula sa browser, mobile, o desktop client code. Ang SDK ay pumirma ng pribilehiyadong Agent API requests.
+
+<h2 id="example-transfer-funds-in">Halimbawa: maglipat ng pondo sa</h2>
+
+```java
+TransferResponse resp = client.transfer(TransferRequest.fixed(
+        "AGT-ORDER-1001",
+        "agent-user-001",
+        Direction.IN,
+        "USDT",
+        "10.00"));
+```
+
+Gumamit ng natatanging partner-side order number para sa bawat transfer request. Kung mag-time out ang request, i-query ang orihinal na order bago gumawa ng bago.
+
+<h2 id="next-steps">Mga susunod na hakbang</h2>
+
+| Kailangan | Susunod na pahina |
+| --- | --- |
+| Mag-isyu ng Trading Widget credential | [Gumawa ng Embed Token] (/sdk/agent-sdk/java/embed-token) |
+| Beripikahin ang mga callback mula sa 6MM | [Webhooks & Idempotency] (/sdk/security/webhooks-idempotency) |
+| Suriin ang pag-uugali sa paglagda | [Mga Lihim at Pagpirma] (/sdk/security/secrets-signing) |
+| I-diagnose ang isang integration problem | [SDK Pag-troubleshoot ] (/sdk/security/troubleshooting) |
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">Mga kaugnay na pahina</h2>
+
+- [Gumawa ng Embed Token](/fil/sdk/agent-sdk/java/embed-token)
+- [Webhook Signature Verification & Idempotency](/fil/sdk/security/webhooks-idempotency)
+- [Agent SDK Mga Lihim at HMAC Signing](/fil/sdk/security/secrets-signing)
+- [SDK Pag-troubleshoot ng Integrasyon](/fil/sdk/security/troubleshooting)
+<!-- sixmm-localized-link-repair:end -->

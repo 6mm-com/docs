@@ -1,0 +1,161 @@
+---
+title: "請求簽署"
+description: "用HMAC簽署6MM API請求——SHA256使用所需的有效載荷、時間戳、API金鑰、簽名標頭和驗證規則。"
+slug: developer-api/request-signing
+canonical-url: https://docs.6mm.com/zh-TW/developer-api/request-signing
+---
+
+<h2 id="request-format">請求格式</h2>
+
+| 地理位置 | 場地       | 必修            | 描述                                   |
+| -------- | ----------- | ------------------- | --------------------------------------------- |
+| 標頭   | `X-API-KEY` | 是的                 | `apiKey` 在 API Key 建立時會回傳 |
+| 查詢    | `timestamp` | 是的                 | Unix 毫秒時間戳記                    |
+| 查詢    | `signature` | 是的                 | HMAC-SHA256 簽名，小寫十六進制字串   |
+| 車身     | JSON        | 這取決於終點 | POST / PUT / DELETE 請求正體              |
+
+<h2 id="signature-payload">簽名有效載荷</h2>
+
+```
+payload = queryStringWithoutSignature + requestBody
+signature = HMAC-SHA256(apiSecret, payload)
+```
+
+關鍵規則：
+
+* `timestamp` 必須是 Unix 毫秒的時間戳記。伺服器容忍範圍為 ±10 秒。
+* `signature` 放在 URL 查詢字串中，但不包含在簽章有效載荷中。
+* 伺服器在移除 `signature`後驗證原始查詢字串;它不會重新排序查詢參數。
+* 用於簽署的查詢參數順序必須與實際請求 URL相符。
+* 若存在請求實體，用於簽署的 JSON 字串必須與實際傳送的實體完全一致。
+* 順序相關路徑會執行簽名重播檢查。在短時間內重複使用相同簽名會返回 `Signature replay detected`。
+
+<h2 id="server-time">伺服器時間</h2>
+
+```http
+GET /v1/time
+```
+
+回應範例：
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "timestamp": 1780473256,
+    "timestampMs": 1780473256708,
+    "iso": "2026-06-03T07:54:16Z",
+    "timezone": "UTC"
+  },
+  "requestId": "req-7cad3113"
+}
+```
+
+用戶端應計算 `timeOffsetMs = serverTimestampMs - localTimestampMs`，然後對後續的簽名請求使用 `timestamp = nowMs + timeOffsetMs` 。若伺服器回傳 `Timestamp outside of tolerance window`，立即重新同步時間並重新產生簽名。
+
+<h2 id="get-signing-example">GET 簽名範例</h2>
+
+實際請求：
+
+```
+GET /v1/private/order/current?symbol=BTCUSDT&timestamp=1772710377808&signature=...
+```
+
+特徵有效載荷：
+
+```
+symbol=BTCUSDT&timestamp=1772710377808
+```
+
+<h2 id="post-signing-example">POST 簽名範例</h2>
+
+實際請求：
+
+```
+POST /v1/private/order/place?timestamp=1772710377808&signature=...
+```
+
+請求正文：
+
+```json
+{"symbol":"BTCUSDT","type":"LIMIT","side":"BUY","price":"85000","quantity":"0.1","timeInForce":"GTC","makerOnly":true,"clientOrderId":"ext-1772710377808-001"}
+```
+
+特徵有效載荷：
+
+```
+timestamp=1772710377808{"symbol":"BTCUSDT","type":"LIMIT","side":"BUY","price":"85000","quantity":"0.1","timeInForce":"GTC","makerOnly":true,"clientOrderId":"ext-1772710377808-001"}
+```
+
+<h2 id="python-signing-example">Python 簽名範例</h2>
+
+```python
+import hashlib
+import hmac
+import json
+import time
+from urllib.parse import urlencode
+
+import requests
+
+BASE_URL = "https://api.6mm.com"
+API_KEY = "YOUR_API_KEY"
+API_SECRET = "YOUR_API_SECRET"
+TIME_OFFSET_MS = 0
+
+def sign(payload: str) -> str:
+    return hmac.new(
+        API_SECRET.encode("utf-8"),
+        payload.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+
+def sync_time_offset():
+    global TIME_OFFSET_MS
+    before = int(time.time() * 1000)
+    resp = requests.get(f"{BASE_URL}/v1/time", timeout=5)
+    after = int(time.time() * 1000)
+    resp.raise_for_status()
+
+    server_ts = int(resp.json()["data"]["timestampMs"])
+    local_midpoint = (before + after) // 2
+    TIME_OFFSET_MS = server_ts - local_midpoint
+
+def signed_request(method: str, path: str, params=None, body=None):
+    params = dict(params or {})
+    params["timestamp"] = str(int(time.time() * 1000) + TIME_OFFSET_MS)
+
+    query_string = urlencode(params)
+    body_string = ""
+    if body is not None:
+        body_string = json.dumps(body, separators=(",", ":"), ensure_ascii=False)
+
+    signature = sign(query_string + body_string)
+    url = f"{BASE_URL}{path}?{query_string}&signature={signature}"
+    headers = {
+        "X-API-KEY": API_KEY,
+        "Content-Type": "application/json",
+    }
+    resp = requests.request(method, url, headers=headers, data=body_string if body is not None else None, timeout=10)
+    resp.raise_for_status()
+    return resp.json()
+
+sync_time_offset()
+print(signed_request("GET", "/v1/private/order/current", {"symbol": "BTCUSDT"}))
+```
+
+<h2 id="related-security-guides">相關安全指南</h2>
+
+- [認證]（/developer-api/authentication）
+- [API Key 管理 ]（/developer-api/api-key-management）
+- 【秘密與簽名】（/sdk/security/secrets-signing）
+- [錯誤代碼與故障排除]（/developer-api/error-codes-and-troubleshooting）
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">相關頁面</h2>
+
+- [6MM API 認證： JWT 與 API 金鑰](/zh-TW/developer-api/authentication)
+- [API Key 管理](/zh-TW/developer-api/api-key-management)
+- [Agent SDK 祕密與 HMAC 手語](/zh-TW/sdk/security/secrets-signing)
+- [錯誤代碼與故障排除](/zh-TW/developer-api/error-codes-and-troubleshooting)
+<!-- sixmm-localized-link-repair:end -->

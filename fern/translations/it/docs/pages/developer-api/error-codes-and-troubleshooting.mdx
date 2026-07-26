@@ -1,0 +1,60 @@
+---
+title: "Codici di errore e risoluzione dei problemi"
+description: "Diagnosticare 6MM API errori utilizzando codici di risposta, messaggi, ID di richiesta, linee guida per i ritenti, controlli di autenticazione e passaggi di risoluzione dei problemi di integrazione."
+slug: developer-api/error-codes-and-troubleshooting
+canonical-url: https://docs.6mm.com/it/developer-api/error-codes-and-troubleshooting
+---
+
+<h2 id="error-response-format">Formato di risposta all'errore</h2>
+
+```json
+{
+  "code": 1003,
+  "message": "Invalid token",
+  "requestId": "req-12345678"
+}
+```
+
+Gli errori aziendali di solito restituiscono ancora la struttura unificata JSON . Gli integratori dovrebbero controllare prima `code` . I fallimenti di autenticazione possono restituire HTTP `401`; la limitazione del tasso può restituire HTTP `429`.
+
+<h2 id="common-error-codes">Codici di errore comuni</h2>
+
+| Codice di errore      | Descrizione                                  |
+| --------------- | -------------------------------------------- |
+| `0`             | Successo                                      |
+| `1001`          | Nessuna informazione valida di autenticazione non è fornita |
+| `1002`          | Token scaduto                                |
+| `1003`          | Token invalido, API Keyo firma         |
+| `1004`          | Token revocato                                |
+| `1006`          | Fonte IP discrepanza                           |
+| `2001`          | Parametro richiesto mancanza                   |
+| `2002`          | Valore del parametro non valido                      |
+| `2003`          | Parametro fuori portata                       |
+| `3001`          | Equilibrio insufficiente                         |
+| `3003`          | Ordine non trovato                              |
+| `3004`          | Richiesta duplicata                            |
+| `3005`          | L'ordine non può essere annullato                     |
+| `3006`          | Permesso negato                            |
+| `3100` - `3112` | Errore di validazione dei parametri di ordine delle condizioni   |
+| `5001`          | Errore interno del server                        |
+| `5002`          | Servizio temporaneamente non disponibile              |
+| `5003`          | Limite di velocità attivato                         |
+
+<h2 id="troubleshooting">Risoluzione dei problemi</h2>
+
+| Problema                                     | Raccomandazione                                                                                   |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `1001` nessuna informazione valida di autenticazione  | Controlla se `Authorization: Bearer <accessToken>` o `X-API-KEY` è incluso.                  |
+| `1002` Token scaduto                        | Aggiorna il Token o accedi di nuovo prima di riprovare.                                                   |
+| `1003` Token, API Keyo firma non valida | Controlla API Key, payload firmata, corpo JSON stringa di richiesta e ordine dei parametri di query.           |
+| `1006` fonte IP discrepanza                   | Controlla la configurazione API Key IP whitelist.                                                    |
+| `3004` richiesta duplicata                    | Non riutilizzare la stessa firma per percorsi legati all'ordine. Rigenerare `timestamp` e `signature`. |
+| `5003` limite di tasso attivato                 | Riduci la frequenza delle richieste e usa un backoff esponenziale se riprovi.                                |
+| `Timestamp outside of tolerance window`     | Chiama `/v1/time` per calibrare l'offset temporale e firma di nuovo la richiesta.                             |
+
+<h2 id="related-diagnostic-guides">Guide diagnostiche correlate</h2>
+
+- [Ambienti e Convenzioni Comuni](/it/developer-api/environments-and-common-conventions)
+- [Autenticazione](/it/developer-api/authentication)
+- [Raccomandazioni di Integrazione](/it/developer-api/integration-recommendations)
+- [Modello di Richiesta di Supporto](/it/resources/support-request-template)

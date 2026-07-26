@@ -1,0 +1,108 @@
+---
+title: "تضمين 6MM Trading Widget: البدء السريع"
+subtitle: "أضف محطة التداول إلى صفحة ويب تحتوي على حاوية، وسكريبت v1، وTradingWidget.create()."
+slug: sdk/trading-widget/quick-start
+canonical-url: https://docs.6mm.com/ar/sdk/trading-widget/quick-start
+---
+
+تدمج Trading Widget SDK واجهة التداول 6MM داخل صفحة ويب مملوكة للشركاء. أسرع تكامل يتطلب حاوية مرئية، وسكريبت SDK الإنتاج، واستدعاء إلى `TradingWidget.create()`.
+
+<h2 id="before-you-start">قبل أن تبدأ</h2>
+
+- تشغيل المثال من صفحة ويب يمكنها تحميل الموارد من `https://app.6mm.com`.
+- إعطاء حاوية الأداة عرضا وارتفاعا صريحين.
+- حمل SDK قبل الاتصال `TradingWidget.create()`.
+- تخطيط [تدفق المصادقة](/ar/sdk/trading-widget/authentication) قبل تمكين ميزات الحساب أو التداول في الإنتاج.
+
+<h2 id="minimal-example">مثال بسيط</h2>
+
+```html
+<div id="trading-widget" style="width: 100%; height: 720px"></div>
+
+<script src="https://app.6mm.com/sdk/trading-widget/v1/index.js"></script>
+<script>
+  const widget = TradingWidget.create('#trading-widget', {
+    baseUrl: 'https://app.6mm.com',
+    symbol: 'BTCUSDT',
+    theme: 'dark',
+    locale: 'en',
+    layout: 'default',
+    display: {
+      showHeader: false,
+      showTicker: false,
+      hidden: [],
+    },
+    onReady(event) {
+      console.log('ready', event)
+    },
+    onError(error) {
+      console.error('error', error)
+    },
+  })
+</script>
+```
+
+عندما ينجح التكامل، ينشئ SDK إطار iframe داخل `#trading-widget` وينادي `onReady`. التقاط `onError` أثناء التطوير بحيث تكون إخفاقات التكوين والتحميل مرئية.
+
+<h2 id="sdk-urls">SDK الروابط</h2>
+
+| البيئة | URL النص |
+| --- | --- |
+| الإنتاج | https://app.6mm.com/sdk/trading-widget/v1/index.js |
+
+> **اضبط baseUrl بشكل صريح**
+>
+> عند الاختبار من صفحات مملوكة للشركاء، امرر baseUrl بحيث يشير الiframe دائما إلى نطاق الويب 6MM .
+
+<h2 id="display-controls">ضوابط العرض</h2>
+
+التضمين الشريكي يخفي رأس الحاسوب ومؤشر السوق السفلي بشكل افتراضي. استخدم `display` عندما تحتاج إلى إظهار مناطق الشل أو إخفاء الحاويات عالية المستوى في صفحة التداول المدمجة.
+
+```js
+display: {
+  showHeader: false,
+  showTicker: false,
+  hidden: ['account'],
+}
+```
+
+<h2 id="container-size">حجم الحاوية</h2>
+
+| السطح | الحد الأدنى الموصى به |
+| --- | --- |
+| سطح المكتب | 1024 × 720 |
+| موبايل | 390 × 700 |
+
+للتخطيطات المستجيبة، حافظ على سلس العرض وحدد ارتفاعا أدنى مناسبا لكل نقطة توقف. الحاوية ذات الارتفاع الصفري يمكنها تحميل SDK بنجاح مع ترك واجهة التداول غير مرئية.
+
+<h2 id="verify-the-integration">تحقق من التكامل</h2>
+
+1. تأكد من عودة سكريبت SDK بنجاح في لوحة شبكة المتصفح.
+2. تأكيد `onReady` الإطلاق بمجرد تهيئة iframe.
+3. اختبر `symbol`المكونة وال `locale`والموضوع والأقسام المخفية.
+4. تغيير حجم الصفحة عبر نقاط توقف سطح المكتب والهواتف المحمولة.
+5. أكمل اختبارا مصادقا مع مستخدم غير إنتاجي قبل الإطلاق.
+
+<h2 id="common-issues">القضايا الشائعة</h2>
+
+| عَرَض | ما يجب التحقق منه |
+| --- | --- |
+| منطقة الأداة الفارغة | تأكد من أن الحاوية تظهر عرضا وارتفاعا. |
+| `TradingWidget` غير معرف | تأكد من تحميل السكريبت v1 قبل إنشاء المكالمة. |
+| الصفحة أو البيئة الخاطئة | قم بتعيين `baseUrl` بشكل صريح وتحقق من البيئة المكونة. |
+| حدث الاستعداد لا يطلق أبدا | التقاط `onError` وفحص طلبات iframe أو السكريبتات المحجوبة. |
+| بيانات الحساب غير متوفرة | أكمل تدفق مصادقة الأداة المدعومة. |
+
+<h2 id="next-steps">الخطوات التالية</h2>
+
+<CardGroup cols={3}>
+<Card title="مصادقة الأداة" icon="fa-duotone fa-user-shield" href="/ar/sdk/trading-widget/authentication">
+قم بتوصيل الطرفية المدمجة بجلسة مستخدم معتمدة.
+</Card>
+<Card title="الخيارات والفعاليات" icon="fa-duotone fa-sliders" href="/ar/sdk/trading-widget/options-events">
+قم بتكوين الرموز، والموقع الجغرافي، وسلوك العرض، واستدعاءات دورة الحياة.
+</Card>
+<Card title="طرق العينات" icon="fa-duotone fa-code" href="/ar/sdk/trading-widget/instance-methods">
+التحكم في نسخة الأداة التي تم إنشاؤها بعد التهيئة.
+</Card>
+</CardGroup>

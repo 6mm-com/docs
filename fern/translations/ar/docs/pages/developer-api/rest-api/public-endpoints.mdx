@@ -1,0 +1,165 @@
+---
+title: "نقاط النهاية العامة"
+description: "الوصول إلى نقاط نهاية 6MM API العامة للأدوات، والنقاط، ودفاتر الطلبات، والتداولات، وغيرها من معلومات السوق غير المصادقة."
+slug: developer-api/rest-api/public-endpoints
+canonical-url: https://docs.6mm.com/ar/developer-api/rest-api/public-endpoints
+---
+
+<h2 id="base-url">URL القاعدة</h2>
+
+```
+https://api.6mm.com
+```
+
+<h2 id="service-version">نسخة الخدمة</h2>
+
+```http
+GET /v1/version
+```
+
+احصل على معلومات عن إصدار الخدمة.
+
+<h2 id="server-time">وقت الخادم</h2>
+
+```http
+GET /v1/time
+```
+
+احصل على وقت الخادم. يمكن استخدام هذه النقطة النهائية لمعايرة وقت العميل قبل توقيع API Key .
+
+<h2 id="user-login">تسجيل دخول المستخدم</h2>
+
+```http
+POST /v1/public/user/login
+```
+
+معايير الطلب:
+
+| المعلمة    | النوع   | مطلوب | الوصف                             |
+| ------------ | ------ | -------- | --------------------------------------- |
+| `username`   | string | نعم      | اسم المستخدم، الطول من 3 إلى 32                 |
+| `password`   | string | نعم      | كلمة السر، الطول 1 - 64                 |
+| `deviceId`   | string | لا       | بصمة الجهاز، حتى 64 حرفا |
+| `deviceName` | string | لا       | اسم الجهاز، حتى 128 حرفا       |
+
+مثال على الطلب:
+
+```bash
+curl -X POST https://api.6mm.com/v1/public/user/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "alice",
+    "password": "yourPassword",
+    "deviceId": "device-001",
+    "deviceName": "server-001"
+  }'
+```
+
+مثال على الرد:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "accessToken": "YOUR_ACCESS_TOKEN",
+    "accessExpire": 1769676656
+  },
+  "requestId": "req-login"
+}
+```
+
+<h2 id="refresh-token">رمز تحديث</h2>
+
+```http
+POST /v1/public/user/refresh-token
+```
+
+في سيناريوهات التكامل العادية، يتم تحديث حالة تسجيل الدخول عبر كوكي. احتفظ بالكوكي الذي أعادته عبر رد تسجيل الدخول.
+
+حقول الاستجابة:
+
+| الميدان          | النوع   | الوصف              |
+| -------------- | ------ | ------------------------ |
+| `accessToken`  | string | رمز الوصول الجديد         |
+| `accessExpire` | int64  | وقت انتهاء صلاحية رمز الوصول |
+
+<h2 id="agent-sso">العميل SSO</h2>
+
+<h2 id="ticket-exchange">تبادل التذاكر</h2>
+
+```http
+POST /v1/public/agent-sso/exchange-ticket
+```
+
+معايير الطلب:
+
+| المعلمة  | النوع   | مطلوب | الوصف                                 |
+| ---------- | ------ | -------- | ------------------------------------------- |
+| `ticket`   | string | نعم      | تذكرة لمرة واحدة صادرة من خدمة الوكيل |
+| `deviceId` | string | لا       | بصمة الجهاز، حتى 64 حرفا     |
+
+حقول الاستجابة:
+
+| الميدان          | النوع   | الوصف              |
+| -------------- | ------ | ------------------------ |
+| `accessToken`  | string | رمز الوصول             |
+| `accessExpire` | int64  | وقت انتهاء صلاحية رمز الوصول |
+| `redirectPath` | string | مسار إعادة التوجيه المقترح  |
+
+<h2 id="embed-token-exchange">تبادل الرموز المضمنة</h2>
+
+```http
+POST /v1/public/agent-sso/exchange-embed-token
+```
+
+معايير الطلب:
+
+| المعلمة    | النوع   | مطلوب | الوصف                                                    |
+| ------------ | ------ | -------- | -------------------------------------------------------------- |
+| `embedToken` | string | نعم      | رمز تداول مدمج قصير العمر يصدره خدمة الوكلاء |
+| `channelId`  | string | نعم      | معرف قناة iframe مدمج، حتى 128 حرفا               |
+| `deviceId`   | string | لا       | بصمة الجهاز، حتى 64 حرفا                        |
+
+حقول الاستجابة:
+
+| الميدان          | النوع   | الوصف              |
+| -------------- | ------ | ------------------------ |
+| `accessToken`  | string | رمز الوصول             |
+| `accessExpire` | int64  | وقت انتهاء صلاحية رمز الوصول |
+
+<h2 id="pnl-leaderboard">لوحة المتصدرين في PnL</h2>
+
+```http
+GET /v1/public/leaderboard/pnl?period=30d
+```
+
+معايير الطلب:
+
+| المعلمة | النوع   | مطلوب | الوصف          |
+| --------- | ------ | -------- | -------------------- |
+| `period`  | string | نعم      | `7d` / `30d` / `90d` |
+
+حقول الاستجابة:
+
+| الميدان              | النوع   | الوصف                                                       |
+| ------------------ | ------ | ----------------------------------------------------------------- |
+| `list[].rank`      | int32  | الرتبة                                                              |
+| `list[].userId`    | string | معرف المستخدم الخارجي                                                  |
+| `list[].trader`    | string | اسم تاجر مقنع                                                |
+| `list[].volume`    | string | حجم التداول في النافذة                                      |
+| `list[].pnlAmount` | string | تم تحقيق PnL في النافذة                                        |
+| `list[].pnlPct`    | string | نسبة PnL، عشرية من `0` إلى `1`                                |
+| `myRank`           | int32  | ترتيب المستخدم الحالي. يعيد `0` إذا لم يتم التحقق منه أو لم يتم تصنيفه |
+
+<h2 id="related-documentation">وثائق ذات صلة</h2>
+
+- [بيانات السوق] (/developer-api/rest-api/market-data)
+- [قنوات WebSocket العامة](/ar/developer-api/websocket/public-market-channels)
+- [البيئات والاتفاقيات المشتركة] (/developer-api/environments-and-common-conventions)
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">صفحات ذات صلة</h2>
+
+- [بيانات السوق](/ar/developer-api/rest-api/market-data)
+- [البيئات والاتفاقيات الشائعة](/ar/developer-api/environments-and-common-conventions)
+<!-- sixmm-localized-link-repair:end -->

@@ -1,0 +1,36 @@
+---
+title: "Trading Widget SDK"
+subtitle: "Osadz terminal 6MM trading na stronie partnera za pomocą iframe."
+slug: sdk/trading-widget/overview
+canonical-url: https://docs.6mm.com/pl/sdk/trading-widget/overview
+---
+
+<h2 id="responsibility-split">Podział odpowiedzialności</h2>
+
+| Obszar | Właściciel | Przypisy |
+| --- | --- | --- |
+| Tworzenie kontenerów | Front partner | Zapewnij widoczny element o wyraźnej szerokości i wysokości. |
+| Tworzenie iframe | Trading Widget SDK | SDK tworzy i zarządza iframe. |
+| Interfejs handlowy | 6MM iframe | K-line, księga zamówień, formularz zamówienia, pozycje, zamówienia i dane konta są prowadzone wewnątrz iframe. |
+| Sterowanie wyświetlaczem | Trading Widget SDK + 6MM iframe | Nagłówek osadzenia PC i dolny ticker są domyślnie ukryte. Partnerzy mogą używać `display` do pokazywania obszarów powłoki lub ukrywania kontenerów handlowych na wysokim poziomie. |
+| Kontrola logowania partnera | Backend partnera | Zweryfikowaj sesję użytkownika partnera przed wydaniem poświadczeń uwierzytelniających. |
+| Embed token emsuance | Backend partnera + Agent API | Polecam tryb partner-token. |
+
+<h2 id="versioning">Wersjonowanie</h2>
+
+Publiczna ścieżka integracji pozostaje stabilna w skrypcie v1 URL. Obecny zestaw możliwości v1 obejmuje token partnera, tokenProvider, entryUrlProvider, sterowanie wyświetlania, zdarzenia cyklu życia, metody instancji oraz zdarzenia kolejności.
+
+```html
+<script src="https://app.6mm.com/sdk/trading-widget/v1/index.js"></script>
+```
+
+<h2 id="when-to-use-the-widget">Kiedy używać widgetu</h2>
+
+Wybierz Trading Widget , gdy partner potrzebuje pełnego interfejsu handlowego w istniejącym produkcie webowym. Zamiast tego korzystaj z dokumentacji REST API i WebSocket podczas budowania i utrzymania w pełni niestandardowego interfejsu handlowego.
+
+<h2 id="implementation-path">Ścieżka implementacji</h2>
+
+1. Wykonaj [Trading Widget Quick Start](/pl/sdk/trading-widget/quick-start), aby załadować skrypt i utworzyć widoczny kontener.
+2. Konfiguruj [uwierzytelnianie tokenów partnera](/pl/sdk/trading-widget/authentication) przez backend partnera.
+3. Dodaj wymagane [opcje i zdarzenia](/pl/sdk/trading-widget/options-events).
+4. Używaj [metod instancji](/pl/sdk/trading-widget/instance-methods) do sterowania cyklem życia i czasem działania.

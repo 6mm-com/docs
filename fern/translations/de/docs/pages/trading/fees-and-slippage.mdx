@@ -1,0 +1,132 @@
+---
+title: "Handelskosten: Gebühren & Slippage"
+description: "Schätzen Sie die ewigen Handelskosten, indem Sie Ausführungsgebühren, Orderbuch-Schlupf, Liquidität, Auftragsgröße und Auftragstyp verstehen."
+slug: trading/fees-and-slippage
+canonical-url: https://docs.6mm.com/de/trading/fees-and-slippage
+---
+
+Die Endkosten eines ewigen Handels hängen sowohl von expliziten Gebühren als auch von der Differenz zwischen dem erwarteten und tatsächlichen Ausführungspreis ab.
+
+Das Verständnis dieser Kosten hilft Nutzern, Handelsergebnisse besser abzuschätzen und Risiken zu managen.
+
+Diese Seite konzentriert sich auf die Ausführungsqualität und die Gesamthandelskosten. Für Maker-, Taker-, Finanzierungs-, Liquidations- und Abwicklungsregeln siehe die [Perpetual Trading Fee Structure](/de/trading/fee-structure).
+
+***
+
+<h2 id="trading-fees">Handelsgebühren</h2>
+
+Handelsgebühren werden nur erhoben, wenn ein Auftrag ausgeführt wird.
+
+<h2 id="maker-and-taker-fees">Hersteller- und Nehmergebühren</h2>
+
+6MM verwendet ein Maker/Taker-Fee-Modell:
+
+* Maker Fee
+  * Angewendet, wenn Ihre Bestellung Liquidität zum Orderbuch hinzufügt
+  * Kommt typischerweise von Limitaufträgen, die nicht sofort ausgefüllt werden
+* Nehmergebühr
+  * Angewendet, wenn Ihre Bestellung Liquidität aus dem Auftragsbuch entfernt
+  * Kommt häufig von Marktaufträgen oder sofort ausgefüllten Limitaufträgen
+
+Die Gebühren können je nach Handelspaar und Partnerkonfiguration variieren.
+
+***
+
+<h2 id="when-are-fees-charged">Wann werden Gebühren erhoben?</h2>
+
+* Bei Auftragsausführung werden Gebühren erhoben
+* Die Gebühren werden basierend auf dem ausgeführten Handelswert berechnet
+* Gebühren werden vom Dauerkonto abgezogen
+
+Unerfüllte oder stornierte Bestellungen verursachen keine Gebühren.
+
+***
+
+<h2 id="estimate-total-execution-cost">Schätzung der Gesamtausführungskosten</h2>
+
+Bevor Sie eine große Bestellung aufgeben, überlegen Sie:
+
+```text
+estimated trading cost = trading fee + estimated slippage cost
+slippage cost = |average execution price - expected price| × executed quantity
+```
+
+Finanzierungszahlungen können auch die Kosten beeinflussen, eine dauerhafte Position während einer Förderveranstaltung zu halten. Liquidationsbezogene Gebühren gelten nur, wenn die Liquidationsregeln ausgelöst werden.
+
+Die Schätzung ist kein garantiertes Ausführungsergebnis. Die verfügbare Tiefe des Auftragsbuchs und die Marktvolatilität können sich zwischen Schätzung und Ausführung ändern.
+
+***
+
+<h2 id="slippage">Durchrutschen</h2>
+
+Slippage ist die Differenz zwischen dem erwarteten Preis und dem tatsächlichen Ausführungspreis.
+
+<h2 id="why-slippage-happens">Warum Rutschen passiert</h2>
+
+Rutschen kann durch folgende Folgen auftreten:
+
+* Niedrige Marktliquidität
+* Große Bestellgröße
+* Hohe Marktvolatilität
+* Nutzung von Marktaufträgen
+
+Slippage ist in schnell bewegenden Märkten deutlicher spürbar.
+
+***
+
+<h2 id="how-to-reduce-slippage">Wie man Rutschen reduziert</h2>
+
+* Verwenden Sie Limit-Orders anstelle von Marktaufträgen
+* Handel in Zeiten höherer Liquidität
+* Vermeiden Sie es, große Bestellungen auf einmal aufzugeben.
+* Überwachen Sie die Tiefe des Orderbuchs vor dem Handel
+
+***
+
+<h2 id="fees-vs-slippage">Gebühren vs. Slippage</h2>
+
+| Kostentyp    | Wann es auftritt   | Kann kontrolliert werden |
+| ------------ | ---------------- | ----------------- |
+| Handelsgebühren | Nach der Hinrichtung   | Teilweise         |
+| Durchrutschen     | Während der Hinrichtung | Ja               |
+
+Während die Gebühren vorhersehbar sind, hängt Slippage von den Marktbedingungen und dem Auftragsverhalten ab.
+
+***
+
+<h2 id="cost-scenarios">Häufige Kostenszenarien</h2>
+
+| Szenario | Hauptkostenüberlegung |
+| --- | --- |
+| Ruhegrenzordnung | Maker fee und ob die Bestellung erfüllt ist. |
+| Marktordnung | Taker-Gebühr und verfügbare Tiefe des Bestellbuchs. |
+| Große Ordnung | Verschiebung über mehrere Preisniveaus hinweg. |
+| Schnell bewegender Markt | Unsicherheit zwischen Ausführungspreis und größerer effektiver Spread. |
+| Positionen über die gesamte Finanzierung hinweg innehalten | Handelskosten plus die anfallende Finanzierungszahlung. |
+
+***
+
+<h2 id="beginner-tips">Anfängertipps</h2>
+
+* Überprüfen Sie die Gebührensätze vor dem Handel
+* Vermeiden Sie häufige kleine Trades, um kumulative Gebühren zu senken
+* Nutze Limit-Orders, um den Ausführungspreis zu steuern
+* Berücksichtigen Sie sowohl Gebühren als auch Slippage bei der Festlegung von TP/SL-Niveaus
+
+***
+
+<h2 id="summary">Zusammenfassung</h2>
+
+Zum 6MM:
+
+* Die Gebühren sind transparent und ausführend
+* Der Slippage hängt von der Liquidität und dem Ordertyp ab
+* Kostenbewusstsein ist für eine konsistente Handelsleistung unerlässlich
+
+Das effektive Management von Gebühren und Slippage ist ein wesentlicher Bestandteil eines erfolgreichen Perpetual Tradings.
+
+<h2 id="related-cost-guides">Verwandte Kostenführer</h2>
+
+- [Gebührenstruktur](/de/trading/fee-structure): Hersteller-, Nehmer-, Finanzierungs-, Liquidations- und Abwicklungsgebühren.
+- [Markttiefe & Spread](/de/solutions/market-depth-spread): Wie Liquidität die Preisauswirkung beeinflusst.
+- [Befehlstypen](/de/trading/order-types): Ausführungsverhalten, das die Verschiebung verändert.

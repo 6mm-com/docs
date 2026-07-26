@@ -1,0 +1,72 @@
+---
+title: "合作夥伴整合安全架構"
+subtitle: "設計信任邊界與生產控制，涵蓋嵌入式交易、 API、 SDK、網路鉤、資產轉移及營運整合。"
+slug: solutions/security-architecture
+canonical-url: https://docs.6mm.com/zh-TW/solutions/security-architecture
+---
+
+本頁聚焦於合作夥伴應如何設計安全的 6MM 整合。關於交易平台中更廣泛的安全層，請參見[平台安全架構]（/security-compliance/security-architecture）。
+
+安全架構應在正式整合開始前就達成共識。它影響合作夥伴系統如何驗證使用者、發出權杖、儲存機密、接收事件、監控操作及回應事件。
+
+<h2 id="recommended-trust-boundary">建議的信託邊界</h2>
+
+| 組成部分 | 可能包含 | 不能包含 |
+| --- | --- | --- |
+| 合作夥伴前端 | 公開設定、短暫的輸入結果、非敏感的 UI 狀態 | 合作夥伴 API 秘密、簽署金鑰、特權後端憑證 |
+| 合作夥伴後端 | 使用者映射、受保護憑證、簽署邏輯、Webhook 處理 | 透過用戶端回應或公開日誌揭露的秘密 |
+| 6MM 整合端點 | 核准簽署請求、代幣與 webhook 傳遞 | 未經驗證的合作夥伴方用戶假設 |
+
+合作夥伴前端應呼叫合作夥伴後端進行特權操作。後端會驗證合作夥伴使用者，透過核准的API或SDK呼叫6MM，並只回傳前端所需的短暫結果。
+
+<h2 id="security-layers">安全層</h2>
+
+| 層 | 必須專注的方向 |
+| --- | --- |
+| API 資歷 | 僅後端儲存、輪換計畫與存取控制。 |
+| 請求簽署 | 時間戳記、簽名與重播保護處理一致。 |
+| 嵌入標記 | 發行時間短暫、資格審查，以及明顯的無效行為。 |
+| Webhook | 簽名驗證、冪性、重試及事件稽核日誌。 |
+| 營運 | 存取角色、事件升級、監控及證據保存。 |
+
+<h2 id="production-control-plan">生產控制計畫</h2>
+
+| 控制區 | 最低實施證據 |
+| --- | --- |
+| 憑證儲存 | 秘密管理位置、存取權擁有者、環境分離與輪替流程。 |
+| 使用者輸入 | 會話驗證、資格檢查、短壽命的令牌流與失敗處理。 |
+| 簽署請求 | 正確的環境、同步時間、請求記錄，以及簽章錯誤警示。 |
+| 資產作業 | 獨特的商業識別碼、逾時對帳、狀態查詢及營運商審查路徑。 |
+| Webhook | 原始體簽名驗證、重播控制、冪性儲存及重試安全處理。 |
+| 監測 | 針對認證失敗、異常重試、Webhook 延遲及操作錯誤的警示。 |
+| 事件應變 | 指定擁有者、升級管道、證據保存及憑證吊銷程序。 |
+
+<h2 id="launch-review">發射回顧</h2>
+
+製作前：
+
+1. 繪製使用者、標記、請求、資產及 webhook 資料流。
+2. 標記所有憑證的建立、儲存、使用、記錄、輪替及撤銷地點。
+3. 測試過期的標記、無效簽章、逾時、重複的 webhook 以及重新連線行為。
+4. 確認支援團隊能從請求或商業識別碼定位作業。
+5. 完成[生產啟動清單]（/solutions/production-launch-checklist）。
+
+<h2 id="recommended-docs">推薦醫師</h2>
+
+<CardGroup cols={3}>
+<Card title="秘密與簽名" icon="fa-duotone fa-key" href="/zh-TW/sdk/security/secrets-signing">
+保護 Agent SDK 憑證和簽署的請求。
+</Card>
+<Card title="請求簽署" icon="fa-duotone fa-signature" href="/zh-TW/developer-api/request-signing">
+實作直接開發者 API 請求簽署。
+</Card>
+<Card title="網鉤與冪性" icon="fa-duotone fa-webhook" href="/zh-TW/sdk/security/webhooks-idempotency">
+安全處理事件。
+</Card>
+</CardGroup>
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">相關頁面</h2>
+
+- [平台安全架構](/zh-TW/security-compliance/security-architecture)
+- [解決方案啟動清單](/zh-TW/solutions/production-launch-checklist)
+<!-- sixmm-localized-link-repair:end -->

@@ -1,0 +1,89 @@
+---
+title: "Connessione, Abbonamento e Battito del cuore"
+subtitle: "Connettiti a 6MM WebSocket stream, iscriviti agli argomenti, mantieni vive le connessioni ed elabora le buste dei messaggi in sicurezza."
+slug: developer-api/websocket/connection-subscription-and-heartbeat
+canonical-url: https://docs.6mm.com/it/developer-api/websocket/connection-subscription-and-heartbeat
+---
+
+Usa WebSocket stream per i dati di mercato e gli aggiornamenti privati dello stato degli utenti che devono rimanere aggiornati senza consultazione.
+
+<h2 id="connection-url">Connessione URL</h2>
+
+```text
+wss://ws.6mm.com/ws
+```
+
+I flussi privati richiedono un contesto di autenticazione come un listenKey o un token di accesso come descritto nella documentazione del canale privato.
+
+<h2 id="subscribe">Abbonati</h2>
+
+```json
+{ "id": "1772007814666", "op": "subscribe", "args": ["market.depth.BTCUSDT"] }
+```
+
+Riconoscimento di abbonamento riuscito:
+
+```json
+{
+  "id": "1772007814666",
+  "event": "subscribe",
+  "success": true,
+  "data": ["market.depth.BTCUSDT"]
+}
+```
+
+<h2 id="unsubscribe">Disiscriverti</h2>
+
+```json
+{ "id": "1772007814667", "op": "unsubscribe", "args": ["market.depth.BTCUSDT"] }
+```
+
+<h2 id="application-ping">Ping dell'applicazione</h2>
+
+```json
+{ "id": "1772007814668", "op": "ping", "args": [] }
+```
+
+<h2 id="message-envelope">Inviluppo del messaggio</h2>
+
+I push pubblici utilizzano un limite coerente:
+
+```json
+{
+  "topic": "market.depth.BTCUSDT",
+  "event": "data",
+  "ts": 1772007815000,
+  "data": {}
+}
+```
+
+<h2 id="operational-recommendations">Raccomandazioni operative</h2>
+
+- Generare un `id` lato client unico per ogni iscrizione, disiscrizione e richiesta di ping.
+- Considerare la riconnessione come una nuova sessione e riiscriverti agli argomenti richiesti.
+- Validare che il `topic` restituito corrisponda al canale che il tuo servizio si aspetta.
+- Mantenere l'elaborazione dei messaggi idempotente quando sono coinvolti eventi di ordini privati o account.
+- Modifica dello stato della connessione nel registro, confermi di abbonamento e disconnessioni anomale.
+
+<h2 id="reconnect-workflow">Flusso di lavoro di riconnessione</h2>
+
+1. Chiudi o scarta la presa precedente e crea una nuova connessione.
+2. Riautenticare i flussi privati con un listenKey valido o un token di accesso.
+3. Sottoscriverti nuovamente a ogni argomento richiesto e attendere i riconoscimenti di successo.
+4. Sostituire lo stato locale del libretto ordini con una nuova istantanea prima di applicare aggiornamenti incrementali.
+5. Riconciliare ordini aperti, posizioni e saldi tramite REST se eventi privati potrebbero essere stati trascurati.
+
+Usa un backoff esponenziale limitato con jitter per i tentativi di riconnessione. Un client che si riconnette continuamente dovrebbe avvisare gli operatori invece di riprovare indefinitamente senza visibilità.
+
+<h2 id="heartbeat-and-stale-connections">Battito cardiaco e connessioni stantie</h2>
+
+- Tracciare il messaggio in entrata più recente e il riconoscimento ping riuscito.
+- Utilizzare l'intervallo cardiaco e la soglia di inattività approvati per l'ambiente di produzione.
+- Considerare una connessione come obsoleta quando la soglia configurata è superata, anche se il socket TCP appare ancora aperto.
+- Non riutilizzare abbonamenti da un vecchio socket; riiscriversi esplicitamente dopo ogni riconnessione.
+
+<h2 id="related-documentation">Documentazione correlata</h2>
+
+- [Canali del Mercato Pubblico](/it/developer-api/websocket/public-market-channels): argomenti, continuità del libretto ordini, transazioni, candele e ticker.
+- [Canale Utente Privato](/it/developer-api/websocket/private-user-channel): listenKey ciclo di vita ed eventi autenticati.
+- [Raccomandazioni di Integrazione](/it/developer-api/integration-recommendations): tentativi, idempotenza, monitoraggio e test di lancio.

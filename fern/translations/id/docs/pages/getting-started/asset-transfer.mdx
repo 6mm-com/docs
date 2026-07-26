@@ -1,0 +1,94 @@
+---
+title: "Transfer Aset"
+description: "Pelajari bagaimana aset berpindah antara sistem mitra dan akun trading 6MM , termasuk tanggung jawab transfer, penanganan status, dan pemeriksaan operasional."
+slug: trading/getting-started/asset-transfer
+canonical-url: https://docs.6mm.com/id/trading/getting-started/asset-transfer
+---
+
+6MM beroperasi di bawah model aliran aset yang dikelola mitra.
+
+6MM tidak menerima setoran langsung atau penarikan dari pengguna akhir.
+
+Semua arus masuk dan keluar dana pengguna ditangani secara eksklusif oleh agen resmi atau platform mitra.
+
+Desain ini memastikan pemisahan yang jelas antara tanggung jawab keuangan, cakupan regulasi, dan kepemilikan pengguna antara 6MM dan mitranya.
+
+***
+
+<h2 id="partner-managed-deposits-and-withdrawals">Setoran dan Penarikan yang Dikelola Mitra</h2>
+
+* Pengguna hanya menyetor dan menarik dana melalui platform mitra
+* 6MM tidak menyediakan alamat deposit on-chain atau off-chain kepada pengguna akhir
+* 6MM tidak secara langsung menyimpan atau menyelesaikan dana pengguna di luar eksekusi perdagangan
+
+Mitra tetap bertanggung jawab penuh untuk:
+
+* Manajemen saldo pengguna
+* Pemrosesan deposit dan penarikan
+* Kepatuhan dan kontrol risiko terkait kustodi dana
+
+***
+
+<h2 id="automated-balance-transfer-to-6mm">Transfer Saldo Otomatis ke 6MM</h2>
+
+Untuk memungkinkan perdagangan, pengguna dapat mentransfer sebagian saldo yang dikelola mitra ke 6MM melalui mekanisme transfer internal otomatis.
+
+Karakteristik utama dari proses transfer ini meliputi:
+
+* Transfer diinisiasi dan diotorisasi oleh sistem mitra
+* Proses dijalankan secara otomatis di tingkat infrastruktur
+* Tidak diperlukan interaksi manual pengguna dengan 6MM
+* Transfer terjadi secara real time atau hampir real time
+
+Dari sudut pandang pengguna, proses ini tampak sebagai alokasi saldo yang mulus, bukan setoran tradisional.
+
+***
+
+<h2 id="account-structure-within-6mm">Struktur Akun Dalam 6MM</h2>
+
+Dalam 6MM, aset yang dipindahkan secara logis dialokasikan ke dalam dua akun internal yang berbeda:
+
+**Akun Spot**
+
+* Berfungsi sebagai akun penerima awal untuk dana yang ditransfer
+* Berfungsi sebagai kumpulan aset untuk manajemen modal internal
+* Tidak mendukung aktivitas perdagangan langsung
+
+**Akun Abadi**
+
+* Dana dipindahkan dari Akun Spot ke Akun Perpetual
+* Hanya aset di Akun Perpetual yang dapat digunakan untuk penempatan pesanan
+* Margin, posisi, dan PnL yang belum direalisasikan dihitung pada tingkat ini
+
+Struktur dua lapis ini memungkinkan isolasi modal yang presisi, efisiensi margin, dan pengendalian risiko untuk perdagangan abadi.
+
+***
+
+<h2 id="internal-transfers-between-accounts">Transfer internal antar akun</h2>
+
+* Dana yang ditransfer ke Akun Spot dapat dialokasikan secara bebas dan instan ke Akun Perpetual
+* Transfer internal diproses tanpa interaksi blockchain
+* Transfer dirancang agar berlatensi rendah dan deterministik
+
+Arsitektur ini memastikan pergerakan modal yang lancar sambil mempertahankan pemisahan ketat antara penyimpanan aset dan eksekusi perdagangan.
+
+***
+
+<h2 id="design-principles">Prinsip Desain</h2>
+
+Sistem transfer aset 6MM dibangun berdasarkan prinsip-prinsip berikut:
+
+* Tidak ada setoran atau penarikan langsung pengguna pada 6MM
+* Semua kustodi aset tetap berada di platform mitra
+* Alokasi dana otomatis yang diotorisasi oleh mitra
+* Pemisahan yang jelas antara akun Spot dan Perpetual
+* Dioptimalkan untuk efisiensi trading dan isolasi risiko
+
+Melalui model ini, 6MM beroperasi sebagai lapisan infrastruktur perdagangan murni, sementara mitra tetap memegang kendali penuh atas dana pengguna dan hubungan keuangan.
+
+<h2 id="implementation-and-safety-guides">Panduan implementasi dan keselamatan</h2>
+
+- [Agent SDK Ikhtisar](/id/sdk/agent-sdk/overview): pengikatan pengguna, transfer, kueri pesanan, dan rekonsiliasi.
+- [Webhooks & Idempotensi](/id/sdk/security/webhooks-idempotency): verifikasi callback status akhir dan retries deduplikasi.
+- [Matriks Tanggung Jawab Mitra](/id/security-compliance/partner-responsibilities): hak asuh dan kepemilikan operasional.
+- [Risk & Liquidations](/id/trading/risk-and-liquidations): memahami bagaimana alokasi akun trading memengaruhi risiko.

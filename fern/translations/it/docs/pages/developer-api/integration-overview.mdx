@@ -1,0 +1,51 @@
+---
+title: "Panoramica dell'integrazione"
+description: "Avvia una 6MM API integrazione con l'ambiente raccomandato, autenticazione, firma, REST, WebSocket, test e sequenza di prontezza alla produzione."
+slug: developer-api/integration-overview
+canonical-url: https://docs.6mm.com/it/developer-api/integration-overview
+---
+
+> REST Base URL: `https://api.6mm.com`\
+> WebSocket URL: `wss://ws.6mm.com/ws`
+
+Questa documentazione è destinata a sistemi esterni che si integrano con il servizio 6MM API . Copre login, autenticazione JWT , gestione API Key , firma API Key HMAC , query di conto, ordini, posizioni, dati di mercato e flussi WebSocket .
+
+Il provisioning degli account e la preparazione dei fondi sono gestiti tramite processi lato piattaforma. Questa documentazione descrive solo endpoint di servizio API chiamabili esternamente.
+
+<h2 id="service-endpoints">Endpoint di servizio</h2>
+
+| Tipo      | Punto finale              |
+| --------- | --------------------- |
+| REST API  | `https://api.6mm.com` |
+| WebSocket | `wss://ws.6mm.com/ws`    |
+
+<h2 id="integration-flow">Flusso di integrazione</h2>
+
+Sequenza di integrazione consigliata:
+
+1. Accedi con l'account fornito dalla piattaforma e ottieni un `accessToken`.
+2. Per l'accesso programmatico lato server, creare prima un API Key con JWT e memorizzare in modo sicuro il `apiSecret`restituito una tantum.
+3. Le query private e gli endpoint di ordine e posizione possono essere chiamati con `Authorization: Bearer <accessToken>` o con firma API Key.
+4. Per i flussi privati WebSocket , crea prima un `listenKey` , poi collegati a `wss://ws.6mm.com/ws?listenKey=...`.
+5. I dati di mercato REST endpoint e i canali pubblici di WebSocket non richiedono autenticazione.
+
+<h2 id="authentication-choice">Scelta dell'autenticazione</h2>
+
+| Scenario                               | Metodo consigliato         |
+| -------------------------------------- | -------------------------- |
+| Azioni dell'utente frontend                  | JWT                        |
+| Chiamate programmatiche lato server         | API Key + HMAC firma   |
+| API Key creazione, aggiornamento e cancellazione | JWT                        |
+| REST di mercato pubblico / WebSocket pubblici  | Nessuna autenticazione richiesta |
+
+<h2 id="documentation-scope">Ambito della documentazione</h2>
+
+Questa documentazione copre login, autenticazione JWT , gestione API Key , firma API Key HMAC , query di conto, ordini, posizioni, dati di mercato e flussi di WebSocket .
+
+<h2 id="recommended-reading-order">Ordine di lettura consigliato</h2>
+
+1. [Ambienti e Convenzioni Comuni](/it/developer-api/environments-and-common-conventions)
+2. [Autenticazione](/it/developer-api/authentication) e [Firma Richieste](/it/developer-api/request-signing)
+3. [REST API](/it/developer-api/rest-api) e [WebSocket](/it/developer-api/websocket)
+4. [Raccomandazioni per l'Integrazione](/it/developer-api/integration-recommendations)
+5. [Elenco di controllo per il lancio della produzione](/it/resources/production-launch-checklist)

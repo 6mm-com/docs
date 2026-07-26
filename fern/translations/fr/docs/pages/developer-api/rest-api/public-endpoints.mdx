@@ -1,0 +1,164 @@
+---
+title: "Points publics de terminaison"
+description: "Accédez aux points publics de 6MM API pour les instruments, tickers, carnets d’ordres, transactions et autres informations de marché non authentifiées."
+slug: developer-api/rest-api/public-endpoints
+canonical-url: https://docs.6mm.com/fr/developer-api/rest-api/public-endpoints
+---
+
+<h2 id="base-url">Base URL</h2>
+
+```
+https://api.6mm.com
+```
+
+<h2 id="service-version">Service Version</h2>
+
+```http
+GET /v1/version
+```
+
+Obtenez les informations sur la version du service.
+
+<h2 id="server-time">Temps serveur</h2>
+
+```http
+GET /v1/time
+```
+
+Obtenez du temps serveur. Ce point de terminaison peut être utilisé pour calibrer le temps client avant API Key signature.
+
+<h2 id="user-login">Connexion utilisateur</h2>
+
+```http
+POST /v1/public/user/login
+```
+
+Paramètres de la demande :
+
+| Paramètre    | Type   | Obligatoire | Description                             |
+| ------------ | ------ | -------- | --------------------------------------- |
+| `username`   | string | Oui      | Nom d’utilisateur, longueur 3 - 32                 |
+| `password`   | string | Oui      | Mot de passe, longueur 1 - 64                 |
+| `deviceId`   | string | Non       | Empreinte digitale de l’appareil, jusqu’à 64 caractères |
+| `deviceName` | string | Non       | Nom de l’appareil, jusqu’à 128 caractères       |
+
+Exemple de demande :
+
+```bash
+curl -X POST https://api.6mm.com/v1/public/user/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "alice",
+    "password": "yourPassword",
+    "deviceId": "device-001",
+    "deviceName": "server-001"
+  }'
+```
+
+Exemple de réponse :
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "accessToken": "YOUR_ACCESS_TOKEN",
+    "accessExpire": 1769676656
+  },
+  "requestId": "req-login"
+}
+```
+
+<h2 id="refresh-token">Jeton de rafraîchissement</h2>
+
+```http
+POST /v1/public/user/refresh-token
+```
+
+Dans les scénarios d’intégration normaux, l’état de connexion est rafraîchi via un cookie. Conservez le cookie retourné par la réponse de connexion.
+
+Champs de réponse :
+
+| Terrain          | Type   | Description              |
+| -------------- | ------ | ------------------------ |
+| `accessToken`  | string | Nouveau jeton d’accès         |
+| `accessExpire` | int64  | Heure d’expiration du jeton d’accès |
+
+<h2 id="agent-sso">Agent SSO</h2>
+
+<h2 id="ticket-exchange">Échange de billets</h2>
+
+```http
+POST /v1/public/agent-sso/exchange-ticket
+```
+
+Paramètres de la demande :
+
+| Paramètre  | Type   | Obligatoire | Description                                 |
+| ---------- | ------ | -------- | ------------------------------------------- |
+| `ticket`   | string | Oui      | Contravention unique délivrée par le service d’agents |
+| `deviceId` | string | Non       | Empreinte digitale de l’appareil, jusqu’à 64 caractères     |
+
+Champs de réponse :
+
+| Terrain          | Type   | Description              |
+| -------------- | ------ | ------------------------ |
+| `accessToken`  | string | Jeton d’accès             |
+| `accessExpire` | int64  | Heure d’expiration du jeton d’accès |
+| `redirectPath` | string | Chemin de redirection suggéré  |
+
+<h2 id="embed-token-exchange">Échange de jetons intégrés</h2>
+
+```http
+POST /v1/public/agent-sso/exchange-embed-token
+```
+
+Paramètres de la demande :
+
+| Paramètre    | Type   | Obligatoire | Description                                                    |
+| ------------ | ------ | -------- | -------------------------------------------------------------- |
+| `embedToken` | string | Oui      | Jeton de trading embarqué de courte durée émis par le service d’agent |
+| `channelId`  | string | Oui      | ID de canal d’iframe intégré, jusqu’à 128 caractères               |
+| `deviceId`   | string | Non       | Empreinte digitale de l’appareil, jusqu’à 64 caractères                        |
+
+Champs de réponse :
+
+| Terrain          | Type   | Description              |
+| -------------- | ------ | ------------------------ |
+| `accessToken`  | string | Jeton d’accès             |
+| `accessExpire` | int64  | Heure d’expiration du jeton d’accès |
+
+<h2 id="pnl-leaderboard">Classement PnL</h2>
+
+```http
+GET /v1/public/leaderboard/pnl?period=30d
+```
+
+Paramètres de la demande :
+
+| Paramètre | Type   | Obligatoire | Description          |
+| --------- | ------ | -------- | -------------------- |
+| `period`  | string | Oui      | `7d` / `30d` / `90d` |
+
+Champs de réponse :
+
+| Terrain              | Type   | Description                                                       |
+| ------------------ | ------ | ----------------------------------------------------------------- |
+| `list[].rank`      | int32  | Grade                                                              |
+| `list[].userId`    | string | ID utilisateur externe                                                  |
+| `list[].trader`    | string | Nom du commerçant masqué                                                |
+| `list[].volume`    | string | Volume de transactions dans la fenêtre                                      |
+| `list[].pnlAmount` | string | J’ai réalisé le PnL à la fenêtre                                        |
+| `list[].pnlPct`    | string | Ratio PnL, décimal de `0` à `1`                                |
+| `myRank`           | int32  | Classement de l’utilisateur actuel. Retour `0` si non authentifié ou non classé |
+
+<h2 id="related-documentation">Documentation associée</h2>
+
+- [Données de marché](/fr/developer-api/rest-api/market-data)
+- [Chaînes publiques WebSocket ](/fr/developer-api/websocket/public-market-channels)
+- [Environnements et conventions courantes] (/developer-api/environments-and-common-conventions)
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">Pages associées</h2>
+
+- [Environnements et conventions communes](/fr/developer-api/environments-and-common-conventions)
+<!-- sixmm-localized-link-repair:end -->

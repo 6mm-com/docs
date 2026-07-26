@@ -1,0 +1,134 @@
+---
+title: "永續交易費用結構"
+description: "參考U保證金永續合約的 6MM 製作者、接受者、資金、清算及結算費用模型。"
+slug: trading/fee-structure
+canonical-url: https://docs.6mm.com/zh-TW/trading/fee-structure
+---
+
+6MM 對U保證金永續合約採用透明且以執行為基礎的費用模式。
+
+僅在交易執行時才會收取費用，且設計上會依市場流動性及交易行為調整。
+
+本頁為費用類別與結算的參考資料。欲了解訂單簿深度與執行價格如何影響總交易成本，請參閱[交易成本：費用與滑票]（/trading/fees-and-slippage）。
+
+***
+
+<h2 id="trading-fees-overview">交易費用概覽</h2>
+
+6MM的交易手續費計算依據：
+
+* 已執行交易價值
+* 訂單類型（製造者或接受者）
+* 交易對與合作夥伴配置
+
+未完成或取消的訂單不會產生任何費用。
+
+對於已執行的量，一般計算為：
+
+```text
+executed notional = execution price × executed quantity
+trading fee = executed notional × applicable maker or taker fee rate
+```
+
+適用的利率取決於交易對及合作夥伴配置。下單前請確認顯示的匯率。
+
+***
+
+<h2 id="maker-fees">創客費用</h2>
+
+當訂單為訂單簿增加流動性時，會收取製作手續費。
+
+典型的創客訂單：
+
+* 未立即執行的限價單
+* 訂單已存於命令簿中
+
+製作者費用通常較低，且可能有激勵以支持市場深度。
+
+***
+
+<h2 id="taker-fees">取樣者費用</h2>
+
+當訂單從訂單簿中移除流動性時，會收取收回費。
+
+典型的接單：
+
+* 市價單
+* 限價單立即執行
+
+出賽者手續費通常較高，因為需立即執行。
+
+***
+
+<h2 id="funding-fees">資金費用</h2>
+
+除了交易費用外，永續合約還涉及資金支付。
+
+* 資金費用會在多空部位間交換
+* 6MM 不收取資金費用
+* 資金利率依市場狀況而異
+
+資金支付有助於保持合約價格與現貨市場保持一致。
+
+***
+
+<h2 id="liquidation-related-fees">清算相關費用</h2>
+
+清算發生時：
+
+* 可能會收取清算費
+* 費用用於涵蓋系統風險及市場執行成本
+
+具體的清算費用規則取決於合作夥伴的配置。
+
+***
+
+<h2 id="fee-settlement">費用結算</h2>
+
+* 費用以穩定幣結算（例如 USDT）
+* 費用直接從永續帳戶扣除
+* 費用計算在執行時即時進行
+
+***
+
+<h2 id="fee-transparency">費用透明</h2>
+
+6MM 確保：
+
+* 費用邏輯具有確定性且可稽核
+* 費用計算可在訂單執行時查看
+* 合作夥伴保留對最終面向用戶的費用呈現的控制權
+
+***
+
+<h2 id="beginner-tips">初學者小技巧</h2>
+
+* 使用限價單以降低接受者手續費
+* 避免過度交易
+* 計算TP/SL等級時請考慮費用
+* 開立大額頭寸前，請先檢視費用率
+
+***
+
+<h2 id="summary">摘要</h2>
+
+關於 6MM：
+
+* 費用依執行方式且透明
+* 做客與吃者模型支持健康的流動性
+* 資金手續費是點對點，而非平台收入
+
+了解費用結構有助於用戶更有效率且可持續地交易。
+
+<h2 id="related-cost-guides">相關成本指南</h2>
+
+- [費用與滑行]（/trading/fees-and-slippage）：估算總執行成本。
+- [永續合約]（/trading/perpetual-contracts）：了解資金與結算。
+- [機構流動性]（/solutions/institutional-liquidity）：檢視市場深度與利差的角色。
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">相關頁面</h2>
+
+- [交易成本：費用與滑點](/zh-TW/trading/fees-and-slippage)
+- [永久合約](/zh-TW/trading/perpetual-contracts)
+- [機構流動性解決方案](/zh-TW/solutions/institutional-liquidity)
+<!-- sixmm-localized-link-repair:end -->

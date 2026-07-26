@@ -1,0 +1,166 @@
+---
+title: "公共端點"
+description: "存取工具、行情行情、訂單簿、交易及其他未經認證的市場資訊的公開 6MM API 端點。"
+slug: developer-api/rest-api/public-endpoints
+canonical-url: https://docs.6mm.com/zh-TW/developer-api/rest-api/public-endpoints
+---
+
+<h2 id="base-url">基礎 URL</h2>
+
+```
+https://api.6mm.com
+```
+
+<h2 id="service-version">服役版本</h2>
+
+```http
+GET /v1/version
+```
+
+取得服務版本資訊。
+
+<h2 id="server-time">伺服器時間</h2>
+
+```http
+GET /v1/time
+```
+
+多累積服務時間。此端點可用於校準用戶端簽署前 API Key 時間。
+
+<h2 id="user-login">使用者登入</h2>
+
+```http
+POST /v1/public/user/login
+```
+
+請求參數：
+
+| 參數    | 類型   | 必修 | 描述                             |
+| ------------ | ------ | -------- | --------------------------------------- |
+| `username`   | string | 是的      | 用戶名，長度 3 - 32                 |
+| `password`   | string | 是的      | 密碼，長度 1 - 64                 |
+| `deviceId`   | string | 不       | 裝置指紋，最多可輸入 64 個字元 |
+| `deviceName` | string | 不       | 裝置名稱，最多 128 字元       |
+
+請求範例：
+
+```bash
+curl -X POST https://api.6mm.com/v1/public/user/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "alice",
+    "password": "yourPassword",
+    "deviceId": "device-001",
+    "deviceName": "server-001"
+  }'
+```
+
+回應範例：
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "accessToken": "YOUR_ACCESS_TOKEN",
+    "accessExpire": 1769676656
+  },
+  "requestId": "req-login"
+}
+```
+
+<h2 id="refresh-token">刷新令牌</h2>
+
+```http
+POST /v1/public/user/refresh-token
+```
+
+在一般整合情境下，登入狀態會透過 Cookie 重新更新。請保留登入回應時回傳的 Cookie。
+
+回應欄位：
+
+| 場地          | 類型   | 描述              |
+| -------------- | ------ | ------------------------ |
+| `accessToken`  | string | 新存取令牌         |
+| `accessExpire` | int64  | 存取權杖的有效期限 |
+
+<h2 id="agent-sso">特工 SSO</h2>
+
+<h2 id="ticket-exchange">換票</h2>
+
+```http
+POST /v1/public/agent-sso/exchange-ticket
+```
+
+請求參數：
+
+| 參數  | 類型   | 必修 | 描述                                 |
+| ---------- | ------ | -------- | ------------------------------------------- |
+| `ticket`   | string | 是的      | 由代理服務開具的一次性票券 |
+| `deviceId` | string | 不       | 裝置指紋，最多可輸入 64 個字元     |
+
+回應欄位：
+
+| 場地          | 類型   | 描述              |
+| -------------- | ------ | ------------------------ |
+| `accessToken`  | string | 存取令牌             |
+| `accessExpire` | int64  | 存取權杖的有效期限 |
+| `redirectPath` | string | 建議重定向路徑  |
+
+<h2 id="embed-token-exchange">Embed 代幣交易所</h2>
+
+```http
+POST /v1/public/agent-sso/exchange-embed-token
+```
+
+請求參數：
+
+| 參數    | 類型   | 必修 | 描述                                                    |
+| ------------ | ------ | -------- | -------------------------------------------------------------- |
+| `embedToken` | string | 是的      | 由代理服務發行的短命嵌入式交易代幣 |
+| `channelId`  | string | 是的      | 嵌入 iframe 通道 ID，最多 128 個字元               |
+| `deviceId`   | string | 不       | 裝置指紋，最多可輸入 64 個字元                        |
+
+回應欄位：
+
+| 場地          | 類型   | 描述              |
+| -------------- | ------ | ------------------------ |
+| `accessToken`  | string | 存取令牌             |
+| `accessExpire` | int64  | 存取權杖的有效期限 |
+
+<h2 id="pnl-leaderboard">PnL 排行榜</h2>
+
+```http
+GET /v1/public/leaderboard/pnl?period=30d
+```
+
+請求參數：
+
+| 參數 | 類型   | 必修 | 描述          |
+| --------- | ------ | -------- | -------------------- |
+| `period`  | string | 是的      | `7d` / `30d` / `90d` |
+
+回應欄位：
+
+| 場地              | 類型   | 描述                                                       |
+| ------------------ | ------ | ----------------------------------------------------------------- |
+| `list[].rank`      | int32  | 軍階                                                              |
+| `list[].userId`    | string | 外部使用者識別碼                                                  |
+| `list[].trader`    | string | 蒙面商人名稱                                                |
+| `list[].volume`    | string | 窗口內的交易量                                      |
+| `list[].pnlAmount` | string | 視窗中實現的PnL                                        |
+| `list[].pnlPct`    | string | PnL 比率，從 `0` 到 `1`                                |
+| `myRank`           | int32  | 目前使用者的等級。若未認證或未排名，退貨`0` |
+
+<h2 id="related-documentation">相關文件</h2>
+
+- [市場數據]（/developer-api/rest-api/market-data）
+- [公共 WebSocket 頻道]（/developer-api/websocket/public-market-channels）
+- [環境與常見慣例]（/developer-api/environments-and-common-conventions）
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">相關頁面</h2>
+
+- [市場數據](/zh-TW/developer-api/rest-api/market-data)
+- [WebSocket 公開市場資料管道](/zh-TW/developer-api/websocket/public-market-channels)
+- [環境與常見慣例](/zh-TW/developer-api/environments-and-common-conventions)
+<!-- sixmm-localized-link-repair:end -->

@@ -1,0 +1,57 @@
+---
+title: "الإينومات الشائعة"
+description: "الرجوع إلى 6MM API القيم الشائعة لحالات الترتيب، والأطراف، وأنواع الترتيب، ووقت القوة، وأنماط الموقع، والانتقالات، واستجابات التكامل."
+slug: developer-api/common-enums
+canonical-url: https://docs.6mm.com/ar/developer-api/common-enums
+---
+
+<h2 id="orders">الأوامر</h2>
+
+| إينوم                 | القيم                                                                                                    |
+| -------------------- | --------------------------------------------------------------------------------------------------------- |
+| جانب الترتيب           | `BUY` / `SELL`                                                                                            |
+| جانب المركز        | `BOTH` / `LONG` / `SHORT`                                                                                 |
+| نوع الترتيب الطبيعي    | `LIMIT` / `MARKET`                                                                                        |
+| نوع ترتيب الحالة | `STOP_MARKET` / `STOP_LIMIT` / `TAKE_PROFIT_MARKET` / `TAKE_PROFIT_LIMIT` / `TRAILING_STOP`               |
+| الزمن القائم        | `GTC` / `IOC` / `FOK` / `GTE_GTC`                                                                         |
+| نوع سعر الزناد   | `MARK_PRICE` / `CONTRACT_PRICE`                                                                           |
+| حالة الترتيب         | `NEW` / `PENDING` / `PARTIALLY_FILLED` / `FILLED` / `CANCELED` / `REJECTED` / `PARTIALLY_FILLED_CANCELED` |
+
+`NEW` يعني أن طلب الطلب تم قبوله وإعادته. `PENDING` يعني أن الأمر دخل في حالة الطلب المعلق أو المفتوح.
+
+<h2 id="positions">المناصب</h2>
+
+| إينوم                      | القيم                                                      |
+| ------------------------- | ----------------------------------------------------------- |
+| قيمة طلب وضع الهامش | `1` التقاطع `2` معزول                                     |
+| سلسلة وضع الهامش        | `ISOLATED` / `CROSS`                                        |
+| وضع الزناد المغلق        | `1` الدليل `2` يأخذ الأرباح، `3` وقف الخسارة، `4` التصفية |
+
+<h2 id="integration-rules">قواعد التكامل</h2>
+
+- عامل قيم العدد كقيم أسلاك حساسة للحرف.
+- الحفاظ على القيم غير المعروفة في السجلات والفشل بأمان بدلا من مطابقتها بصمت إلى حالة معروفة.
+- لا تستنتج أن كل حالة من الحالات غير النهائية آمنة لإعادة التجربة. استفسر عن الأمر أو توفقه مع حدث WebSocket خاص.
+- تخزين كل من قيمة API الأصلية وملصق العرض المواجه للشريك حتى يمكن دعم القيم الجديدة دون تغيير السجلات التاريخية.
+
+<h2 id="order-state-handling">التعامل مع الحالة في الترتيب</h2>
+
+| مجموعة الولايات | القيم | التعامل الموصى به |
+| --- | --- | --- |
+| مقبولة أو مفتوحة | `NEW`، `PENDING`، `PARTIALLY_FILLED` | حافظ على النظام نشطا ووافقت على WebSocket أو REST التحديثات. |
+| اكتمل | `FILLED` | طبق الكمية النهائية وسجلات التنفيذ. |
+| مغلق بدون تعبئة كاملة | `CANCELED`، `REJECTED`، `PARTIALLY_FILLED_CANCELED` | أوقف المعالجة النشطة وحافظ على السبب وأي كمية تم تنفيذها. |
+
+<h2 id="related-documentation">وثائق ذات صلة</h2>
+
+- [أمر API](/ar/developer-api/rest-api/order): حقول طلب وعمليات دورة حياة الأوامر.
+- [أنواع الطلبات] (/trading/order-types): سلوك المنتج للأوامر الحدية، السوقية، والشرطية.
+- [قناة المستخدم الخاصة] (/developer-api/websocket/private-user-channel): أمر في الوقت الحقيقي وحالة الحساب.
+- [رموز الأخطاء واستكشاف الأخطاء] (/developer-api/error-codes-and-troubleshooting): رموز الأعمال وسير العمل التشخيصي.
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">صفحات ذات صلة</h2>
+
+- [أنواع الأوامر](/ar/trading/order-types)
+- [قناة المستخدم الخاص](/ar/developer-api/websocket/private-user-channel)
+- [رموز الأخطاء واستكشاف الأخطاء](/ar/developer-api/error-codes-and-troubleshooting)
+<!-- sixmm-localized-link-repair:end -->

@@ -1,0 +1,102 @@
+---
+title: "資產轉移"
+description: "了解資產如何在合作夥伴系統與 6MM 交易帳戶間流動，包括轉移責任、狀態處理及營運檢查。"
+slug: trading/getting-started/asset-transfer
+canonical-url: https://docs.6mm.com/zh-TW/trading/getting-started/asset-transfer
+---
+
+6MM 採用合作夥伴管理的資產流動模式運作。
+
+6MM 不接受終端用戶的直接存款或提款。
+
+所有用戶資金的進出均由授權代理人或合作平台專屬處理。
+
+此設計確保 6MM 與合作夥伴間財務責任、監管範圍及使用者所有權的明確分離。
+
+***
+
+<h2 id="partner-managed-deposits-and-withdrawals">合作夥伴管理的存取款</h2>
+
+* 用戶僅透過合作夥伴平台進行資金存取
+* 6MM 不提供鏈上或鏈外的存款地址給終端用戶
+* 6MM 不會在交易執行之外直接保管或結算用戶資金
+
+合夥人仍須對以下事項負全責：
+
+* 使用者餘額管理
+* 存取款處理
+* 與資金託管相關的合規與風險控管
+
+***
+
+<h2 id="automated-balance-transfer-to-6mm">自動餘額轉帳至 6MM</h2>
+
+為了啟用交易，用戶可透過自動化內部轉帳機制將部分合作夥伴管理餘額轉入 6MM 。
+
+此轉移流程的主要特徵包括：
+
+* 轉帳由合作夥伴系統發起並授權
+* 流程在基礎設施層級自動執行
+* 無需手動使用者與 6MM 互動
+* 傳輸可即時或近乎即時進行
+
+從使用者的角度來看，這個過程看起來像是無縫的餘額配置，而非傳統的存款。
+
+***
+
+<h2 id="account-structure-within-6mm">6MM內的帳戶結構</h2>
+
+在 6MM內，轉移資產會邏輯地分配到兩個不同的內部帳戶：
+
+**現貨帳戶**
+
+* 作為轉帳資金的初始接收帳戶
+* 作為內部資本管理的資產池
+* 不支援直接交易活動
+
+**永續帳戶**
+
+* 資金從現貨帳戶轉入永續帳戶
+* 只有永續帳戶中的資產可用於下單
+* 保證金、持倉及未實現PnL均在此層級計算
+
+這種雙層結構能精確控制資本、提升保證金效率及風險控制，實現永續交易。
+
+***
+
+<h2 id="internal-transfers-between-accounts">帳戶間的內部轉帳</h2>
+
+* 轉入現貨帳戶的資金可自由且即時分配至永續帳戶
+* 內部轉帳處理時不需區塊鏈互動
+* 傳輸設計為低延遲且具確定性
+
+此架構確保資金流動順暢，同時嚴格分開資產託管與交易執行。
+
+***
+
+<h2 id="design-principles">設計原則</h2>
+
+6MM的資產轉移系統圍繞以下原則建立：
+
+* 6MM 不允許直接用戶存款或提款
+* 所有資產託管權仍由合作夥伴平台持有
+* 自動化、合作夥伴授權資金配置
+* 現貨與永續帳戶的明確區分
+* 優化交易效率與風險隔離
+
+透過此模式， 6MM 純粹作為交易基礎設施層運作，而合作夥伴則完全掌控用戶資金與財務關係。
+
+<h2 id="implementation-and-safety-guides">實施與安全指南</h2>
+
+- [Agent SDK 概述 ]（/sdk/agent-sdk/overview）：使用者綁定、傳輸、訂單查詢與對帳。
+- [Webhooks 與冪性]（/sdk/security/webhooks-idempotency）：驗證最終狀態回撥及去重重試。
+- [夥伴責任矩陣]（/security-compliance/partner-responsibilities）：監護權與營運所有權。
+- [風險與清算]（/trading/risk-and-liquidations）：了解交易帳戶配置如何影響風險。
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">相關頁面</h2>
+
+- [6MM Agent SDK Java 和 PHP](/zh-TW/sdk/agent-sdk/overview)
+- [Webhook 簽名驗證與冪性](/zh-TW/sdk/security/webhooks-idempotency)
+- [6MM 與夥伴責任矩陣](/zh-TW/security-compliance/partner-responsibilities)
+- [風險與清算](/zh-TW/trading/risk-and-liquidations)
+<!-- sixmm-localized-link-repair:end -->

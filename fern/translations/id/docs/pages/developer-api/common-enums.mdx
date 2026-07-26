@@ -1,0 +1,50 @@
+---
+title: "Enum Umum"
+description: "Referensikan enum 6MM API umum untuk status urutan, sisi, jenis pesanan, waktu berlaku, mode posisi, transfer, dan respons integrasi."
+slug: developer-api/common-enums
+canonical-url: https://docs.6mm.com/id/developer-api/common-enums
+---
+
+<h2 id="orders">Pesanan</h2>
+
+| enum                 | Nilai-nilai                                                                                                    |
+| -------------------- | --------------------------------------------------------------------------------------------------------- |
+| Sisi pesanan           | `BUY` / `SELL`                                                                                            |
+| Sisi posisi        | `BOTH` / `LONG` / `SHORT`                                                                                 |
+| Jenis pesanan normal    | `LIMIT` / `MARKET`                                                                                        |
+| Jenis urutan kondisi | `STOP_MARKET` / `STOP_LIMIT` / `TAKE_PROFIT_MARKET` / `TAKE_PROFIT_LIMIT` / `TRAILING_STOP`               |
+| Waktu berlaku        | `GTC` / `IOC` / `FOK` / `GTE_GTC`                                                                         |
+| Jenis harga pemicu   | `MARK_PRICE` / `CONTRACT_PRICE`                                                                           |
+| Status pesanan         | `NEW` / `PENDING` / `PARTIALLY_FILLED` / `FILLED` / `CANCELED` / `REJECTED` / `PARTIALLY_FILLED_CANCELED` |
+
+`NEW` berarti permintaan pesanan telah diterima dan dikembalikan. `PENDING` berarti pesanan telah memasuki status pesanan tertunda atau terbuka.
+
+<h2 id="positions">Posisi</h2>
+
+| enum                      | Nilai-nilai                                                      |
+| ------------------------- | ----------------------------------------------------------- |
+| Nilai permintaan mode margin | `1` salib, `2` terisolasi                                     |
+| String mode margin        | `ISOLATED` / `CROSS`                                        |
+| Mode pemicu tutup        | `1` manual, `2` take profit, stop loss `3` stop loss, `4` likuidasi |
+
+<h2 id="integration-rules">Aturan integrasi</h2>
+
+- Perlakukan nilai enum sebagai nilai kawat sensitif terhadap huruf besar.
+- Mempertahankan nilai yang tidak diketahui dalam log dan gagal dengan aman daripada memetakannya secara diam-diam ke status yang diketahui.
+- Jangan menyimpulkan bahwa setiap status order non-final aman untuk dicoba ulang. Query order tersebut atau rekonsiliasi dengan event WebSocket privat.
+- Simpan baik nilai API asli maupun label tampilan yang menghadap mitra sehingga nilai baru dapat didukung tanpa mengubah catatan historis.
+
+<h2 id="order-state-handling">Penanganan status pesanan</h2>
+
+| Kelompok negara bagian | Nilai-nilai | Penanganan yang direkomendasikan |
+| --- | --- | --- |
+| Diterima atau terbuka | `NEW`, `PENDING`, `PARTIALLY_FILLED` | Jaga agar urutan tetap aktif dan sesuaikan dengan pembaruan WebSocket atau REST . |
+| Selesai | `FILLED` | Terapkan jumlah akhir yang terisi dan catatan eksekusi. |
+| Ditutup tanpa isi penuh | `CANCELED`, `REJECTED`, `PARTIALLY_FILLED_CANCELED` | Hentikan pemrosesan aktif dan pertahankan alasan serta jumlah yang dieksekusi. |
+
+<h2 id="related-documentation">Dokumentasi terkait</h2>
+
+- [Order API](/id/developer-api/rest-api/order): field permintaan dan operasi siklus hidup order.
+- [Jenis Pesanan](/id/trading/order-types): perilaku produk untuk pesanan batas, pasar, dan kondisional.
+- [Saluran Pengguna Pribadi](/id/developer-api/websocket/private-user-channel): pesanan dan status akun secara real-time.
+- [Kode Kesalahan & Pemecahan Masalah](/id/developer-api/error-codes-and-troubleshooting): kode bisnis dan alur kerja diagnostik.

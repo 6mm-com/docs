@@ -1,0 +1,153 @@
+---
+title: "リクエスト署名"
+description: "6MM APIリクエストにはHMACで署名します。SHA256、必要なペイロード、タイムスタンプ、APIキー、署名ヘッダー、検証ルールを使用します。"
+slug: developer-api/request-signing
+canonical-url: https://docs.6mm.com/ja/developer-api/request-signing
+---
+
+<h2 id="request-format">リクエストフォーマット</h2>
+
+| 所在地 | フィールド       | 必須            | 概要                                   |
+| -------- | ----------- | ------------------- | --------------------------------------------- |
+| ヘッダー   | `X-API-KEY` | はい                 | API Keyが作成されると`apiKey`戻ってきます |
+| クエリ    | `timestamp` | はい                 | Unixミリ秒タイムスタンプ                    |
+| クエリ    | `signature` | はい                 | HMAC-SHA256 署名、小文字の十六進形文字列   |
+| 本文     | JSON        | エンドポイントによります | POST / PUT / DELETE 要求する身体              |
+
+<h2 id="signature-payload">シグネチャーペイロード</h2>
+
+```
+payload = queryStringWithoutSignature + requestBody
+signature = HMAC-SHA256(apiSecret, payload)
+```
+
+主なルール:
+
+* `timestamp` はUnixのミリ秒タイムスタンプでなければなりません。サーバー許容範囲は±10秒です。
+* `signature` は URL クエリ文字列に配置されますが、署名ペイロードには含まれていません。
+* サーバーは `signature`を削除した後に元のクエリ文字列を検証します;クエリパラメータの順序を変えることはありません。
+* 署名に用いられるクエリパラメータの順序は、実際のリクエスト URLと一致しなければなりません。
+* リクエスト本体が存在する場合、署名に使われる JSON 文字列は実際に送信された本体と正確に一致しなければなりません。
+* 順序関連パスは署名のリプレイチェックを行います。同じ署名を短時間内に再利用すると `Signature replay detected`返されます。
+
+<h2 id="server-time">サーバータイム</h2>
+
+```http
+GET /v1/time
+```
+
+回答例:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "timestamp": 1780473256,
+    "timestampMs": 1780473256708,
+    "iso": "2026-06-03T07:54:16Z",
+    "timezone": "UTC"
+  },
+  "requestId": "req-7cad3113"
+}
+```
+
+クライアントは `timeOffsetMs = serverTimestampMs - localTimestampMs`を計算し、その後の署名要求に対して `timestamp = nowMs + timeOffsetMs` を使用すべきです。サーバーが `Timestamp outside of tolerance window`を返した場合は、直ちに時刻を再同期し、署名を再生成します。
+
+<h2 id="get-signing-example">GET 署名例</h2>
+
+実際の要望:
+
+```
+GET /v1/private/order/current?symbol=BTCUSDT&timestamp=1772710377808&signature=...
+```
+
+シグネチャーペイロード:
+
+```
+symbol=BTCUSDT&timestamp=1772710377808
+```
+
+<h2 id="post-signing-example">POST 署名例</h2>
+
+実際の要望:
+
+```
+POST /v1/private/order/place?timestamp=1772710377808&signature=...
+```
+
+要請本体:
+
+```json
+{"symbol":"BTCUSDT","type":"LIMIT","side":"BUY","price":"85000","quantity":"0.1","timeInForce":"GTC","makerOnly":true,"clientOrderId":"ext-1772710377808-001"}
+```
+
+シグネチャーペイロード:
+
+```
+timestamp=1772710377808{"symbol":"BTCUSDT","type":"LIMIT","side":"BUY","price":"85000","quantity":"0.1","timeInForce":"GTC","makerOnly":true,"clientOrderId":"ext-1772710377808-001"}
+```
+
+<h2 id="python-signing-example">Python署名の例</h2>
+
+```python
+import hashlib
+import hmac
+import json
+import time
+from urllib.parse import urlencode
+
+import requests
+
+BASE_URL = "https://api.6mm.com"
+API_KEY = "YOUR_API_KEY"
+API_SECRET = "YOUR_API_SECRET"
+TIME_OFFSET_MS = 0
+
+def sign(payload: str) -> str:
+    return hmac.new(
+        API_SECRET.encode("utf-8"),
+        payload.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+
+def sync_time_offset():
+    global TIME_OFFSET_MS
+    before = int(time.time() * 1000)
+    resp = requests.get(f"{BASE_URL}/v1/time", timeout=5)
+    after = int(time.time() * 1000)
+    resp.raise_for_status()
+
+    server_ts = int(resp.json()["data"]["timestampMs"])
+    local_midpoint = (before + after) // 2
+    TIME_OFFSET_MS = server_ts - local_midpoint
+
+def signed_request(method: str, path: str, params=None, body=None):
+    params = dict(params or {})
+    params["timestamp"] = str(int(time.time() * 1000) + TIME_OFFSET_MS)
+
+    query_string = urlencode(params)
+    body_string = ""
+    if body is not None:
+        body_string = json.dumps(body, separators=(",", ":"), ensure_ascii=False)
+
+    signature = sign(query_string + body_string)
+    url = f"{BASE_URL}{path}?{query_string}&signature={signature}"
+    headers = {
+        "X-API-KEY": API_KEY,
+        "Content-Type": "application/json",
+    }
+    resp = requests.request(method, url, headers=headers, data=body_string if body is not None else None, timeout=10)
+    resp.raise_for_status()
+    return resp.json()
+
+sync_time_offset()
+print(signed_request("GET", "/v1/private/order/current", {"symbol": "BTCUSDT"}))
+```
+
+<h2 id="related-security-guides">関連するセキュリティガイド</h2>
+
+- [認証](/ja/developer-api/authentication)
+- [API Key 管理](/ja/developer-api/api-key-management)
+- [秘密と署名](/ja/sdk/security/secrets-signing)
+- [エラーコードとトラブルシューティング](/ja/developer-api/error-codes-and-troubleshooting)

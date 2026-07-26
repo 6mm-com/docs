@@ -1,0 +1,50 @@
+---
+title: "共通の列挙"
+description: "秩序状態、側、順序タイプ、使用期間、位置モード、転送、積分応答に関する共通 6MM API の列挙を参照。"
+slug: developer-api/common-enums
+canonical-url: https://docs.6mm.com/ja/developer-api/common-enums
+---
+
+<h2 id="orders">命令</h2>
+
+| エヌック                 | 価値観                                                                                                    |
+| -------------------- | --------------------------------------------------------------------------------------------------------- |
+| オーダー側           | `BUY` / `SELL`                                                                                            |
+| ポジション側        | `BOTH` / `LONG` / `SHORT`                                                                                 |
+| 正規順序型    | `LIMIT` / `MARKET`                                                                                        |
+| 条件順序タイプ | `STOP_MARKET` / `STOP_LIMIT` / `TAKE_PROFIT_MARKET` / `TAKE_PROFIT_LIMIT` / `TRAILING_STOP`               |
+| 有効時        | `GTC` / `IOC` / `FOK` / `GTE_GTC`                                                                         |
+| トリガー価格タイプ   | `MARK_PRICE` / `CONTRACT_PRICE`                                                                           |
+| 修道会の状況         | `NEW` / `PENDING` / `PARTIALLY_FILLED` / `FILLED` / `CANCELED` / `REJECTED` / `PARTIALLY_FILLED_CANCELED` |
+
+`NEW` は注文リクエストが受理され返送されたことを意味します。 `PENDING` は注文が保留中または未開注文状態に入ったことを意味します。
+
+<h2 id="positions">ポジション</h2>
+
+| エヌック                      | 価値観                                                      |
+| ------------------------- | ----------------------------------------------------------- |
+| マージンモード要求値 | `1` 十字架、 `2` 孤立している                                     |
+| マージンモード文字列        | `ISOLATED` / `CROSS`                                        |
+| クローズトリガーモード        | `1`手動で、利益確定、ストップロス`3`、清算`2``4` |
+
+<h2 id="integration-rules">積分ルール</h2>
+
+- ENUM値を大文字に応答するワイヤー値として扱います。
+- 未知の値をログに保持し、既知の状態に静かにマッピングするのではなく安全に失敗させる。
+- すべての非最終順序状態が再試行しても安全であると推論しないでください。順序を問い合わせるか、プライベート WebSocket イベントと照合してください。
+- 元の API 値とパートナー側の表示ラベルの両方を保存し、過去の記録を変更せずに新しい値をサポートできるようにします。
+
+<h2 id="order-state-handling">注文状態の処理</h2>
+
+| 国家グループ | 価値観 | 推奨取り扱い |
+| --- | --- | --- |
+| 受け入れまたは開かれるか | `NEW`、 `PENDING`、 `PARTIALLY_FILLED` | 注文は有効に保ち、更新 WebSocket や REST と照合してください。 |
+| 完了 | `FILLED` | 最終的な処理量と実行記録を適用してください。 |
+| 完全充填なしで閉じる | `CANCELED`、 `REJECTED`、 `PARTIALLY_FILLED_CANCELED` | アクティブ処理を停止し、理由と実行された量を保持してください。 |
+
+<h2 id="related-documentation">関連文書</h2>
+
+- [注文 API](/ja/developer-api/rest-api/order): 要求フィールドおよび注文ライフサイクル操作。
+- [注文の種類](/ja/trading/order-types):限値注文、市場注文、条件付き注文の製品挙動。
+- [プライベートユーザーチャネル](/ja/developer-api/websocket/private-user-channel):リアルタイムの注文およびアカウントの状態。
+- [エラーコードとトラブルシューティング](/ja/developer-api/error-codes-and-troubleshooting):ビジネスコードと診断ワークフロー。

@@ -1,5 +1,61 @@
 (function () {
   var siteUrl = "https://docs.6mm.com";
+  var localeCodes = [
+    "en-142",
+    "es-419",
+    "zh-TW",
+    "pt-BR",
+    "es-AR",
+    "ja",
+    "ru",
+    "it",
+    "fr",
+    "de",
+    "zh",
+    "id",
+    "pl",
+    "vi",
+    "uk",
+    "pt",
+    "es",
+    "uz",
+    "ar",
+    "fil",
+    "az",
+  ];
+  var homeNames = {
+    en: "Home",
+    "en-142": "Home",
+    ja: "ホーム",
+    ru: "Главная",
+    "es-419": "Inicio",
+    it: "Pagina iniziale",
+    fr: "Accueil",
+    de: "Startseite",
+    zh: "首页",
+    "zh-TW": "首頁",
+    "pt-BR": "Início",
+    id: "Beranda",
+    pl: "Strona główna",
+    vi: "Trang chủ",
+    uk: "Головна",
+    pt: "Início",
+    es: "Inicio",
+    "es-AR": "Inicio",
+    uz: "Bosh sahifa",
+    ar: "الرئيسية",
+    fil: "Home",
+    az: "Ana səhifə",
+  };
+
+  function localeForPathname(pathname) {
+    var firstSegment = pathname.split("/").filter(Boolean)[0];
+    var code = localeCodes.indexOf(firstSegment) >= 0 ? firstSegment : "en";
+    return {
+      code: code,
+      prefix: code === "en" ? "" : "/" + code,
+    };
+  }
 
   function upsertStructuredData(key, value) {
     var selector = 'script[data-sixmm-schema="' + key + '"]';
@@ -26,38 +82,57 @@
     return document.title.replace(/\s*\|\s*6MM Docs\s*$/i, "").trim();
   }
 
-  function addBreadcrumbs(pathname, isChinese) {
-    var route = pathname.replace(/^\/zh\//, "/").replace(/^\//, "");
-    var localePrefix = isChinese ? "/zh" : "";
-    var labels = isChinese
-      ? {
-          solutions: "解决方案",
-          trading: "交易指南",
-          developerApi: "开发者 API",
-          restApi: "REST API",
-          websocket: "WebSocket",
-          sdk: "SDK",
-          tradingWidget: "Trading Widget SDK",
-          agentSdk: "Agent SDK",
-          javaSdk: "Java SDK",
-          phpSdk: "PHP SDK",
-          security: "安全与合规",
-          resources: "资源与支持",
-        }
-      : {
-          solutions: "Solutions",
-          trading: "Trading",
-          developerApi: "Developer API",
-          restApi: "REST API",
-          websocket: "WebSocket",
-          sdk: "SDKs",
-          tradingWidget: "Trading Widget SDK",
-          agentSdk: "Agent SDK",
-          javaSdk: "Java SDK",
-          phpSdk: "PHP SDK",
-          security: "Security & Compliance",
-          resources: "Resources & Support",
-        };
+  function addBreadcrumbs(pathname, locale) {
+    var route = pathname
+      .replace(new RegExp("^" + locale.prefix.replace("-", "\\-") + "/"), "/")
+      .replace(/^\//, "");
+    var localePrefix = locale.prefix;
+    var isChinese = locale.code === "zh" || locale.code === "zh-TW";
+    var labels =
+      locale.code === "zh-TW"
+        ? {
+            solutions: "解決方案",
+            trading: "交易指南",
+            developerApi: "開發者 API",
+            restApi: "REST API",
+            websocket: "WebSocket",
+            sdk: "SDK",
+            tradingWidget: "Trading Widget SDK",
+            agentSdk: "Agent SDK",
+            javaSdk: "Java SDK",
+            phpSdk: "PHP SDK",
+            security: "安全與合規",
+            resources: "資源與支援",
+          }
+        : isChinese
+          ? {
+              solutions: "解决方案",
+              trading: "交易指南",
+              developerApi: "开发者 API",
+              restApi: "REST API",
+              websocket: "WebSocket",
+              sdk: "SDK",
+              tradingWidget: "Trading Widget SDK",
+              agentSdk: "Agent SDK",
+              javaSdk: "Java SDK",
+              phpSdk: "PHP SDK",
+              security: "安全与合规",
+              resources: "资源与支持",
+            }
+          : {
+              solutions: "Solutions",
+              trading: "Trading",
+              developerApi: "Developer API",
+              restApi: "REST API",
+              websocket: "WebSocket",
+              sdk: "SDKs",
+              tradingWidget: "Trading Widget SDK",
+              agentSdk: "Agent SDK",
+              javaSdk: "Java SDK",
+              phpSdk: "PHP SDK",
+              security: "Security & Compliance",
+              resources: "Resources & Support",
+            };
     var levels = [
       ["solutions", labels.solutions, "/solutions/overview"],
       ["trading", labels.trading, "/trading/overview"],
@@ -78,7 +153,7 @@
       : siteUrl + pathname;
     var items = [
       {
-        name: isChinese ? "首页" : "Home",
+        name: homeNames[locale.code] || "Home",
         item: siteUrl + localePrefix + "/home",
       },
     ];
@@ -119,12 +194,13 @@
 
   function syncStructuredData() {
     var pathname = window.location.pathname.replace(/\/+$/, "") || "/";
-    var isChinese = pathname === "/zh" || pathname.indexOf("/zh/") === 0;
+    lastStructuredPath = pathname;
+    var locale = localeForPathname(pathname);
     var isHome =
       pathname === "/" ||
       pathname === "/home" ||
-      pathname === "/zh" ||
-      pathname === "/zh/home";
+      pathname === locale.prefix ||
+      pathname === locale.prefix + "/home";
 
     upsertStructuredData(
       "website",
@@ -134,8 +210,8 @@
             "@type": "WebSite",
             name: "6MM Docs",
             alternateName: ["6MM Documentation", "docs.6mm.com"],
-            url: siteUrl + "/",
-            inLanguage: isChinese ? "zh" : "en",
+            url: siteUrl + locale.prefix + "/home",
+            inLanguage: locale.code,
           }
         : null,
     );
@@ -143,10 +219,22 @@
     if (isHome) {
       upsertStructuredData("breadcrumb", null);
     } else {
-      addBreadcrumbs(pathname, isChinese);
+      addBreadcrumbs(pathname, locale);
     }
+  }
+
+  var lastStructuredPath;
+  function syncWhenPathChanges() {
+    var pathname = window.location.pathname.replace(/\/+$/, "") || "/";
+    if (pathname !== lastStructuredPath) syncStructuredData();
   }
 
   syncStructuredData();
   window.addEventListener("popstate", syncStructuredData);
+  window.addEventListener("pageshow", syncStructuredData);
+  document.addEventListener("DOMContentLoaded", syncStructuredData);
+  new MutationObserver(syncWhenPathChanges).observe(document.documentElement, {
+    childList: true,
+    subtree: true,
+  });
 })();

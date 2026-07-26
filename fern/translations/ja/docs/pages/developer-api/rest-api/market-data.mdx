@@ -1,0 +1,111 @@
+---
+title: "市場データ"
+description: "認証されていない 6MM 市場データをエンドポイント REST 用いて、シンボル、ティッカー、注文帳、取引、その他の公開取引情報を取得しましょう。"
+slug: developer-api/rest-api/market-data
+canonical-url: https://docs.6mm.com/ja/developer-api/rest-api/market-data
+---
+
+マーケットデータ REST エンドポイントは認証を必要としません。
+
+<h2 id="symbol-configuration">シンボル構成</h2>
+
+```http
+GET /v1/public/market/symbols
+```
+
+一般的な応答フィールド:
+
+| フィールド                      | 種類   | 概要                   |
+| -------------------------- | ------ | ----------------------------- |
+| `list[].symbol`            | string | シンボル                        |
+| `list[].baseAsset`         | string | 基本資産                    |
+| `list[].quoteAsset`        | string | クォート資産                   |
+| `list[].minQuantity`       | string | 最小注文量        |
+| `list[].minNotional`       | string | 最小名目価値        |
+| `list[].tickSize`          | string | 価格ティックサイズ               |
+| `list[].stepSize`          | string | 数量ステップサイズ            |
+| `list[].pricePrecision`    | int64  | 価格精度               |
+| `list[].maxLimitOrderQty`  | string | 最大限値注文数  |
+| `list[].maxMarketOrderQty` | string | 最大成行注文量 |
+| `list[].maxOpenOrders`     | int64  | ユーザーごとの最大未開注文  |
+| `list[].defaultLeverage`   | int64  | デフォルトレバレッジ              |
+| `list[].defaultMarginMode` | int64  | デフォルトマージンモード           |
+| `list[].leverageTiers[]`   | array  | レバレッジマージンの階層         |
+| `handlingFeeLevelConfig[]` | array  | 料金階層の構成        |
+
+<h2 id="funding-rate-configuration">資金調達率の構成</h2>
+
+```http
+GET /v1/public/market/funding-rate?symbol=BTCUSDT
+```
+
+リクエストパラメータ:
+
+| パラメータ | 種類   | 必須 | 概要                     |
+| --------- | ------ | -------- | ------------------------------- |
+| `symbol`  | string | いいえ       | 省略すると、すべての記号を返します |
+
+<h2 id="current-funding-rate">現在の資金調達率</h2>
+
+```http
+GET /v1/public/market/funding-rate/current?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+リクエストパラメータ:
+
+| パラメータ  | 種類   | 必須 | 概要                  |
+| ---------- | ------ | -------- | ---------------------------- |
+| `symbol`   | string | いいえ       | シンボル                       |
+| `page`     | int32  | いいえ       | ページ番号、デフォルトで `1`     |
+| `pageSize` | int32  | いいえ       | ページごとの項目数、デフォルト `20` |
+
+<h2 id="funding-rate-history">資金調達率の歴史</h2>
+
+```http
+GET /v1/public/market/funding-rate/history?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+リクエストパラメータ:
+
+| パラメータ   | 種類   | 必須 | 概要                  |
+| ----------- | ------ | -------- | ---------------------------- |
+| `symbol`    | string | はい      | シンボル                       |
+| `startTime` | int64  | いいえ       | 開始時間                   |
+| `endTime`   | int64  | いいえ       | 終焉                     |
+| `page`      | int32  | いいえ       | ページ番号、デフォルトで `1`     |
+| `pageSize`  | int32  | いいえ       | ページごとの項目数、デフォルト `20` |
+
+<h2 id="klines">クラインズ</h2>
+
+```http
+GET /v1/public/market/klines?symbol=BTCUSDT&interval=1m&limit=500
+```
+
+リクエストパラメータ:
+
+| パラメータ   | 種類   | 必須 | 概要                                                              |
+| ----------- | ------ | -------- | ------------------------------------------------------------------------ |
+| `symbol`    | string | はい      | シンボル                                                                   |
+| `interval`  | string | はい      | 区間は、 `1m`、 `5m`、 `15m`、 `30m`、 `1h`、 `4h`、 `1d`、 `1w`、 `1M` |
+| `priceType` | string | いいえ       | `indexPrice` / `markPrice`。省略すると、取引価格Klinesが返されます。       |
+| `startTime` | int64  | いいえ       | 開始時間                                                               |
+| `endTime`   | int64  | いいえ       | 終焉                                                                 |
+| `limit`     | int32  | いいえ       | 返品品数、デフォルト、最大`500``1000`                  |
+
+応答フィールド:
+
+| フィールド              | 種類   | 概要 |
+| ------------------ | ------ | ----------- |
+| `list[].openTime`  | int64  | 開放時間   |
+| `list[].open`      | string | 終価  |
+| `list[].high`      | string | 高価格  |
+| `list[].low`       | string | 低価格   |
+| `list[].close`     | string | 終値 |
+| `list[].volume`    | string | 音量      |
+| `list[].closeTime` | int64  | 終了時間  |
+
+<h2 id="related-documentation">関連文書</h2>
+
+- [公開エンドポイント](/ja/developer-api/rest-api/public-endpoints)
+- [公共 WebSocket チャンネル](/ja/developer-api/websocket/public-market-channels)
+- [市場の深さとスプレッド](/ja/solutions/market-depth-spread)

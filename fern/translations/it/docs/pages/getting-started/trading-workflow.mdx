@@ -1,0 +1,137 @@
+---
+title: "Flusso di lavoro del trading"
+description: "6MM supporta contratti perpetui a margine U, permettendo agli utenti di scambiare futures perpetui regolati e marginati in stablecoin (ad esempio USDT)."
+slug: trading/getting-started/trading-workflow
+canonical-url: https://docs.6mm.com/it/trading/getting-started/trading-workflow
+---
+
+<h2 id="u-margined-perpetual-contracts">Contratti perpetui a margine U</h2>
+
+6MM supporta contratti perpetui a margine U, permettendo agli utenti di scambiare futures perpetui regolati e marginati in stablecoin (ad esempio USDT).
+
+Questa sezione spiega il flusso di lavoro di trading principale e i meccanismi chiave coinvolti nel posizionare e gestire ordini contrattuali perpetui su 6MM.
+
+***
+
+<h2 id="contract-overview">Panoramica del contratto</h2>
+
+* Tipo di contratto: contratti perpetui a margine U
+* Asset di insediamento: stablecoin (ad esempio USDT)
+* Nessuna scadenza: Le posizioni non scadono e possono essere mantenute a tempo indeterminato
+* Mark Price-Based Risk Control: Utilizzato per il calcolo e la liquidazione dei margini
+
+***
+
+<h2 id="order-types">Tipi di ordine</h2>
+
+6MM supporta tipi di ordine comunemente usati per adattarsi a diverse strategie di trading:
+
+<h2 id="market-order">Ordine di mercato</h2>
+
+* Esegue immediatamente al miglior prezzo di mercato disponibile
+* Dà priorità alla velocità di esecuzione rispetto alla precisione del prezzo
+* Adatto per ingresso o uscita rapidi
+
+<h2 id="limit-order">Ordine limite</h2>
+
+* Viene eseguito solo al prezzo specificato o superiore
+* Fornisce controllo dei prezzi
+* Può rimanere aperto fino a quando non viene riempito o cancellato
+
+<h2 id="stop-order">Ordine di arresto</h2>
+
+* Attiva un ordine di mercato o limite una volta raggiunto il prezzo di attivazione
+* Comunemente usata per strategie stop-loss o breakout
+
+> disponibilità degli ordini può variare in base alla coppia di trading e alla modalità di integrazione.
+
+***
+
+<h2 id="leverage-and-margin">Leva e margine</h2>
+
+* La leva finanziaria consente agli utenti di controllare posizioni più grandi con meno capitale
+* Il margine si calcola in base a:
+  * Dimensione della posizione
+  * Livello di leva
+  * Mark Price
+
+Una leva più elevata aumenta i potenziali rendimenti ma aumenta anche il rischio di liquidazione.
+
+***
+
+<h2 id="funding-rate-mechanism">Meccanismo di Tasso di Finanziamento</h2>
+
+I contratti perpetui utilizzano un meccanismo di tasso di finanziamento per mantenere i prezzi dei contratti allineati con il mercato spot.
+
+* I pagamenti del finanziamento avvengono a intervalli programmati
+* Se il tasso di finanziamento è positivo:
+  * Le posizioni lunghe pagano a corto
+* Se il tasso di finanziamento è negativo:
+  * Le posizioni corte pagano a lunga
+
+Le commissioni di finanziamento vengono scambiate direttamente tra i trader.
+
+6MM non riscuotisce i pagamenti di finanziamento come entrate.
+
+***
+
+<h2 id="fees-and-slippage">Tariffe e Slippage</h2>
+
+<h2 id="trading-fees">Commissioni di trading</h2>
+
+* Le tariffe vengono addebitate quando vengono eseguiti gli ordini
+* Le tariffe possono variare per:
+  * Ordini del produttore
+  * Ordini del ricevitore
+
+I tabelloni tariffari sono definiti dalla piattaforma partner e possono variare.
+
+<h2 id="slippage">Slippage</h2>
+
+* Lo slippage si verifica quando la liquidità di mercato non è sufficiente per eseguire un ordine al prezzo atteso
+* Più comune durante l'alta volatilità o quando si usano ordini di mercato
+
+Gli utenti possono ridurre lo slippage utilizzando ordini limite e gestendo la dimensione degli ordini.
+
+***
+
+<h2 id="position-lifecycle">Ciclo di vita della posizione</h2>
+
+1. I fondi sono allocati al Conto Perpetuo
+2. Un ordine viene effettuato e abbinato dal motore di corrispondenza 6MM
+3. Una posizione viene liberata all'esecuzione
+4. Aggiornamento di margine e PnL in tempo reale
+5. Le commissioni di finanziamento vengono applicate a intervalli programmati
+6. La posizione viene chiusa manualmente o tramite TP/SL
+7. Il PnL finale viene assegnato al Conto Perpetuo
+
+***
+
+<h2 id="risk-management-and-liquidation">Gestione del Rischio e Liquidazione</h2>
+
+* 6MM monitora i rapporti di margine in tempo reale
+* Quando il margine scende sotto la soglia di mantenimento:
+  * Le posizioni possono essere parzialmente o completamente liquidate
+* I prezzi di liquidazione vengono calcolati utilizzando il prezzo di marca, non l'ultimo prezzo scambiato
+
+Questo meccanismo aiuta a ridurre le liquidazioni inutili causate dalla volatilità del mercato a breve termine.
+
+***
+
+<h2 id="summary">Sommario</h2>
+
+Il flusso di lavoro di trading perpetuo con margine U su 6MM è progettato per:
+
+* Fornire tipi di ordine familiari e flessibili
+* Mantenere l'allineamento dei prezzi tramite i tassi di finanziamento
+* Offrire meccanismi trasparenti di commissioni e regolamento
+* Fornire un controllo del rischio di livello istituzionale
+
+Questa struttura consente ai partner di offrire trading professionale e perpetuo mantenendo un'esperienza utente senza intoppi.
+
+<h2 id="related-trading-guides">Guide al trading correlate</h2>
+
+- [Contratti Perpetui](/it/trading/perpetual-contracts): nozioni di base su contratto, finanziamento, margine e liquidazione.
+- [Tipi di ordine](/it/trading/order-types): comportamenti limite, di mercato, condizionali e nel tempo di vigore.
+- [Spese e Scivolamento](/it/trading/fees-and-slippage): costo di esecuzione e impatto sulla liquidità.
+- [Rischio e Liquidazioni](/it/trading/risk-and-liquidations): rischio di margine e comportamento di chiusura forzata.

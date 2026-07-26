@@ -1,0 +1,53 @@
+---
+title: "6MM SDKs"
+subtitle: "Pilih jalur 6MM SDK yang tepat untuk trading tertanam, penerbitan token backend, penghubungan akun, webhook, dan operasi produksi."
+slug: sdk/overview
+canonical-url: https://docs.6mm.com/id/sdk/overview
+---
+
+<h2 id="choose-an-sdk-path">Pilih jalur SDK</h2>
+
+<CardGroup cols={3}>
+<Card title="Trading Widget SDK" icon="duotone chart-line" href="/id/sdk/trading-widget/quick-start">
+  Sematkan terminal trading 6MM ke dalam situs web, dompet, portal broker, atau permukaan produk mitra yang sudah ada.
+</Card>
+<Card title="Agent SDK" icon="duotone server" href="/id/sdk/agent-sdk/overview">
+  Hubungkan backend mitra ke 6MM untuk pengikatan pengguna, token semat, URL entri, transfer, kueri pesanan, dan webhook.
+</Card>
+<Card title="Keamanan & Operasi" icon="duotone shield-check" href="/id/sdk/security/secrets-signing">
+  Siapkan penyimpanan rahasia, penandatanganan permintaan, idempotensi webhook, pemantauan, dan pemecahan masalah peluncuran.
+</Card>
+</CardGroup>
+
+<h2 id="recommended-combination">Kombinasi yang direkomendasikan</h2>
+
+| Tujuan mitra | Frontend | Backend | Mengapa hal ini penting |
+| --- | --- | --- | --- |
+| Tambahkan terminal trading tertanam | Trading Widget SDK | Agent SDK | Widget menangani antarmuka perdagangan sementara backend mitra mengeluarkan token dan menjaga rahasia tetap pribadi. |
+| Buat titik masuk aplikasi asli | Entri asli atau H5 | Agent SDK | Aplikasi membuka entri 6MM URL setelah mitra memvalidasi sesi pengguna. |
+| Bangun alur trading khusus | UI Mitra | API pengembang + alur SDK terpilih | Gunakan APIs untuk data akun, pesanan, posisi, dan pasar sambil menjaga kontrol operasional tetap di sisi server. |
+
+<h2 id="reference-architecture">Arsitektur referensi</h2>
+
+```text
+Partner Web App
+  -> TradingWidget.create()
+  -> tokenProvider()
+  -> Partner Backend
+  -> 6MM Agent SDK
+  -> 6MM Agent API
+  -> 6MM Trading iframe
+```
+
+> **Simpan rahasia di sisi server**
+>
+> Kode browser hanya boleh memanggil endpoint milik mitra. Secret API Agen tidak boleh dikirim ke kode frontend.
+
+<h2 id="production-checklist">Daftar periksa produksi</h2>
+
+- Simpan apiSecret hanya di infrastruktur backend.
+- Gunakan HTTPS untuk permintaan API Agen dan URL webhook.
+- Persist agentUserId, platformUserId, dan pemetaan agentOrderNo .
+- Mewakili jumlah moneter sebagai string desimal alih-alih nilai floating-point.
+- Tangani PROCESSING sebagai pending, bukan sebagai sukses atau kegagalan.
+- Proses webhook secara idempotensial karena percobaan ulang diharapkan.

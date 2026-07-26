@@ -1,0 +1,84 @@
+---
+title: "WebSocket Canaux de données de marché public"
+description: "Diffusez 6MM les carnets de commandes, les transactions, les chandeliers et les données des bourses via des canaux publics WebSocket avec des conseils d’abonnement et de reconnexion."
+slug: developer-api/websocket/public-market-channels
+canonical-url: https://docs.6mm.com/fr/developer-api/websocket/public-market-channels
+---
+
+Utilisez les canaux publics de marché lorsqu’une application a besoin d’une mise à jour continue des prix, des transactions, des chandeliers ou de la profondeur du carnet d’ordres sans interroger à répétition REST points de terminaison. Ces flux peuvent supporter des écrans de trading, des affichages de prix, des alertes et une surveillance du marché.
+
+<h2 id="connection-url">Connexion URL</h2>
+
+```
+wss://ws.6mm.com/ws
+```
+
+Le WebSocket public ne nécessite pas d’authentification.
+
+Pour le cycle de vie de la connexion, désabonnement, ping et reconnexion, voir [Connexion, Abonnement & Battement de cœur](/fr/developer-api/websocket/connection-subscription-and-heartbeat).
+
+<h2 id="common-channels">Canaux communs</h2>
+
+| Chaîne                            | Description                                                        |
+| ---------------------------------- | ------------------------------------------------------------------ |
+| `market.depth.{symbol}`            | Profondeur du carnet de commandes. Envoie d’abord un instantané, puis des mises à jour progressives |
+| `market.trade.{symbol}`            | Dernières transactions                                                      |
+| `market.kline.{symbol}.{interval}` | Klines                                                             |
+| `market.ticker.{symbol}`           | Résumé du ticker à symbole unique                                       |
+| `market.tickers`                   | Résumé du ticker tous symboles                                          |
+
+<h2 id="choose-a-channel">Choisissez une chaîne</h2>
+
+| Besoin d’application | Chaîne |
+| --- | --- |
+| Construisez ou maintenez un carnet des commandes | `market.depth.{symbol}` |
+| Affichez un flux commercial en direct | `market.trade.{symbol}` |
+| Dessinez un diagramme de chandelier | `market.kline.{symbol}.{interval}` |
+| Résumé du marché Display one | `market.ticker.{symbol}` |
+| Maintenir une vue d’ensemble du marché | `market.tickers` |
+
+<h2 id="subscription-example">Exemple d’abonnement</h2>
+
+```json
+{ "id": "1772007814666", "op": "subscribe", "args": ["market.depth.BTCUSDT"] }
+```
+
+<h2 id="push-message-wrapper">Enveloppe de message push</h2>
+
+```json
+{
+  "topic": "market.depth.BTCUSDT",
+  "event": "data",
+  "ts": 1772007815000,
+  "data": {}
+}
+```
+
+Utilisez `topic` pour acheminer chaque message vers le bon gestionnaire et `ts` pour observer le moment de livraison. L’objet `data` contient la charge utile du canal abonné.
+
+<h2 id="order-book-handling">Gestion du carnet de commandes</h2>
+
+Le canal de profondeur envoie d’abord un instantané puis des mises à jour incrémentales. Initialiser le livre local à partir de l’instantané avant d’appliquer les mises à jour. Après la reconnexion, créer une nouvelle session, s’abonner à nouveau, et reconstruire le livre local à partir du snapshot suivant au lieu de continuer depuis un état obsolète en mémoire.
+
+<h2 id="production-recommendations">Recommandations de production</h2>
+
+- Générer un `id` unique pour chaque demande d’abonnement, de désabonnement et de ping.
+- Confirmer les accusés de réception avant de considérer un canal comme actif.
+- Réabonnez-vous à tous les sujets requis après la reconnexion.
+- Garder les lectures réseau séparées du traitement plus lent de la base de données ou de l’interface utilisateur.
+- Fréquence de déconnexion du monitor, délai de traitement des messages et charges utiles mal formées.
+- Utiliser [Canal utilisateur privé](/fr/developer-api/websocket/private-user-channel) pour les mises à jour authentifiées des comptes et des commandes.
+
+<h2 id="related-api-docs">Documents API associés</h2>
+
+<CardGroup cols={3}>
+<Card title="WebSocket Aperçu" icon="fa-duotone fa-wave-pulse" href="/fr/developer-api/websocket">
+Choisissez entre des connexions de streaming publiques et privées.
+</Card>
+<Card title="Connexion & Battement de cœur" icon="fa-duotone fa-heart-pulse" href="/fr/developer-api/websocket/connection-subscription-and-heartbeat">
+Mettez en place la gestion des abonnements, désabonnements, ping et reconnexions.
+</Card>
+<Card title="REST Données de marché" icon="fa-duotone fa-chart-line" href="/fr/developer-api/rest-api/market-data">
+Utilisez des données de marché basées sur des requêtes en parallèle des chaînes de streaming.
+</Card>
+</CardGroup>

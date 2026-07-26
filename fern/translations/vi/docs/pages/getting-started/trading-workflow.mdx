@@ -1,0 +1,137 @@
+---
+title: "Quy trình giao dịch"
+description: "6MM hỗ trợ hợp đồng vĩnh viễn U-margined, cho phép người dùng giao dịch hợp đồng tương lai vĩnh viễn đã thanh toán và ký quỹ bằng stablecoin (ví dụ: USDT)."
+slug: trading/getting-started/trading-workflow
+canonical-url: https://docs.6mm.com/vi/trading/getting-started/trading-workflow
+---
+
+<h2 id="u-margined-perpetual-contracts">Hợp đồng vĩnh viễn có biên độ U</h2>
+
+6MM hỗ trợ hợp đồng vĩnh viễn U-margined, cho phép người dùng giao dịch hợp đồng tương lai vĩnh viễn đã thanh toán và ký quỹ bằng stablecoin (ví dụ: USDT).
+
+Phần này giải thích quy trình giao dịch cốt lõi và các cơ chế chính liên quan đến việc đặt và quản lý lệnh hợp đồng vĩnh viễn trên 6MM.
+
+***
+
+<h2 id="contract-overview">Tổng quan về hợp đồng</h2>
+
+* Loại hợp đồng: Hợp đồng vĩnh viễn có ký quỹ U
+* Tài sản thanh toán: Stablecoin (ví dụ: USDT)
+* Không hết hạn: Vị trí không hết hạn và có thể giữ vô thời hạn
+* Kiểm soát rủi ro dựa trên giá đánh dấu: Dùng để tính toán ký quỹ và thanh lý
+
+***
+
+<h2 id="order-types">Loại đơn hàng</h2>
+
+6MM hỗ trợ các loại lệnh phổ biến để phù hợp với các chiến lược giao dịch khác nhau:
+
+<h2 id="market-order">lệnh thị trường</h2>
+
+* Thực hiện ngay lập tức với mức giá thị trường tốt nhất hiện có
+* Ưu tiên tốc độ thực hiện hơn chính xác giá cả
+* Phù hợp cho việc ra vào nhanh chóng
+
+<h2 id="limit-order">lệnh giới hạn</h2>
+
+* Chỉ thực hiện ở mức giá đã chỉ định hoặc tốt hơn
+* Cung cấp kiểm soát giá cả
+* Có thể mở cho đến khi được lấp đầy hoặc hủy
+
+<h2 id="stop-order">lệnh dừng</h2>
+
+* Kích hoạt lệnh thị trường hoặc lệnh giới hạn khi giá kích hoạt đạt
+* Thường được sử dụng cho các chiến lược cắt lỗ hoặc phá vỡ
+
+> Khả năng có lệnh có thể thay đổi tùy theo cặp giao dịch và chế độ tích hợp.
+
+***
+
+<h2 id="leverage-and-margin">đòn bẩy và ký quỹ</h2>
+
+* Đòn bẩy cho phép người dùng kiểm soát các vị thế lớn hơn với ít vốn hơn
+* Ký quỹ được tính dựa trên:
+  * Kích thước vị trí
+  * Mức đòn bẩy
+  * Giá niêm yết
+
+Đòn bẩy cao hơn làm tăng lợi nhuận tiềm năng nhưng cũng làm tăng rủi ro thanh lý.
+
+***
+
+<h2 id="funding-rate-mechanism">Cơ chế Tỷ lệ Tài trợ</h2>
+
+Hợp đồng vĩnh viễn sử dụng cơ chế tỷ lệ huy động vốn để giữ giá hợp đồng phù hợp với thị trường giao ngay.
+
+* Các khoản thanh toán tài trợ diễn ra theo lịch trình
+* Nếu tỷ lệ tài trợ là dương:
+  * Vị thế mua trả tiền bán khống
+* Nếu tỷ lệ tài trợ âm:
+  * Vị thế bán sẽ trả tiền mua
+
+Phí huy động vốn được trao đổi trực tiếp giữa các nhà giao dịch.
+
+6MM không thu các khoản thanh toán tài trợ như nguồn thu.
+
+***
+
+<h2 id="fees-and-slippage">Phí và Trượt Phí</h2>
+
+<h2 id="trading-fees">Phí giao dịch</h2>
+
+* Phí sẽ được tính khi lệnh được thực hiện
+* Phí có thể khác nhau cho:
+  * Đơn hàng nhà sản xuất
+  * Đơn đặt hàng của người nhận
+
+Bảng phí được xác định bởi nền tảng đối tác và có thể thay đổi.
+
+<h2 id="slippage">trượt</h2>
+
+* Trượt giảm xảy ra khi thanh khoản thị trường không đủ để thực hiện lệnh ở mức giá mong đợi
+* Phổ biến hơn khi biến động cao hoặc khi sử dụng lệnh thị trường
+
+Người dùng có thể giảm trượt lệnh bằng cách sử dụng lệnh giới hạn và quản lý kích thước lệnh.
+
+***
+
+<h2 id="position-lifecycle">Vòng đời vị trí</h2>
+
+1. Tiền được phân bổ vào Tài khoản Vĩnh viễn
+2. Một đơn hàng được đặt và đối chiếu với 6MM xe phù hợp
+3. Một vị trí được mở khi thực hiện
+4. Cập nhật biên lợi nhuận và PnL theo thời gian thực
+5. Phí tài trợ được áp dụng theo lịch trình
+6. Vị trí được đóng thủ công hoặc qua TP/SL
+7. PnL cuối cùng được thanh toán vào Tài khoản Vĩnh viễn
+
+***
+
+<h2 id="risk-management-and-liquidation">Quản lý rủi ro và thanh lý</h2>
+
+* 6MM giám sát tỷ lệ ký quỹ theo thời gian thực
+* Khi biên lợi nhuận giảm xuống dưới ngưỡng bảo trì:
+  * Vị thế có thể được thanh lý một phần hoặc toàn bộ
+* Giá thanh lý được tính dựa trên giá đánh dấu, không phải giá giao dịch cuối cùng
+
+Cơ chế này giúp giảm thiểu việc thanh lý không cần thiết do biến động thị trường ngắn hạn.
+
+***
+
+<h2 id="summary">Tóm tắt</h2>
+
+Quy trình giao dịch liên tục có ký quỹ U trên 6MM được thiết kế để:
+
+* Cung cấp các loại đơn hàng quen thuộc và linh hoạt
+* Duy trì sự đồng bộ giá thông qua lãi suất tài trợ
+* Cung cấp các cơ chế thanh toán và thanh toán minh bạch
+* Cung cấp kiểm soát rủi ro ở cấp độ tổ chức
+
+Cấu trúc này cho phép đối tác cung cấp giao dịch vĩnh viễn chuyên nghiệp trong khi vẫn duy trì trải nghiệm người dùng liền mạch.
+
+<h2 id="related-trading-guides">Hướng dẫn giao dịch liên quan</h2>
+
+- [Hợp đồng vĩnh viễn](/vi/trading/perpetual-contracts): các kiến thức cơ bản về hợp đồng, tài trợ, ký quỹ và thanh toán.
+- [Loại lệnh](/vi/trading/order-types): hành vi giới hạn, thị trường, điều kiện và thời gian có hiệu lực.
+- [Phí & Trượt](/vi/trading/fees-and-slippage): chi phí thực hiện và ảnh hưởng đến thanh khoản.
+- [Rủi ro & Thanh lý](/vi/trading/risk-and-liquidations): rủi ro ký quỹ và hành vi đóng bắt buộc.

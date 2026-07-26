@@ -1,0 +1,69 @@
+---
+title: "Tùy chọn & Sự kiện"
+subtitle: "Tùy chọn khởi tạo, sự kiện trong thời gian chạy và các mã lỗi phổ biến."
+slug: sdk/trading-widget/options-events
+canonical-url: https://docs.6mm.com/vi/sdk/trading-widget/options-events
+---
+
+<h2 id="options">Tùy chọn</h2>
+
+| Lĩnh vực | Loại | Mặc định | Ghi chú |
+| --- | --- | --- | --- |
+| baseUrl | string | SDK nguồn gốc chữ viết | Tên miền iframe. Truyền rõ ràng trong các trang đối tác. |
+| biểu tượng | string | BTCUSDT | Chuẩn hóa thành chữ hoa và dải - / _. |
+| chủ đề | tối \| ánh sáng | tối | Tham số chủ đề ban đầu. |
+| địa phương | en \| en-US \| zh-CN | Trình duyệt/mặc định | Hỗ trợ tiếng Anh và tiếng Trung giản thể. |
+| bố cục | mặc định \| gọn gàng | mặc định | Tùy chọn bố cục được đặt trước. |
+| trưng bày | object | `showHeader: false`, `showTicker: false`, `hidden: []` | Điều khiển nhúng khu vực shell và container giao dịch cấp cao. |
+| xác thực | object | không có | Sử dụng partner-token cho các tích hợp SSO mới. |
+
+<h2 id="display-controls">Điều khiển hiển thị</h2>
+
+`display` kiểm soát vỏ trang giao dịch nhúng và các container cấp cao. Trong nhúng đối tác, tiêu đề PC và mã thị trường dưới cùng được ẩn mặc định.
+
+```js
+display: {
+  showHeader: false,
+  showTicker: false,
+  hidden: ['chart', 'orderBook'],
+}
+```
+
+| Lĩnh vực | Loại | Mặc định | Ghi chú |
+| --- | --- | --- | --- |
+| showHeader | boolean | giả | Có nên hiển thị tiêu đề nhúng PC bên trong iframe hay không. |
+| showTicker | boolean | giả | Có nên hiển thị mã thị trường thấp nhất trong vỏ nhúng hay không. |
+| ẩn | dây[] | [] | Ẩn các container cấp cao trong trang giao dịch. |
+
+Giá trị `display.hidden` được hỗ trợ:
+
+| Giá trị | Container |
+| --- | --- |
+| biểu đồ | Vùng chứa biểu đồ |
+| orderBook | Hộp đựng sách đặt hàng |
+| orderForm | Bảng biểu mẫu đặt hàng |
+| các vị trí | Bảng vị trí dưới cùng và lệnh mở |
+| tài khoản | Container tài sản tài khoản |
+
+`display.hidden` chỉ ẩn toàn bộ container. Nó không ẩn từng nút, trường hoặc công cụ riêng lẻ bên trong container. Các giá trị không phù hợp với viewport hiện tại sẽ bị bỏ qua.
+
+<h2 id="events">Sự kiện</h2>
+
+| Sự kiện | Kích hoạt |
+| --- | --- |
+| sẵn sàng | Khởi tạo iframe đã hoàn tất. |
+| lỗi | SDK, iframe hoặc lỗi xác thực. |
+| state_changed | SDK trạng thái vòng đời đã thay đổi. |
+| auth_state_changed | Trạng thái xác thực token đối tác đã thay đổi. |
+| symbol_changed | Biểu tượng iframe thực tế đã thay đổi. |
+| locale_changed | Ngôn ngữ iframe thực tế đã thay đổi. |
+| order_created | Người dùng đã tạo một đơn hàng bên trong iframe. |
+| order_failed | Gửi đơn hàng thất bại. |
+| đã bị phá hủy | SDK bị phá hủy. |
+
+<h2 id="related-widget-guides">Hướng dẫn Widget liên quan</h2>
+
+- [Trading Widget Khởi Đầu Nhanh](/vi/sdk/trading-widget/quick-start)
+- [Xác thực](/vi/sdk/trading-widget/authentication)
+- [Phương thức thể hiện](/vi/sdk/trading-widget/instance-methods)
+- [Khắc phục sự cố](/vi/sdk/security/troubleshooting)

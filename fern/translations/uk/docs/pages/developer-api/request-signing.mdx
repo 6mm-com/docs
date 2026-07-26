@@ -1,0 +1,153 @@
+---
+title: "Підписання запитів"
+description: "Підписуйте 6MM API запити за допомогою HMAC-SHA256 з використанням необхідного корисного навантаження, часової познаки, ключа API , заголовків підписів і правил верифікації."
+slug: developer-api/request-signing
+canonical-url: https://docs.6mm.com/uk/developer-api/request-signing
+---
+
+<h2 id="request-format">Формат запиту</h2>
+
+| Розташування | Поле       | Обов'язкове            | Опис                                   |
+| -------- | ----------- | ------------------- | --------------------------------------------- |
+| Заголовок   | `X-API-KEY` | Так                 | `apiKey` повертається, коли створюється API Key |
+| Запит    | `timestamp` | Так                 | Мілісекундний часовий штамп Unix                    |
+| Запит    | `signature` | Так                 | HMAC-SHA256 підпис, малий шестилітник   |
+| Кузов     | JSON        | Залежить від кінцевої точки | POST / PUT / DELETE запит              |
+
+<h2 id="signature-payload">Сигнатурне корисне навантаження</h2>
+
+```
+payload = queryStringWithoutSignature + requestBody
+signature = HMAC-SHA256(apiSecret, payload)
+```
+
+Ключові правила:
+
+* `timestamp` має бути Unix мілісекундним таймштампом. Вікно допуску сервера — ±10 секунд.
+* `signature` розміщується у рядку запиту URL , але не включено до сигнатурного корисного навантаження.
+* Сервер перевіряє початковий рядок запиту після видалення `signature`; він не змінює порядок параметрів запиту.
+* Порядок параметра запиту, який використовується для підписання, повинен відповідати фактичному запиту URL.
+* Якщо існує тіло запиту, JSON рядок, що використовується для підписання, повинен точно збігатися з фактичним переданим тілом.
+* Шляхи, пов'язані з порядком, виконують перевірки повтору підпису. Повторне використання одного й того ж підпису протягом короткого періоду повертає `Signature replay detected`.
+
+<h2 id="server-time">Час сервера</h2>
+
+```http
+GET /v1/time
+```
+
+Приклад відповіді:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "timestamp": 1780473256,
+    "timestampMs": 1780473256708,
+    "iso": "2026-06-03T07:54:16Z",
+    "timezone": "UTC"
+  },
+  "requestId": "req-7cad3113"
+}
+```
+
+Клієнти повинні розраховувати `timeOffsetMs = serverTimestampMs - localTimestampMs`, а потім використовувати `timestamp = nowMs + timeOffsetMs` для наступних підписаних запитів. Якщо сервер повертає `Timestamp outside of tolerance window`, негайно синхронізуйте час і генеруйте підпис.
+
+<h2 id="get-signing-example">GET Приклад підпису</h2>
+
+Фактичний запит:
+
+```
+GET /v1/private/order/current?symbol=BTCUSDT&timestamp=1772710377808&signature=...
+```
+
+Сигнатурне корисне навантаження:
+
+```
+symbol=BTCUSDT&timestamp=1772710377808
+```
+
+<h2 id="post-signing-example">POST Приклад підпису</h2>
+
+Фактичний запит:
+
+```
+POST /v1/private/order/place?timestamp=1772710377808&signature=...
+```
+
+Тіло запиту:
+
+```json
+{"symbol":"BTCUSDT","type":"LIMIT","side":"BUY","price":"85000","quantity":"0.1","timeInForce":"GTC","makerOnly":true,"clientOrderId":"ext-1772710377808-001"}
+```
+
+Сигнатурне корисне навантаження:
+
+```
+timestamp=1772710377808{"symbol":"BTCUSDT","type":"LIMIT","side":"BUY","price":"85000","quantity":"0.1","timeInForce":"GTC","makerOnly":true,"clientOrderId":"ext-1772710377808-001"}
+```
+
+<h2 id="python-signing-example">Приклад підпису в Python</h2>
+
+```python
+import hashlib
+import hmac
+import json
+import time
+from urllib.parse import urlencode
+
+import requests
+
+BASE_URL = "https://api.6mm.com"
+API_KEY = "YOUR_API_KEY"
+API_SECRET = "YOUR_API_SECRET"
+TIME_OFFSET_MS = 0
+
+def sign(payload: str) -> str:
+    return hmac.new(
+        API_SECRET.encode("utf-8"),
+        payload.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+
+def sync_time_offset():
+    global TIME_OFFSET_MS
+    before = int(time.time() * 1000)
+    resp = requests.get(f"{BASE_URL}/v1/time", timeout=5)
+    after = int(time.time() * 1000)
+    resp.raise_for_status()
+
+    server_ts = int(resp.json()["data"]["timestampMs"])
+    local_midpoint = (before + after) // 2
+    TIME_OFFSET_MS = server_ts - local_midpoint
+
+def signed_request(method: str, path: str, params=None, body=None):
+    params = dict(params or {})
+    params["timestamp"] = str(int(time.time() * 1000) + TIME_OFFSET_MS)
+
+    query_string = urlencode(params)
+    body_string = ""
+    if body is not None:
+        body_string = json.dumps(body, separators=(",", ":"), ensure_ascii=False)
+
+    signature = sign(query_string + body_string)
+    url = f"{BASE_URL}{path}?{query_string}&signature={signature}"
+    headers = {
+        "X-API-KEY": API_KEY,
+        "Content-Type": "application/json",
+    }
+    resp = requests.request(method, url, headers=headers, data=body_string if body is not None else None, timeout=10)
+    resp.raise_for_status()
+    return resp.json()
+
+sync_time_offset()
+print(signed_request("GET", "/v1/private/order/current", {"symbol": "BTCUSDT"}))
+```
+
+<h2 id="related-security-guides">Пов'язані посібники з безпеки</h2>
+
+- [Автентифікація](/uk/developer-api/authentication)
+- [API Key Менеджмент](/uk/developer-api/api-key-management)
+- [Секрети та підписи](/uk/sdk/security/secrets-signing)
+- [Коди помилок та усунення несправностей](/uk/developer-api/error-codes-and-troubleshooting)

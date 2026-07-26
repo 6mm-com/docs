@@ -1,0 +1,51 @@
+---
+title: "Огляд інтеграції"
+description: "Почніть інтеграцію 6MM API з рекомендованим середовищем, автентифікацією, підписуванням, REST, WebSocket, тестуванням та послідовністю готовності до виробництва."
+slug: developer-api/integration-overview
+canonical-url: https://docs.6mm.com/uk/developer-api/integration-overview
+---
+
+> REST Базова URL: `https://api.6mm.com`\
+> WebSocket URL: `wss://ws.6mm.com/ws`
+
+Ця документація призначена для зовнішніх систем, які інтегруються з сервісом 6MM API . Він охоплює вхід, автентифікацію JWT , управління API Key , підписання API Key HMAC , запити до акаунтів, замовлення, позиції, ринкові дані та WebSocket потоки.
+
+Забезпечення рахунку та підготовка фінансування здійснюється через процеси на стороні платформи. Ця документація описує лише зовнішньо викликані API сервісні кінцеві точки.
+
+<h2 id="service-endpoints">Кінцеві точки обслуговування</h2>
+
+| Тип      | Кінцева точка              |
+| --------- | --------------------- |
+| REST API  | `https://api.6mm.com` |
+| WebSocket | `wss://ws.6mm.com/ws`    |
+
+<h2 id="integration-flow">Потік інтеграції</h2>
+
+Рекомендована послідовність інтеграції:
+
+1. Увійдіть у акаунт, наданий платформою, і отримайте `accessToken`.
+2. Для серверного програмного доступу створіть API Key з JWT спочатку та безпечно зберігайте одноразовий повернений `apiSecret`.
+3. Приватні запити, а також кінцеві точки ордерів і позицій можна викликати за допомогою `Authorization: Bearer <accessToken>` або підпису API Key.
+4. Для приватних WebSocket потоків спочатку створіть `listenKey` , потім підключіться до `wss://ws.6mm.com/ws?listenKey=...`.
+5. Ринкові дані REST кінцевих точок і публічних WebSocket каналах не потребують автентифікації.
+
+<h2 id="authentication-choice">Вибір автентифікації</h2>
+
+| Сценарій                               | Рекомендований метод         |
+| -------------------------------------- | -------------------------- |
+| Дії користувачів фронтенду                  | JWT                        |
+| Серверні програмні виклики         | API Key + HMAC підпис   |
+| API Key створення, оновлення та видалення | JWT                        |
+| Публічний ринок REST / публічний WebSocket  | Автентифікація не потрібна |
+
+<h2 id="documentation-scope">Обсяг документації</h2>
+
+Ця документація охоплює вхід, автентифікацію JWT , управління API Key , підписання API Key HMAC , запити до акаунтів, замовлення, позиції, ринкові дані та WebSocket потоки.
+
+<h2 id="recommended-reading-order">Рекомендований порядок читання</h2>
+
+1. [Середовища та загальні конвенції](/uk/developer-api/environments-and-common-conventions)
+2. [Автентифікація](/uk/developer-api/authentication) та [Підписання запиту](/uk/developer-api/request-signing)
+3. [REST API](/uk/developer-api/rest-api) і [WebSocket](/uk/developer-api/websocket)
+4. [Рекомендації щодо інтеграції](/uk/developer-api/integration-recommendations)
+5. [Контрольний список запуску виробництва](/uk/resources/production-launch-checklist)

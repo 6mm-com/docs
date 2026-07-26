@@ -1,0 +1,70 @@
+---
+title: "PHP Départ rapide"
+subtitle: "Installez et initialisez le PHP SDK depuis un service backend."
+slug: sdk/agent-sdk/php/quick-start
+canonical-url: https://docs.6mm.com/fr/sdk/agent-sdk/php/quick-start
+---
+
+<h2 id="install">Installation</h2>
+
+```json
+{
+  "require": {
+    "sixmm/agent-sdk": "VERSION_PROVIDED_BY_6MM"
+  }
+}
+```
+
+> **Accès au forfait**
+>
+> 6MM fournit le nom du paquet Composer approuvé, le dépôt et la version lors de l’intégration du partenaire. Il ne faut pas supposer que le package existe sur Packagist public.
+
+<h2 id="before-you-start">Avant que tu commences</h2>
+
+- Confirmez l’Agent API URL base avec 6MM.
+- Charger apiSecret à partir de variables d’environnement ou de gestion de secrets.
+- Conserver SDK utilisation uniquement dans les services backend.
+- Préparer la manipulation des idempotents pour les flux de transfert et de webhook.
+
+<h2 id="initialize-client">Initialisation du client</h2>
+
+```php
+<?php
+
+use Sixmm\Agent\AgentClient;
+use Sixmm\Agent\AgentConfig;
+
+$client = new AgentClient(new AgentConfig(
+    'https://agent-api.6mm.com',
+    'AGENT001',
+    getenv('AGENT_API_SECRET') ?: '',
+    'USDT'
+));
+```
+
+> **Uniquement en arrière-plan**
+>
+> Le PHP SDK signe les requêtes Agent API et ne doit pas être exposé via le code source public ou les environnements d’exécution frontend.
+
+<h2 id="example-transfer-funds-in">Exemple : transférer des fonds dans</h2>
+
+```php
+$response = $client->transfer([
+    'agentOrderNo' => 'AGT-ORDER-1001',
+    'agentUserId' => 'agent-user-001',
+    'direction' => 'IN',
+    'currency' => 'USDT',
+    'amount' => '10.00',
+]);
+```
+
+Utilisez des chaînes décimales pour les montants et conservez le agentOrderNo d’origine lors de la réévaluation ou de la requête sur le statut du transfert.
+
+<h2 id="next-steps">Prochaines étapes</h2>
+
+| Besoin | Page suivante |
+| --- | --- |
+| Comprendre Agent SDK capacités | [Agent SDK Aperçu ](/fr/sdk/agent-sdk/overview) |
+| Examiner le comportement de signature | [Secrets & Signatures](/fr/sdk/security/secrets-signing) |
+| Vérifier la livraison du rappel | [Crochets et Idempotence](/fr/sdk/security/webhooks-idempotency) |
+| Diagnostiquer un problème d’intégration | [SDK Dépannage ](/fr/sdk/security/troubleshooting) |

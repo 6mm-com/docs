@@ -1,0 +1,95 @@
+---
+title: "Trading Widget Автентифікація"
+subtitle: "Використовуйте партнерський токен для нових вбудованих торгових SSO інтеграцій."
+slug: sdk/trading-widget/authentication
+canonical-url: https://docs.6mm.com/uk/sdk/trading-widget/authentication
+---
+
+<h2 id="recommended-mode-partner-token">Рекомендований режим: партнер-токен</h2>
+
+Partner-token уникає розміщення коротких токенів у URL і зберігає apiSecret на партнерському бекенді.
+
+```js
+const widget = TradingWidget.create('#trading-widget', {
+  baseUrl: 'https://app.6mm.com',
+  auth: {
+    mode: 'partner-token',
+    tokenProvider: async ({ channelId, symbol, reason }) => {
+      const resp = await fetch('/api/trading/embed-token', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ channelId, symbol, reason }),
+      })
+
+      if (!resp.ok) {
+        throw new Error('Failed to request embed token')
+      }
+
+      return resp.json()
+    },
+  },
+})
+```
+
+<h2 id="related-documentation">Пов'язана документація</h2>
+
+- [Create Embed Token](/uk/sdk/agent-sdk/java/embed-token): приклад випуску бекенд-токена.
+- [Trading Widget Швидкий старт](/uk/sdk/trading-widget/quick-start): повний процес ініціалізації.
+- [Секрети та підписи](/uk/sdk/security/secrets-signing): зберігайте привілейовані облікові дані Агента на бекенді.
+- [Усунення несправностей](/uk/sdk/security/troubleshooting): збоїв у діагностиці сесії, токена, початку та ініціалізації.
+
+<h2 id="backend-flow">Бекенд-потік</h2>
+
+```text
+1. Partner frontend receives auth_request from the iframe.
+2. SDK calls tokenProvider.
+3. Partner frontend calls its own backend.
+4. Partner backend validates the partner session.
+5. Partner backend calls 6MM Agent API or Java SDK createEmbedToken.
+6. SDK sends embedToken to the iframe through postMessage.
+7. iframe exchanges embedToken for a 6MM access token.
+8. iframe continues initialization and emits ready.
+```
+
+<h2 id="tokenprovider-contract">tokenProvider контракт</h2>
+
+| Поле | Режисура | Опис |
+| --- | --- | --- |
+| channelId | SDK -> Партнерський бекенд | Унікальний ідентифікатор сесії віджета. Бекенд має передавати його createEmbedToken. |
+| Символ | SDK -> Партнерський бекенд | Поточний запитуваний торговий символ. Використовуйте його для обмеження токена, коли це потрібно. |
+| Причина | SDK -> Партнерський бекенд | Чому SDK запитує токен, наприклад, початкове завантаження або оновлення. |
+| embedToken | Партнерський бекенд -> SDK | Короткочасний токен, створений Agent SDK або агентом API. |
+| expireAt | Партнерський бекенд -> SDK | Термін дії токена повернений 6MM. |
+
+<h2 id="failure-handling">Обробка відмов</h2>
+
+| Стан | Рекомендоване поводження |
+| --- | --- |
+| Партнерна сесія закінчилася | Поверніть 401 з партнерської кінцевої точки і попросіть користувача увійти ще раз. |
+| Створення токена тимчасово не вдалося | Додайте помилку в tokenProvider і дозвольте віджету виявити помилку автентифікації. |
+| channelId невідповідність | Відхиліть запит і створіть екземпляр віджета. |
+| Користувач не має права торгувати | Поверніть помилку, контрольовану партнером, і не створюйте embed-токен. |
+
+<h2 id="compatibility-mode-agent-sso">Режим сумісності: agent-sso</h2>
+
+Agent-sso зберігає старий потік /agent-entry ticket. Віддавайте перевагу партнерському токені для нових інтеграцій.
+
+```js
+const widget = TradingWidget.create('#trading-widget', {
+  baseUrl: 'https://app.6mm.com',
+  auth: {
+    mode: 'agent-sso',
+    entryUrlProvider: async ({ redirectPath }) => {
+      const resp = await fetch('/api/trading-entry', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ redirectPath }),
+      })
+      const data = await resp.json()
+      return data.webUrl
+    },
+  },
+})
+```

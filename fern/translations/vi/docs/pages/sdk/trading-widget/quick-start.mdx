@@ -1,0 +1,108 @@
+---
+title: "Nhúng 6MM Trading Widget: Khởi động nhanh"
+subtitle: "Thêm terminal giao dịch vào trang web với container, script v1 và TradingWidget.create()."
+slug: sdk/trading-widget/quick-start
+canonical-url: https://docs.6mm.com/vi/sdk/trading-widget/quick-start
+---
+
+Trading Widget SDK tích hợp giao diện giao dịch 6MM vào một trang web thuộc sở hữu của đối tác. Tích hợp nhanh nhất yêu cầu một container hiển thị, script SDK sản xuất, và một cuộc gọi `TradingWidget.create()`.
+
+<h2 id="before-you-start">Trước khi bạn bắt đầu</h2>
+
+- Chạy ví dụ từ một trang web có thể tải tài nguyên từ `https://app.6mm.com`.
+- Đặt cho container widget một chiều rộng và chiều cao rõ ràng.
+- Tải SDK trước khi gọi `TradingWidget.create()`.
+- Lên kế hoạch [luồng xác thực](/vi/sdk/trading-widget/authentication) trước khi kích hoạt tính năng tài khoản hoặc giao dịch trong môi trường sản xuất.
+
+<h2 id="minimal-example">Ví dụ tối thiểu</h2>
+
+```html
+<div id="trading-widget" style="width: 100%; height: 720px"></div>
+
+<script src="https://app.6mm.com/sdk/trading-widget/v1/index.js"></script>
+<script>
+  const widget = TradingWidget.create('#trading-widget', {
+    baseUrl: 'https://app.6mm.com',
+    symbol: 'BTCUSDT',
+    theme: 'dark',
+    locale: 'en',
+    layout: 'default',
+    display: {
+      showHeader: false,
+      showTicker: false,
+      hidden: [],
+    },
+    onReady(event) {
+      console.log('ready', event)
+    },
+    onError(error) {
+      console.error('error', error)
+    },
+  })
+</script>
+```
+
+Khi tích hợp thành công, SDK tạo một iframe bên trong `#trading-widget` và gọi `onReady`. Thu thập `onError` trong quá trình phát triển để các lỗi cấu hình và tải được hiển thị.
+
+<h2 id="sdk-urls">URL SDK</h2>
+
+| Môi trường | Kịch bản URL |
+| --- | --- |
+| Sản xuất | https://app.6mm.com/sdk/trading-widget/v1/index.js |
+
+> **Đặt baseUrl một cách rõ ràng**
+>
+> Khi kiểm thử từ các trang thuộc sở hữu của đối tác, hãy chuyển baseUrl sao cho iframe luôn trỏ đến miền Web 6MM .
+
+<h2 id="display-controls">Điều khiển hiển thị</h2>
+
+Nhúng đối tác mặc định ẩn tiêu đề PC và mã thị trường đáy. Sử dụng `display` khi bạn cần hiển thị các khu vực shell đó hoặc ẩn các container cấp cao trong trang giao dịch nhúng.
+
+```js
+display: {
+  showHeader: false,
+  showTicker: false,
+  hidden: ['account'],
+}
+```
+
+<h2 id="container-size">Kích thước container</h2>
+
+| Bề mặt | Mức tối thiểu khuyến nghị |
+| --- | --- |
+| Máy tính để bàn | 1024 x 720 |
+| Di động | 390 x 700 |
+
+Đối với bố cục đáp ứng, giữ cho chiều rộng linh hoạt và đặt chiều cao tối thiểu phù hợp cho mỗi điểm ngừng. Một container có chiều cao bằng 0 có thể nạp SDK thành công trong khi giao diện giao dịch không hiển thị.
+
+<h2 id="verify-the-integration">Xác minh sự tích hợp</h2>
+
+1. Xác nhận script SDK trả về thành công trong bảng mạng trình duyệt.
+2. Xác nhận `onReady` kích hoạt sau khi iframe được khởi tạo.
+3. Kiểm tra các phần `symbol`, `locale`, chủ đề và các phần ẩn đã được cấu hình.
+4. Thay đổi kích thước trang trên cả các điểm dừng trên máy tính để bàn và trên thiết bị di động.
+5. Hoàn thành kiểm tra xác thực với người dùng không phải sản xuất trước khi khởi động.
+
+<h2 id="common-issues">Các vấn đề phổ biến</h2>
+
+| Triệu chứng | Những gì cần kiểm tra |
+| --- | --- |
+| Khu vực widget trống | Xác nhận container có chiều rộng và chiều cao hiển thị. |
+| `TradingWidget` là không xác định | Xác nhận script v1 đã được tải trước khi gọi create. |
+| Sai trang hoặc môi trường | Thiết lập `baseUrl` một cách rõ ràng và xác minh môi trường đã cấu hình. |
+| Sự kiện sẵn sàng không bao giờ kích hoạt | Thu thập `onError` và kiểm tra các yêu cầu iframe hoặc script bị chặn. |
+| Dữ liệu tài khoản không khả dụng | Hoàn thành quy trình xác thực widget được hỗ trợ. |
+
+<h2 id="next-steps">Các bước tiếp theo</h2>
+
+<CardGroup cols={3}>
+<Card title="Xác thực Widget" icon="fa-duotone fa-user-shield" href="/vi/sdk/trading-widget/authentication">
+Kết nối thiết bị đầu cuối nhúng với phiên người dùng đã được phê duyệt.
+</Card>
+<Card title="Tùy chọn & Sự kiện" icon="fa-duotone fa-sliders" href="/vi/sdk/trading-widget/options-events">
+Cấu hình các ký hiệu, khu vực, hành vi hiển thị và callback vòng đời.
+</Card>
+<Card title="Phương thức thể hiện" icon="fa-duotone fa-code" href="/vi/sdk/trading-widget/instance-methods">
+Kiểm soát phiên bản widget được tạo sau khi khởi tạo.
+</Card>
+</CardGroup>

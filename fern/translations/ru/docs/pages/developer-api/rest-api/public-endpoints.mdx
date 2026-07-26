@@ -1,0 +1,159 @@
+---
+title: "Публичные конечные точки"
+description: "Получите доступ к публичным 6MM API конечным точкам для инструментов, тикеров, книг ордеров, сделок и другой неаутентифицированной рыночной информации."
+slug: developer-api/rest-api/public-endpoints
+canonical-url: https://docs.6mm.com/ru/developer-api/rest-api/public-endpoints
+---
+
+<h2 id="base-url">Базовый URL</h2>
+
+```
+https://api.6mm.com
+```
+
+<h2 id="service-version">Сервисная версия</h2>
+
+```http
+GET /v1/version
+```
+
+Получите информацию о версии сервиса.
+
+<h2 id="server-time">Серверное время</h2>
+
+```http
+GET /v1/time
+```
+
+Получите серверное время. Этот эндпойнт можно использовать для калибровки времени клиента перед подписанием API Key .
+
+<h2 id="user-login">Вход пользователя</h2>
+
+```http
+POST /v1/public/user/login
+```
+
+Параметры запроса:
+
+| Параметр    | Тип   | Обязательно | Описание                             |
+| ------------ | ------ | -------- | --------------------------------------- |
+| `username`   | string | Да      | Имя пользователя, длина 3 - 32                 |
+| `password`   | string | Да      | Пароль, длина 1 - 64                 |
+| `deviceId`   | string | Нет       | Отпечаток устройства — до 64 символов |
+| `deviceName` | string | Нет       | Имя устройства, до 128 символов       |
+
+Пример запроса:
+
+```bash
+curl -X POST https://api.6mm.com/v1/public/user/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "alice",
+    "password": "yourPassword",
+    "deviceId": "device-001",
+    "deviceName": "server-001"
+  }'
+```
+
+Пример ответа:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "accessToken": "YOUR_ACCESS_TOKEN",
+    "accessExpire": 1769676656
+  },
+  "requestId": "req-login"
+}
+```
+
+<h2 id="refresh-token">Жетон обновления</h2>
+
+```http
+POST /v1/public/user/refresh-token
+```
+
+В обычных сценариях интеграции состояние входа обновляется через Cookie. Сохраняйте возвращение Cookie в ответ входа.
+
+Поля ответов:
+
+| Поле          | Тип   | Описание              |
+| -------------- | ------ | ------------------------ |
+| `accessToken`  | string | Новый токен доступа         |
+| `accessExpire` | int64  | Время истечения токена доступа |
+
+<h2 id="agent-sso">Агент SSO</h2>
+
+<h2 id="ticket-exchange">Обмен билетами</h2>
+
+```http
+POST /v1/public/agent-sso/exchange-ticket
+```
+
+Параметры запроса:
+
+| Параметр  | Тип   | Обязательно | Описание                                 |
+| ---------- | ------ | -------- | ------------------------------------------- |
+| `ticket`   | string | Да      | Одноразовый штраф, выданный агентской службой |
+| `deviceId` | string | Нет       | Отпечаток устройства — до 64 символов     |
+
+Поля ответов:
+
+| Поле          | Тип   | Описание              |
+| -------------- | ------ | ------------------------ |
+| `accessToken`  | string | Токен доступа             |
+| `accessExpire` | int64  | Время истечения токена доступа |
+| `redirectPath` | string | Рекомендуемый путь перенаправления  |
+
+<h2 id="embed-token-exchange">Обмен встраиваемыми токенами</h2>
+
+```http
+POST /v1/public/agent-sso/exchange-embed-token
+```
+
+Параметры запроса:
+
+| Параметр    | Тип   | Обязательно | Описание                                                    |
+| ------------ | ------ | -------- | -------------------------------------------------------------- |
+| `embedToken` | string | Да      | Кратковременный встроенный торговый токен, выпущенный агентом |
+| `channelId`  | string | Да      | Встроенный идентификатор канала iframe, до 128 символов               |
+| `deviceId`   | string | Нет       | Отпечаток устройства — до 64 символов                        |
+
+Поля ответов:
+
+| Поле          | Тип   | Описание              |
+| -------------- | ------ | ------------------------ |
+| `accessToken`  | string | Токен доступа             |
+| `accessExpire` | int64  | Время истечения токена доступа |
+
+<h2 id="pnl-leaderboard">Таблица лидеров PnL</h2>
+
+```http
+GET /v1/public/leaderboard/pnl?period=30d
+```
+
+Параметры запроса:
+
+| Параметр | Тип   | Обязательно | Описание          |
+| --------- | ------ | -------- | -------------------- |
+| `period`  | string | Да      | `7d` / `30d` / `90d` |
+
+Поля ответов:
+
+| Поле              | Тип   | Описание                                                       |
+| ------------------ | ------ | ----------------------------------------------------------------- |
+| `list[].rank`      | int32  | Звание                                                              |
+| `list[].userId`    | string | Внешний идентификатор пользователя                                                  |
+| `list[].trader`    | string | Имя торговца в маске                                                |
+| `list[].volume`    | string | Объём торгов в окне                                      |
+| `list[].pnlAmount` | string | Понял PnL в окне                                        |
+| `list[].pnlPct`    | string | Коэффициент PnL, десятичный от `0` до `1`                                |
+| `myRank`           | int32  | Ранг текущего пользователя. Возвращает `0` , если не аутентифицирован или не ранжирован |
+
+<h2 id="related-documentation">Связанная документация</h2>
+
+- [Рыночные данные](/ru/developer-api/rest-api/market-data)
+- [Публичные WebSocket каналы](/ru/developer-api/websocket/public-market-channels)
+- [Среды и общие конвенции](/ru/developer-api/environments-and-common-conventions)

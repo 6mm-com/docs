@@ -1,0 +1,60 @@
+---
+title: "Mã lỗi và Khắc phục sự cố"
+description: "Chẩn đoán lỗi 6MM API bằng mã phản hồi, tin nhắn, ID yêu cầu, hướng dẫn thử lại, kiểm tra xác thực và các bước khắc phục sự cố tích hợp."
+slug: developer-api/error-codes-and-troubleshooting
+canonical-url: https://docs.6mm.com/vi/developer-api/error-codes-and-troubleshooting
+---
+
+<h2 id="error-response-format">Định dạng phản hồi lỗi</h2>
+
+```json
+{
+  "code": 1003,
+  "message": "Invalid token",
+  "requestId": "req-12345678"
+}
+```
+
+Lỗi kinh doanh thường vẫn trả về cấu trúc JSON thống nhất. Các chuyên gia tích hợp nên kiểm tra `code` trước. Lỗi xác thực có thể trả về HTTP `401`; Giới hạn tốc độ có thể trả HTTP `429`.
+
+<h2 id="common-error-codes">Các Mã Lỗi Phổ Biến</h2>
+
+| Mã lỗi      | Mô tả                                  |
+| --------------- | -------------------------------------------- |
+| `0`             | Thành công                                      |
+| `1001`          | Không cung cấp thông tin xác thực hợp lệ |
+| `1002`          | Token đã hết hạn                                |
+| `1003`          | Mã token, API Keyhoặc chữ ký không hợp lệ         |
+| `1004`          | Token bị thu hồi                                |
+| `1006`          | Nguồn IP sự không khớp                           |
+| `2001`          | Thiếu tham số bắt buộc                   |
+| `2002`          | Giá trị tham số không hợp lệ                      |
+| `2003`          | Tham số nằm ngoài phạm vi                       |
+| `3001`          | Cân bằng không đủ                         |
+| `3003`          | Không tìm thấy đơn hàng                              |
+| `3004`          | Yêu cầu trùng lặp                            |
+| `3005`          | Đơn hàng không thể hủy                     |
+| `3006`          | Xin phép bị từ chối                            |
+| `3100` - `3112` | Lỗi xác thực tham số thứ tự điều kiện   |
+| `5001`          | Lỗi máy chủ nội bộ                        |
+| `5002`          | Dịch vụ tạm thời không khả dụng              |
+| `5003`          | Giới hạn tốc độ được kích hoạt                         |
+
+<h2 id="troubleshooting">Khắc phục sự cố</h2>
+
+| Vấn đề                                     | Khuyến nghị                                                                                   |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `1001` không có thông tin xác thực hợp lệ  | Kiểm tra xem `Authorization: Bearer <accessToken>` hay `X-API-KEY` có bao gồm không.                  |
+| `1002` Token đã hết hạn                        | Làm mới Token hoặc đăng nhập lại trước khi thử lại.                                                   |
+| `1003` Token, API Keyhoặc chữ ký không hợp lệ | Kiểm tra API Key, payload chữ ký, chuỗi phần thân JSON yêu cầu, và thứ tự tham số truy vấn.           |
+| `1006` nguồn IP sự không khớp                   | Kiểm tra cấu hình danh sách trắng API Key IP .                                                    |
+| `3004` yêu cầu trùng lặp                    | Không tái sử dụng cùng một chữ ký cho các đường dẫn liên quan đến lệnh. Tái tạo `timestamp` và `signature`. |
+| Giới hạn `5003` giá được kích hoạt                 | Giảm tần suất yêu cầu và sử dụng backoff theo cấp số nhân nếu thử lại.                                |
+| `Timestamp outside of tolerance window`     | Gọi cho `/v1/time` để hiệu chỉnh khoảng thời gian và ký lại yêu cầu.                             |
+
+<h2 id="related-diagnostic-guides">Hướng dẫn chẩn đoán liên quan</h2>
+
+- [Môi trường & Quy ước Chung](/vi/developer-api/environments-and-common-conventions)
+- [Xác thực](/vi/developer-api/authentication)
+- [Khuyến nghị tích hợp](/vi/developer-api/integration-recommendations)
+- [Mẫu Yêu Cầu Hỗ Trợ](/vi/resources/support-request-template)

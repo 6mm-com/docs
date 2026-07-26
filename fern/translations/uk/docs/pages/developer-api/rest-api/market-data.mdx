@@ -1,0 +1,111 @@
+---
+title: "Ринкові дані"
+description: "Використовуйте неавтентифіковані 6MM ринкові дані REST кінцевих точках для отримання символів, тікерів, книг ордерів, угод та іншої публічної торгової інформації."
+slug: developer-api/rest-api/market-data
+canonical-url: https://docs.6mm.com/uk/developer-api/rest-api/market-data
+---
+
+Ринкові дані REST кінцеві точки не потребують автентифікації.
+
+<h2 id="symbol-configuration">Конфігурація символів</h2>
+
+```http
+GET /v1/public/market/symbols
+```
+
+Поширені поля відповідей:
+
+| Поле                      | Тип   | Опис                   |
+| -------------------------- | ------ | ----------------------------- |
+| `list[].symbol`            | string | Символ                        |
+| `list[].baseAsset`         | string | Базовий актив                    |
+| `list[].quoteAsset`        | string | Актив котирування                   |
+| `list[].minQuantity`       | string | Мінімальна кількість замовлення        |
+| `list[].minNotional`       | string | Мінімальне номінальне значення        |
+| `list[].tickSize`          | string | Розмір цінового тика               |
+| `list[].stepSize`          | string | Розмір кроків кількості            |
+| `list[].pricePrecision`    | int64  | Точність ціни               |
+| `list[].maxLimitOrderQty`  | string | Максимальна кількість лімітного замовлення  |
+| `list[].maxMarketOrderQty` | string | Максимальна кількість ринкових ордерів |
+| `list[].maxOpenOrders`     | int64  | Максимальна кількість відкритих ордерів на користувача  |
+| `list[].defaultLeverage`   | int64  | Кредитне плече за замовчуванням              |
+| `list[].defaultMarginMode` | int64  | Стандартний режим margin           |
+| `list[].leverageTiers[]`   | array  | Рівні маржі важеля         |
+| `handlingFeeLevelConfig[]` | array  | Конфігурація тарифного рівня        |
+
+<h2 id="funding-rate-configuration">Конфігурація ставки фінансування</h2>
+
+```http
+GET /v1/public/market/funding-rate?symbol=BTCUSDT
+```
+
+Параметри запиту:
+
+| Параметр | Тип   | Обов'язкове | Опис                     |
+| --------- | ------ | -------- | ------------------------------- |
+| `symbol`  | string | Ні       | Якщо його опускати, повертається всі символи |
+
+<h2 id="current-funding-rate">Поточний рівень фінансування</h2>
+
+```http
+GET /v1/public/market/funding-rate/current?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+Параметри запиту:
+
+| Параметр  | Тип   | Обов'язкове | Опис                  |
+| ---------- | ------ | -------- | ---------------------------- |
+| `symbol`   | string | Ні       | Символ                       |
+| `page`     | int32  | Ні       | Номер сторінки, стандартний `1`     |
+| `pageSize` | int32  | Ні       | Пункти на сторінку, стандартні `20` |
+
+<h2 id="funding-rate-history">Історія ставок фінансування</h2>
+
+```http
+GET /v1/public/market/funding-rate/history?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+Параметри запиту:
+
+| Параметр   | Тип   | Обов'язкове | Опис                  |
+| ----------- | ------ | -------- | ---------------------------- |
+| `symbol`    | string | Так      | Символ                       |
+| `startTime` | int64  | Ні       | Час початку                   |
+| `endTime`   | int64  | Ні       | Кінець часу                     |
+| `page`      | int32  | Ні       | Номер сторінки, стандартний `1`     |
+| `pageSize`  | int32  | Ні       | Пункти на сторінку, стандартні `20` |
+
+<h2 id="klines">Клайнс</h2>
+
+```http
+GET /v1/public/market/klines?symbol=BTCUSDT&interval=1m&limit=500
+```
+
+Параметри запиту:
+
+| Параметр   | Тип   | Обов'язкове | Опис                                                              |
+| ----------- | ------ | -------- | ------------------------------------------------------------------------ |
+| `symbol`    | string | Так      | Символ                                                                   |
+| `interval`  | string | Так      | Інтервал, такі як `1m`, `5m`, `15m`, `30m`, `1h`, `4h`, `1d`, `1w`, `1M` |
+| `priceType` | string | Ні       | `indexPrice` / `markPrice`. Якщо його опускати, він повертає ціну торгівлі Клайнс       |
+| `startTime` | int64  | Ні       | Час початку                                                               |
+| `endTime`   | int64  | Ні       | Кінець часу                                                                 |
+| `limit`     | int32  | Ні       | Кількість повернених елементів, `500`за замовчуванням , максимальна `1000`                  |
+
+Поля відповіді:
+
+| Поле              | Тип   | Опис |
+| ------------------ | ------ | ----------- |
+| `list[].openTime`  | int64  | Відкритий час   |
+| `list[].open`      | string | Відкрита ціна  |
+| `list[].high`      | string | Висока ціна  |
+| `list[].low`       | string | Низька ціна   |
+| `list[].close`     | string | Ціна закриття |
+| `list[].volume`    | string | Об'єм      |
+| `list[].closeTime` | int64  | Час закриття  |
+
+<h2 id="related-documentation">Пов'язана документація</h2>
+
+- [Публічні кінцеві точки](/uk/developer-api/rest-api/public-endpoints)
+- [Публічні WebSocket канали](/uk/developer-api/websocket/public-market-channels)
+- [Глибина ринку та спред](/uk/solutions/market-depth-spread)

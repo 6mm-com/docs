@@ -1,0 +1,141 @@
+---
+title: "Vị trí"
+description: "Sử dụng các điểm cuối vị thế 6MM để truy vấn các vị thế mở, chi tiết ký quỹ, đòn bẩy, lợi nhuận và thua lỗ chưa thực hiện, cũng như các hoạt động liên quan đến vị thế."
+slug: developer-api/rest-api/position
+canonical-url: https://docs.6mm.com/vi/developer-api/rest-api/position
+---
+
+> **Lưu ý**
+>
+> Điểm cuối vị trí yêu cầu quyền giao dịch.
+
+<h2 id="set-leverage">Thiết lập đòn bẩy</h2>
+
+```http
+POST /v1/private/position/leverage
+Content-Type: application/json
+```
+
+Nội dung yêu cầu:
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "leverage": 20
+}
+```
+
+Trường phản hồi:
+
+| Lĩnh vực       | Loại   | Mô tả |
+| ----------- | ------ | ----------- |
+| `symbol`    | string | Biểu tượng      |
+| `leverage`  | int32  | Đòn bẩy    |
+| `timestamp` | int64  | dấu thời gian   |
+
+<h2 id="set-margin-mode">Thiết lập Chế độ Lề</h2>
+
+```http
+POST /v1/private/position/margin-mode
+Content-Type: application/json
+```
+
+Nội dung yêu cầu:
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "marginMode": 1
+}
+```
+
+`marginMode`: `1` thánh giá, `2` cô lập.
+
+<h2 id="position-settings">Cài đặt vị trí</h2>
+
+```http
+GET /v1/private/position/settings?symbol=BTCUSDT
+```
+
+Trường phản hồi:
+
+| Lĩnh vực        | Loại   | Mô tả             |
+| ------------ | ------ | ----------------------- |
+| `symbol`     | string | Biểu tượng                  |
+| `marginMode` | int32  | `1` thánh giá, `2` biệt lập |
+| `leverage`   | int32  | Đòn bẩy                |
+
+<h2 id="current-positions">Các vị trí hiện tại</h2>
+
+```http
+GET /v1/private/position/positions?symbol=BTCUSDT
+```
+
+Tham số yêu cầu:
+
+| Tham số | Loại   | Bắt buộc | Mô tả |
+| --------- | ------ | -------- | ----------- |
+| `symbol`  | string | Không       | Biểu tượng      |
+
+Trường phản hồi:
+
+| Lĩnh vực                         | Loại   | Mô tả                |
+| ----------------------------- | ------ | -------------------------- |
+| `positions[].symbol`          | string | Biểu tượng                     |
+| `positions[].marginMode`      | string | Chế độ lề                |
+| `positions[].positionSide`    | string | Phía vị trí              |
+| `positions[].leverage`        | int32  | Đòn bẩy                   |
+| `positions[].quantity`        | string | Số lượng vị trí          |
+| `positions[].entryPrice`      | string | Giá đầu vào                |
+| `positions[].breakEvenPrice`  | string | Giá hòa vốn           |
+| `positions[].liqPrice`        | string | Giá thanh lý          |
+| `positions[].marginRatio`     | string | Tỷ lệ biên lợi nhuận               |
+| `positions[].unrealizedPnl`   | string | PnL chưa thực hiện             |
+| `positions[].roe`             | string | Tỷ suất lợi nhuận trên vốn chủ sở hữu           |
+| `positions[].nextFundingFee`  | string | Phí tài trợ tiếp theo ước tính |
+| `positions[].fundingFeeAccum` | string | Phí tài trợ tích lũy    |
+| `positions[].tpPrice`         | string | Giá chốt lời          |
+| `positions[].slPrice`         | string | Giá dừng lỗ            |
+
+<h2 id="position-history">Lịch sử vị trí</h2>
+
+```http
+GET /v1/private/position/history?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+Tham số yêu cầu:
+
+| Tham số   | Loại   | Bắt buộc | Mô tả                  |
+| ----------- | ------ | -------- | ---------------------------- |
+| `symbol`    | string | Không       | Biểu tượng                       |
+| `side`      | string | Không       | `long` / `short`             |
+| `startTime` | int64  | Không       | Thời gian bắt đầu                   |
+| `endTime`   | int64  | Không       | Thời gian kết thúc                     |
+| `page`      | int64  | Không       | Số trang, `1` mặc định     |
+| `pageSize`  | int64  | Không       | Số lượng mục trên mỗi trang, `20` mặc định |
+
+Trường phản hồi:
+
+| Lĩnh vực                    | Loại   | Mô tả               |
+| ------------------------ | ------ | ------------------------- |
+| `list[].symbol`          | string | Biểu tượng                    |
+| `list[].positionSide`    | string | Phía vị trí             |
+| `list[].leverage`        | int32  | Đòn bẩy                  |
+| `list[].maxQuantity`     | string | Số lượng vị trí tối đa |
+| `list[].entryPrice`      | string | Giá đầu vào               |
+| `list[].closePrice`      | string | Giá đóng cửa               |
+| `list[].pnl`             | string | PnL đã thực hiện              |
+| `list[].roe`             | string | Tỷ suất lợi nhuận trên vốn chủ sở hữu          |
+| `list[].marginMode`      | string | Chế độ lề               |
+| `list[].triggerMode`     | int32  | Đóng chế độ kích hoạt        |
+| `list[].fundingFeeAccum` | string | Phí tài trợ tích lũy   |
+| `list[].openedAt`        | int64  | Thời gian mở cửa                 |
+| `list[].closedAt`        | int64  | Thời gian đóng cửa                |
+| `total`                  | int64  | Tổng số lượng               |
+
+<h2 id="related-documentation">Tài liệu liên quan</h2>
+
+- [Quy tắc Margin](/vi/trading/margin-rules)
+- [Cơ chế đòn bẩy](/vi/trading/leverage-mechanics)
+- [Rủi ro & Thanh lý](/vi/trading/risk-and-liquidations)
+- [Kênh Người dùng Riêng tư](/vi/developer-api/websocket/private-user-channel)

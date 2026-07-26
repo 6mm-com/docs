@@ -1,0 +1,39 @@
+---
+title: "Kiến trúc & Trách nhiệm"
+subtitle: "Làm rõ hệ thống đối tác sở hữu gì và hạ tầng 6MM cung cấp gì trong triển khai giao dịch nhúng."
+slug: solutions/architecture-responsibilities
+canonical-url: https://docs.6mm.com/vi/solutions/architecture-responsibilities
+---
+
+Một lần ra mắt giao dịch nhúng sạch sẽ phụ thuộc vào ranh giới trách nhiệm rõ ràng. Hệ thống đối tác nên giữ quyền sở hữu doanh nghiệp nhạy cảm, trong khi 6MM cung cấp hạ tầng giao dịch và khả năng vòng đời.
+
+<h2 id="responsibility-model">Mô hình trách nhiệm</h2>
+
+| Khu vực | Hệ thống đối tác | Cơ sở hạ tầng 6MM |
+| --- | --- | --- |
+| Quan hệ người dùng | Sở hữu tài khoản người dùng, trạng thái đăng nhập, danh tính hỗ trợ khách hàng và kiểm tra điều kiện đủ điều kiện. | Nhận được ngữ cảnh vào lệnh giao dịch đã được xác thực và duy trì trạng thái bên giao dịch. |
+| Bí mật và ký kết | Lưu trữ các khóa API đối tác trên backend và ký các yêu cầu phía máy chủ. | Xác minh các yêu cầu đã ký và xử lý các hành động được ủy quyền. |
+| Kinh nghiệm giao dịch | Cung cấp điểm truy cập, điều hướng và bối cảnh sản phẩm. | Cung cấp giao diện giao dịch, vòng đời lệnh, dữ liệu thị trường, vị thế, rủi ro và hành vi thanh toán. |
+| Hoạt động | Xử lý quy trình làm việc hỗ trợ, phân tích kinh doanh và chuyển cấp nội bộ. | Phát ra các sự kiện, webhook và thông tin trạng thái cần thiết cho việc tích hợp. |
+
+<h2 id="production-principles">Nguyên lý sản xuất</h2>
+
+- Giữ tất cả bí mật của đối tác ở phía sau.
+- Coi token nhúng là thông tin đăng nhập ngắn hạn.
+- Xử lý webhook một cách vô hiệu và lưu trữ ID sự kiện.
+- Sử dụng giám sát về phát hành token, luồng chuyển giao và thay đổi trạng thái lệnh.
+- Giữ cho nội dung hướng tới khách hàng nhất quán trên các trang nhập liệu, giao dịch và hỗ trợ.
+
+<h2 id="related-docs">Tài liệu liên quan</h2>
+
+<CardGroup cols={3}>
+<Card title="Xác thực" icon="fa-duotone fa-user-shield" href="/vi/developer-api/authentication">
+Xem lại kỳ vọng xác thực phía sau.
+</Card>
+<Card title="Yêu cầu ký" icon="fa-duotone fa-signature" href="/vi/developer-api/request-signing">
+Hiểu về các cuộc gọi API đã ký.
+</Card>
+<Card title="Bảo mật Webhook" icon="fa-duotone fa-webhook" href="/vi/sdk/security/webhooks-idempotency">
+Xử lý việc giao sự kiện một cách an toàn.
+</Card>
+</CardGroup>

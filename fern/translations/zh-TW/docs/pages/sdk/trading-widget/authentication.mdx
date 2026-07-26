@@ -1,0 +1,103 @@
+---
+title: "Trading Widget 認證"
+subtitle: "使用 Partner-Token 進行新的嵌入式交易 SSO 整合。"
+slug: sdk/trading-widget/authentication
+canonical-url: https://docs.6mm.com/zh-TW/sdk/trading-widget/authentication
+---
+
+<h2 id="recommended-mode-partner-token">推薦模式：夥伴代幣</h2>
+
+Partner-Token 避免在 URL 中放置短令牌，並將 apiSecret 留在 Partner 後端。
+
+```js
+const widget = TradingWidget.create('#trading-widget', {
+  baseUrl: 'https://app.6mm.com',
+  auth: {
+    mode: 'partner-token',
+    tokenProvider: async ({ channelId, symbol, reason }) => {
+      const resp = await fetch('/api/trading/embed-token', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ channelId, symbol, reason }),
+      })
+
+      if (!resp.ok) {
+        throw new Error('Failed to request embed token')
+      }
+
+      return resp.json()
+    },
+  },
+})
+```
+
+<h2 id="related-documentation">相關文件</h2>
+
+- [建立嵌入令牌]（/sdk/agent-sdk/java/embed-token）：後端令牌發行範例。
+- [Trading Widget 快速啟動]（/sdk/trading-widget/quick-start）：完成初始化流程。
+- [秘密與簽署]（/sdk/security/secrets-signing）：將特權代理憑證保留在後端。
+- [故障排除]（/sdk/security/troubleshooting）：診斷會話、標記、起源及初始化失敗。
+
+<h2 id="backend-flow">後端流程</h2>
+
+```text
+1. Partner frontend receives auth_request from the iframe.
+2. SDK calls tokenProvider.
+3. Partner frontend calls its own backend.
+4. Partner backend validates the partner session.
+5. Partner backend calls 6MM Agent API or Java SDK createEmbedToken.
+6. SDK sends embedToken to the iframe through postMessage.
+7. iframe exchanges embedToken for a 6MM access token.
+8. iframe continues initialization and emits ready.
+```
+
+<h2 id="tokenprovider-contract">tokenProvider 合約</h2>
+
+| 場地 | 導演 | 描述 |
+| --- | --- | --- |
+| channelId | SDK -> 合作夥伴後端 | 唯一的小工具會話識別碼。後端應該會把它傳給 createEmbedToken。 |
+| 象徵 | SDK -> 合作夥伴後端 | 目前請求的交易代碼。必要時用它來定位代幣。 |
+| 原因 | SDK -> 合作夥伴後端 | 為什麼 SDK 會請求一個代幣，例如初始載入或刷新。 |
+| embedToken | 合作夥伴後端 -> SDK | 由 Agent SDK 或代理人 API產生的短暫代幣。 |
+| expireAt | 合作夥伴後端 -> SDK | 代幣過期時間戳由 6MM返回。 |
+
+<h2 id="failure-handling">故障處理</h2>
+
+| 狀況 | 建議操作方法 |
+| --- | --- |
+| 夥伴會議結束 | 從合作夥伴端點回傳 401 並要求使用者重新登入。 |
+| 代幣創建暫時失敗 | 在 tokenProvider 丟出錯誤，讓小工具顯示認證錯誤。 |
+| channelId 不匹配 | 拒絕請求並重新建立小工具實例。 |
+| 用戶不得進行交易 | 回傳由夥伴控制的錯誤，且不建立嵌入標記。 |
+
+<h2 id="compatibility-mode-agent-sso">相容模式：agent-sso</h2>
+
+agent-SSO 保留舊版的 /agent-entry 工單流程。新整合時偏好 partner-token 。
+
+```js
+const widget = TradingWidget.create('#trading-widget', {
+  baseUrl: 'https://app.6mm.com',
+  auth: {
+    mode: 'agent-sso',
+    entryUrlProvider: async ({ redirectPath }) => {
+      const resp = await fetch('/api/trading-entry', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ redirectPath }),
+      })
+      const data = await resp.json()
+      return data.webUrl
+    },
+  },
+})
+```
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">相關頁面</h2>
+
+- [建立嵌入令牌](/zh-TW/sdk/agent-sdk/java/embed-token)
+- [嵌入 6MM Trading Widget：快速開始](/zh-TW/sdk/trading-widget/quick-start)
+- [Agent SDK 祕密與 HMAC 手語](/zh-TW/sdk/security/secrets-signing)
+- [SDK 整合故障排除](/zh-TW/sdk/security/troubleshooting)
+<!-- sixmm-localized-link-repair:end -->

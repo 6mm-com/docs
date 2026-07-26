@@ -1,0 +1,148 @@
+---
+title: "الموقع"
+description: "استخدم نقاط نهاية 6MM المراكز للاستعلام عن المراكز المفتوحة، وتفاصيل الهامش، والرفع المالي، والأرباح والخسائر غير المحققة، والعمليات المتعلقة بالمراكز المفتوحة."
+slug: developer-api/rest-api/position
+canonical-url: https://docs.6mm.com/ar/developer-api/rest-api/position
+---
+
+> **ملاحظة**
+>
+> نقاط نهاية المراكز تتطلب إذن تداول.
+
+<h2 id="set-leverage">الرافعة المهمة</h2>
+
+```http
+POST /v1/private/position/leverage
+Content-Type: application/json
+```
+
+نص الطلب:
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "leverage": 20
+}
+```
+
+حقول الاستجابة:
+
+| الميدان       | النوع   | الوصف |
+| ----------- | ------ | ----------- |
+| `symbol`    | string | الرمز      |
+| `leverage`  | int32  | الرافعة المالية    |
+| `timestamp` | int64  | الطابع الزمني   |
+
+<h2 id="set-margin-mode">تعيين وضع الهامش</h2>
+
+```http
+POST /v1/private/position/margin-mode
+Content-Type: application/json
+```
+
+نص الطلب:
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "marginMode": 1
+}
+```
+
+`marginMode`: `1` متقاطع، `2` معزول.
+
+<h2 id="position-settings">إعدادات المراكز</h2>
+
+```http
+GET /v1/private/position/settings?symbol=BTCUSDT
+```
+
+حقول الاستجابة:
+
+| الميدان        | النوع   | الوصف             |
+| ------------ | ------ | ----------------------- |
+| `symbol`     | string | الرمز                  |
+| `marginMode` | int32  | `1` التقاطع `2` معزول |
+| `leverage`   | int32  | الرافعة المالية                |
+
+<h2 id="current-positions">المناصب الحالية</h2>
+
+```http
+GET /v1/private/position/positions?symbol=BTCUSDT
+```
+
+معايير الطلب:
+
+| المعلمة | النوع   | مطلوب | الوصف |
+| --------- | ------ | -------- | ----------- |
+| `symbol`  | string | لا       | الرمز      |
+
+حقول الاستجابة:
+
+| الميدان                         | النوع   | الوصف                |
+| ----------------------------- | ------ | -------------------------- |
+| `positions[].symbol`          | string | الرمز                     |
+| `positions[].marginMode`      | string | وضع الهامش                |
+| `positions[].positionSide`    | string | جانب المركز              |
+| `positions[].leverage`        | int32  | الرافعة المالية                   |
+| `positions[].quantity`        | string | كمية الموقع          |
+| `positions[].entryPrice`      | string | سعر الدخول                |
+| `positions[].breakEvenPrice`  | string | سعر التعادل           |
+| `positions[].liqPrice`        | string | سعر التصفية          |
+| `positions[].marginRatio`     | string | نسبة الهامش               |
+| `positions[].unrealizedPnl`   | string | PnL غير المنفذ             |
+| `positions[].roe`             | string | العائد على حقوق الملكية           |
+| `positions[].nextFundingFee`  | string | رسوم التمويل المقدرة القادمة |
+| `positions[].fundingFeeAccum` | string | رسوم التمويل المتراكمة    |
+| `positions[].tpPrice`         | string | سعر الربح          |
+| `positions[].slPrice`         | string | سعر وقف الخسارة            |
+
+<h2 id="position-history">تاريخ المركز</h2>
+
+```http
+GET /v1/private/position/history?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+معايير الطلب:
+
+| المعلمة   | النوع   | مطلوب | الوصف                  |
+| ----------- | ------ | -------- | ---------------------------- |
+| `symbol`    | string | لا       | الرمز                       |
+| `side`      | string | لا       | `long` / `short`             |
+| `startTime` | int64  | لا       | وقت البدء                   |
+| `endTime`   | int64  | لا       | نهاية الزمن                     |
+| `page`      | int64  | لا       | رقم الصفحة، `1` الافتراضي     |
+| `pageSize`  | int64  | لا       | العناصر في كل صفحة، `20` الافتراضي |
+
+حقول الاستجابة:
+
+| الميدان                    | النوع   | الوصف               |
+| ------------------------ | ------ | ------------------------- |
+| `list[].symbol`          | string | الرمز                    |
+| `list[].positionSide`    | string | جانب المركز             |
+| `list[].leverage`        | int32  | الرافعة المالية                  |
+| `list[].maxQuantity`     | string | كمية الموقع القصوى |
+| `list[].entryPrice`      | string | سعر الدخول               |
+| `list[].closePrice`      | string | سعر الإغلاق               |
+| `list[].pnl`             | string | PnL المحقق              |
+| `list[].roe`             | string | العائد على حقوق الملكية          |
+| `list[].marginMode`      | string | وضع الهامش               |
+| `list[].triggerMode`     | int32  | وضع الزناد المغلق        |
+| `list[].fundingFeeAccum` | string | رسوم التمويل المتراكمة   |
+| `list[].openedAt`        | int64  | وقت الفتح                 |
+| `list[].closedAt`        | int64  | وقت الإغلاق                |
+| `total`                  | int64  | إجمالي العدد               |
+
+<h2 id="related-documentation">وثائق ذات صلة</h2>
+
+- [قواعد الهامش] (/trading/margin-rules)
+- [ميكانيكيات الرافعة] (/trading/leverage-mechanics)
+- [المخاطر والتصفية](/ar/trading/risk-and-liquidations)
+- [قناة المستخدمين الخاصة] (/developer-api/websocket/private-user-channel)
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">صفحات ذات صلة</h2>
+
+- [قواعد الهامش](/ar/trading/margin-rules)
+- [ميكانيكا الرافعة](/ar/trading/leverage-mechanics)
+- [قناة المستخدم الخاص](/ar/developer-api/websocket/private-user-channel)
+<!-- sixmm-localized-link-repair:end -->

@@ -1,0 +1,44 @@
+---
+title: "Agent PHP SDK"
+subtitle: "Verwenden Sie das genehmigte 6MM Agent PHP Paket von Backend-Services für Benutzerbindungen, Übertragungen, Eintrags-URLs und Webhook-Verifikation."
+slug: sdk/agent-sdk/php/overview
+canonical-url: https://docs.6mm.com/de/sdk/agent-sdk/php/overview
+---
+
+<h2 id="runtime">Laufzeit</h2>
+
+| Gegenstand | Wert |
+| --- | --- |
+| Paket | sixmm/agent-SDK |
+| Minimum PHP Version | PHP 7,4+ |
+| Empfohlene PHP Version | PHP 8.1+ oder aktuell unterstützte Versionen |
+| Erforderliche Erweiterungen | ext-json, ext-curl |
+
+Die PHP SDK Paketquelle und die genehmigte Version werden beim Partner-Onboarding bereitgestellt. Nehmen Sie nicht an, dass das Paket über den öffentlichen Packagist verfügbar ist; konfigurieren Sie das für Ihre Organisation bereitgestellte Composer-Repository.
+
+<h2 id="supported-scenarios">Unterstützte Szenarien</h2>
+
+| Szenario | SDK Methode |
+| --- | --- |
+| Bind-Benutzer | bind |
+| Feste Übertragung | Transfer |
+| Alles übertreiben | transferAllOut |
+| Rückwärtsübertragung | Rückwärts |
+| Abfragereihenfolge | queryOrder |
+| Eintrag erstellen URL | createEntryUrl |
+| Webhook-Verifikation | WebhookVerifier::verify |
+
+<h2 id="backend-integration-rules">Backend-Integrationsregeln</h2>
+
+- Laden `apiSecret` aus einem Secret-Manager oder einer geschützten Umgebungsvariable.
+- Benutzerbindung, Übertragung, Signierung und Webhook-Logik aus dem Browsercode heraushalten.
+- Verwenden Sie Dezimalstrings für Asset-Beträge, um Gleitkomma-Rundungen zu vermeiden.
+- Verwenden Sie die ursprüngliche `agentOrderNo` bei der Abfrage eines unsicheren Übertragungsergebnisses.
+- Verifizieren Sie Webhook-Signaturen mit dem Rohanfrage-Body vor der Entschlüsselung oder Änderung dieser Anfrage.
+
+<h2 id="next-steps">Nächste Schritte</h2>
+
+- [PHP Quick Start](/de/sdk/agent-sdk/php/quick-start): Konfigurieren Sie Composer und initialisieren Sie den Client.
+- [Agent SDK Übersicht](/de/sdk/agent-sdk/overview): Überprüfen Sie den vollständigen Backend-Integrationsfluss.
+- [Secrets & Signing](/de/sdk/security/secrets-signing): Schützen Sie Zugangsdaten und verstehen Sie HMAC Signing.
+- [Webhooks & Idempotenz](/de/sdk/security/webhooks-idempotency): Verarbeiten wiederholte Rückrufe sicher.

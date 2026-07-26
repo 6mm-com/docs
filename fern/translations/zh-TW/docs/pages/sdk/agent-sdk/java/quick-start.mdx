@@ -1,0 +1,90 @@
+---
+title: "Java 快速入門"
+subtitle: "從後端服務安裝並初始化 Java SDK 。"
+slug: sdk/agent-sdk/java/quick-start
+canonical-url: https://docs.6mm.com/zh-TW/sdk/agent-sdk/java/quick-start
+---
+
+<h2 id="install">安裝</h2>
+
+公開 SDK 來源目前以以下 Maven 座標記錄標籤 `v0.1.1` ：
+
+```xml
+<dependency>
+    <groupId>com.sixmm.exchange.sdk</groupId>
+    <artifactId>agent</artifactId>
+    <version>0.1.1</version>
+</dependency>
+```
+
+GitHub 並非 Maven 相依性儲存庫。在解決相依性之前，請先在本地安裝已標記的原始碼：
+
+```bash
+git clone https://github.com/6mm-com/agent-java-sdk.git
+cd agent-java-sdk
+git checkout v0.1.1
+mvn install
+```
+
+> **團隊建設**
+>
+> 將核准的產物發佈到貴組織的 Maven 倉庫，用於 CI、測試及生產版本。在正式部署前，請與 6MM 確認核准版本。
+
+原始碼與使用範例可在官方 Java SDK 庫取得：
+
+[6mm-com/agent-java-sdk]（https://github.com/6mm-com/agent-java-sdk）
+
+<h2 id="before-you-start">開始之前</h2>
+
+- 確認你的生產特工API基地URL6MM團隊。
+- 僅將 apiSecret 存放於後端秘密管理中。
+- 準備一個穩定的映射，連接 platformUserId 與 agentUserId。
+- 啟用關於綁定、傳輸、排序及 webhook 流程的結構化日誌。
+
+<h2 id="initialize-client">初始化用戶端</h2>
+
+```java
+import com.sixmm.agent.AgentClient;
+import com.sixmm.agent.AgentClientConfig;
+
+AgentClient client = new AgentClient(AgentClientConfig.builder()
+        .baseUrl("https://agent-api.6mm.com")
+        .agentCode("AGENT001")
+        .apiSecret("your-api-secret")
+        .defaultCurrency("USDT")
+        .build());
+```
+
+> **僅後端**
+>
+> 不要從瀏覽器、行動裝置或桌面用戶端程式碼初始化 Agent SDK 。 SDK 會簽署特權代理 API 請求。
+
+<h2 id="example-transfer-funds-in">範例：轉帳資金</h2>
+
+```java
+TransferResponse resp = client.transfer(TransferRequest.fixed(
+        "AGT-ORDER-1001",
+        "agent-user-001",
+        Direction.IN,
+        "USDT",
+        "10.00"));
+```
+
+每個轉帳請求使用獨特的合作夥伴端訂單號碼。如果請求逾時，請先查詢原始訂單，再建立新訂單。
+
+<h2 id="next-steps">下一步</h2>
+
+| 需求 | 下一頁 |
+| --- | --- |
+| 核發 Trading Widget 憑證 | [建立嵌入令牌]（/sdk/agent-sdk/java/embed-token） |
+| 確認6MM的回電 | 【網鉤與冪性】（/sdk/security/webhooks-idempotency） |
+| 檢視簽署行為 | [秘密與簽名]（/sdk/security/secrets-signing） |
+| 診斷積分問題 | [SDK 故障排除中 ]（/sdk/security/troubleshooting） |
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">相關頁面</h2>
+
+- [建立嵌入令牌](/zh-TW/sdk/agent-sdk/java/embed-token)
+- [Webhook 簽名驗證與冪性](/zh-TW/sdk/security/webhooks-idempotency)
+- [Agent SDK 祕密與 HMAC 手語](/zh-TW/sdk/security/secrets-signing)
+- [SDK 整合故障排除](/zh-TW/sdk/security/troubleshooting)
+<!-- sixmm-localized-link-repair:end -->

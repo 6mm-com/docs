@@ -1,0 +1,76 @@
+---
+title: "الخيارات والفعاليات"
+subtitle: "خيارات التهيئة، أحداث وقت التشغيل، ورموز الأخطاء الشائعة."
+slug: sdk/trading-widget/options-events
+canonical-url: https://docs.6mm.com/ar/sdk/trading-widget/options-events
+---
+
+<h2 id="options">الخيارات</h2>
+
+| الميدان | النوع | الافتراضي | ملاحظات |
+| --- | --- | --- | --- |
+| baseUrl | string | SDK أصل النص | نطاق iframe. تمرير الملف بشكل صريح في صفحات الشركاء. |
+| الرمز | string | BTCUSDT | تم تطبيعه إلى الأحرف الكبيرة والشرائط - / _. |
+| الموضوع | دارك \| الضوء | مظلم | معامل الموضوع الأولي. |
+| الموقع | en \| أمريكا \| zh-CN | المتصفح/الافتراضي | الإنجليزية والصينية المبسطة مدعومة. |
+| التصميم | الافتراضي \| مضغوط | الافتراضي | خيار التخطيط المحجوز. |
+| العرض | object | `showHeader: false`، `showTicker: false`، `hidden: []` | تتحكم في مناطق القذائف وحاويات التجارة عالية المستوى. |
+| المصادقة | object | لا شيء | استخدم الشريك-توكن لتكاملات SSO جديدة. |
+
+<h2 id="display-controls">ضوابط العرض</h2>
+
+`display` يتحكم في غلاف صفحة التداول المدمجة والحاويات عالية المستوى. في تضمين الشركاء، يكون رأس PC ومؤشر السوق السفلي مخفيا بشكل افتراضي.
+
+```js
+display: {
+  showHeader: false,
+  showTicker: false,
+  hidden: ['chart', 'orderBook'],
+}
+```
+
+| الميدان | النوع | الافتراضي | ملاحظات |
+| --- | --- | --- | --- |
+| showHeader | boolean | خطأ | هل يجب عرض رأس التضمين الخاص بالكمبيوتر داخل إطار iframe. |
+| showTicker | boolean | خطأ | هل يجب عرض مؤشر السوق السفلي في غلاف التضمين. |
+| مخفي | الوتر[] | [] | يخفي الحاويات عالية المستوى في صفحة التداول. |
+
+قيم `display.hidden` المدعومة:
+
+| القيمة | الحاوية |
+| --- | --- |
+| المخطط | حاوية الخريطة |
+| orderBook | حاوية دفتر الطلبات |
+| orderForm | لوحة نماذج الطلب |
+| المناصب | لوحة المراكز السفلى والأوامر المفتوحة |
+| الحساب | حاوية أصول الحساب |
+
+`display.hidden` يخفي الحاويات الكاملة فقط. لا يخفي الأزرار أو الحقول أو الأدوات الفردية داخل الحاوية. القيم التي لا تتوافق مع نافذة العرض الحالية يتم تجاهلها.
+
+<h2 id="events">الفعاليات</h2>
+
+| الحدث | الزناد |
+| --- | --- |
+| جاهز | تم الانتهاء من تهيئة iframe. |
+| خطأ | SDKأو iframe أو خطأ في المصادقة. |
+| state_changed | SDK حالة دورة الحياة تغيرت. |
+| auth_state_changed | حالة مصادقة الشريك-رمز تغيرت. |
+| symbol_changed | رمز iframe الفعلي تغير. |
+| locale_changed | تم تغيير موقع iframe الفعلي. |
+| order_created | أنشأ المستخدم طلبا داخل إطار iframe. |
+| order_failed | فشل تقديم الطلب. |
+| تم تدميرها | SDK الحادثة دمرت. |
+
+<h2 id="related-widget-guides">أدلة الأدوات ذات الصلة</h2>
+
+- [Trading Widget البدء السريع] (/sdk/trading-widget/quick-start)
+- [توثيق](/ar/sdk/trading-widget/authentication)
+- [طرق النسخة] (/sdk/trading-widget/instance-methods)
+- [حل المشكلة] (/sdk/security/troubleshooting)
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">صفحات ذات صلة</h2>
+
+- [تضمين 6MM Trading Widget: البدء السريع](/ar/sdk/trading-widget/quick-start)
+- [طرق العينات](/ar/sdk/trading-widget/instance-methods)
+- [SDK استكشاف أخطاء التكامل](/ar/sdk/security/troubleshooting)
+<!-- sixmm-localized-link-repair:end -->

@@ -1,0 +1,159 @@
+---
+title: "Публічні кінцеві точки"
+description: "Отримуйте доступ до публічних 6MM API кінцевих точок для інструментів, тікерів, книг замовлень, угод та іншої неавтентифікованої ринкової інформації."
+slug: developer-api/rest-api/public-endpoints
+canonical-url: https://docs.6mm.com/uk/developer-api/rest-api/public-endpoints
+---
+
+<h2 id="base-url">Базовий URL</h2>
+
+```
+https://api.6mm.com
+```
+
+<h2 id="service-version">Сервісна версія</h2>
+
+```http
+GET /v1/version
+```
+
+Отримайте інформацію про версію сервісу.
+
+<h2 id="server-time">Час сервера</h2>
+
+```http
+GET /v1/time
+```
+
+Отримайте серверний час. Цей кінцевий пристрій можна використовувати для калібрування часу клієнта перед підписанням API Key .
+
+<h2 id="user-login">Вхід користувача</h2>
+
+```http
+POST /v1/public/user/login
+```
+
+Параметри запиту:
+
+| Параметр    | Тип   | Обов'язкове | Опис                             |
+| ------------ | ------ | -------- | --------------------------------------- |
+| `username`   | string | Так      | Ім'я користувача, довжина 3 - 32                 |
+| `password`   | string | Так      | Пароль, довжина 1 - 64                 |
+| `deviceId`   | string | Ні       | Відбиток пристрою, до 64 символів |
+| `deviceName` | string | Ні       | Назва пристрою, до 128 символів       |
+
+Приклад запиту:
+
+```bash
+curl -X POST https://api.6mm.com/v1/public/user/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "alice",
+    "password": "yourPassword",
+    "deviceId": "device-001",
+    "deviceName": "server-001"
+  }'
+```
+
+Приклад відповіді:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "accessToken": "YOUR_ACCESS_TOKEN",
+    "accessExpire": 1769676656
+  },
+  "requestId": "req-login"
+}
+```
+
+<h2 id="refresh-token">Токен оновлення</h2>
+
+```http
+POST /v1/public/user/refresh-token
+```
+
+У звичайних сценаріях інтеграції стан входу оновлюється через Cookie. Зберігайте Cookie у відповідь на вход.
+
+Поля відповіді:
+
+| Поле          | Тип   | Опис              |
+| -------------- | ------ | ------------------------ |
+| `accessToken`  | string | Новий токен доступу         |
+| `accessExpire` | int64  | Термін дії токена доступу |
+
+<h2 id="agent-sso">Агент SSO</h2>
+
+<h2 id="ticket-exchange">Обмін квитками</h2>
+
+```http
+POST /v1/public/agent-sso/exchange-ticket
+```
+
+Параметри запиту:
+
+| Параметр  | Тип   | Обов'язкове | Опис                                 |
+| ---------- | ------ | -------- | ------------------------------------------- |
+| `ticket`   | string | Так      | Одноразовий квиток, виданий агентською службою |
+| `deviceId` | string | Ні       | Відбиток пристрою, до 64 символів     |
+
+Поля відповіді:
+
+| Поле          | Тип   | Опис              |
+| -------------- | ------ | ------------------------ |
+| `accessToken`  | string | Токен доступу             |
+| `accessExpire` | int64  | Термін дії токена доступу |
+| `redirectPath` | string | Рекомендований шлях перенаправлення  |
+
+<h2 id="embed-token-exchange">Обмін вбудовуваними токенами</h2>
+
+```http
+POST /v1/public/agent-sso/exchange-embed-token
+```
+
+Параметри запиту:
+
+| Параметр    | Тип   | Обов'язкове | Опис                                                    |
+| ------------ | ------ | -------- | -------------------------------------------------------------- |
+| `embedToken` | string | Так      | Короткочасний вбудований торговий токен, випущений агентським сервісом |
+| `channelId`  | string | Так      | Вбудований ідентифікатор каналу iframe, до 128 символів               |
+| `deviceId`   | string | Ні       | Відбиток пристрою, до 64 символів                        |
+
+Поля відповіді:
+
+| Поле          | Тип   | Опис              |
+| -------------- | ------ | ------------------------ |
+| `accessToken`  | string | Токен доступу             |
+| `accessExpire` | int64  | Термін дії токена доступу |
+
+<h2 id="pnl-leaderboard">Таблиця лідерів PnL</h2>
+
+```http
+GET /v1/public/leaderboard/pnl?period=30d
+```
+
+Параметри запиту:
+
+| Параметр | Тип   | Обов'язкове | Опис          |
+| --------- | ------ | -------- | -------------------- |
+| `period`  | string | Так      | `7d` / `30d` / `90d` |
+
+Поля відповіді:
+
+| Поле              | Тип   | Опис                                                       |
+| ------------------ | ------ | ----------------------------------------------------------------- |
+| `list[].rank`      | int32  | Ранг                                                              |
+| `list[].userId`    | string | Зовнішній ідентифікатор користувача                                                  |
+| `list[].trader`    | string | Ім'я торговця в маскі                                                |
+| `list[].volume`    | string | Обсяг торгівлі у вікні                                      |
+| `list[].pnlAmount` | string | Зрозумів PnL у вікні                                        |
+| `list[].pnlPct`    | string | Співвідношення PnL, десяткове від `0` до `1`                                |
+| `myRank`           | int32  | Ранг поточного користувача. Повертає `0` , якщо не автентифікований або не ранжується |
+
+<h2 id="related-documentation">Пов'язана документація</h2>
+
+- [Ринкові дані](/uk/developer-api/rest-api/market-data)
+- [Публічні WebSocket канали](/uk/developer-api/websocket/public-market-channels)
+- [Середовища та загальні конвенції](/uk/developer-api/environments-and-common-conventions)

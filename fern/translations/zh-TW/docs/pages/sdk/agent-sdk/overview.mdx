@@ -1,0 +1,80 @@
+---
+title: "6MM Agent SDK Java 和 PHP"
+subtitle: "整合簽署代理 API 通話、使用者綁定、傳輸、入口網址及 webhook 驗證，均來自合作夥伴後端服務。"
+slug: sdk/agent-sdk/overview
+canonical-url: https://docs.6mm.com/zh-TW/sdk/agent-sdk/overview
+---
+
+6MM Agent SDK是針對需要呼叫特權代理APIs，卻不從頭開始實作簽名與請求處理的合作夥伴後端服務。它不得在瀏覽器、行動裝置或公開桌面程式碼中執行，因為整合會使用合作夥伴API秘密。
+
+<h2 id="when-to-use-the-agent-sdk">何時使用 Agent SDK</h2>
+
+當你的後端需要綁定合作夥伴用戶、透過核准的工作流程移動資產、查詢交易紀錄、建立嵌入的交易條目URL，或驗證 webhook 通知時，可以使用 Agent SDK。當合作夥伴前端需要顯示交易介面時，請另外使用 [Trading Widget SDK]（/sdk/trading-widget/overview）。
+
+<h2 id="capabilities">能力</h2>
+
+| 劇本 | Java SDK | PHP SDK |
+| --- | --- | --- |
+| 綁定使用者 | 支援 | 支援 |
+| 固定金額轉移 | 支援 | 支援 |
+| 全部轉交 | 支援 | 支援 |
+| 反向轉移 | 支援 | 支援 |
+| 查詢順序 | 支援 | 支援 |
+| 建立入口 URL | 支援 | 支援 |
+| Webhook 驗證 | 支援 | 支援 |
+
+<h2 id="common-configuration">常見配置</h2>
+
+| 說明 | 範例 | 描述 |
+| --- | --- | --- |
+| baseUrl | `https://agent-api.6mm.com` | 6MM 代理人 API 服務 URL ，沒有尾部斜線。 |
+| agentCode | AGENT001 | 夥伴特工代碼。 |
+| apiSecret | 你的 API 秘密 | API 簽署秘密只會儲存在後端。 |
+| defaultCurrency | USDT | 轉帳和帳戶的預設貨幣 APIs。 |
+| webhookUrl | https://partner.example.com/6mm/webhook | 合作夥伴端點用於 6MM webhook 通知。 |
+
+<h2 id="typical-integration-flow">典型積分流程</h2>
+
+1. 合作夥伴前端透過合作夥伴自己的帳號系統驗證使用者。
+2. 合作夥伴後端將使用者映射到穩定的合作夥伴端識別碼。
+3. 後端呼叫 Agent SDK ， `agentCode` 且受保護的 API 秘密。
+4. SDK 簽署並向代理人發送 API 請求。
+5. 後端儲存回傳的商業識別碼，並以冪等方式處理後續的 webhooks。
+6. 前端僅接收其所需的短暫結果或進入憑證。
+
+<h2 id="choose-an-sdk">選擇一個 SDK</h2>
+
+| 後端堆疊 | 從這裡開始 |
+| --- | --- |
+| Java | [Java SDK 概述]（/sdk/agent-sdk/java/overview）和[Java 快速啟動]（/sdk/agent-sdk/java/quick-start） |
+| PHP | [PHP SDK 概述]（/sdk/agent-sdk/php/overview）和[PHP 快速啟動]（/sdk/agent-sdk/php/quick-start） |
+
+<h2 id="production-checklist">製作檢查清單</h2>
+
+- 從後端秘密管理器載入 `apiSecret` ，而非原始碼。
+- 將開發、舞台設計與製作資格分開。
+- 使用穩定的合作夥伴使用者映射及獨特的商業訂單識別碼。
+- 在檢查逾時請求狀態時保留原始識別碼。
+- 驗證 webhook 簽名並儲存處理中的事件 ID。
+- 從日誌中刪除秘密與簽章，同時保留請求 ID 以供支援。
+
+<h2 id="next-steps">下一步</h2>
+
+<CardGroup cols={3}>
+<Card title="Java 快速入門" icon="fa-brands fa-java" href="/zh-TW/sdk/agent-sdk/java/quick-start">
+在Java後端安裝並初始化Agent SDK。
+</Card>
+<Card title="PHP 快速入門" icon="fa-brands fa-php" href="/zh-TW/sdk/agent-sdk/php/quick-start">
+在PHP後端安裝並初始化Agent SDK。
+</Card>
+<Card title="Webhook 與冪性" icon="fa-duotone fa-webhook" href="/zh-TW/sdk/security/webhooks-idempotency">
+確認回電並避免重複的業務處理。
+</Card>
+</CardGroup>
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">相關頁面</h2>
+
+- [Trading Widget SDK](/zh-TW/sdk/trading-widget/overview)
+- [Agent Java SDK](/zh-TW/sdk/agent-sdk/java/overview)
+- [Agent PHP SDK](/zh-TW/sdk/agent-sdk/php/overview)
+<!-- sixmm-localized-link-repair:end -->

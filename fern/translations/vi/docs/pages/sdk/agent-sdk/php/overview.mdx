@@ -1,0 +1,44 @@
+---
+title: "Agent PHP SDK"
+subtitle: "Sử dụng gói PHP 6MM Agent đã được phê duyệt từ các dịch vụ backend để liên kết người dùng, truyền tải, URL nhập và xác minh webhook."
+slug: sdk/agent-sdk/php/overview
+canonical-url: https://docs.6mm.com/vi/sdk/agent-sdk/php/overview
+---
+
+<h2 id="runtime">Thời gian chạy</h2>
+
+| Mục | Giá trị |
+| --- | --- |
+| Đóng gói | SixMM/Agent-SDK |
+| Phiên bản PHP tối thiểu | PHP 7.4+ |
+| Phiên bản PHP được đề xuất | PHP 8.1+ hoặc các phiên bản hiện được hỗ trợ |
+| Các phần mở rộng bắt buộc | ext-json, ext-curl |
+
+Nguồn gói PHP SDK và phiên bản được phê duyệt sẽ được cung cấp trong quá trình tiếp nhận đối tác. Không giả định rằng gói có sẵn từ Packagist công khai; hãy cấu hình kho Composer được cung cấp cho tổ chức của bạn.
+
+<h2 id="supported-scenarios">Các kịch bản được hỗ trợ</h2>
+
+| Kịch bản | Phương pháp SDK |
+| --- | --- |
+| Liên kết người dùng | buộc |
+| Chuyển khoản cố định | chuyển giao |
+| Chuyển toàn bộ ra ngoài | transferAllOut |
+| Chuyển ngược | mặt đảo ngược |
+| Thứ tự truy vấn | queryOrder |
+| Tạo URL nhập | createEntryUrl |
+| Xác minh Webhook | WebhookVerifier::verify |
+
+<h2 id="backend-integration-rules">Quy tắc tích hợp backend</h2>
+
+- Tải `apiSecret` từ một trình quản lý bí mật hoặc biến môi trường được bảo vệ.
+- Giữ cho việc liên kết, truyền tải, ký và logic webhook của người dùng không xuất hiện trong mã duyệt.
+- Sử dụng chuỗi thập phân cho số lượng tài sản để tránh làm tròn số thực.
+- Tái sử dụng `agentOrderNo` gốc khi truy vấn kết quả truyền không chắc chắn.
+- Xác minh chữ ký webhook với phần thân yêu cầu thô trước khi giải mã hoặc thay đổi nó.
+
+<h2 id="next-steps">Các bước tiếp theo</h2>
+
+- [PHP Quick Start](/vi/sdk/agent-sdk/php/quick-start): cấu hình Composer và khởi tạo máy khách.
+- [Tổng quanAgent SDK ](/vi/sdk/agent-sdk/overview): xem xét toàn bộ quy trình tích hợp backend.
+- [Secrets & Signing](/vi/sdk/security/secrets-signing): bảo vệ thông tin đăng nhập và hiểu HMAC ký.
+- [Webhooks & Idempotency](/vi/sdk/security/webhooks-idempotency): xử lý các callback lặp lại một cách an toàn.

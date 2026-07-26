@@ -1,0 +1,420 @@
+---
+title: "Порядок"
+description: "Використовуйте 6MM order endpoints для створення, запиту, скасування та управління перпетуальними замовленнями, одночасно обробляючи дозволи, ідентифікатори та стани життєвого циклу."
+slug: developer-api/rest-api/order
+canonical-url: https://docs.6mm.com/uk/developer-api/rest-api/order
+---
+
+> **Примітка**
+>
+> Кінцеві точки замовлення потребують дозволу на торгівлю.
+
+<h2 id="place-order">Зробити замовлення</h2>
+
+```http
+POST /v1/private/order/place
+Content-Type: application/json
+```
+
+**Параметри запиту:**
+
+| Параметр       | Тип   | Обов'язкове               | Опис                                                                                                                   |
+| --------------- | ------ | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `symbol`        | string | Так                    | Символ                                                                                                                        |
+| `type`          | string | Так                    | `LIMIT` / `MARKET`                                                                                                            |
+| `side`          | string | Так                    | `BUY` / `SELL`                                                                                                                |
+| `positionSide`  | string | Ні                     | `BOTH` / `LONG` / `SHORT`, за замовчуванням `BOTH`                                                                                     |
+| `price`         | string | Умовно обов'язковий | Потрібні для лімітних ордерів                                                                                                     |
+| `quantity`      | string | Умовно обов'язковий | Кількість. Можна опустити, коли `closePosition=true`                                                                            |
+| `timeInForce`   | string | Ні                     | `GTC` / `IOC` / `FOK`, за замовчуванням `GTC`                                                                                          |
+| `reduceOnly`    | bool   | Ні                     | Лише зменшення, стандартне `false`                                                                                                  |
+| `makerOnly`     | bool   | Ні                     | Тільки для виробника, стандартний `false`                                                                                                   |
+| `closePosition` | bool   | Ні                     | Закрити всю позицію за замовчуванням `false`                                                                                    |
+| `clientOrderId` | string | Ні                     | Ідентифікатор замовлення, визначений клієнтом                                                                                                       |
+| `placeType`     | string | Ні                     | Маркер типу розміщення замовлення                                                                                                   |
+| `priceType`     | int32  | Ні                     | BBO тип ціни: `0` вказана ціна, `1` опонента ціна 1, `2` опонент ціна 5, `3` ціна на той самий бік 1, `4` ціна з того ж боку 5 |
+
+**Приклад запиту:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "type": "LIMIT",
+  "side": "BUY",
+  "price": "85000",
+  "quantity": "0.1",
+  "timeInForce": "GTC",
+  "makerOnly": true,
+  "clientOrderId": "ext-1772710377808-001"
+}
+```
+
+**Поля відповіді:**
+
+| Поле           | Тип   | Опис             |
+| --------------- | ------ | ----------------------- |
+| `orderId`       | string | Ідентифікатор порядку сервера         |
+| `clientOrderId` | string | Ідентифікатор замовлення, визначений клієнтом |
+| `status`        | string | Статус ордену            |
+| `timestamp`     | int64  | Часова мітка               |
+
+<h2 id="batch-place-orders">Замовлення на розміщення пакетів</h2>
+
+```http
+POST /v1/private/order/batch-place
+Content-Type: application/json
+```
+
+**Запитуйте тіло:**
+
+```json
+{
+  "orders": [
+    {
+      "symbol": "BTCUSDT",
+      "type": "LIMIT",
+      "side": "BUY",
+      "price": "85000",
+      "quantity": "0.1",
+      "clientOrderId": "ext-buy-001"
+    }
+  ]
+}
+```
+
+**Поля відповіді:**
+
+| Поле          | Тип  | Опис                 |
+| -------------- | ----- | --------------------------- |
+| `successCount` | int32 | Кількість успішних замовлень |
+| `failedCount`  | int32 | Кількість невдалих замовлень     |
+| `results[]`    | array | Результат для кожного порядку       |
+
+<h2 id="place-condition-order">Порядок умов розміщення</h2>
+
+```http
+POST /v1/private/order/place-condition
+Content-Type: application/json
+```
+
+**Параметри запиту:**
+
+| Параметр       | Тип   | Обов'язкове               | Опис                                                                                 |
+| --------------- | ------ | ---------------------- | ------------------------------------------------------------------------------------------- |
+| `symbol`        | string | Так                    | Символ                                                                                      |
+| `type`          | string | Так                    | `STOP_MARKET` / `TAKE_PROFIT_MARKET` / `STOP_LIMIT` / `TAKE_PROFIT_LIMIT` / `TRAILING_STOP` |
+| `side`          | string | Так                    | `BUY` / `SELL`                                                                              |
+| `positionSide`  | string | Ні                     | `BOTH` / `LONG` / `SHORT`                                                                   |
+| `price`         | string | Умовно обов'язковий | Обов'язково для `STOP_LIMIT` / `TAKE_PROFIT_LIMIT`                                             |
+| `quantity`      | string | Умовно обов'язковий | Кількість. Можна опустити, коли `closePosition=true`                                          |
+| `timeInForce`   | string | Ні                     | `GTC` / `IOC` / `FOK` / `GTE_GTC`                                                           |
+| `reduceOnly`    | bool   | Ні                     | Лише редукція                                                                                 |
+| `clientOrderId` | string | Ні                     | Ідентифікатор замовлення, визначений клієнтом                                                                     |
+| `stopPrice`     | string | Умовно обов'язковий | Тригерна ціна                                                                               |
+| `workingType`   | string | Ні                     | `MARK_PRICE` / `CONTRACT_PRICE`, за замовчуванням `CONTRACT_PRICE`                                   |
+| `priceProtect`  | bool   | Ні                     | Чи увімкнено захист цін                                                         |
+| `activatePrice` | string | Умовно обов'язковий | Ціна активації трейлінгового замовлення                                                             |
+| `callbackRate`  | string | Умовно обов'язковий | Частота зворотного виклику за наказом                                                                |
+| `closePosition` | bool   | Ні                     | Закрийте всю позицію                                                                   |
+
+**Поля відповіді:**
+
+| Поле             | Тип   | Опис            |
+| ----------------- | ------ | ---------------------- |
+| `conditionId`     | string | Ідентифікатор порядку стану     |
+| `conditionStatus` | string | Стан порядку стану |
+| `timestamp`       | int64  | Часова мітка              |
+
+<h2 id="place-strategy-order">Порядок розміщення стратегії</h2>
+
+```http
+POST /v1/private/order/place-strategy
+Content-Type: application/json
+```
+
+**Параметри запиту:**
+
+| Параметр      | Тип   | Обов'язкове | Опис             |
+| -------------- | ------ | -------- | ----------------------- |
+| `strategyType` | string | Так      | `OTOCO` / `OTO` / `OCO` |
+| `subOrderList` | array  | Так      | Список підпорядків          |
+
+Поля в `subOrderList[]` здебільшого збігаються з нормальними порядками та порядками умов, з додатковими полями залежностей:
+
+| Параметр        | Тип   | Опис                                     |
+| ---------------- | ------ | ----------------------------------------------- |
+| `strategySubId`  | int64  | Ідентифікатор підпорядку                                    |
+| `firstDrivenId`  | int64  | Перше посвідчення наказу на водіння. `0` означає відсутність залежності |
+| `firstDrivenOn`  | string | Перша умова тригера                         |
+| `firstTrigger`   | string | Перша спускова дія                            |
+| `secondDrivenId` | int64  | Другий ідентифікатор наказу водіння                         |
+| `secondDrivenOn` | string | Друга умова тригера                        |
+| `secondTrigger`  | string | Друга спускова дія                           |
+
+**Поля відповіді:**
+
+| Поле            | Тип   | Опис     |
+| ---------------- | ------ | --------------- |
+| `strategyId`     | string | Стратегічний ідентифікатор     |
+| `strategyStatus` | string | Статус стратегії |
+| `timestamp`      | int64  | Часова мітка       |
+
+<h2 id="query-single-order">Одиничний порядок запиту</h2>
+
+```http
+GET /v1/private/order?symbol=BTCUSDT&orderId=2022543809547603968
+```
+
+**Параметри запиту:**
+
+| Параметр       | Тип   | Обов'язкове | Опис             |
+| --------------- | ------ | -------- | ----------------------- |
+| `symbol`        | string | Так      | Символ                  |
+| `orderId`       | string | Ні       | Ідентифікатор порядку сервера         |
+| `clientOrderId` | string | Ні       | Ідентифікатор замовлення, визначений клієнтом |
+
+Має бути надано принаймні один із `orderId` і `clientOrderId` . Якщо обидва надані, сервер виконує точне співпадіння за обох умов.
+
+<h2 id="current-normal-orders">Поточні нормальні порядки</h2>
+
+```http
+GET /v1/private/order/current?symbol=BTCUSDT
+```
+
+**Параметри запиту:**
+
+| Параметр     | Тип   | Обов'язкове | Опис        |
+| ------------- | ------ | -------- | ------------------ |
+| `symbol`      | string | Ні       | Символ             |
+| `limit`       | int32  | Ні       | Ліміт кількості повернень |
+| `lastOrderId` | int64  | Ні       | Курсорне поле       |
+
+**Поля відповіді:**
+
+| Поле    | Тип  | Опис               |
+| -------- | ----- | ------------------------- |
+| `list[]` | array | Поточний список нормальних порядків |
+| `total`  | int32 | Граф                     |
+
+<h2 id="current-condition-orders">Поточні накази щодо стану</h2>
+
+```http
+GET /v1/private/order/current-condition?symbol=BTCUSDT
+```
+
+**Параметри запиту:**
+
+| Параметр | Тип   | Обов'язкове | Опис |
+| --------- | ------ | -------- | ----------- |
+| `symbol`  | string | Ні       | Символ      |
+
+<h2 id="historical-normal-orders">Історичні нормальні порядки</h2>
+
+```http
+GET /v1/private/order/history?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+**Параметри запиту:**
+
+| Параметр       | Тип   | Обов'язкове | Опис                              |
+| --------------- | ------ | -------- | ---------------------------------------- |
+| `symbol`        | string | Ні       | Символ                                   |
+| `orderId`       | string | Ні       | Фільтр ідентифікатора точного порядку                    |
+| `clientOrderId` | string | Ні       | Точний фільтр ідентифікатора замовлення клієнта             |
+| `type`          | int32  | Ні       | Фільтр типу ордерів: `1` ліміт, `2` ринку |
+| `side`          | int32  | Ні       | Бічний фільтр: `1` купуєш, `2` продаєш           |
+| `status`        | int32  | Ні       | Фільтр статусу                            |
+| `startTime`     | int64  | Ні       | Час початку                               |
+| `endTime`       | int64  | Ні       | Кінець часу                                 |
+| `page`          | int64  | Ні       | Номер сторінки, стандартний `1`                 |
+| `pageSize`      | int64  | Ні       | Пункти на сторінку, стандартні `20`             |
+
+<h2 id="historical-condition-orders">Історичні накази про стан</h2>
+
+```http
+GET /v1/private/order/history-condition?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+**Параметри запиту:**
+
+| Параметр   | Тип   | Обов'язкове | Опис                    |
+| ----------- | ------ | -------- | ------------------------------ |
+| `symbol`    | string | Ні       | Символ                         |
+| `side`      | int32  | Ні       | Бічний фільтр: `1` купуєш, `2` продаєш |
+| `status`    | int32  | Ні       | Фільтр статусу                  |
+| `startTime` | int64  | Ні       | Час початку                     |
+| `endTime`   | int64  | Ні       | Кінець часу                       |
+| `page`      | int64  | Ні       | Номер сторінки, стандартний `1`       |
+| `pageSize`  | int64  | Ні       | Пункти на сторінку, стандартні `20`   |
+
+<h2 id="trade-records">Торгові рекорди</h2>
+
+```http
+GET /v1/private/order/trades?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+**Параметри запиту:**
+
+| Параметр   | Тип   | Обов'язкове | Опис                  |
+| ----------- | ------ | -------- | ---------------------------- |
+| `symbol`    | string | Ні       | Символ                       |
+| `orderId`   | string | Ні       | Фільтр Order ID              |
+| `startTime` | int64  | Ні       | Час початку                   |
+| `endTime`   | int64  | Ні       | Кінець часу                     |
+| `page`      | int64  | Ні       | Номер сторінки, стандартний `1`     |
+| `pageSize`  | int64  | Ні       | Пункти на сторінку, стандартні `20` |
+
+**Поля відповіді:**
+
+| Поле                 | Тип   | Опис       |
+| --------------------- | ------ | ----------------- |
+| `list[].fillId`       | string | Ідентифікатор деталей заповнення    |
+| `list[].tradeId`      | string | Ідентифікатор торгової записи   |
+| `list[].orderId`      | string | Ідентифікатор замовлення          |
+| `list[].symbol`       | string | Символ            |
+| `list[].side`         | string | Бік              |
+| `list[].roleType`     | string | `maker` / `taker` |
+| `list[].price`        | string | Заповнена ціна      |
+| `list[].quantity`     | string | Заповнена кількість   |
+| `list[].tradeValue`   | string | Торговельна вартість       |
+| `list[].handlingFee`  | string | Плата за обробку      |
+| `list[].realizedPnl`  | string | Реалізований PnL      |
+| `list[].positionSide` | string | Позиція     |
+| `list[].createdAt`    | int64  | Час обміну        |
+| `total`               | int64  | Загальна кількість       |
+
+<h2 id="cancel-order">Скасування замовлення</h2>
+
+```http
+POST /v1/private/order/cancel
+Content-Type: application/json
+```
+
+**Запитуйте тіло:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "orderId": "2022543809547603968"
+}
+```
+
+`clientOrderId` також можна використати для скасування замовлення.
+
+<h2 id="amend-order">Наказ про внесення змін</h2>
+
+```http
+POST /v1/private/order/move
+Content-Type: application/json
+```
+
+**Запитуйте тіло:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "orderId": "2022543809547603968",
+  "price": "85100",
+  "quantity": "0.2"
+}
+```
+
+`quantity` — це остаточна загальна кількість замовлення після внесення змін, а не залишкова величина.
+
+<h2 id="batch-amend-orders">Накази про внесення змін на групу</h2>
+
+```http
+POST /v1/private/order/batch-move
+Content-Type: application/json
+```
+
+**Запитуйте тіло:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "orders": [
+    {
+      "orderId": "2022543809547603968",
+      "price": "85100",
+      "quantity": "0.2"
+    }
+  ]
+}
+```
+
+<h2 id="batch-cancel-orders">Замовлення на скасування пакетів</h2>
+
+```http
+POST /v1/private/order/batch-cancel
+Content-Type: application/json
+```
+
+**Запитуйте тіло:**
+
+```json
+{
+  "orders": [
+    {
+      "symbol": "BTCUSDT",
+      "orderId": "2022543809547603968"
+    }
+  ]
+}
+```
+
+<h2 id="cancel-all">Скасувати все</h2>
+
+```http
+POST /v1/private/order/batch-cancel-all
+Content-Type: application/json
+```
+
+**Параметри запиту:**
+
+| Параметр    | Тип   | Обов'язкове | Опис                                                                         |
+| ------------ | ------ | -------- | ----------------------------------------------------------------------------------- |
+| `symbol`     | string | Ні       | Символ                                                                              |
+| `cancelType` | int32  | Ні       | `0` всі звичайні ордери, `1` лише лімітні ордери, `2` всі умовні ордери. Стандартна `0` |
+
+Скасування всіх для звичайних замовлень приймається асинхронно. Остаточний статус має визначатися WebSocket `ORDER_TRADE_UPDATE` або кінцевими точками запиту.
+
+<h2 id="cancel-condition-order">Наказ про скасування умов</h2>
+
+```http
+POST /v1/private/order/cancel-condition
+Content-Type: application/json
+```
+
+**Запитуйте тіло:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "conditionId": "2022543809547603968"
+}
+```
+
+<h2 id="strategy-order-detail">Деталі порядку стратегії</h2>
+
+```http
+GET /v1/private/order/strategy?strategyId=2022543809547603968
+```
+
+**Поля відповіді:**
+
+| Поле            | Тип   | Опис                          |
+| ---------------- | ------ | ------------------------------------ |
+| `strategyId`     | string | Стратегічний ідентифікатор                          |
+| `strategyType`   | string | `OTOCO` / `OTO` / `OCO`              |
+| `strategyStatus` | string | `WORKING` / `ALL_DONE` / `CANCELLED` |
+| `bookTime`       | int64  | Час створення                        |
+| `subOrders[]`    | array  | Деталі підпорядку                    |
+| `updateTime`     | int64  | Час оновлення                          |
+
+<h2 id="related-documentation">Пов'язана документація</h2>
+
+- [Типи наказів](/uk/trading/order-types)
+- [Common Enums](/uk/developer-api/common-enums)
+- [Приватний користувацький канал](/uk/developer-api/websocket/private-user-channel)
+- [Рекомендації щодо інтеграції](/uk/developer-api/integration-recommendations)

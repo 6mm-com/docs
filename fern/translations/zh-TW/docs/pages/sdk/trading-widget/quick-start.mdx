@@ -1,0 +1,108 @@
+---
+title: "嵌入 6MM Trading Widget：快速開始"
+subtitle: "將交易終端機加入一個網頁，包含容器、v1 腳本和 TradingWidget.create（）。"
+slug: sdk/trading-widget/quick-start
+canonical-url: https://docs.6mm.com/zh-TW/sdk/trading-widget/quick-start
+---
+
+Trading Widget SDK將6MM交易介面嵌入合作夥伴擁有的網頁中。最快的整合需要一個可見的容器、生產SDK腳本，以及呼叫`TradingWidget.create()`。
+
+<h2 id="before-you-start">開始之前</h2>
+
+- 從一個可以載入資源的網頁執行範例 `https://app.6mm.com`。
+- 給 widget 容器明確的寬度和高度。
+- 在呼叫`TradingWidget.create()`前先載入SDK。
+- 在啟用帳戶或交易功能前，先規劃[認證流程]（/sdk/trading-widget/authentication）。
+
+<h2 id="minimal-example">最小範例</h2>
+
+```html
+<div id="trading-widget" style="width: 100%; height: 720px"></div>
+
+<script src="https://app.6mm.com/sdk/trading-widget/v1/index.js"></script>
+<script>
+  const widget = TradingWidget.create('#trading-widget', {
+    baseUrl: 'https://app.6mm.com',
+    symbol: 'BTCUSDT',
+    theme: 'dark',
+    locale: 'en',
+    layout: 'default',
+    display: {
+      showHeader: false,
+      showTicker: false,
+      hidden: [],
+    },
+    onReady(event) {
+      console.log('ready', event)
+    },
+    onError(error) {
+      console.error('error', error)
+    },
+  })
+</script>
+```
+
+當整合成功時， SDK 會在 `#trading-widget` 中建立一個 iframe，並呼叫 `onReady`。在開發過程中擷取 `onError` ，讓設定和載入失敗都能清楚看到。
+
+<h2 id="sdk-urls">SDK 網址</h2>
+
+| 環境 | 劇本 URL |
+| --- | --- |
+| 製作 | https://app.6mm.com/sdk/trading-widget/v1/index.js |
+
+> **明確設定 baseUrl **
+>
+> 在合作夥伴擁有的頁面測試時，傳送 baseUrl 讓 iframe 總是指向 6MM 網域。
+
+<h2 id="display-controls">顯示控制</h2>
+
+合作夥伴嵌入預設會隱藏 PC 標頭和底部市場股票。需要顯示 shell 區域或隱藏內嵌交易頁面的高階容器時，請使用 `display` 。
+
+```js
+display: {
+  showHeader: false,
+  showTicker: false,
+  hidden: ['account'],
+}
+```
+
+<h2 id="container-size">容器尺寸</h2>
+
+| 表面 | 建議最低價 |
+| --- | --- |
+| 桌面 | 1024 x 720 |
+| 行動裝置 | 390 x 700 |
+
+對於響應式版面，保持寬度流動，並為每個斷點設定適當的最小高度。高度為零的容器可以成功載入 SDK ，而交易介面則保持隱形。
+
+<h2 id="verify-the-integration">驗證整合</h2>
+
+1. 確認 SDK 腳本在瀏覽器網路面板中成功回傳。
+2. 確認 iframe 初始化後 `onReady` 發射。
+3. 測試已設定的 `symbol`、 `locale`、主題及隱藏區塊。
+4. 在桌面與行動裝置的中斷點間調整頁面大小。
+5. 在上線前與非生產用戶完成認證測試。
+
+<h2 id="common-issues">常見問題</h2>
+
+| 症狀 | 要注意的事項 |
+| --- | --- |
+| 空白小工具區域 | 確認容器是否有明顯的寬度和高度。 |
+| `TradingWidget` 未定義 | 在建立呼叫前確認 v1 腳本已載入。 |
+| 錯誤的頁面或環境 | 明確設定 `baseUrl` 並驗證已設定的環境。 |
+| 準備事件從未觸發 | 擷取 `onError` 並檢查被阻擋的 iframe 或腳本請求。 |
+| 帳號資料無法取得 | 完成支援的小工具認證流程。 |
+
+<h2 id="next-steps">下一步</h2>
+
+<CardGroup cols={3}>
+<Card title="小工具認證" icon="fa-duotone fa-user-shield" href="/zh-TW/sdk/trading-widget/authentication">
+將嵌入式終端機連接到核准的使用者會話。
+</Card>
+<Card title="選項與活動" icon="fa-duotone fa-sliders" href="/zh-TW/sdk/trading-widget/options-events">
+配置符號、地點、顯示行為及生命週期回撥。
+</Card>
+<Card title="實例方法" icon="fa-duotone fa-code" href="/zh-TW/sdk/trading-widget/instance-methods">
+初始化後控制已建立的小工具實例。
+</Card>
+</CardGroup>

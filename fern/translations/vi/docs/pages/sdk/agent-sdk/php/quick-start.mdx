@@ -1,0 +1,70 @@
+---
+title: "PHP Khởi Đầu Nhanh"
+subtitle: "Cài đặt và khởi tạo PHP SDK từ dịch vụ backend."
+slug: sdk/agent-sdk/php/quick-start
+canonical-url: https://docs.6mm.com/vi/sdk/agent-sdk/php/quick-start
+---
+
+<h2 id="install">Cài đặt</h2>
+
+```json
+{
+  "require": {
+    "sixmm/agent-sdk": "VERSION_PROVIDED_BY_6MM"
+  }
+}
+```
+
+> **Truy cập gói**
+>
+> 6MM cung cấp tên gói Composer đã được phê duyệt, kho lưu trữ và phiên bản trong quá trình onboarding đối tác. Không nên giả định gói này tồn tại trên Packagist công khai.
+
+<h2 id="before-you-start">Trước khi bạn bắt đầu</h2>
+
+- Xác nhận URL căn cứ của Đặc vụ API với 6MM.
+- Tải apiSecret từ các biến môi trường hoặc quản lý bí mật.
+- Chỉ giữ SDK sử dụng trong các dịch vụ backend.
+- Chuẩn bị xử lý đồng nhất cho các luồng chuyển giao và webhook.
+
+<h2 id="initialize-client">Khởi tạo máy khách</h2>
+
+```php
+<?php
+
+use Sixmm\Agent\AgentClient;
+use Sixmm\Agent\AgentConfig;
+
+$client = new AgentClient(new AgentConfig(
+    'https://agent-api.6mm.com',
+    'AGENT001',
+    getenv('AGENT_API_SECRET') ?: '',
+    'USDT'
+));
+```
+
+> **Chỉ dành cho backend**
+>
+> PHP SDK ký các yêu cầu Agent API và không được lộ thông qua mã nguồn công khai hoặc môi trường thời gian chạy frontend.
+
+<h2 id="example-transfer-funds-in">Ví dụ: chuyển tiền vào</h2>
+
+```php
+$response = $client->transfer([
+    'agentOrderNo' => 'AGT-ORDER-1001',
+    'agentUserId' => 'agent-user-001',
+    'direction' => 'IN',
+    'currency' => 'USDT',
+    'amount' => '10.00',
+]);
+```
+
+Sử dụng chuỗi thập phân cho số tiền và giữ nguyên agentOrderNo gốc khi thử lại hoặc truy vấn trạng thái chuyển giao.
+
+<h2 id="next-steps">Các bước tiếp theo</h2>
+
+| Nhu cầu | Trang tiếp theo |
+| --- | --- |
+| Hiểu các khả năng Agent SDK | [Agent SDK Tổng quan](/vi/sdk/agent-sdk/overview) |
+| Xem lại hành vi ký | [Bí mật & Ký hiệu](/vi/sdk/security/secrets-signing) |
+| Xác minh việc thực hiện callback | [Webhooks & Idempotency](/vi/sdk/security/webhooks-idempotency) |
+| Chẩn đoán vấn đề tích hợp | [SDK Khắc phục sự cố](/vi/sdk/security/troubleshooting) |

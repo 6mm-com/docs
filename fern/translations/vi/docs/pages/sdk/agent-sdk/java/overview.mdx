@@ -1,0 +1,48 @@
+---
+title: "Agent Java SDK"
+subtitle: "Cài đặt 6MM Agent Java SDK và sử dụng APIs backend đã ký để liên kết người dùng, chuyển giao dữ liệu, thông tin đăng nhập và xác minh webhook."
+slug: sdk/agent-sdk/java/overview
+canonical-url: https://docs.6mm.com/vi/sdk/agent-sdk/java/overview
+---
+
+<h2 id="official-repository">Kho lưu trữ chính thức</h2>
+
+Kho lưu trữ Java SDK là nguồn dữ liệu cho mã nguồn, ghi chú phát hành, ví dụ sử dụng và chi tiết triển khai SDK :
+
+[6mm-com/agent-java-sdk](https://github.com/6mm-com/agent-java-sdk)
+
+<h2 id="runtime">Thời gian chạy</h2>
+
+| Mục | Giá trị |
+| --- | --- |
+| Phiên bản Java tối thiểu | Java 8+ |
+| Công cụ xây dựng được khuyến nghị | Maven 3.9+ |
+| Nhóm Maven | `com.sixmm.exchange.sdk` |
+| Hiện vật Maven | `agent` |
+| Thẻ nguồn được tài liệu hóa | `v0.1.1` |
+
+Kho lưu trữ GitHub công khai là lưu trữ nguồn, không phải kho lưu trữ phụ thuộc Maven. Xây dựng và cài đặt mã nguồn được gắn thẻ cục bộ hoặc xuất bản artifact đã được phê duyệt vào kho Maven riêng của tổ chức bạn trước khi sử dụng trong các nhóm build.
+
+<h2 id="typical-backend-responsibilities">Các trách nhiệm điển hình của backend</h2>
+
+- Xác thực phiên người dùng đối tác.
+- Ánh xạ người dùng đối tác với agentUserId.
+- Bind Call trước khi giao dịch hoặc chuyển tiền lần đầu.
+- Gọi createEntryUrl để được kiểm tra toàn SSOmột lần.
+- Gọi createEmbedToken để Trading Widget chế độ token đối tác.
+- Xác minh các webhook truyền và xử lý chúng một cách hiệu quả.
+
+<h2 id="security-and-operational-rules">Quy tắc an ninh và vận hành</h2>
+
+- Lưu `apiSecret` chỉ trong một biến quản lý bí mật phía sau hoặc môi trường bảo vệ.
+- Giữ thời gian máy chủ đồng bộ vì các yêu cầu đã ký có dấu thời gian.
+- Xem `agentOrderNo` như một khóa idempotency bền vững và giữ cho nó duy nhất trên toàn cầu.
+- Lưu `platformUserId` dưới dạng chuỗi và duy trì mối quan hệ với `agentUserId`.
+- Truy vấn lần truyền gốc trước khi thử lại sau khi hết thời gian chờ hoặc kết quả mạng không chắc chắn.
+
+<h2 id="next-steps">Các bước tiếp theo</h2>
+
+- [Java Khởi động nhanh](/vi/sdk/agent-sdk/java/quick-start): cài đặt nguồn được gắn thẻ và khởi tạo `AgentClient`.
+- [Create Embed Token](/vi/sdk/agent-sdk/java/embed-token): phát hành thông tin xác thực ngắn hạn cho Trading Widget.
+- [Secrets & Signing](/vi/sdk/security/secrets-signing): hiểu về ký HMAC tự động và xử lý bí mật.
+- [Webhooks & Idempotency](/vi/sdk/security/webhooks-idempotency): xác minh callback và ngăn chặn xử lý trùng lặp.

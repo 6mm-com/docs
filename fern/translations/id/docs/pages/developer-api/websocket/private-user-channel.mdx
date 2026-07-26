@@ -1,0 +1,107 @@
+---
+title: "Saluran Pengguna Pribadi"
+description: "Berlangganan event 6MM WebSocket yang telah diautentikasi untuk pesanan, posisi, saldo, dan perubahan akun dengan membuat dan memelihara tombol dengar."
+slug: developer-api/websocket/private-user-channel
+canonical-url: https://docs.6mm.com/id/developer-api/websocket/private-user-channel
+---
+
+Buat `listenKey` terlebih dahulu:
+
+```http
+POST /v1/private/user/listen-key
+```
+
+Contoh respons:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "listenKey": "f57cb61ef604ce76be09e753a5dbdd8c",
+    "expireAt": 1777539918867
+  },
+  "requestId": "req-listen-key"
+}
+```
+
+`listenKey` berlaku selama 60 menit secara default. Perpanjangan setiap 30 menit sangat dianjurkan.
+
+<h2 id="renew">Perbarui</h2>
+
+```http
+PUT /v1/private/user/listen-key
+Content-Type: application/json
+```
+
+```json
+{ "listenKey": "f57cb61ef604ce76be09e753a5dbdd8c" }
+```
+
+<h2 id="close">Tutup</h2>
+
+```http
+DELETE /v1/private/user/listen-key
+Content-Type: application/json
+```
+
+```json
+{ "listenKey": "f57cb61ef604ce76be09e753a5dbdd8c" }
+```
+
+<h2 id="connect-to-private-websocket">Terhubung ke WebSocket pribadi</h2>
+
+```
+wss://ws.6mm.com/ws?listenKey=YOUR_LISTEN_KEY
+```
+
+Metode koneksi JWT yang kompatibel:
+
+```
+wss://ws.6mm.com/ws?token=YOUR_ACCESS_TOKEN
+```
+
+Setelah autentikasi berhasil, server secara otomatis berlangganan koneksi ke saluran privat pengguna saat ini. Tidak diperlukan langganan manual.
+
+Pengakuan autentikasi yang berhasil:
+
+```json
+{ "event": "auth", "success": true, "data": "1188041528" }
+```
+
+<h2 id="common-private-events">Acara pribadi umum</h2>
+
+| Acara                | Deskripsi                                                                   |
+| -------------------- | ----------------------------------------------------------------------------- |
+| `ORDER_TRADE_UPDATE` | Perubahan status pesanan, termasuk pesanan baru, perubahan, perdagangan, dan pembatalan |
+| `ACCOUNT_UPDATE`     | Perubahan saldo akun dan posisi                                          |
+
+Pembungkus pesan push privat:
+
+```json
+{
+  "topic": "user.5794",
+  "ts": 1771047000000,
+  "data": {
+    "eventType": "ORDER_TRADE_UPDATE"
+  }
+}
+```
+
+REST endpoint query dan WebSocket private stream menggunakan skema terpisah. Klien harus memparse setiap skema secara independen dan tidak boleh mengasumsikan nama bidang identik.
+
+<h2 id="common-differences">Perbedaan umum</h2>
+
+| Domain         | bidang REST     | bidang WebSocket                                             |
+| -------------- | -------------- | ----------------------------------------------------------- |
+| Status pesanan   | `status`       | `orderStatus`                                               |
+| Keseimbangan beku | `frozenMargin` | `frozenBalance`                                             |
+| Mode margin    | `marginMode`   | `marginMode`, dikembalikan sebagai string dalam posisi dan aliran |
+
+<h2 id="recovery-and-reconciliation">Pemulihan dan rekonsiliasi</h2>
+
+- Perbarui listenKey sebelum kedaluwarsa dan buat yang baru jika perpanjangan gagal.
+- Hubungkan kembali, autentikasi ulang, dan perlakukan soket baru sebagai sesi acara baru.
+- Deduplikasi peristiwa sebelum mengubah saldo mitra atau catatan pesanan.
+- Jika event mungkin terlewat, tanyakan [orders](/id/developer-api/rest-api/order), [positions](/id/developer-api/rest-api/position), dan [account state](/id/developer-api/rest-api/user-and-account) melalui REST.
+- Ikuti [panduan koneksi dan detak jantung](/id/developer-api/websocket/connection-subscription-and-heartbeat) untuk penanganan ulang dan koneksi yang tidak aktif.

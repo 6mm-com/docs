@@ -1,0 +1,65 @@
+---
+title: "WebSocket"
+description: "اتصل بخدمة 6MM WebSocket لبث السوق العام وفعاليات الحسابات الخاصة، مع إرشادات Heartbeat والاشتراك."
+slug: developer-api/websocket
+canonical-url: https://docs.6mm.com/ar/developer-api/websocket
+---
+
+<h2 id="service-endpoint">نقطة نهاية الخدمة</h2>
+
+```
+wss://ws.6mm.com/ws
+```
+
+تنقسم WebSocket القنوات إلى قنوات عامة وقنوات خاصة:
+
+| النوع             | المصادقة              | الوصف                                            |
+| ---------------- | --------------------------- | ------------------------------------------------------ |
+| القنوات العامة  | غير مطلوب                | بيانات السوق، مثل العمق، التداولات، الكلينز، والرمز |
+| القنوات الخاصة | `listenKey` أو JWT المطلوبة | ترتيب المستخدمين، الحسابات، وتدفقات المواقع              |
+
+<h2 id="public-channels">القنوات العامة</h2>
+
+WebSocket العام لا يتطلب مصادقة. بعد الاتصال، أرسل طلب `subscribe` للاشتراك في قنوات السوق.
+
+القنوات الشائعة:
+
+| القناة                            | الوصف                                                        |
+| ---------------------------------- | ------------------------------------------------------------------ |
+| `market.depth.{symbol}`            | عمق دفتر الطلبات. يرسل لقطة أولا، ثم تحديثات تدريجية |
+| `market.trade.{symbol}`            | أحدث الصفقات                                                      |
+| `market.kline.{symbol}.{interval}` | كلاينز                                                             |
+| `market.ticker.{symbol}`           | ملخص رمز واحد                                       |
+| `market.tickers`                   | ملخص رموز كاملة                                          |
+
+<h2 id="private-channels">القنوات الخاصة</h2>
+
+<h2 id="listenkey">listenKey</h2>
+بالنسبة لتدفقات WebSocket الخاصة، أنشئ `listenKey` عبر REST API أولا، ثم اتصل ب:
+
+```
+wss://ws.6mm.com/ws?listenKey=YOUR_LISTEN_KEY
+```
+
+<h2 id="jwt">JWT</h2>
+طريقة الاتصال JWT المتوافقة:
+
+```
+wss://ws.6mm.com/ws?token=YOUR_ACCESS_TOKEN
+```
+
+بعد نجاح المصادقة، يشترك الخادم تلقائيا في الاتصال بقناة المستخدم الخاصة الحالية. لا يتطلب اشتراكا يدويا.
+
+<h2 id="choose-the-next-guide">اختر الدليل التالي</h2>
+
+- [اتصال، اشتراك & نبضات القلب](/ar/developer-api/websocket/connection-subscription-and-heartbeat): دورة حياة الاتصال، التنبيه، إعادة الاتصال، وإعادة الاشتراك.
+- [قنوات السوق العامة] (/developer-api/websocket/public-market-channels): العمق، التداولات، الكلينز، المؤشرات الرمزية، والتعامل مع التسلسل.
+- [قناة المستخدم الخاصة] (/developer-api/websocket/private-user-channel): listenKey دورة الحياة وأحداث الحساب المصادقة.
+- [توصيات التكامل] (/developer-api/integration-recommendations): المراقبة، الهوية، التكرار، واختبارات الإنتاج.
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">صفحات ذات صلة</h2>
+
+- [WebSocket قنوات بيانات السوق العامة](/ar/developer-api/websocket/public-market-channels)
+- [قناة المستخدم الخاص](/ar/developer-api/websocket/private-user-channel)
+- [توصيات التكامل](/ar/developer-api/integration-recommendations)
+<!-- sixmm-localized-link-repair:end -->

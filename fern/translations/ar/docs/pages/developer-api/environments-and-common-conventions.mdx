@@ -1,0 +1,64 @@
+---
+title: "البيئات والاتفاقيات الشائعة"
+description: "راجع 6MM API البيئات والاتفاقيات المشتركة لعناوين URLs الأساسية، الطوابع الزمنية، الحقول الرقمية، الرموز، معرفات الطلبات، الترقيم، والردود."
+slug: developer-api/environments-and-common-conventions
+canonical-url: https://docs.6mm.com/ar/developer-api/environments-and-common-conventions
+---
+
+<h2 id="service-endpoints">نقاط نهاية الخدمة</h2>
+
+| النوع      | نقطة النهاية              |
+| --------- | --------------------- |
+| REST API  | `https://api.6mm.com` |
+| WebSocket | `wss://ws.6mm.com/ws`    |
+
+<h2 id="time-and-numeric-values">الزمن والقيم الرقمية</h2>
+
+* ما لم يذكر خلاف ذلك، فإن حقول الوقت هي طوابع زمنية بحجم مللي ثانية من يونكس.
+* الإحصائيات اليومية، ولمحات الرزن، وإحصائيات حجم التداول تستخدم حدود UTC اليوم بشكل افتراضي.
+* الحقول الحساسة للدقة مثل الكمية والسعر والكمية والمعدل تنقل كسلاسل نصية.
+* يتم إرجاع معرفات الأعداد الصحيحة الكبيرة مثل `orderId`و `conditionId`و `strategyId` كسلاسل في JSON.
+
+<h2 id="response-format">صيغة الاستجابة</h2>
+
+استجابة ناجحة:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {},
+  "requestId": "req-12345678"
+}
+```
+
+استجابة خطأ:
+
+```json
+{
+  "code": 1003,
+  "message": "Invalid token",
+  "requestId": "req-12345678"
+}
+```
+
+ملاحظات:
+
+* عادة ما تعيد أخطاء الأعمال هيكل JSON الموحد. يجب على المدمجين التحقق من `code` أولا.
+* قد تعيد حالات فشل المصادقة HTTP `401`؛ قد تعيد حدود المعدل HTTP `429`.
+* يمكنك إرسال `X-Request-ID` في رأس الطلب. سيعيدها الخادم كما `requestId` في الرد.
+
+<h2 id="related-documentation">وثائق ذات صلة</h2>
+
+- [التوثيق] (/developer-api/authentication): اختر توقيع JWT أو API Key .
+- [توقيع الطلبات] (/developer-api/request-signing): إنشاء والتحقق من الطلبات الموقعة.
+- [REST API] (/developer-api/rest-api): تطبيق هذه الاتفاقيات على مجموعات نقاط النهاية.
+- [رموز الأخطاء واستكشاف الأخطاء] (/developer-api/error-codes-and-troubleshooting): تشخيص أخطاء HTTP والأعمال.
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">صفحات ذات صلة</h2>
+
+- [6MM API المصادقة: مفاتيح JWT وAPI](/ar/developer-api/authentication)
+- [توقيع طلبات التوقيع](/ar/developer-api/request-signing)
+- [REST API](/ar/developer-api/rest-api)
+- [رموز الأخطاء واستكشاف الأخطاء](/ar/developer-api/error-codes-and-troubleshooting)
+<!-- sixmm-localized-link-repair:end -->

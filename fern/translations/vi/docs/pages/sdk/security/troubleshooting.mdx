@@ -1,0 +1,68 @@
+---
+title: "SDK Khắc phục sự cố tích hợp"
+subtitle: "Chẩn đoán các vấn đề Trading Widget, Agent SDK, ký, webhook, timeout và môi trường trước khi chuyển yêu cầu hỗ trợ."
+slug: sdk/security/troubleshooting
+canonical-url: https://docs.6mm.com/vi/sdk/security/troubleshooting
+---
+
+Bắt đầu với môi trường, dấu thời gian và định danh doanh nghiệp cho thao tác thất bại. Kiểm tra có cấu trúc thường tách biệt các vấn đề cấu hình khỏi các vấn đề xác thực, mạng và xử lý bất đồng bộ.
+
+<h2 id="diagnostic-order">Thứ tự chẩn đoán được khuyến nghị</h2>
+
+1. Xác nhận môi trường bị ảnh hưởng và URLcơ sở.
+2. Ghi lại khoảng thời gian UTC và yêu cầu thất bại đầu tiên.
+3. Xác định module: Trading Widget, Agent SDK, REST API, WebSockethoặc webhook.
+4. Ghi lại ID yêu cầu, ID người dùng đối tác, `agentOrderNo`, ID đơn hàng hoặc ID sự kiện webhook.
+5. Kiểm tra mã nguồn gần đây, thông tin đăng nhập, danh sách trắng IP hoặc thay đổi triển khai.
+6. Tái tạo bằng hộp thử nhỏ nhất an toàn.
+
+<h2 id="trading-widget-issues">Vấn đề Trading Widget</h2>
+
+| Triệu chứng | Nguyên nhân có thể xảy ra | Sửa lỗi |
+| --- | --- | --- |
+| miền cục bộ đối tác yêu cầu iframe | baseUrl bị thiếu | Pass baseUrl: 'https://app.6mm.com'. |
+| iframe không hiển thị hoặc rất ngắn | Container cha không có chiều cao | Thiết lập chiều cao container hoặc chiều cao qua. |
+| token_provider_missing | chế độ partner-token không có nhà cung cấp | Thêm xác thực.tokenProvider. |
+| auth_exchange_failed | Mã nhúng không hợp lệ, hết hạn hoặc không khớp | Kiểm tra phản hồi token backend và channelId. |
+
+<h2 id="agent-sdk-issues">Vấn đề Agent SDK</h2>
+
+| Triệu chứng | Nguyên nhân có thể xảy ra | Sửa lỗi |
+| --- | --- | --- |
+| Chữ ký bị từ chối | Sai bí mật, lệch đồng hồ hoặc thay đổi thủ công các trường đã ký | Cho phép SDK tạo trường ký và đồng bộ thời gian máy chủ. |
+| Rủi ro di chuyển quỹ trùng lặp | Số đơn hàng mới được sử dụng sau khi hết thời gian chờ | Truy vấn theo agentOrderNo gốc trước. |
+| PROCESSING bị coi là thất bại | Tình trạng đang chờ xử lý bị hiểu nhầm | Chờ webhook hoặc gọi queryOrder. |
+| Webhook đã được xử lý nhiều lần | Hành vi thử lại mà không có idempotency | Thêm khóa bất lực và kiểm tra trạng thái cuối cùng. |
+
+<h2 id="evidence-to-capture">Bằng chứng cần bắt giữ</h2>
+
+| Tích hợp | Bằng chứng hữu ích |
+| --- | --- |
+| Trading Widget | Trang URL, đường dẫn phiên bản SDK , bảng điều khiển trình duyệt, các yêu cầu mạng thất bại, payload `onError` và kích thước container. |
+| Agent SDK | SDK ngôn ngữ/phiên bản, URLcơ bản, dấu thời gian UTC , ID yêu cầu, `agentOrderNo`, mã phản hồi và nhật ký đã được làm sạch. |
+| Webhook | Thời gian gửi, khóa sự kiện hoặc khóa kinh doanh, kết quả xác thực chữ ký, trạng thái xử lý và hàm băm cơ thể thô đã được làm sạch. |
+| REST API | Phương thức, đường dẫn, môi trường, ID yêu cầu, mã phản hồi và các tham số đã được làm sạch. |
+
+Không bao giờ đưa mật khẩu, mã truy cập, bí mật API , chữ ký đầy đủ, khóa riêng tư hoặc dữ liệu cá nhân không bị che giấu trong chẩn đoán.
+
+<h2 id="before-escalating">Trước khi leo thang</h2>
+
+- Chỉ thử lại khi thao tác được ghi nhận là an toàn để thử lại.
+- Sau một thời gian chờ, hãy truy vấn định danh doanh nghiệp gốc thay vì tạo mới.
+- Xác nhận môi trường đồng hồ hệ thống và thông tin đăng nhập để phát hiện lỗi chữ ký.
+- Giữ nguyên thất bại đầu tiên và bất kỳ kết quả thử lại nào sau đó.
+- Sử dụng [Mẫu Yêu Cầu Hỗ Trợ](/vi/resources/support-request-template) để gửi báo cáo đầy đủ, đã được bôi đen.
+
+<h2 id="related-docs">Tài liệu liên quan</h2>
+
+<CardGroup cols={3}>
+<Card title="Trading Widget Khởi Đầu Nhanh" icon="fa-duotone fa-chart-line" href="/vi/sdk/trading-widget/quick-start">
+Xác minh việc tải script, kích thước container, cấu hình và callback.
+</Card>
+<Card title="Bí mật & Ký kết" icon="fa-duotone fa-shield-keyhole" href="/vi/sdk/security/secrets-signing">
+Kiểm tra thông tin đăng nhập Agent SDK , đồng hồ và các trường đã ký.
+</Card>
+<Card title="Webhooks & Idmpotency" icon="fa-duotone fa-webhook" href="/vi/sdk/security/webhooks-idempotency">
+Xem xét xác minh callback và xử lý sự kiện trùng lặp.
+</Card>
+</CardGroup>

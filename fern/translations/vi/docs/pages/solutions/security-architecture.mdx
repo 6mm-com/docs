@@ -1,0 +1,66 @@
+---
+title: "Kiến trúc bảo mật tích hợp đối tác"
+subtitle: "Thiết kế ranh giới tin cậy và kiểm soát sản xuất cho giao dịch nhúng, API, SDK, webhook, chuyển giao tài sản và tích hợp vận hành."
+slug: solutions/security-architecture
+canonical-url: https://docs.6mm.com/vi/solutions/security-architecture
+---
+
+Trang này tập trung vào cách đối tác nên thiết kế tích hợp 6MM an toàn. Để biết các lớp bảo mật rộng hơn được sử dụng trên toàn nền tảng giao dịch, xem [Kiến trúc Bảo mật Nền tảng](/vi/security-compliance/security-architecture).
+
+Kiến trúc bảo mật nên được thống nhất trước khi bắt đầu tích hợp sản xuất. Nó ảnh hưởng đến cách các hệ thống đối tác xác thực người dùng, phát hành token, lưu trữ bí mật, nhận sự kiện, giám sát hoạt động và phản ứng với sự cố.
+
+<h2 id="recommended-trust-boundary">Ranh giới tin cậy được khuyến nghị</h2>
+
+| Thành phần | Có thể chứa | Không được chứa |
+| --- | --- | --- |
+| Giao diện đối tác | Cấu hình công khai, kết quả nhập ngắn hạn, trạng thái giao diện không nhạy cảm | Bí mật API đối tác, khóa ký, thông tin xác thực backend ưu tiên |
+| Backend đối tác | Ánh xạ người dùng, thông tin đăng nhập được bảo vệ, logic ký, xử lý webhook | Bí mật được tiết lộ qua phản hồi của khách hàng hoặc nhật ký công khai |
+| 6MM điểm cuối tích hợp | Đã phê duyệt các yêu cầu đã ký, token và giao webhook | Giả định người dùng phía đối tác chưa được xác minh |
+
+Frontend đối tác nên gọi backend đối tác để thực hiện các thao tác đặc quyền. Backend xác thực người dùng đối tác, gọi 6MM qua API hoặc SDKđược phê duyệt, và chỉ trả về kết quả ngắn hạn mà frontend cần.
+
+<h2 id="security-layers">Các lớp bảo mật</h2>
+
+| Lớp | Trọng tâm bắt buộc |
+| --- | --- |
+| Thông tin API | Lưu trữ chỉ ở backend, kế hoạch luân phiên và kiểm soát truy cập. |
+| Yêu cầu ký | Xử lý thời gian, chữ ký và bảo vệ phát lại nhất quán. |
+| Nhúng token | Cấp phát ngắn hạn, kiểm tra đủ điều kiện và hành vi vô hiệu hóa rõ ràng. |
+| Webhooks | Xác minh chữ ký, tính đồng tính, thử lại và nhật ký kiểm tra sự kiện. |
+| Hoạt động | Vai trò truy cập, leo thang sự cố, giám sát và lưu giữ bằng chứng. |
+
+<h2 id="production-control-plan">Kế hoạch kiểm soát sản xuất</h2>
+
+| Khu vực điều khiển | Bằng chứng triển khai tối thiểu |
+| --- | --- |
+| Lưu trữ thông tin đăng nhập | Vị trí quản lý bí mật, chủ sở hữu truy cập, tách môi trường và quy trình luân phiên. |
+| Mục nhập của người dùng | Xác thực phiên, kiểm tra đủ điều kiện, luồng token ngắn hạn và xử lý lỗi. |
+| Yêu cầu đã ký | Đúng môi trường, thời gian đồng bộ, ghi nhật ký yêu cầu và cảnh báo lỗi chữ ký. |
+| Hoạt động tài sản | ID doanh nghiệp duy nhất, đối chiếu thời gian chờ, truy vấn trạng thái và đường dẫn xem xét của nhân viên vận hành. |
+| Webhooks | Xác minh chữ ký cơ thể thô, điều khiển phát lại, lưu trữ idempotency và xử lý an toàn khi thử lại. |
+| Giám sát | Cảnh báo về lỗi xác thực, thử lại bất thường, độ trễ webhook và lỗi vận hành. |
+| Phản ứng sự cố | Chủ sở hữu được chỉ định, kênh leo thang, lưu giữ bằng chứng và thủ tục thu hồi thông tin đăng nhập. |
+
+<h2 id="launch-review">Đánh giá khi ra mắt</h2>
+
+Trước khi sản xuất:
+
+1. Vẽ các luồng dữ liệu người dùng, token, yêu cầu, tài sản và webhook.
+2. Đánh dấu vị trí mỗi thông tin đăng nhập được tạo, lưu trữ, sử dụng, ghi lại, xoay và thu hồi.
+3. Kiểm tra các token hết hạn, chữ ký không hợp lệ, thời gian chờ, webhook trùng lặp và hành vi kết nối lại.
+4. Xác nhận rằng các nhóm hỗ trợ có thể xác định vị trí một thao tác từ yêu cầu hoặc định danh doanh nghiệp của nó.
+5. Hoàn thành [Danh sách kiểm tra ra mắt sản xuất](/vi/solutions/production-launch-checklist).
+
+<h2 id="recommended-docs">Các bác sĩ được khuyến nghị</h2>
+
+<CardGroup cols={3}>
+<Card title="Bí mật & Ký kết" icon="fa-duotone fa-key" href="/vi/sdk/security/secrets-signing">
+Bảo vệ thông tin đăng nhập Agent SDK và các yêu cầu đã ký.
+</Card>
+<Card title="Yêu cầu ký" icon="fa-duotone fa-signature" href="/vi/developer-api/request-signing">
+Triển khai ký yêu cầu API nhà phát triển trực tiếp.
+</Card>
+<Card title="Webhook & Idampestency" icon="fa-duotone fa-webhook" href="/vi/sdk/security/webhooks-idempotency">
+Xử lý sự kiện một cách an toàn.
+</Card>
+</CardGroup>

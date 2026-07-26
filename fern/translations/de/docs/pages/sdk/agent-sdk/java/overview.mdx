@@ -1,0 +1,48 @@
+---
+title: "Agent Java SDK"
+subtitle: "Installiere die 6MM Agent Java SDK und nutze signierte Backend- APIs für Benutzerbindungen, Übertragungen, Zugangsdaten und Webhook-Verifikation."
+slug: sdk/agent-sdk/java/overview
+canonical-url: https://docs.6mm.com/de/sdk/agent-sdk/java/overview
+---
+
+<h2 id="official-repository">Offizielles Archiv</h2>
+
+Das Java SDK -Repository ist die Quelle der Wahrheit für SDK Quellcode, Release Notes, Anwendungsbeispiele und Implementierungsdetails:
+
+[6mm-com/agent-java-sdk] (https://github.com/6mm-com/agent-java-sdk)
+
+<h2 id="runtime">Laufzeit</h2>
+
+| Gegenstand | Wert |
+| --- | --- |
+| Minimum Java Version | Java 8+ |
+| Empfohlenes Bauwerkzeug | Maven 3.9+ |
+| Maven-Gruppe | `com.sixmm.exchange.sdk` |
+| Maven-Artefakt | `agent` |
+| Dokumentiertes Quell-Tag | `v0.1.1` |
+
+Das öffentliche GitHub-Repository ist Quellcode-Hosting, kein Maven-Abhängigkeitsrepository. Baue und installiere den getaggten Quellcode lokal oder veröffentliche das genehmigte Artefakt im privaten Maven-Repository deiner Organisation, bevor du es in Team-Builds verwendest.
+
+<h2 id="typical-backend-responsibilities">Typische Backend-Aufgaben</h2>
+
+- Validiere die Partnerbenutzersitzung.
+- Den Partnerbenutzer auf agentUserIdabbilden.
+- Call Bind vor den ersten Handels- oder Transferströmen.
+- Rufen Sie createEntryUrl für einmalige Vollstandort- SSOan.
+- Ruf createEmbedToken für Trading Widget Partner-Token-Modus an.
+- Verifizieren Sie Transfer-Webhooks und verarbeiten Sie sie idempotent.
+
+<h2 id="security-and-operational-rules">Sicherheits- und Betriebsregeln</h2>
+
+- Speichere `apiSecret` nur in einem Backend-Secret-Manager oder einer geschützten Umgebungsvariable.
+- Halten Sie die Serverzeit synchron, da signierte Anfragen Zeitstempel enthalten.
+- Behandle `agentOrderNo` als dauerhaften Idempotenzschlüssel und halte ihn global einzigartig.
+- Speichert `platformUserId` als Zeichenkette und bewahrt seine Beziehung zu `agentUserId`bei.
+- Abfrage des ursprünglichen Transfers, bevor man es nach einer Auszeit oder einem unsicheren Netzwerkergebnis erneut versucht.
+
+<h2 id="next-steps">Nächste Schritte</h2>
+
+- [Java Quick Start](/de/sdk/agent-sdk/java/quick-start): Installieren Sie die markierte Quellquelle und initialisieren Sie `AgentClient`.
+- [Create Embed Token](/de/sdk/agent-sdk/java/embed-token): Geben kurzlebige Zugangsdaten für Trading Widgetaus.
+- [Secrets & Signing](/de/sdk/security/secrets-signing): Verstehen Sie automatische HMAC Signieren und Geheimnishandhabung.
+- [Webhooks & Idempotency](/de/sdk/security/webhooks-idempotency): Verifizieren Rückrufe und verhindern doppelte Verarbeitung.

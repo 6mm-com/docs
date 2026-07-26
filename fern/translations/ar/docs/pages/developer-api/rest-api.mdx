@@ -1,0 +1,108 @@
+---
+title: "REST API"
+description: "راجع اتفاقيات 6MM REST API ، خيارات المصادقة، تنسيقات الطلبات، هياكل الردود، الأذونات، ومجموعات نقاط النهاية."
+slug: developer-api/rest-api
+canonical-url: https://docs.6mm.com/ar/developer-api/rest-api
+---
+
+<h2 id="public-endpoints">نقاط النهاية العامة</h2>
+
+| نقطة النهاية                   | الطريقة | المسار                                        | الوصف                                                    |
+| -------------------------- | ------ | ------------------------------------------- | -------------------------------------------------------------- |
+| نسخة الخدمة            | GET    | `/v1/version`                               | احصل على معلومات إصدار الخدمة                                |
+| وقت الخادم                | GET    | `/v1/time`                                  | احصل على وقت الخادم                                                |
+| تسجيل دخول المستخدم                 | POST   | `/v1/public/user/login`                     | استخدم اسم المستخدم وكلمة المرور للحصول على `accessToken`              |
+| رمز تحديث              | POST   | `/v1/public/user/refresh-token`             | تحديث حالة تسجيل الدخول عبر كوكي                                 |
+| تبادل تذاكر الوكيل      | POST   | `/v1/public/agent-sso/exchange-ticket`      | استبدل تذكرة دخول الوكيل إلى حالة تسجيل الدخول              |
+| تبادل رموز الوكيل المدمجة | POST   | `/v1/public/agent-sso/exchange-embed-token` | استبدل رمز تداول قصير العمر مدمج لحالة تسجيل الدخول |
+| تكوين الرموز       | GET    | `/v1/public/market/symbols`                 | احصل على الرموز، وقواعد التداول، وتكوين مستوى الرسوم         |
+| تكوين معدل التمويل | GET    | `/v1/public/market/funding-rate`            | تكوين معدل التمويل للاستعلام                               |
+| معدل التمويل الحالي       | GET    | `/v1/public/market/funding-rate/current`    | معدلات التمويل الحالية على شكل أرقام                                 |
+| تاريخ معدل التمويل       | GET    | `/v1/public/market/funding-rate/history`    | تاريخ معدل التمويل للاستفسار                                     |
+| كلاينز                     | GET    | `/v1/public/market/klines`                  | استعلام سعر التداول، سعر المؤشر، أو سعر العلامة Klines           |
+| لوحة المتصدرين في PnL            | GET    | `/v1/public/leaderboard/pnl`                | استعلام لوحة المتصدرين في PnL 7 / 30 / 90 يوما                          |
+
+<h2 id="private-user-endpoints">نقاط نهاية المستخدمين الخاصة</h2>
+
+ما لم يذكر خلاف ذلك، يمكن للنقاط النهائية التالية استخدام توقيع JWT أو API Key .
+
+| نقطة النهاية                 | الطريقة | المسار                                      | إذن   | الوصف                                 |
+| ------------------------ | ------ | ----------------------------------------- | ------------ | ------------------------------------------- |
+| معلومات المستخدم                | GET    | `/v1/private/user/info`                   | اقرأ         | استعلام ملف المستخدم الحالي                  |
+| أصول المستخدم              | GET    | `/v1/private/user/asset`                  | اقرأ         | استعلام رصيد المحفظة واستخدام الهامش       |
+| أنشئ listenKey         | POST   | `/v1/private/user/listen-key`             | اقرأ         | إنشاء مفتاح مصادقة WebSocket خاص |
+| تجديد listenKey          | PUT    | `/v1/private/user/listen-key`             | اقرأ         | تمديد صلاحية listenKey                   |
+| إغلاق listenKey          | DELETE | `/v1/private/user/listen-key`             | اقرأ         | إغلاق listenKey                             |
+| سجلات تغيير الحساب      | GET    | `/v1/private/user/account-change-log`     | اقرأ         | استعلام سجلات حركة الصناديق                 |
+| إحصائيات حجم الثلاثين يوما | GET    | `/v1/private/user/volume-stats`           | اقرأ         | استعلام حجم التداول والرسوم الأخيرة خلال 30 يوما |
+| تاريخ التوازن          | GET    | `/v1/private/user/balance-history`        | اقرأ         | تاريخ توازن الاستعلام                       |
+| نظرة عامة على التجارة           | GET    | `/v1/private/user/trade-overview`         | اقرأ         | استعلام PnL، الحجم، واتجاه الأصول          |
+| ملخص نظرة عامة على الأصول   | GET    | `/v1/private/user/asset/overview/summary` | اقرأ         | مقاييس ملخص الأصول للاستعلام                 |
+| نظرة عامة على الأصول     | GET    | `/v1/private/user/asset/overview/trend`   | اقرأ         | اتجاه الأصول الاستعلامية                           |
+| احفظ الرموز المفضلة    | POST   | `/v1/private/user/favorite-symbols`       | اقرأ         | الكتابة فوق الرموز المفضلة                  |
+| احصل على الرموز المفضلة     | GET    | `/v1/private/user/favorite-symbols`       | اقرأ         | استعلام الرموز المفضلة                      |
+| تسجيل الخروج                   | POST   | `/v1/private/user/logout`                 | JWT + كوكي | مسح حالة تسجيل الدخول                           |
+
+<h2 id="api-key-management-endpoints">API Key نقاط نهاية الإدارة</h2>
+
+API Key نقاط نهاية الإدارة تقبل فقط JWT.
+
+| نقطة النهاية            | الطريقة | المسار                                  | الوصف                                         |
+| ------------------- | ------ | ------------------------------------- | --------------------------------------------------- |
+| أنشئ API Key      | POST   | `/v1/private/user/api-key/create`     | إنشاء API Key؛ `apiSecret` يعاد مرة واحدة فقط   |
+| قائمة API Key        | GET    | `/v1/private/user/api-key/list`       | استعلام مفاتيح API المستخدم الحالي                       |
+| تحديث API Key      | PUT    | `/v1/private/user/api-key/update`     | تحديث التسمية، الأذونات، القائمة البيضاء IP ، والحالة |
+| حذف API Key      | POST   | `/v1/private/user/api-key/delete`     | حذف API Key محدد                          |
+| حذف جميع API المفاتيح | POST   | `/v1/private/user/api-key/delete-all` | احذف جميع مفاتيح المستخدم الحالي API             |
+
+<h2 id="order-endpoints">نقاط نهاية الترتيب</h2>
+
+نقاط نهاية الطلبات تتطلب إذن تداول.
+
+| نقطة النهاية                    | الطريقة | المسار                                  | الوصف                                                       |
+| --------------------------- | ------ | ------------------------------------- | ----------------------------------------------------------------- |
+| استعلام ترتيب واحد          | GET    | `/v1/private/order`                   | الاستعلام الدقيق من `symbol + orderId/clientOrderId`                   |
+| ترتيب الأماكن                 | POST   | `/v1/private/order/place`             | الحدود أو ترتيب السوق                                             |
+| ترتيب حالة المكان       | POST   | `/v1/private/order/place-condition`   | أوامر وقف الخسارة، أخذ الربح، الوقف المتتبع، وأوامر الشروط الأخرى |
+| ترتيب استراتيجية الأماكن        | POST   | `/v1/private/order/place-strategy`    | OTO / OCO / OTOCO ترتيب الاستراتيجية                                  |
+| أوامر التوزيع الدفعي          | POST   | `/v1/private/order/batch-place`       | تقديم عدة أوامر عادية                                     |
+| إلغاء الطلب                | POST   | `/v1/private/order/cancel`            | إلغاء ترتيب عادي محدد                                   |
+| أمر التعديل                 | POST   | `/v1/private/order/move`              | تعديل سعر الطلب المنتظر والكمية العادية                    |
+| أوامر التعديل الدفعي          | POST   | `/v1/private/order/batch-move`        | تعديل دفعي للأوامر المعلقة العادية لنفس الرمز            |
+| إلغاء الطلبات دفعة واحدة         | POST   | `/v1/private/order/batch-cancel`      | إلغاء الأوامر العادية دفعة واحدة                                        |
+| إلغاء كل شيء                  | POST   | `/v1/private/order/batch-cancel-all`  | تلغي الطلبات دفعة حسب النوع                                       |
+| إلغاء ترتيب الشرط      | POST   | `/v1/private/order/cancel-condition`  | إلغاء ترتيب شرط محدد                                |
+| الترتيبات العادية الحالية       | GET    | `/v1/private/order/current`           | استعلام الأوامر المعلقة العادية الحالية                               |
+| ترتيبات الحالة الحالية    | GET    | `/v1/private/order/current-condition` | استعلام ترتيبات الشروط الحالية غير المفعلة                        |
+| الترتيبات الطبيعية التاريخية    | GET    | `/v1/private/order/history`           | الترتيبات التاريخية العادية على الصفحات                                 |
+| ترتيبات الحالة التاريخية | GET    | `/v1/private/order/history-condition` | ترتيبات الحالة التاريخية على الصفحات                              |
+| سجلات التجارة               | GET    | `/v1/private/order/trades`            | سجلات تجارة الصفحات                                            |
+| تفاصيل ترتيب الاستراتيجية       | GET    | `/v1/private/order/strategy`          | ترتيب استراتيجية الاستعلام والترتيبات الفرعية                               |
+
+<h2 id="position-endpoints">نقاط نهاية المراكز</h2>
+
+نقاط نهاية المراكز تتطلب إذن تداول.
+
+| نقطة النهاية          | الطريقة | المسار                               | الوصف                                  |
+| ----------------- | ------ | ---------------------------------- | -------------------------------------------- |
+| وضع الهامش المعين   | POST   | `/v1/private/position/margin-mode` | عزل المفتاح / هامش التقاطع               |
+| رافعة التعيين      | POST   | `/v1/private/position/leverage`    | أداة الرمز المعين                          |
+| إعدادات الوضع | GET    | `/v1/private/position/settings`    | استعلام وضع الرافعة المالية ووضع الهامش لرمز  |
+| المناصب الحالية | GET    | `/v1/private/position/positions`   | استعلام المواقع الحالية                      |
+| تاريخ الوظيفة  | GET    | `/v1/private/position/history`     | استعلام المواقع التاريخية والسجلات القريبة |
+
+<h2 id="endpoint-groups">مجموعات نقاط النهاية</h2>
+
+- [نقاط النهاية العامة] (/developer-api/rest-api/public-endpoints)
+- [المستخدم والحساب](/ar/developer-api/rest-api/user-and-account)
+- [الأوامر] (/developer-api/rest-api/order)
+- [المواقع] (/developer-api/rest-api/position)
+- [بيانات السوق] (/developer-api/rest-api/market-data)
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">صفحات ذات صلة</h2>
+
+- [نقاط النهاية العامة](/ar/developer-api/rest-api/public-endpoints)
+- [الترتيب](/ar/developer-api/rest-api/order)
+- [الموقع](/ar/developer-api/rest-api/position)
+- [بيانات السوق](/ar/developer-api/rest-api/market-data)
+<!-- sixmm-localized-link-repair:end -->

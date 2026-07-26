@@ -1,0 +1,100 @@
+---
+title: "REST API"
+description: "Überprüfen Sie die 6MM REST API Konventionen, Authentifizierungsoptionen, Anfrageformate, Antwortstrukturen, Berechtigungen und Endpunktgruppen."
+slug: developer-api/rest-api
+canonical-url: https://docs.6mm.com/de/developer-api/rest-api
+---
+
+<h2 id="public-endpoints">Öffentliche Endpunkte</h2>
+
+| Endpunkt                   | Methode | Verlauf                                        | Beschreibung                                                    |
+| -------------------------- | ------ | ------------------------------------------- | -------------------------------------------------------------- |
+| Dienstversion            | GET    | `/v1/version`                               | Informationen zur Serviceversion erhalten                                |
+| Serverzeit                | GET    | `/v1/time`                                  | Erhalte Serverzeit                                                |
+| Benutzeranmeldung                 | POST   | `/v1/public/user/login`                     | Verwenden Sie Benutzername und Passwort, um `accessToken`              |
+| Refresh Token              | POST   | `/v1/public/user/refresh-token`             | Login-Status über Cookie aktualisieren                                 |
+| Agent Ticket-Austausch      | POST   | `/v1/public/agent-sso/exchange-ticket`      | Tauschen Sie ein Agenten-Eintrittsticket gegen den Login-Status ein              |
+| Agent Embed Token Exchange | POST   | `/v1/public/agent-sso/exchange-embed-token` | Tauschen Sie ein Embedded Trading Short-Live-Token gegen den Login-Status aus |
+| Symbolkonfiguration       | GET    | `/v1/public/market/symbols`                 | Erhalten Sie Symbole, Handelsregeln und Gebühren-Stufenkonfiguration         |
+| Konfiguration des Förderzinssatzes | GET    | `/v1/public/market/funding-rate`            | Abfrage-Finanzierungsrate-Konfiguration                               |
+| Aktueller Fördersatz       | GET    | `/v1/public/market/funding-rate/current`    | Aktuelle Förderraten im Seitentakt                                 |
+| Geschichte des Fördersatzes       | GET    | `/v1/public/market/funding-rate/history`    | Abfrage der Finanzierungsrate-Historie                                     |
+| Klines                     | GET    | `/v1/public/market/klines`                  | Abfrage von Handelspreis, Indexpreis oder Markpreis Klines           |
+| PnL-Bestenliste            | GET    | `/v1/public/leaderboard/pnl`                | Abfrage 7 / 30 / 90 Tage PnL-Bestenliste                          |
+
+<h2 id="private-user-endpoints">Private Benutzer-Endpunkte</h2>
+
+Sofern nicht anders angegeben, können die folgenden Endpunkte JWT oder API Key Signing verwenden.
+
+| Endpunkt                 | Methode | Verlauf                                      | Genehmigung   | Beschreibung                                 |
+| ------------------------ | ------ | ----------------------------------------- | ------------ | ------------------------------------------- |
+| Benutzerinformationen                | GET    | `/v1/private/user/info`                   | Lesen         | Aktuelles Benutzerprofil abfragen                  |
+| Nutzerressourcen              | GET    | `/v1/private/user/asset`                  | Lesen         | Abfragen von Wallet-Saldo und Margennutzung       |
+| Erstellen Sie listenKey         | POST   | `/v1/private/user/listen-key`             | Lesen         | Private WebSocket Authentifizierungsschlüssel erstellen |
+| Erneuern Sie listenKey          | PUT    | `/v1/private/user/listen-key`             | Lesen         | Verlängern listenKey Gültigkeit                   |
+| Schließen Sie listenKey          | DELETE | `/v1/private/user/listen-key`             | Lesen         | Schließen Sie listenKey                             |
+| Kontoänderungsprotokolle      | GET    | `/v1/private/user/account-change-log`     | Lesen         | Abfrage von Fondsbewegungsaufzeichnungen                 |
+| 30-Tage-Volumenstatistiken | GET    | `/v1/private/user/volume-stats`           | Lesen         | Abfrage des aktuellen 30-Tage-Handelsvolumens und der Gebühren |
+| Bilanzgeschichte          | GET    | `/v1/private/user/balance-history`        | Lesen         | Abfragebilanz                       |
+| Handelsübersicht           | GET    | `/v1/private/user/trade-overview`         | Lesen         | Abfrage von PnL, Volumen und Vermögenstrend          |
+| Zusammenfassung der Vermögenswerte   | GET    | `/v1/private/user/asset/overview/summary` | Lesen         | Abfrage von Asset-Zusammenfassungsmetriken                 |
+| Der Trend zur Vermögensübersicht     | GET    | `/v1/private/user/asset/overview/trend`   | Lesen         | Abfrage-Asset-Trend                           |
+| Lieblingssymbole speichern    | POST   | `/v1/private/user/favorite-symbols`       | Lesen         | Lieblingssymbole überschreiben                  |
+| Erhalten Sie Lieblingssymbole     | GET    | `/v1/private/user/favorite-symbols`       | Lesen         | Abfrage von Lieblingssymbolen                      |
+| Ausloggen                   | POST   | `/v1/private/user/logout`                 | JWT + Keks | Anmeldezustand löschen                           |
+
+<h2 id="api-key-management-endpoints">API Key Management-Endpunkte</h2>
+
+API Key Management-Endpunkte akzeptieren nur JWT.
+
+| Endpunkt            | Methode | Verlauf                                  | Beschreibung                                         |
+| ------------------- | ------ | ------------------------------------- | --------------------------------------------------- |
+| Erstellen Sie API Key      | POST   | `/v1/private/user/api-key/create`     | Erstellen Sie API Key; `apiSecret` wird nur einmal zurückgegeben   |
+| API Key Liste        | GET    | `/v1/private/user/api-key/list`       | Abfrage der API Schlüssel des aktuellen Nutzers                       |
+| Update API Key      | PUT    | `/v1/private/user/api-key/update`     | Update-Label, Berechtigungen, IP Whitelist und Status |
+| Lösche API Key      | POST   | `/v1/private/user/api-key/delete`     | Löschen Sie eine bestimmte API Key                          |
+| Alle API Schlüssel löschen | POST   | `/v1/private/user/api-key/delete-all` | Löschen Sie alle API Schlüssel des aktuellen Benutzers             |
+
+<h2 id="order-endpoints">Ordnungs-Endpunkte</h2>
+
+Order-Endpunkte erfordern eine Handelserlaubnis.
+
+| Endpunkt                    | Methode | Verlauf                                  | Beschreibung                                                       |
+| --------------------------- | ------ | ------------------------------------- | ----------------------------------------------------------------- |
+| Abfrage einzelner Reihenfolge          | GET    | `/v1/private/order`                   | Genaue Abfrage von `symbol + orderId/clientOrderId`                   |
+| Platzreihenfolge                 | POST   | `/v1/private/order/place`             | Limit- oder Marktordnung                                             |
+| Platzzustandsreihenfolge       | POST   | `/v1/private/order/place-condition`   | Stop-Loss-, Take-Profit-, Trailing-Stop- und andere Zustandsaufträge |
+| Strategische Reihenfolge platzieren        | POST   | `/v1/private/order/place-strategy`    | OTO / OCO / OTOCO Strategiereihenfolge                                  |
+| Chargenbestellungen          | POST   | `/v1/private/order/batch-place`       | Reichen Sie mehrere normale Bestellungen ein                                     |
+| Bestellung stornieren                | POST   | `/v1/private/order/cancel`            | Storniere eine bestimmte normale Ordnung                                   |
+| Änderungsanordnung                 | POST   | `/v1/private/order/move`              | Normale ausstehende Bestellpreise und -menge ändern                    |
+| Chargenänderungsanordnungen          | POST   | `/v1/private/order/batch-move`        | Batch-modifiziere normale ausstehende Bestellungen für dasselbe Symbol            |
+| Bestellungen in Chargen stornieren         | POST   | `/v1/private/order/batch-cancel`      | Batch-Stornierung von Normalbestellungen                                        |
+| Alle abbrechen                  | POST   | `/v1/private/order/batch-cancel-all`  | Bestellungen nach Typ stornieren                                       |
+| Bedingungsreihenfolge stornieren      | POST   | `/v1/private/order/cancel-condition`  | Storniere eine bestimmte Bedingungsordnung                                |
+| Aktuelle Normalordnungen       | GET    | `/v1/private/order/current`           | Abfrage aktueller normaler, ausstehender Bestellungen                               |
+| Aktuelle Bestellungen    | GET    | `/v1/private/order/current-condition` | Abfrage aktueller, nicht ausgelöster Konditionsreihenfolge                        |
+| Historische Normalordnungen    | GET    | `/v1/private/order/history`           | Historische Normalordnungen der Seiten                                 |
+| Historische Zustandsordnungen | GET    | `/v1/private/order/history-condition` | Paginierte historische Zustandsordnungen                              |
+| Handelsrekorde               | GET    | `/v1/private/order/trades`            | Paginate-Handelsaufzeichnungen                                            |
+| Details der Strategiereihenfolge       | GET    | `/v1/private/order/strategy`          | Abfragestrategie-Reihenfolge und Unterordnungen                               |
+
+<h2 id="position-endpoints">Positionsendpunkte</h2>
+
+Positionsendpunkte erfordern eine Handelserlaubnis.
+
+| Endpunkt          | Methode | Verlauf                               | Beschreibung                                  |
+| ----------------- | ------ | ---------------------------------- | -------------------------------------------- |
+| Set-Margin-Modus   | POST   | `/v1/private/position/margin-mode` | Schalter isoliert / Kreuzmarge               |
+| Hebelwirkung setzen      | POST   | `/v1/private/position/leverage`    | Set-Symbol-Hebelwirkung                          |
+| Positionseinstellungen | GET    | `/v1/private/position/settings`    | Abfrage von Hebelwirkung und Margin-Modus für ein Symbol  |
+| Aktuelle Positionen | GET    | `/v1/private/position/positions`   | Aktuelle Positionen abfragen                      |
+| Positionsgeschichte  | GET    | `/v1/private/position/history`     | Abfrage historischer Positionen und Close Records |
+
+<h2 id="endpoint-groups">Endpunktgruppen</h2>
+
+- [Öffentliche Endpunkte](/de/developer-api/rest-api/public-endpoints)
+- [Benutzer & Konto](/de/developer-api/rest-api/user-and-account)
+- [Befehle](/de/developer-api/rest-api/order)
+- [Positionen](/de/developer-api/rest-api/position)
+- [Marktdaten](/de/developer-api/rest-api/market-data)

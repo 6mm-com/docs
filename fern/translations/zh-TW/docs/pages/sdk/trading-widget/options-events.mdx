@@ -1,0 +1,77 @@
+---
+title: "選項與活動"
+subtitle: "初始化選項、執行時事件及常見錯誤碼。"
+slug: sdk/trading-widget/options-events
+canonical-url: https://docs.6mm.com/zh-TW/sdk/trading-widget/options-events
+---
+
+<h2 id="options">選擇權</h2>
+
+| 場地 | 類型 | 預設 | 註釋 |
+| --- | --- | --- | --- |
+| baseUrl | string | SDK 文字起源 | iframe 網域。明確傳遞到合作夥伴頁面。 |
+| 象徵 | string | BTCUSDT | 標準化為大寫並以條帶表示 - / _。 |
+| 主題 | 黑暗 \| 光 | 黑暗 | 初始主題參數。 |
+| 地點 | en \| 美國 \| Zh-CN | 瀏覽器/預設 | 支援英文及簡體中文。 |
+| 佈局 | 預設 \| 緊湊型 | 預設 | 保留版面配置選項。 |
+| 顯示 | object | `showHeader: false`， `showTicker: false`， `hidden: []` | 控制系統包含貝殼區域和高階交易容器。 |
+| 認證 | object | 沒有 | 使用 partner-token 來整合新的 SSO 。 |
+
+<h2 id="display-controls">顯示控制</h2>
+
+`display` 控制內嵌的交易頁面殼層與高階容器。在合作夥伴嵌入中，PC 標頭和底部市場行情條預設隱藏。
+
+```js
+display: {
+  showHeader: false,
+  showTicker: false,
+  hidden: ['chart', 'orderBook'],
+}
+```
+
+| 場地 | 類型 | 預設 | 註釋 |
+| --- | --- | --- | --- |
+| showHeader | boolean | 錯誤 | 是否要在 iframe 中顯示 PC 嵌入標頭。 |
+| showTicker | boolean | 錯誤 | 是否要在嵌入殼層中顯示底盤股票。 |
+| 隱藏 | string[] | [] | 在交易頁面隱藏高階容器。 |
+
+支持 `display.hidden` 價值觀：
+
+| 價值 | 容器 |
+| --- | --- |
+| 排行榜 | 圖表容器 |
+| orderBook | 訂單簿容器 |
+| orderForm | 訂單表單面板 |
+| 職位 | 底層職位與開放訂單面板 |
+| 帳號 | 帳戶資產容器 |
+
+`display.hidden` 只會隱藏整個容器。它不會隱藏容器內的個別按鈕、欄位或工具。不對應到當前視窗的值會被忽略。
+
+<h2 id="events">活動</h2>
+
+| 活動 | 觸發 |
+| --- | --- |
+| 準備好了 | iframe 初始化完成。 |
+| 錯誤 | SDK、iframe或認證錯誤。 |
+| state_changed | SDK 生命週期狀態改變了。 |
+| auth_state_changed | 夥伴代幣認證狀態變更。 |
+| symbol_changed | 實際的 iframe 符號已經改變。 |
+| locale_changed | 實際的 iframe 地點有變動。 |
+| order_created | 使用者在 iframe 內建立了訂單。 |
+| order_failed | 訂單提交失敗。 |
+| 已毀滅 | SDK 個實例被摧毀了。 |
+
+<h2 id="related-widget-guides">相關小工具指南</h2>
+
+- [Trading Widget 快速入門 ]（/sdk/trading-widget/quick-start）
+- [認證]（/sdk/trading-widget/authentication）
+- [實例方法]（/sdk/trading-widget/instance-methods）
+- [故障排除]（/sdk/security/troubleshooting）
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">相關頁面</h2>
+
+- [嵌入 6MM Trading Widget：快速開始](/zh-TW/sdk/trading-widget/quick-start)
+- [Trading Widget 認證](/zh-TW/sdk/trading-widget/authentication)
+- [實例方法](/zh-TW/sdk/trading-widget/instance-methods)
+- [SDK 整合故障排除](/zh-TW/sdk/security/troubleshooting)
+<!-- sixmm-localized-link-repair:end -->

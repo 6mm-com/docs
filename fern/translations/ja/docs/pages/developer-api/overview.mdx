@@ -1,0 +1,44 @@
+---
+title: "6MM 開発者 API"
+subtitle: "環境、認証、署名、REST APIs、WebSocketストリーム、トラブルシューティングを横断した統合を計画6MM APIしましょう。"
+slug: developer-api/overview
+canonical-url: https://docs.6mm.com/ja/developer-api/overview
+---
+
+開発者セクションは、 6MM APIsと直接統合するバックエンドエンジニアやプラットフォームチーム向けです。慣習、セキュリティモデル、 REST リソース、ストリーミングチャンネル、運用チェックなど、本番環境での利用前に必要な点について説明しています。
+
+<h2 id="recommended-integration-path">推奨統合経路</h2>
+
+<CardGroup cols={2}>
+<Card title="統合概要" icon="fa-duotone fa-diagram-project" href="/ja/developer-api/integration-overview">
+APIアクセスモデルと推奨される接続順序を理解しましょう。
+</Card>
+<Card title="環境と慣習" icon="fa-duotone fa-server" href="/ja/developer-api/environments-and-common-conventions">
+基本URL、タイムスタンプ、数値フィールド、レスポンス形式を確認しましょう。
+</Card>
+<Card title="認証と署名" icon="fa-duotone fa-shield-keyhole" href="/ja/developer-api/request-signing">
+JWTアクセス、API鍵、HMAC署名の準備をしてください。
+</Card>
+<Card title="REST API" icon="fa-duotone fa-brackets-curly" href="/ja/developer-api/rest-api">
+口座、注文、ポジション、市場データのエンドポイントを探索してください。
+</Card>
+</CardGroup>
+
+<h2 id="documentation-areas">文書化エリア</h2>
+
+| 面積 | 内容 |
+| --- | --- |
+| 統合設定 | サービスアドレス、リクエスト慣習、レスポンス形状、アクセスモード。 |
+| 認証とセキュリティ | JWT、 API Key 権限、 HMAC 署名、リプレイ保護、時間同期などです。 |
+| REST API | 公開エンドポイント、ユーザー/アカウントデータ、注文、ポジション、市場データなどです。 |
+| WebSocket | 接続ライフサイクル、公開市場ストリーム、プライベートユーザーストリーム。 |
+| 参照とトラブルシューティング | 列挙、エラーコード、そして実践的な統合の推奨事項。 |
+
+<h2 id="production-checklist">生産チェックリスト</h2>
+
+- 秘密 API バックエンドにのみ保存する。
+- 署名リクエスト前のサーバー時間を同期する。
+- ページに明示的に別記されていない限り、すべての数値精度フィールドを文字列として扱います。
+- 冪等性、リクエストID、秩序フローに関する構造化されたログを使用します。
+- 運用システムで最新の状態を保つ必要がある状態のために WebSocket ストリームに加入する。
+- エラーコードを確認し、起動前に再試行を行うこと。

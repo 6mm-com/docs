@@ -1,0 +1,102 @@
+---
+title: "Akses Akun Trading"
+description: "Pahami model registrasi dan akses akun yang dikelola mitra yang digunakan untuk menghubungkan pengguna ke perdagangan 6MM sambil mempertahankan batas tanggung jawab."
+slug: trading/getting-started/authentication
+canonical-url: https://docs.6mm.com/id/trading/getting-started/authentication
+---
+
+6MM mengadopsi model registrasi dan akses yang dikelola mitra, dirancang untuk menyeimbangkan pengalaman pengguna yang mulus dengan pemisahan jelas antara kepemilikan pengguna dan tanggung jawab platform.
+
+* 6MM tidak menyediakan pendaftaran mandiri secara publik.
+* Semua onboarding pengguna diinisiasi dan dikelola secara eksklusif oleh agen resmi atau platform mitra.
+
+***
+
+<h2 id="registration-model">Model Registrasi</h2>
+
+<h2 id="partner-only-registration">Pendaftaran Khusus Mitra</h2>
+
+6MM mendukung satu model pendaftaran:
+
+* Pengguna hanya terdaftar melalui agen atau platform mitra
+* Tidak ada pendaftaran langsung pada 6MM
+* Identitas pengguna, pembuatan akun, dan manajemen siklus hidup sepenuhnya dikendalikan oleh mitra
+
+Setelah pendaftaran, mitra membuka titik masuk 6MM dalam aplikasi mereka sendiri, memungkinkan pengguna mengakses pengalaman trading yang didukung 6MM.
+
+6MM tidak secara independen mengumpulkan atau mengelola informasi identitas pengguna akhir.
+
+***
+
+<h2 id="login-methods">Metode Login</h2>
+
+Untuk mengakomodasi arsitektur aplikasi mitra yang berbeda dan kebutuhan pengalaman pengguna, 6MM mendukung dua metode login, keduanya dimulai melalui platform mitra.
+
+***
+
+<h2 id="login-method-1-partner-embedded-access">Metode Login 1: Akses Tertanam Mitra</h2>
+
+Dalam model integrasi utama, pengguna mengakses 6MM langsung dari aplikasi mitra.
+
+* Pengguna memasukkan 6MM melalui titik masuk tertanam yang disediakan oleh agen atau mitra
+* Otentikasi sepenuhnya ditangani oleh mitra
+* Token akses atau kredensial sesi diteruskan secara aman ke 6MM
+* Tidak diperlukan login 6MM terpisah
+
+Metode ini memberikan pengalaman yang paling mulus dan direkomendasikan untuk aplikasi mitra yang sangat terintegrasi.
+
+***
+
+<h2 id="login-method-2-6mm-account-login-partner-issued-credentials">Metode Login 2: Login Akun 6MM (Kredensial yang Dikeluarkan Mitra)</h2>
+
+Karena perbedaan kemampuan aplikasi mitra dan lingkungan perangkat, 6MM juga menyediakan antarmuka Web dan mobile yang independen, dengan aplikasi native direncanakan untuk rilis mendatang.
+
+Dalam model ini:
+
+* Pengguna pertama memasukkan 6MM melalui aplikasi mitra
+* Mitra mengeluarkan akun login dan kata sandi khusus 6MMkepada pengguna
+* Pengguna kemudian dapat masuk langsung melalui:
+  * [https://app.6mm.com](https://app.6mm.com/)
+  * Antarmuka web yang dioptimalkan untuk mobile
+  * Aplikasi 6MM resmi di masa depan
+
+Pendekatan ini memungkinkan peningkatan kinerja interaksi dan pengalaman pengguna di berbagai perangkat.
+
+> Penting:\
+> Semua kredensial login 6MM dibuat, diterbitkan, dan dikelola oleh mitra.\
+> 6MM tidak memverifikasi identitas pengguna secara independen atau memelihara data profil pengguna.
+
+***
+
+<h2 id="user-ownership-and-data-responsibility">Kepemilikan Pengguna dan Tanggung Jawab Data</h2>
+
+Terlepas dari metode login yang digunakan:
+
+* Semua pengguna dimiliki dan dikelola oleh mitra
+* Data identitas pengguna tetap berada dalam sistem mitra
+* 6MM hanya mempertahankan identifikasi teknis minimum yang diperlukan untuk:
+  * Eksekusi perdagangan
+  * Perhitungan margin dan risiko
+  * Isolasi posisi dan akun
+
+6MM tidak mengakses, menganalisis, atau memonetisasi informasi identitas pengguna.
+
+***
+
+<h2 id="design-principles">Prinsip Desain</h2>
+
+Sistem autentikasi dan akses 6MM dibangun berdasarkan prinsip-prinsip berikut:
+
+* Sumber pendaftaran tunggal: hanya mitra
+* Berbagai metode akses untuk pengalaman pengguna yang lebih baik
+* Pemisahan yang jelas antara kepemilikan pengguna dan infrastruktur perdagangan
+* Tidak ada akuisisi langsung pengguna atau persaingan dengan mitra
+
+Model ini memastikan bahwa 6MM berfungsi sebagai infrastruktur perdagangan netral yang mengutamakan mitra, sambil tetap memberikan pengalaman trading yang konsisten dan berkualitas tinggi di berbagai platform dan perangkat.
+
+<h2 id="implementation-guides">Panduan implementasi</h2>
+
+- [Autentikasi API Pengembang](/id/developer-api/authentication): JWT dan autentikasi API Key untuk integrasi.
+- [Trading Widget Autentikasi](/id/sdk/trading-widget/authentication): mode token mitra dan kompatibilitas.
+- [Agent SDK Ikhtisar](/id/sdk/agent-sdk/overview): pengikatan pengguna backend dan penerbitan kredensial.
+- [Arsitektur & Tanggung Jawab](/id/solutions/architecture-responsibilities): batas kepemilikan mitra dan 6MM .

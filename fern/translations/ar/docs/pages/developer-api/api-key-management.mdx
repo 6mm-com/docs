@@ -1,0 +1,135 @@
+---
+title: "إدارة API Key"
+description: "إنشاء وفحص وتحديث وإلغاء مفاتيح 6MM API مع تطبيق الأذونات المناسبة، وقيود IP ، والتخزين السري، وممارسات التدوير."
+slug: developer-api/api-key-management
+canonical-url: https://docs.6mm.com/ar/developer-api/api-key-management
+---
+
+API Key نقاط النهاية الإدارية تقبل فقط JWT المصادقة.
+
+<h2 id="create-api-key">أنشئ API Key</h2>
+
+```http
+POST /v1/private/user/api-key/create
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+معايير الطلب:
+
+| المعلمة     | النوع      | مطلوب | الوصف                                                           |
+| ------------- | --------- | -------- | --------------------------------------------------------------------- |
+| `label`       | string    | نعم      | API Key الملصق، الطول 1 - 64                                          |
+| `permissions` | الاستخبارات       | لا       | قناع بت الإذن، `1`الافتراضي، النطاق `1` - `7`                      |
+| `ipWhitelist` | الوترية\[] | لا       | IP القائمة البيضاء، حتى 20 إدخالا. إذا تم حذفها، فإن IP المصدر غير مقيد |
+
+مثال على الطلب:
+
+```bash
+curl -X POST https://api.6mm.com/v1/private/user/api-key/create \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -d '{
+    "label": "external-service-prod",
+    "permissions": 3,
+    "ipWhitelist": ["203.0.113.10"]
+  }'
+```
+
+مثال على الرد:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "apiKey": "fx_xxxxxxxxxxxxxxxxxxxxxxxx",
+    "apiSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  },
+  "requestId": "req-api-key"
+}
+```
+
+يتم إرجاع `apiSecret` مرة واحدة فقط عند إنشاء API Key. خزنها فورا في نظام إدارة سري. لا تكتبها في مستودعات أو سجلات الشيفرة المصدرية.
+
+يمكن لكل مستخدم إنشاء ما يصل إلى 30 مفتاحا API .
+
+<h2 id="list-api-keys">قائمة API مفاتيح</h2>
+
+```http
+GET /v1/private/user/api-key/list
+Authorization: Bearer YOUR_ACCESS_TOKEN
+```
+
+حقول الاستجابة:
+
+| الميدان                | النوع      | الوصف                       |
+| -------------------- | --------- | --------------------------------- |
+| `list[].id`          | string    | API Key ID                        |
+| `list[].label`       | string    | العلامة التجارية                             |
+| `list[].apiKey`      | string    | معرف API Key العام         |
+| `list[].permissions` | الاستخبارات       | قناع البت الخاص بالإذن                |
+| `list[].ipWhitelist` | الوترية\[] | IP القائمة البيضاء                      |
+| `list[].status`      | الاستخبارات       | الحالة: `1` مفعل، `0` معطلة |
+| `list[].lastUsedAt`  | int64     | آخر وقت مستخدم                    |
+| `list[].createdAt`   | int64     | زمن الخلق                     |
+
+<h2 id="update-api-key">تحديث API Key</h2>
+
+```http
+PUT /v1/private/user/api-key/update
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+معايير الطلب:
+
+| المعلمة     | النوع      | مطلوب | الوصف               |
+| ------------- | --------- | -------- | ------------------------- |
+| `id`          | string    | نعم      | API Key ID                |
+| `label`       | string    | لا       | شركة الإنتاج الجديدة                 |
+| `permissions` | الاستخبارات       | لا       | قناع بت للإذن الجديد    |
+| `ipWhitelist` | الوترية\[] | لا       | القائمة البيضاء الجديدة IP          |
+| `status`      | الاستخبارات       | لا       | `1` مفعل، `0` معطلة |
+
+<h2 id="delete-api-key">حذف API Key</h2>
+
+```http
+POST /v1/private/user/api-key/delete
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+نص الطلب:
+
+```json
+{ "id": "1001" }
+```
+
+<h2 id="delete-all-api-keys">حذف جميع API المفاتيح</h2>
+
+```http
+POST /v1/private/user/api-key/delete-all
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+حقول الاستجابة:
+
+| الميدان     | النوع  | الوصف                |
+| --------- | ----- | -------------------------- |
+| `deleted` | int64 | عدد المفاتيح API المحذوفة |
+
+<h2 id="related-security-guides">أدلة أمنية ذات صلة</h2>
+
+- [توثيق](/ar/developer-api/authentication)
+- [توقيع الطلب] (/developer-api/request-signing)
+- [أسرار وإشارة] (/sdk/security/secrets-signing)
+- [توصيات التكامل] (/developer-api/integration-recommendations)
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">صفحات ذات صلة</h2>
+
+- [توقيع طلبات التوقيع](/ar/developer-api/request-signing)
+- [Agent SDK أسرار وتوقيع HMAC](/ar/sdk/security/secrets-signing)
+- [توصيات التكامل](/ar/developer-api/integration-recommendations)
+<!-- sixmm-localized-link-repair:end -->

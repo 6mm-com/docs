@@ -1,0 +1,56 @@
+---
+title: "埋め込みトークンの作成"
+subtitle: "パートナートークンモード用の短命な埋め込みトークン Trading Widget 発行してください。"
+slug: sdk/agent-sdk/java/embed-token
+canonical-url: https://docs.6mm.com/ja/sdk/agent-sdk/java/embed-token
+---
+
+<h2 id="sdk-call">SDK</h2>
+
+パートナーユーザーセッションを検証した後、バックエンドから埋め込みトークンを作成します。ブラウザはエンドポイントを呼び出し、エンドポイントはAgent SDKを通じて6MMを呼び出します。
+
+```java
+CreateEmbedTokenResponse resp = client.createEmbedToken(
+        CreateEmbedTokenRequest.of("agent-user-001", "tw_abc123")
+                .withSymbol("ETHUSDT"));
+
+System.out.println(resp.embedToken);
+System.out.println(resp.expireAt);
+```
+
+> **一度限りの資格証明**
+>
+> embedToken は短期間で一度きりの使用です。 URL クエリ文字列には置かないでください。
+
+<h2 id="backend-endpoint-example">バックエンドエンドポイントの例</h2>
+
+```java
+@PostMapping("/api/trading/embed-token")
+public EmbedTokenView createEmbedToken(@RequestBody EmbedTokenRequest request,
+                                       PartnerSession session) {
+    String agentUserId = session.getAgentUserId();
+    CreateEmbedTokenResponse resp = agentClient.createEmbedToken(
+            CreateEmbedTokenRequest.of(agentUserId, request.getChannelId())
+                    .withSymbol(request.getSymbol()));
+
+    return new EmbedTokenView(resp.embedToken, resp.expireAt, request.getChannelId());
+}
+```
+
+Trading Widgetトークン提供者が必要とするフィールドのみを返してください。apiSecret、生の署名フィールド、内部サービス構成は返さないでください。
+
+<h2 id="failure-handling">故障処理</h2>
+
+| 状態 | 推奨取り扱い |
+| --- | --- |
+| ユーザーセッションが失われているか、期限切れになっています | パートナーエンドポイントから401を返し、ユーザーに再度サインインを求めます。 |
+| エージェントユーザーは拘束されません | まずユーザーをバインドし、その後トークン作成を再試行してください。 |
+| 6MM 一時的なエラーを返します | 再試行可能なエラーをフロントエンドに返し、サポートのためにログ requestId してください。 |
+| channelId ウィジェットインスタンスと一致しません | リクエストを拒否してウィジェットセッションを再作成してください。 |
+
+<h2 id="related-documentation">関連文書</h2>
+
+- [Trading Widget 認証](/ja/sdk/trading-widget/authentication):パートナーエンドポイントに `tokenProvider` 接続します。
+- [Java クイックスタート](/ja/sdk/agent-sdk/java/quick-start)インストールと初期化 `AgentClient`。
+- [秘密と署名](/ja/sdk/security/secrets-signing)エージェントの秘密を守る API 。
+- [ウェブフックと冪等性](/ja/sdk/security/webhooks-idempotency):統合のコールバック側を確保してください。

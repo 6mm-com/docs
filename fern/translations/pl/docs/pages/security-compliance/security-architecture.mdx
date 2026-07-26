@@ -1,0 +1,48 @@
+---
+title: "Architektura bezpieczeństwa platformy"
+subtitle: "Zrozum warstwy bezpieczeństwa stosowane w 6MM infrastrukturze handlowej, APIs, SDKs, webhookach i integracjach partnerów."
+slug: security-compliance/security-architecture
+canonical-url: https://docs.6mm.com/pl/security-compliance/security-architecture
+---
+
+6MM dokumentacja bezpieczeństwa koncentruje się na gotowości partnerów do produkcji. Celem jest utrzymanie stabilnej infrastruktury handlowej przy jednoczesnym jasnym określeniu granic odpowiedzialności.
+
+<h2 id="security-layers">Warstwy bezpieczeństwa</h2>
+
+| Warstwa | Skupienie |
+| --- | --- |
+| Infrastruktura | Izolacja sieci, szyfrowana komunikacja usług, monitorowanie i przełączanie awaryjne. |
+| Systemy handlowe | Deterministyczne dopasowywanie, kontrole marginesów, kontrola ryzyka i zapobieganie nadużyciom. |
+| Bezpieczeństwo integracji | API klucze, podpisy HMAC , podpisy webhooków, ochronę przed powtórkami oraz sekrety tylko w backendzie. |
+| Operacje partnerskie | Weryfikacja sesji użytkownika, przechowywanie zasobów, obsługa klienta oraz lokalne regulacje zgodności. |
+
+<h2 id="partner-responsibilities">Obowiązki partnerów</h2>
+
+- Zachowanie API sekretów i kluczy logowania w przeglądarkach i aplikacjach mobilnych.
+- Weryfikacja sesji partnera przed wydaniem danych uwierzytelniających do transakcji.
+- Implementacja idempotencji webhooków i kontroli stanu terminala.
+- Prowadzenie dzienników operacyjnych dla przepływów kont, zamówień, transferów i webhooków.
+
+<h2 id="integration-trust-boundaries">Granice zaufania integracyjnego</h2>
+
+| Granica | Wymagana kontrola |
+| --- | --- |
+| Przeglądarka lub aplikacja na zaplecze partnerskie | Zweryfikować sesję partnerską przed wydaniem jakichkolwiek uprawnień handlowych. |
+| Partner backend do 6MM API | Używaj poświadczeń o ograniczonym zakresie, podpisywania żądań, synchronizacji czasu oraz chronionego przechowywania sekretów. |
+| 6MM webhook to partner endpoint | Weryfikuj podpis względem surowego ciała żądania, odrzucaj przestarzałe lub nieprawidłowe wiadomości oraz deduplikuj próby. |
+| Rekordy handlu stanem z partnerem | Uzgadniaj zamówienia, pozycje, salda i transfery za pomocą trwałych identyfikatorów oraz kontroli stanu końcowego. |
+
+<h2 id="production-verification">Weryfikacja produkcji</h2>
+
+- Test wygasł, cofnięty i błędnie skierowany do poświadczeń.
+- Testować zmienione ciała webhooków, duplikaty powrotów, opóźnione odwołania oraz limity czasu końcowe.
+- Potwierdź, że logi redagują sekrety, tokeny dostępu i wrażliwe ładunki żądań.
+- Alert o powtarzających się awariach sygnatur, nieprawidłowej aktywności porządkowej, różnicach w uzgadnianiu oraz niestabilności połączeń.
+- Dokumentowanie właściciela i ścieżki reakcji na ujawnienie poświadczeń, awarię webhooka oraz incydenty handlowe.
+
+<h2 id="related-security-guides">Powiązane przewodniki po bezpieczeństwie</h2>
+
+- [Sekrety i podpisywanie](/pl/sdk/security/secrets-signing)
+- [Webhooks & Idempotency](/pl/sdk/security/webhooks-idempotency)
+- [Reagowanie na incydent](/pl/security-compliance/incident-response)
+- [Matryca odpowiedzialności partnera](/pl/security-compliance/partner-responsibilities)

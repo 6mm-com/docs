@@ -1,0 +1,78 @@
+---
+title: "PHP Mulai Cepat"
+subtitle: "Instal dan inisialisasi PHP SDK dari layanan backend."
+slug: sdk/agent-sdk/php/quick-start
+canonical-url: https://docs.6mm.com/id/sdk/agent-sdk/php/quick-start
+---
+
+<h2 id="install">Instal</h2>
+
+```json
+{
+  "require": {
+    "sixmm/agent-sdk": "VERSION_PROVIDED_BY_6MM"
+  }
+}
+```
+
+> **Akses paket**
+>
+> 6MM menyediakan nama paket Composer, repositori, dan versi yang disetujui selama onboarding mitra. Paket tersebut tidak boleh diasumsikan ada di Packagist publik.
+
+<h2 id="before-you-start">Sebelum Anda mulai</h2>
+
+- Konfirmasi Agen API URL pangkalan dengan 6MM.
+- Memuat apiSecret dari variabel lingkungan atau manajemen rahasia.
+- Gunakan SDK hanya di dalam layanan backend.
+- Siapkan penanganan idempoten untuk transfer dan aliran webhook.
+
+<h2 id="initialize-client">Inisialisasi klien</h2>
+
+```php
+<?php
+
+use Sixmm\Agent\AgentClient;
+use Sixmm\Agent\AgentConfig;
+
+$client = new AgentClient(new AgentConfig(
+    'https://agent-api.6mm.com',
+    'AGENT001',
+    getenv('AGENT_API_SECRET') ?: '',
+    'USDT'
+));
+```
+
+> **Hanya backend**
+>
+> PHP SDK menandatangani permintaan API Agen dan tidak boleh diekspos melalui kode sumber publik atau lingkungan runtime frontend.
+
+<h2 id="example-transfer-funds-in">Contoh: transfer dana ke</h2>
+
+```php
+$response = $client->transfer([
+    'agentOrderNo' => 'AGT-ORDER-1001',
+    'agentUserId' => 'agent-user-001',
+    'direction' => 'IN',
+    'currency' => 'USDT',
+    'amount' => '10.00',
+]);
+```
+
+Gunakan string desimal untuk jumlah dan pertahankan agentOrderNo asli saat mencoba ulang atau menanyakan status transfer.
+
+<h2 id="next-steps">Langkah selanjutnya</h2>
+
+| Kebutuhan | Halaman berikutnya |
+| --- | --- |
+| Pahami kemampuan Agent SDK | [Agent SDK Ikhtisar ] (/sdk/agent-sdk/overview) |
+| Tinjau perilaku penandatanganan | [Rahasia & Penandatanganan] (/sdk/security/secrets-signing) |
+| Verifikasi pengiriman callback | [Webhooks & Idempotensi] (/sdk/security/webhooks-idempotency) |
+| Mendiagnosis masalah integrasi | [SDK Pemecahan Masalah ] (/sdk/security/troubleshooting) |
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">Halaman terkait</h2>
+
+- [6MM Agent SDK untuk Java dan PHP](/id/sdk/agent-sdk/overview)
+- [Agent SDK Secrets & HMAC Penandatanganan](/id/sdk/security/secrets-signing)
+- [Verifikasi & Idempotensi Tanda Tangan Webhook](/id/sdk/security/webhooks-idempotency)
+- [Pemecahan Masalah Integrasi SDK](/id/sdk/security/troubleshooting)
+<!-- sixmm-localized-link-repair:end -->

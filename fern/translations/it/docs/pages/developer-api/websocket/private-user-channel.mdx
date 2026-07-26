@@ -1,0 +1,107 @@
+---
+title: "Canale Utente Privato"
+description: "Iscriviti a eventi 6MM WebSocket autenticati per ordini, posizioni, saldi e modifiche del conto creando e mantenendo una chiave di ascolto."
+slug: developer-api/websocket/private-user-channel
+canonical-url: https://docs.6mm.com/it/developer-api/websocket/private-user-channel
+---
+
+Crea prima un `listenKey` :
+
+```http
+POST /v1/private/user/listen-key
+```
+
+Esempio di risposta:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "listenKey": "f57cb61ef604ce76be09e753a5dbdd8c",
+    "expireAt": 1777539918867
+  },
+  "requestId": "req-listen-key"
+}
+```
+
+`listenKey` è valido per 60 minuti di default. Si consiglia un rinnovo ogni 30 minuti.
+
+<h2 id="renew">Rinnova</h2>
+
+```http
+PUT /v1/private/user/listen-key
+Content-Type: application/json
+```
+
+```json
+{ "listenKey": "f57cb61ef604ce76be09e753a5dbdd8c" }
+```
+
+<h2 id="close">Chiudi</h2>
+
+```http
+DELETE /v1/private/user/listen-key
+Content-Type: application/json
+```
+
+```json
+{ "listenKey": "f57cb61ef604ce76be09e753a5dbdd8c" }
+```
+
+<h2 id="connect-to-private-websocket">Connettiti a WebSocket privata</h2>
+
+```
+wss://ws.6mm.com/ws?listenKey=YOUR_LISTEN_KEY
+```
+
+Metodo di connessione JWT compatibile:
+
+```
+wss://ws.6mm.com/ws?token=YOUR_ACCESS_TOKEN
+```
+
+Dopo il successo dell'autenticazione, il server sottoscrive automaticamente la connessione al canale privato dell'utente corrente. Non è richiesta alcuna sottoscrizione manuale.
+
+Conferma di autenticazione riuscita:
+
+```json
+{ "event": "auth", "success": true, "data": "1188041528" }
+```
+
+<h2 id="common-private-events">Eventi privati comuni</h2>
+
+| Evento                | Descrizione                                                                   |
+| -------------------- | ----------------------------------------------------------------------------- |
+| `ORDER_TRADE_UPDATE` | Cambiamenti nello stato dell'ordine, inclusi nuovo ordine, modifica, commercio e cancellazione |
+| `ACCOUNT_UPDATE`     | Variazioni di saldo del conto e posizioni                                          |
+
+Involucro di messaggi push privati:
+
+```json
+{
+  "topic": "user.5794",
+  "ts": 1771047000000,
+  "data": {
+    "eventType": "ORDER_TRADE_UPDATE"
+  }
+}
+```
+
+REST query endpoint e WebSocket flussi privati usano schemi separati. I client dovrebbero analizzare ogni schema indipendentemente e non dovrebbero presumere che i nomi dei campi siano identici.
+
+<h2 id="common-differences">Differenze comuni</h2>
+
+| Dominio         | REST campo     | WebSocket campo                                             |
+| -------------- | -------------- | ----------------------------------------------------------- |
+| Stato dell'ordine   | `status`       | `orderStatus`                                               |
+| Saldo congelato | `frozenMargin` | `frozenBalance`                                             |
+| Modalità margine    | `marginMode`   | `marginMode`, restituito come stringa nelle posizioni e nei flussi |
+
+<h2 id="recovery-and-reconciliation">Recupero e riconciliazione</h2>
+
+- Rinnovare il listenKey prima della scadenza e crearne uno nuovo se il rinnovo fallisce.
+- Riconnettersi, riautenticare e trattare il nuovo socket come una nuova sessione evento.
+- Deduplicare gli eventi prima di modificare i saldi dei partner o i registri degli ordini.
+- Se eventi possono essere stati trascurati, interrogare [ordini](/it/developer-api/rest-api/order), [posizioni](/it/developer-api/rest-api/position), e [stato del conto](/it/developer-api/rest-api/user-and-account) attraverso REST.
+- Segui la [guida alla connessione e al battito cardiaco](/it/developer-api/websocket/connection-subscription-and-heartbeat) per la gestione dei ritenti e della connessione stagnante.

@@ -1,0 +1,60 @@
+---
+title: "Kode Kesalahan dan Pemecahan Masalah"
+description: "Mendiagnosis kesalahan 6MM API menggunakan kode respons, pesan, ID permintaan, panduan percobaan ulang, pemeriksaan otentikasi, dan langkah-langkah pemecahan masalah integrasi."
+slug: developer-api/error-codes-and-troubleshooting
+canonical-url: https://docs.6mm.com/id/developer-api/error-codes-and-troubleshooting
+---
+
+<h2 id="error-response-format">Format Respons Kesalahan</h2>
+
+```json
+{
+  "code": 1003,
+  "message": "Invalid token",
+  "requestId": "req-12345678"
+}
+```
+
+Kesalahan bisnis biasanya masih mengembalikan struktur JSON yang terpadu. Integrator harus memeriksa `code` terlebih dahulu. Kegagalan autentikasi dapat mengembalikan HTTP `401`; Pembatasan tarif dapat mengembalikan HTTP `429`.
+
+<h2 id="common-error-codes">Kode Kesalahan Umum</h2>
+
+| Kode kesalahan      | Deskripsi                                  |
+| --------------- | -------------------------------------------- |
+| `0`             | Keberhasilan                                      |
+| `1001`          | Tidak ada informasi autentikasi yang valid yang diberikan |
+| `1002`          | Token kedaluwarsa                                |
+| `1003`          | Token, API Key, atau tanda tangan tidak valid         |
+| `1004`          | Token dicabut                                |
+| `1006`          | Ketidakcocokan sumber IP                           |
+| `2001`          | Parameter yang dibutuhkan hilang                   |
+| `2002`          | Nilai parameter tidak valid                      |
+| `2003`          | Parameter di luar jangkauan                       |
+| `3001`          | Keseimbangan yang tidak memadai                         |
+| `3003`          | Pesanan tidak ditemukan                              |
+| `3004`          | Permintaan duplikat                            |
+| `3005`          | Pesanan tidak dapat dibatalkan                     |
+| `3006`          | Izin ditolak                            |
+| `3100` - `3112` | Kesalahan validasi parameter urutan kondisi   |
+| `5001`          | Kesalahan server internal                        |
+| `5002`          | Layanan sementara tidak tersedia              |
+| `5003`          | Batas laju dipicu                         |
+
+<h2 id="troubleshooting">Pemecahan Masalah</h2>
+
+| Masalah                                     | Rekomendasi                                                                                   |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `1001` tidak ada informasi autentikasi yang valid  | Periksa apakah `Authorization: Bearer <accessToken>` atau `X-API-KEY` termasuk.                  |
+| `1002` Token kedaluwarsa                        | Segarkan Token atau masuk lagi sebelum mencoba lagi.                                                   |
+| `1003` Token, API Key, atau tanda tangan yang tidak valid | Periksa API Key, payload tanda tangan, isi permintaan JSON string, dan urutan parameter kueri.           |
+| `1006` sumber IP ketidakcocokan                   | Periksa konfigurasi daftar putih API Key IP .                                                    |
+| `3004` permintaan duplikat                    | Jangan gunakan ulang tanda tangan yang sama untuk jalur terkait pesanan. Regenerasi `timestamp` dan `signature`. |
+| batas tarif `5003` diaktifkan                 | Kurangi frekuensi permintaan dan gunakan backoff eksponensial jika mencoba ulang.                                |
+| `Timestamp outside of tolerance window`     | Hubungi `/v1/time` untuk mengkalibrasi offset waktu dan menandatangani permintaan lagi.                             |
+
+<h2 id="related-diagnostic-guides">Panduan diagnostik terkait</h2>
+
+- [Lingkungan & Konvensi Umum](/id/developer-api/environments-and-common-conventions)
+- [Autentikasi](/id/developer-api/authentication)
+- [Rekomendasi Integrasi](/id/developer-api/integration-recommendations)
+- [Template Permintaan Dukungan](/id/resources/support-request-template)

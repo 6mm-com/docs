@@ -1,0 +1,73 @@
+---
+title: "6MM API Autenticazione: chiavi JWT e API"
+description: "Impara come autenticare le richieste private di 6MM API con token di accesso JWT o chiavi API e scegli il metodo appropriato per ogni integrazione."
+slug: developer-api/authentication
+canonical-url: https://docs.6mm.com/it/developer-api/authentication
+---
+
+6MM supporta JWT access token e API Keys per l'accesso privato API . Scegli il metodo in base al fatto che la richiesta appartenga a una sessione utente interattiva o a un'integrazione backend di lunga durata.
+
+<h2 id="choose-an-authentication-method">Scegli un metodo di autenticazione</h2>
+
+| Necessità di integrazione | Metodo consigliato | Perché |
+| --- | --- | --- |
+| Chiamate API sessione utente | JWT | Utilizza il token di accesso restituito dopo l'accesso. |
+| Crea, aggiorna o revoca API Chiavi | JWT | API Key endpoint di gestione non accettano API Key autogestione. |
+| Chiamate di account server-to-server o trading | API Key + HMAC firma | Supporta permessi con ambito definito e richieste backend firmate. |
+
+<h2 id="jwt">JWT</h2>
+
+Dopo l'accesso, il API restituisce un `accessToken`. Quando si chiamano endpoint privati, si include:
+
+```http
+Authorization: Bearer YOUR_ACCESS_TOKEN
+```
+
+Tieni il token fuori da URL e log. Quando un token scade, ottieni un token valido tramite il login approvato o il flusso di aggiornamento prima di riprovare la richiesta privata.
+
+<h2 id="api-key">API Key</h2>
+
+Quando è presente l'intestazione `X-API-KEY` richiesta, il server utilizza API Key HMAC autenticazione:
+
+```http
+X-API-KEY: YOUR_API_KEY
+```
+
+API Key endpoint di gestione devono utilizzare JWT. API Keys non riesce a gestirsi da sole.
+
+API Key richieste richiedono anche il timestamp e la firma HMAC descritti in [Request Firming](/it/developer-api/request-signing). Memorizza il corrispondente segreto API solo in un sistema di gestione dei segreti backend.
+
+<h2 id="api-key-permissions">API Key Permessi</h2>
+
+| Valore | Permesso | Descrizione                                                                                                                                                                                    |
+| ----- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `1`   | Leggi       | Informazioni utente, asset, log delle modifiche degli account, statistiche, listenKey, simboli preferiti e endpoint relativi a utenti/account. Gli endpoint di ordine e posizione, incluse le query, richiedono il permesso di commercio |
+| `2`   | Commercio      | Endpoint di ordine e posizione, inclusi sia le operazioni di query che di scrittura                                                                                                                        |
+| `4`   | Ritiro   | Permesso per fondi riservati                                                                                                                                                                       |
+
+Per concedere sia permessi di lettura che di commercio, usa `permissions=3`.
+
+Usa il set di permessi più piccolo richiesto dall'integrazione. Un servizio di dati di mercato non dovrebbe ricevere permessi di scambio, mentre un servizio di ordini necessita del permesso di contrattazione anche quando interroga solo ordini o posizioni.
+
+<h2 id="production-security-checklist">Checklist per la sicurezza della produzione</h2>
+
+- Creare chiavi API separate per sviluppo, staging e produzione.
+- Applicare una whitelist IP dove l'integrazione ha indirizzi outbound stabili.
+- Non esporre mai API segreti nel codice di browser, mobile o desktop.
+- Sincronizzare l'ora del server prima di generare richieste firmate.
+- Redatere le intestazioni di autorizzazione, API Chiavi, firme e segreti dai log delle applicazioni.
+- Revocare e sostituire immediatamente una chiave quando si sospetta esposizione.
+
+<h2 id="next-steps">Passi successivi</h2>
+
+<CardGroup cols={3}>
+<Card title="API Key Gestione" icon="fa-duotone fa-key" href="/it/developer-api/api-key-management">
+Crea chiavi con ambito, configura le restrizioni IP e pianifica la rotazione delle chiavi.
+</Card>
+<Card title="Firma della richiesta" icon="fa-duotone fa-signature" href="/it/developer-api/request-signing">
+Costruisci il carico utile HMACSHA256 e firma richieste private.
+</Card>
+<Card title="Errori e risoluzione dei problemi" icon="fa-duotone fa-screwdriver-wrench" href="/it/developer-api/error-codes-and-troubleshooting">
+Diagnostica credenziali rifiutate, timestamp, firme e permessi.
+</Card>
+</CardGroup>

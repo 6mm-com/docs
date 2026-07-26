@@ -1,0 +1,128 @@
+---
+title: "API Key Управління"
+description: "Створюйте, перевіряйте, оновлюйте та відкликайте 6MM API ключі, застосовуючи відповідні дозволи, обмеження IP , зберігання секретів і практики ротації."
+slug: developer-api/api-key-management
+canonical-url: https://docs.6mm.com/uk/developer-api/api-key-management
+---
+
+API Key кінцеві точки управління приймають лише JWT автентифікацію.
+
+<h2 id="create-api-key">Створіть API Key</h2>
+
+```http
+POST /v1/private/user/api-key/create
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+Параметри запиту:
+
+| Параметр     | Тип      | Обов'язкове | Опис                                                           |
+| ------------- | --------- | -------- | --------------------------------------------------------------------- |
+| `label`       | string    | Так      | API Key етикетка, довжина 1 - 64                                          |
+| `permissions` | int       | Ні       | Бітова маска дозволу, стандартний `1`, діапазон `1` - `7`                      |
+| `ipWhitelist` | String\[] | Ні       | IP білий список, до 20 записів. Якщо його опускати, IP джерела є необмеженим |
+
+Приклад запиту:
+
+```bash
+curl -X POST https://api.6mm.com/v1/private/user/api-key/create \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -d '{
+    "label": "external-service-prod",
+    "permissions": 3,
+    "ipWhitelist": ["203.0.113.10"]
+  }'
+```
+
+Приклад відповіді:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "apiKey": "fx_xxxxxxxxxxxxxxxxxxxxxxxx",
+    "apiSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  },
+  "requestId": "req-api-key"
+}
+```
+
+`apiSecret` повертається лише один раз після створення API Key . Зберігайте його одразу в секретній системі управління. Не записуйте це у репозиторії чи логи вихідного коду.
+
+Кожен користувач може створити до 30 API Keys.
+
+<h2 id="list-api-keys">Список API ключів</h2>
+
+```http
+GET /v1/private/user/api-key/list
+Authorization: Bearer YOUR_ACCESS_TOKEN
+```
+
+Поля відповіді:
+
+| Поле                | Тип      | Опис                       |
+| -------------------- | --------- | --------------------------------- |
+| `list[].id`          | string    | API Key ID                        |
+| `list[].label`       | string    | Лейбл                             |
+| `list[].apiKey`      | string    | Публічний ідентифікатор API Key         |
+| `list[].permissions` | int       | Бітмаска дозволу                |
+| `list[].ipWhitelist` | String\[] | IP білий список                      |
+| `list[].status`      | int       | Статус: `1` увімкнено, `0` вимкнено |
+| `list[].lastUsedAt`  | int64     | Останній час використання                    |
+| `list[].createdAt`   | int64     | Час створення                     |
+
+<h2 id="update-api-key">Оновлення API Key</h2>
+
+```http
+PUT /v1/private/user/api-key/update
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+Параметри запиту:
+
+| Параметр     | Тип      | Обов'язкове | Опис               |
+| ------------- | --------- | -------- | ------------------------- |
+| `id`          | string    | Так      | API Key ID                |
+| `label`       | string    | Ні       | Новий лейбл                 |
+| `permissions` | int       | Ні       | Нова бітова маска дозволу    |
+| `ipWhitelist` | String\[] | Ні       | Новий білий список IP          |
+| `status`      | int       | Ні       | `1` увімкнено, `0` вимкнено |
+
+<h2 id="delete-api-key">Видалити API Key</h2>
+
+```http
+POST /v1/private/user/api-key/delete
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+Тіло запиту:
+
+```json
+{ "id": "1001" }
+```
+
+<h2 id="delete-all-api-keys">Видалити всі API ключі</h2>
+
+```http
+POST /v1/private/user/api-key/delete-all
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+Поля відповіді:
+
+| Поле     | Тип  | Опис                |
+| --------- | ----- | -------------------------- |
+| `deleted` | int64 | Кількість видалених API ключів |
+
+<h2 id="related-security-guides">Пов'язані посібники з безпеки</h2>
+
+- [Автентифікація](/uk/developer-api/authentication)
+- [Запит на підписання](/uk/developer-api/request-signing)
+- [Секрети та підписи](/uk/sdk/security/secrets-signing)
+- [Рекомендації щодо інтеграції](/uk/developer-api/integration-recommendations)

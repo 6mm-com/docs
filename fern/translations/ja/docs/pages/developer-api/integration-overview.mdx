@@ -1,0 +1,51 @@
+---
+title: "統合概要"
+description: "推奨環境、認証、署名、REST、WebSocket、テスト、本番準備シーケンスとの6MM API統合を開始します。"
+slug: developer-api/integration-overview
+canonical-url: https://docs.6mm.com/ja/developer-api/integration-overview
+---
+
+> REST ベース URL: `https://api.6mm.com`\
+> WebSocket URL: `wss://ws.6mm.com/ws`
+
+このドキュメントは、 6MM API サービスと統合する外部システム向けに設計されています。ログイン、 JWT 認証、 API Key 管理、 API Key HMAC 署名、アカウント照会、注文、ポジション、市場データ、 WebSocket ストリームなどをカバーしています。
+
+アカウントのプロビジョニングおよび資金準備はプラットフォーム側のプロセスを通じて処理されます。このドキュメントは外部呼び出し可能な API サービスエンドポイントのみを記述しています。
+
+<h2 id="service-endpoints">サービスエンドポイント</h2>
+
+| 種類      | 終着点              |
+| --------- | --------------------- |
+| REST API  | `https://api.6mm.com` |
+| WebSocket | `wss://ws.6mm.com/ws`    |
+
+<h2 id="integration-flow">積分フロー</h2>
+
+推奨される統合順序:
+
+1. プラットフォームが提供するアカウントでログインし、 `accessToken`を取得します。
+2. サーバー側のプログラムアクセスのために、まずJWTでAPI Keyを作成し、一度だけ返された`apiSecret`を安全に保存します。
+3. プライベートクエリ、順序端点、位置端点は `Authorization: Bearer <accessToken>` または API Key 署名のいずれかで呼び出すことができます。
+4. プライベート WebSocket ストリームの場合、まず `listenKey` を作成し、その後 `wss://ws.6mm.com/ws?listenKey=...`に接続します。
+5. エンドポイントやパブリックWebSocketチャネルREST市場データは認証を必要としません。
+
+<h2 id="authentication-choice">認証選択</h2>
+
+| シナリオ                               | 推奨方法         |
+| -------------------------------------- | -------------------------- |
+| フロントエンドのユーザーアクション                  | JWT                        |
+| サーバーサイドのプログラマティックコール         | API Key + HMAC シグネチャー   |
+| API Key 作成、更新、削除 | JWT                        |
+| 公共市場 REST /公共 WebSocket  | 認証は不要です |
+
+<h2 id="documentation-scope">文書化範囲</h2>
+
+このドキュメントには、ログイン、 JWT 認証、 API Key 管理、 API Key HMAC 署名、アカウントクエリ、注文、ポジション、市場データ、 WebSocket ストリームが含まれます。
+
+<h2 id="recommended-reading-order">おすすめ読書順</h2>
+
+1. [環境と一般的な規則](/ja/developer-api/environments-and-common-conventions)
+2. [認証](/ja/developer-api/authentication) および [リクエスト署名](/ja/developer-api/request-signing)
+3. [REST API](/ja/developer-api/rest-api) および [WebSocket](/ja/developer-api/websocket)
+4. [統合推奨事項](/ja/developer-api/integration-recommendations)
+5. [生産開始チェックリスト](/ja/resources/production-launch-checklist)

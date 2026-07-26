@@ -1,0 +1,62 @@
+---
+title: "整合概述"
+description: "開始與推薦環境、認證、簽署、REST、WebSocket、測試及生產準備序列進行6MM API整合。"
+slug: developer-api/integration-overview
+canonical-url: https://docs.6mm.com/zh-TW/developer-api/integration-overview
+---
+
+> REST 基礎 URL： `https://api.6mm.com`\
+> WebSocket URL: `wss://ws.6mm.com/ws`
+
+本文件旨在用於與 6MM API 服務整合的外部系統。內容涵蓋登入、 JWT 認證、 API Key 管理、 API Key HMAC 簽名、帳戶查詢、訂單、持倉、市場數據及 WebSocket 流程。
+
+帳戶配置與資金準備則透過平台端流程處理。本文件僅描述可外部呼叫的 API 服務端點。
+
+<h2 id="service-endpoints">服務端點</h2>
+
+| 類型      | 終點              |
+| --------- | --------------------- |
+| REST API  | `https://api.6mm.com` |
+| WebSocket | `wss://ws.6mm.com/ws`    |
+
+<h2 id="integration-flow">整合流程</h2>
+
+建議整合順序：
+
+1. 使用平台提供的帳號登入並取得 `accessToken`。
+2. 伺服器端程式存取，先建立JWT的 API Key，並安全儲存一次性回傳的 `apiSecret`。
+3. 私有查詢、訂單端點與倉位端點可使用 `Authorization: Bearer <accessToken>` 或 API Key 簽章呼叫。
+4. 對於私有 WebSocket 串流，先建立一個 `listenKey` ，然後連接到 `wss://ws.6mm.com/ws?listenKey=...`。
+5. 端點 REST 公共 WebSocket 通道的市場資料不需驗證。
+
+<h2 id="authentication-choice">認證選擇</h2>
+
+| 劇本                               | 推薦方法         |
+| -------------------------------------- | -------------------------- |
+| 前端使用者操作                  | JWT                        |
+| 伺服器端程式化呼叫         | API Key + HMAC 簽名   |
+| API Key 建立、更新與刪除 | JWT                        |
+| 公共市場 REST / 公共 WebSocket  | 無需驗證 |
+
+<h2 id="documentation-scope">文件範圍</h2>
+
+這些文件涵蓋登入、 JWT 認證、 API Key 管理、 API Key HMAC 簽署、帳戶查詢、訂單、持倉、市場資料及 WebSocket 串流。
+
+<h2 id="recommended-reading-order">推薦閱讀順序</h2>
+
+1. [環境與常見慣例]（/developer-api/environments-and-common-conventions）
+2. [認證]（/developer-api/authentication）與[請求簽署]（/developer-api/request-signing）
+3. [REST API]（/developer-api/rest-api）和[WebSocket]（/developer-api/websocket）
+4. [整合建議]（/developer-api/integration-recommendations）
+5. [生產啟動清單]（/resources/production-launch-checklist）
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">相關頁面</h2>
+
+- [環境與常見慣例](/zh-TW/developer-api/environments-and-common-conventions)
+- [6MM API 認證： JWT 與 API 金鑰](/zh-TW/developer-api/authentication)
+- [請求簽署](/zh-TW/developer-api/request-signing)
+- [REST API](/zh-TW/developer-api/rest-api)
+- [WebSocket](/zh-TW/developer-api/websocket)
+- [整合建議](/zh-TW/developer-api/integration-recommendations)
+- [合作夥伴生產啟動清單](/zh-TW/resources/production-launch-checklist)
+<!-- sixmm-localized-link-repair:end -->

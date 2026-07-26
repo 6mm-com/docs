@@ -1,0 +1,51 @@
+---
+title: "Integration Überblick"
+description: "Starte eine 6MM API Integration mit der empfohlenen Umgebung, Authentifizierung, Signing, REST, WebSocket, Testing und Produktionsbereitschaftssequenz."
+slug: developer-api/integration-overview
+canonical-url: https://docs.6mm.com/de/developer-api/integration-overview
+---
+
+> REST Basis URL: `https://api.6mm.com`\
+> WebSocket URL: `wss://ws.6mm.com/ws`
+
+Diese Dokumentation richtet sich an externe Systeme, die mit dem 6MM API -Dienst integriert werden. Sie umfasst Login, JWT Authentifizierung, API Key Management, API Key HMAC Signing, Kontoanfragen, Bestellungen, Positionen, Marktdaten und WebSocket Streams.
+
+Kontobereitstellung und Finanzierungsvorbereitung erfolgen über plattformseitige Prozesse. Diese Dokumentation beschreibt nur extern aufrufbare API Service-Endpunkte.
+
+<h2 id="service-endpoints">Dienstendpunkte</h2>
+
+| Typ      | Endpunkt              |
+| --------- | --------------------- |
+| REST API  | `https://api.6mm.com` |
+| WebSocket | `wss://ws.6mm.com/ws`    |
+
+<h2 id="integration-flow">Integrationsfluss</h2>
+
+Empfohlene Integrationsreihenfolge:
+
+1. Melden Sie sich mit dem von der Plattform bereitgestellten Konto an und erhalten Sie ein `accessToken`.
+2. Für den serverseitigen programmatischen Zugriff erstellen Sie zuerst einen API Key mit JWT und speichern Sie die einmalig zurückgegebenen `apiSecret`sicher.
+3. Private Abfragen sowie Order- und Positionsendpunkte können entweder mit `Authorization: Bearer <accessToken>` oder per API Key-Signatur aufgerufen werden.
+4. Für private WebSocket Streams erstellen Sie zuerst ein `listenKey` und verbinden Sie sich dann mit `wss://ws.6mm.com/ws?listenKey=...`.
+5. Marktdaten REST Endpunkte und öffentliche WebSocket -Kanäle erfordern keine Authentifizierung.
+
+<h2 id="authentication-choice">Authentifizierungswahl</h2>
+
+| Szenario                               | Empfohlene Methode         |
+| -------------------------------------- | -------------------------- |
+| Frontend-Benutzeraktionen                  | JWT                        |
+| Serverseitige programmatische Aufrufe         | API Key + HMAC Signatur   |
+| API Key Erstellung, Aktualisierung und Löschung | JWT                        |
+| Öffentlicher Markt REST / öffentliche WebSocket  | Keine Authentifizierung erforderlich |
+
+<h2 id="documentation-scope">Dokumentationsumfang</h2>
+
+Diese Dokumentation behandelt Login, JWT Authentifizierung, API Key Management, API Key HMAC Signing, Kontoanfragen, Bestellungen, Positionen, Marktdaten und WebSocket Streams.
+
+<h2 id="recommended-reading-order">Empfohlene Lesereihenfolge</h2>
+
+1. [Umgebungen & Gemeinsame Konventionen](/de/developer-api/environments-and-common-conventions)
+2. [Authentifizierung](/de/developer-api/authentication) und [Request Signing](/de/developer-api/request-signing)
+3. [REST API](/de/developer-api/rest-api) und [WebSocket](/de/developer-api/websocket)
+4. [Integrationsempfehlungen](/de/developer-api/integration-recommendations)
+5. [Produktionsstart-Checkliste](/de/resources/production-launch-checklist)

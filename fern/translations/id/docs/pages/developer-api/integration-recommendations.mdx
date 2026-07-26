@@ -1,0 +1,42 @@
+---
+title: "Rekomendasi Integrasi"
+description: "Terapkan praktik 6MM yang direkomendasikan untuk autentikasi, retries, idempotensi, logging, penanganan rate, pemantauan, keamanan, dan kesiapan peluncuran."
+slug: developer-api/integration-recommendations
+canonical-url: https://docs.6mm.com/id/developer-api/integration-recommendations
+---
+
+Gunakan rekomendasi ini sebagai dasar kesiapan produksi. Rekomendasi ini melengkapi referensi endpoint dan membantu integrasi pulih dengan aman dari timeout, reconnect, permintaan duplikat, dan insiden kredensial.
+
+<h2 id="authentication-and-secrets">Autentikasi dan rahasia</h2>
+
+- Lebih memilih [API Key signing](/id/developer-api/authentication) untuk program trading sisi server dan JWT untuk aksi frontend yang digerakkan pengguna.
+- Simpan `apiSecret` dalam manajemen rahasia backend. Fitur ini hanya ditampilkan sekali dan tidak boleh dikirim ke browser atau klien mobile.
+- Menerapkan izin API Key minimum yang diperlukan dan membatasi IP sumber ketika lingkungan integrasi mendukung alamat egress yang stabil.
+- Nonaktifkan atau hapus kunci yang bocor segera, lalu tinjau log permintaan sebelum mengeluarkan penggantian.
+
+<h2 id="request-validation-and-idempotency">Permintaan validasi dan idempotensi</h2>
+
+- Sebelum melakukan pemesanan, lakukan `/v1/public/market/symbols` dan validasi `tickSize`, `stepSize`, nilai nominal minimum, dan jumlah maksimum secara lokal.
+- Menghasilkan `clientOrderId` unik untuk setiap penulisan pesanan sehingga permintaan dapat direkonsiliasi setelah disconnect.
+- Pertahankan pengenal asli ketika hasil HTTP tidak pasti. Query urutan yang ada sebelum membuat permintaan pengganti.
+- Perlakukan jumlah dan harga desimal sebagai string atau tipe desimal, bukan nilai floating-point biner.
+
+<h2 id="order-and-websocket-state">Ketertiban dan WebSocket negara</h2>
+
+- Menentukan status akhir setelah operasi batalkan, pembatalan semua, atau ubah dari [event WebSocket privat](/id/developer-api/websocket/private-user-channel) atau kueri REST .
+- Perlakukan setiap reconnect sebagai sesi WebSocket baru dan pulihkan semua langganan yang diperlukan.
+- Periksa kontinuitas buku pesanan dengan `endVersion`. Jika muncul celah versi, buang buku lokal dan berlangganan ulang untuk snapshot baru.
+- Deduplikasi event pesanan pribadi dan akun sebelum menerapkannya pada saldo, posisi, atau catatan mitra.
+
+<h2 id="logging-monitoring-and-retries">Pencatatan, pemantauan, dan percobaan ulang</h2>
+
+- Rekam ID permintaan, ID pesanan klien, status HTTP , kode bisnis API , latensi, dan jumlah percobaan ulang tanpa mencatat rahasia atau token penuh.
+- Coba ulang hanya operasi yang didokumentasikan aman, menggunakan backoff eksponensial terbatas dan jitter.
+- Peringatan tentang kegagalan autentikasi, kesalahan tanda tangan, respons batas rate, loop WebSocket reconnect, celah urutan, dan perbedaan rekonsiliasi pesanan.
+- Jaga agar jam server tetap sinkron karena autentikasi dan penandatanganan bergantung pada timestamp.
+
+<h2 id="before-production">Sebelum produksi</h2>
+
+- Menjalankan skenario timeout, duplicate request, reconnect, rotasi kunci, dan percobaan ulang webhook di lingkungan non-produksi.
+- Tetapkan pemilik untuk rotasi kredensial, insiden trading, kegagalan webhook, dan rekonsiliasi.
+- Lengkapi [daftar periksa peluncuran produksi](/id/resources/production-launch-checklist) dan gunakan [template permintaan dukungan](/id/resources/support-request-template) saat eskalasi diperlukan.

@@ -1,0 +1,66 @@
+---
+title: "Architektura bezpieczeństwa integracji partnerów"
+subtitle: "Projektuj granice zaufania i kontrole produkcyjne dla zintegrowanego handlu, API, SDK, webhooków, transferu aktywów oraz integracji operacyjnych."
+slug: solutions/security-architecture
+canonical-url: https://docs.6mm.com/pl/solutions/security-architecture
+---
+
+Ta strona koncentruje się na tym, jak partner powinien zaprojektować bezpieczną integrację 6MM . Dla szerszych warstw bezpieczeństwa stosowanych na platformie handlowej zobacz [Platform Security Architecture](/pl/security-compliance/security-architecture).
+
+Architektura bezpieczeństwa powinna zostać uzgodniona przed rozpoczęciem integracji produkcyjnej. Wpływa to na to, jak systemy partnerskie walidują użytkowników, wydają tokeny, przechowują tajemnice, odbierają zdarzenia, monitorują operacje i reagują na incydenty.
+
+<h2 id="recommended-trust-boundary">Zalecana granica powiernicza</h2>
+
+| Składnik | Może zawierać | Nie wolno zawierać |
+| --- | --- | --- |
+| Front partner | Konfiguracja publiczna, krótkotrwały wynik wpisu, nieczuły stan interfejsu | Partner API secret, klucz podpisowy, uprzywilejowane poświadczenia backendowe |
+| Backend partnera | Mapowanie użytkownika, chronione poświadczenia, logika podpisywania, przetwarzanie webhooków | Sekrety ujawnione w odpowiedziach klientów lub publicznych logach |
+| 6MM endpointy integracji | Zatwierdzane podpisane żądania, tokeny i dostarczanie webhooków | Niezweryfikowane założenia użytkownika po stronie partnera |
+
+Partner frontend powinien wywoływać partnera backend dla uprzywilejowanych operacji. Backend waliduje użytkownika partnera, wywołuje 6MM przez zatwierdzony API lub SDKi zwraca tylko krótkotrwały wynik potrzebny frontendowi.
+
+<h2 id="security-layers">Warstwy bezpieczeństwa</h2>
+
+| Warstwa | Wymagana koncentracja |
+| --- | --- |
+| API kwalifikacje | Przechowywanie tylko w backendzie, plan rotacji i kontrola dostępu. |
+| Podpis z prośbą | Stabilne zabezpieczenia przed znacznikami czasu, sygnaturami i powtórkami. |
+| Embed tokeny | Krótkotrwałe wydawanie, sprawdzanie kwalifikacji i wyraźne zachowania związane z unieważnieniem. |
+| Webhooki | Weryfikacja podpisów, idempotencja, próby i logi audytu zdarzeń. |
+| Eksploatacja | Role związane z dostępem, eskalacją incydentów, monitorowaniem i przechowywaniem dowodów. |
+
+<h2 id="production-control-plan">Plan kontroli produkcji</h2>
+
+| Obszar sterowania | Minimalne dowody wdrożenia |
+| --- | --- |
+| Przechowywanie danych uwierzytelniających | Lokalizacja menedżera sekretów, właściciel dostępu, separacja środowiska oraz proces rotacji. |
+| Wpis użytkownika | Weryfikacja sesji, sprawdzanie kwalifikacji, krótkotrwały przepływ tokenów oraz obsługa awarii. |
+| Podpisane prośby | Poprawne środowisko, synchronizowany czas, logowanie żądań oraz alerty o błędach sygnatur. |
+| Operacje aktywów | Unikalne identyfikatory biznesowe, uzgadnianie timeoutów, zapytania o status oraz ścieżka przeglądu operatora. |
+| Webhooki | Weryfikacja sygnatury surowej ciała, kontrola powtórek, przechowywanie idempotencji oraz bezpieczne przetwarzanie powtórek. |
+| Monitorowanie | Alerty o niepowodzeniach uwierzytelniania, nieprawidłowych próbach, opóźnieniach webhooków oraz błędach operacyjnych. |
+| Reagowanie na incydenty | Właściciel z nazwiska, kanał eskalacji, przechowywanie dowodów i procedura cofania uprawnień. |
+
+<h2 id="launch-review">Recenzja premiery</h2>
+
+Przed produkcją:
+
+1. Narysuj przepływy danych użytkownika, tokena, żądania, aktywa oraz webhooków.
+2. Zaznacz miejsce, gdzie każda kredencja jest tworzona, przechowywana, używana, rejestrowana, rotowana i cofnięta.
+3. Testuj wygasłe tokeny, nieprawidłowe podpisy, czasowe limity, duplikujące się webhooki oraz zachowania związane z ponownym połączeniem.
+4. Potwierdzenie, że zespoły wsparcia mogą zlokalizować operację na podstawie jej identyfikatora żądania lub biznesowego.
+5. Wypełnij [Listę kontrolną produkcji startu](/pl/solutions/production-launch-checklist).
+
+<h2 id="recommended-docs">Polecani lekarze</h2>
+
+<CardGroup cols={3}>
+<Card title="Sekrety i podpisywanie" icon="fa-duotone fa-key" href="/pl/sdk/security/secrets-signing">
+Chroń Agent SDK dane uwierzytelniające i podpisane żądania.
+</Card>
+<Card title="Podpisywanie wniosków" icon="fa-duotone fa-signature" href="/pl/developer-api/request-signing">
+Wprowadź bezpośrednie podpisywanie wniosków przez API deweloperów.
+</Card>
+<Card title="Webhook i Idempotencja" icon="fa-duotone fa-webhook" href="/pl/sdk/security/webhooks-idempotency">
+Przetwarzaj zdarzenia bezpiecznie.
+</Card>
+</CardGroup>

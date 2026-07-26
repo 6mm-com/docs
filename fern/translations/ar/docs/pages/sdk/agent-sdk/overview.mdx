@@ -1,0 +1,73 @@
+---
+title: "6MM Agent SDK Java PHP"
+subtitle: "دمج مكالمات API الوكيل الموقع، وربط المستخدم، والنقلات، وعناوين الإدخال، والتحقق من webhook من خدمات الواجهة الخلفية للشريك."
+slug: sdk/agent-sdk/overview
+canonical-url: https://docs.6mm.com/ar/sdk/agent-sdk/overview
+---
+
+6MM Agent SDK مخصص لخدمات الخلفية الشريكة التي تحتاج إلى استدعاء APIs الوكيل المميز دون تنفيذ معالجة التوقيع والطلبات من الصفر. يجب ألا يعمل في المتصفح أو الهاتف المحمول أو كود سطح المكتب العام لأن التكامل يستخدم شريكا API سريا.
+
+<h2 id="when-to-use-the-agent-sdk">متى تستخدم Agent SDK</h2>
+
+استخدم Agent SDK عندما تحتاج الخلفية إلى ربط مستخدم شريك، أو نقل الأصول عبر سير عمل معتمد، أو استعلام سجلات التداول، أو إنشاء URLإدخال تداول مدمج، أو التحقق من إشعارات webhook. استخدم [Trading Widget SDK](/ar/sdk/trading-widget/overview) بشكل منفصل عندما يحتاج الطرف الأمامي الشريك لعرض واجهة التداول.
+
+<h2 id="capabilities">القدرات</h2>
+
+| السيناريو | Java SDK | PHP SDK |
+| --- | --- | --- |
+| مستخدم الربط | مدعوم | مدعوم |
+| تحويل مبلغ ثابت | مدعوم | مدعوم |
+| انقل كل شيء | مدعوم | مدعوم |
+| النقل العكسي | مدعوم | مدعوم |
+| ترتيبات الاستعلام | مدعوم | مدعوم |
+| إنشاء URL | مدعوم | مدعوم |
+| التحقق عبر Webhook | مدعوم | مدعوم |
+
+<h2 id="common-configuration">التكوين المشترك</h2>
+
+| مفتاح | مثال | الوصف |
+| --- | --- | --- |
+| baseUrl | `https://agent-api.6mm.com` | 6MM API خدمة URL دون تتبع أو شرط. |
+| agentCode | AGENT001 | رمز وكيل الشريك. |
+| apiSecret | سر واجهة المستخدم الخاص بك | API التوقيع السري المخزن فقط في الخلفية. |
+| defaultCurrency | USDT | العملة الافتراضية للتحويل وحساب APIs. |
+| webhookUrl | https://partner.example.com/6mm/webhook | نقطة نهاية الشريك لإشعارات الويب هوك 6MM . |
+
+<h2 id="typical-integration-flow">تدفق التكامل النموذجي</h2>
+
+1. تقوم واجهة الشريك بالتحقق من صحة المستخدم من خلال نظام حسابات الشريك الخاص.
+2. يقوم الطرف الخلفي للشريك بتعيين المستخدم إلى معرف مستقر من جانب الشريك.
+3. الواجهة الخلفية تتصل ب Agent SDK مع `agentCode` و API السر المحمي.
+4. يوقع SDK ويرسل العميل API الطلب.
+5. يخزن الواجهة الخلفية معرف الأعمال المرتجع وتعالج webhooks لاحقا بشكل متكامل.
+6. تحصل الواجهة الأمامية فقط على النتيجة القصيرة أو بطاقة الدخول التي تحتاجها.
+
+<h2 id="choose-an-sdk">اختر SDK</h2>
+
+| مكدس الخلفية | ابدأ من هنا |
+| --- | --- |
+| Java | [ نظرة عامةJava SDK ](/ar/sdk/agent-sdk/java/overview) و [Java البدء السريع] (/sdk/agent-sdk/java/quick-start) |
+| PHP | [ نظرة عامةPHP SDK ](/ar/sdk/agent-sdk/php/overview) و [PHP البدء السريع] (/sdk/agent-sdk/php/quick-start) |
+
+<h2 id="production-checklist">قائمة تحقق الإنتاج</h2>
+
+- تحميل `apiSecret` من مدير سري خلفي، وليس من الشيفرة المصدرية.
+- إبقاء الاعتماد على التطوير والإخراج والإنتاج.
+- استخدام خريطة مستخدم الشريك المستقرة ومعرفات أوامر الأعمال الفريدة.
+- الحفاظ على المعرف الأصلي عند التحقق من حالة طلب انتهاء الوقت.
+- التحقق من توقيعات webhook وتخزين معرفات الأحداث المعالجة.
+- حذف الأسرار والتواقيع من السجلات مع الاحتفاظ بمعرفات الطلبات للدعم.
+
+<h2 id="next-steps">الخطوات التالية</h2>
+
+<CardGroup cols={3}>
+<Card title="Java البداية السريعة" icon="fa-brands fa-java" href="/ar/sdk/agent-sdk/java/quick-start">
+قم بتثبيت وتهيئة Agent SDK في خلفية Java .
+</Card>
+<Card title="PHP البداية السريعة" icon="fa-brands fa-php" href="/ar/sdk/agent-sdk/php/quick-start">
+قم بتثبيت وتهيئة Agent SDK في خلفية PHP .
+</Card>
+<Card title="ويبهوكس وإيديمونتسي" icon="fa-duotone fa-webhook" href="/ar/sdk/security/webhooks-idempotency">
+تحقق من المكالمات المتكررة ومنع معالجة الأعمال المكررة.
+</Card>
+</CardGroup>

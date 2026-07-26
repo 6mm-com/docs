@@ -1,0 +1,117 @@
+---
+title: "بيانات السوق"
+description: "استخدم بيانات السوق 6MM غير المصادقة REST نقاط النهاية لاسترجاع الرموز، والمؤشرات الإعلانية، ودفاتر الطلبات، والصفقات، وغيرها من معلومات التداول العام."
+slug: developer-api/rest-api/market-data
+canonical-url: https://docs.6mm.com/ar/developer-api/rest-api/market-data
+---
+
+بيانات السوق REST النقاط النهائية لا تتطلب المصادقة.
+
+<h2 id="symbol-configuration">تكوين الرموز</h2>
+
+```http
+GET /v1/public/market/symbols
+```
+
+حقول الاستجابة المشتركة:
+
+| الميدان                      | النوع   | الوصف                   |
+| -------------------------- | ------ | ----------------------------- |
+| `list[].symbol`            | string | الرمز                        |
+| `list[].baseAsset`         | string | الأصل الأساسي                    |
+| `list[].quoteAsset`        | string | سعر الأصل                   |
+| `list[].minQuantity`       | string | الحد الأدنى لكمية الطلب        |
+| `list[].minNotional`       | string | القيمة التصورية الدنيا        |
+| `list[].tickSize`          | string | حجم علامة السعر               |
+| `list[].stepSize`          | string | حجم خطوة الكمية            |
+| `list[].pricePrecision`    | int64  | دقة السعر               |
+| `list[].maxLimitOrderQty`  | string | الحد الأقصى لكمية أوامر الحد الأدنى  |
+| `list[].maxMarketOrderQty` | string | الحد الأقصى لكمية أوامر السوق |
+| `list[].maxOpenOrders`     | int64  | الحد الأقصى للطلبات المفتوحة لكل مستخدم  |
+| `list[].defaultLeverage`   | int64  | الرافعة المالية الافتراضية              |
+| `list[].defaultMarginMode` | int64  | وضع الهامش الافتراضي           |
+| `list[].leverageTiers[]`   | array  | مستويات الهامش المستفيد         |
+| `handlingFeeLevelConfig[]` | array  | تكوين طبقة الرسوم        |
+
+<h2 id="funding-rate-configuration">تكوين معدل التمويل</h2>
+
+```http
+GET /v1/public/market/funding-rate?symbol=BTCUSDT
+```
+
+معايير الطلب:
+
+| المعلمة | النوع   | مطلوب | الوصف                     |
+| --------- | ------ | -------- | ------------------------------- |
+| `symbol`  | string | لا       | إذا تم حذفها، يعيد جميع الرموز |
+
+<h2 id="current-funding-rate">معدل التمويل الحالي</h2>
+
+```http
+GET /v1/public/market/funding-rate/current?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+معايير الطلب:
+
+| المعلمة  | النوع   | مطلوب | الوصف                  |
+| ---------- | ------ | -------- | ---------------------------- |
+| `symbol`   | string | لا       | الرمز                       |
+| `page`     | int32  | لا       | رقم الصفحة، `1` الافتراضي     |
+| `pageSize` | int32  | لا       | العناصر في كل صفحة، `20` الافتراضي |
+
+<h2 id="funding-rate-history">تاريخ معدل التمويل</h2>
+
+```http
+GET /v1/public/market/funding-rate/history?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+معايير الطلب:
+
+| المعلمة   | النوع   | مطلوب | الوصف                  |
+| ----------- | ------ | -------- | ---------------------------- |
+| `symbol`    | string | نعم      | الرمز                       |
+| `startTime` | int64  | لا       | وقت البدء                   |
+| `endTime`   | int64  | لا       | نهاية الزمن                     |
+| `page`      | int32  | لا       | رقم الصفحة، `1` الافتراضي     |
+| `pageSize`  | int32  | لا       | العناصر في كل صفحة، `20` الافتراضي |
+
+<h2 id="klines">كلاينز</h2>
+
+```http
+GET /v1/public/market/klines?symbol=BTCUSDT&interval=1m&limit=500
+```
+
+معايير الطلب:
+
+| المعلمة   | النوع   | مطلوب | الوصف                                                              |
+| ----------- | ------ | -------- | ------------------------------------------------------------------------ |
+| `symbol`    | string | نعم      | الرمز                                                                   |
+| `interval`  | string | نعم      | الفواصل، مثل `1m`، `5m`، `15m`، `30m`، `1h`، `4h`، `1d`، `1w`، `1M` |
+| `priceType` | string | لا       | `indexPrice` / `markPrice`. إذا تم حذفها، تعود بسعر التبادل Klines       |
+| `startTime` | int64  | لا       | وقت البدء                                                               |
+| `endTime`   | int64  | لا       | نهاية الزمن                                                                 |
+| `limit`     | int32  | لا       | عدد العناصر المرتجعة، `500`الافتراضية، الحد الأقصى `1000`                  |
+
+حقول الاستجابة:
+
+| الميدان              | النوع   | الوصف |
+| ------------------ | ------ | ----------- |
+| `list[].openTime`  | int64  | وقت الفتح   |
+| `list[].open`      | string | سعر الافتتاح  |
+| `list[].high`      | string | السعر المرتفع  |
+| `list[].low`       | string | سعر منخفض   |
+| `list[].close`     | string | سعر الإغلاق |
+| `list[].volume`    | string | الحجم      |
+| `list[].closeTime` | int64  | وقت الإغلاق  |
+
+<h2 id="related-documentation">وثائق ذات صلة</h2>
+
+- [نقاط النهاية العامة] (/developer-api/rest-api/public-endpoints)
+- [قنوات WebSocket العامة](/ar/developer-api/websocket/public-market-channels)
+- [عمق السوق وانتشار] (/solutions/market-depth-spread)
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">صفحات ذات صلة</h2>
+
+- [نقاط النهاية العامة](/ar/developer-api/rest-api/public-endpoints)
+- [عمق السوق وانتشار السوق](/ar/solutions/market-depth-spread)
+<!-- sixmm-localized-link-repair:end -->

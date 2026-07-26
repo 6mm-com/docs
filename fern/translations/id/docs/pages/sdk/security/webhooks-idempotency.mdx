@@ -1,0 +1,85 @@
+---
+title: "Verifikasi & Idempotensi Tanda Tangan Webhook"
+subtitle: "Verifikasi webhook Agen 6MM dengan badan permintaan mentah dan proses retry, timeout, serta event berulang tanpa tindakan bisnis yang duplikat."
+slug: sdk/security/webhooks-idempotency
+canonical-url: https://docs.6mm.com/id/sdk/security/webhooks-idempotency
+---
+
+Webhook memberi tahu backend mitra tentang perubahan status bisnis asinkron. Karena pengiriman dapat dicoba ulang, setiap penerima harus memverifikasi tanda tangan sebelum mem-parse data tepercaya dan harus memproses peristiwa secara idempotensial.
+
+<h2 id="webhook-headers">Header Webhook</h2>
+
+| Header | Deskripsi |
+| --- | --- |
+| X-Agent-Timestamp | Timestamp Unix dalam hitungan detik. |
+| X-Agent-Nonce | Perlindungan tayangan ulang nonce. |
+| tanda tangan agen x | HMAC- tanda tanganSHA256 . |
+
+```text
+timestamp + nonce + rawBody
+```
+
+Gunakan body permintaan mentah yang diterima secara tepat selama HTTP saat merekonstruksi nilai yang ditandatangani. Mengurai dan menyeriakan ulang JSON terlebih dahulu dapat mengubah urutan ruang kosong atau field dan menghasilkan tanda tangan yang berbeda.
+
+<h2 id="verification-flow">Alur verifikasi</h2>
+
+1. Baca timestamp, nonce, dan header tanda tangan.
+2. Tangkap badan permintaan mentah yang tidak dimodifikasi.
+3. Bangun `timestamp + nonce + rawBody`.
+4. Hitung HMAC-SHA256 dengan mitra API rahasia.
+5. Bandingkan tanda tangan yang dihitung dan diterima menggunakan perbandingan waktu konstan.
+6. Terapkan timestamp-freshness dan nonce-reuse yang disetujui.
+7. Analisis dan proses event hanya setelah verifikasi berhasil.
+
+Ketika verifikator Agent SDK resmi tersedia, gunakan itu daripada mempertahankan kode penandatanganan independen.
+
+<h2 id="order-idempotency">Idempotensi urutan</h2>
+
+| Kasus | Penanganan |
+| --- | --- |
+| Permintaan transfer awal | Buat satu agentOrderNoyang unik secara global. |
+| HTTP timeout | Query agentOrderNo asli sebelum membuat yang baru. |
+| Respons PROCESSING | Tunggu status webhook atau urutan kueri. |
+| Webhook berulang | Deduplikasi berdasarkan kunci idempotensi dan status akhir. |
+
+<h2 id="recommended-idempotency-record">Catatan idempotensi yang direkomendasikan</h2>
+
+Simpan cukup informasi untuk mengenali pengiriman berulang dan pulihkan dengan aman:
+
+| Lapangan | Tujuan |
+| --- | --- |
+| Kunci acara atau bisnis | Mengidentifikasi notifikasi atau operasi secara unik. |
+| Nomor pesanan mitra | Menghubungkan event ke permintaan asli. |
+| Hash payload | Membantu mengidentifikasi muatan berulang yang bertentangan. |
+| Status pemrosesan saat ini | Distinguishes yang diterima, diproses, berhasil, dan gagal dalam pekerjaan. |
+| Status bisnis akhir | Mencegah aksi terminal diterapkan dua kali. |
+| Timestamp yang diproses | Mendukung kebijakan investigasi dan retensi. |
+
+Commit catatan perubahan bisnis dan idempotensi dalam transaksi yang sama jika memungkinkan. Peristiwa berulang harus mengembalikan hasil yang sudah diketahui, bukan menerapkan saldo, pesanan, atau perubahan pengguna lagi.
+
+<h2 id="timeout-and-retry-rule">Aturan timeout dan percobaan ulang</h2>
+
+Timeout HTTP tidak membuktikan bahwa permintaan asli gagal. Query operasi menggunakan `agentOrderNo`asli, atau tunggu webhook-nya, sebelum memutuskan apakah tindakan lain diperlukan. Membuat nomor order bisnis baru setelah setiap timeout dapat menyebabkan pergerakan dana duplikat.
+
+<h2 id="production-checklist">Daftar periksa produksi</h2>
+
+- Verifikasi tanda tangan sebelum JSON parsing atau pemrosesan bisnis.
+- Menjaga badan mentah secara independen dari muatan yang telah diparse.
+- Tolak permintaan yang sudah usang atau diputar ulang sesuai dengan kebijakan integrasi yang telah disetujui.
+- Membuat pemrosesan acara aman untuk pengiriman berulang maupun di luar urutan.
+- Catat event ID, nomor pesanan mitra, hasil pemrosesan, dan waktu permintaan.
+- Menyusun rahasia dan nilai tanda tangan dari log dan lampiran dukungan.
+
+<h2 id="related-docs">Dokumen terkait</h2>
+
+<CardGroup cols={3}>
+<Card title="Rahasia & Penandatanganan HMAC" icon="fa-duotone fa-shield-keyhole" href="/id/sdk/security/secrets-signing">
+Lindungi rahasia API yang digunakan untuk verifikasi permintaan dan webhook.
+</Card>
+<Card title="Agent SDK Ikhtisar" icon="fa-duotone fa-server" href="/id/sdk/agent-sdk/overview">
+Tinjau alur kerja integrasi backend secara lengkap.
+</Card>
+<Card title="SDK Pemecahan Masalah" icon="fa-duotone fa-screwdriver-wrench" href="/id/sdk/security/troubleshooting">
+Selidiki tanda tangan yang ditolak, kejadian berulang, dan operasi yang tertunda.
+</Card>
+</CardGroup>

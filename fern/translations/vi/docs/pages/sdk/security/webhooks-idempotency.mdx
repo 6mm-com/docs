@@ -1,0 +1,85 @@
+---
+title: "Xác minh chữ ký Webhook & Tính tương đồng"
+subtitle: "Xác minh webhook 6MM Agent với phần thân yêu cầu thô và xử lý thử lại, timeout, và sự kiện lặp lại mà không có các hành động kinh doanh trùng lặp."
+slug: sdk/security/webhooks-idempotency
+canonical-url: https://docs.6mm.com/vi/sdk/security/webhooks-idempotency
+---
+
+Webhook thông báo cho backend đối tác về các thay đổi trạng thái kinh doanh bất đồng bộ. Vì việc gửi có thể được thử lại, mỗi người nhận phải xác minh chữ ký trước khi phân tích dữ liệu đáng tin cậy và phải xử lý sự kiện một cách đồng nhất.
+
+<h2 id="webhook-headers">Tiêu đề Webhook</h2>
+
+| Tiêu đề | Mô tả |
+| --- | --- |
+| Dấu thời gian X-Agent | Thời gian Unix tính bằng giây. |
+| X-Agent-Nonce | Không có bảo vệ phát lại. |
+| chữ ký X-Agent | HMAC-SHA256 ký. |
+
+```text
+timestamp + nonce + rawBody
+```
+
+Sử dụng chính xác phần thân yêu cầu thô nhận được trên HTTP khi tái tạo giá trị đã ký. Phân tích cú pháp và tuần tự hóa lại JSON trước có thể thay đổi khoảng trắng hoặc thứ tự trường và tạo ra một chữ ký khác.
+
+<h2 id="verification-flow">Quy trình xác minh</h2>
+
+1. Đọc tiêu đề thời gian, nonce và chữ ký.
+2. Ghi lại nội dung yêu cầu thô chưa chỉnh sửa.
+3. Xây dựng `timestamp + nonce + rawBody`.
+4. Tính HMAC-SHA256 với đối tác API bí mật.
+5. So sánh chữ ký đã tính toán và nhận được bằng cách so sánh thời gian hằng số.
+6. Áp dụng các kiểm tra thời gian tươi mới và không tái sử dụng đã được phê duyệt.
+7. Chỉ phân tích và xử lý sự kiện sau khi xác minh thành công.
+
+Khi có trình xác minh Agent SDK chính thức, hãy sử dụng nó thay vì duy trì mã ký độc lập.
+
+<h2 id="order-idempotency">Tính đồng nhất của thứ tự</h2>
+
+| Vụ án | Xử lý |
+| --- | --- |
+| Yêu cầu chuyển ban đầu | Tạo một agentOrderNoduy nhất toàn cầu. |
+| HTTP hội ý | Truy vấn agentOrderNo gốc trước khi tạo một  mới. |
+| Phản hồi PROCESSING | Chờ trạng thái webhook hoặc lệnh truy vấn. |
+| Webhook lặp lại | Loại bỏ trùng lặp bằng khóa đồng tính và trạng thái cuối cùng. |
+
+<h2 id="recommended-idempotency-record">Bản ghi idempotency được khuyến nghị</h2>
+
+Lưu trữ đủ thông tin để nhận biết một lần giao hàng lặp lại và phục hồi an toàn:
+
+| Lĩnh vực | Mục đích |
+| --- | --- |
+| Khóa sự kiện hoặc khóa kinh doanh | Xác định duy nhất thông báo hoặc thao tác. |
+| Số đơn hàng đối tác | Kết nối sự kiện với yêu cầu ban đầu. |
+| Băm tải trọng | Giúp xác định các tải trọng lặp lại xung đột. |
+| Trạng thái xử lý hiện tại | Phân biệt công việc nhận được, xử lý, thành công và thất bại. |
+| Tình trạng kinh doanh cuối cùng | Ngăn một hành động cuối được áp dụng hai lần. |
+| Dấu thời gian đã xử lý | Hỗ trợ các chính sách điều tra và lưu trữ. |
+
+Cam kết bản ghi thay đổi kinh doanh và bản ghi idempotency trong cùng một giao dịch nếu có thể. Một sự kiện lặp lại nên trả về kết quả đã biết thay vì áp dụng lại số dư, thứ tự hoặc thay đổi người dùng.
+
+<h2 id="timeout-and-retry-rule">Quy tắc timeout và thử lại</h2>
+
+Thời gian chờ HTTP không chứng minh rằng yêu cầu ban đầu đã thất bại. Truy vấn thao tác bằng `agentOrderNo`gốc, hoặc chờ webhook của nó, trước khi quyết định có cần hành động khác hay không. Tạo số lệnh doanh nghiệp mới sau mỗi lần timeout có thể gây ra các chuyển động quỹ trùng lặp.
+
+<h2 id="production-checklist">Danh sách kiểm tra sản xuất</h2>
+
+- Xác minh chữ ký trước khi JSON phân tích cú pháp hoặc xử lý kinh doanh.
+- Bảo toàn phần cơ thể thô độc lập với payload đã phân tích cú pháp.
+- Từ chối các yêu cầu cũ hoặc phát lại theo chính sách tích hợp đã được phê duyệt.
+- Đảm bảo xử lý sự kiện an toàn cho việc giao hàng lặp đi lặp lại hoặc giao hàng ngoài đơn hàng.
+- Ghi lại ID sự kiện, số đơn hàng đối tác, kết quả xử lý và thời gian yêu cầu.
+- Xóa các bí mật và giá trị chữ ký khỏi nhật ký và tệp đính kèm hỗ trợ.
+
+<h2 id="related-docs">Tài liệu liên quan</h2>
+
+<CardGroup cols={3}>
+<Card title="Bí mật & Ký HMAC" icon="fa-duotone fa-shield-keyhole" href="/vi/sdk/security/secrets-signing">
+Bảo vệ bí mật API được sử dụng để xác minh yêu cầu và webhook.
+</Card>
+<Card title="Tổng quan Agent SDK" icon="fa-duotone fa-server" href="/vi/sdk/agent-sdk/overview">
+Xem xét toàn bộ quy trình tích hợp backend.
+</Card>
+<Card title="SDK Khắc phục sự cố" icon="fa-duotone fa-screwdriver-wrench" href="/vi/sdk/security/troubleshooting">
+Điều tra các chữ ký bị từ chối, sự kiện lặp lại và các hoạt động đang chờ xử lý.
+</Card>
+</CardGroup>

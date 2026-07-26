@@ -1,0 +1,74 @@
+---
+title: "Opzioni ed Eventi"
+subtitle: "Opzioni di inizializzazione, eventi di esecuzione e codici di errore comuni."
+slug: sdk/trading-widget/options-events
+canonical-url: https://docs.6mm.com/it/sdk/trading-widget/options-events
+---
+
+<h2 id="options">Opzioni</h2>
+
+| Campo | Tipo | Predefinito | Note |
+| --- | --- | --- | --- |
+| baseUrl | string | SDK origine della scrittura | Dominio iFrame. Passa esplicitamente nelle pagine partner. |
+| Simbolo | string | BTCUSDT | Normalizzato a maiuscole e strisce - / _. |
+| Tema | Buio \| luce | Buio | Parametro iniziale del tema. |
+| Località | en \| en-US \| zh-CN | Browser/predefinito | Sono supportati l'inglese e il cinese semplificato. |
+| Disposizione | predefinito \| compatto | predefinito | Opzione layout riservato. |
+| Display | object | `showHeader: false`, `showTicker: false`, `hidden: []` | Controlla le aree di guscio e i contenitori commerciali di alto livello. |
+| Auth | object | nessuna | Usa partner-token per nuove integrazioni SSO . |
+
+<h2 id="display-controls">Controlli di visualizzazione</h2>
+
+`display` controlla la shell embedded della pagina di trading e i container di alto livello. Negli embedded partner, l'intestazione PC e il ticker di mercato inferiore sono nascosti di default.
+
+```js
+display: {
+  showHeader: false,
+  showTicker: false,
+  hidden: ['chart', 'orderBook'],
+}
+```
+
+| Campo | Tipo | Predefinito | Note |
+| --- | --- | --- | --- |
+| showHeader | boolean | falso | Se mostrare l'intestazione embedded del PC all'interno dell'iframe. |
+| showTicker | boolean | falso | Se mostrare il ticker di mercato più basso nel guscio incorporato. |
+| nascosto | string[] | [] | Nasconde contenitori di alto livello nella pagina di commercio. |
+
+Valori `display.hidden` supportati:
+
+| Valore | Contenitore |
+| --- | --- |
+| Classifica | Contenitore cartografico |
+| orderBook | Contenitore del libro ordini |
+| orderForm | Pannello dei moduli d'ordine |
+| Posizioni | Posizioni più basse e pannello ordini aperti |
+| Account | Contenitore degli asset del conto |
+
+`display.hidden` nasconde solo interi contenitori. Non nasconde singoli pulsanti, campi o strumenti all'interno di un contenitore. I valori che non si mappano alla viewport corrente vengono ignorati.
+
+<h2 id="events">Eventi</h2>
+
+| Evento | Trigger |
+| --- | --- |
+| Pronto | Inizializzazione iframe completata. |
+| Errore | SDK, iframe o errore di autenticazione. |
+| state_changed | SDK stato del ciclo di vita è cambiato. |
+| auth_state_changed | Stato di autenticazione del token partner cambiato. |
+| symbol_changed | Il simbolo reale dell'iframe è cambiato. |
+| locale_changed | La località effettiva dell'iframe è cambiata. |
+| order_created | L'utente ha creato un ordine all'interno dell'iframe. |
+| order_failed | Invio dell'ordine fallito. |
+| distrutto | SDK istanza distrutta. |
+
+<h2 id="related-widget-guides">Guide ai widget correlati</h2>
+
+- [Trading Widget Avvio Rapido] (/sdk/trading-widget/quick-start)
+- [Autenticazione](/it/sdk/trading-widget/authentication)
+- [Metodi di Istanza](/it/sdk/trading-widget/instance-methods)
+- [Risoluzione dei problemi](/it/sdk/security/troubleshooting)
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">Pagine correlate</h2>
+
+- [Incorpora il 6MM Trading Widget: Avvio rapido](/it/sdk/trading-widget/quick-start)
+<!-- sixmm-localized-link-repair:end -->

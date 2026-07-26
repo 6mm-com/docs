@@ -1,0 +1,52 @@
+---
+title: "Agent PHP SDK"
+subtitle: "使用後端服務中核准的 6MM 代理 PHP 套件來進行使用者綁定、傳輸、進入網址及 webhook 驗證。"
+slug: sdk/agent-sdk/php/overview
+canonical-url: https://docs.6mm.com/zh-TW/sdk/agent-sdk/php/overview
+---
+
+<h2 id="runtime">運行時間</h2>
+
+| 項目 | 價值 |
+| --- | --- |
+| 包裝 | SixMM/agent-SDK |
+| 最低 PHP 版本 | PHP 7.4+ |
+| 推薦 PHP 版本 | PHP 8.1+ 或目前支援的版本 |
+| 必要延期 | ext-json， ext-curl |
+
+PHP SDK套件來源及核准版本會在合作夥伴入職時提供。不要以為該套件是公開 Packagist 提供的;配置為你公司提供的 Composer 資料庫。
+
+<h2 id="supported-scenarios">支援劇本</h2>
+
+| 劇本 | SDK 方法 |
+| --- | --- |
+| 綁定使用者 | 綁定 |
+| 固定金額轉移 | 轉會 |
+| 全部轉交 | transferAllOut |
+| 反向轉移 | 背面 |
+| 查詢順序 | queryOrder |
+| 建立入口 URL | createEntryUrl |
+| Webhook 驗證 | WebhookVerifier：：verify |
+
+<h2 id="backend-integration-rules">後端整合規則</h2>
+
+- 從秘密管理器或受保護環境變數載入 `apiSecret` 。
+- 避免使用者綁定、傳輸、簽署及 webhook 邏輯進入瀏覽器程式碼。
+- 使用十進位字串表示資產數量，以避免浮點數四捨五入。
+- 查詢不確定傳輸結果時，重用原始 `agentOrderNo` 。
+- 在解碼或更改原始請求主體前，先驗證 webhook 簽章是否符合原始請求內容。
+
+<h2 id="next-steps">下一步</h2>
+
+- [PHP 快速啟動 ]（/sdk/agent-sdk/php/quick-start）：設定 Composer 並初始化用戶端。
+- [Agent SDK 概述 ]（/sdk/agent-sdk/overview）：檢視完整的後端整合流程。
+- [秘密與簽署]（/sdk/security/secrets-signing）：保護憑證並理解 HMAC 簽署。
+- [Webhooks 與 Idempotency]（/sdk/security/webhooks-idempotency）：安全處理重複回調。
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">相關頁面</h2>
+
+- [PHP 快速入門](/zh-TW/sdk/agent-sdk/php/quick-start)
+- [6MM Agent SDK Java 和 PHP](/zh-TW/sdk/agent-sdk/overview)
+- [Agent SDK 祕密與 HMAC 手語](/zh-TW/sdk/security/secrets-signing)
+- [Webhook 簽名驗證與冪性](/zh-TW/sdk/security/webhooks-idempotency)
+<!-- sixmm-localized-link-repair:end -->

@@ -1,0 +1,128 @@
+---
+title: "Quản lý API Key"
+description: "Tạo, kiểm tra, cập nhật và thu hồi khóa 6MM API đồng thời áp dụng các quyền phù hợp, hạn chế IP , lưu trữ bí mật và thực hành luân phiên."
+slug: developer-api/api-key-management
+canonical-url: https://docs.6mm.com/vi/developer-api/api-key-management
+---
+
+API Key đầu cuối quản lý chỉ chấp nhận xác thực JWT .
+
+<h2 id="create-api-key">Tạo API Key</h2>
+
+```http
+POST /v1/private/user/api-key/create
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+Tham số yêu cầu:
+
+| Tham số     | Loại      | Bắt buộc | Mô tả                                                           |
+| ------------- | --------- | -------- | --------------------------------------------------------------------- |
+| `label`       | string    | Đúng vậy      | API Key nhãn, độ dài 1 - 64                                          |
+| `permissions` | int       | Không       | Bitmask quyền, `1`mặc định, phạm vi `1` - `7`                      |
+| `ipWhitelist` | string\[] | Không       | IP danh sách trắng, tối đa 20 mục. Nếu bỏ qua, IP nguồn không bị giới hạn |
+
+Yêu cầu ví dụ:
+
+```bash
+curl -X POST https://api.6mm.com/v1/private/user/api-key/create \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -d '{
+    "label": "external-service-prod",
+    "permissions": 3,
+    "ipWhitelist": ["203.0.113.10"]
+  }'
+```
+
+Ví dụ phản hồi:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "apiKey": "fx_xxxxxxxxxxxxxxxxxxxxxxxx",
+    "apiSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  },
+  "requestId": "req-api-key"
+}
+```
+
+`apiSecret` chỉ được trả về một lần khi API Key được tạo. Lưu nó ngay lập tức trong hệ thống quản lý bí mật. Không ghi nó vào kho mã nguồn hoặc nhật ký.
+
+Mỗi người dùng có thể tạo tối đa 30 Khóa API .
+
+<h2 id="list-api-keys">Danh sách API khóa</h2>
+
+```http
+GET /v1/private/user/api-key/list
+Authorization: Bearer YOUR_ACCESS_TOKEN
+```
+
+Trường phản hồi:
+
+| Lĩnh vực                | Loại      | Mô tả                       |
+| -------------------- | --------- | --------------------------------- |
+| `list[].id`          | string    | ID API Key                        |
+| `list[].label`       | string    | Nhãn hiệu                             |
+| `list[].apiKey`      | string    | Định danh API Key công khai         |
+| `list[].permissions` | int       | Bitmask quyền                |
+| `list[].ipWhitelist` | string\[] | IP danh sách trắng                      |
+| `list[].status`      | int       | Trạng thái: `1` bật, `0` vô hiệu hóa |
+| `list[].lastUsedAt`  | int64     | Thời gian sử dụng cuối cùng                    |
+| `list[].createdAt`   | int64     | Thời gian sáng tạo                     |
+
+<h2 id="update-api-key">Cập nhật API Key</h2>
+
+```http
+PUT /v1/private/user/api-key/update
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+Tham số yêu cầu:
+
+| Tham số     | Loại      | Bắt buộc | Mô tả               |
+| ------------- | --------- | -------- | ------------------------- |
+| `id`          | string    | Đúng vậy      | ID API Key                |
+| `label`       | string    | Không       | Nhãn hiệu mới                 |
+| `permissions` | int       | Không       | Bitmask quyền mới    |
+| `ipWhitelist` | string\[] | Không       | Danh sách trắng IP mới          |
+| `status`      | int       | Không       | `1` bật, `0` vô hiệu hóa |
+
+<h2 id="delete-api-key">Xóa API Key</h2>
+
+```http
+POST /v1/private/user/api-key/delete
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+Nội dung yêu cầu:
+
+```json
+{ "id": "1001" }
+```
+
+<h2 id="delete-all-api-keys">Xóa Tất Cả Khóa API</h2>
+
+```http
+POST /v1/private/user/api-key/delete-all
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+Trường phản hồi:
+
+| Lĩnh vực     | Loại  | Mô tả                |
+| --------- | ----- | -------------------------- |
+| `deleted` | int64 | Số lượng khóa API đã xóa |
+
+<h2 id="related-security-guides">Hướng dẫn bảo mật liên quan</h2>
+
+- [Xác thực](/vi/developer-api/authentication)
+- [Yêu cầu ký](/vi/developer-api/request-signing)
+- [Bí mật & Ký kết](/vi/sdk/security/secrets-signing)
+- [Khuyến nghị tích hợp](/vi/developer-api/integration-recommendations)

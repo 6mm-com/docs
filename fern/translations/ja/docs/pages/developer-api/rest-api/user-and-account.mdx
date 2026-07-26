@@ -1,0 +1,223 @@
+---
+title: "ユーザーとアカウント"
+description: "ユーザーおよびアカウント 6MM エンドポイントを使って、プロフィール、残高、アカウント状態、権限、パートナー連携アカウント情報を取得します。"
+slug: developer-api/rest-api/user-and-account
+canonical-url: https://docs.6mm.com/ja/developer-api/rest-api/user-and-account
+---
+
+特に指定がない限り、以下のエンドポイントは JWT 署名または API Key 署名を使用できます。
+
+<h2 id="user-info">ユーザー情報</h2>
+
+```http
+GET /v1/private/user/info
+```
+
+応答フィールド:
+
+| フィールド                  | 種類   | 概要      |
+| ---------------------- | ------ | ---------------- |
+| `userInfo.userId`      | string | 外部ユーザーID |
+| `userInfo.username`    | string | ユーザー名         |
+| `userInfo.agentId`     | int64  | エージェントID         |
+| `userInfo.vipLevel`    | int64  | VIP レベル        |
+| `userInfo.lastLoginAt` | int64  | 最終ログイン時間  |
+| `userInfo.lastLoginIp` | string | 最後のログイン IP    |
+
+<h2 id="user-assets">ユーザー資産</h2>
+
+```http
+GET /v1/private/user/asset
+```
+
+応答フィールド:
+
+| フィールド                     | 種類   | 概要                     |
+| ------------------------- | ------ | ------------------------------- |
+| `userAsset.userId`        | string | 外部ユーザーID                |
+| `userAsset.assetType`     | string | 資産の種類                      |
+| `userAsset.walletBalance` | string | ウォレット残高                  |
+| `userAsset.frozenMargin`  | string | 保留中の注文により利益が凍結されました |
+| `userAsset.usedMargin`    | string | ポジションごとに使われるマージン        |
+
+<h2 id="create-listenkey">創り出す listenKey</h2>
+
+```http
+POST /v1/private/user/listen-key
+```
+
+プライベート WebSocket ストリームの認証鍵を作成します。
+
+<h2 id="renew-listenkey">更新 listenKey</h2>
+
+```http
+PUT /v1/private/user/listen-key
+```
+
+listenKey有効性を拡張します。
+
+<h2 id="close-listenkey">接近 listenKey</h2>
+
+```http
+DELETE /v1/private/user/listen-key
+```
+
+指定された listenKeyを閉じます。
+
+<h2 id="account-change-logs">アカウント変更ログ</h2>
+
+```http
+GET /v1/private/user/account-change-log?assetType=USDT&page=1&pageSize=20
+```
+
+リクエストパラメータ:
+
+| パラメータ    | 種類   | 必須 | 概要                  |
+| ------------ | ------ | -------- | ---------------------------- |
+| `assetType`  | string | いいえ       | 資産の種類、例えば `USDT`   |
+| `changeType` | string | いいえ       | タイプ変更                  |
+| `startTime`  | int64  | いいえ       | 開始時間                   |
+| `endTime`    | int64  | いいえ       | 終焉                     |
+| `page`       | int32  | いいえ       | ページ番号、デフォルトで `1`     |
+| `pageSize`   | int32  | いいえ       | ページごとの項目数、デフォルト `20` |
+
+応答フィールド:
+
+| フィールド                        | 種類   | 概要                  |
+| ---------------------------- | ------ | ---------------------------- |
+| `list[].assetType`           | string | 資産の種類                   |
+| `list[].amount`              | string | 金額変更               |
+| `list[].walletBalanceBefore` | string | お釣り前のウォレット残高 |
+| `list[].walletBalanceAfter`  | string | 小銭変更後のウォレット残高  |
+| `list[].frozenBalanceBefore` | string | 変化前の凍結残高 |
+| `list[].frozenBalanceAfter`  | string | 変化後の凍結残高  |
+| `list[].changeType`          | string | タイプ変更                  |
+| `list[].referenceId`         | string | 関連事業ID          |
+| `list[].createdAt`           | int64  | 作成時間                |
+| `total`                      | int64  | 総数                  |
+
+<h2 id="30-day-volume-statistics">30日間の取引量統計</h2>
+
+```http
+GET /v1/private/user/volume-stats
+```
+
+応答フィールド:
+
+| フィールド         | 種類   | 概要                                     |
+| ------------- | ------ | ----------------------------------------------- |
+| `volume30d`   | string | 過去30日間の累積取引量 |
+| `feeTotal30d` | string | 過去30日間の累積料金           |
+
+<h2 id="balance-history">バランスの歴史</h2>
+
+```http
+GET /v1/private/user/balance-history?period=1D&limit=30
+```
+
+リクエストパラメータ:
+
+| パラメータ | 種類   | 必須 | 概要                            |
+| --------- | ------ | -------- | -------------------------------------- |
+| `period`  | string | はい      | `1D` / `1W` / `1M`                     |
+| `limit`   | 知力    | いいえ       | 返品されたアイテム数、デフォルトで返品 `30` |
+
+応答フィールド:
+
+| フィールド             | 種類   | 概要                 |
+| ----------------- | ------ | --------------------------- |
+| `items[].date`    | string | 集約日            |
+| `items[].balance` | string | ウォレット残高              |
+| `items[].pnl`     | string | 当時のPnLを実現 |
+
+<h2 id="trade-overview">貿易概要</h2>
+
+```http
+GET /v1/private/user/trade-overview?type=1M
+```
+
+リクエストパラメータ:
+
+| パラメータ | 種類   | 必須 | 概要                                     |
+| --------- | ------ | -------- | ----------------------------------------------- |
+| `type`    | string | はい      | トレンドレンジ: `1D`、 `1W`、 `1M`、 `3M`、 `6M`、 `1Y` |
+
+応答フィールド:
+
+| フィールド                | 種類   | 概要                                                          |
+| -------------------- | ------ | -------------------------------------------------------------------- |
+| `todayPnl`           | string | 本日実現されたPnL                                                 |
+| `todayVolume`        | string | 本日の契約取引量                                      |
+| `totalVolume`        | string | 累積契約取引量                                   |
+| `totalPnl`           | string | 累積実現PnL                                              |
+| `maxDrawdown30d`     | string | 過去30日間の最大引き出し額                        |
+| `maxDrawdown30dRate` | string | 過去30日間の最大引き落とし率(小数点で`0`から`1`まで |
+| `transferIn`         | string | 累積移管資金                                      |
+| `transferOut`        | string | 累積引き出し資金                                     |
+| `items[]`            | array  | 資産動向データ                                                     |
+
+<h2 id="asset-overview-summary">資産概要概要</h2>
+
+```http
+GET /v1/private/user/asset/overview/summary
+```
+
+レスポンスフィールドはトレード概要の要約欄と同じですが、 `items[]`を除きます。
+
+<h2 id="asset-overview-trend">資産概観の傾向</h2>
+
+```http
+GET /v1/private/user/asset/overview/trend?type=1M
+```
+
+リクエストパラメータ:
+
+| パラメータ | 種類   | 必須 | 概要                                     |
+| --------- | ------ | -------- | ----------------------------------------------- |
+| `type`    | string | はい      | トレンドレンジ: `1D`、 `1W`、 `1M`、 `3M`、 `6M`、 `1Y` |
+
+応答フィールド:
+
+| フィールド                  | 種類   | 概要                     |
+| ---------------------- | ------ | ------------------------------- |
+| `items[].snapshotTime` | int64  | スナップショット時間                   |
+| `items[].balance`      | string | 経常収支         |
+| `items[].pnl`          | string | 現在の期間のPnL      |
+| `items[].pnlRate`      | string | 現在期間のPnLレート |
+| `items[].totalPnl`     | string | 累積PnL                  |
+
+<h2 id="favorite-symbols">お気に入りのシンボル</h2>
+
+<h2 id="save">セーブ</h2>
+
+```http
+POST /v1/private/user/favorite-symbols
+Content-Type: application/json
+```
+
+要請本体:
+
+```json
+{
+  "symbols": ["BTCUSDT", "ETHUSDT"]
+}
+```
+
+<h2 id="query">クエリ</h2>
+
+```http
+GET /v1/private/user/favorite-symbols
+```
+
+応答フィールド:
+
+| フィールド     | 種類      | 概要          |
+| --------- | --------- | -------------------- |
+| `symbols` | ストリング\[] | お気に入りのシンボルリスト |
+
+<h2 id="related-documentation">関連文書</h2>
+
+- [プライベートユーザーチャネル](/ja/developer-api/websocket/private-user-channel)
+- [認証](/ja/developer-api/authentication)
+- [資産移転](/ja/trading/getting-started/asset-transfer)
+- [エラーコードとトラブルシューティング](/ja/developer-api/error-codes-and-troubleshooting)

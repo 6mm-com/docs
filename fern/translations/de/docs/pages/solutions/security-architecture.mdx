@@ -1,0 +1,66 @@
+---
+title: "Partnerintegration Sicherheitsarchitektur"
+subtitle: "Entwerfen Sie Vertrauensgrenzen und Produktionskontrollen für Embedded Trading, API, SDK, Webhook, Asset-Transfer und operative Integrationen."
+slug: solutions/security-architecture
+canonical-url: https://docs.6mm.com/de/solutions/security-architecture
+---
+
+Diese Seite konzentriert sich darauf, wie ein Partner eine sichere 6MM Integration gestalten sollte. Für die breiteren Sicherheitsschichten, die über die Handelsplattform hinweg verwendet werden, siehe [Platform Security Architecture](/de/security-compliance/security-architecture).
+
+Die Sicherheitsarchitektur sollte vor Beginn der Produktionsintegration vereinbart werden. Sie beeinflusst, wie Partnersysteme Nutzer validieren, Token ausgeben, Geheimnisse speichern, Ereignisse empfangen, Abläufe überwachen und auf Vorfälle reagieren.
+
+<h2 id="recommended-trust-boundary">Empfohlene Vertrauensgrenze</h2>
+
+| Komponente | Kann enthalten | Darf nicht enthalten |
+| --- | --- | --- |
+| Partner-Frontend | Öffentliche Konfiguration, kurzlebiger Eintrag, nicht sensibler UI-Zustand | Partner API geheimen, signierenden Schlüssel, privilegierten Backend-Zugangsdaten |
+| Partner-Backend | Benutzerzuordnung, geschützte Zugangsdaten, Signierungslogik, Webhook-Verarbeitung | Geheimnisse, die durch Kundenantworten oder öffentliche Protokolle offengelegt werden |
+| 6MM Integrationsendpunkte | Genehmigte signierte Anfragen, Token und Webhook-Lieferung | Unverifizierte Annahmen der Partnerseite der Nutzer |
+
+Das Partner-Frontend sollte das Partner-Backend für privilegierte Operationen aufrufen. Das Backend validiert den Partner-Benutzer, ruft 6MM über das genehmigte API oder SDKauf und liefert nur das kurzlebige Ergebnis, das das Frontend benötigt.
+
+<h2 id="security-layers">Sicherheitsschichten</h2>
+
+| Schicht | Erforderlicher Fokus |
+| --- | --- |
+| API Qualifikationen | Nur Backend-Speicher, Rotationsplan und Zugriffskontrolle. |
+| Unterschrift auf Anfrage | Konsistente Zeitstempel-, Unterschriften- und Wiederholungsschutzbehandlung. |
+| Embed-Tokens | Kurzlebige Ausgabe, Eignungsprüfungen und eindeutiges Invalidierungsverhalten. |
+| Webhooks | Signaturenverifikation, Idempotenz, Wiederholungen und Event-Audit-Protokolle. |
+| Betrieb | Zugang zu Rollen, Eskalation von Vorfällen, Überwachung und Beweissicherung. |
+
+<h2 id="production-control-plan">Produktionskontrollplan</h2>
+
+| Kontrollgebiet | Minimale Implementierungsnachweise |
+| --- | --- |
+| Speicherung von Zugangsdaten | Standort des Secret-Managers, Zugangsbesitzer, Trennung der Umgebung und Rotationsprozess. |
+| Benutzereingabe | Sitzungsvalidierung, Eignungsprüfung, kurzlebiger Token-Fluss und Fehlerbehandlung. |
+| Unterschriebene Anfragen | Korrekte Umgebung, synchronisierte Zeit, Anfrageprotokollierung und Signaturfehlerwarnungen. |
+| Vermögensbetrieb | Eindeutige Unternehmens-IDs, Timeout-Abstimmung, Statusanfragen und Betreiberbewertungspfad. |
+| Webhooks | Rohkörper-Signaturverifikation, Wiedergabekontrollen, Idempotenzspeicher und wiederholungssichere Verarbeitung. |
+| Überwachung | Warnungen wegen Authentifizierungsfehlern, abnormalen Wiederholungen, Webhook-Verzögerungen und Betriebsfehlern. |
+| Einsatzreaktion | Benannter Eigentümer, Eskalationskanal, Beweisaufbewahrung und Verfahren zur Entziehung der Berechtigung. |
+
+<h2 id="launch-review">Launch-Review</h2>
+
+Vor der Produktion:
+
+1. Zeichnen Sie die Datenströme von Benutzer-, Token-, Anfrage-, Asset- und Webhook-Daten.
+2. Markieren Sie, wo jede Zugangsdaten erstellt, gespeichert, verwendet, protokolliert, rotiert und widerrufen wird.
+3. Testen abgelaufene Token, ungültige Signaturen, Zeitbegrenzungen, doppelte Webhooks und Wiederverbindungsverhalten.
+4. Bestätigen Sie, dass Support-Teams eine Operation anhand ihrer Anfrage oder Geschäftskennung finden können.
+5. Füllen Sie die [Produktionsstart-Checkliste](/de/solutions/production-launch-checklist) aus.
+
+<h2 id="recommended-docs">Empfohlene Ärzte</h2>
+
+<CardGroup cols={3}>
+<Card title="Geheimnisse & Signieren" icon="fa-duotone fa-key" href="/de/sdk/security/secrets-signing">
+Schützen Sie Agent SDK Zugangsdaten und unterschriebenen Anfragen.
+</Card>
+<Card title="Unterschrift der Anfrage" icon="fa-duotone fa-signature" href="/de/developer-api/request-signing">
+Implementiere direkte Entwickler- API Request-Signing.
+</Card>
+<Card title="Webhook & Idempotenz" icon="fa-duotone fa-webhook" href="/de/sdk/security/webhooks-idempotency">
+Verarbeiten Sie Ereignisse sicher.
+</Card>
+</CardGroup>

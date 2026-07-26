@@ -1,0 +1,48 @@
+---
+title: "Agent Java SDK"
+subtitle: "6MM Agent Java SDKをインストールし、ユーザーのバインディング、転送、エントリー認証情報、ウェブフックの認証に署名付きバックエンドAPIsを使用します。"
+slug: sdk/agent-sdk/java/overview
+canonical-url: https://docs.6mm.com/ja/sdk/agent-sdk/java/overview
+---
+
+<h2 id="official-repository">公式リポジトリ</h2>
+
+Java SDKリポジトリは、SDKソースコード、リリースノート、使用例、実装詳細の真実の情報源です。
+
+[6mm-com/agent-java-sdk](https://github.com/6mm-com/agent-java-sdk)
+
+<h2 id="runtime">ランタイム</h2>
+
+| アイテム | 価値 |
+| --- | --- |
+| 最小 Java バージョン | Java 8+ |
+| おすすめビルドツール | メイヴン 3.9+ |
+| メイヴン群 | `com.sixmm.exchange.sdk` |
+| メイヴン遺物 | `agent` |
+| ドキュメントドソースタグ | `v0.1.1` |
+
+公開のGitHubリポジトリはソースホスティングであり、Maven依存関係のリポジトリではありません。タグ付けされたソースをローカルでビルド・インストールするか、承認されたアーティファクトを組織のプライベートMavenリポジトリに公開してから、チームビルドで使用してください。
+
+<h2 id="typical-backend-responsibilities">典型的なバックエンドの責任</h2>
+
+- パートナーユーザーセッションの検証。
+- パートナーユーザーを agentUserIdにマッピングする。
+- ファーストトレードまたはトランスファーフローの前にコールバインド。
+- 一度限りのフルサイトでのご連絡SSOcreateEntryUrl
+- パートナートークンモードTrading Widget createEmbedTokenを呼びます。
+- 転送ウェブフックの検証と冪等処理。
+
+<h2 id="security-and-operational-rules">セキュリティおよび運用規則</h2>
+
+- `apiSecret` をバックエンドのシークレットマネージャまたは保護環境変数にのみ保存する。
+- 署名されたリクエストにはタイムスタンプが含まれているため、サーバーの時間同期を保持すること。
+- `agentOrderNo` を持続性冪等キーとして扱い、グローバルに一意に保つこと。
+- `platformUserId` を文字列として保存し、 `agentUserId`との関係を永続させる。
+- タイムアウトや不確実なネットワーク結果の後に再試行する前に、元の転送をクエリします。
+
+<h2 id="next-steps">今後のステップ</h2>
+
+- [Java クイックスタート](/ja/sdk/agent-sdk/java/quick-start)タグ付けされたソースをインストールし、 `AgentClient`を初期化します。
+- [埋め込みトークンの作成](/ja/sdk/agent-sdk/java/embed-token): Trading Widgetの短命な資格証明書を発行。
+- [秘密と署名](/ja/sdk/security/secrets-signing):自動 HMAC 署名と秘密処理を理解すること。
+- [ウェブフックと冪等性](/ja/sdk/security/webhooks-idempotency): コールバックの検証と重複処理の防止。

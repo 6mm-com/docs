@@ -1,0 +1,48 @@
+---
+title: "Arsitektur Keamanan Platform"
+subtitle: "Pahami lapisan keamanan yang digunakan di seluruh infrastruktur trading 6MM , APIs, SDKs, webhook, dan integrasi mitra."
+slug: security-compliance/security-architecture
+canonical-url: https://docs.6mm.com/id/security-compliance/security-architecture
+---
+
+Dokumentasi keamanan 6MM berfokus pada kesiapan produksi mitra. Tujuannya adalah menjaga infrastruktur perdagangan tetap stabil sekaligus memperjelas batas tanggung jawab.
+
+<h2 id="security-layers">Lapisan keamanan</h2>
+
+| lapisan | Fokus |
+| --- | --- |
+| Infrastruktur | Isolasi jaringan, komunikasi layanan terenkripsi, pemantauan, dan failover. |
+| Sistem perdagangan | Pencocokan deterministik, pemeriksaan margin, kontrol risiko, dan pencegahan penyalahgunaan. |
+| Keamanan integrasi | API keys, HMAC signing, tanda tangan webhook, perlindungan replay, dan rahasia khusus backend. |
+| Operasi mitra | Validasi sesi pengguna, kustodi aset, dukungan pelanggan, dan kontrol kepatuhan lokal. |
+
+<h2 id="partner-responsibilities">Tanggung jawab mitra</h2>
+
+- Simpan rahasia API dan kunci keluar dari browser dan aplikasi mobile.
+- Validasi sesi pengguna mitra sebelum mengeluarkan kredensial entri perdagangan.
+- Menerapkan pemeriksaan idempotensi webhook dan status terminal.
+- Memelihara log operasional untuk alur akun, pesanan, transfer, dan webhook.
+
+<h2 id="integration-trust-boundaries">Batas kepercayaan integrasi</h2>
+
+| Batas | Kontrol yang diperlukan |
+| --- | --- |
+| Browser atau aplikasi ke backend mitra | Validasi sesi mitra sebelum mengeluarkan kredensial trading apapun. |
+| Backend mitra ke 6MM API | Gunakan kredensial terbatas, penandatanganan permintaan, sinkronisasi waktu, dan penyimpanan rahasia yang dilindungi. |
+| 6MM webhook ke endpoint mitra | Verifikasi tanda tangan terhadap badan permintaan mentah, tolak pesan yang usang atau tidak valid, dan deduplikasi ulang. |
+| Rekaman status perdagangan ke mitra | Rekonsiliasi pesanan, posisi, saldo, dan transfer menggunakan pengenal tahan lama dan pemeriksaan terminal-state. |
+
+<h2 id="production-verification">Verifikasi produksi</h2>
+
+- Tes telah kedaluwarsa, dicabut, dan kredensial yang salah cakupannya.
+- Uji badan webhook yang diubah, callback duplikat, callback tertunda, dan timeout endpoint.
+- Pastikan log menyunting rahasia, token akses, dan payload permintaan sensitif.
+- Peringatan tentang kegagalan tanda tangan berulang, aktivitas pesanan yang tidak normal, perbedaan rekonsiliasi, dan ketidakstabilan koneksi.
+- Mendokumentasikan pemilik dan jalur respons untuk eksposur kredensial, kegagalan webhook, dan insiden trading.
+
+<h2 id="related-security-guides">Panduan keamanan terkait</h2>
+
+- [Rahasia & Penandatanganan](/id/sdk/security/secrets-signing)
+- [Webhooks & Idempotensi](/id/sdk/security/webhooks-idempotency)
+- [Respons Insiden](/id/security-compliance/incident-response)
+- [Matriks Tanggung Jawab Mitra](/id/security-compliance/partner-responsibilities)

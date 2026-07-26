@@ -1,0 +1,51 @@
+---
+title: "Ikhtisar Integrasi"
+description: "Mulailah integrasi 6MM API dengan lingkungan yang direkomendasikan, autentikasi, penandatanganan, REST, WebSocket, pengujian, dan urutan kesiapan produksi."
+slug: developer-api/integration-overview
+canonical-url: https://docs.6mm.com/id/developer-api/integration-overview
+---
+
+> REST URLdasar : `https://api.6mm.com`\
+> WebSocket URL: `wss://ws.6mm.com/ws`
+
+Dokumentasi ini ditujukan untuk sistem eksternal yang terintegrasi dengan layanan 6MM API . Dokumentasi ini mencakup login, autentikasi JWT , manajemen API Key , penandatanganan API Key HMAC , kueri akun, pesanan, posisi, data pasar, dan aliran WebSocket .
+
+Penyediaan akun dan persiapan pendanaan ditangani melalui proses di sisi platform. Dokumentasi ini hanya menjelaskan endpoint layanan API yang dapat dipanggil secara eksternal.
+
+<h2 id="service-endpoints">Endpoint Layanan</h2>
+
+| Tipe      | Titik Akhir              |
+| --------- | --------------------- |
+| REST API  | `https://api.6mm.com` |
+| WebSocket | `wss://ws.6mm.com/ws`    |
+
+<h2 id="integration-flow">Alur Integrasi</h2>
+
+Urutan integrasi yang direkomendasikan:
+
+1. Masuk dengan akun yang disediakan oleh platform dan dapatkan `accessToken`.
+2. Untuk akses programatik sisi server, buat API Key dengan JWT terlebih dahulu, dan simpan `apiSecret`yang dikembalikan sekali pakai dengan aman.
+3. Kueri privat, endpoint pesanan, dan endpoint posisi dapat dipanggil dengan `Authorization: Bearer <accessToken>` atau penandatanganan API Key.
+4. Untuk stream WebSocket privat, buat `listenKey` terlebih dahulu, lalu sambungkan ke `wss://ws.6mm.com/ws?listenKey=...`.
+5. Data pasar REST endpoint dan saluran WebSocket publik tidak memerlukan autentikasi.
+
+<h2 id="authentication-choice">Pilihan Autentikasi</h2>
+
+| Skenario                               | Metode yang direkomendasikan         |
+| -------------------------------------- | -------------------------- |
+| Tindakan pengguna frontend                  | JWT                        |
+| Panggilan programatik di sisi server         | API Key + tanda tangan HMAC   |
+| API Key pembuatan, pembaruan, dan penghapusan | JWT                        |
+| REST pasar publik / WebSocket publik  | Tidak memerlukan otentikasi |
+
+<h2 id="documentation-scope">Ruang Lingkup Dokumentasi</h2>
+
+Dokumentasi ini mencakup login, autentikasi JWT , manajemen API Key , penandatanganan API Key HMAC , kueri akun, pesanan, posisi, data pasar, dan aliran WebSocket .
+
+<h2 id="recommended-reading-order">Urutan bacaan yang direkomendasikan</h2>
+
+1. [Lingkungan & Konvensi Umum](/id/developer-api/environments-and-common-conventions)
+2. [Autentikasi](/id/developer-api/authentication) dan [Penandatanganan Permintaan](/id/developer-api/request-signing)
+3. [REST API](/id/developer-api/rest-api) dan [WebSocket](/id/developer-api/websocket)
+4. [Rekomendasi Integrasi](/id/developer-api/integration-recommendations)
+5. [Daftar Periksa Peluncuran Produksi](/id/resources/production-launch-checklist)

@@ -1,0 +1,137 @@
+---
+title: "Alur Kerja Trading"
+description: "6MM mendukung kontrak perpetual U-margin, memungkinkan pengguna memperdagangkan futures perpetual yang diselesaikan dan dimargin dalam stablecoin (misalnya USDT)."
+slug: trading/getting-started/trading-workflow
+canonical-url: https://docs.6mm.com/id/trading/getting-started/trading-workflow
+---
+
+<h2 id="u-margined-perpetual-contracts">Kontrak Perpetual U-Margin</h2>
+
+6MM mendukung kontrak perpetual U-margin, memungkinkan pengguna memperdagangkan futures perpetual yang diselesaikan dan dimargin dalam stablecoin (misalnya USDT).
+
+Bagian ini menjelaskan alur kerja inti perdagangan dan mekanisme utama yang terlibat dalam menempatkan dan mengelola pesanan kontrak abadi di 6MM.
+
+***
+
+<h2 id="contract-overview">Ikhtisar Kontrak</h2>
+
+* Jenis kontrak: kontrak perpetual U-margin
+* Aset Penyelesaian: Stablecoin (misalnya USDT)
+* Tidak Ada Kadaluarsa: Posisi tidak kedaluwarsa dan dapat dipegang tanpa batas waktu
+* Kontrol Risiko Berbasis Harga Tanda: Digunakan untuk perhitungan margin dan likuidasi
+
+***
+
+<h2 id="order-types">Jenis Pesanan</h2>
+
+6MM mendukung jenis order yang umum digunakan untuk mengakomodasi berbagai strategi trading:
+
+<h2 id="market-order">Urutan Pasar</h2>
+
+* Langsung dieksekusi dengan harga pasar terbaik yang tersedia
+* Mengutamakan kecepatan eksekusi daripada presisi harga
+* Cocok untuk masuk atau keluar dengan cepat
+
+<h2 id="limit-order">Perintah Batas</h2>
+
+* Hanya dapat dijalankan pada harga yang ditentukan atau lebih baik
+* Memberikan kontrol harga
+* Dapat tetap buka hingga terisi atau dibatalkan
+
+<h2 id="stop-order">Perintah Berhenti</h2>
+
+* Memicu order pasar atau limit setelah harga pemicu tercapai
+* Umum digunakan untuk strategi stop-loss atau breakout
+
+Ketersediaan pesanan > dapat bervariasi tergantung pada pasangan perdagangan dan mode integrasi.
+
+***
+
+<h2 id="leverage-and-margin">Leverage dan Margin</h2>
+
+* Leverage memungkinkan pengguna mengontrol posisi yang lebih besar dengan modal yang lebih sedikit
+* Margin dihitung berdasarkan:
+  * Ukuran posisi
+  * Tingkat leverage
+  * Harga mark
+
+Leverage yang lebih tinggi meningkatkan potensi pengembalian tetapi juga meningkatkan risiko likuidasi.
+
+***
+
+<h2 id="funding-rate-mechanism">Mekanisme Tingkat Pendanaan</h2>
+
+Kontrak perpetual menggunakan mekanisme tingkat pendanaan untuk menjaga harga kontrak tetap selaras dengan pasar spot.
+
+* Pembayaran pendanaan dilakukan pada interval yang dijadwalkan
+* Jika tingkat pendanaan positif:
+  * Posisi panjang membayar short
+* Jika tingkat pendanaan negatif:
+  * Posisi short membayar longs
+
+Biaya pendanaan dipertukarkan langsung antar trader.
+
+6MM tidak mengumpulkan pembayaran pendanaan sebagai pendapatan.
+
+***
+
+<h2 id="fees-and-slippage">Biaya dan Slippage</h2>
+
+<h2 id="trading-fees">Biaya Perdagangan</h2>
+
+* Biaya dikenakan saat pesanan dieksekusi
+* Tarif biaya dapat berbeda untuk:
+  * Pesanan pembuat
+  * Pesanan pengambil
+
+Jadwal biaya ditentukan oleh platform mitra dan dapat bervariasi.
+
+<h2 id="slippage">Slippage</h2>
+
+* Slippage terjadi ketika likuiditas pasar tidak cukup untuk mengisi order pada harga yang diharapkan
+* Lebih umum saat volatilitas tinggi atau saat menggunakan order pasar
+
+Pengguna dapat mengurangi slippage dengan menggunakan pesanan batas dan mengelola ukuran pesanan.
+
+***
+
+<h2 id="position-lifecycle">Siklus Hidup Posisi</h2>
+
+1. Dana dialokasikan ke Akun Perpetual
+2. Pesanan dilakukan dan dicocokkan oleh mesin 6MM yang cocok
+3. Posisi dibuka saat eksekusi
+4. Pembaruan margin dan PnL secara real time
+5. Biaya pendanaan dikenakan pada interval yang dijadwalkan
+6. Posisi ditutup secara manual atau melalui TP/SL
+7. PnL Akhir diselesaikan ke Akun Perpetual
+
+***
+
+<h2 id="risk-management-and-liquidation">Manajemen Risiko dan Likuidasi</h2>
+
+* 6MM memantau rasio margin secara real time
+* Ketika margin turun di bawah ambang batas pemeliharaan:
+  * Posisi dapat dilikuidasi sebagian atau sepenuhnya
+* Harga likuidasi dihitung menggunakan harga mark, bukan harga terakhir yang diperdagangkan
+
+Mekanisme ini membantu mengurangi likuidasi yang tidak perlu akibat volatilitas pasar jangka pendek.
+
+***
+
+<h2 id="summary">Ringkasan</h2>
+
+Alur kerja perdagangan abadi U-margin di 6MM dirancang untuk:
+
+* Menyediakan jenis pesanan yang familiar dan fleksibel
+* Menjaga penyelarasan harga melalui tingkat pendanaan
+* Menawarkan mekanisme biaya dan penyelesaian yang transparan
+* Memberikan pengendalian risiko tingkat institusional
+
+Struktur ini memungkinkan mitra menawarkan trading profesional dan berkelanjutan sambil mempertahankan pengalaman pengguna yang mulus.
+
+<h2 id="related-trading-guides">Panduan perdagangan terkait</h2>
+
+- [Kontrak Abadi](/id/trading/perpetual-contracts): dasar-dasar kontrak, pendanaan, margin, dan penyelesaian.
+- [Jenis Pesanan](/id/trading/order-types): perilaku batas, pasar, kondisional, dan waktu berlaku.
+- [Biaya & Slippage](/id/trading/fees-and-slippage): biaya eksekusi dan dampak likuiditas.
+- [Risiko & Likuidasi](/id/trading/risk-and-liquidations): risiko margin dan perilaku penutupan paksa.

@@ -1,0 +1,48 @@
+---
+title: "Agent Java SDK"
+subtitle: "Instal 6MM Agent Java SDK dan gunakan APIs backend bertanda tangan untuk pengikatan pengguna, transfer, kredensial entri, dan verifikasi webhook."
+slug: sdk/agent-sdk/java/overview
+canonical-url: https://docs.6mm.com/id/sdk/agent-sdk/java/overview
+---
+
+<h2 id="official-repository">Repositori resmi</h2>
+
+Repositori Java SDK adalah sumber kebenaran untuk kode sumber SDK , catatan rilis, contoh penggunaan, dan detail implementasi:
+
+[6mm-com/agent-java-sdk](https://github.com/6mm-com/agent-java-sdk)
+
+<h2 id="runtime">Durasi</h2>
+
+| Item | Nilai |
+| --- | --- |
+| Versi Java minimum | Java 8+ |
+| Alat build yang direkomendasikan | Maven 3.9+ |
+| Grup Maven | `com.sixmm.exchange.sdk` |
+| Artefak Maven | `agent` |
+| Tag sumber terdokumentasi | `v0.1.1` |
+
+Repositori GitHub publik adalah hosting sumber, bukan repositori ketergantungan Maven. Bangun dan instal sumber yang ditandai secara lokal atau publikasikan artefak yang disetujui ke repositori Maven pribadi organisasi Anda sebelum menggunakannya dalam build tim.
+
+<h2 id="typical-backend-responsibilities">Tanggung jawab backend yang khas</h2>
+
+- Validasi sesi pengguna partner.
+- Petakan pengguna mitra ke agentUserId.
+- Call bind sebelum alur perdagangan atau transfer pertama.
+- Hubungi createEntryUrl untuk SSOsatu kali di lokasi penuh.
+- Panggil createEmbedToken untuk mode token mitra Trading Widget .
+- Verifikasi webhook transfer dan prosesnya secara identitas.
+
+<h2 id="security-and-operational-rules">Aturan keamanan dan operasional</h2>
+
+- Simpan `apiSecret` hanya dalam manajer rahasia backend atau variabel lingkungan yang dilindungi.
+- Jaga waktu server tetap sinkron karena permintaan yang ditandatangani mengandung cap waktu.
+- Perlakukan `agentOrderNo` sebagai kunci idempotensi yang tahan lama dan jaga agar tetap unik secara global.
+- Menyimpan `platformUserId` sebagai string dan mempertahankan hubungannya dengan `agentUserId`.
+- Query transfer asli sebelum mencoba ulang setelah timeout atau hasil jaringan yang tidak pasti.
+
+<h2 id="next-steps">Langkah selanjutnya</h2>
+
+- [Java Quick Start](/id/sdk/agent-sdk/java/quick-start): instal sumber yang ditandai dan inisialisasi `AgentClient`.
+- [Create Embed Token](/id/sdk/agent-sdk/java/embed-token): mengeluarkan kredensial jangka pendek untuk Trading Widget.
+- [Secrets & Signing](/id/sdk/security/secrets-signing): memahami penandatanganan HMAC otomatis dan penanganan rahasia.
+- [Webhooks & Idempotensi](/id/sdk/security/webhooks-idempotency): verifikasi callback dan mencegah pemrosesan duplikat.

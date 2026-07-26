@@ -1,0 +1,69 @@
+---
+title: "オプションとイベント"
+subtitle: "初期化オプション、実行時イベント、一般的なエラーコード。"
+slug: sdk/trading-widget/options-events
+canonical-url: https://docs.6mm.com/ja/sdk/trading-widget/options-events
+---
+
+<h2 id="options">オプション</h2>
+
+| フィールド | 種類 | デフォルト | 注記 |
+| --- | --- | --- | --- |
+| baseUrl | string | SDK 文字の起源 | iframeドメイン。パートナーページに明示的にパスします。 |
+| シンボル | string | BTCUSDT | 大文字とストリップに正規化 - / _。 |
+| テーマ | 暗い \| 光 | 暗い | 初期テーマパラメータ。 |
+| 場所 | え \| en-US \| zh-CN | ブラウザ/デフォルト | 英語および簡体字中国語も対応しています。 |
+| レイアウト | デフォルト \| コンパクト | デフォルト | 予約レイアウトオプション。 |
+| ディスプレイ | object | `showHeader: false`、 `showTicker: false`、 `hidden: []` | コントロールはシェルエリアや高レベルの取引コンテナを埋め込んでいます。 |
+| 認証 | object | なし | 新しい SSO 統合にはpartner-tokenを使いましょう。 |
+
+<h2 id="display-controls">表示コントロール</h2>
+
+`display` は埋め込まれたトレーディングページのシェルや高レベルのコンテナを制御します。パートナー埋め込みでは、PCヘッダーとボトムマーケットティッカーはデフォルトで隠されています。
+
+```js
+display: {
+  showHeader: false,
+  showTicker: false,
+  hidden: ['chart', 'orderBook'],
+}
+```
+
+| フィールド | 種類 | デフォルト | 注記 |
+| --- | --- | --- | --- |
+| showHeader | boolean | 偽り | iframe内にPC組み込みヘッダーを表示するかどうか。 |
+| showTicker | boolean | 偽り | 埋め込みシェルにボトムマーケットのティッカーを表示するかどうか。 |
+| 隠れている | 文字列[] | [] | 取引ページに高レベルのコンテナを隠します。 |
+
+支持される `display.hidden` 価値観:
+
+| 価値 | コンテナ |
+| --- | --- |
+| チャート | チャートコンテナ |
+| orderBook | 注文帳コンテナ |
+| orderForm | 注文書式パネル |
+| ポジション | ボトムポジションとオープンオーダーパネル |
+| アカウント | アカウント資産コンテナ |
+
+`display.hidden` コンテナ全体のみを隠します。コンテナ内の個々のボタン、フィールド、ツールを隠すことはありません。現在のビューポートにマッピングされていない値は無視されます。
+
+<h2 id="events">イベント</h2>
+
+| イベント | トリガー |
+| --- | --- |
+| 準備 | iFrameの初期化が完了しました。 |
+| エラー | SDK、iframe、または認証エラー。 |
+| state_changed | SDK ライフサイクル状態が変わりました。 |
+| auth_state_changed | パートナートークン認証の状態が変更されました。 |
+| symbol_changed | 実際のiframeシンボルが変更されました。 |
+| locale_changed | 実際のiframeのロケーションが変更されました。 |
+| order_created | ユーザーはiframe内で注文を作成しました。 |
+| order_failed | 注文提出が失敗しました。 |
+| 破壊 | SDK インスタンスは破壊されました。 |
+
+<h2 id="related-widget-guides">関連ウィジェットガイド</h2>
+
+- [Trading Widget クイックスタート](/ja/sdk/trading-widget/quick-start)
+- [認証](/ja/sdk/trading-widget/authentication)
+- [インスタンスメソッド](/ja/sdk/trading-widget/instance-methods)
+- [トラブルシューティング](/ja/sdk/security/troubleshooting)

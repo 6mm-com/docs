@@ -1,0 +1,90 @@
+---
+title: "Java Khởi Đầu Nhanh"
+subtitle: "Cài đặt và khởi tạo Java SDK từ dịch vụ backend."
+slug: sdk/agent-sdk/java/quick-start
+canonical-url: https://docs.6mm.com/vi/sdk/agent-sdk/java/quick-start
+---
+
+<h2 id="install">Cài đặt</h2>
+
+Nguồn SDK công khai hiện đang gắn thẻ `v0.1.1` với các tọa độ Maven sau:
+
+```xml
+<dependency>
+    <groupId>com.sixmm.exchange.sdk</groupId>
+    <artifactId>agent</artifactId>
+    <version>0.1.1</version>
+</dependency>
+```
+
+GitHub không hoạt động như một kho lưu trữ phụ thuộc Maven. Cài đặt mã nguồn được gắn thẻ cục bộ trước khi giải quyết phụ thuộc:
+
+```bash
+git clone https://github.com/6mm-com/agent-java-sdk.git
+cd agent-java-sdk
+git checkout v0.1.1
+mvn install
+```
+
+> **Xây dựng đội nhóm**
+>
+> Xuất bản hiện vật đã được phê duyệt vào kho lưu trữ Maven của tổ chức bạn cho các bản dựng CI, kiểm thử và sản xuất. Xác nhận phiên bản đã phê duyệt với 6MM trước khi triển khai sản xuất.
+
+Mã nguồn và ví dụ sử dụng có sẵn trong kho Java SDK chính thức:
+
+[6mm-com/agent-java-sdk] (https://github.com/6mm-com/agent-java-sdk)
+
+<h2 id="before-you-start">Trước khi bạn bắt đầu</h2>
+
+- Xác nhận API Agent sản xuất của bạn URL cơ sở với nhóm 6MM .
+- Lưu trữ apiSecret chỉ trong quản lý bí mật phía sau.
+- Chuẩn bị bản đồ ổn định giữa platformUserId và agentUserId.
+- Kích hoạt nhật ký có cấu trúc xoay quanh các luồng liên kết liên quan, chuyển giao, đặt hàng và webhook.
+
+<h2 id="initialize-client">Khởi tạo máy khách</h2>
+
+```java
+import com.sixmm.agent.AgentClient;
+import com.sixmm.agent.AgentClientConfig;
+
+AgentClient client = new AgentClient(AgentClientConfig.builder()
+        .baseUrl("https://agent-api.6mm.com")
+        .agentCode("AGENT001")
+        .apiSecret("your-api-secret")
+        .defaultCurrency("USDT")
+        .build());
+```
+
+> **Chỉ dành cho backend**
+>
+> Không khởi tạo Agent SDK từ mã client trình duyệt, di động hoặc máy tính để bàn. SDK ký các yêu cầu Agent API có đặc quyền.
+
+<h2 id="example-transfer-funds-in">Ví dụ: chuyển tiền vào</h2>
+
+```java
+TransferResponse resp = client.transfer(TransferRequest.fixed(
+        "AGT-ORDER-1001",
+        "agent-user-001",
+        Direction.IN,
+        "USDT",
+        "10.00"));
+```
+
+Sử dụng một số đơn hàng bên đối tác duy nhất cho mỗi yêu cầu chuyển giao. Nếu yêu cầu hết thời gian, hãy truy vấn đơn hàng gốc trước khi tạo yêu cầu mới.
+
+<h2 id="next-steps">Các bước tiếp theo</h2>
+
+| Nhu cầu | Trang tiếp theo |
+| --- | --- |
+| Cấp thông tin xác thực Trading Widget | [Tạo Token Nhúng] (/sdk/agent-sdk/java/embed-token) |
+| Xác minh các cuộc gọi lại từ 6MM | [Webhooks & Idempotency] (/sdk/security/webhooks-idempotency) |
+| Xem lại hành vi ký | [Bí mật & Ký hiệu] (/sdk/security/secrets-signing) |
+| Chẩn đoán vấn đề tích hợp | [SDK Đang khắc phục sự cố ] (/sdk/security/troubleshooting) |
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">Trang liên quan</h2>
+
+- [Tạo Token Nhúng](/vi/sdk/agent-sdk/java/embed-token)
+- [Xác minh chữ ký Webhook & Tính tương đồng](/vi/sdk/security/webhooks-idempotency)
+- [Agent SDK Bí mật & ký HMAC](/vi/sdk/security/secrets-signing)
+- [SDK Khắc phục sự cố tích hợp](/vi/sdk/security/troubleshooting)
+<!-- sixmm-localized-link-repair:end -->

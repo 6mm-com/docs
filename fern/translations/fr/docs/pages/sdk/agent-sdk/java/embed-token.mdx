@@ -1,0 +1,61 @@
+---
+title: "Créer un jeton d’intégration"
+subtitle: "Émettez des jetons d’intégration éphémères pour Trading Widget mode jeton partenaire."
+slug: sdk/agent-sdk/java/embed-token
+canonical-url: https://docs.6mm.com/fr/sdk/agent-sdk/java/embed-token
+---
+
+<h2 id="sdk-call">SDK appelle</h2>
+
+Créez des tokens d’intégration depuis votre backend après avoir validé la session utilisateur partenaire. Le navigateur doit appeler votre point de terminaison, et votre point de terminaison doit appeler 6MM via le Agent SDK.
+
+```java
+CreateEmbedTokenResponse resp = client.createEmbedToken(
+        CreateEmbedTokenRequest.of("agent-user-001", "tw_abc123")
+                .withSymbol("ETHUSDT"));
+
+System.out.println(resp.embedToken);
+System.out.println(resp.expireAt);
+```
+
+> **Accréditation unique**
+>
+> embedToken est de courte durée et à usage unique. Ne le placez pas dans une chaîne de requête URL .
+
+<h2 id="backend-endpoint-example">Exemple de terminaison backend</h2>
+
+```java
+@PostMapping("/api/trading/embed-token")
+public EmbedTokenView createEmbedToken(@RequestBody EmbedTokenRequest request,
+                                       PartnerSession session) {
+    String agentUserId = session.getAgentUserId();
+    CreateEmbedTokenResponse resp = agentClient.createEmbedToken(
+            CreateEmbedTokenRequest.of(agentUserId, request.getChannelId())
+                    .withSymbol(request.getSymbol()));
+
+    return new EmbedTokenView(resp.embedToken, resp.expireAt, request.getChannelId());
+}
+```
+
+Retournez uniquement les champs nécessaires au fournisseur Trading Widget token. Ne retournez pas apiSecret, champs de signature bruts ou configuration interne du service.
+
+<h2 id="failure-handling">Gestion des pannes</h2>
+
+| État | Manipulation recommandée |
+| --- | --- |
+| La session utilisateur est manquante ou expirée | Retournez le 401 depuis le point de terminaison partenaire et demandez à l’utilisateur de se reconnecter. |
+| L’utilisateur agent n’est pas lié | Assignez d’abord l’utilisateur, puis réessayez la création du token. |
+| 6MM renvoie une erreur temporaire | Retournez une erreur réessayable au frontend et enregistrez requestId pour le support. |
+| channelId ne correspond pas à l’instance du widget | Rejetez la requête et recréez la session du widget. |
+
+<h2 id="related-documentation">Documentation associée</h2>
+
+- [Trading Widget Authentification](/fr/sdk/trading-widget/authentication) : connectez- `tokenProvider` au point d’arrivée partenaire.
+- [Java Démarrage rapide](/fr/sdk/agent-sdk/java/quick-start) : installer et initialiser `AgentClient`.
+- [Secrets & Signature](/fr/sdk/security/secrets-signing) : protégez l’Agent API secret.
+- [Webhooks et idempotence](/fr/sdk/security/webhooks-idempotency) : sécurisez les callbacks de l’intégration.
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">Pages associées</h2>
+
+- [Vérification de la signature Webhook et Idempotence](/fr/sdk/security/webhooks-idempotency)
+<!-- sixmm-localized-link-repair:end -->

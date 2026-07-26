@@ -1,0 +1,100 @@
+---
+title: "REST API"
+description: "6MM REST APIの慣習、認証オプション、リクエスト形式、レスポンス構造、権限、エンドポイントグループを確認しましょう。"
+slug: developer-api/rest-api
+canonical-url: https://docs.6mm.com/ja/developer-api/rest-api
+---
+
+<h2 id="public-endpoints">公開エンドポイント</h2>
+
+| 終着点                   | 方法 | 経路                                        | 概要                                                    |
+| -------------------------- | ------ | ------------------------------------------- | -------------------------------------------------------------- |
+| サービスバージョン            | GET    | `/v1/version`                               | サービスバージョン情報を取得する                                |
+| サーバー時間                | GET    | `/v1/time`                                  | サーバータイムを確保                                                |
+| ユーザーログイン                 | POST   | `/v1/public/user/login`                     | ユーザー名とパスワードを使って`accessToken`を取得してください              |
+| リフレッシュトークン              | POST   | `/v1/public/user/refresh-token`             | クッキーによるログイン状態の更新                                 |
+| エージェントチケット交換      | POST   | `/v1/public/agent-sso/exchange-ticket`      | エージェントの入場チケットをログイン状態に交換する              |
+| エージェント埋め込みトークン交換 | POST   | `/v1/public/agent-sso/exchange-embed-token` | 埋め込み型の短期間の取引トークンをログイン状態と交換する |
+| シンボル構成       | GET    | `/v1/public/market/symbols`                 | シンボル、取引ルール、手数料階層の設定を入手しましょう         |
+| 資金調達率の構成 | GET    | `/v1/public/market/funding-rate`            | クエリ資金率設定                               |
+| 現在の資金調達率       | GET    | `/v1/public/market/funding-rate/current`    | パギネートの現在の資金率                                 |
+| 資金調達率の履歴       | GET    | `/v1/public/market/funding-rate/history`    | 資金調達率の履歴を検索                                     |
+| クラインズ                     | GET    | `/v1/public/market/klines`                  | 取引価格、指数価格、またはマーク価格Klinesをクエリしてください           |
+| PnLリーダーボード            | GET    | `/v1/public/leaderboard/pnl`                | クエリ 7 / 30 / 90日 PnL リーダーボード                          |
+
+<h2 id="private-user-endpoints">プライベートユーザーエンドポイント</h2>
+
+特に指定がない限り、以下のエンドポイントは JWT 署名または API Key 署名を使用できます。
+
+| 終着点                 | 方法 | 経路                                      | 許可を   | 概要                                 |
+| ------------------------ | ------ | ----------------------------------------- | ------------ | ------------------------------------------- |
+| ユーザー情報                | GET    | `/v1/private/user/info`                   | 読む         | 現在のユーザープロファイルを検索                  |
+| ユーザー資産              | GET    | `/v1/private/user/asset`                  | 読む         | ウォレット残高とマージン使用状況のクエリ       |
+| 創り出す listenKey         | POST   | `/v1/private/user/listen-key`             | 読む         | プライベート WebSocket 認証キーを作成する |
+| 更新 listenKey          | PUT    | `/v1/private/user/listen-key`             | 読む         | 有効性 listenKey 拡大                   |
+| 接近 listenKey          | DELETE | `/v1/private/user/listen-key`             | 読む         | 接近 listenKey                             |
+| アカウント変更ログ      | GET    | `/v1/private/user/account-change-log`     | 読む         | 資金移動記録を照会                 |
+| 30日間の取引量統計 | GET    | `/v1/private/user/volume-stats`           | 読む         | 最近の30日間取引量と手数料を検索 |
+| バランスの歴史          | GET    | `/v1/private/user/balance-history`        | 読む         | クエリバランスの歴史                       |
+| 貿易概要           | GET    | `/v1/private/user/trade-overview`         | 読む         | PnL、取引量、資産動向をクエリ          |
+| 資産概要概要   | GET    | `/v1/private/user/asset/overview/summary` | 読む         | 資産要約指標のクエリ                 |
+| 資産概観のトレンド     | GET    | `/v1/private/user/asset/overview/trend`   | 読む         | 資産トレンドのクエリ                           |
+| お気に入りのシンボルを保存してください    | POST   | `/v1/private/user/favorite-symbols`       | 読む         | お気に入りのシンボルを上書きしてください                  |
+| お気に入りのシンボルを手に入れましょう     | GET    | `/v1/private/user/favorite-symbols`       | 読む         | お気に入り記号をクエリ                      |
+| ログアウト                   | POST   | `/v1/private/user/logout`                 | JWT + クッキー | ログイン状態をクリア                           |
+
+<h2 id="api-key-management-endpoints">API Key 管理エンドポイント</h2>
+
+API Key 管理エンドポイントは JWTのみを受け入れます。
+
+| 終着点            | 方法 | 経路                                  | 概要                                         |
+| ------------------- | ------ | ------------------------------------- | --------------------------------------------------- |
+| 創り出す API Key      | POST   | `/v1/private/user/api-key/create`     | API Key作成;`apiSecret`は一度だけ返されます。   |
+| API Key リスト        | GET    | `/v1/private/user/api-key/list`       | 現在のユーザーの API キーを検索                       |
+| アップデート API Key      | PUT    | `/v1/private/user/api-key/update`     | ラベル、権限、ホワイトリスト IP 、ステータスの更新 |
+| 削除 API Key      | POST   | `/v1/private/user/api-key/delete`     | 指定されたAPI Keyを削除してください                          |
+| すべての API キーを削除してください | POST   | `/v1/private/user/api-key/delete-all` | 現在のユーザーのすべての API キーを削除してください             |
+
+<h2 id="order-endpoints">順序終点</h2>
+
+注文エンドポイントには取引許可が必要です。
+
+| 終着点                    | 方法 | 経路                                  | 概要                                                       |
+| --------------------------- | ------ | ------------------------------------- | ----------------------------------------------------------------- |
+| 単一順序クエリ          | GET    | `/v1/private/order`                   | `symbol + orderId/clientOrderId`による正確なクエリ                   |
+| 注文                 | POST   | `/v1/private/order/place`             | 指値注文または成り行き注文                                             |
+| 配置条件の順序       | POST   | `/v1/private/order/place-condition`   | ストップロス、利益確定、トレーリングストップ、その他の条件注文 |
+| 戦略の配置順        | POST   | `/v1/private/order/place-strategy`    | OTO / OCO / OTOCO 戦略の順序                                  |
+| バッチ注文          | POST   | `/v1/private/order/batch-place`       | 複数の通常注文を提出してください                                     |
+| 注文キャンセル                | POST   | `/v1/private/order/cancel`            | 指定された通常の順序をキャンセルする                                   |
+| 命令の修正                 | POST   | `/v1/private/order/move`              | 通常の保留注文価格と数量を修正します                    |
+| バッチ修正命令          | POST   | `/v1/private/order/batch-move`        | 同じシンボルに対して通常の保留中の注文をバッチで修正します            |
+| バッチキャンセル注文         | POST   | `/v1/private/order/batch-cancel`      | バッチキャンセル通常注文                                        |
+| すべてキャンセル                  | POST   | `/v1/private/order/batch-cancel-all`  | 種類ごとのバッチキャンセル                                       |
+| キャンセル条件の命令      | POST   | `/v1/private/order/cancel-condition`  | 指定された条件命令をキャンセルする                                |
+| 現在の正規順序       | GET    | `/v1/private/order/current`           | 現在の通常の保留中の注文をクエリしてください                               |
+| 現行状況命令    | GET    | `/v1/private/order/current-condition` | 現在の未トリガー条件命令をクエリ                        |
+| 歴史的な正規秩序    | GET    | `/v1/private/order/history`           | パギネート歴史的正規秩序                                 |
+| 歴史的状態命令 | GET    | `/v1/private/order/history-condition` | ページ内の歴史的状態命令                              |
+| 貿易記録               | GET    | `/v1/private/order/trades`            | ペギネート貿易記録                                            |
+| 戦略順序の詳細       | GET    | `/v1/private/order/strategy`          | クエリ戦略の順序とサブ順序                               |
+
+<h2 id="position-endpoints">位置終点</h2>
+
+ポジションエンドポイントには取引許可が必要です。
+
+| 終着点          | 方法 | 経路                               | 概要                                  |
+| ----------------- | ------ | ---------------------------------- | -------------------------------------------- |
+| マージンモード設定   | POST   | `/v1/private/position/margin-mode` | スイッチアイソレート/クロスマージン               |
+| レバレッジを設定しましょう      | POST   | `/v1/private/position/leverage`    | シンボルレバレッジを設定する                          |
+| ポジション設定 | GET    | `/v1/private/position/settings`    | シンボルのクエリレバレッジとマージンモード  |
+| 現在の役職 | GET    | `/v1/private/position/positions`   | クエリ現在の位置                      |
+| ポジションの歴史  | GET    | `/v1/private/position/history`     | 過去のポジションと近い記録の照会 |
+
+<h2 id="endpoint-groups">エンドポイントグループ</h2>
+
+- [公開エンドポイント](/ja/developer-api/rest-api/public-endpoints)
+- [ユーザーとアカウント](/ja/developer-api/rest-api/user-and-account)
+- [命令](/ja/developer-api/rest-api/order)
+- [ポジション](/ja/developer-api/rest-api/position)
+- [市場データ](/ja/developer-api/rest-api/market-data)

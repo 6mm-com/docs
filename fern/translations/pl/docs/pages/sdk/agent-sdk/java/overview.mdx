@@ -1,0 +1,48 @@
+---
+title: "Agent Java SDK"
+subtitle: "Zainstaluj 6MM Agent Java SDK i użyj podpisanego backendu APIs do wiązania użytkownika, transferów, danych uwierzytelniających i weryfikacji webhooków."
+slug: sdk/agent-sdk/java/overview
+canonical-url: https://docs.6mm.com/pl/sdk/agent-sdk/java/overview
+---
+
+<h2 id="official-repository">Oficjalne repozytorium</h2>
+
+Repozytorium Java SDK jest źródłem prawdy dla SDK kodu źródłowego, notatek wydawniczych, przykładów użycia oraz szczegółów implementacji:
+
+[6mm-com/agent-java-sdk](https://github.com/6mm-com/agent-java-sdk)
+
+<h2 id="runtime">Czas trwania</h2>
+
+| Przedmiot | Wartość |
+| --- | --- |
+| Wersja minimalna Java | Java 8+ |
+| Polecane narzędzie do budowania | Maven 3.9+ |
+| Grupa Maven | `com.sixmm.exchange.sdk` |
+| Artefakt Maven | `agent` |
+| Udokumentowany tag źródłowy | `v0.1.1` |
+
+Publiczne repozytorium GitHub to hosting źródłowy, a nie repozytorium zależności Maven. Zbuduj i zainstaluj oznaczony kod lokalnie lub opublikuj zatwierdzony artefakt w prywatnym repozytorium Maven swojej organizacji, zanim użyjesz go w budowaniu zespołowym.
+
+<h2 id="typical-backend-responsibilities">Typowe obowiązki backendowe</h2>
+
+- Walidacja sesji użytkownika partnera.
+- Przypisuj użytkownika partnera na agentUserId.
+- Wiązanie wywołań przed pierwszym handlem lub przepływem transferowym.
+- Zadzwoń createEntryUrl w celu jednorazowego pełnego SSO.
+- Zadzwoń createEmbedToken Trading Widget tryb tokenów partnera.
+- Weryfikacja webhooków transferowych i ich prawidłowe przetwarzanie.
+
+<h2 id="security-and-operational-rules">Zasady bezpieczeństwa i działania</h2>
+
+- Przechowywać `apiSecret` tylko w backendowym menedżerze sekretów lub chronionej zmiennej środowiskowej.
+- Utrzymywanie synchronizacji czasu serwera, ponieważ podpisane żądania zawierają znaczniki czasowe.
+- Traktuj `agentOrderNo` jako trwały klucz idempotencji i utrzymuj go globalnie unikalnym.
+- Przechowuj `platformUserId` jako ciąg i utrzymuj jego relację do `agentUserId`.
+- Zapytanie o oryginalny transfer przed ponowną próbą po przerwie czasu lub niepewnym wyniku sieci.
+
+<h2 id="next-steps">Kolejne kroki</h2>
+
+- [Java Quick Start](/pl/sdk/agent-sdk/java/quick-start): zainstaluj oznaczony kodowy i inicjalizuj `AgentClient`.
+- [Create Embed Token](/pl/sdk/agent-sdk/java/embed-token): wydawanie krótkotrwałych poświadczeń dla Trading Widget.
+- [Sekrety i podpisywanie](/pl/sdk/security/secrets-signing): rozumiem automatyczne podpisywanie HMAC i obsługę tajemnic.
+- [Webhooks & Idempotency](/pl/sdk/security/webhooks-idempotency): weryfikuj callbacki i zapobiegaj duplikatowi przetwarzania.

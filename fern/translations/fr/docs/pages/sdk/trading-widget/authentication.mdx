@@ -1,0 +1,100 @@
+---
+title: "Trading Widget Authentification"
+subtitle: "Utilisez partner-token pour de nouvelles intégrations de trading SSO intégrées."
+slug: sdk/trading-widget/authentication
+canonical-url: https://docs.6mm.com/fr/sdk/trading-widget/authentication
+---
+
+<h2 id="recommended-mode-partner-token">Mode recommandé : jeton partenaire</h2>
+
+partner-token évite de mettre des jetons courts dans les URL et conserve apiSecret sur le backend du partenaire.
+
+```js
+const widget = TradingWidget.create('#trading-widget', {
+  baseUrl: 'https://app.6mm.com',
+  auth: {
+    mode: 'partner-token',
+    tokenProvider: async ({ channelId, symbol, reason }) => {
+      const resp = await fetch('/api/trading/embed-token', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ channelId, symbol, reason }),
+      })
+
+      if (!resp.ok) {
+        throw new Error('Failed to request embed token')
+      }
+
+      return resp.json()
+    },
+  },
+})
+```
+
+<h2 id="related-documentation">Documentation associée</h2>
+
+- [Créer un jeton d’insertion](/fr/sdk/agent-sdk/java/embed-token) : exemple d’émission de jeton en arrière-plan.
+- [Trading Widget Démarrage rapide] (/sdk/trading-widget/quick-start) : flux d’initialisation complet.
+- [Secrets & Signature](/fr/sdk/security/secrets-signing) : gardez les identifiants d’agent privilégiés en arrière-plan.
+- [Dépannage](/fr/sdk/security/troubleshooting) : diagnostiquer les échecs de session, de jeton, d’origine et d’initialisation.
+
+<h2 id="backend-flow">Flux backend</h2>
+
+```text
+1. Partner frontend receives auth_request from the iframe.
+2. SDK calls tokenProvider.
+3. Partner frontend calls its own backend.
+4. Partner backend validates the partner session.
+5. Partner backend calls 6MM Agent API or Java SDK createEmbedToken.
+6. SDK sends embedToken to the iframe through postMessage.
+7. iframe exchanges embedToken for a 6MM access token.
+8. iframe continues initialization and emits ready.
+```
+
+<h2 id="tokenprovider-contract">tokenProvider contrat</h2>
+
+| Terrain | Réalisation | Description |
+| --- | --- | --- |
+| channelId | SDK -> Partenaire backend | Identifiant unique de session du widget. Le backend devrait le transmettre à createEmbedToken. |
+| Symbole | SDK -> Partenaire backend | Symbole de trading actuellement demandé. Utilisez-le pour lunôner le jeton quand c’est nécessaire. |
+| Raison | SDK -> Partenaire backend | Pourquoi le SDK demande un jeton, comme le chargement initial ou le rafraîchissement ? |
+| embedToken | Partenaire backend -> SDK | Jeton éphémère créé par le Agent SDK ou l’Agent API. |
+| expireAt | Partenaire backend -> SDK | L’horodatage d’expiration du jeton est retourné par 6MM. |
+
+<h2 id="failure-handling">Gestion des pannes</h2>
+
+| État | Manipulation recommandée |
+| --- | --- |
+| Session partenaire expirée | Retournez le 401 depuis le point de terminaison partenaire et demandez à l’utilisateur de se reconnecter. |
+| Échec temporaire de la création de jeton | Ajoutez une erreur dans tokenProvider et laissez le widget afficher une erreur d’authentification. |
+| channelId décalage | Rejetez la requête et recréez l’instance du widget. |
+| L’utilisateur n’a pas le droit de trader | Retournez une erreur contrôlée par le partenaire et ne créez pas de jeton d’intégration. |
+
+<h2 id="compatibility-mode-agent-sso">Mode de compatibilité : agent-sso</h2>
+
+Agent-SSO conserve l’ancien flux de tickets /agent-entry. Privilégiez le partner-token pour les nouvelles intégrations.
+
+```js
+const widget = TradingWidget.create('#trading-widget', {
+  baseUrl: 'https://app.6mm.com',
+  auth: {
+    mode: 'agent-sso',
+    entryUrlProvider: async ({ redirectPath }) => {
+      const resp = await fetch('/api/trading-entry', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ redirectPath }),
+      })
+      const data = await resp.json()
+      return data.webUrl
+    },
+  },
+})
+```
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">Pages associées</h2>
+
+- [Intégrer le 6MM Trading Widget: Démarrage rapide](/fr/sdk/trading-widget/quick-start)
+<!-- sixmm-localized-link-repair:end -->

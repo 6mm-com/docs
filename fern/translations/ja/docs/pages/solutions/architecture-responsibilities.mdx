@@ -1,0 +1,39 @@
+---
+title: "アーキテクチャと責任"
+subtitle: "パートナーシステムが何を所有し、組み込み取引展開において 6MM インフラが何を提供するかを明確にしてください。"
+slug: solutions/architecture-responsibilities
+canonical-url: https://docs.6mm.com/ja/solutions/architecture-responsibilities
+---
+
+クリーンな組み込み取引ローンチは、明確な責任範囲の設定に依存します。パートナーシステムは繊細なビジネスオーナーシップを保持し、一方 6MM 取引インフラとライフサイクル機能を提供します。
+
+<h2 id="responsibility-model">責任モデル</h2>
+
+| 面積 | パートナーシステム | 6MM インフラ |
+| --- | --- | --- |
+| ユーザー関係 | ユーザーアカウント、ログイン状態、カスタマーサポートのアイデンティティ、適格性チェックを所有しています。 | 検証済みの取引エントリコンテキストを受け取り、取引側の状態を維持します。 |
+| 秘密と署名 | パートナー API キーをバックエンドで保存し、サーバー側のリクエストに署名します。 | 署名されたリクエストの検証と認可されたアクションの処理。 |
+| 取引経験 | エントリーポイント、ナビゲーション、製品の文脈を提供します。 | 取引UI、注文ライフサイクル、市場データ、ポジション、リスク、決済行動を提供します。 |
+| 運用 | サポートワークフロー、ビジネス分析、社内エスカレーションを担当します。 | 統合に必要なイベント、ウェブフック、ステータス情報を発行します。 |
+
+<h2 id="production-principles">制作原理</h2>
+
+- パートナーの秘密は裏で守れ。
+- 埋め込みトークンを短命なエントリ認証情報として扱う。
+- ウェブフックを冪等的に処理し、イベントIDを保存する。
+- トークン発行、転送フロー、注文状態の変更に関する監視を利用する。
+- エントリーページ、トレードページ、サポートページ間で顧客向けコピーを一貫性を持って保つこと。
+
+<h2 id="related-docs">関連文書</h2>
+
+<CardGroup cols={3}>
+<Card title="認証" icon="fa-duotone fa-user-shield" href="/ja/developer-api/authentication">
+バックエンド認証の期待を見直しましょう。
+</Card>
+<Card title="リクエスト署名" icon="fa-duotone fa-signature" href="/ja/developer-api/request-signing">
+署名された電話 API 理解してください。
+</Card>
+<Card title="ウェブフックのセキュリティ" icon="fa-duotone fa-webhook" href="/ja/sdk/security/webhooks-idempotency">
+イベントの配信を安全に行ってください。
+</Card>
+</CardGroup>

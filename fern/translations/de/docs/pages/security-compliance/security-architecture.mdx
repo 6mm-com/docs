@@ -1,0 +1,48 @@
+---
+title: "Plattformsicherheitsarchitektur"
+subtitle: "Verstehen Sie die Sicherheitsschichten, die in 6MM Handelsinfrastruktur, APIs, SDKs, Webhooks und Partnerintegrationen verwendet werden."
+slug: security-compliance/security-architecture
+canonical-url: https://docs.6mm.com/de/security-compliance/security-architecture
+---
+
+6MM Sicherheitsdokumentation konzentriert sich auf die Produktionsbereitschaft der Partner. Das Ziel ist es, die Handelsinfrastruktur stabil zu halten und gleichzeitig Verantwortungsgrenzen klar zu machen.
+
+<h2 id="security-layers">Sicherheitsschichten</h2>
+
+| Schicht | Fokus |
+| --- | --- |
+| Infrastruktur | Netzwerkisolation, verschlüsselte Dienstkommunikation, Überwachung und Failover. |
+| Handelssysteme | Deterministische Matching, Margenkontrollen, Risikokontrollen und Missbrauchsprävention. |
+| Integrationssicherheit | API Keys, HMAC Signing, Webhook-Signaturen, Wiederholungsschutz und Backend-only-Geheimnisse. |
+| Partnerbetriebe | Validierung von Benutzersitzungen, Vermögensverwahrung, Kundensupport und lokale Compliance-Kontrollen. |
+
+<h2 id="partner-responsibilities">Partnerverantwortlichkeiten</h2>
+
+- Bewahren Sie API Geheimnisse und Unterzeichnungsschlüssel aus Browsern und mobilen Apps heraus.
+- Validierung von Partnerbenutzersitzungen vor der Ausstellung von Handelszugangsdaten.
+- Implementierung von Webhook-Idempotenz und Terminal-Zustandsprüfungen.
+- Führen Sie Betriebsprotokolle für Konto-, Bestell-, Übertragungs- und Webhook-Flüsse.
+
+<h2 id="integration-trust-boundaries">Integrationstreuhandgrenzen</h2>
+
+| Grenze | Erforderliche Steuerung |
+| --- | --- |
+| Browser oder App zum Partner-Backend | Überprüfen Sie die Partnersitzung, bevor Sie eine Handelszuweise ausstellen. |
+| Partner Backend zu 6MM API | Verwenden Sie scoped credentials, Request Signing, Zeitsynchronisation und geschützte geheime Speicherung. |
+| 6MM Webhook an Partner-Endpunkt | Vergleiche die Signatur mit dem rohen Anforderungskörper, lehne veraltete oder ungültige Nachrichten ab und dedupliziere Neuversuche. |
+| Handelsstatus zu Partner-Datensätzen | Stimmen Sie Befehle, Positionen, Salden und Überweisungen mit dauerhaften Kennungen und Terminalzustandskontrollen ab. |
+
+<h2 id="production-verification">Produktionsverifikation</h2>
+
+- Abgelaufene, widerrufene und falsch geplante Zugangsdaten getestet.
+- Testen Sie veränderte Webhook-Körper, doppelte Rückrufe, verzögerte Rückrufe und Endpunkt-Timeouts.
+- Bestätigen, dass Logs Geheimnisse, Zugriffstoken und sensible Anfrage-Payloads schwärzen.
+- Warnung bei wiederholten Signaturfehlern, abnormaler Ordnungsaktivitäten, Abstimmungsdifferenzen und Verbindungsinstabilität.
+- Dokumentation des Besitzers und des Antwortpfads bei Anmeldedaten-Exposition, Webhook-Ausfällen und Handelsvorfällen.
+
+<h2 id="related-security-guides">Verwandte Sicherheitsleitfäden</h2>
+
+- [Geheimnisse & Unterschriften](/de/sdk/security/secrets-signing)
+- [Webhooks & Idempotenz](/de/sdk/security/webhooks-idempotency)
+- [Vorfallreaktion](/de/security-compliance/incident-response)
+- [Partnerverantwortungsmatrix](/de/security-compliance/partner-responsibilities)

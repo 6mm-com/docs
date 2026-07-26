@@ -1,0 +1,75 @@
+---
+title: "Options & Événements"
+subtitle: "Options d’initialisation, événements d’exécution et codes d’erreur courants."
+slug: sdk/trading-widget/options-events
+canonical-url: https://docs.6mm.com/fr/sdk/trading-widget/options-events
+---
+
+<h2 id="options">Options</h2>
+
+| Terrain | Type | Par défaut | Notes |
+| --- | --- | --- | --- |
+| baseUrl | string | SDK origine de l’écriture | Domaine iframe. Passer explicitement dans les pages partenaires. |
+| Symbole | string | BTCUSDT | Normalisé en majuscules et bandes - / _. |
+| Thème | sombre \| Lumière | sombre | Paramètre de thème initial. |
+| Localisation | en \| en-US \| zh-CN | Navigateur/par défaut | L’anglais et le chinois simplifié sont pris en charge. |
+| Disposition | par défaut \| compact | Par défaut | Option de mise en page réservée. |
+| Affichage | object | `showHeader: false`, `showTicker: false`, `hidden: []` | Contrôle l’intégration des zones de coquilles et des conteneurs commerciaux de haut niveau. |
+| Auth | object | aucun | Utilisez partner-token pour les nouvelles intégrations SSO . |
+
+<h2 id="display-controls">Commandes d’affichage</h2>
+
+`display` contrôle la coquille intégrée de la page de trading et les conteneurs de haut niveau. Dans les embeds partenaires, l’en-tête PC et le ticker du marché le plus bas sont cachés par défaut.
+
+```js
+display: {
+  showHeader: false,
+  showTicker: false,
+  hidden: ['chart', 'orderBook'],
+}
+```
+
+| Terrain | Type | Par défaut | Notes |
+| --- | --- | --- | --- |
+| showHeader | boolean | faux | S’il faut montrer l’en-tête d’insertion du PC à l’intérieur de l’iframe. |
+| showTicker | boolean | faux | S’il faut montrer le ticker du marché le plus bas dans la coque intégrée. |
+| caché | Ficelle[] | [] | Cache les conteneurs de haut niveau sur la page d’échange. |
+
+Valeurs `display.hidden` soutenues :
+
+| Valeur | Conteneur |
+| --- | --- |
+| Classement | Conteneur de cartes |
+| orderBook | Contenant du carnet de commandes |
+| orderForm | Panel des formulaires de commande |
+| Postes | Positions basses et panneau des ordres ouverts |
+| Compte | Conteneur d’actifs de compte |
+
+`display.hidden` ne masque que des conteneurs entiers. Il ne masque pas les boutons, champs ou outils individuels à l’intérieur d’un conteneur. Les valeurs qui ne correspondent pas à la fenêtre actuelle sont ignorées.
+
+<h2 id="events">Événements</h2>
+
+| Événement | Déclencheur |
+| --- | --- |
+| Prêt | Initialisation de l’iframe terminée. |
+| Erreur | SDK, iframe ou erreur d’authentification. |
+| state_changed | SDK état du cycle de vie a changé. |
+| auth_state_changed | L’état d’authentification du jeton partenaire a changé. |
+| symbol_changed | Le symbole iframe réel a changé. |
+| locale_changed | Le lieu réel de l’iframe a changé. |
+| order_created | L’utilisateur a créé un ordre à l’intérieur de l’iframe. |
+| order_failed | Soumission de commande échouée. |
+| détruit | SDK instance détruite. |
+
+<h2 id="related-widget-guides">Guides widgets associés</h2>
+
+- [Trading Widget Démarrage rapide] (/sdk/trading-widget/quick-start)
+- [Authentification](/fr/sdk/trading-widget/authentication)
+- [Méthodes d’instance](/fr/sdk/trading-widget/instance-methods)
+- [Dépannage] (/sdk/security/troubleshooting)
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">Pages associées</h2>
+
+- [Intégrer le 6MM Trading Widget: Démarrage rapide](/fr/sdk/trading-widget/quick-start)
+- [SDK Dépannage de l’intégration](/fr/sdk/security/troubleshooting)
+<!-- sixmm-localized-link-repair:end -->

@@ -1,0 +1,56 @@
+---
+title: "Umgebungen und gemeinsame Konventionen"
+description: "Überprüfen Sie 6MM API Umgebungen und gemeinsame Konventionen für Basis-URLs, Zeitstempel, numerische Felder, Symbole, Anfrage-IDs, Paginierung und Antworten."
+slug: developer-api/environments-and-common-conventions
+canonical-url: https://docs.6mm.com/de/developer-api/environments-and-common-conventions
+---
+
+<h2 id="service-endpoints">Dienstendpunkte</h2>
+
+| Typ      | Endpunkt              |
+| --------- | --------------------- |
+| REST API  | `https://api.6mm.com` |
+| WebSocket | `wss://ws.6mm.com/ws`    |
+
+<h2 id="time-and-numeric-values">Zeit und numerische Werte</h2>
+
+* Sofern nicht anders angegeben, sind Zeitfelder Unix-Millisekunden-Zeitstempel.
+* Tägliche Statistiken, Balance-Snapshots und Handelsvolumenstatistiken verwenden standardmäßig UTC Tagesgrenzen.
+* Präzisionsempfindliche Felder wie Menge, Preis, Menge und Rate werden als Zeichenketten übertragen.
+* Große ganzzahlige IDs wie `orderId`, `conditionId`, und `strategyId` werden als Zeichenketten in JSONzurückgegeben.
+
+<h2 id="response-format">Antwortformat</h2>
+
+Erfolgreiche Antwort:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {},
+  "requestId": "req-12345678"
+}
+```
+
+Fehlerantwort:
+
+```json
+{
+  "code": 1003,
+  "message": "Invalid token",
+  "requestId": "req-12345678"
+}
+```
+
+Anmerkungen:
+
+* Geschäftsfehler geben in der Regel weiterhin die einheitliche JSON -Struktur zurück. Integratoren sollten `code` zuerst überprüfen.
+* Authentifizierungsfehler können HTTP `401`zurückgeben; Ratenbegrenzung kann HTTP `429`zurückgeben.
+* Du kannst `X-Request-ID` im Request-Header senden. Der Server wird es als `requestId` in der Antwort zurückgeben.
+
+<h2 id="related-documentation">Verwandte Dokumentation</h2>
+
+- [Authentifizierung](/de/developer-api/authentication): Wählen Sie JWT oder API Key Signing.
+- [Request Signing](/de/developer-api/request-signing): konstruieren und verifizieren signierte Anfragen.
+- [REST API](/de/developer-api/rest-api): wende diese Konventionen auf Endpunktgruppen an.
+- [Fehlercodes & Fehlerbehebung](/de/developer-api/error-codes-and-troubleshooting): Diagnose von HTTP - und Geschäftsfehlern.

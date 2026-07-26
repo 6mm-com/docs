@@ -1,0 +1,159 @@
+---
+title: "Öffentliche Endpunkte"
+description: "Greifen Sie auf öffentliche 6MM API -Endpunkte für Instrumente, Ticker, Auftragsbücher, Trades und andere nicht authentifizierte Marktinformationen zu."
+slug: developer-api/rest-api/public-endpoints
+canonical-url: https://docs.6mm.com/de/developer-api/rest-api/public-endpoints
+---
+
+<h2 id="base-url">Basis URL</h2>
+
+```
+https://api.6mm.com
+```
+
+<h2 id="service-version">Dienstversion</h2>
+
+```http
+GET /v1/version
+```
+
+Holen Sie sich Informationen zur Serviceversion.
+
+<h2 id="server-time">Serverzeit</h2>
+
+```http
+GET /v1/time
+```
+
+Erhalten Sie Serverzeit. Dieser Endpunkt kann verwendet werden, um die Client-Zeit vor dem API Key Signieren zu kalibrieren.
+
+<h2 id="user-login">Benutzeranmeldung</h2>
+
+```http
+POST /v1/public/user/login
+```
+
+Anfrageparameter:
+
+| Parameter    | Typ   | Erforderlich | Beschreibung                             |
+| ------------ | ------ | -------- | --------------------------------------- |
+| `username`   | string | Ja      | Benutzername, Länge 3 - 32                 |
+| `password`   | string | Ja      | Passwort, Länge 1 - 64                 |
+| `deviceId`   | string | Nein       | Geräte-Fingerabdruck, bis zu 64 Zeichen |
+| `deviceName` | string | Nein       | Gerätname, bis zu 128 Zeichen       |
+
+Beispiel für eine Anfrage:
+
+```bash
+curl -X POST https://api.6mm.com/v1/public/user/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "alice",
+    "password": "yourPassword",
+    "deviceId": "device-001",
+    "deviceName": "server-001"
+  }'
+```
+
+Antwortbeispiel:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "accessToken": "YOUR_ACCESS_TOKEN",
+    "accessExpire": 1769676656
+  },
+  "requestId": "req-login"
+}
+```
+
+<h2 id="refresh-token">Refresh Token</h2>
+
+```http
+POST /v1/public/user/refresh-token
+```
+
+In normalen Integrationsszenarien wird der Login-Status per Cookie aktualisiert. Behalten Sie das Cookie durch die Login-Antwort zurück.
+
+Antwortfelder:
+
+| Spielfeld          | Typ   | Beschreibung              |
+| -------------- | ------ | ------------------------ |
+| `accessToken`  | string | New access Token         |
+| `accessExpire` | int64  | Ablaufzeit des Access Tokens |
+
+<h2 id="agent-sso">Agent SSO</h2>
+
+<h2 id="ticket-exchange">Fahrkartenaustausch</h2>
+
+```http
+POST /v1/public/agent-sso/exchange-ticket
+```
+
+Anfrageparameter:
+
+| Parameter  | Typ   | Erforderlich | Beschreibung                                 |
+| ---------- | ------ | -------- | ------------------------------------------- |
+| `ticket`   | string | Ja      | Einmaliges Ticket vom Agentenservice ausgestellt |
+| `deviceId` | string | Nein       | Geräte-Fingerabdruck, bis zu 64 Zeichen     |
+
+Antwortfelder:
+
+| Spielfeld          | Typ   | Beschreibung              |
+| -------------- | ------ | ------------------------ |
+| `accessToken`  | string | Zugangstoken             |
+| `accessExpire` | int64  | Ablaufzeit des Access Tokens |
+| `redirectPath` | string | Vorgeschlagener Umleitungspfad  |
+
+<h2 id="embed-token-exchange">Embed-Token-Börse</h2>
+
+```http
+POST /v1/public/agent-sso/exchange-embed-token
+```
+
+Anfrageparameter:
+
+| Parameter    | Typ   | Erforderlich | Beschreibung                                                    |
+| ------------ | ------ | -------- | -------------------------------------------------------------- |
+| `embedToken` | string | Ja      | Kurzlebiger von dem Agentendienst ausgegebener eingebetteter Handelstoken |
+| `channelId`  | string | Ja      | Eingebettete iframe-Kanal-ID, bis zu 128 Zeichen               |
+| `deviceId`   | string | Nein       | Geräte-Fingerabdruck, bis zu 64 Zeichen                        |
+
+Antwortfelder:
+
+| Spielfeld          | Typ   | Beschreibung              |
+| -------------- | ------ | ------------------------ |
+| `accessToken`  | string | Zugangstoken             |
+| `accessExpire` | int64  | Ablaufzeit des Access Tokens |
+
+<h2 id="pnl-leaderboard">PnL-Bestenliste</h2>
+
+```http
+GET /v1/public/leaderboard/pnl?period=30d
+```
+
+Anfrageparameter:
+
+| Parameter | Typ   | Erforderlich | Beschreibung          |
+| --------- | ------ | -------- | -------------------- |
+| `period`  | string | Ja      | `7d` / `30d` / `90d` |
+
+Antwortfelder:
+
+| Spielfeld              | Typ   | Beschreibung                                                       |
+| ------------------ | ------ | ----------------------------------------------------------------- |
+| `list[].rank`      | int32  | Rang                                                              |
+| `list[].userId`    | string | Externe Benutzer-ID                                                  |
+| `list[].trader`    | string | Name maskierter Händler                                                |
+| `list[].volume`    | string | Handelsvolumen im Fenster                                      |
+| `list[].pnlAmount` | string | PnL im Fenster realisiert                                        |
+| `list[].pnlPct`    | string | PnL-Verhältnis, dezimal von `0` bis `1`                                |
+| `myRank`           | int32  | Der Rang des aktuellen Nutzers. Wird `0` zurückgegeben, wenn er nicht authentifiziert oder nicht gerankt ist |
+
+<h2 id="related-documentation">Verwandte Dokumentation</h2>
+
+- [Marktdaten](/de/developer-api/rest-api/market-data)
+- [Öffentliche WebSocket Kanäle](/de/developer-api/websocket/public-market-channels)
+- [Umgebungen & Gemeinsame Konventionen](/de/developer-api/environments-and-common-conventions)

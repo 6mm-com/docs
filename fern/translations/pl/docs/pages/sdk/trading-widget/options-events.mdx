@@ -1,0 +1,69 @@
+---
+title: "Opcje i wydarzenia"
+subtitle: "Opcje inicjalizacji, zdarzenia w czasie działania oraz typowe kody błędów."
+slug: sdk/trading-widget/options-events
+canonical-url: https://docs.6mm.com/pl/sdk/trading-widget/options-events
+---
+
+<h2 id="options">Opcje</h2>
+
+| Pole | Typ | Domyślność | Przypisy |
+| --- | --- | --- | --- |
+| baseUrl | string | SDK Pochodzenie pisma | domena iframe. Przesyłaj jawnie na stronach partnerskich. |
+| Symbol | string | BTCUSDT | Znormalizowane do wielkich liter i pasków - / _. |
+| Motyw | ciemne \| światło | ciemność | Początkowy parametr motywu. |
+| Lokalizacja | en \| en-US \| zh-CN | Przeglądarka/domyślne | Obsługiwane są angielskie i uproszczone chińskie. |
+| Układ | domyślnie \| Compact | Domyślne | Opcja zarezerwowanego układu. |
+| Ekspozycja | object | `showHeader: false`, `showTicker: false`, `hidden: []` | Sterowanie osadza obszary powłok i kontenery handlowe wysokiego poziomu. |
+| Auth | object | Brak | Używaj partner-token do integracji nowych SSO . |
+
+<h2 id="display-controls">Sterowanie wyświetlaczem</h2>
+
+`display` kontroluje osadzoną powłokę strony handlowej oraz kontenery wysokiego poziomu. W partnerskich osadzeniach nagłówek PC i indeks rynku najniższego poziomu są domyślnie ukryte.
+
+```js
+display: {
+  showHeader: false,
+  showTicker: false,
+  hidden: ['chart', 'orderBook'],
+}
+```
+
+| Pole | Typ | Domyślność | Przypisy |
+| --- | --- | --- | --- |
+| showHeader | boolean | fałszywe | Czy pokazać nagłówek osadzenia PC wewnątrz iframe. |
+| showTicker | boolean | fałszywe | Czy pokazać indeks z najniższego poziomu rynku w obudowie wbudowanej. |
+| ukryte | String[] | [] | Ukrywa kontenery wysokiego poziomu na stronie handlowej. |
+
+Wartości wspierane `display.hidden` :
+
+| Wartość | Kontener |
+| --- | --- |
+| Lista | Kontener map |
+| orderBook | Pojemnik książki na zamówienie |
+| orderForm | Panel formularza zamówienia |
+| Pokoje | Ostatnie pozycje i panel otwartych zamówień |
+| Relacja | Kontener aktywów konta |
+
+`display.hidden` ukrywa wyłącznie całe kontenery. Nie ukrywa pojedynczych przycisków, pól ani narzędzi wewnątrz kontenera. Wartości, które nie są mapowane na aktualny viewport, są ignorowane.
+
+<h2 id="events">Wydarzenia</h2>
+
+| Wydarzenie | Trigger |
+| --- | --- |
+| gotowi | Inicjalizacja iFrame zakończona. |
+| błąd | SDK, iframe lub błąd uwierzytelniania. |
+| state_changed | SDK zmienił się stan cyklu życia. |
+| auth_state_changed | Zmieniono stan uwierzytelniania tokena partnera. |
+| symbol_changed | Zmienił się faktyczny symbol iframe. |
+| locale_changed | Zmieniło się faktyczne miejsce w iframe. |
+| order_created | Użytkownik utworzył polecenie wewnątrz iframe. |
+| order_failed | Złożenie rozkazu nie powiodło się. |
+| zniszczony | SDK instancja zniszczona. |
+
+<h2 id="related-widget-guides">Powiązane przewodniki po widgetach</h2>
+
+- [Trading Widget Quick Start](/pl/sdk/trading-widget/quick-start)
+- [Uwierzytelnianie](/pl/sdk/trading-widget/authentication)
+- [Metody instancji](/pl/sdk/trading-widget/instance-methods)
+- [Rozwiązywanie problemów](/pl/sdk/security/troubleshooting)

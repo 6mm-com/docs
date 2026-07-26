@@ -1,0 +1,108 @@
+---
+title: "Sematkan 6MM Trading Widget: Mulai Cepat"
+subtitle: "Tambahkan terminal trading ke halaman web dengan kontainer, skrip v1, dan TradingWidget.create()."
+slug: sdk/trading-widget/quick-start
+canonical-url: https://docs.6mm.com/id/sdk/trading-widget/quick-start
+---
+
+Trading Widget SDK menyematkan antarmuka trading 6MM ke dalam halaman web milik mitra. Integrasi tercepat membutuhkan kontainer yang terlihat, skrip produksi SDK, dan panggilan ke `TradingWidget.create()`.
+
+<h2 id="before-you-start">Sebelum Anda mulai</h2>
+
+- Jalankan contoh dari halaman web yang dapat memuat sumber daya dari `https://app.6mm.com`.
+- Berikan wadah widget lebar dan tinggi yang jelas.
+- Muat SDK sebelum memanggil `TradingWidget.create()`.
+- Rencanakan [alur otentikasi](/id/sdk/trading-widget/authentication) sebelum mengaktifkan fitur akun atau trading dalam produksi.
+
+<h2 id="minimal-example">Contoh minimal</h2>
+
+```html
+<div id="trading-widget" style="width: 100%; height: 720px"></div>
+
+<script src="https://app.6mm.com/sdk/trading-widget/v1/index.js"></script>
+<script>
+  const widget = TradingWidget.create('#trading-widget', {
+    baseUrl: 'https://app.6mm.com',
+    symbol: 'BTCUSDT',
+    theme: 'dark',
+    locale: 'en',
+    layout: 'default',
+    display: {
+      showHeader: false,
+      showTicker: false,
+      hidden: [],
+    },
+    onReady(event) {
+      console.log('ready', event)
+    },
+    onError(error) {
+      console.error('error', error)
+    },
+  })
+</script>
+```
+
+Ketika integrasi berhasil, SDK membuat iframe di dalam `#trading-widget` dan memanggil `onReady`. Tangkap `onError` selama pengembangan agar kegagalan konfigurasi dan pemuatan terlihat.
+
+<h2 id="sdk-urls">URL SDK</h2>
+
+| Lingkungan | Script URL |
+| --- | --- |
+| Produksi | https://app.6mm.com/sdk/trading-widget/v1/index.js |
+
+> **Tetapkan baseUrl secara eksplisit**
+>
+> Saat menguji dari halaman milik mitra, lewati baseUrl agar iframe selalu menunjuk ke domain Web 6MM .
+
+<h2 id="display-controls">Kontrol tampilan</h2>
+
+Partner embed secara default menyembunyikan header PC dan ticker bottom market. Gunakan `display` saat Anda perlu menampilkan area shell tersebut atau menyembunyikan kontainer tingkat tinggi di halaman trading yang disematkan.
+
+```js
+display: {
+  showHeader: false,
+  showTicker: false,
+  hidden: ['account'],
+}
+```
+
+<h2 id="container-size">Ukuran kontainer</h2>
+
+| Permukaan | Minimum yang direkomendasikan |
+| --- | --- |
+| Desktop | 1024 x 720 |
+| Mobile | 390 x 700 |
+
+Untuk tata letak responsif, jaga lebar tetap cair dan atur ketinggian minimum yang sesuai untuk setiap titik jeda. Kontainer dengan tinggi nol dapat memuat SDK dengan sukses sambil membuat antarmuka perdagangan tidak terlihat.
+
+<h2 id="verify-the-integration">Verifikasi integrasi</h2>
+
+1. Konfirmasi skrip SDK berhasil dikembalikan di panel jaringan browser.
+2. Konfirmasi `onReady` akan aktif setelah iframe diinisialisasi.
+3. Uji bagian `symbol`yang dikonfigurasi, `locale`, tema, dan bagian tersembunyi.
+4. Ubah ukuran halaman di antara breakpoint desktop dan mobile.
+5. Selesaikan tes terautentikasi dengan pengguna non-produksi sebelum peluncuran.
+
+<h2 id="common-issues">Masalah umum</h2>
+
+| Gejala | Apa yang harus diperiksa |
+| --- | --- |
+| Area widget kosong | Pastikan wadah memiliki lebar dan tinggi yang terlihat. |
+| `TradingWidget` tidak terdefinisi | Konfirmasi skrip v1 dimuat sebelum panggilan pembuatan. |
+| Halaman atau lingkungan yang salah | Atur `baseUrl` secara eksplisit dan verifikasi lingkungan yang dikonfigurasi. |
+| Acara siap tidak pernah aktif | Tangkap `onError` dan periksa permintaan iframe atau skrip yang diblokir. |
+| Data akun tidak tersedia | Selesaikan alur otentikasi widget yang didukung. |
+
+<h2 id="next-steps">Langkah selanjutnya</h2>
+
+<CardGroup cols={3}>
+<Card title="Otentikasi Widget" icon="fa-duotone fa-user-shield" href="/id/sdk/trading-widget/authentication">
+Hubungkan terminal tertanam ke sesi pengguna yang disetujui.
+</Card>
+<Card title="Opsi & Acara" icon="fa-duotone fa-sliders" href="/id/sdk/trading-widget/options-events">
+Konfigurasikan simbol, lokal, perilaku tampilan, dan callback siklus hidup.
+</Card>
+<Card title="Metode Instance" icon="fa-duotone fa-code" href="/id/sdk/trading-widget/instance-methods">
+Kontrol instance widget yang dibuat setelah inisialisasi.
+</Card>
+</CardGroup>

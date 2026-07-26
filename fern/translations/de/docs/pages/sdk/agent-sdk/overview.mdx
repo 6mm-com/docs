@@ -1,0 +1,73 @@
+---
+title: "6MM Agent SDK für Java und PHP"
+subtitle: "Integrieren Sie Signed Agent API Calls, User Bindings, Übertragungen, Eingangs-URLs und Webhook-Verifizierung von Partner-Backend-Services."
+slug: sdk/agent-sdk/overview
+canonical-url: https://docs.6mm.com/de/sdk/agent-sdk/overview
+---
+
+Das 6MM Agent SDK ist für Partner-Backend-Dienste, die privilegierte Agenten APIs aufrufen müssen, ohne Signing und Request von Grund auf zu implementieren. Es darf nicht im Browser-, Mobil- oder öffentlichen Desktop-Code laufen, da die Integration einen Partner API Secret verwendet.
+
+<h2 id="when-to-use-the-agent-sdk">Wann sollte man die Agent SDK</h2>
+
+Verwenden Sie ein Agent SDK , wenn Ihr Backend einen Partner-Nutzer binden muss, Vermögenswerte durch einen genehmigten Workflow bewegen, Handelsdaten abfragen, einen eingebetteten Handelseintrag URLerstellen oder Webhook-Benachrichtigungen überprüfen müssen. Verwenden Sie das [Trading Widget SDK](/de/sdk/trading-widget/overview) separat, wenn das Partner-Frontend die Handelsoberfläche anzeigen muss.
+
+<h2 id="capabilities">Fähigkeiten</h2>
+
+| Szenario | Java SDK | PHP SDK |
+| --- | --- | --- |
+| Bind-Benutzer | Unterstützt | Unterstützt |
+| Feste Übertragung | Unterstützt | Unterstützt |
+| Alles übertreiben | Unterstützt | Unterstützt |
+| Rückwärtsübertragung | Unterstützt | Unterstützt |
+| Abfragereihenfolgen | Unterstützt | Unterstützt |
+| Eintrag erstellen URL | Unterstützt | Unterstützt |
+| Webhook-Verifikation | Unterstützt | Unterstützt |
+
+<h2 id="common-configuration">Gemeinsame Konfiguration</h2>
+
+| Legende | Beispiel | Beschreibung |
+| --- | --- | --- |
+| baseUrl | `https://agent-api.6mm.com` | 6MM Agent API URL ohne Slash zu bedienen. |
+| agentCode | AGENT001 | Partneragenten-Code. |
+| apiSecret | Dein-api-geheimnis | API Signing-Secret wird nur im Backend gespeichert. |
+| defaultCurrency | USDT | Standardwährung für Überweisung und Konto APIs. |
+| webhookUrl | https://partner.example.com/6mm/webhook | Partner-Endpunkt für 6MM Webhook-Benachrichtigungen. |
+
+<h2 id="typical-integration-flow">Typischer Integrationsfluss</h2>
+
+1. Das Partner-Frontend authentifiziert den Nutzer über das eigene Kontosystem des Partners.
+2. Das Partner-Backend mappt den Benutzer auf eine stabile Partner-seitige Kennung.
+3. Das Backend ruft das Agent SDK mit `agentCode` und dem geschützten API geheim auf.
+4. Die SDK unterschreibt und sendet dem Agenten API Anfrage.
+5. Das Backend speichert die zurückgegebene Geschäftskennung und verarbeitet spätere Webhooks idempotent.
+6. Das Frontend erhält nur das kurzlebige Ergebnis oder die benötigte Zugangsberechtigung.
+
+<h2 id="choose-an-sdk">Wählen Sie eine SDK</h2>
+
+| Backend-Stack | Fang hier an |
+| --- | --- |
+| Java | [Java SDK Übersicht](/de/sdk/agent-sdk/java/overview) und [Java Schnellstart](/de/sdk/agent-sdk/java/quick-start) |
+| PHP | [PHP SDK Übersicht](/de/sdk/agent-sdk/php/overview) und [PHP Schnellstart](/de/sdk/agent-sdk/php/quick-start) |
+
+<h2 id="production-checklist">Produktionscheckliste</h2>
+
+- Laden Sie `apiSecret` aus einem Backend-Secret-Manager, nicht aus dem Quellcode.
+- Entwicklungs-, Staging- und Produktionsreferenzen getrennt halten.
+- Verwenden Sie eine stabile Partner-Benutzerabbildung und eindeutige Geschäftsordnungskennungen.
+- Die ursprüngliche Identifikatorin erhalten bleiben, wenn der Status einer zeitgesteuerten Anfrage überprüft wird.
+- Webhook-Signaturen zu überprüfen und verarbeitete Ereignis-IDs zu speichern.
+- Geheimnisse und Signaturen aus Protokollen schwärzen, während Anfrage-IDs zur Unterstützung erhalten bleiben.
+
+<h2 id="next-steps">Nächste Schritte</h2>
+
+<CardGroup cols={3}>
+<Card title="Java Schneller Start" icon="fa-brands fa-java" href="/de/sdk/agent-sdk/java/quick-start">
+Installiere und initialisiere die Agent SDK in einem Java Backend.
+</Card>
+<Card title="PHP Schneller Start" icon="fa-brands fa-php" href="/de/sdk/agent-sdk/php/quick-start">
+Installiere und initialisiere die Agent SDK in einem PHP Backend.
+</Card>
+<Card title="Webhooks & Idempotenz" icon="fa-duotone fa-webhook" href="/de/sdk/security/webhooks-idempotency">
+Verifizieren Sie Rückrufe und verhindern Sie doppelte Geschäftsabwicklungen.
+</Card>
+</CardGroup>

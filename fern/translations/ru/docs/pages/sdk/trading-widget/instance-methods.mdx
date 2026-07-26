@@ -1,0 +1,135 @@
+---
+title: "Методы экземпляров"
+subtitle: "Управлять созданным виджетом после TradingWidget.create()."
+slug: sdk/trading-widget/instance-methods
+canonical-url: https://docs.6mm.com/ru/sdk/trading-widget/instance-methods
+---
+
+<h2 id="method-summary">Краткое содержание метода</h2>
+
+| Метод | Назначение |
+| --- | --- |
+| уничтожить() | Удалите iframe и отпустите слушатели событий. |
+| getState() | Читайте текущее состояние SDK жизненного цикла. |
+| whenReady() | Подождите, пока iframe завершит инициализацию. |
+| setSymbol(символ) | Переключите торговую пару внутри iframe. |
+| setTheme(тема) | Обновите параметр темы iframe. |
+| setLocale(место) | Переключите язык iframe. |
+| setSize(ширина, высота) | Обновите размеры iframe. |
+| Перезарядка() | Перезагрузите текущий iframe. |
+| refreshAuth(причина) | Запустите процесс обновления автентификации виджета. |
+| setTokenProvider(провайдер) | Замените провайдера, используемого в режиме партнёрского токена. |
+| on (событие, куратор) | Подпишитесь на события во время выполнения и получите функцию отмены. |
+
+<h2 id="destroy">уничтожить()</h2>
+
+Удалите iframe, очистите слушатели и издайте уничтоженный один раз для текущего экземпляра.
+
+```js
+widget.destroy()
+```
+
+<h2 id="getstate">getState()</h2>
+
+Прочитайте текущий жизненный цикл экземпляра виджета.
+
+```js
+const state = widget.getState()
+```
+
+Возвращаемые значения включают загрузку, аутентификацию, готовность, ошибку и уничтожение.
+
+<h2 id="whenready">whenReady()</h2>
+
+Подождите, пока iframe завершит инициализацию, прежде чем запускать логику зависимого интерфейса.
+
+```js
+await widget.whenReady()
+```
+
+<h2 id="setsymbol-symbol">setSymbol(символ)</h2>
+
+Переключите торговую пару внутри iframe. Если iframe всё ещё инициализируется, SDK ставит команду в очередь и отправляет её после готовности.
+
+```js
+widget.setSymbol('ETHUSDT')
+```
+
+<h2 id="settheme-theme">setTheme(тема)</h2>
+
+Обновите параметр темы, используемый встроенным торговым iframe.
+
+```js
+widget.setTheme('dark')
+widget.setTheme('light')
+```
+
+<h2 id="setlocale-locale">setLocale(место)</h2>
+
+Переключите язык iframe. Поддерживаемые значения — en, en-US и zh-CN.
+
+```js
+widget.setLocale('en')
+widget.setLocale('en-US')
+widget.setLocale('zh-CN')
+```
+
+<h2 id="setsize-width-height">setSize(ширина, высота)</h2>
+
+Обновите размер iframe DOM и уведомите iframe о новом внешнем размере. Числовые значения преобразуются в px.
+
+```js
+widget.setSize('100%', 720)
+```
+
+<h2 id="reload">Перезарядка()</h2>
+
+Перезагрузите текущий iframe и дождитесь, пока он снова инициализируется.
+
+```js
+widget.reload()
+```
+
+<h2 id="refreshauth-reason">refreshAuth(причина)</h2>
+
+Попросите iframe обновить текущий поток аутентификации. Необязательное значение причины пересылается для логирования и управления потоком.
+
+```js
+widget.refreshAuth('manual')
+```
+
+<h2 id="settokenprovider-provider">setTokenProvider(провайдер)</h2>
+
+Замените tokenProvider , используемый в режиме партнера-токена. SDK вызывает провайдера, когда iframe запрашивает новый встраиваемый токен.
+
+```js
+widget.setTokenProvider(async ({ channelId, symbol, reason }) => {
+  const resp = await fetch('/api/trading/embed-token', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ channelId, symbol, reason }),
+  })
+
+  return resp.json()
+})
+```
+
+<h2 id="on-event-handler">on (событие, куратор)</h2>
+
+Подпишитесь на событие во время выполнения. Возвращённая функция удаляет слушателя.
+
+```js
+const off = widget.on('order_created', (event) => {
+  console.log(event)
+})
+
+off()
+```
+
+<h2 id="related-widget-guides">Связанные гайды по виджетам</h2>
+
+- [Trading Widget Быстрый старт](/ru/sdk/trading-widget/quick-start)
+- [Опции и события](/ru/sdk/trading-widget/options-events)
+- [Аутентификация](/ru/sdk/trading-widget/authentication)
+- [Устранение неполадок](/ru/sdk/security/troubleshooting)

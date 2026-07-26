@@ -1,0 +1,223 @@
+---
+title: "Користувач і обліковий запис"
+description: "Використовуйте 6MM кінцеві точки користувача та акаунта для отримання профілів, балансів, стану рахунку, дозволів і інформації про партнерські акаунти."
+slug: developer-api/rest-api/user-and-account
+canonical-url: https://docs.6mm.com/uk/developer-api/rest-api/user-and-account
+---
+
+Якщо не вказано інше, наступні кінцеві точки можуть використовувати JWT або API Key підписи.
+
+<h2 id="user-info">Інформація про користувача</h2>
+
+```http
+GET /v1/private/user/info
+```
+
+Поля відповіді:
+
+| Поле                  | Тип   | Опис      |
+| ---------------------- | ------ | ---------------- |
+| `userInfo.userId`      | string | Зовнішній ідентифікатор користувача |
+| `userInfo.username`    | string | Ім'я користувача         |
+| `userInfo.agentId`     | int64  | Ідентифікатор агента         |
+| `userInfo.vipLevel`    | int64  | VIP рівень        |
+| `userInfo.lastLoginAt` | int64  | Останній час входу  |
+| `userInfo.lastLoginIp` | string | Останній IP входу    |
+
+<h2 id="user-assets">Користувацькі ресурси</h2>
+
+```http
+GET /v1/private/user/asset
+```
+
+Поля відповіді:
+
+| Поле                     | Тип   | Опис                     |
+| ------------------------- | ------ | ------------------------------- |
+| `userAsset.userId`        | string | Зовнішній ідентифікатор користувача                |
+| `userAsset.assetType`     | string | Тип активу                      |
+| `userAsset.walletBalance` | string | Баланс гаманця                  |
+| `userAsset.frozenMargin`  | string | Маржа заморожена через очікувані ордери |
+| `userAsset.usedMargin`    | string | Маржа за позиціями        |
+
+<h2 id="create-listenkey">Створіть listenKey</h2>
+
+```http
+POST /v1/private/user/listen-key
+```
+
+Створює ключ автентифікації для приватних WebSocket потоків.
+
+<h2 id="renew-listenkey">Оновити listenKey</h2>
+
+```http
+PUT /v1/private/user/listen-key
+```
+
+Розширює listenKey валідність.
+
+<h2 id="close-listenkey">Close listenKey</h2>
+
+```http
+DELETE /v1/private/user/listen-key
+```
+
+Закриває заданий listenKey.
+
+<h2 id="account-change-logs">Журнали змін облікового запису</h2>
+
+```http
+GET /v1/private/user/account-change-log?assetType=USDT&page=1&pageSize=20
+```
+
+Параметри запиту:
+
+| Параметр    | Тип   | Обов'язкове | Опис                  |
+| ------------ | ------ | -------- | ---------------------------- |
+| `assetType`  | string | Ні       | Тип активу, наприклад `USDT`   |
+| `changeType` | string | Ні       | Тип зміни                  |
+| `startTime`  | int64  | Ні       | Час початку                   |
+| `endTime`    | int64  | Ні       | Кінець часу                     |
+| `page`       | int32  | Ні       | Номер сторінки, стандартний `1`     |
+| `pageSize`   | int32  | Ні       | Пункти на сторінку, стандартні `20` |
+
+Поля відповіді:
+
+| Поле                        | Тип   | Опис                  |
+| ---------------------------- | ------ | ---------------------------- |
+| `list[].assetType`           | string | Тип активу                   |
+| `list[].amount`              | string | Змінена сума               |
+| `list[].walletBalanceBefore` | string | Баланс гаманця до зміни |
+| `list[].walletBalanceAfter`  | string | Баланс гаманця після зміни  |
+| `list[].frozenBalanceBefore` | string | Заморожений баланс перед змінами |
+| `list[].frozenBalanceAfter`  | string | Заморожений баланс після зміни  |
+| `list[].changeType`          | string | Тип зміни                  |
+| `list[].referenceId`         | string | Пов'язаний бізнес-ідентифікатор          |
+| `list[].createdAt`           | int64  | Час створення                |
+| `total`                      | int64  | Загальна кількість                  |
+
+<h2 id="30-day-volume-statistics">Статистика обсягів за 30 днів</h2>
+
+```http
+GET /v1/private/user/volume-stats
+```
+
+Поля відповіді:
+
+| Поле         | Тип   | Опис                                     |
+| ------------- | ------ | ----------------------------------------------- |
+| `volume30d`   | string | Сукупний обсяг торгівлі за останні 30 днів |
+| `feeTotal30d` | string | Накопичені комісії за останні 30 днів           |
+
+<h2 id="balance-history">Історія балансу</h2>
+
+```http
+GET /v1/private/user/balance-history?period=1D&limit=30
+```
+
+Параметри запиту:
+
+| Параметр | Тип   | Обов'язкове | Опис                            |
+| --------- | ------ | -------- | -------------------------------------- |
+| `period`  | string | Так      | `1D` / `1W` / `1M`                     |
+| `limit`   | int    | Ні       | Кількість повернених товарів, за замовчуванням `30` |
+
+Поля відповіді:
+
+| Поле             | Тип   | Опис                 |
+| ----------------- | ------ | --------------------------- |
+| `items[].date`    | string | Дата агрегації            |
+| `items[].balance` | string | Баланс гаманця              |
+| `items[].pnl`     | string | Реалізований PnL за цей період |
+
+<h2 id="trade-overview">Огляд торгівлі</h2>
+
+```http
+GET /v1/private/user/trade-overview?type=1M
+```
+
+Параметри запиту:
+
+| Параметр | Тип   | Обов'язкове | Опис                                     |
+| --------- | ------ | -------- | ----------------------------------------------- |
+| `type`    | string | Так      | Діапазон трендів: `1D`, `1W`, `1M`, `3M`, `6M`, `1Y` |
+
+Поля відповіді:
+
+| Поле                | Тип   | Опис                                                          |
+| -------------------- | ------ | -------------------------------------------------------------------- |
+| `todayPnl`           | string | Сьогоднішній реалізований PnL                                                 |
+| `todayVolume`        | string | Сьогоднішній обсяг торгів за контрактами                                      |
+| `totalVolume`        | string | Кумулятивний обсяг торгів за контрактами                                   |
+| `totalPnl`           | string | Кумулятивний реалізований PnL                                              |
+| `maxDrawdown30d`     | string | Максимальна сума погашення за останні 30 днів                        |
+| `maxDrawdown30dRate` | string | Максимальний темп пониження за останні 30 днів, десятковий від `0` до `1` |
+| `transferIn`         | string | Кумулятивні переведені кошти                                      |
+| `transferOut`        | string | Кумулятивні переведені кошти                                     |
+| `items[]`            | array  | Дані про тенденції активів                                                     |
+
+<h2 id="asset-overview-summary">Огляд активів Огляд</h2>
+
+```http
+GET /v1/private/user/asset/overview/summary
+```
+
+Поля відповідей такі ж, як і поля огляду торгівлі, за винятком `items[]`.
+
+<h2 id="asset-overview-trend">Огляд тенденції активів</h2>
+
+```http
+GET /v1/private/user/asset/overview/trend?type=1M
+```
+
+Параметри запиту:
+
+| Параметр | Тип   | Обов'язкове | Опис                                     |
+| --------- | ------ | -------- | ----------------------------------------------- |
+| `type`    | string | Так      | Діапазон трендів: `1D`, `1W`, `1M`, `3M`, `6M`, `1Y` |
+
+Поля відповіді:
+
+| Поле                  | Тип   | Опис                     |
+| ---------------------- | ------ | ------------------------------- |
+| `items[].snapshotTime` | int64  | Час знімка                   |
+| `items[].balance`      | string | Баланс поточного рахунку         |
+| `items[].pnl`          | string | PnL за поточний період      |
+| `items[].pnlRate`      | string | Ставка PnL за поточний період |
+| `items[].totalPnl`     | string | Кумулятивний PnL                  |
+
+<h2 id="favorite-symbols">Улюблені символи</h2>
+
+<h2 id="save">Збереження</h2>
+
+```http
+POST /v1/private/user/favorite-symbols
+Content-Type: application/json
+```
+
+Тіло запиту:
+
+```json
+{
+  "symbols": ["BTCUSDT", "ETHUSDT"]
+}
+```
+
+<h2 id="query">Запит</h2>
+
+```http
+GET /v1/private/user/favorite-symbols
+```
+
+Поля відповіді:
+
+| Поле     | Тип      | Опис          |
+| --------- | --------- | -------------------- |
+| `symbols` | String\[] | Список улюблених символів |
+
+<h2 id="related-documentation">Пов'язана документація</h2>
+
+- [Приватний користувацький канал](/uk/developer-api/websocket/private-user-channel)
+- [Автентифікація](/uk/developer-api/authentication)
+- [Передача активів](/uk/trading/getting-started/asset-transfer)
+- [Коди помилок та усунення несправностей](/uk/developer-api/error-codes-and-troubleshooting)

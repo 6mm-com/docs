@@ -1,0 +1,136 @@
+---
+title: "API Key 管理"
+description: "建立、檢查、更新及撤銷 6MM API 金鑰，同時套用適當的權限、 IP 限制、秘密儲存及輪替操作。"
+slug: developer-api/api-key-management
+canonical-url: https://docs.6mm.com/zh-TW/developer-api/api-key-management
+---
+
+API Key 管理端點只接受 JWT 認證。
+
+<h2 id="create-api-key">創造 API Key</h2>
+
+```http
+POST /v1/private/user/api-key/create
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+請求參數：
+
+| 參數     | 類型      | 必修 | 描述                                                           |
+| ------------- | --------- | -------- | --------------------------------------------------------------------- |
+| `label`       | string    | 是的      | API Key 標籤，長度1至64                                          |
+| `permissions` | 智力       | 不       | 權限位元掩蓋、預設 `1`、範圍 `1` - `7`                      |
+| `ipWhitelist` | 弦\[] | 不       | IP 白名單，最多可錄20個條目。若省略，來源 IP 為無限制 |
+
+請求範例：
+
+```bash
+curl -X POST https://api.6mm.com/v1/private/user/api-key/create \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -d '{
+    "label": "external-service-prod",
+    "permissions": 3,
+    "ipWhitelist": ["203.0.113.10"]
+  }'
+```
+
+回應範例：
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "apiKey": "fx_xxxxxxxxxxxxxxxxxxxxxxxx",
+    "apiSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  },
+  "requestId": "req-api-key"
+}
+```
+
+`apiSecret` 在 API Key 建立時只會回傳一次。立即將它儲存在秘密管理系統中。不要把它寫進原始碼庫或日誌。
+
+每位使用者最多可建立 30 把 API 鑰匙。
+
+<h2 id="list-api-keys">API鑰匙列表</h2>
+
+```http
+GET /v1/private/user/api-key/list
+Authorization: Bearer YOUR_ACCESS_TOKEN
+```
+
+回應欄位：
+
+| 場地                | 類型      | 描述                       |
+| -------------------- | --------- | --------------------------------- |
+| `list[].id`          | string    | API Key ID                        |
+| `list[].label`       | string    | 唱片公司                             |
+| `list[].apiKey`      | string    | 公開 API Key 識別碼         |
+| `list[].permissions` | 智力       | 權限位元掩模                |
+| `list[].ipWhitelist` | 弦\[] | IP 白名單                      |
+| `list[].status`      | 智力       | 狀態： `1` 啟用， `0` 停用 |
+| `list[].lastUsedAt`  | int64     | 最後使用時間                    |
+| `list[].createdAt`   | int64     | 創作時間                     |
+
+<h2 id="update-api-key">更新 API Key</h2>
+
+```http
+PUT /v1/private/user/api-key/update
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+請求參數：
+
+| 參數     | 類型      | 必修 | 描述               |
+| ------------- | --------- | -------- | ------------------------- |
+| `id`          | string    | 是的      | API Key ID                |
+| `label`       | string    | 不       | 新唱片公司                 |
+| `permissions` | 智力       | 不       | 新權限位元遮罩    |
+| `ipWhitelist` | 弦\[] | 不       | 新 IP 白名單          |
+| `status`      | 智力       | 不       | `1` 啟用， `0` 停用 |
+
+<h2 id="delete-api-key">刪除 API Key</h2>
+
+```http
+POST /v1/private/user/api-key/delete
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+請求正文：
+
+```json
+{ "id": "1001" }
+```
+
+<h2 id="delete-all-api-keys">刪除所有 API 鍵</h2>
+
+```http
+POST /v1/private/user/api-key/delete-all
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+回應欄位：
+
+| 場地     | 類型  | 描述                |
+| --------- | ----- | -------------------------- |
+| `deleted` | int64 | 刪除 API 鑰匙數量 |
+
+<h2 id="related-security-guides">相關安全指南</h2>
+
+- [認證]（/developer-api/authentication）
+- [請求簽署]（/developer-api/request-signing）
+- 【秘密與簽名】（/sdk/security/secrets-signing）
+- [整合建議]（/developer-api/integration-recommendations）
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">相關頁面</h2>
+
+- [6MM API 認證： JWT 與 API 金鑰](/zh-TW/developer-api/authentication)
+- [請求簽署](/zh-TW/developer-api/request-signing)
+- [Agent SDK 祕密與 HMAC 手語](/zh-TW/sdk/security/secrets-signing)
+- [整合建議](/zh-TW/developer-api/integration-recommendations)
+<!-- sixmm-localized-link-repair:end -->

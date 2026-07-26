@@ -1,0 +1,100 @@
+---
+title: "REST API"
+description: "Xem xét các quy ước 6MM REST API , tùy chọn xác thực, định dạng yêu cầu, cấu trúc phản hồi, quyền truy cập và nhóm điểm cuối."
+slug: developer-api/rest-api
+canonical-url: https://docs.6mm.com/vi/developer-api/rest-api
+---
+
+<h2 id="public-endpoints">Các điểm cuối công khai</h2>
+
+| Điểm cuối                   | Phương pháp | Đường đi                                        | Mô tả                                                    |
+| -------------------------- | ------ | ------------------------------------------- | -------------------------------------------------------------- |
+| Phiên bản phục vụ            | GET    | `/v1/version`                               | Lấy thông tin phiên bản dịch vụ                                |
+| Thời gian máy chủ                | GET    | `/v1/time`                                  | Nhận thời gian trên máy chủ                                                |
+| Đăng nhập người dùng                 | POST   | `/v1/public/user/login`                     | Sử dụng tên người dùng và mật khẩu để lấy `accessToken`              |
+| Refresh Token              | POST   | `/v1/public/user/refresh-token`             | Làm mới trạng thái đăng nhập qua Cookie                                 |
+| Trao đổi vé đại lý      | POST   | `/v1/public/agent-sso/exchange-ticket`      | Trao đổi vé vào đại lý để lấy trạng thái đăng nhập              |
+| Trao đổi Agent Embed Token | POST   | `/v1/public/agent-sso/exchange-embed-token` | Đổi một token giao dịch nhúng ngắn hạn để lấy trạng thái đăng nhập |
+| Cấu hình ký hiệu       | GET    | `/v1/public/market/symbols`                 | Nhận các biểu tượng, quy tắc giao dịch và cấu hình mức phí         |
+| Cấu hình lãi suất tài trợ | GET    | `/v1/public/market/funding-rate`            | Cấu hình tỷ lệ tài trợ truy vấn                               |
+| Tỷ lệ tài trợ hiện tại       | GET    | `/v1/public/market/funding-rate/current`    | Đánh số các tỷ lệ tài trợ hiện tại                                 |
+| Lịch sử tỷ lệ tài trợ       | GET    | `/v1/public/market/funding-rate/history`    | Lịch sử lãi suất tài trợ truy vấn                                     |
+| Klines                     | GET    | `/v1/public/market/klines`                  | Truy vấn giá giao dịch, giá chỉ số hoặc giá đánh dấu Kline           |
+| Bảng xếp hạng PnL            | GET    | `/v1/public/leaderboard/pnl`                | Truy vấn bảng xếp hạng PnL 7 / 30 / 90 ngày                          |
+
+<h2 id="private-user-endpoints">Điểm cuối người dùng riêng tư</h2>
+
+Trừ khi có chỉ định khác, các điểm cuối sau đây có thể sử dụng ký JWT hoặc API Key .
+
+| Điểm cuối                 | Phương pháp | Đường đi                                      | Sự cho phép   | Mô tả                                 |
+| ------------------------ | ------ | ----------------------------------------- | ------------ | ------------------------------------------- |
+| Thông tin người dùng                | GET    | `/v1/private/user/info`                   | Đọc         | Truy vấn hồ sơ người dùng hiện tại                  |
+| Tài sản người dùng              | GET    | `/v1/private/user/asset`                  | Đọc         | Tra cứu số dư ví và mức sử dụng ký quỹ       |
+| Tạo listenKey         | POST   | `/v1/private/user/listen-key`             | Đọc         | Tạo khóa xác thực WebSocket riêng tư |
+| Gia hạn listenKey          | PUT    | `/v1/private/user/listen-key`             | Đọc         | Gia hạn hiệu lực listenKey                   |
+| Đóng listenKey          | DELETE | `/v1/private/user/listen-key`             | Đọc         | Đóng listenKey                             |
+| Nhật ký thay đổi tài khoản      | GET    | `/v1/private/user/account-change-log`     | Đọc         | Truy vấn hồ sơ di chuyển quỹ                 |
+| Thống kê khối lượng 30 ngày | GET    | `/v1/private/user/volume-stats`           | Đọc         | Tra cứu khối lượng giao dịch 30 ngày gần đây và phí |
+| Lịch sử cân bằng          | GET    | `/v1/private/user/balance-history`        | Đọc         | Lịch sử cân bằng truy vấn                       |
+| Tổng quan thương mại           | GET    | `/v1/private/user/trade-overview`         | Đọc         | Truy vấn PnL, khối lượng và xu hướng tài sản          |
+| Tổng quan tài sản   | GET    | `/v1/private/user/asset/overview/summary` | Đọc         | Chỉ số tóm tắt tài sản truy vấn                 |
+| Tổng quan về xu hướng tài sản     | GET    | `/v1/private/user/asset/overview/trend`   | Đọc         | Truy vấn xu hướng tài sản                           |
+| Lưu các biểu tượng yêu thích    | POST   | `/v1/private/user/favorite-symbols`       | Đọc         | Ghi đè các biểu tượng yêu thích                  |
+| Nhận các biểu tượng yêu thích     | GET    | `/v1/private/user/favorite-symbols`       | Đọc         | Truy vấn các biểu tượng yêu thích                      |
+| Đăng xuất                   | POST   | `/v1/private/user/logout`                 | JWT + Cookie | Xóa trạng thái đăng nhập                           |
+
+<h2 id="api-key-management-endpoints">API Key Đầu cuối quản lý</h2>
+
+API Key đầu cuối quản lý chỉ chấp nhận JWT.
+
+| Điểm cuối            | Phương pháp | Đường đi                                  | Mô tả                                         |
+| ------------------- | ------ | ------------------------------------- | --------------------------------------------------- |
+| Tạo API Key      | POST   | `/v1/private/user/api-key/create`     | Tạo API Key; `apiSecret` chỉ được trả lại một lần duy nhất   |
+| Danh sách API Key        | GET    | `/v1/private/user/api-key/list`       | Truy vấn các khóa API của người dùng hiện tại                       |
+| Cập nhật API Key      | PUT    | `/v1/private/user/api-key/update`     | Cập nhật nhãn, quyền, danh sách trắng IP và trạng thái |
+| Xóa API Key      | POST   | `/v1/private/user/api-key/delete`     | Xóa một API Key được chỉ định                          |
+| Xóa tất cả các khóa API | POST   | `/v1/private/user/api-key/delete-all` | Xóa tất cả các Khóa API của người dùng hiện tại             |
+
+<h2 id="order-endpoints">Các điểm cuối đơn hàng</h2>
+
+Các điểm cuối lệnh yêu cầu quyền giao dịch.
+
+| Điểm cuối                    | Phương pháp | Đường đi                                  | Mô tả                                                       |
+| --------------------------- | ------ | ------------------------------------- | ----------------------------------------------------------------- |
+| Truy vấn đơn hàng đơn          | GET    | `/v1/private/order`                   | Truy vấn chính xác theo `symbol + orderId/clientOrderId`                   |
+| Đặt hàng                 | POST   | `/v1/private/order/place`             | Giới hạn hoặc lệnh thị trường                                             |
+| Thứ tự điều kiện đặt       | POST   | `/v1/private/order/place-condition`   | Lệnh dừng lỗ, chốt lời, lệnh dừng lỗ theo sau và các lệnh điều kiện khác |
+| Đặt lệnh chiến lược        | POST   | `/v1/private/order/place-strategy`    | Thứ tự chiến lược OTO / OCO / OTOCO                                  |
+| Đặt hàng theo lô          | POST   | `/v1/private/order/batch-place`       | Gửi nhiều đơn hàng bình thường                                     |
+| Hủy đơn hàng                | POST   | `/v1/private/order/cancel`            | Hủy một đơn hàng bình thường được chỉ định                                   |
+| Sửa đổi lệnh                 | POST   | `/v1/private/order/move`              | Chỉnh sửa giá và số lượng đơn hàng thông thường đang chờ xử lý                    |
+| Đơn hàng sửa đổi theo lô          | POST   | `/v1/private/order/batch-move`        | Chỉnh sửa hàng loạt các đơn hàng đang chờ thông thường cho cùng một ký hiệu            |
+| Hủy đơn hàng theo lô         | POST   | `/v1/private/order/batch-cancel`      | Hủy đơn hàng thông thường theo lô                                        |
+| Hủy tất cả                  | POST   | `/v1/private/order/batch-cancel-all`  | Hủy đơn hàng theo lô theo loại                                       |
+| Hủy đơn hàng điều kiện      | POST   | `/v1/private/order/cancel-condition`  | Hủy một lệnh điều kiện được chỉ định                                |
+| Đơn đặt hàng bình thường hiện tại       | GET    | `/v1/private/order/current`           | Truy vấn các lệnh chờ xử lý bình thường hiện tại                               |
+| Đơn hàng tình trạng hiện tại    | GET    | `/v1/private/order/current-condition` | Truy vấn các lệnh điều kiện chưa được kích hoạt hiện tại                        |
+| Thứ tự chuẩn mực lịch sử    | GET    | `/v1/private/order/history`           | Thứ tự chuẩn lịch sử phân trang                                 |
+| Đơn đặt hàng tình trạng lịch sử | GET    | `/v1/private/order/history-condition` | Thứ tự điều kiện lịch sử phân trang                              |
+| Hồ sơ thương mại               | GET    | `/v1/private/order/trades`            | Hồ sơ giao dịch theo số trang                                            |
+| Chi tiết lệnh chiến lược       | GET    | `/v1/private/order/strategy`          | Thứ tự chiến lược truy vấn và các thứ tự con                               |
+
+<h2 id="position-endpoints">Điểm cuối vị trí</h2>
+
+Các điểm cuối vị trí yêu cầu quyền giao dịch.
+
+| Điểm cuối          | Phương pháp | Đường đi                               | Mô tả                                  |
+| ----------------- | ------ | ---------------------------------- | -------------------------------------------- |
+| Thiết lập chế độ lề   | POST   | `/v1/private/position/margin-mode` | Công tắc cách ly / lề chéo               |
+| Thiết lập đòn bẩy      | POST   | `/v1/private/position/leverage`    | Thiết lập đòn bẩy biểu tượng                          |
+| Cài đặt vị trí | GET    | `/v1/private/position/settings`    | Truy vấn đòn bẩy và chế độ ký quỹ cho một biểu tượng  |
+| Vị trí hiện tại | GET    | `/v1/private/position/positions`   | Truy vấn vị trí hiện tại                      |
+| Lịch sử vị trí  | GET    | `/v1/private/position/history`     | Truy vấn vị trí lịch sử và đóng hồ sơ |
+
+<h2 id="endpoint-groups">Nhóm điểm cuối</h2>
+
+- [Điểm cuối công khai](/vi/developer-api/rest-api/public-endpoints)
+- [Người dùng & Tài khoản](/vi/developer-api/rest-api/user-and-account)
+- [Lệnh](/vi/developer-api/rest-api/order)
+- [Vị trí](/vi/developer-api/rest-api/position)
+- [Dữ liệu thị trường](/vi/developer-api/rest-api/market-data)

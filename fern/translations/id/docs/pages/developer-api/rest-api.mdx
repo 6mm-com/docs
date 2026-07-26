@@ -1,0 +1,100 @@
+---
+title: "REST API"
+description: "Tinjau konvensi 6MM REST API , opsi autentikasi, format permintaan, struktur respons, izin, dan grup endpoint."
+slug: developer-api/rest-api
+canonical-url: https://docs.6mm.com/id/developer-api/rest-api
+---
+
+<h2 id="public-endpoints">Titik Akhir Publik</h2>
+
+| Titik Akhir                   | Metode | Jalur                                        | Deskripsi                                                    |
+| -------------------------- | ------ | ------------------------------------------- | -------------------------------------------------------------- |
+| Versi layanan            | GET    | `/v1/version`                               | Dapatkan informasi versi layanan                                |
+| Waktu server                | GET    | `/v1/time`                                  | Dapatkan waktu server                                                |
+| Login pengguna                 | POST   | `/v1/public/user/login`                     | Gunakan nama pengguna dan kata sandi untuk mendapatkan `accessToken`              |
+| Refresh Token              | POST   | `/v1/public/user/refresh-token`             | Segarkan status login melalui Cookie                                 |
+| Agen Pertukaran Tiket      | POST   | `/v1/public/agent-sso/exchange-ticket`      | Tukar tiket masuk agen dengan status login              |
+| Pertukaran Token Embed Agen | POST   | `/v1/public/agent-sso/exchange-embed-token` | Tukar token trading tertanam yang bertahan pendek untuk status login |
+| Konfigurasi simbol       | GET    | `/v1/public/market/symbols`                 | Dapatkan simbol, aturan trading, dan konfigurasi fee tier         |
+| Konfigurasi tarif pendanaan | GET    | `/v1/public/market/funding-rate`            | Konfigurasi tingkat pendanaan kueri                               |
+| Tingkat pendanaan saat ini       | GET    | `/v1/public/market/funding-rate/current`    | Halaman tingkat pendanaan saat ini                                 |
+| Sejarah tingkat pendanaan       | GET    | `/v1/public/market/funding-rate/history`    | Query riwayat tingkat pendanaan                                     |
+| Klines                     | GET    | `/v1/public/market/klines`                  | Query harga perdagangan, harga indeks, atau mark price Klines           |
+| Papan peringkat PnL            | GET    | `/v1/public/leaderboard/pnl`                | Query Papan peringkat PnL 7 / 30 / 90 hari                          |
+
+<h2 id="private-user-endpoints">Endpoint Pengguna Pribadi</h2>
+
+Kecuali dinyatakan lain, endpoint berikut dapat menggunakan penandatanganan JWT atau API Key .
+
+| Titik Akhir                 | Metode | Jalur                                      | Izin   | Deskripsi                                 |
+| ------------------------ | ------ | ----------------------------------------- | ------------ | ------------------------------------------- |
+| Info pengguna                | GET    | `/v1/private/user/info`                   | Baca         | Query profil pengguna saat ini                  |
+| Aset pengguna              | GET    | `/v1/private/user/asset`                  | Baca         | Query saldo dompet dan penggunaan margin       |
+| Buat listenKey         | POST   | `/v1/private/user/listen-key`             | Baca         | Buat kunci autentikasi WebSocket privat |
+| Perbarui listenKey          | PUT    | `/v1/private/user/listen-key`             | Baca         | Perpanjang masa berlaku listenKey                   |
+| Tutup listenKey          | DELETE | `/v1/private/user/listen-key`             | Baca         | Tutup listenKey                             |
+| Log perubahan akun      | GET    | `/v1/private/user/account-change-log`     | Baca         | Cari catatan pergerakan dana                 |
+| Statistik volume 30 hari | GET    | `/v1/private/user/volume-stats`           | Baca         | Cari volume dan biaya perdagangan 30 hari terbaru |
+| Sejarah keseimbangan          | GET    | `/v1/private/user/balance-history`        | Baca         | Riwayat keseimbangan kueri                       |
+| Gambaran Perdagangan           | GET    | `/v1/private/user/trade-overview`         | Baca         | Query PnL, volume, dan tren aset          |
+| Ringkasan aset   | GET    | `/v1/private/user/asset/overview/summary` | Baca         | Query metrik ringkasan aset                 |
+| Tren ikhtisar aset     | GET    | `/v1/private/user/asset/overview/trend`   | Baca         | Query tren aset                           |
+| Simpan simbol favorit    | POST   | `/v1/private/user/favorite-symbols`       | Baca         | Timpa simbol favorit                  |
+| Dapatkan simbol favorit     | GET    | `/v1/private/user/favorite-symbols`       | Baca         | Kueri simbol favorit                      |
+| Keluar                   | POST   | `/v1/private/user/logout`                 | JWT + Kue | Hapus status login                           |
+
+<h2 id="api-key-management-endpoints">Endpoint Manajemen API Key</h2>
+
+API Key endpoint manajemen hanya menerima JWT.
+
+| Titik Akhir            | Metode | Jalur                                  | Deskripsi                                         |
+| ------------------- | ------ | ------------------------------------- | --------------------------------------------------- |
+| Buat API Key      | POST   | `/v1/private/user/api-key/create`     | Buat API Key; `apiSecret` hanya dikembalikan sekali   |
+| daftar API Key        | GET    | `/v1/private/user/api-key/list`       | Query Kunci API pengguna saat ini                       |
+| Pembaruan API Key      | PUT    | `/v1/private/user/api-key/update`     | Perbarui label, izin, daftar putih IP , dan status |
+| Hapus API Key      | POST   | `/v1/private/user/api-key/delete`     | Hapus API Key tertentu                          |
+| Hapus semua Kunci API | POST   | `/v1/private/user/api-key/delete-all` | Hapus semua Kunci API pengguna saat ini             |
+
+<h2 id="order-endpoints">Titik Akhir Pesanan</h2>
+
+Endpoint pesanan memerlukan izin perdagangan.
+
+| Titik Akhir                    | Metode | Jalur                                  | Deskripsi                                                       |
+| --------------------------- | ------ | ------------------------------------- | ----------------------------------------------------------------- |
+| Query satu order          | GET    | `/v1/private/order`                   | Kueri tepat oleh `symbol + orderId/clientOrderId`                   |
+| Pesan                 | POST   | `/v1/private/order/place`             | Limit atau order pasar                                             |
+| Tempatkan pesanan kondisi       | POST   | `/v1/private/order/place-condition`   | Stop loss, take profit, trailing stop, dan perintah kondisi lainnya |
+| Pesan strategi        | POST   | `/v1/private/order/place-strategy`    | Urutan strategi OTO / OCO / OTOCO                                  |
+| Melakukan pemesanan secara batch          | POST   | `/v1/private/order/batch-place`       | Kirim beberapa pesanan normal                                     |
+| Batalkan pesanan                | POST   | `/v1/private/order/cancel`            | Batalkan pesanan normal yang ditentukan                                   |
+| Amandemen urutan                 | POST   | `/v1/private/order/move`              | Ubah harga dan jumlah pesanan tertunda normal                    |
+| Pesanan amandemen batch          | POST   | `/v1/private/order/batch-move`        | Ubah pesanan tertunda secara batch untuk simbol yang sama            |
+| Membatalkan pesanan secara batch         | POST   | `/v1/private/order/batch-cancel`      | Batalkan pesanan normal secara batch                                        |
+| Batalkan semua                  | POST   | `/v1/private/order/batch-cancel-all`  | Batalkan pesanan secara batch berdasarkan jenis                                       |
+| Membatalkan perintah kondisi      | POST   | `/v1/private/order/cancel-condition`  | Batalkan pesanan kondisi tertentu                                |
+| Perintah normal saat ini       | GET    | `/v1/private/order/current`           | Query order normal pending saat ini                               |
+| Pesanan kondisi saat ini    | GET    | `/v1/private/order/current-condition` | Query urutan kondisi yang tidak terpicu saat ini                        |
+| Urutan normal historis    | GET    | `/v1/private/order/history`           | Halaman urutan normal historis                                 |
+| Perintah kondisi historis | GET    | `/v1/private/order/history-condition` | Urutan kondisi historis halaman                              |
+| Rekor perdagangan               | GET    | `/v1/private/order/trades`            | Catatan perdagangan halaman                                            |
+| Detail urutan strategi       | GET    | `/v1/private/order/strategy`          | Query urutan strategi dan sub-order                               |
+
+<h2 id="position-endpoints">Posisi Titik Akhir</h2>
+
+Endpoint posisi memerlukan izin perdagangan.
+
+| Titik Akhir          | Metode | Jalur                               | Deskripsi                                  |
+| ----------------- | ------ | ---------------------------------- | -------------------------------------------- |
+| Atur mode margin   | POST   | `/v1/private/position/margin-mode` | Switch terisolasi / margin silang               |
+| Tetapkan leverage      | POST   | `/v1/private/position/leverage`    | Tetapkan leverage simbol                          |
+| Pengaturan posisi | GET    | `/v1/private/position/settings`    | Leverage query dan mode margin untuk simbol  |
+| Posisi saat ini | GET    | `/v1/private/position/positions`   | Query posisi saat ini                      |
+| Sejarah posisi  | GET    | `/v1/private/position/history`     | Query posisi historis dan tutup catatan |
+
+<h2 id="endpoint-groups">Grup endpoint</h2>
+
+- [Titik Akhir Publik](/id/developer-api/rest-api/public-endpoints)
+- [Pengguna & Akun](/id/developer-api/rest-api/user-and-account)
+- [Perintah](/id/developer-api/rest-api/order)
+- [Posisi](/id/developer-api/rest-api/position)
+- [Data Pasar](/id/developer-api/rest-api/market-data)

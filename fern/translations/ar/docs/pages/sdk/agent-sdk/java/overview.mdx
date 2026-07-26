@@ -1,0 +1,55 @@
+---
+title: "Agent Java SDK"
+subtitle: "قم بتثبيت 6MM Agent Java SDK واستخدم APIs الخلفية الموقعة لربط المستخدم، والنقلات، وبيانات الدخول والتحقق من webhook."
+slug: sdk/agent-sdk/java/overview
+canonical-url: https://docs.6mm.com/ar/sdk/agent-sdk/java/overview
+---
+
+<h2 id="official-repository">المستودع الرسمي</h2>
+
+يعد المستودع Java SDK مصدر الحقيقة لشيفرة المصدر SDK ، وملاحظات الإصدار، وأمثلة الاستخدام، وتفاصيل التنفيذ:
+
+[6mm-com/agent-java-sdk](https://github.com/6mm-com/agent-java-sdk)
+
+<h2 id="runtime">مدة العرض</h2>
+
+| العنصر | القيمة |
+| --- | --- |
+| النسخة Java الأدنى | Java 8+ |
+| أداة البناء الموصى بها | مافن 3.9+ |
+| مجموعة مافن | `com.sixmm.exchange.sdk` |
+| قطعة أثرية من مافن | `agent` |
+| وسم المصدر الموثق | `v0.1.1` |
+
+المستودع العام في GitHub هو استضافة المصدر، وليس مستودع اعتماد Maven. قم ببناء وتثبيت المصدر الموسوم محليا أو انشر القطعة المعتمدة في مستودع Maven الخاص بمؤسستك قبل استخدامها في بناءات الفريق.
+
+<h2 id="typical-backend-responsibilities">المسؤوليات النموذجية للخلف</h2>
+
+- التحقق من جلسة المستخدم الشريكة.
+- تعيين المستخدم الشريك إلى agentUserId.
+- ربط المكالمات قبل أول تداول أو تدفقات تحويل.
+- اتصل createEntryUrl للحصول على SSOبكامل الموقع لمرة واحدة.
+- اتصل createEmbedToken لوضع Trading Widget الشريك الرمزي.
+- التحقق من نقل webhooks ومعالجتها بشكل متكامل.
+
+<h2 id="security-and-operational-rules">قواعد الأمن والتشغيل</h2>
+
+- تخزين `apiSecret` فقط في مدير سري خلفي أو متغير بيئة محمية.
+- الحفاظ على تزامن وقت الخادم لأن الطلبات الموقعة تحتوي على الطوابع الزمنية.
+- عامل `agentOrderNo` كمفتاح موثوق دائم والحفاظ على فريده عالميا.
+- تخزين `platformUserId` كسلسلة والحفاظ على علاقتها مع `agentUserId`.
+- الاستعلام عن النقل الأصلي قبل إعادة المحاولة بعد انتهاء الوقت أو نتيجة الشبكة غير المؤكدة.
+
+<h2 id="next-steps">الخطوات التالية</h2>
+
+- [Java Quick Start] (/sdk/agent-sdk/java/quick-start): تثبيت المصدر الموسوم وتهيئة `AgentClient`.
+- [إنشاء رمز تضمين] (/sdk/agent-sdk/java/embed-token): إصدار بيانات اعتماد قصيرة العمر ل Trading Widget.
+- [الأسرار والإشارة] (/sdk/security/secrets-signing): فهم التوقيع التلقائي HMAC والتعامل السري.
+- [Webhooks & Idempotency](/ar/sdk/security/webhooks-idempotency): التحقق من المكالمات المتكررة ومنع المعالجة المكررة.
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">صفحات ذات صلة</h2>
+
+- [Java البداية السريعة](/ar/sdk/agent-sdk/java/quick-start)
+- [إنشاء رمز التضمين](/ar/sdk/agent-sdk/java/embed-token)
+- [Agent SDK أسرار وتوقيع HMAC](/ar/sdk/security/secrets-signing)
+<!-- sixmm-localized-link-repair:end -->

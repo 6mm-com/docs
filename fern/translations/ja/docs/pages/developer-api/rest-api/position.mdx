@@ -1,0 +1,141 @@
+---
+title: "位置"
+description: "6MMポジションエンドポイントを使って、未開きポジション、マージン詳細、レバレッジ、未実現損益、ポジション関連業務を照会しましょう。"
+slug: developer-api/rest-api/position
+canonical-url: https://docs.6mm.com/ja/developer-api/rest-api/position
+---
+
+> **注**
+>
+> ポジションエンドポイントには取引許可が必要です。
+
+<h2 id="set-leverage">セイトレバレッジ</h2>
+
+```http
+POST /v1/private/position/leverage
+Content-Type: application/json
+```
+
+要請本体:
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "leverage": 20
+}
+```
+
+応答フィールド:
+
+| フィールド       | 種類   | 概要 |
+| ----------- | ------ | ----------- |
+| `symbol`    | string | シンボル      |
+| `leverage`  | int32  | レバレッジ    |
+| `timestamp` | int64  | タイムスタンプ   |
+
+<h2 id="set-margin-mode">マージンモードを設定してください</h2>
+
+```http
+POST /v1/private/position/margin-mode
+Content-Type: application/json
+```
+
+要請本体:
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "marginMode": 1
+}
+```
+
+`marginMode`: `1` 交差、 `2` 孤立。
+
+<h2 id="position-settings">ポジション設定</h2>
+
+```http
+GET /v1/private/position/settings?symbol=BTCUSDT
+```
+
+応答フィールド:
+
+| フィールド        | 種類   | 概要             |
+| ------------ | ------ | ----------------------- |
+| `symbol`     | string | シンボル                  |
+| `marginMode` | int32  | `1` 十字架、 `2` 孤立している |
+| `leverage`   | int32  | レバレッジ                |
+
+<h2 id="current-positions">現在の役職</h2>
+
+```http
+GET /v1/private/position/positions?symbol=BTCUSDT
+```
+
+リクエストパラメータ:
+
+| パラメータ | 種類   | 必須 | 概要 |
+| --------- | ------ | -------- | ----------- |
+| `symbol`  | string | いいえ       | シンボル      |
+
+応答フィールド:
+
+| フィールド                         | 種類   | 概要                |
+| ----------------------------- | ------ | -------------------------- |
+| `positions[].symbol`          | string | シンボル                     |
+| `positions[].marginMode`      | string | マージンモード                |
+| `positions[].positionSide`    | string | ポジション側              |
+| `positions[].leverage`        | int32  | レバレッジ                   |
+| `positions[].quantity`        | string | 位置量          |
+| `positions[].entryPrice`      | string | 入場価格                |
+| `positions[].breakEvenPrice`  | string | 損益分岐点           |
+| `positions[].liqPrice`        | string | 清算価格          |
+| `positions[].marginRatio`     | string | マージン比率               |
+| `positions[].unrealizedPnl`   | string | 未実現PnL             |
+| `positions[].roe`             | string | 自己資本利益率           |
+| `positions[].nextFundingFee`  | string | 次の資金提供料の推定 |
+| `positions[].fundingFeeAccum` | string | 累積資金料    |
+| `positions[].tpPrice`         | string | 利益切入価格          |
+| `positions[].slPrice`         | string | ストップロス価格            |
+
+<h2 id="position-history">ポジションの歴史</h2>
+
+```http
+GET /v1/private/position/history?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+リクエストパラメータ:
+
+| パラメータ   | 種類   | 必須 | 概要                  |
+| ----------- | ------ | -------- | ---------------------------- |
+| `symbol`    | string | いいえ       | シンボル                       |
+| `side`      | string | いいえ       | `long` / `short`             |
+| `startTime` | int64  | いいえ       | 開始時間                   |
+| `endTime`   | int64  | いいえ       | 終焉                     |
+| `page`      | int64  | いいえ       | ページ番号、デフォルトで `1`     |
+| `pageSize`  | int64  | いいえ       | ページごとの項目数、デフォルト `20` |
+
+応答フィールド:
+
+| フィールド                    | 種類   | 概要               |
+| ------------------------ | ------ | ------------------------- |
+| `list[].symbol`          | string | シンボル                    |
+| `list[].positionSide`    | string | ポジション側             |
+| `list[].leverage`        | int32  | レバレッジ                  |
+| `list[].maxQuantity`     | string | 最大位置量 |
+| `list[].entryPrice`      | string | 入場価格               |
+| `list[].closePrice`      | string | 終値               |
+| `list[].pnl`             | string | 実現されたPnL              |
+| `list[].roe`             | string | 自己資本利益率          |
+| `list[].marginMode`      | string | マージンモード               |
+| `list[].triggerMode`     | int32  | クローズトリガーモード        |
+| `list[].fundingFeeAccum` | string | 累積資金料   |
+| `list[].openedAt`        | int64  | 開放時間                 |
+| `list[].closedAt`        | int64  | 終了時間                |
+| `total`                  | int64  | 総数               |
+
+<h2 id="related-documentation">関連文書</h2>
+
+- [マージンルール](/ja/trading/margin-rules)
+- [レバレッジ・メカニクス](/ja/trading/leverage-mechanics)
+- [リスクと清算](/ja/trading/risk-and-liquidations)
+- [プライベートユーザーチャネル](/ja/developer-api/websocket/private-user-channel)

@@ -1,0 +1,42 @@
+---
+title: "Integrationsempfehlungen"
+description: "Wenden Sie empfohlene 6MM Praktiken für Authentifizierung, Wiederholungen, Idempotenz, Protokollierung, Ratenabwicklung, Überwachung, Sicherheit und Startbereitschaft an."
+slug: developer-api/integration-recommendations
+canonical-url: https://docs.6mm.com/de/developer-api/integration-recommendations
+---
+
+Nutzen Sie diese Empfehlungen als Basis für die Produktionsbereitschaft. Sie ergänzen die Endpunkt-Referenz und helfen Integrationen, sich sicher von Auszeiten, Wiederverbindungen, doppelten Anfragen und Zugangsdaten zu erholen.
+
+<h2 id="authentication-and-secrets">Authentifizierung und Geheimnisse</h2>
+
+- Bevorzugen Sie [API Key Signing](/de/developer-api/authentication) für serverseitige Handelsprogramme und JWT für benutzergesteuerte Frontend-Aktionen.
+- Halten Sie `apiSecret` im Backend-Secret-Management. Sie werden nur einmal angezeigt und dürfen niemals an einen Browser oder mobilen Client gesendet werden.
+- Wenden Sie die erforderlichen Mindestberechtigungen API Key an und schränken Sie Quell-IPs ein, wenn die Integrationsumgebung stabile Ausgangsadressen unterstützt.
+- Deaktivieren oder löschen Sie einen geleakten Schlüssel sofort und prüfen Sie dann die Anfrageprotokolle, bevor Sie einen Ersatzschlüssel ausgeben.
+
+<h2 id="request-validation-and-idempotency">Anfragevalidierung und Idempotenz</h2>
+
+- Vor der Bestellung `/v1/public/market/symbols` Abfrage und Validierung `tickSize`, `stepSize`, des minimalen Nominalwerts und der maximalen Menge lokal.
+- Generiere für jeden Order-Write ein eindeutiges `clientOrderId` , damit Anfragen nach einer Trennung abgestimmt werden können.
+- Erhalte die ursprüngliche Kennung, wenn ein HTTP Ergebnis unsicher ist. Abfrage der bestehenden Reihenfolge vor der Erstellung einer Ersatzanfrage.
+- Behandle Dezimalbeträge und Preise als Strings oder Dezimaltypen, nicht als binäre Gleitkommawerte.
+
+<h2 id="order-and-websocket-state">Ordnung und WebSocket Zustand</h2>
+
+- Bestimmen Sie den Endzustand nach Operationen zum Cancel-, Cancel-All oder Ändern von [privaten WebSocket Events](/de/developer-api/websocket/private-user-channel) oder einer REST Abfrage.
+- Jede Wiederverbindung als neue WebSocket Sitzung behandeln und alle erforderlichen Abonnements wiederherstellen.
+- Überprüfen Sie die Kontinuität des Bestellbuchs mit `endVersion`. Tritt eine Versionslücke auf, verwerfen Sie das lokale Buch und abonnieren Sie erneut für eine neue Snapshotaufnahme.
+- Duplizieren Sie private Bestell- und Kontenereignisse, bevor sie auf Salden, Positionen oder Partneraufzeichnungen angewendet werden.
+
+<h2 id="logging-monitoring-and-retries">Protokollierung, Überwachung und Wiederholungsversuche</h2>
+
+- Record Request ID, Client Order ID, HTTP Status, API Geschäftscode, Latenz und Wiederholungsanzahl ohne Protokollierung von Geheimnissen oder vollständigen Tokens.
+- Nur als sicher dokumentierte Wiederholungsoperationen unter Verwendung von begrenztem exponentiellem Backoff und Jitter.
+- Warnung bei Authentifizierungsfehlern, Signaturfehlern, Ratenbegrenzungsantworten, WebSocket Wiederverbindungsschleifen, Sequenzlücken und Unterschieden bei der Reihenfolgeabstimmung.
+- Server-Uhren synchron halten, da Authentifizierung und Signierung von Zeitstempeln abhängen.
+
+<h2 id="before-production">Vor der Produktion</h2>
+
+- Timeout-, Duplikat-Anfragen, Wiederverbindungen, Schlüsselrotation und Webhook-Wiederholungsszenarien in einer nicht-produktionsbezogenen Umgebung durchführen.
+- Besitzer für Credential-Rotation, Handelsvorfälle, Webhook-Fehler und Abstimmung zuweisen.
+- Füllen Sie die [Produktionsstart-Checkliste](/de/resources/production-launch-checklist) aus und verwenden Sie die [Support-Anfrage-Vorlage](/de/resources/support-request-template) bei Bedarf an Eskalation.

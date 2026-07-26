@@ -1,0 +1,94 @@
+---
+title: "Transfer aktywów"
+description: "Dowiedz się, jak aktywa przechodzą między systemami partnerów a kontami 6MM handlowymi, w tym odpowiedzialność za transfery, zarządzanie statusem oraz kontrole operacyjne."
+slug: trading/getting-started/asset-transfer
+canonical-url: https://docs.6mm.com/pl/trading/getting-started/asset-transfer
+---
+
+6MM działa w oparciu o model przepływu aktywów zarządzanych przez partnerów.
+
+6MM nie akceptuje bezpośrednich wpłat ani wypłat od użytkowników końcowych.
+
+Wszystkie wpływy i odpływy środków użytkowników są obsługiwane wyłącznie przez upoważnionych agentów lub platformy partnerskie.
+
+Ten projekt zapewnia wyraźne rozdzielenie odpowiedzialności finansowej, zakresu regulacyjnego oraz własności użytkowników między 6MM a jego partnerami.
+
+***
+
+<h2 id="partner-managed-deposits-and-withdrawals">Depozyty i wypłaty zarządzane przez partnerów</h2>
+
+* Użytkownicy wpłacają i wypłacają środki wyłącznie za pośrednictwem platformy partnerskiej
+* 6MM nie udostępnia użytkownikom końcowym adresów depozytowych zarówno on-chain, ani off-chain.
+* 6MM nie przechowuje ani nie rozlicza środków użytkowników poza realizacją transakcji
+
+Partnerzy pozostają w pełni odpowiedzialni za:
+
+* Zarządzanie balansem użytkownika
+* Przetwarzanie wpłat i wypłat
+* Zgodność i kontrola ryzyka związana z przechowywaniem funduszy
+
+***
+
+<h2 id="automated-balance-transfer-to-6mm">Automatyczny transfer salda do 6MM</h2>
+
+Aby umożliwić handel, użytkownicy mogą przenieść część swojego salda zarządzanego przez partnera na 6MM za pomocą zautomatyzowanego mechanizmu wewnętrznego transferu.
+
+Kluczowe cechy tego procesu transferu to:
+
+* Transfery są inicjowane i autoryzowane przez system partnerski
+* Proces jest wykonywany automatycznie na poziomie infrastruktury
+* Nie wymagana jest ręczna interakcja użytkownika z 6MM
+* Transfery zachodzą w czasie rzeczywistym lub w czasie bliskim rzeczywistym
+
+Z perspektywy użytkownika proces ten wygląda na płynną alokację salda, a nie tradycyjną wpłatę.
+
+***
+
+<h2 id="account-structure-within-6mm">Struktura konta w 6MM</h2>
+
+W ciągu 6MM, przeniesione aktywa są logicznie rozdzielane na dwa odrębne konta wewnętrzne:
+
+**Konto Spot**
+
+* Służy jako początkowe konto odbiorcze dla przeniesionych środków
+* Pełni rolę puli aktywów do zarządzania kapitałem wewnętrznym
+* Nie wspiera działalności handlu bezpośredniego
+
+**Konto wieczyste**
+
+* Środki są przelewane z Spot Account na Perpetual Account
+* Do składania zamówień można używać tylko aktywa z Konta Wieczystego
+* Margines, pozycje i niezrealizowane PnL są obliczane na tym poziomie
+
+Ta dwuwarstwowa struktura umożliwia precyzyjną izolację kapitału, efektywność marży oraz kontrolę ryzyka dla nieustannego handlu.
+
+***
+
+<h2 id="internal-transfers-between-accounts">Wewnętrzne przelewy między kontami</h2>
+
+* Środki przelane na Konto Spot mogą być swobodnie i natychmiast przelane na Konto Wieczyste
+* Transfery wewnętrzne są przetwarzane bez interakcji z blockchainem
+* Transfery są zaprojektowane tak, aby były niskie opóźnienia i deterministyczne
+
+Ta architektura zapewnia płynny przepływ kapitału, jednocześnie zachowując ścisłą separację między przechowywaniem aktywów a realizacją transakcji.
+
+***
+
+<h2 id="design-principles">Zasady projektowania</h2>
+
+System transferu aktywów 6MM opiera się na następujących zasadach:
+
+* Brak bezpośrednich wpłat ani wypłat przez użytkowników 6MM
+* Cała opieka aktywów pozostaje przy platformach partnerskich
+* Zautomatyzowana, autoryzowana przez partnerów alokacja funduszy
+* Wyraźne rozdzielenie między kontami Spot a Perpetual
+* Optymalizacja pod kątem efektywności handlu i izolacji ryzyka
+
+Dzięki temu modelu 6MM działa jako czysta warstwa infrastruktury handlowej, podczas gdy partnerzy zachowują pełną kontrolę nad środkami użytkowników i relacjami finansowymi.
+
+<h2 id="implementation-and-safety-guides">Przewodniki wdrożenia i bezpieczeństwa</h2>
+
+- [ PrzeglądAgent SDK ](/pl/sdk/agent-sdk/overview): wiązanie użytkownika, transfery, zapytania o zamówienia i uzgadnianie.
+- [Webhooks & Idempotency](/pl/sdk/security/webhooks-idempotency): weryfikuj końcowe wywołania i próby deduplikacji.
+- [Matryca odpowiedzialności partnera](/pl/security-compliance/partner-responsibilities): opieka i własność operacyjna.
+- [Risk & Likwidacje](/pl/trading/risk-and-liquidations): zrozum, jak alokacja kont handlowych wpływa na ryzyko.

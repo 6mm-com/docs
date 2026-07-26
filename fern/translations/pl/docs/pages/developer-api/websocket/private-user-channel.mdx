@@ -1,0 +1,107 @@
+---
+title: "Prywatny kanał użytkownika"
+description: "Subskrybuj uwierzytelnione zdarzenia 6MM WebSocket dotyczące zamówień, pozycji, sald i zmian konta, tworząc i utrzymując klucz słuchania."
+slug: developer-api/websocket/private-user-channel
+canonical-url: https://docs.6mm.com/pl/developer-api/websocket/private-user-channel
+---
+
+Najpierw stwórz `listenKey` :
+
+```http
+POST /v1/private/user/listen-key
+```
+
+Przykład odpowiedzi:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "listenKey": "f57cb61ef604ce76be09e753a5dbdd8c",
+    "expireAt": 1777539918867
+  },
+  "requestId": "req-listen-key"
+}
+```
+
+`listenKey` domyślnie obowiązuje przez 60 minut. Zaleca się odnawianie co 30 minut.
+
+<h2 id="renew">Odnawianie</h2>
+
+```http
+PUT /v1/private/user/listen-key
+Content-Type: application/json
+```
+
+```json
+{ "listenKey": "f57cb61ef604ce76be09e753a5dbdd8c" }
+```
+
+<h2 id="close">Zamknij</h2>
+
+```http
+DELETE /v1/private/user/listen-key
+Content-Type: application/json
+```
+
+```json
+{ "listenKey": "f57cb61ef604ce76be09e753a5dbdd8c" }
+```
+
+<h2 id="connect-to-private-websocket">Połącz się z prywatnymi WebSocket</h2>
+
+```
+wss://ws.6mm.com/ws?listenKey=YOUR_LISTEN_KEY
+```
+
+Kompatybilna metoda JWT połączenia:
+
+```
+wss://ws.6mm.com/ws?token=YOUR_ACCESS_TOKEN
+```
+
+Po udanej weryfikacji serwer automatycznie subskrybuje połączenie z prywatnym kanałem obecnego użytkownika. Nie jest wymagana ręczna subskrypcja.
+
+Pomyślne potwierdzenie uwierzytelnienia:
+
+```json
+{ "event": "auth", "success": true, "data": "1188041528" }
+```
+
+<h2 id="common-private-events">Typowe prywatne wydarzenia</h2>
+
+| Wydarzenie                | Opis                                                                   |
+| -------------------- | ----------------------------------------------------------------------------- |
+| `ORDER_TRADE_UPDATE` | Zmiany statusu zlecenia, w tym nowe zlecenia, poprawki, transakcje i anulowanie |
+| `ACCOUNT_UPDATE`     | Saldo konta i zmiany pozycji                                          |
+
+Prywatny opakujący wiadomość push:
+
+```json
+{
+  "topic": "user.5794",
+  "ts": 1771047000000,
+  "data": {
+    "eventType": "ORDER_TRADE_UPDATE"
+  }
+}
+```
+
+REST endpointy zapytań oraz WebSocket prywatne strumienie używają oddzielnych schematów. Klienci powinni analizować każdy schemat niezależnie i nie zakładać, że nazwy pól są identyczne.
+
+<h2 id="common-differences">Typowe różnice</h2>
+
+| Domena         | REST dziedzina     | WebSocket dziedzina                                             |
+| -------------- | -------------- | ----------------------------------------------------------- |
+| Status zamówienia   | `status`       | `orderStatus`                                               |
+| Zamrożona równowaga | `frozenMargin` | `frozenBalance`                                             |
+| Tryb marginesowy    | `marginMode`   | `marginMode`, zwracał się jako ciąg w pozycjach i strumieniach |
+
+<h2 id="recovery-and-reconciliation">Odbudowa i pojednanie</h2>
+
+- Odnawianie listenKey przed wygaśnięciem i tworzenie nowego, jeśli odnowienie się nie powiedzie.
+- Ponowne połączenie, ponowne uwierzytelnienie i traktowanie nowego gniazda jako nowej sesji zdarzeń.
+- Deduplikować zdarzenia przed zmianą sald partnera lub zapisów zleceń.
+- Jeśli zdarzenia mogły zostać przeoczone, zapytaj [orders](/pl/developer-api/rest-api/order), [positions](/pl/developer-api/rest-api/position), oraz [account state](/pl/developer-api/rest-api/user-and-account) przez REST.
+- Stosuj się do [przewodnika po połączeniach i biciu serca](/pl/developer-api/websocket/connection-subscription-and-heartbeat) do ponownego próbowania i obsługi połączenia z opóźnieniami.

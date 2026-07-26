@@ -1,0 +1,42 @@
+---
+title: "Trading Widget SDK"
+subtitle: "تضمين محطة التداول 6MM في صفحة شريك عبر iframe."
+slug: sdk/trading-widget/overview
+canonical-url: https://docs.6mm.com/ar/sdk/trading-widget/overview
+---
+
+<h2 id="responsibility-split">تقسيم المسؤولية</h2>
+
+| المنطقة | المالك | ملاحظات |
+| --- | --- | --- |
+| إنشاء الحاويات | واجهة الشريك الأمامية | وفر عنصرا مرئيا بعرض وارتفاع واضحين. |
+| إنشاء iframe | Trading Widget SDK | يقوم SDK بإنشاء وإدارة الإطار الافتراضي. |
+| واجهة التداول | 6MM iframe | خط K، دفتر الطلبات، نموذج الطلب، المراكز، الطلبات، وبيانات الحساب تعمل داخل إطار iframe. |
+| ضوابط العرض | Trading Widget SDK + 6MM iframe | رأس التضمين في الحاسوب الشخصي ورمز الخصم السفلي مخفيان بشكل افتراضي. يمكن للشركاء استخدام `display` لإظهار مناطق القشرة أو إخفاء حاويات التداول عالية المستوى. |
+| فحص تسجيل دخول الشريك | خلفية الشريك | تحقق من جلسة مستخدم الشريك قبل إصدار بيانات اعتماد المصادقة. |
+| إصدار رمز التضمين | خلفية الشريك + وكيل API | موصى به لوضع الشريك الرمزي. |
+
+<h2 id="versioning">الإصدار</h2>
+
+يبقى مسار التكامل العام مستقرا تحت URLالسكريبت v1. تشمل مجموعة القدرات الحالية للإصدار 1 رموز الشريك، tokenProvider، entryUrlProvider، التحكم في العرض، أحداث دورة الحياة، طرق الحالات، وأحداث الترتيب.
+
+```html
+<script src="https://app.6mm.com/sdk/trading-widget/v1/index.js"></script>
+```
+
+<h2 id="when-to-use-the-widget">متى تستخدم الأداة</h2>
+
+اختر Trading Widget عندما يحتاج الشريك إلى واجهة تداول كاملة داخل منتج ويب موجود. استخدم وثائق REST API و WebSocket بدلا من ذلك عند بناء وصيانة واجهة تداول مخصصة بالكامل.
+
+<h2 id="implementation-path">مسار التنفيذ</h2>
+
+1. اتبع [Trading Widget Quick Start](/ar/sdk/trading-widget/quick-start) لتحميل السكربت وإنشاء حاوية مرئية.
+2. تكوين [مصادقة الشريك-الرموز] (/sdk/trading-widget/authentication) من خلال الواجهة الخلفية للشريك.
+3. أضف [الخيارات والأحداث] المطلوبة (/sdk/trading-widget/options-events).
+4. استخدم [طرق النسخة](/ar/sdk/trading-widget/instance-methods) لضوابط دورة الحياة ووقت التشغيل.
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">صفحات ذات صلة</h2>
+
+- [Trading Widget المصادقة](/ar/sdk/trading-widget/authentication)
+- [الخيارات والفعاليات](/ar/sdk/trading-widget/options-events)
+<!-- sixmm-localized-link-repair:end -->

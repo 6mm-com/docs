@@ -1,0 +1,153 @@
+---
+title: "Yêu cầu ký"
+description: "Ký yêu cầu 6MM API bằng HMAC-SHA256 sử dụng payload, dấu thời gian, khóa API , tiêu đề chữ ký và quy tắc xác minh cần thiết."
+slug: developer-api/request-signing
+canonical-url: https://docs.6mm.com/vi/developer-api/request-signing
+---
+
+<h2 id="request-format">Định dạng yêu cầu</h2>
+
+| Vị trí | Lĩnh vực       | Bắt buộc            | Mô tả                                   |
+| -------- | ----------- | ------------------- | --------------------------------------------- |
+| Tiêu đề   | `X-API-KEY` | Đúng vậy                 | `apiKey` trả về khi API Key được tạo |
+| Truy vấn    | `timestamp` | Đúng vậy                 | Dấu thời gian mili giây Unix                    |
+| Truy vấn    | `signature` | Đúng vậy                 | HMAC- Chữ kýSHA256 , chuỗi lục giác chữ thường   |
+| Thân xe     | JSON        | Tùy thuộc vào endpoint | POST / PUT / DELETE cơ quan yêu cầu              |
+
+<h2 id="signature-payload">Tải trọng chữ ký</h2>
+
+```
+payload = queryStringWithoutSignature + requestBody
+signature = HMAC-SHA256(apiSecret, payload)
+```
+
+Các quy tắc chính:
+
+* `timestamp` phải là dấu thời gian Unix mili giây. Cửa sổ dung sai máy chủ là ±10 giây.
+* `signature` được đặt trong chuỗi truy vấn URL , nhưng không được bao gồm trong payload chữ ký.
+* Máy chủ xác minh chuỗi truy vấn gốc sau khi xóa `signature`; không thay đổi thứ tự tham số truy vấn.
+* Thứ tự tham số truy vấn dùng để ký phải khớp với URLyêu cầu thực tế.
+* Nếu có phần thân yêu cầu, chuỗi JSON dùng để ký phải khớp chính xác với phần thân được truyền thực tế.
+* Các đường dẫn liên quan đến thứ tự thực hiện kiểm tra lại chữ ký. Việc sử dụng lại cùng một chữ ký trong thời gian ngắn sẽ trả về `Signature replay detected`.
+
+<h2 id="server-time">Thời gian máy chủ</h2>
+
+```http
+GET /v1/time
+```
+
+Ví dụ phản hồi:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "timestamp": 1780473256,
+    "timestampMs": 1780473256708,
+    "iso": "2026-06-03T07:54:16Z",
+    "timezone": "UTC"
+  },
+  "requestId": "req-7cad3113"
+}
+```
+
+Khách hàng nên tính toán `timeOffsetMs = serverTimestampMs - localTimestampMs`, sau đó sử dụng `timestamp = nowMs + timeOffsetMs` cho các yêu cầu đã ký tiếp theo. Nếu máy chủ trả về `Timestamp outside of tolerance window`, hãy ngay lập tức đồng bộ lại thời gian và tạo lại chữ ký.
+
+<h2 id="get-signing-example">Ví dụ về ký hiệu GET</h2>
+
+Yêu cầu thực tế:
+
+```
+GET /v1/private/order/current?symbol=BTCUSDT&timestamp=1772710377808&signature=...
+```
+
+Tải trọng chữ ký:
+
+```
+symbol=BTCUSDT&timestamp=1772710377808
+```
+
+<h2 id="post-signing-example">Ví dụ về ký hiệu POST</h2>
+
+Yêu cầu thực tế:
+
+```
+POST /v1/private/order/place?timestamp=1772710377808&signature=...
+```
+
+Nội dung yêu cầu:
+
+```json
+{"symbol":"BTCUSDT","type":"LIMIT","side":"BUY","price":"85000","quantity":"0.1","timeInForce":"GTC","makerOnly":true,"clientOrderId":"ext-1772710377808-001"}
+```
+
+Tải trọng chữ ký:
+
+```
+timestamp=1772710377808{"symbol":"BTCUSDT","type":"LIMIT","side":"BUY","price":"85000","quantity":"0.1","timeInForce":"GTC","makerOnly":true,"clientOrderId":"ext-1772710377808-001"}
+```
+
+<h2 id="python-signing-example">Ví dụ về ký Python</h2>
+
+```python
+import hashlib
+import hmac
+import json
+import time
+from urllib.parse import urlencode
+
+import requests
+
+BASE_URL = "https://api.6mm.com"
+API_KEY = "YOUR_API_KEY"
+API_SECRET = "YOUR_API_SECRET"
+TIME_OFFSET_MS = 0
+
+def sign(payload: str) -> str:
+    return hmac.new(
+        API_SECRET.encode("utf-8"),
+        payload.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+
+def sync_time_offset():
+    global TIME_OFFSET_MS
+    before = int(time.time() * 1000)
+    resp = requests.get(f"{BASE_URL}/v1/time", timeout=5)
+    after = int(time.time() * 1000)
+    resp.raise_for_status()
+
+    server_ts = int(resp.json()["data"]["timestampMs"])
+    local_midpoint = (before + after) // 2
+    TIME_OFFSET_MS = server_ts - local_midpoint
+
+def signed_request(method: str, path: str, params=None, body=None):
+    params = dict(params or {})
+    params["timestamp"] = str(int(time.time() * 1000) + TIME_OFFSET_MS)
+
+    query_string = urlencode(params)
+    body_string = ""
+    if body is not None:
+        body_string = json.dumps(body, separators=(",", ":"), ensure_ascii=False)
+
+    signature = sign(query_string + body_string)
+    url = f"{BASE_URL}{path}?{query_string}&signature={signature}"
+    headers = {
+        "X-API-KEY": API_KEY,
+        "Content-Type": "application/json",
+    }
+    resp = requests.request(method, url, headers=headers, data=body_string if body is not None else None, timeout=10)
+    resp.raise_for_status()
+    return resp.json()
+
+sync_time_offset()
+print(signed_request("GET", "/v1/private/order/current", {"symbol": "BTCUSDT"}))
+```
+
+<h2 id="related-security-guides">Hướng dẫn bảo mật liên quan</h2>
+
+- [Xác thực](/vi/developer-api/authentication)
+- [API Key Quản lý](/vi/developer-api/api-key-management)
+- [Bí mật & Ký kết](/vi/sdk/security/secrets-signing)
+- [Mã lỗi & Khắc phục sự cố](/vi/developer-api/error-codes-and-troubleshooting)

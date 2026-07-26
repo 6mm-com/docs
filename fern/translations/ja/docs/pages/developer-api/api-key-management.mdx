@@ -1,0 +1,128 @@
+---
+title: "API Key 管理"
+description: "適切な権限、IP制限、秘密保存、回転操作を適用しながら、6MM APIキーの作成、検査、更新、取り消しを行います。"
+slug: developer-api/api-key-management
+canonical-url: https://docs.6mm.com/ja/developer-api/api-key-management
+---
+
+API Key 管理エンドポイントは認証のみ JWT 受け付けます。
+
+<h2 id="create-api-key">創り出す API Key</h2>
+
+```http
+POST /v1/private/user/api-key/create
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+リクエストパラメータ:
+
+| パラメータ     | 種類      | 必須 | 概要                                                           |
+| ------------- | --------- | -------- | --------------------------------------------------------------------- |
+| `label`       | string    | はい      | API Key ラベル、長さ1 - 64                                          |
+| `permissions` | 知力       | いいえ       | 許可ビットマスク、デフォルト `1`、範囲 `1` - `7`                      |
+| `ipWhitelist` | ストリング\[] | いいえ       | IP ホワイトリスト、最大20件まで。省略の場合、出典 IP は制限なしです |
+
+依頼例:
+
+```bash
+curl -X POST https://api.6mm.com/v1/private/user/api-key/create \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -d '{
+    "label": "external-service-prod",
+    "permissions": 3,
+    "ipWhitelist": ["203.0.113.10"]
+  }'
+```
+
+回答例:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "apiKey": "fx_xxxxxxxxxxxxxxxxxxxxxxxx",
+    "apiSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  },
+  "requestId": "req-api-key"
+}
+```
+
+`apiSecret` は API Key が作成される際に一度だけ返されます。すぐに秘密管理システムに保存してください。ソースコードリポジトリやログには書き込みしないでください。
+
+各ユーザーは最大30個の API キーを作成できます。
+
+<h2 id="list-api-keys">API一覧</h2>
+
+```http
+GET /v1/private/user/api-key/list
+Authorization: Bearer YOUR_ACCESS_TOKEN
+```
+
+応答フィールド:
+
+| フィールド                | 種類      | 概要                       |
+| -------------------- | --------- | --------------------------------- |
+| `list[].id`          | string    | API Key ID                        |
+| `list[].label`       | string    | レーベル                             |
+| `list[].apiKey`      | string    | パブリック API Key 識別子         |
+| `list[].permissions` | 知力       | 許可ビットマスク                |
+| `list[].ipWhitelist` | ストリング\[] | IP ホワイトリスト                      |
+| `list[].status`      | 知力       | ステータス: `1` 有効、 `0` 無効 |
+| `list[].lastUsedAt`  | int64     | 最後の使用時間                    |
+| `list[].createdAt`   | int64     | 作成時間                     |
+
+<h2 id="update-api-key">アップデート API Key</h2>
+
+```http
+PUT /v1/private/user/api-key/update
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+リクエストパラメータ:
+
+| パラメータ     | 種類      | 必須 | 概要               |
+| ------------- | --------- | -------- | ------------------------- |
+| `id`          | string    | はい      | API Key ID                |
+| `label`       | string    | いいえ       | 新しいレーベル                 |
+| `permissions` | 知力       | いいえ       | 新しい権限ビットマスク    |
+| `ipWhitelist` | ストリング\[] | いいえ       | 新しい IP ホワイトリスト          |
+| `status`      | 知力       | いいえ       | `1`有効、無効`0` |
+
+<h2 id="delete-api-key">削除 API Key</h2>
+
+```http
+POST /v1/private/user/api-key/delete
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+要請本体:
+
+```json
+{ "id": "1001" }
+```
+
+<h2 id="delete-all-api-keys">すべての API キーを削除してください</h2>
+
+```http
+POST /v1/private/user/api-key/delete-all
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+応答フィールド:
+
+| フィールド     | 種類  | 概要                |
+| --------- | ----- | -------------------------- |
+| `deleted` | int64 | 削除された API キーの数 |
+
+<h2 id="related-security-guides">関連するセキュリティガイド</h2>
+
+- [認証](/ja/developer-api/authentication)
+- [リクエスト署名](/ja/developer-api/request-signing)
+- [秘密と署名](/ja/sdk/security/secrets-signing)
+- [統合推奨事項](/ja/developer-api/integration-recommendations)

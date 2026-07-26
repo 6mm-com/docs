@@ -1,0 +1,420 @@
+---
+title: "Pesanan"
+description: "Gunakan endpoint pesanan 6MM untuk membuat, melakukan kueri, membatalkan, dan mengelola pesanan abadi sambil menangani izin, identifier, dan status siklus hidup."
+slug: developer-api/rest-api/order
+canonical-url: https://docs.6mm.com/id/developer-api/rest-api/order
+---
+
+> **Catatan**
+>
+> Endpoint Order memerlukan izin perdagangan.
+
+<h2 id="place-order">Pesan Tempat</h2>
+
+```http
+POST /v1/private/order/place
+Content-Type: application/json
+```
+
+**Parameter permintaan:**
+
+| Parameter       | Tipe   | Wajib               | Deskripsi                                                                                                                   |
+| --------------- | ------ | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `symbol`        | string | Ya                    | Simbol                                                                                                                        |
+| `type`          | string | Ya                    | `LIMIT` / `MARKET`                                                                                                            |
+| `side`          | string | Ya                    | `BUY` / `SELL`                                                                                                                |
+| `positionSide`  | string | Tidak                     | `BOTH` / `LONG` / `SHORT`, `BOTH` default                                                                                     |
+| `price`         | string | Persyaratan bersyarat | Diperlukan untuk pesanan batas                                                                                                     |
+| `quantity`      | string | Persyaratan bersyarat | Kuantitas. Dapat dihilangkan saat `closePosition=true`                                                                            |
+| `timeInForce`   | string | Tidak                     | `GTC` / `IOC` / `FOK`, `GTC` default                                                                                          |
+| `reduceOnly`    | bool   | Tidak                     | Hanya pengurangan, `false` default                                                                                                  |
+| `makerOnly`     | bool   | Tidak                     | Hanya pembuat, `false` default                                                                                                   |
+| `closePosition` | bool   | Tidak                     | Tutup seluruh posisi, `false` default                                                                                    |
+| `clientOrderId` | string | Tidak                     | ID pesanan yang didefinisikan klien                                                                                                       |
+| `placeType`     | string | Tidak                     | Penanda tipe penempatan pesanan                                                                                                   |
+| `priceType`     | int32  | Tidak                     | BBO jenis harga: harga `0` yang ditentukan, harga lawan `1` 1, harga lawan `2` 5, harga sisi `3` 1, harga sisi sama `4` 5 |
+
+**Contoh permintaan:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "type": "LIMIT",
+  "side": "BUY",
+  "price": "85000",
+  "quantity": "0.1",
+  "timeInForce": "GTC",
+  "makerOnly": true,
+  "clientOrderId": "ext-1772710377808-001"
+}
+```
+
+**Kolom respons:**
+
+| Lapangan           | Tipe   | Deskripsi             |
+| --------------- | ------ | ----------------------- |
+| `orderId`       | string | ID pesanan server         |
+| `clientOrderId` | string | ID pesanan yang didefinisikan klien |
+| `status`        | string | Status pesanan            |
+| `timestamp`     | int64  | Cap waktu               |
+
+<h2 id="batch-place-orders">Melakukan Pemesanan Batch</h2>
+
+```http
+POST /v1/private/order/batch-place
+Content-Type: application/json
+```
+
+**Badan permintaan:**
+
+```json
+{
+  "orders": [
+    {
+      "symbol": "BTCUSDT",
+      "type": "LIMIT",
+      "side": "BUY",
+      "price": "85000",
+      "quantity": "0.1",
+      "clientOrderId": "ext-buy-001"
+    }
+  ]
+}
+```
+
+**Kolom respons:**
+
+| Lapangan          | Tipe  | Deskripsi                 |
+| -------------- | ----- | --------------------------- |
+| `successCount` | int32 | Jumlah pesanan yang berhasil |
+| `failedCount`  | int32 | Jumlah pesanan yang gagal     |
+| `results[]`    | array | Hasil untuk setiap pesanan       |
+
+<h2 id="place-condition-order">Pesan Kondisi</h2>
+
+```http
+POST /v1/private/order/place-condition
+Content-Type: application/json
+```
+
+**Parameter permintaan:**
+
+| Parameter       | Tipe   | Wajib               | Deskripsi                                                                                 |
+| --------------- | ------ | ---------------------- | ------------------------------------------------------------------------------------------- |
+| `symbol`        | string | Ya                    | Simbol                                                                                      |
+| `type`          | string | Ya                    | `STOP_MARKET` / `TAKE_PROFIT_MARKET` / `STOP_LIMIT` / `TAKE_PROFIT_LIMIT` / `TRAILING_STOP` |
+| `side`          | string | Ya                    | `BUY` / `SELL`                                                                              |
+| `positionSide`  | string | Tidak                     | `BOTH` / `LONG` / `SHORT`                                                                   |
+| `price`         | string | Persyaratan bersyarat | Diperlukan untuk `STOP_LIMIT` / `TAKE_PROFIT_LIMIT`                                             |
+| `quantity`      | string | Persyaratan bersyarat | Kuantitas. Dapat dihilangkan saat `closePosition=true`                                          |
+| `timeInForce`   | string | Tidak                     | `GTC` / `IOC` / `FOK` / `GTE_GTC`                                                           |
+| `reduceOnly`    | bool   | Tidak                     | Hanya reduksi                                                                                 |
+| `clientOrderId` | string | Tidak                     | ID pesanan yang didefinisikan klien                                                                     |
+| `stopPrice`     | string | Persyaratan bersyarat | Harga pelatuk                                                                               |
+| `workingType`   | string | Tidak                     | `MARK_PRICE` / `CONTRACT_PRICE`, `CONTRACT_PRICE` default                                   |
+| `priceProtect`  | bool   | Tidak                     | Apakah perlindungan harga diaktifkan                                                         |
+| `activatePrice` | string | Persyaratan bersyarat | Harga aktivasi pesanan trailing                                                             |
+| `callbackRate`  | string | Persyaratan bersyarat | Tingkat panggilan balik pesanan terlambat                                                                |
+| `closePosition` | bool   | Tidak                     | Tutup seluruh posisi                                                                   |
+
+**Kolom respons:**
+
+| Lapangan             | Tipe   | Deskripsi            |
+| ----------------- | ------ | ---------------------- |
+| `conditionId`     | string | ID pesanan kondisi     |
+| `conditionStatus` | string | Status urutan kondisi |
+| `timestamp`       | int64  | Cap waktu              |
+
+<h2 id="place-strategy-order">Pesan Strategi</h2>
+
+```http
+POST /v1/private/order/place-strategy
+Content-Type: application/json
+```
+
+**Parameter permintaan:**
+
+| Parameter      | Tipe   | Wajib | Deskripsi             |
+| -------------- | ------ | -------- | ----------------------- |
+| `strategyType` | string | Ya      | `OTOCO` / `OTO` / `OCO` |
+| `subOrderList` | array  | Ya      | Daftar sub-urutan          |
+
+Medan dalam `subOrderList[]` sebagian besar sama dengan orde normal dan perintah kondisi, dengan medan ketergantungan tambahan:
+
+| Parameter        | Tipe   | Deskripsi                                     |
+| ---------------- | ------ | ----------------------------------------------- |
+| `strategySubId`  | int64  | Sub-order ID                                    |
+| `firstDrivenId`  | int64  | Nomor Kartu Pesanan Mengemudi pertama. `0` berarti tidak ada ketergantungan |
+| `firstDrivenOn`  | string | Kondisi pemicu pertama                         |
+| `firstTrigger`   | string | Aksi pemicu pertama                            |
+| `secondDrivenId` | int64  | ID pesanan mengemudi kedua                         |
+| `secondDrivenOn` | string | Kondisi pemicu kedua                        |
+| `secondTrigger`  | string | Aksi pemicu kedua                           |
+
+**Kolom respons:**
+
+| Lapangan            | Tipe   | Deskripsi     |
+| ---------------- | ------ | --------------- |
+| `strategyId`     | string | ID Strategi     |
+| `strategyStatus` | string | Status strategi |
+| `timestamp`      | int64  | Cap waktu       |
+
+<h2 id="query-single-order">Query Pesanan Tunggal</h2>
+
+```http
+GET /v1/private/order?symbol=BTCUSDT&orderId=2022543809547603968
+```
+
+**Parameter permintaan:**
+
+| Parameter       | Tipe   | Wajib | Deskripsi             |
+| --------------- | ------ | -------- | ----------------------- |
+| `symbol`        | string | Ya      | Simbol                  |
+| `orderId`       | string | Tidak       | ID pesanan server         |
+| `clientOrderId` | string | Tidak       | ID pesanan yang didefinisikan klien |
+
+Setidaknya satu dari `orderId` dan `clientOrderId` harus disediakan. Jika keduanya disediakan, server melakukan kecocokan yang tepat pada kedua kondisi tersebut.
+
+<h2 id="current-normal-orders">Perintah Normal Saat Ini</h2>
+
+```http
+GET /v1/private/order/current?symbol=BTCUSDT
+```
+
+**Parameter permintaan:**
+
+| Parameter     | Tipe   | Wajib | Deskripsi        |
+| ------------- | ------ | -------- | ------------------ |
+| `symbol`      | string | Tidak       | Simbol             |
+| `limit`       | int32  | Tidak       | Batas jumlah pengembalian |
+| `lastOrderId` | int64  | Tidak       | Bidang kursor       |
+
+**Kolom respons:**
+
+| Lapangan    | Tipe  | Deskripsi               |
+| -------- | ----- | ------------------------- |
+| `list[]` | array | Daftar urutan normal saat ini |
+| `total`  | int32 | Hitung                     |
+
+<h2 id="current-condition-orders">Pesanan Kondisi Saat Ini</h2>
+
+```http
+GET /v1/private/order/current-condition?symbol=BTCUSDT
+```
+
+**Parameter permintaan:**
+
+| Parameter | Tipe   | Wajib | Deskripsi |
+| --------- | ------ | -------- | ----------- |
+| `symbol`  | string | Tidak       | Simbol      |
+
+<h2 id="historical-normal-orders">Ordo Normal Historis</h2>
+
+```http
+GET /v1/private/order/history?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+**Parameter permintaan:**
+
+| Parameter       | Tipe   | Wajib | Deskripsi                              |
+| --------------- | ------ | -------- | ---------------------------------------- |
+| `symbol`        | string | Tidak       | Simbol                                   |
+| `orderId`       | string | Tidak       | Filter ID pesanan yang tepat                    |
+| `clientOrderId` | string | Tidak       | Filter ID pesanan klien yang tepat             |
+| `type`          | int32  | Tidak       | Filter tipe pesanan: batas `1`, pasar `2` |
+| `side`          | int32  | Tidak       | Filter samping: `1` beli, `2` jual           |
+| `status`        | int32  | Tidak       | Filter status                            |
+| `startTime`     | int64  | Tidak       | Waktu mulai                               |
+| `endTime`       | int64  | Tidak       | Waktu akhir                                 |
+| `page`          | int64  | Tidak       | Nomor halaman, `1` default                 |
+| `pageSize`      | int64  | Tidak       | Item per halaman, `20` default             |
+
+<h2 id="historical-condition-orders">Perintah Kondisi Historis</h2>
+
+```http
+GET /v1/private/order/history-condition?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+**Parameter permintaan:**
+
+| Parameter   | Tipe   | Wajib | Deskripsi                    |
+| ----------- | ------ | -------- | ------------------------------ |
+| `symbol`    | string | Tidak       | Simbol                         |
+| `side`      | int32  | Tidak       | Filter samping: `1` beli, `2` jual |
+| `status`    | int32  | Tidak       | Filter status                  |
+| `startTime` | int64  | Tidak       | Waktu mulai                     |
+| `endTime`   | int64  | Tidak       | Waktu akhir                       |
+| `page`      | int64  | Tidak       | Nomor halaman, `1` default       |
+| `pageSize`  | int64  | Tidak       | Item per halaman, `20` default   |
+
+<h2 id="trade-records">Rekor Perdagangan</h2>
+
+```http
+GET /v1/private/order/trades?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+**Parameter permintaan:**
+
+| Parameter   | Tipe   | Wajib | Deskripsi                  |
+| ----------- | ------ | -------- | ---------------------------- |
+| `symbol`    | string | Tidak       | Simbol                       |
+| `orderId`   | string | Tidak       | Filter ID Pesanan              |
+| `startTime` | int64  | Tidak       | Waktu mulai                   |
+| `endTime`   | int64  | Tidak       | Waktu akhir                     |
+| `page`      | int64  | Tidak       | Nomor halaman, `1` default     |
+| `pageSize`  | int64  | Tidak       | Item per halaman, `20` default |
+
+**Kolom respons:**
+
+| Lapangan                 | Tipe   | Deskripsi       |
+| --------------------- | ------ | ----------------- |
+| `list[].fillId`       | string | ID detail isi    |
+| `list[].tradeId`      | string | ID catatan perdagangan   |
+| `list[].orderId`      | string | ID Pesanan          |
+| `list[].symbol`       | string | Simbol            |
+| `list[].side`         | string | Sisi              |
+| `list[].roleType`     | string | `maker` / `taker` |
+| `list[].price`        | string | Harga penuh      |
+| `list[].quantity`     | string | Jumlah yang terisi   |
+| `list[].tradeValue`   | string | Nilai perdagangan       |
+| `list[].handlingFee`  | string | Biaya penanganan      |
+| `list[].realizedPnl`  | string | Terwujud PnL      |
+| `list[].positionSide` | string | Sisi posisi     |
+| `list[].createdAt`    | int64  | Waktu perdagangan        |
+| `total`               | int64  | Total jumlah       |
+
+<h2 id="cancel-order">Batalkan Pesanan</h2>
+
+```http
+POST /v1/private/order/cancel
+Content-Type: application/json
+```
+
+**Badan permintaan:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "orderId": "2022543809547603968"
+}
+```
+
+`clientOrderId` juga dapat digunakan untuk membatalkan pesanan.
+
+<h2 id="amend-order">Amandemen Perintah</h2>
+
+```http
+POST /v1/private/order/move
+Content-Type: application/json
+```
+
+**Badan permintaan:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "orderId": "2022543809547603968",
+  "price": "85100",
+  "quantity": "0.2"
+}
+```
+
+`quantity` adalah jumlah total pesanan akhir setelah perubahan, bukan jumlah yang tersisa.
+
+<h2 id="batch-amend-orders">Pesanan Amandemen Batch</h2>
+
+```http
+POST /v1/private/order/batch-move
+Content-Type: application/json
+```
+
+**Badan permintaan:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "orders": [
+    {
+      "orderId": "2022543809547603968",
+      "price": "85100",
+      "quantity": "0.2"
+    }
+  ]
+}
+```
+
+<h2 id="batch-cancel-orders">Batalkan Pesanan secara Batch</h2>
+
+```http
+POST /v1/private/order/batch-cancel
+Content-Type: application/json
+```
+
+**Badan permintaan:**
+
+```json
+{
+  "orders": [
+    {
+      "symbol": "BTCUSDT",
+      "orderId": "2022543809547603968"
+    }
+  ]
+}
+```
+
+<h2 id="cancel-all">Batalkan Semua</h2>
+
+```http
+POST /v1/private/order/batch-cancel-all
+Content-Type: application/json
+```
+
+**Parameter permintaan:**
+
+| Parameter    | Tipe   | Wajib | Deskripsi                                                                         |
+| ------------ | ------ | -------- | ----------------------------------------------------------------------------------- |
+| `symbol`     | string | Tidak       | Simbol                                                                              |
+| `cancelType` | int32  | Tidak       | `0` semua pesanan normal, hanya pesanan batas `1` , `2` semua pesanan kondisi. Default `0` |
+
+Cancel-all untuk pesanan normal diterima secara asinkron. Status akhir harus ditentukan oleh endpoint WebSocket `ORDER_TRADE_UPDATE` atau query.
+
+<h2 id="cancel-condition-order">Membatalkan Pesanan Kondisi</h2>
+
+```http
+POST /v1/private/order/cancel-condition
+Content-Type: application/json
+```
+
+**Badan permintaan:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "conditionId": "2022543809547603968"
+}
+```
+
+<h2 id="strategy-order-detail">Detail Perintah Strategi</h2>
+
+```http
+GET /v1/private/order/strategy?strategyId=2022543809547603968
+```
+
+**Kolom respons:**
+
+| Lapangan            | Tipe   | Deskripsi                          |
+| ---------------- | ------ | ------------------------------------ |
+| `strategyId`     | string | ID Strategi                          |
+| `strategyType`   | string | `OTOCO` / `OTO` / `OCO`              |
+| `strategyStatus` | string | `WORKING` / `ALL_DONE` / `CANCELLED` |
+| `bookTime`       | int64  | Waktu penciptaan                        |
+| `subOrders[]`    | array  | Detail sub-order                    |
+| `updateTime`     | int64  | Waktu pembaruan                          |
+
+<h2 id="related-documentation">Dokumentasi terkait</h2>
+
+- [Jenis Pesanan](/id/trading/order-types)
+- [Enum Umum](/id/developer-api/common-enums)
+- [Saluran Pengguna Pribadi](/id/developer-api/websocket/private-user-channel)
+- [Rekomendasi Integrasi](/id/developer-api/integration-recommendations)

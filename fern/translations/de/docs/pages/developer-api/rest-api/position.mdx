@@ -1,0 +1,141 @@
+---
+title: "Position"
+description: "Nutzen Sie 6MM Positionsendpunkte, um offene Positionen, Margendetails, Hebelwirkung, nicht realisierte Gewinne und Verluste sowie positionsbezogene Operationen abzufragen."
+slug: developer-api/rest-api/position
+canonical-url: https://docs.6mm.com/de/developer-api/rest-api/position
+---
+
+> **Anmerkung**
+>
+> Positionsendpunkte benötigen Handelserlaubnis.
+
+<h2 id="set-leverage">Hebelwirkung setzen</h2>
+
+```http
+POST /v1/private/position/leverage
+Content-Type: application/json
+```
+
+Antragstext:
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "leverage": 20
+}
+```
+
+Antwortfelder:
+
+| Spielfeld       | Typ   | Beschreibung |
+| ----------- | ------ | ----------- |
+| `symbol`    | string | Symbol      |
+| `leverage`  | int32  | Hebelwirkung    |
+| `timestamp` | int64  | Zeitstempel   |
+
+<h2 id="set-margin-mode">Margen-Einstellungsmodus</h2>
+
+```http
+POST /v1/private/position/margin-mode
+Content-Type: application/json
+```
+
+Antragstext:
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "marginMode": 1
+}
+```
+
+`marginMode`: `1` Kreuz `2` isoliert.
+
+<h2 id="position-settings">Positionseinstellungen</h2>
+
+```http
+GET /v1/private/position/settings?symbol=BTCUSDT
+```
+
+Antwortfelder:
+
+| Spielfeld        | Typ   | Beschreibung             |
+| ------------ | ------ | ----------------------- |
+| `symbol`     | string | Symbol                  |
+| `marginMode` | int32  | `1` Kreuz `2` isoliert |
+| `leverage`   | int32  | Hebelwirkung                |
+
+<h2 id="current-positions">Aktuelle Positionen</h2>
+
+```http
+GET /v1/private/position/positions?symbol=BTCUSDT
+```
+
+Anfrageparameter:
+
+| Parameter | Typ   | Erforderlich | Beschreibung |
+| --------- | ------ | -------- | ----------- |
+| `symbol`  | string | Nein       | Symbol      |
+
+Antwortfelder:
+
+| Spielfeld                         | Typ   | Beschreibung                |
+| ----------------------------- | ------ | -------------------------- |
+| `positions[].symbol`          | string | Symbol                     |
+| `positions[].marginMode`      | string | Margin-Modus                |
+| `positions[].positionSide`    | string | Positionsseite              |
+| `positions[].leverage`        | int32  | Hebelwirkung                   |
+| `positions[].quantity`        | string | Positionsmenge          |
+| `positions[].entryPrice`      | string | Eintrittspreis                |
+| `positions[].breakEvenPrice`  | string | Break-even-Preis           |
+| `positions[].liqPrice`        | string | Liquidationspreis          |
+| `positions[].marginRatio`     | string | Margin-Verhältnis               |
+| `positions[].unrealizedPnl`   | string | Unrealisierte PnL             |
+| `positions[].roe`             | string | Eigenkapitalrendite           |
+| `positions[].nextFundingFee`  | string | Geschätzte nächste Fördergebühr |
+| `positions[].fundingFeeAccum` | string | Angesammelte Finanzierungsgebühr    |
+| `positions[].tpPrice`         | string | Take-Profit-Preis          |
+| `positions[].slPrice`         | string | Stop-Loss-Preis            |
+
+<h2 id="position-history">Positionsgeschichte</h2>
+
+```http
+GET /v1/private/position/history?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+Anfrageparameter:
+
+| Parameter   | Typ   | Erforderlich | Beschreibung                  |
+| ----------- | ------ | -------- | ---------------------------- |
+| `symbol`    | string | Nein       | Symbol                       |
+| `side`      | string | Nein       | `long` / `short`             |
+| `startTime` | int64  | Nein       | Startzeit                   |
+| `endTime`   | int64  | Nein       | Endzeit                     |
+| `page`      | int64  | Nein       | Seitenzahl, Standard- `1`     |
+| `pageSize`  | int64  | Nein       | Elemente pro Seite, Standard `20` |
+
+Antwortfelder:
+
+| Spielfeld                    | Typ   | Beschreibung               |
+| ------------------------ | ------ | ------------------------- |
+| `list[].symbol`          | string | Symbol                    |
+| `list[].positionSide`    | string | Positionsseite             |
+| `list[].leverage`        | int32  | Hebelwirkung                  |
+| `list[].maxQuantity`     | string | Maximale Positionsmenge |
+| `list[].entryPrice`      | string | Eintrittspreis               |
+| `list[].closePrice`      | string | Schlusskurs               |
+| `list[].pnl`             | string | PnL realisiert              |
+| `list[].roe`             | string | Eigenkapitalrendite          |
+| `list[].marginMode`      | string | Margin-Modus               |
+| `list[].triggerMode`     | int32  | Schließ-Trigger-Modus        |
+| `list[].fundingFeeAccum` | string | Angesammelte Finanzierungsgebühr   |
+| `list[].openedAt`        | int64  | Öffnungszeit                 |
+| `list[].closedAt`        | int64  | Schlusszeit                |
+| `total`                  | int64  | Gesamtanzahl               |
+
+<h2 id="related-documentation">Verwandte Dokumentation</h2>
+
+- [Margin Rules](/de/trading/margin-rules)
+- [Hebelmechanik](/de/trading/leverage-mechanics)
+- [Risiko & Liquidationen](/de/trading/risk-and-liquidations)
+- [Privatbenutzerkanal](/de/developer-api/websocket/private-user-channel)

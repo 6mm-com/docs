@@ -1,0 +1,50 @@
+---
+title: "Enum thường"
+description: "Tham khảo các enum 6MM API chung cho trạng thái lệnh, phe, loại lệnh, thời gian có hiệu lực, chế độ vị trí, chuyển giao và phản hồi tích hợp."
+slug: developer-api/common-enums
+canonical-url: https://docs.6mm.com/vi/developer-api/common-enums
+---
+
+<h2 id="orders">Đơn đặt hàng</h2>
+
+| Enum                 | Giá trị                                                                                                    |
+| -------------------- | --------------------------------------------------------------------------------------------------------- |
+| Bên thứ tự           | `BUY` / `SELL`                                                                                            |
+| Phía vị trí        | `BOTH` / `LONG` / `SHORT`                                                                                 |
+| Loại lệnh thông thường    | `LIMIT` / `MARKET`                                                                                        |
+| Loại thứ tự điều kiện | `STOP_MARKET` / `STOP_LIMIT` / `TAKE_PROFIT_MARKET` / `TAKE_PROFIT_LIMIT` / `TRAILING_STOP`               |
+| Thời hạn có hiệu lực        | `GTC` / `IOC` / `FOK` / `GTE_GTC`                                                                         |
+| Loại giá kích hoạt   | `MARK_PRICE` / `CONTRACT_PRICE`                                                                           |
+| Tình trạng đơn hàng         | `NEW` / `PENDING` / `PARTIALLY_FILLED` / `FILLED` / `CANCELED` / `REJECTED` / `PARTIALLY_FILLED_CANCELED` |
+
+`NEW` nghĩa là yêu cầu đặt hàng đã được chấp nhận và trả lại. `PENDING` nghĩa là đơn hàng đã vào trạng thái đang chờ hoặc đang mở.
+
+<h2 id="positions">Các vị trí</h2>
+
+| Enum                      | Giá trị                                                      |
+| ------------------------- | ----------------------------------------------------------- |
+| Giá trị yêu cầu chế độ ký quỹ | `1` thánh giá, `2` biệt lập                                     |
+| Chuỗi chế độ lề        | `ISOLATED` / `CROSS`                                        |
+| Đóng chế độ kích hoạt        | `1` thủ công, `2` chốt lời, `3` lệnh cắt lỗ `4` thanh lý |
+
+<h2 id="integration-rules">Quy tắc tích hợp</h2>
+
+- Coi giá trị enum như các giá trị dây phân biệt chữ hoa chữ thường.
+- Bảo toàn các giá trị không xác định trong nhật ký và thất bại an toàn thay vì ánh xạ chúng một cách im lặng đến trạng thái đã biết.
+- Không suy ra rằng mọi trạng thái không phải thứ tự cuối cùng đều an toàn để thử lại. Truy vấn thứ tự hoặc đối chiếu nó với sự kiện WebSocket riêng tư.
+- Lưu trữ cả giá trị API gốc và nhãn hiển thị đối tác để có thể hỗ trợ giá trị mới mà không cần thay đổi các bản ghi lịch sử.
+
+<h2 id="order-state-handling">Xử lý trạng thái đơn hàng</h2>
+
+| Nhóm bang | Giá trị | Khuyến nghị sử dụng |
+| --- | --- | --- |
+| Được chấp nhận hoặc mở | `NEW`, `PENDING`, `PARTIALLY_FILLED` | Giữ đơn hàng hoạt động và đối chiếu với các cập nhật WebSocket hoặc REST . |
+| Hoàn thành | `FILLED` | Áp dụng các bản ghi số lượng cuối cùng đã điền và bản ghi thực hiện. |
+| Đóng mà không được lấp đầy | `CANCELED`, `REJECTED`, `PARTIALLY_FILLED_CANCELED` | Dừng quá trình xử lý đang hoạt động và giữ nguyên lý do cũng như số lượng đã thực hiện. |
+
+<h2 id="related-documentation">Tài liệu liên quan</h2>
+
+- [Đơn hàng API](/vi/developer-api/rest-api/order): các trường yêu cầu và các thao tác vòng đời đơn hàng.
+- [Loại Đơn hàng](/vi/trading/order-types): hành vi sản phẩm cho các đơn hàng giới hạn, thị trường và có điều kiện.
+- [Kênh Người dùng Riêng tư](/vi/developer-api/websocket/private-user-channel): trạng thái lệnh và tài khoản theo thời gian thực.
+- [Mã lỗi & Khắc phục sự cố](/vi/developer-api/error-codes-and-troubleshooting): mã kinh doanh và quy trình làm việc chẩn đoán.

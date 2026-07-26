@@ -1,0 +1,56 @@
+---
+title: "Stwórz token osadzenia"
+subtitle: "Wydanie krótkotrwałych tokenów embedowych dla Trading Widget trybu tokenów partnera."
+slug: sdk/agent-sdk/java/embed-token
+canonical-url: https://docs.6mm.com/pl/sdk/agent-sdk/java/embed-token
+---
+
+<h2 id="sdk-call">SDK telefon</h2>
+
+Stwórz tokeny embed z backendu po zweryfikowaniu sesji użytkownika partnera. Przeglądarka powinna wywołać Twój punkt końcowy, a punkt końcowy powinien wywołać 6MM przez Agent SDK.
+
+```java
+CreateEmbedTokenResponse resp = client.createEmbedToken(
+        CreateEmbedTokenRequest.of("agent-user-001", "tw_abc123")
+                .withSymbol("ETHUSDT"));
+
+System.out.println(resp.embedToken);
+System.out.println(resp.expireAt);
+```
+
+> **Jednorazowe uprawnienia**
+>
+> embedToken jest krótkotrwały i jednorazowy. Nie umieszczaj go w ciągu zapytania URL .
+
+<h2 id="backend-endpoint-example">Przykład endpointu backendowego</h2>
+
+```java
+@PostMapping("/api/trading/embed-token")
+public EmbedTokenView createEmbedToken(@RequestBody EmbedTokenRequest request,
+                                       PartnerSession session) {
+    String agentUserId = session.getAgentUserId();
+    CreateEmbedTokenResponse resp = agentClient.createEmbedToken(
+            CreateEmbedTokenRequest.of(agentUserId, request.getChannelId())
+                    .withSymbol(request.getSymbol()));
+
+    return new EmbedTokenView(resp.embedToken, resp.expireAt, request.getChannelId());
+}
+```
+
+Zwracaj tylko pola potrzebne dostawcy tokena Trading Widget . Nie zwracaj apiSecret, surowych pól podpisu ani wewnętrznej konfiguracji usługi.
+
+<h2 id="failure-handling">Obsługa awarii</h2>
+
+| Stan | Zalecane prowadzenie |
+| --- | --- |
+| Sesja użytkownika jest brakująca lub wygasła | Zwróć 401 z punktu końcowego partnera i poproś użytkownika o ponowne zalogowanie. |
+| Użytkownik agenta nie jest związany | Najpierw przypisz użytkownika, a potem spróbuj ponownie utworzyć token. |
+| 6MM zwraca tymczasowy błąd | Zwróć błąd do ponownego spróbowania do frontendu i loguj requestId wsparcia. |
+| channelId nie pasuje do instancji widżetu | Odrzuć żądanie i odtworzyć sesję widżetów. |
+
+<h2 id="related-documentation">Powiązana dokumentacja</h2>
+
+- [Trading Widget Uwierzytelnianie](/pl/sdk/trading-widget/authentication): połącz `tokenProvider` z punktem końcowym partnera.
+- [Java Quick Start](/pl/sdk/agent-sdk/java/quick-start): instalować i inicjalizować `AgentClient`.
+- [Sekrety i Podpisy](/pl/sdk/security/secrets-signing): chroń Agenta API tajemnicą.
+- [Webhooks & Idempotency](/pl/sdk/security/webhooks-idempotency): zabezpiecz stronę callback integracji.

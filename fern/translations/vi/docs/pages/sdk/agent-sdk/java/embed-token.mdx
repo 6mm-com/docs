@@ -1,0 +1,56 @@
+---
+title: "Tạo Token Nhúng"
+subtitle: "Phát hành token nhúng ngắn hạn cho chế độ token đối tác Trading Widget ."
+slug: sdk/agent-sdk/java/embed-token
+canonical-url: https://docs.6mm.com/vi/sdk/agent-sdk/java/embed-token
+---
+
+<h2 id="sdk-call">cuộc gọi SDK</h2>
+
+Tạo token nhúng từ backend sau khi xác thực phiên người dùng đối tác. Trình duyệt nên gọi endpoint của bạn, và endpoint của bạn nên gọi 6MM qua Agent SDK.
+
+```java
+CreateEmbedTokenResponse resp = client.createEmbedToken(
+        CreateEmbedTokenRequest.of("agent-user-001", "tw_abc123")
+                .withSymbol("ETHUSDT"));
+
+System.out.println(resp.embedToken);
+System.out.println(resp.expireAt);
+```
+
+> **Thông tin đăng nhập một lần**
+>
+> embedToken tồn tại ngắn hạn và chỉ dùng một lần. Không đặt nó vào chuỗi truy vấn URL .
+
+<h2 id="backend-endpoint-example">Ví dụ về điểm cuối backend</h2>
+
+```java
+@PostMapping("/api/trading/embed-token")
+public EmbedTokenView createEmbedToken(@RequestBody EmbedTokenRequest request,
+                                       PartnerSession session) {
+    String agentUserId = session.getAgentUserId();
+    CreateEmbedTokenResponse resp = agentClient.createEmbedToken(
+            CreateEmbedTokenRequest.of(agentUserId, request.getChannelId())
+                    .withSymbol(request.getSymbol()));
+
+    return new EmbedTokenView(resp.embedToken, resp.expireAt, request.getChannelId());
+}
+```
+
+Chỉ trả về các trường mà nhà cung cấp token Trading Widget cần thiết. Không trả về apiSecret, trường ký thô hoặc cấu hình dịch vụ nội bộ.
+
+<h2 id="failure-handling">Xử lý lỗi</h2>
+
+| Tình trạng | Khuyến nghị sử dụng |
+| --- | --- |
+| Phiên người dùng bị thiếu hoặc hết hạn | Trả về 401 từ điểm cuối đối tác và yêu cầu người dùng đăng nhập lại. |
+| Người dùng agent không bị ràng buộc | Ràng buộc người dùng trước, sau đó thử tạo token lại. |
+| 6MM trả về lỗi tạm thời | Trả về lỗi có thể thử lại về frontend và ghi lại requestId để được hỗ trợ. |
+| channelId không khớp với thể hiện widget | Từ chối yêu cầu và tạo lại phiên widget. |
+
+<h2 id="related-documentation">Tài liệu liên quan</h2>
+
+- [Trading Widget Xác thực](/vi/sdk/trading-widget/authentication): kết nối `tokenProvider` với điểm cuối đối tác.
+- [Java Quick Start](/vi/sdk/agent-sdk/java/quick-start): cài đặt và khởi tạo `AgentClient`.
+- [Bí mật & Ký kết](/vi/sdk/security/secrets-signing): bảo vệ đặc vụ API bí mật.
+- [Webhooks & Idempotency](/vi/sdk/security/webhooks-idempotency): bảo mật phía callback của tích hợp.

@@ -1,0 +1,111 @@
+---
+title: "Marktdaten"
+description: "Verwenden Sie nicht authentifizierte 6MM Marktdaten REST Endpunkte, um Symbole, Ticker, Auftragsbücher, Trades und andere öffentliche Handelsinformationen abzurufen."
+slug: developer-api/rest-api/market-data
+canonical-url: https://docs.6mm.com/de/developer-api/rest-api/market-data
+---
+
+Marktdaten REST Endpunkte erfordern keine Authentifizierung.
+
+<h2 id="symbol-configuration">Symbolkonfiguration</h2>
+
+```http
+GET /v1/public/market/symbols
+```
+
+Häufige Antwortfelder:
+
+| Spielfeld                      | Typ   | Beschreibung                   |
+| -------------------------- | ------ | ----------------------------- |
+| `list[].symbol`            | string | Symbol                        |
+| `list[].baseAsset`         | string | Basisvermögen                    |
+| `list[].quoteAsset`        | string | Angebotsvermögen                   |
+| `list[].minQuantity`       | string | Mindestbestellmenge        |
+| `list[].minNotional`       | string | Minimaler Nominalwert        |
+| `list[].tickSize`          | string | Preis-Tick-Größe               |
+| `list[].stepSize`          | string | Schrittweite der Menge            |
+| `list[].pricePrecision`    | int64  | Preisgenauigkeit               |
+| `list[].maxLimitOrderQty`  | string | Maximale Limitbestellungsmenge  |
+| `list[].maxMarketOrderQty` | string | Maximale Auftragsmenge auf dem Markt |
+| `list[].maxOpenOrders`     | int64  | Maximale offene Bestellungen pro Nutzer  |
+| `list[].defaultLeverage`   | int64  | Zahlungsverschuldung              |
+| `list[].defaultMarginMode` | int64  | Standard-Margin-Modus           |
+| `list[].leverageTiers[]`   | array  | Hebelmargin-Stufen         |
+| `handlingFeeLevelConfig[]` | array  | Gebühren-Tier-Konfiguration        |
+
+<h2 id="funding-rate-configuration">Konfiguration der Finanzierungsrate</h2>
+
+```http
+GET /v1/public/market/funding-rate?symbol=BTCUSDT
+```
+
+Anfrageparameter:
+
+| Parameter | Typ   | Erforderlich | Beschreibung                     |
+| --------- | ------ | -------- | ------------------------------- |
+| `symbol`  | string | Nein       | Wenn weggelassen, werden alle Symbole zurückgegeben |
+
+<h2 id="current-funding-rate">Aktueller Fördersatz</h2>
+
+```http
+GET /v1/public/market/funding-rate/current?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+Anfrageparameter:
+
+| Parameter  | Typ   | Erforderlich | Beschreibung                  |
+| ---------- | ------ | -------- | ---------------------------- |
+| `symbol`   | string | Nein       | Symbol                       |
+| `page`     | int32  | Nein       | Seitenzahl, Standard- `1`     |
+| `pageSize` | int32  | Nein       | Elemente pro Seite, Standard `20` |
+
+<h2 id="funding-rate-history">Geschichte der Finanzierungsrate</h2>
+
+```http
+GET /v1/public/market/funding-rate/history?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+Anfrageparameter:
+
+| Parameter   | Typ   | Erforderlich | Beschreibung                  |
+| ----------- | ------ | -------- | ---------------------------- |
+| `symbol`    | string | Ja      | Symbol                       |
+| `startTime` | int64  | Nein       | Startzeit                   |
+| `endTime`   | int64  | Nein       | Endzeit                     |
+| `page`      | int32  | Nein       | Seitenzahl, Standard- `1`     |
+| `pageSize`  | int32  | Nein       | Elemente pro Seite, Standard `20` |
+
+<h2 id="klines">Klines</h2>
+
+```http
+GET /v1/public/market/klines?symbol=BTCUSDT&interval=1m&limit=500
+```
+
+Anfrageparameter:
+
+| Parameter   | Typ   | Erforderlich | Beschreibung                                                              |
+| ----------- | ------ | -------- | ------------------------------------------------------------------------ |
+| `symbol`    | string | Ja      | Symbol                                                                   |
+| `interval`  | string | Ja      | Intervalle wie `1m`, `5m`, `15m`, `30m`, `1h`, `4h`, `1d`, `1w`, `1M` |
+| `priceType` | string | Nein       | `indexPrice` / `markPrice`. Wenn ausgelassen, gibt es Handelspreis Klines zurück       |
+| `startTime` | int64  | Nein       | Startzeit                                                               |
+| `endTime`   | int64  | Nein       | Endzeit                                                                 |
+| `limit`     | int32  | Nein       | Anzahl der zurückgegebenen Artikel, Standardanzahl `500`, maximal `1000`                  |
+
+Antwortfelder:
+
+| Spielfeld              | Typ   | Beschreibung |
+| ------------------ | ------ | ----------- |
+| `list[].openTime`  | int64  | Öffnungszeit   |
+| `list[].open`      | string | Offener Preis  |
+| `list[].high`      | string | Hoher Preis  |
+| `list[].low`       | string | Niedriger Preis   |
+| `list[].close`     | string | Schlusskurs |
+| `list[].volume`    | string | Band      |
+| `list[].closeTime` | int64  | Schlusszeit  |
+
+<h2 id="related-documentation">Verwandte Dokumentation</h2>
+
+- [Öffentliche Endpunkte](/de/developer-api/rest-api/public-endpoints)
+- [Öffentliche WebSocket Kanäle](/de/developer-api/websocket/public-market-channels)
+- [Markttiefe & Streuung](/de/solutions/market-depth-spread)

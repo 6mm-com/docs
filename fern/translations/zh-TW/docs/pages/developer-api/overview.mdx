@@ -1,0 +1,44 @@
+---
+title: "6MM 開發者 API"
+subtitle: "規劃跨環境整合 6MM API ，包括驗證、簽名、 REST APIs、 WebSocket 串流及故障排除。"
+slug: developer-api/overview
+canonical-url: https://docs.6mm.com/zh-TW/developer-api/overview
+---
+
+開發者區是給直接整合 6MM APIs的後端工程師和平台團隊。它說明了慣例、安全模型、 REST 資源、串流頻道，以及在生產使用前所需的營運檢查。
+
+<h2 id="recommended-integration-path">推薦的整合路徑</h2>
+
+<CardGroup cols={2}>
+<Card title="整合概述" icon="fa-duotone fa-diagram-project" href="/zh-TW/developer-api/integration-overview">
+了解 API 存取模式及建議的連線順序。
+</Card>
+<Card title="環境與慣例" icon="fa-duotone fa-server" href="/zh-TW/developer-api/environments-and-common-conventions">
+檢視基礎網址、時間戳、數字欄位及回應格式。
+</Card>
+<Card title="認證與簽署" icon="fa-duotone fa-shield-keyhole" href="/zh-TW/developer-api/request-signing">
+準備 JWT 通行證、 API 鑰匙及 HMAC 簽名。
+</Card>
+<Card title="REST API" icon="fa-duotone fa-brackets-curly" href="/zh-TW/developer-api/rest-api">
+探索帳戶、訂單、持倉及市場數據端點。
+</Card>
+</CardGroup>
+
+<h2 id="documentation-areas">文件區域</h2>
+
+| 面積 | 內容涵蓋 |
+| --- | --- |
+| 整合設定 | 服務位址、請求慣例、回應形狀與存取模式。 |
+| 認證與安全性 | JWT、 API Key 權限、 HMAC 簽名、重播保護和時間同步。 |
+| REST API | 公開端點、用戶/帳戶資料、訂單、持倉和市場資料。 |
+| WebSocket | 連線生命週期、公開市場串流與私人用戶串流。 |
+| 參考與故障排除 | 枚舉、錯誤代碼與實用整合建議。 |
+
+<h2 id="production-checklist">製作檢查清單</h2>
+
+- API 秘密僅儲存在後端。
+- 同步伺服器時間，先於簽署請求。
+- 除非頁面明確說明，否則所有數值精度欄位都視為字串。
+- 利用冪等性、請求 ID 及圍繞順序流程的結構化日誌。
+- 訂閱 WebSocket 流，以取得必須在運作系統中保持狀態的最新狀態。
+- 在啟動前檢視錯誤代碼並重試行為。

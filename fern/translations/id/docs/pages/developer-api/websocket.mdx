@@ -1,0 +1,58 @@
+---
+title: "WebSocket"
+description: "Terhubung ke layanan 6MM WebSocket untuk streaming pasar publik dan acara akun privat, dengan panduan detak jantung dan langganan."
+slug: developer-api/websocket
+canonical-url: https://docs.6mm.com/id/developer-api/websocket
+---
+
+<h2 id="service-endpoint">Endpoint Layanan</h2>
+
+```
+wss://ws.6mm.com/ws
+```
+
+WebSocket saluran dibagi menjadi saluran publik dan saluran privat:
+
+| Tipe             | Autentikasi              | Deskripsi                                            |
+| ---------------- | --------------------------- | ------------------------------------------------------ |
+| Saluran publik  | Tidak wajib                | Data pasar, seperti kedalaman, perdagangan, Klines, dan ticker |
+| Saluran privat | `listenKey` atau JWT diperlukan | Urutan pengguna, akun, dan aliran posisi              |
+
+<h2 id="public-channels">Saluran Publik</h2>
+
+WebSocket publik tidak memerlukan autentikasi. Setelah terhubung, kirim permintaan `subscribe` untuk berlangganan saluran pasar.
+
+Saluran umum:
+
+| Saluran                            | Deskripsi                                                        |
+| ---------------------------------- | ------------------------------------------------------------------ |
+| `market.depth.{symbol}`            | Kedalaman pesan buku. Mengirim snapshot terlebih dahulu, lalu pembaruan bertahap |
+| `market.trade.{symbol}`            | Perdagangan terbaru                                                      |
+| `market.kline.{symbol}.{interval}` | Klines                                                             |
+| `market.ticker.{symbol}`           | Ringkasan ticker simbol tunggal                                       |
+| `market.tickers`                   | Ringkasan ticker semua simbol                                          |
+
+<h2 id="private-channels">Saluran Pribadi</h2>
+
+<h2 id="listenkey">listenKey</h2>
+Untuk aliran WebSocket privat, buat `listenKey` melalui REST API terlebih dahulu, lalu hubungkan ke:
+
+```
+wss://ws.6mm.com/ws?listenKey=YOUR_LISTEN_KEY
+```
+
+<h2 id="jwt">JWT</h2>
+Metode koneksi JWT yang kompatibel:
+
+```
+wss://ws.6mm.com/ws?token=YOUR_ACCESS_TOKEN
+```
+
+Setelah autentikasi berhasil, server secara otomatis berlangganan koneksi ke saluran privat pengguna saat ini. Tidak diperlukan langganan manual.
+
+<h2 id="choose-the-next-guide">Pilih panduan berikutnya</h2>
+
+- [Koneksi, Langganan & Detak Jantung](/id/developer-api/websocket/connection-subscription-and-heartbeat): siklus hidup koneksi, ping, sambung ulang, dan langganan ulang.
+- [Saluran Pasar Publik](/id/developer-api/websocket/public-market-channels): kedalaman, perdagangan, Kline, ticker, dan penanganan urutan.
+- [Saluran Pengguna Pribadi](/id/developer-api/websocket/private-user-channel): listenKey siklus hidup dan peristiwa akun yang terautentikasi.
+- [Rekomendasi Integrasi](/id/developer-api/integration-recommendations): pemantauan, idempotensi, pengulangan, dan pengujian produksi.

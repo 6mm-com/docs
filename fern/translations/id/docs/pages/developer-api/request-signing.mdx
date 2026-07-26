@@ -1,0 +1,153 @@
+---
+title: "Penandatanganan Permintaan"
+description: "Tandatangani permintaan 6MM API dengan HMAC-SHA256 menggunakan payload, timestamp, kunci API , header tanda tangan, dan aturan verifikasi yang diperlukan."
+slug: developer-api/request-signing
+canonical-url: https://docs.6mm.com/id/developer-api/request-signing
+---
+
+<h2 id="request-format">Format Permintaan</h2>
+
+| Lokasi | Lapangan       | Wajib            | Deskripsi                                   |
+| -------- | ----------- | ------------------- | --------------------------------------------- |
+| Header   | `X-API-KEY` | Ya                 | `apiKey` dikembalikan saat API Key dibuat |
+| Kueri    | `timestamp` | Ya                 | Timestamp milidetik Unix                    |
+| Kueri    | `signature` | Ya                 | HMAC- tanda tanganSHA256 , string heksagon huruf kecil   |
+| Badan     | JSON        | Tergantung pada titik akhir | POST / PUT / DELETE badan permintaan              |
+
+<h2 id="signature-payload">Payload Tanda Tangan</h2>
+
+```
+payload = queryStringWithoutSignature + requestBody
+signature = HMAC-SHA256(apiSecret, payload)
+```
+
+Aturan utama:
+
+* `timestamp` harus berupa timestamp Unix milidetik. Jendela toleransi server adalah ±10 detik.
+* `signature` ditempatkan dalam string kueri URL , tetapi tidak termasuk dalam payload tanda tangan.
+* Server memverifikasi string query asli setelah menghapus `signature`; server tidak mengatur ulang parameter query.
+* Urutan parameter kueri yang digunakan untuk penandatanganan harus sesuai dengan permintaan URLsebenarnya.
+* Jika ada badan permintaan, string JSON yang digunakan untuk penandatanganan harus persis sama dengan badan yang sebenarnya dikirimkan.
+* Jalur terkait pesanan melakukan pemeriksaan ulang tanda tangan. Menggunakan kembali tanda tangan yang sama dalam waktu singkat menghasilkan `Signature replay detected`.
+
+<h2 id="server-time">Waktu Server</h2>
+
+```http
+GET /v1/time
+```
+
+Contoh respons:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "timestamp": 1780473256,
+    "timestampMs": 1780473256708,
+    "iso": "2026-06-03T07:54:16Z",
+    "timezone": "UTC"
+  },
+  "requestId": "req-7cad3113"
+}
+```
+
+Klien harus menghitung `timeOffsetMs = serverTimestampMs - localTimestampMs`, lalu menggunakan `timestamp = nowMs + timeOffsetMs` untuk permintaan yang ditandatangani berikutnya. Jika server mengembalikan `Timestamp outside of tolerance window`, segera melakukan sinkronisasi ulang dan membuat ulang tanda tangan.
+
+<h2 id="get-signing-example">Contoh Penandatanganan GET</h2>
+
+Permintaan sebenarnya:
+
+```
+GET /v1/private/order/current?symbol=BTCUSDT&timestamp=1772710377808&signature=...
+```
+
+Payload tanda tangan:
+
+```
+symbol=BTCUSDT&timestamp=1772710377808
+```
+
+<h2 id="post-signing-example">Contoh Penandatanganan POST</h2>
+
+Permintaan sebenarnya:
+
+```
+POST /v1/private/order/place?timestamp=1772710377808&signature=...
+```
+
+Badan permintaan:
+
+```json
+{"symbol":"BTCUSDT","type":"LIMIT","side":"BUY","price":"85000","quantity":"0.1","timeInForce":"GTC","makerOnly":true,"clientOrderId":"ext-1772710377808-001"}
+```
+
+Payload tanda tangan:
+
+```
+timestamp=1772710377808{"symbol":"BTCUSDT","type":"LIMIT","side":"BUY","price":"85000","quantity":"0.1","timeInForce":"GTC","makerOnly":true,"clientOrderId":"ext-1772710377808-001"}
+```
+
+<h2 id="python-signing-example">Contoh Penandatanganan Python</h2>
+
+```python
+import hashlib
+import hmac
+import json
+import time
+from urllib.parse import urlencode
+
+import requests
+
+BASE_URL = "https://api.6mm.com"
+API_KEY = "YOUR_API_KEY"
+API_SECRET = "YOUR_API_SECRET"
+TIME_OFFSET_MS = 0
+
+def sign(payload: str) -> str:
+    return hmac.new(
+        API_SECRET.encode("utf-8"),
+        payload.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+
+def sync_time_offset():
+    global TIME_OFFSET_MS
+    before = int(time.time() * 1000)
+    resp = requests.get(f"{BASE_URL}/v1/time", timeout=5)
+    after = int(time.time() * 1000)
+    resp.raise_for_status()
+
+    server_ts = int(resp.json()["data"]["timestampMs"])
+    local_midpoint = (before + after) // 2
+    TIME_OFFSET_MS = server_ts - local_midpoint
+
+def signed_request(method: str, path: str, params=None, body=None):
+    params = dict(params or {})
+    params["timestamp"] = str(int(time.time() * 1000) + TIME_OFFSET_MS)
+
+    query_string = urlencode(params)
+    body_string = ""
+    if body is not None:
+        body_string = json.dumps(body, separators=(",", ":"), ensure_ascii=False)
+
+    signature = sign(query_string + body_string)
+    url = f"{BASE_URL}{path}?{query_string}&signature={signature}"
+    headers = {
+        "X-API-KEY": API_KEY,
+        "Content-Type": "application/json",
+    }
+    resp = requests.request(method, url, headers=headers, data=body_string if body is not None else None, timeout=10)
+    resp.raise_for_status()
+    return resp.json()
+
+sync_time_offset()
+print(signed_request("GET", "/v1/private/order/current", {"symbol": "BTCUSDT"}))
+```
+
+<h2 id="related-security-guides">Panduan keamanan terkait</h2>
+
+- [Autentikasi](/id/developer-api/authentication)
+- [API Key Manajemen](/id/developer-api/api-key-management)
+- [Rahasia & Penandatanganan](/id/sdk/security/secrets-signing)
+- [Kode Kesalahan & Pemecahan Masalah](/id/developer-api/error-codes-and-troubleshooting)

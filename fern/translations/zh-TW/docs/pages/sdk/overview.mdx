@@ -1,0 +1,53 @@
+---
+title: "6MM SDKs"
+subtitle: "選擇適合嵌入式交易、後端代幣發行、帳戶連結、網路鉤及生產作業的 6MM SDK 路徑。"
+slug: sdk/overview
+canonical-url: https://docs.6mm.com/zh-TW/sdk/overview
+---
+
+<h2 id="choose-an-sdk-path">選擇一條 SDK 的道路</h2>
+
+<CardGroup cols={3}>
+<Card title="Trading Widget SDK" icon="duotone chart-line" href="/zh-TW/sdk/trading-widget/quick-start">
+  將 6MM 交易終端嵌入現有網站、錢包、經紀入口網站或合作夥伴產品面板中。
+</Card>
+<Card title="Agent SDK" icon="duotone server" href="/zh-TW/sdk/agent-sdk/overview">
+  將合作夥伴後端連接到 6MM ，用於使用者綁定、嵌入權杖、入口網址、傳輸、訂單查詢及 webhook。
+</Card>
+<Card title="安全與行動" icon="duotone shield-check" href="/zh-TW/sdk/security/secrets-signing">
+  準備秘密儲存、請求簽署、webhook 冪性、監控及啟動故障排除。
+</Card>
+</CardGroup>
+
+<h2 id="recommended-combination">推薦組合</h2>
+
+| 夥伴目標 | 前端 | 後端 | 為什麼重要 |
+| --- | --- | --- | --- |
+| 新增嵌入式交易終端 | Trading Widget SDK | Agent SDK | 小工具負責交易介面，而合作夥伴後端則發行代幣並保持機密隱私。 |
+| 建立一個原生應用程式入口 | 本地或H5條目 | Agent SDK | 在合作夥伴驗證使用者會話後，應用程式會開啟一個 6MM 條目 URL 。 |
+| 建立自訂的交易流程 | 合作夥伴使用者介面 | 開發 API + 選擇 SDK 流 | 使用 APIs 來管理帳戶、訂單、部位和市場資料，同時將營運控制權保留在伺服器端。 |
+
+<h2 id="reference-architecture">參考架構</h2>
+
+```text
+Partner Web App
+  -> TradingWidget.create()
+  -> tokenProvider()
+  -> Partner Backend
+  -> 6MM Agent SDK
+  -> 6MM Agent API
+  -> 6MM Trading iframe
+```
+
+> **伺服器端保密**
+>
+> 瀏覽器程式碼應該只呼叫合作夥伴擁有的端點。代理 API 秘密絕不能被交付給前端程式碼。
+
+<h2 id="production-checklist">製作檢查清單</h2>
+
+- 僅將 apiSecret 儲存在後端基礎設施中。
+- 使用 HTTPS 處理代理 API 請求及 webhook URL。
+- 持續保存 agentUserId、 platformUserId、 agentOrderNo 映射。
+- 以小數字串表示金額，而非浮點數。
+- 將 PROCESSING 視為待處理，而非成功或失敗。
+- 因預期重試而以冪等方式處理 webhook。

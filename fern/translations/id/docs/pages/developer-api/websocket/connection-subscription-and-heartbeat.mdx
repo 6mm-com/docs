@@ -1,0 +1,89 @@
+---
+title: "Koneksi, Langganan & Detak Jantung"
+subtitle: "Terhubung ke aliran 6MM WebSocket , berlangganan topik, jaga koneksi tetap hidup, dan proses amplop pesan dengan aman."
+slug: developer-api/websocket/connection-subscription-and-heartbeat
+canonical-url: https://docs.6mm.com/id/developer-api/websocket/connection-subscription-and-heartbeat
+---
+
+Gunakan aliran WebSocket untuk data pasar dan pembaruan status pengguna pribadi yang harus tetap terkini tanpa melakukan polling.
+
+<h2 id="connection-url">Koneksi URL</h2>
+
+```text
+wss://ws.6mm.com/ws
+```
+
+Aliran privat memerlukan konteks autentikasi seperti listenKey atau token akses seperti yang dijelaskan dalam dokumentasi saluran privat.
+
+<h2 id="subscribe">Berlangganan</h2>
+
+```json
+{ "id": "1772007814666", "op": "subscribe", "args": ["market.depth.BTCUSDT"] }
+```
+
+Pengakuan langganan yang berhasil:
+
+```json
+{
+  "id": "1772007814666",
+  "event": "subscribe",
+  "success": true,
+  "data": ["market.depth.BTCUSDT"]
+}
+```
+
+<h2 id="unsubscribe">Berhenti berlangganan</h2>
+
+```json
+{ "id": "1772007814667", "op": "unsubscribe", "args": ["market.depth.BTCUSDT"] }
+```
+
+<h2 id="application-ping">Ping aplikasi</h2>
+
+```json
+{ "id": "1772007814668", "op": "ping", "args": [] }
+```
+
+<h2 id="message-envelope">Amplop pesan</h2>
+
+Dorongan publik menggunakan batas yang konsisten:
+
+```json
+{
+  "topic": "market.depth.BTCUSDT",
+  "event": "data",
+  "ts": 1772007815000,
+  "data": {}
+}
+```
+
+<h2 id="operational-recommendations">Rekomendasi operasional</h2>
+
+- Menghasilkan `id` sisi klien yang unik untuk setiap permintaan langganan, berhenti berlangganan, dan ping.
+- Anggap reconnect sebagai sesi baru dan langganan kembali topik yang diperlukan.
+- Validasi bahwa `topic` yang dikembalikan sesuai dengan saluran yang diharapkan layanan Anda.
+- Jaga agar pemrosesan pesan tetap sama di mana pesanan pribadi atau acara akun terlibat.
+- Catat perubahan status koneksi, pengakuan langganan, dan pemutusan koneksi yang tidak normal.
+
+<h2 id="reconnect-workflow">Alur kerja Koneksi Kembali</h2>
+
+1. Tutup atau buang soket sebelumnya dan buat koneksi baru.
+2. Autentikasi ulang aliran pribadi dengan listenKey atau token akses yang valid.
+3. Berlangganan ulang setiap topik yang diperlukan dan tunggu ucapan terima kasih yang berhasil.
+4. Ganti status orderbook-lokal dengan snapshot baru sebelum menerapkan pembaruan bertahap.
+5. Rekonsiliasi pesanan terbuka, posisi, dan saldo melalui REST jika acara pribadi mungkin terlewat.
+
+Gunakan bounded exponential backoff dengan jitter untuk percobaan reconnect. Klien yang terus terhubung kembali seharusnya memberi tahu operator, bukan mencoba ulang tanpa batas waktu tanpa visibilitas.
+
+<h2 id="heartbeat-and-stale-connections">Detak jantung dan koneksi yang basi</h2>
+
+- Lacak pesan masuk terbaru dan pengakuan ping yang berhasil.
+- Gunakan interval detak jantung dan ambang idle yang disetujui untuk lingkungan produksi.
+- Perlakukan koneksi sebagai basi ketika ambang batas yang dikonfigurasi terlampaui, meskipun soket TCP masih tampak terbuka.
+- Jangan menggunakan ulang langganan dari soket lama; Berlangganan ulang secara eksplisit setelah setiap koneksi ulang.
+
+<h2 id="related-documentation">Dokumentasi terkait</h2>
+
+- [Saluran Pasar Publik](/id/developer-api/websocket/public-market-channels): topik, kontinuitas buku pesanan, perdagangan, lilin, dan ticker.
+- [Saluran Pengguna Pribadi](/id/developer-api/websocket/private-user-channel): siklus hidup listenKey dan peristiwa yang terautentikasi.
+- [Rekomendasi Integrasi](/id/developer-api/integration-recommendations): pengulangan, idempotensi, pemantauan, dan pengujian peluncuran.

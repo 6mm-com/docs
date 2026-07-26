@@ -1,0 +1,82 @@
+---
+title: "Java Швидкий початок"
+subtitle: "Встановіть і ініціалізуйте Java SDK з бекенд-сервісу."
+slug: sdk/agent-sdk/java/quick-start
+canonical-url: https://docs.6mm.com/uk/sdk/agent-sdk/java/quick-start
+---
+
+<h2 id="install">Встановлення</h2>
+
+Публічне SDK джерело наразі документує `v0.1.1` з такими координатами Maven:
+
+```xml
+<dependency>
+    <groupId>com.sixmm.exchange.sdk</groupId>
+    <artifactId>agent</artifactId>
+    <version>0.1.1</version>
+</dependency>
+```
+
+GitHub не виконує функції репозиторію залежностей Maven. Встановіть позначене джерело локально перед вирішення залежності:
+
+```bash
+git clone https://github.com/6mm-com/agent-java-sdk.git
+cd agent-java-sdk
+git checkout v0.1.1
+mvn install
+```
+
+> **Командні збірки**
+>
+> Опублікуйте затверджений артефакт у репозиторії Maven вашої організації для CI, тестування та продакшн-збірок. Підтвердіть затверджену версію 6MM перед запуском у виробництво.
+
+Приклади вихідного коду та використання доступні в офіційному репозиторії Java SDK :
+
+[6mm-com/agent-java-sdk](https://github.com/6mm-com/agent-java-sdk)
+
+<h2 id="before-you-start">Перш ніж почати</h2>
+
+- Підтвердіть свого агента з виробництва API базову URL з командою 6MM .
+- Store apiSecret лише в бекенд-управлінні секретами.
+- Підготуйте стабільне відображення між platformUserId та agentUserId.
+- Увімкнути структуровані журнали навколо потоків зв'язування, передачі, порядку та вебхуків.
+
+<h2 id="initialize-client">Ініціалізувати клієнта</h2>
+
+```java
+import com.sixmm.agent.AgentClient;
+import com.sixmm.agent.AgentClientConfig;
+
+AgentClient client = new AgentClient(AgentClientConfig.builder()
+        .baseUrl("https://agent-api.6mm.com")
+        .agentCode("AGENT001")
+        .apiSecret("your-api-secret")
+        .defaultCurrency("USDT")
+        .build());
+```
+
+> **Тільки бекенд**
+>
+> Не ініціалізуйте Agent SDK з браузера, мобільного чи десктопного клієнта. SDK підписує привілейовані Агенти API запити.
+
+<h2 id="example-transfer-funds-in">Приклад: переказ коштів у</h2>
+
+```java
+TransferResponse resp = client.transfer(TransferRequest.fixed(
+        "AGT-ORDER-1001",
+        "agent-user-001",
+        Direction.IN,
+        "USDT",
+        "10.00"));
+```
+
+Використовуйте унікальний номер замовлення на стороні партнера для кожного запиту на передачу. Якщо час запиту закінчується, запитуйте оригінальне замовлення перед створенням нового.
+
+<h2 id="next-steps">Наступні кроки</h2>
+
+| Потреба | Наступна сторінка |
+| --- | --- |
+| Видати Trading Widget сертифікат | [Створити токен вбудовування](/uk/sdk/agent-sdk/java/embed-token) |
+| Перевірте зворотні дзвінки з 6MM | [Вебхуки та ідемпотентність](/uk/sdk/security/webhooks-idempotency) |
+| Перегляд поведінки при підписах | [Секрети та жести](/uk/sdk/security/secrets-signing) |
+| Діагностуйте проблему інтеграції | [SDK Усунення несправностей](/uk/sdk/security/troubleshooting) |

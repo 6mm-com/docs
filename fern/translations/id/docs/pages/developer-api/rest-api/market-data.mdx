@@ -1,0 +1,111 @@
+---
+title: "Data Pasar"
+description: "Gunakan data pasar 6MM yang tidak terautentikasi REST endpoint untuk mengambil simbol, ticker, buku order, perdagangan, dan informasi perdagangan publik lainnya."
+slug: developer-api/rest-api/market-data
+canonical-url: https://docs.6mm.com/id/developer-api/rest-api/market-data
+---
+
+Data pasar REST endpoint tidak memerlukan autentikasi.
+
+<h2 id="symbol-configuration">Konfigurasi Simbol</h2>
+
+```http
+GET /v1/public/market/symbols
+```
+
+Bidang respons umum:
+
+| Lapangan                      | Tipe   | Deskripsi                   |
+| -------------------------- | ------ | ----------------------------- |
+| `list[].symbol`            | string | Simbol                        |
+| `list[].baseAsset`         | string | Aset dasar                    |
+| `list[].quoteAsset`        | string | Aset penawaran                   |
+| `list[].minQuantity`       | string | Jumlah pesanan minimum        |
+| `list[].minNotional`       | string | Nilai nominal minimum        |
+| `list[].tickSize`          | string | Ukuran tick harga               |
+| `list[].stepSize`          | string | Ukuran langkah kuantitas            |
+| `list[].pricePrecision`    | int64  | Presisi harga               |
+| `list[].maxLimitOrderQty`  | string | Jumlah pesanan batas maksimum  |
+| `list[].maxMarketOrderQty` | string | Kuantitas pesanan pasar maksimum |
+| `list[].maxOpenOrders`     | int64  | Pesanan terbuka maksimum per pengguna  |
+| `list[].defaultLeverage`   | int64  | Leverage default              |
+| `list[].defaultMarginMode` | int64  | Mode margin default           |
+| `list[].leverageTiers[]`   | array  | Tingkat margin leverage         |
+| `handlingFeeLevelConfig[]` | array  | Konfigurasi tingkat biaya        |
+
+<h2 id="funding-rate-configuration">Konfigurasi Tingkat Pendanaan</h2>
+
+```http
+GET /v1/public/market/funding-rate?symbol=BTCUSDT
+```
+
+Parameter permintaan:
+
+| Parameter | Tipe   | Wajib | Deskripsi                     |
+| --------- | ------ | -------- | ------------------------------- |
+| `symbol`  | string | Tidak       | Jika dihilangkan, mengembalikan semua simbol |
+
+<h2 id="current-funding-rate">Tingkat pendanaan saat ini</h2>
+
+```http
+GET /v1/public/market/funding-rate/current?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+Parameter permintaan:
+
+| Parameter  | Tipe   | Wajib | Deskripsi                  |
+| ---------- | ------ | -------- | ---------------------------- |
+| `symbol`   | string | Tidak       | Simbol                       |
+| `page`     | int32  | Tidak       | Nomor halaman, `1` default     |
+| `pageSize` | int32  | Tidak       | Item per halaman, `20` default |
+
+<h2 id="funding-rate-history">Sejarah Tingkat Pendanaan</h2>
+
+```http
+GET /v1/public/market/funding-rate/history?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+Parameter permintaan:
+
+| Parameter   | Tipe   | Wajib | Deskripsi                  |
+| ----------- | ------ | -------- | ---------------------------- |
+| `symbol`    | string | Ya      | Simbol                       |
+| `startTime` | int64  | Tidak       | Waktu mulai                   |
+| `endTime`   | int64  | Tidak       | Waktu akhir                     |
+| `page`      | int32  | Tidak       | Nomor halaman, `1` default     |
+| `pageSize`  | int32  | Tidak       | Item per halaman, `20` default |
+
+<h2 id="klines">Klines</h2>
+
+```http
+GET /v1/public/market/klines?symbol=BTCUSDT&interval=1m&limit=500
+```
+
+Parameter permintaan:
+
+| Parameter   | Tipe   | Wajib | Deskripsi                                                              |
+| ----------- | ------ | -------- | ------------------------------------------------------------------------ |
+| `symbol`    | string | Ya      | Simbol                                                                   |
+| `interval`  | string | Ya      | Interval, seperti `1m`, `5m`, `15m`, `30m`, `1h`, `4h`, `1d`, `1w`, `1M` |
+| `priceType` | string | Tidak       | `indexPrice` / `markPrice`. Jika dihilangkan, mengembalikan harga perdagangan Klines       |
+| `startTime` | int64  | Tidak       | Waktu mulai                                                               |
+| `endTime`   | int64  | Tidak       | Waktu akhir                                                                 |
+| `limit`     | int32  | Tidak       | Jumlah item yang dikembalikan, `500`default, `1000` maksimum                  |
+
+Bidang respons:
+
+| Lapangan              | Tipe   | Deskripsi |
+| ------------------ | ------ | ----------- |
+| `list[].openTime`  | int64  | Waktu buka   |
+| `list[].open`      | string | Harga terbuka  |
+| `list[].high`      | string | Harga tinggi  |
+| `list[].low`       | string | Harga rendah   |
+| `list[].close`     | string | Harga penutupan |
+| `list[].volume`    | string | Volume      |
+| `list[].closeTime` | int64  | Waktu tutup  |
+
+<h2 id="related-documentation">Dokumentasi terkait</h2>
+
+- [Titik Akhir Publik](/id/developer-api/rest-api/public-endpoints)
+- [Saluran WebSocket Publik](/id/developer-api/websocket/public-market-channels)
+- [Kedalaman & Sebaran Pasar](/id/solutions/market-depth-spread)

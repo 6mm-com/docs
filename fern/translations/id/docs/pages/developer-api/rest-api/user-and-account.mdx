@@ -1,0 +1,223 @@
+---
+title: "Pengguna dan Akun"
+description: "Gunakan endpoint pengguna dan akun 6MM untuk mengambil profil, saldo, status akun, izin, dan informasi akun yang terhubung dengan mitra."
+slug: developer-api/rest-api/user-and-account
+canonical-url: https://docs.6mm.com/id/developer-api/rest-api/user-and-account
+---
+
+Kecuali dinyatakan lain, endpoint berikut dapat menggunakan penandatanganan JWT atau API Key .
+
+<h2 id="user-info">Info Pengguna</h2>
+
+```http
+GET /v1/private/user/info
+```
+
+Bidang respons:
+
+| Lapangan                  | Tipe   | Deskripsi      |
+| ---------------------- | ------ | ---------------- |
+| `userInfo.userId`      | string | ID pengguna eksternal |
+| `userInfo.username`    | string | Nama pengguna         |
+| `userInfo.agentId`     | int64  | ID Agen         |
+| `userInfo.vipLevel`    | int64  | tingkat VIP        |
+| `userInfo.lastLoginAt` | int64  | Waktu login terakhir  |
+| `userInfo.lastLoginIp` | string | IP login terakhir    |
+
+<h2 id="user-assets">Aset Pengguna</h2>
+
+```http
+GET /v1/private/user/asset
+```
+
+Bidang respons:
+
+| Lapangan                     | Tipe   | Deskripsi                     |
+| ------------------------- | ------ | ------------------------------- |
+| `userAsset.userId`        | string | ID pengguna eksternal                |
+| `userAsset.assetType`     | string | Jenis aset                      |
+| `userAsset.walletBalance` | string | Saldo dompet                  |
+| `userAsset.frozenMargin`  | string | Margin dibekukan oleh pesanan yang tertunda |
+| `userAsset.usedMargin`    | string | Margin yang digunakan oleh posisi        |
+
+<h2 id="create-listenkey">Buat listenKey</h2>
+
+```http
+POST /v1/private/user/listen-key
+```
+
+Membuat kunci autentikasi untuk aliran WebSocket privat.
+
+<h2 id="renew-listenkey">Perbarui listenKey</h2>
+
+```http
+PUT /v1/private/user/listen-key
+```
+
+Memperpanjang validitas listenKey .
+
+<h2 id="close-listenkey">Tutup listenKey</h2>
+
+```http
+DELETE /v1/private/user/listen-key
+```
+
+Menutup listenKeyyang ditentukan .
+
+<h2 id="account-change-logs">Log Perubahan Akun</h2>
+
+```http
+GET /v1/private/user/account-change-log?assetType=USDT&page=1&pageSize=20
+```
+
+Parameter permintaan:
+
+| Parameter    | Tipe   | Wajib | Deskripsi                  |
+| ------------ | ------ | -------- | ---------------------------- |
+| `assetType`  | string | Tidak       | Jenis aset, seperti `USDT`   |
+| `changeType` | string | Tidak       | Ubah tipe                  |
+| `startTime`  | int64  | Tidak       | Waktu mulai                   |
+| `endTime`    | int64  | Tidak       | Waktu akhir                     |
+| `page`       | int32  | Tidak       | Nomor halaman, `1` default     |
+| `pageSize`   | int32  | Tidak       | Item per halaman, `20` default |
+
+Bidang respons:
+
+| Lapangan                        | Tipe   | Deskripsi                  |
+| ---------------------------- | ------ | ---------------------------- |
+| `list[].assetType`           | string | Jenis aset                   |
+| `list[].amount`              | string | Jumlah yang diubah               |
+| `list[].walletBalanceBefore` | string | Saldo dompet sebelum perubahan |
+| `list[].walletBalanceAfter`  | string | Saldo dompet setelah kembalian  |
+| `list[].frozenBalanceBefore` | string | Saldo beku sebelum perubahan |
+| `list[].frozenBalanceAfter`  | string | Saldo beku setelah perubahan  |
+| `list[].changeType`          | string | Ubah tipe                  |
+| `list[].referenceId`         | string | ID bisnis terkait          |
+| `list[].createdAt`           | int64  | Waktu penciptaan                |
+| `total`                      | int64  | Total jumlah                  |
+
+<h2 id="30-day-volume-statistics">Statistik Volume 30 Hari</h2>
+
+```http
+GET /v1/private/user/volume-stats
+```
+
+Bidang respons:
+
+| Lapangan         | Tipe   | Deskripsi                                     |
+| ------------- | ------ | ----------------------------------------------- |
+| `volume30d`   | string | Volume perdagangan kumulatif selama 30 hari terakhir |
+| `feeTotal30d` | string | Biaya kumulatif selama 30 hari terakhir           |
+
+<h2 id="balance-history">Sejarah Balance</h2>
+
+```http
+GET /v1/private/user/balance-history?period=1D&limit=30
+```
+
+Parameter permintaan:
+
+| Parameter | Tipe   | Wajib | Deskripsi                            |
+| --------- | ------ | -------- | -------------------------------------- |
+| `period`  | string | Ya      | `1D` / `1W` / `1M`                     |
+| `limit`   | int    | Tidak       | Jumlah item yang dikembalikan, `30` default |
+
+Bidang respons:
+
+| Lapangan             | Tipe   | Deskripsi                 |
+| ----------------- | ------ | --------------------------- |
+| `items[].date`    | string | Tanggal agregasi            |
+| `items[].balance` | string | Saldo dompet              |
+| `items[].pnl`     | string | Terwujud PnL untuk periode tersebut |
+
+<h2 id="trade-overview">Ikhtisar Perdagangan</h2>
+
+```http
+GET /v1/private/user/trade-overview?type=1M
+```
+
+Parameter permintaan:
+
+| Parameter | Tipe   | Wajib | Deskripsi                                     |
+| --------- | ------ | -------- | ----------------------------------------------- |
+| `type`    | string | Ya      | Rentang tren: `1D`, `1W`, `1M`, `3M`, `6M`, `1Y` |
+
+Bidang respons:
+
+| Lapangan                | Tipe   | Deskripsi                                                          |
+| -------------------- | ------ | -------------------------------------------------------------------- |
+| `todayPnl`           | string | PnL yang terwujud hari ini                                                 |
+| `todayVolume`        | string | Volume perdagangan kontrak hari ini                                      |
+| `totalVolume`        | string | Volume perdagangan kontrak kumulatif                                   |
+| `totalPnl`           | string | Kumulatif PnL yang direalisasikan                                              |
+| `maxDrawdown30d`     | string | Jumlah penarikan maksimum selama 30 hari terakhir                        |
+| `maxDrawdown30dRate` | string | Tingkat penarikan maksimum selama 30 hari terakhir, desimal dari `0` ke `1` |
+| `transferIn`         | string | Dana kumulatif yang ditransfer masuk                                      |
+| `transferOut`        | string | Dana yang dipindahkan secara kumulatif                                     |
+| `items[]`            | array  | Data tren aset                                                     |
+
+<h2 id="asset-overview-summary">Ringkasan Ikhtisar Aset</h2>
+
+```http
+GET /v1/private/user/asset/overview/summary
+```
+
+Kolom respons sama dengan kolom ringkasan ikhtisar perdagangan, kecuali `items[]`.
+
+<h2 id="asset-overview-trend">Tren Ikhtisar Aset</h2>
+
+```http
+GET /v1/private/user/asset/overview/trend?type=1M
+```
+
+Parameter permintaan:
+
+| Parameter | Tipe   | Wajib | Deskripsi                                     |
+| --------- | ------ | -------- | ----------------------------------------------- |
+| `type`    | string | Ya      | Rentang tren: `1D`, `1W`, `1M`, `3M`, `6M`, `1Y` |
+
+Bidang respons:
+
+| Lapangan                  | Tipe   | Deskripsi                     |
+| ---------------------- | ------ | ------------------------------- |
+| `items[].snapshotTime` | int64  | Waktu snapshot                   |
+| `items[].balance`      | string | Saldo neraca berjalan         |
+| `items[].pnl`          | string | PnL untuk periode saat ini      |
+| `items[].pnlRate`      | string | Tarif PnL untuk periode saat ini |
+| `items[].totalPnl`     | string | Kumulatif PnL                  |
+
+<h2 id="favorite-symbols">Simbol Favorit</h2>
+
+<h2 id="save">Simpan</h2>
+
+```http
+POST /v1/private/user/favorite-symbols
+Content-Type: application/json
+```
+
+Badan permintaan:
+
+```json
+{
+  "symbols": ["BTCUSDT", "ETHUSDT"]
+}
+```
+
+<h2 id="query">Kueri</h2>
+
+```http
+GET /v1/private/user/favorite-symbols
+```
+
+Bidang respons:
+
+| Lapangan     | Tipe      | Deskripsi          |
+| --------- | --------- | -------------------- |
+| `symbols` | senar\[] | Daftar simbol favorit |
+
+<h2 id="related-documentation">Dokumentasi terkait</h2>
+
+- [Saluran Pengguna Pribadi](/id/developer-api/websocket/private-user-channel)
+- [Autentikasi](/id/developer-api/authentication)
+- [Transfer Aset](/id/trading/getting-started/asset-transfer)
+- [Kode Kesalahan & Pemecahan Masalah](/id/developer-api/error-codes-and-troubleshooting)

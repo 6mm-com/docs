@@ -1,0 +1,39 @@
+---
+title: "架構與職責"
+subtitle: "釐清合作夥伴系統擁有什麼，以及 6MM 基礎設施在嵌入式交易部署中提供了什麼。"
+slug: solutions/architecture-responsibilities
+canonical-url: https://docs.6mm.com/zh-TW/solutions/architecture-responsibilities
+---
+
+乾淨的嵌入式交易啟動依賴明確的責任界限。合作夥伴系統應保留敏感的企業所有權，而 6MM 則提供交易基礎設施與生命週期能力。
+
+<h2 id="responsibility-model">責任模型</h2>
+
+| 面積 | 夥伴制度 | 6MM 基礎設施 |
+| --- | --- | --- |
+| 使用者關係 | 擁有使用者帳號、登入狀態、客服身份及資格審查。 | 接收經過驗證的交易輸入上下文並維持交易端狀態。 |
+| 秘密與手語 | 在後端與 API 金鑰合作，並簽署伺服器端請求。 | 驗證已簽署的請求並處理授權操作。 |
+| 交易經驗 | 提供入口點、導航及產品上下文。 | 提供交易介面、訂單生命週期、市場數據、持倉、風險及結算行為。 |
+| 營運 | 負責支援工作流程、業務分析及內部升級。 | 會發出事件、webhook 以及整合所需的狀態資訊。 |
+
+<h2 id="production-principles">製作原理</h2>
+
+- 把所有夥伴保密在後台。
+- 將嵌入的標記視為短暫的進入憑證。
+- 以冪等方式處理 webhook 並儲存事件 ID。
+- 監控代幣發行、傳輸流程及訂單狀態變更。
+- 在入口、交易及支援頁面間，保持面向客戶的文案一致性。
+
+<h2 id="related-docs">相關文件</h2>
+
+<CardGroup cols={3}>
+<Card title="認證" icon="fa-duotone fa-user-shield" href="/zh-TW/developer-api/authentication">
+檢視後端認證的期望。
+</Card>
+<Card title="請求簽署" icon="fa-duotone fa-signature" href="/zh-TW/developer-api/request-signing">
+了解簽署 API 通話。
+</Card>
+<Card title="Webhook 安全性" icon="fa-duotone fa-webhook" href="/zh-TW/sdk/security/webhooks-idempotency">
+安全處理活動傳遞。
+</Card>
+</CardGroup>

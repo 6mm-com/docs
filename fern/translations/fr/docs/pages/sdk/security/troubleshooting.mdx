@@ -1,0 +1,68 @@
+---
+title: "SDK Dépannage de l’intégration"
+subtitle: "Diagnostiquez Trading Widget, Agent SDK, signing, webhook, timeout et environnement avant d’escalader une demande de support."
+slug: sdk/security/troubleshooting
+canonical-url: https://docs.6mm.com/fr/sdk/security/troubleshooting
+---
+
+Commencez par l’environnement, l’horodatage et l’identifiant métier de l’opération ratée. Un contrôle structuré sépare généralement les problèmes de configuration des problèmes d’authentification, de réseau et de traitement asynchrone.
+
+<h2 id="diagnostic-order">Ordonnance diagnostique recommandée</h2>
+
+1. Confirmer l’environnement et la base URLaffectés.
+2. Enregistrer la plage de temps UTC et la première demande échouée.
+3. Identifier le module : Trading Widget, Agent SDK, REST API, WebSocket, ou webhook.
+4. Capturez l’ID de la requête, l’identifiant utilisateur du partenaire, le `agentOrderNo`, l’identifiant de commande ou l’identifiant de l’événement webhook.
+5. Vérifier les modifications récentes du code, des identifiants, IP de la liste blanche ou du déploiement.
+6. Reproduire avec le plus petit cas sûr de test.
+
+<h2 id="trading-widget-issues">Trading Widget problèmes</h2>
+
+| Symptôme | Cause probable | Correction |
+| --- | --- | --- |
+| iframe demande le domaine local partenaire | baseUrl manque | Passez baseUrl: «https://app.6mm.com». |
+| iFrame est invisible ou très court | Le conteneur parent n’a pas de hauteur | Fixez la hauteur du contenant ou la hauteur de passage. |
+| token_provider_missing | Le mode partner-token n’a pas de fournisseur | Ajoutez l’authentificationtokenProvider. |
+| auth_exchange_failed | Jeton d’intégration invalide, expiré ou mal assorti | Vérifiez la réponse des jetons backend et channelId. |
+
+<h2 id="agent-sdk-issues">Agent SDK problèmes</h2>
+
+| Symptôme | Cause probable | Correction |
+| --- | --- | --- |
+| Signature rejetée | Mauvais secret, dérive d’horloge, ou champs signés modifiés manuellement | Laissez- SDK générer des champs de signature et synchroniser l’heure du serveur. |
+| Risque de mouvement de fonds en double | Nouveau numéro de commande utilisé après un délai d’attente | Requête par agentOrderNo originale d’abord. |
+| PROCESSING traité comme un échec | État en attente mal compris | Attendez le webhook ou appelez queryOrder. |
+| Webhook traité plusieurs fois | Comportement de réessai sans idempotence | Ajouter des vérifications de clé d’idempotence et d’état final. |
+
+<h2 id="evidence-to-capture">Preuves à capturer</h2>
+
+| Intégration | Preuves utiles |
+| --- | --- |
+| Trading Widget | Page URL, chemin de SDK version, console du navigateur, requêtes réseau échouées, `onError` charge utile et dimensions du conteneur. |
+| Agent SDK | SDK langue/version, URLde base, UTC horodatage, ID de requête, `agentOrderNo`, code de réponse et journaux aseptisés. |
+| Webhook | Délai de livraison, clé d’événement ou métier, résultat de validation de signature, état de traitement et hachage du corps brut épuré. |
+| REST API | Méthode, chemin, environnement, ID de requête, code de réponse et paramètres aseptisés. |
+
+N’incluez jamais de mots de passe, de jetons d’accès, de secrets API , de signatures complètes, de clés privées ou de données personnelles non expurgées dans les diagnostics.
+
+<h2 id="before-escalating">Avant d’escalader</h2>
+
+- Réessayer uniquement lorsque l’opération est documentée comme sûre à retenter.
+- Après un temps d’attente, interroger l’identifiant d’entreprise original au lieu d’en créer un nouveau.
+- Confirmer l’horloge système et l’environnement des identifiants pour détecter les erreurs de signature.
+- Préserver le premier échec ainsi que les résultats de toute tentative ultérieure.
+- Utiliser le [Modèle de demande de support](/fr/resources/support-request-template) pour envoyer un rapport complet et caviardé.
+
+<h2 id="related-docs">Documents connexes</h2>
+
+<CardGroup cols={3}>
+<Card title="Trading Widget Départ rapide" icon="fa-duotone fa-chart-line" href="/fr/sdk/trading-widget/quick-start">
+Vérifiez le chargement du script, la taille du conteneur, la configuration et les rappels.
+</Card>
+<Card title="Secrets & Signature" icon="fa-duotone fa-shield-keyhole" href="/fr/sdk/security/secrets-signing">
+Vérifiez Agent SDK identifiants, horloges et champs signés.
+</Card>
+<Card title="Crochets et Idempotence" icon="fa-duotone fa-webhook" href="/fr/sdk/security/webhooks-idempotency">
+Examinez la vérification des rappels et la gestion des événements en double.
+</Card>
+</CardGroup>

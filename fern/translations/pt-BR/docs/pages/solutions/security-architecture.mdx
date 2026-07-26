@@ -1,0 +1,66 @@
+---
+title: "Arquitetura de Segurança de Integração de Parceiros"
+subtitle: "Projete limites de confiança e controles de produção para negociação embarcada, API, SDK, webhook, transferência de ativos e integrações operacionais."
+slug: solutions/security-architecture
+canonical-url: https://docs.6mm.com/pt-BR/solutions/security-architecture
+---
+
+Esta página foca em como um parceiro deve projetar uma integração 6MM segura. Para as camadas de segurança mais amplas utilizadas na plataforma de negociação, veja [Arquitetura de Segurança da Plataforma](/pt-BR/security-compliance/security-architecture).
+
+A arquitetura de segurança deve ser acordada antes do início da integração em produção. Ela afeta como os sistemas parceiros validam usuários, emitem tokens, armazenam segredos, recebem eventos, monitoram operações e respondem a incidentes.
+
+<h2 id="recommended-trust-boundary">Limite recomendado de confiança</h2>
+
+| Componente | Pode conter | Não deve conter |
+| --- | --- | --- |
+| Interface parceira | Configuração pública, resultado de entrada de curta duração, estado da interface não sensível | Parceiro API segredo, chave de assinatura, credenciais de backend privilegiadas |
+| Backend parceiro | Mapeamento de usuários, credenciais protegidas, lógica de assinatura, processamento de webhooks | Segredos expostos por meio de respostas de clientes ou logs públicos |
+| 6MM endpoints de integração | Solicitações assinadas aprovadas, tokens e entrega por webhook | Suposições não verificadas do usuário do lado do parceiro |
+
+O frontend parceiro deve chamar o backend parceiro para operações privilegiadas. O backend valida o usuário parceiro, chama 6MM através do API aprovado ou SDKe retorna apenas o resultado de curta duração necessário pelo frontend.
+
+<h2 id="security-layers">Camadas de segurança</h2>
+
+| Camada | Foco necessário |
+| --- | --- |
+| API credenciais | Armazenamento apenas no backend, plano de rotação e controle de acesso. |
+| Assinatura do pedido | Controle consistente contra proteção contra timestamp, assinatura e replay. |
+| Embed tokens | Emissão de curta duração, verificações de elegibilidade e comportamento claro de invalidação. |
+| Webhooks | Verificação de assinatura, idempotência, tentativas e logs de auditoria de eventos. |
+| Operações | Acesso a papéis, escalonamento de incidentes, monitoramento e retenção de evidências. |
+
+<h2 id="production-control-plan">Plano de controle de produção</h2>
+
+| Área de controle | Evidência mínima de implementação |
+| --- | --- |
+| Armazenamento de credenciais | Localização do gerente secreto, proprietário do acesso, separação do ambiente e processo de rotação. |
+| Entrada do usuário | Validação de sessão, verificação de elegibilidade, fluxo de tokens de curta duração e tratamento de falhas. |
+| Pedidos assinados | Ambiente correto, tempo sincronizado, registro de solicitações e alertas de erro de assinatura. |
+| Operações de ativos | IDs de negócio únicos, reconciliação de timeout, consultas de status e caminho de revisão do operador. |
+| Webhooks | Verificação de assinatura de corpo bruto, controles de replay, armazenamento de idempotência e processamento seguro para tentativas de reprodução. |
+| Monitoramento | Alertas para falhas de autenticação, tentativas anormais, atraso no webhook e erros operacionais. |
+| Resposta a incidentes | Proprietário nomeado, canal de escalonamento, retenção de provas e procedimento de revogação de credencial. |
+
+<h2 id="launch-review">Análise do lançamento</h2>
+
+Antes da produção:
+
+1. Desenhar os fluxos de dados do usuário, token, requisição, ativo e webhook.
+2. Marque onde cada credencial é criada, armazenada, usada, registrada, rotacionada e revogada.
+3. Teste tokens expirados, assinaturas inválidas, timeouts, webhooks duplicados e comportamento de reconectão.
+4. Confirmar que as equipes de suporte podem localizar uma operação a partir de sua solicitação ou identificador de negócio.
+5. Complete a [Lista de Verificação de Lançamento em Produção](/pt-BR/solutions/production-launch-checklist).
+
+<h2 id="recommended-docs">Médicos recomendados</h2>
+
+<CardGroup cols={3}>
+<Card title="Segredos e Assinatura" icon="fa-duotone fa-key" href="/pt-BR/sdk/security/secrets-signing">
+Proteja Agent SDK credenciais e pedidos assinados.
+</Card>
+<Card title="Assinatura de Solicitação" icon="fa-duotone fa-signature" href="/pt-BR/developer-api/request-signing">
+Implemente assinatura direta de API solicitações pelo Desenvolvedor.
+</Card>
+<Card title="Webhook & Idempotência" icon="fa-duotone fa-webhook" href="/pt-BR/sdk/security/webhooks-idempotency">
+Processe eventos com segurança.
+</Card>
+</CardGroup>

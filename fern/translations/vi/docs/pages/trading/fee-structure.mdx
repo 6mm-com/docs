@@ -1,0 +1,127 @@
+---
+title: "Cấu trúc phí giao dịch vĩnh viễn"
+description: "Tham khảo mô hình phí 6MM tạo ra, nhận, tài trợ, thanh lý và thanh toán cho các hợp đồng vĩnh viễn có biên độ U."
+slug: trading/fee-structure
+canonical-url: https://docs.6mm.com/vi/trading/fee-structure
+---
+
+6MM áp dụng mô hình phí minh bạch và dựa trên thực hiện cho các hợp đồng vĩnh viễn có biên độ U.
+
+Phí chỉ được tính khi các giao dịch được thực hiện và được thiết kế phù hợp với tính thanh khoản và hành vi giao dịch của thị trường.
+
+Trang này là tài liệu tham khảo cho các loại phí và thanh toán. Để hiểu cách độ sâu sổ lệnh và giá thực hiện ảnh hưởng đến tổng chi phí giao dịch, xem [Chi phí giao dịch: Phí & Trượt](/vi/trading/fees-and-slippage).
+
+***
+
+<h2 id="trading-fees-overview">Tổng quan về phí giao dịch</h2>
+
+Phí giao dịch trên 6MM được tính dựa trên:
+
+* Giá trị giao dịch đã thực hiện
+* Loại đơn hàng (Nhà sản xuất hoặc Người nhận)
+* Cấu hình cặp giao dịch và đối tác
+
+Đơn hàng chưa hoàn thành hoặc hủy sẽ không phát sinh bất kỳ khoản phí nào.
+
+Đối với một đại lượng đã thực hiện, phép tính tổng quát là:
+
+```text
+executed notional = execution price × executed quantity
+trading fee = executed notional × applicable maker or taker fee rate
+```
+
+Tỷ giá áp dụng phụ thuộc vào cặp giao dịch và cấu hình đối tác. Xác nhận tỷ giá hiển thị trước khi đặt lệnh.
+
+***
+
+<h2 id="maker-fees">Phí nhà sản xuất</h2>
+
+Phí maker áp dụng khi một lệnh thêm thanh khoản vào sổ lệnh.
+
+Các đơn đặt hàng điển hình của nhà sản xuất:
+
+* Giới hạn lệnh không được thực hiện ngay lập tức
+* Đơn hàng nằm trong sổ đơn hàng
+
+Phí maker thường thấp hơn và có thể được khuyến khích để hỗ trợ chiều sâu thị trường.
+
+***
+
+<h2 id="taker-fees">Phí người nhận</h2>
+
+Phí người nhận áp dụng khi lệnh loại bỏ thanh khoản khỏi sổ lệnh.
+
+Các lệnh người nhận thông thường:
+
+* Lệnh thị trường
+* Giới hạn lệnh thực hiện ngay lập tức
+
+Phí người tham gia thường cao hơn do thực hiện ngay lập tức.
+
+***
+
+<h2 id="funding-fees">Phí tài trợ</h2>
+
+Ngoài phí giao dịch, hợp đồng vĩnh viễn còn bao gồm các khoản thanh toán tài trợ.
+
+* Phí huy động vốn được trao đổi giữa vị thế mua và vị thế bán
+* 6MM không thu phí tài trợ
+* Tỷ lệ huy động vốn thay đổi tùy theo điều kiện thị trường
+
+Các khoản thanh toán tài trợ giúp giữ giá hợp đồng phù hợp với thị trường giao ngay.
+
+***
+
+<h2 id="liquidation-related-fees">Phí liên quan đến thanh lý</h2>
+
+Khi diễn ra thanh lý:
+
+* Có thể áp dụng phí thanh lý
+* Phí được sử dụng để chi trả rủi ro hệ thống và chi phí thực thi thị trường
+
+Các quy định về phí thanh lý cụ thể phụ thuộc vào cấu hình đối tác.
+
+***
+
+<h2 id="fee-settlement">Thanh toán phí</h2>
+
+* Phí được thanh toán bằng stablecoin (ví dụ: USDT)
+* Phí được trừ trực tiếp từ Tài khoản Vĩnh viễn
+* Việc tính phí diễn ra theo thời gian thực khi thực hiện
+
+***
+
+<h2 id="fee-transparency">Minh bạch về phí</h2>
+
+6MM đảm bảo:
+
+* Logic phí là xác định và có thể kiểm toán
+* Tính toán phí hiển thị khi thực hiện lệnh
+* Đối tác giữ quyền kiểm soát việc trình bày phí cuối cùng dành cho người dùng
+
+***
+
+<h2 id="beginner-tips">Mẹo cho người mới bắt đầu</h2>
+
+* Sử dụng lệnh giới hạn để giảm phí người nhận
+* Tránh giao dịch quá mức
+* Xem xét phí khi tính mức TP/SL
+* Xem xét mức phí trước khi mở vị thế lớn
+
+***
+
+<h2 id="summary">Tóm tắt</h2>
+
+Về 6MM:
+
+* Phí dựa trên thực hiện và minh bạch
+* Mô hình maker và taker hỗ trợ thanh khoản lành mạnh
+* Phí tài trợ là ngang hàng, không phải doanh thu từ nền tảng
+
+Hiểu rõ cấu trúc phí giúp người dùng giao dịch hiệu quả và bền vững hơn.
+
+<h2 id="related-cost-guides">Hướng dẫn chi phí liên quan</h2>
+
+- [Phí & Trượt](/vi/trading/fees-and-slippage): ước tính tổng chi phí thực hiện.
+- [Hợp đồng vĩnh viễn](/vi/trading/perpetual-contracts): hiểu về tài trợ và giải quyết.
+- [Thanh khoản tổ chức](/vi/solutions/institutional-liquidity): xem xét vai trò của độ sâu thị trường và chênh lệch giá.

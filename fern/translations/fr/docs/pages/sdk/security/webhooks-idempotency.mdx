@@ -1,0 +1,85 @@
+---
+title: "Vérification de la signature Webhook et Idempotence"
+subtitle: "Vérifiez 6MM webhooks d’Agent avec le corps brut de la requête et traitez les tentatives, délais et événements répétés sans actions métier en duplaque."
+slug: sdk/security/webhooks-idempotency
+canonical-url: https://docs.6mm.com/fr/sdk/security/webhooks-idempotency
+---
+
+Les Webhooks notifient un partenaire en arrière-plan des changements asynchrones d’état métier. Comme la livraison peut être retentée, chaque récepteur doit vérifier la signature avant d’analyser les données de confiance et traiter l’événement de manière idempotente.
+
+<h2 id="webhook-headers">En-têtes Webhook</h2>
+
+| En-tête | Description |
+| --- | --- |
+| X-Agent-Timestamp | Horodatage Unix en quelques secondes. |
+| X-Agent-Nonce | Nonce de protection contre la rediffusion. |
+| X-Agent-Signature | HMAC-SHA256 signature. |
+
+```text
+timestamp + nonce + rawBody
+```
+
+Utilisez le corps brut exact de la requête reçu sur HTTP lors de la reconstruction de la valeur signée. L’analyse et la résérialise JSON d’abord peuvent modifier l’ordre des espaces blancs ou des champs et produire une signature différente.
+
+<h2 id="verification-flow">Flux de vérification</h2>
+
+1. Lire les en-têtes d’heure et de signature.
+2. Capturez le corps brut de la requête non modifié.
+3. Construire `timestamp + nonce + rawBody`.
+4. Calculer HMAC-SHA256 avec le partenaire API secret.
+5. Comparer les signatures calculées et reçues à l’aide d’une comparaison en temps constant.
+6. Appliquer les vérifications approuvées de fraîcheur temporelle et de non-réutilisation.
+7. Analyser et traiter l’événement seulement après la réussite de la vérification.
+
+Lorsqu’un vérificateur officiel de Agent SDK est disponible, utilisez-le plutôt que de maintenir un code de signature indépendant.
+
+<h2 id="order-idempotency">Idempotence d’ordre</h2>
+
+| Affaire | Maniabilité |
+| --- | --- |
+| Demande initiale de transfert | Créer un agentOrderNounique au niveau mondial. |
+| HTTP temps mort | Interrogez le agentOrderNo original avant d’en créer un nouveau. |
+| PROCESSING réponse | Attendez le statut du webhook ou de la requête. |
+| Webhook répété | Dédupliquer par clé d’idempotence et statut final. |
+
+<h2 id="recommended-idempotency-record">Dossier d’idempotence recommandé</h2>
+
+Stockez suffisamment d’informations pour reconnaître une livraison répétée et récupérer en toute sécurité :
+
+| Terrain | Objectif |
+| --- | --- |
+| Clé d’événement ou d’entreprise | Identifie de manière unique la notification ou l’opération. |
+| Numéro de commande partenaire | Relie l’événement à la demande initiale. |
+| Hachage de la charge utile | Cela aide à identifier les charges utiles répétées et conflictuelles. |
+| État de traitement actuel | Distingue les travaux reçus, traités, réussis et échoués. |
+| Statut final de l’entreprise | Empêche qu’une action terminale soit appliquée deux fois. |
+| Horodatage traité | Soutient les politiques d’enquête et de rétention. |
+
+Validez l’enregistrement de changement métier et d’idempotence dans la même transaction lorsque possible. Un événement répété devrait retourner le résultat déjà connu au lieu d’appliquer à nouveau le solde, l’ordre ou le changement utilisateur.
+
+<h2 id="timeout-and-retry-rule">Règle du temps mort et de la réévaluation</h2>
+
+Un délai d’attente HTTP ne prouve pas que la requête initiale a échoué. Interrogez l’opération en utilisant le `agentOrderNo`original, ou attendez son webhook, avant de décider si une autre action est nécessaire. Créer un nouveau numéro d’ordre commercial après chaque délai peut entraîner des mouvements de fonds en double.
+
+<h2 id="production-checklist">Liste de contrôle de la production</h2>
+
+- Vérifier la signature avant JSON analyse syntaxique ou traitement professionnel.
+- Préserver le corps brut indépendamment de la charge utile analysée.
+- Rejeter les demandes obsolètes ou rejouées conformément à la politique d’intégration approuvée.
+- Rendre le traitement des événements sûr pour les livraisons répétées et hors ordre.
+- Enregistrer les identifiants d’événements, les numéros de commande des partenaires, le résultat de traitement et le temps de la demande.
+- Expurger les secrets et les valeurs de signature des journaux et des pièces jointes de support.
+
+<h2 id="related-docs">Documents connexes</h2>
+
+<CardGroup cols={3}>
+<Card title="Secrets & HMAC Signature" icon="fa-duotone fa-shield-keyhole" href="/fr/sdk/security/secrets-signing">
+Protégez le API secret utilisé pour la vérification des requêtes et des webhooks.
+</Card>
+<Card title="Agent SDK Aperçu" icon="fa-duotone fa-server" href="/fr/sdk/agent-sdk/overview">
+Examinez le flux de travail complet de l’intégration backend.
+</Card>
+<Card title="SDK Dépannage" icon="fa-duotone fa-screwdriver-wrench" href="/fr/sdk/security/troubleshooting">
+Enquêter sur les signatures rejetées, les événements répétés et les opérations en attente.
+</Card>
+</CardGroup>

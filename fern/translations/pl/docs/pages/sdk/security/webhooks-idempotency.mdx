@@ -1,0 +1,85 @@
+---
+title: "Weryfikacja podpisu webhooka i idempotencja"
+subtitle: "Weryfikuj 6MM Agent webhooków za pomocą surowego ciała żądania oraz powtórek procesów, timeoutów i powtarzających się zdarzeń bez duplikatów działań biznesowych."
+slug: sdk/security/webhooks-idempotency
+canonical-url: https://docs.6mm.com/pl/sdk/security/webhooks-idempotency
+---
+
+Webhooki powiadamiają backend partnera o asynchronicznych zmianach stanu biznesowego. Ponieważ dostarczenie może być powtarzane, każdy odbiorca musi zweryfikować podpis przed parsowaniem zaufanych danych i musi przetwarzać zdarzenie idempotentnie.
+
+<h2 id="webhook-headers">Nagłówki Webhooków</h2>
+
+| Nagłówek | Opis |
+| --- | --- |
+| X-Agent-Timestamp | Znacznik czasu Unixa w sekundy. |
+| X-Agent-Nonce | Ochrona przed powtórkami. |
+| X-Agent-Sygnatura | HMAC-SHA256 podpis. |
+
+```text
+timestamp + nonce + rawBody
+```
+
+Używaj dokładnego surowego ciała żądania otrzymanego przez HTTP podczas rekonstrukcji wartości podpisanej. Parsowanie i ponowne serializowanie JSON pierwsze może zmienić odstępy lub kolejność pola i uzyskać inny podpis.
+
+<h2 id="verification-flow">Przepływ weryfikacji</h2>
+
+1. Przeczytaj nagłówki z znacznikiem czasu, nonce i podpisem.
+2. Zdobyć niezmodyfikowany surowy korpus żądania.
+3. Buduj `timestamp + nonce + rawBody`.
+4. Oblicz HMAC-SHA256 z partnerem API sekretem.
+5. Porównaj obliczone i otrzymane sygnatury za pomocą porównania w czasie stałym.
+6. Stosuj zatwierdzone kontrole aktualności i ponownego użycia w czasie użycia.
+7. Analizuj i przetwarzaj zdarzenie dopiero po pomyślnym sprawdzeniu.
+
+Gdy dostępny jest oficjalny weryfikator Agent SDK , używaj go zamiast utrzymywać kod niezależnego podpisu.
+
+<h2 id="order-idempotency">Idempotencja rzędu</h2>
+
+| Sprawa | Prowadzenie |
+| --- | --- |
+| Początkowa prośba o przeniesienie | Stwórz jedną globalnie unikalną agentOrderNo. |
+| HTTP przerwa | Zapytaj oryginalny agentOrderNo przed utworzeniem nowego. |
+| PROCESSING reakcja | Czekaj na status webhooka lub kolejności zapytania. |
+| Powtarzające się webhooki | Deduplikuj według klucza idempotencji i ostatecznego statusu. |
+
+<h2 id="recommended-idempotency-record">Zalecany rekord idempotencji</h2>
+
+Przechowuj wystarczająco dużo informacji, aby rozpoznać powtarzającą się dostawę i bezpiecznie ją odzyskać:
+
+| Pole | Cel |
+| --- | --- |
+| Klucz do wydarzenia lub działalności gospodarczej | Jednoznacznie identyfikuje powiadomienie lub operację. |
+| Numer zamówienia partnera | Łączy zdarzenie z oryginalnym żądaniem. |
+| Hash ładunku | Pomaga zidentyfikować sprzeczne powtarzające się ładunki. |
+| Aktualny stan przetwarzania | Rozróżnia otrzymaną, przetwarzaną, sukcesową i nieudaną pracę. |
+| Ostateczny status działalności | Zapobiega podwójnemu zastosowaniu akcji terminalnej. |
+| Przetworzony znacznik czasu | Wspiera politykę dochodzeniową i retencyjną. |
+
+Jeśli to możliwe, zatwierdzaj zmianę biznesową i rekord idempotencji w tej samej transakcji. Powtarzające się zdarzenie powinno zwracać już znany wynik, zamiast ponownie stosować saldo, zamówienie lub zmianę użytkownika.
+
+<h2 id="timeout-and-retry-rule">Zasada timeoutu i ponownej próby</h2>
+
+Limit HTTP nie dowodzi, że pierwotne żądanie nie powiodło się. Zapytaj operację używając oryginalnego `agentOrderNo`lub poczekaj na jej webhook, zanim zdecydujesz, czy potrzebna jest kolejna akcja. Tworzenie nowego numeru zlecenia biznesowego po każdym przekroczeniu może powodować duplikacje ruchów funduszy.
+
+<h2 id="production-checklist">Lista kontrolna produkcji</h2>
+
+- Weryfikacja podpisu przed JSON parsowania lub przetwarzania biznesowego.
+- Zachowanie surowego ciała niezależnie od przeanalizowanego ładunku.
+- Odrzucanie przestarzałych lub powtarzanych żądań zgodnie z zatwierdzoną polityką integracji.
+- Zapewnienie bezpiecznego przetwarzania zdarzeń dla powtarzających się i niekolejnych dostaw.
+- Rejestruj identyfikatory zdarzeń, numery zamówień partnerów, wyniki przetwarzania oraz czas żądań.
+- Redakcja sekretów i wartości sygnatur z logów i załączników wsparcia.
+
+<h2 id="related-docs">Powiązane dokumenty</h2>
+
+<CardGroup cols={3}>
+<Card title="Sekrety i podpisywanie HMAC" icon="fa-duotone fa-shield-keyhole" href="/pl/sdk/security/secrets-signing">
+Chroń API sekret używany do weryfikacji żądań i webhooków.
+</Card>
+<Card title="Agent SDK Przegląd" icon="fa-duotone fa-server" href="/pl/sdk/agent-sdk/overview">
+Przejrzyj cały proces integracji backendu.
+</Card>
+<Card title="SDK Rozwiązywanie problemów" icon="fa-duotone fa-screwdriver-wrench" href="/pl/sdk/security/troubleshooting">
+Zbadaj odrzucone sygnatury, powtarzające się zdarzenia i oczekujące operacje.
+</Card>
+</CardGroup>

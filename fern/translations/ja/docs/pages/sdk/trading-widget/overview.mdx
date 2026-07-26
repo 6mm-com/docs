@@ -1,0 +1,36 @@
+---
+title: "Trading Widget SDK"
+subtitle: "6MMトレーディング端末をiframeを通じてパートナーページに埋め込みます。"
+slug: sdk/trading-widget/overview
+canonical-url: https://docs.6mm.com/ja/sdk/trading-widget/overview
+---
+
+<h2 id="responsibility-split">責任分担</h2>
+
+| 面積 | オーナー | 注記 |
+| --- | --- | --- |
+| コンテナ作成 | パートナーフロントエンド | 幅と高さが明確に示された可視要素を提供しましょう。 |
+| iframe作成 | Trading Widget SDK | SDKはiframeを作成し管理します。 |
+| トレーディングUI(取引UI) | 6MM iframe(iframe) | Kライン、注文簿、注文フォーム、ポジション、注文、アカウントデータがiframe内で実行されます。 |
+| 表示コントロール | Trading Widget SDK + iframe 6MM | PCの埋め込みヘッダーと下部ティッカーはデフォルトで隠されています。パートナーは `display` を使ってシェルエリアを表示したり、高レベルの取引コンテナを隠したりできます。 |
+| パートナーログインチェック | パートナーバックエンド | 認証資格を発行する前にパートナーユーザーセッションを検証してください。 |
+| 埋め込みトークン発行 | パートナーバックエンド+エージェント API | パートナートークンモードにおすすめします。 |
+
+<h2 id="versioning">バージョン管理</h2>
+
+公開統合パスはv1スクリプト URLの下で安定しています。現在のv1の能力セットには、パートナートークン、 tokenProvider、 entryUrlProvider、表示コントロール、ライフサイクルイベント、インスタンスメソッド、オーダーイベントが含まれます。
+
+```html
+<script src="https://app.6mm.com/sdk/trading-widget/v1/index.js"></script>
+```
+
+<h2 id="when-to-use-the-widget">ウィジェットの使い方</h2>
+
+パートナーが既存のウェブ製品内に完全な取引インターフェースを必要とする場合 Trading Widget 選択してください。完全にカスタムした取引インターフェースを構築し維持する際は、 REST API や WebSocket ドキュメントを活用してください。
+
+<h2 id="implementation-path">実装経路</h2>
+
+1. 従う [Trading Widget クイックスタート](/ja/sdk/trading-widget/quick-start) スクリプトを読み込み、可視化コンテナを作成するために。
+2. 設定 [パートナートークン認証](/ja/sdk/trading-widget/authentication) パートナーのバックエンドを通じて。
+3. 必要なものを追加 [選択肢とイベント](/ja/sdk/trading-widget/options-events).
+4. 使用 [インスタンスメソッド](/ja/sdk/trading-widget/instance-methods) ライフサイクルおよびランタイム制御のために。

@@ -1,0 +1,137 @@
+---
+title: "Przepływ pracy handlowej"
+description: "6MM obsługuje kontrakty wieczne z marginesem U, umożliwiając użytkownikom handel kontraktami terminowymi uliczanymi i marginedowanymi w stablecoinach (np. USDT)."
+slug: trading/getting-started/trading-workflow
+canonical-url: https://docs.6mm.com/pl/trading/getting-started/trading-workflow
+---
+
+<h2 id="u-margined-perpetual-contracts">Kontrakty wieczyste z marżą U</h2>
+
+6MM obsługuje kontrakty wieczne z marginesem U, umożliwiając użytkownikom handel kontraktami terminowymi uliczanymi i marginedowanymi w stablecoinach (np. USDT).
+
+Ta sekcja wyjaśnia podstawowy przepływ pracy oraz kluczowe mechanizmy związane z składaniem i zarządzaniem zleceniami kontraktów wieczystych na 6MM.
+
+***
+
+<h2 id="contract-overview">Przegląd kontraktu</h2>
+
+* Typ kontraktu: Kontrakty wieczyste z marżą U
+* Asset osadniczy: Stablecoin (np. USDT)
+* Brak wygaśnięcia: Pozycje nie wygasają i mogą być utrzymywane w nieskończoność
+* Kontrola ryzyka oparta na cenie marki: Wykorzystywana do obliczania marży i likwidacji
+
+***
+
+<h2 id="order-types">Typy zamówień</h2>
+
+6MM obsługuje powszechnie stosowane typy zleceń, aby dostosować się do różnych strategii handlowych:
+
+<h2 id="market-order">Porządek rynkowy</h2>
+
+* Wykonuje natychmiast po najlepszej dostępnej cenie rynkowej
+* Priorytetowo traktuje szybkość wykonania nad precyzją cenową
+* Odpowiedni do szybkiego wejścia lub wyjścia
+
+<h2 id="limit-order">Limit Order</h2>
+
+* Wykonuje tylko po określonej cenie lub wyższej
+* Zapewnia kontrolę cen
+* Może pozostać otwarty do momentu wypełnienia lub anulowania
+
+<h2 id="stop-order">Zamówienie zatrzymania</h2>
+
+* Wywołuje zlecenie rynkowe lub limitowe po osiągnięciu ceny wyzwalającej
+* Powszechnie stosowane w strategiach stop-loss lub breakout
+
+> Dostępność zlecenia może się różnić w zależności od pary handlowej i trybu integracji.
+
+***
+
+<h2 id="leverage-and-margin">Dźwignia i marża</h2>
+
+* Dźwignia pozwala użytkownikom kontrolować większe pozycje przy mniejszym kapitale
+* Margines obliczany jest na podstawie:
+  * Rozmiar pozycji
+  * Poziom dźwigni
+  * Mark price
+
+Wyższa dźwignia zwiększa potencjalne zwroty, ale także zwiększa ryzyko likwidacji.
+
+***
+
+<h2 id="funding-rate-mechanism">Mechanizm Stóp Finansowania</h2>
+
+Kontrakty wieczyste wykorzystują mechanizm stopy finansowania, aby utrzymać ceny kontraktów na poziomie rynku spot.
+
+* Wypłaty finansowania są dokonywane w zaplanowanych odstępach czasu
+* Jeśli stopa finansowania jest dodatnia:
+  * Pozycje długie wypłacają krótkie pozycje
+* Jeśli stopa finansowania jest ujemna:
+  * Pozycje krótkie wypłacają długie pozycje
+
+Opłaty za realizację są wymieniane bezpośrednio między traderami.
+
+6MM nie pobiera płatności finansowych jako przychodów.
+
+***
+
+<h2 id="fees-and-slippage">Opłaty i poślizg</h2>
+
+<h2 id="trading-fees">Opłaty handlowe</h2>
+
+* Opłaty pobierane są przy realizacji zleceń
+* Stawki opłat mogą się różnić dla:
+  * Rozkazy twórcy
+  * Przyjmujący rozkazy
+
+Harmonogramy opłat są określane przez platformę partnerską i mogą się różnić.
+
+<h2 id="slippage">Poślizg</h2>
+
+* Slippage występuje, gdy płynność rynkowa jest niewystarczająca, by zrealizować zlecenie po oczekiwanej cenie
+* Częstsze podczas wysokiej zmienności lub przy użyciu zleceń rynkowych
+
+Użytkownicy mogą ograniczać poślizgi, stosując zlecenia limitowe i zarządzając wielkością zleceń.
+
+***
+
+<h2 id="position-lifecycle">Cykl życia stanowiska</h2>
+
+1. Środki są przydzielane na Konto Wieczyste
+2. Zamówienie jest składane i dopasowane przez 6MM silnik dopasowujący
+3. Stanowisko otwiera się po wykonaniu
+4. Aktualizacja marginesów i PnL w czasie rzeczywistym
+5. Opłaty za finansowanie są naliczane w zaplanowanych odstępach czasu
+6. Pozycja zamykana jest ręcznie lub za pomocą TP/SL
+7. Ostateczne PnL zostaje rozliczone na konto wieczyste.
+
+***
+
+<h2 id="risk-management-and-liquidation">Zarządzanie ryzykiem i likwidacja</h2>
+
+* 6MM monitoruje wskaźniki marży w czasie rzeczywistym
+* Gdy marża spada poniżej progu utrzymania:
+  * Stanowiska mogą być częściowo lub całkowicie zlikwidowane
+* Ceny likwidacyjne obliczane są na podstawie ceny markowej, a nie ostatniej ceny notowanej
+
+Ten mechanizm pomaga ograniczyć niepotrzebne likwidacje spowodowane krótkoterminową zmiennością rynku.
+
+***
+
+<h2 id="summary">Podsumowanie</h2>
+
+Przepływ pracy perpetual tradingu z marżą U na 6MM został zaprojektowany tak, aby:
+
+* Zapewnij znane i elastyczne typy zamówień
+* Utrzymanie zgodności cen poprzez stopy finansowania
+* Oferowanie przejrzystych mechanizmów opłat i rozliczeń
+* Wdrażanie instytucjonalnej kontroli ryzyka
+
+Ta struktura umożliwia partnerom oferowanie profesjonalnego, wiecznego handlu, jednocześnie utrzymując płynne doświadczenie użytkownika.
+
+<h2 id="related-trading-guides">Powiązane przewodniki handlowe</h2>
+
+- [Umowy wieczyste](/pl/trading/perpetual-contracts): podstawy umowy, finansowania, marży i rozliczeń.
+- [Typy zleceń](/pl/trading/order-types): zachowanie limitu, rynku, warunkowego i czasu obowiązywania w obowiązek.
+- [Opłaty i poślizgi](/pl/trading/fees-and-slippage): wpływ na koszty wykonania i płynność.
+- [Ryzyko i likwidacje](/pl/trading/risk-and-liquidations): ryzyko marży i wymuszone zachowanie zamknięcia.

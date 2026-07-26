@@ -1,0 +1,135 @@
+---
+title: "Metody instancji"
+subtitle: "Kontroluj utworzoną instancję widżetu po TradingWidget.create()."
+slug: sdk/trading-widget/instance-methods
+canonical-url: https://docs.6mm.com/pl/sdk/trading-widget/instance-methods
+---
+
+<h2 id="method-summary">Podsumowanie metody</h2>
+
+| Metoda | Cel |
+| --- | --- |
+| zniszczy() | Usuń iframe i wypuść słuchacze zdarzeń. |
+| getState() | Przeczytaj aktualny SDK stan cyklu życia. |
+| whenReady() | Poczekaj, aż i-frame zakończy inicjalizację. |
+| setSymbol(symbol) | Zamienij parę handlową wewnątrz iframe. |
+| setTheme(motyw przewodni) | Zaktualizuj parametr motywu iframe. |
+| setLocale(lokalizacja) | Zmień język iframe. |
+| setSize(szerokość, wysokość) | Zaktualizuj wymiary iframe. |
+| reload() | Wczytaj aktualny iframe. |
+| refreshAuth(powód) | Uruchom przepływ odświeżania widżetu. |
+| setTokenProvider(dostawca) | Zastąp dostawcę używanego przez tryb token partner. |
+| on(wydarzenie, opiekun) | Subskrybuj wydarzenia w czasie rzeczywistym i otrzymaj funkcję wypisania. |
+
+<h2 id="destroy">zniszczy()</h2>
+
+Usuń iframe, wyczyść listeners i emit destroy raz dla bieżącej instancji.
+
+```js
+widget.destroy()
+```
+
+<h2 id="getstate">getState()</h2>
+
+Przeczytaj aktualny stan cyklu życia instancji widżetu.
+
+```js
+const state = widget.getState()
+```
+
+Wartości zwrotne obejmują ładowanie, uwierzytelnianie, gotowość, błąd i zniszczenie.
+
+<h2 id="whenready">whenReady()</h2>
+
+Poczekaj, aż iFrame zakończy inicjalizację, zanim uruchomisz zależną logikę UI.
+
+```js
+await widget.whenReady()
+```
+
+<h2 id="setsymbol-symbol">setSymbol(symbol)</h2>
+
+Przełącz parę handlową wewnątrz iframe. Jeśli iframe nadal się iinicializuje, SDK kolejkuje polecenie i wysyła je po gotowości.
+
+```js
+widget.setSymbol('ETHUSDT')
+```
+
+<h2 id="settheme-theme">setTheme(motyw przewodni)</h2>
+
+Zaktualizuj parametr motywu używany przez wbudowany trading iframe.
+
+```js
+widget.setTheme('dark')
+widget.setTheme('light')
+```
+
+<h2 id="setlocale-locale">setLocale(lokalizacja)</h2>
+
+Zmień język iframe. Obsługiwane wartości to en, en-US i zh-CN.
+
+```js
+widget.setLocale('en')
+widget.setLocale('en-US')
+widget.setLocale('zh-CN')
+```
+
+<h2 id="setsize-width-height">setSize(szerokość, wysokość)</h2>
+
+Zaktualizuj iframe DOM rozmiar i powiadom iframe o nowym rozmiarze zewnętrznym. Wartości numeryczne są konwertowane na px.
+
+```js
+widget.setSize('100%', 720)
+```
+
+<h2 id="reload">reload()</h2>
+
+Przeładuj aktualną iframe i poczekaj na ponowne inicjalizowanie.
+
+```js
+widget.reload()
+```
+
+<h2 id="refreshauth-reason">refreshAuth(powód)</h2>
+
+Poproś iframe o odświeżenie bieżącego przepływu uwierzytelniania. Opcjonalna wartość powódu jest przekazywana do logowania i kontroli przepływu.
+
+```js
+widget.refreshAuth('manual')
+```
+
+<h2 id="settokenprovider-provider">setTokenProvider(dostawca)</h2>
+
+Zastąpienie tokenProvider używanego przez tryb token partner. SDK dzwoni do dostawcy, gdy iframe żąda nowego tokena osadzenia.
+
+```js
+widget.setTokenProvider(async ({ channelId, symbol, reason }) => {
+  const resp = await fetch('/api/trading/embed-token', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ channelId, symbol, reason }),
+  })
+
+  return resp.json()
+})
+```
+
+<h2 id="on-event-handler">on(wydarzenie, opiekun)</h2>
+
+Subskrybuj zdarzenie w czasie rzeczywistym. Funkcja zwracana usuwa słuchacza.
+
+```js
+const off = widget.on('order_created', (event) => {
+  console.log(event)
+})
+
+off()
+```
+
+<h2 id="related-widget-guides">Powiązane przewodniki po widgetach</h2>
+
+- [Trading Widget Quick Start](/pl/sdk/trading-widget/quick-start)
+- [Opcje i wydarzenia](/pl/sdk/trading-widget/options-events)
+- [Uwierzytelnianie](/pl/sdk/trading-widget/authentication)
+- [Rozwiązywanie problemów](/pl/sdk/security/troubleshooting)

@@ -1,0 +1,53 @@
+---
+title: "6MM SDKs"
+subtitle: "Chọn con đường 6MM SDK phù hợp cho giao dịch nhúng, phát hành token backend, liên kết tài khoản, webhook và hoạt động sản xuất."
+slug: sdk/overview
+canonical-url: https://docs.6mm.com/vi/sdk/overview
+---
+
+<h2 id="choose-an-sdk-path">Chọn một đường dẫn SDK</h2>
+
+<CardGroup cols={3}>
+<Card title="Trading Widget SDK" icon="duotone chart-line" href="/vi/sdk/trading-widget/quick-start">
+  Nhúng thiết bị giao dịch 6MM vào một trang web, ví, cổng môi giới hoặc bề mặt sản phẩm đối tác hiện có.
+</Card>
+<Card title="Agent SDK" icon="duotone server" href="/vi/sdk/agent-sdk/overview">
+  Kết nối backend đối tác với 6MM để liên kết người dùng, embed token, URL nhập, chuyển khoản, truy vấn đơn hàng và webhook.
+</Card>
+<Card title="Bảo mật & Vận hành" icon="duotone shield-check" href="/vi/sdk/security/secrets-signing">
+  Chuẩn bị lưu trữ bí mật, ký yêu cầu, xác định hiệu ứng webhook, giám sát và khởi chạy sự cố.
+</Card>
+</CardGroup>
+
+<h2 id="recommended-combination">Sự kết hợp được khuyến nghị</h2>
+
+| Mục tiêu đối tác | Giao diện người dùng | Backend | Tại sao điều đó quan trọng |
+| --- | --- | --- | --- |
+| Thêm thiết bị giao dịch nhúng | Trading Widget SDK | Agent SDK | Widget xử lý giao diện giao dịch trong khi backend đối tác phát hành token và giữ bí mật riêng tư. |
+| Tạo điểm truy cập ứng dụng gốc | Nhập bản địa hoặc H5 | Agent SDK | Ứng dụng sẽ mở một URL 6MM sau khi đối tác xác thực phiên người dùng. |
+| Xây dựng luồng giao dịch tùy chỉnh | Giao diện đối tác | API dành cho nhà phát triển + các luồng SDK được chọn | Sử dụng APIs cho dữ liệu tài khoản, lệnh, vị thế và thị trường trong khi vẫn giữ các kiểm soát vận hành phía máy chủ. |
+
+<h2 id="reference-architecture">Kiến trúc tham chiếu</h2>
+
+```text
+Partner Web App
+  -> TradingWidget.create()
+  -> tokenProvider()
+  -> Partner Backend
+  -> 6MM Agent SDK
+  -> 6MM Agent API
+  -> 6MM Trading iframe
+```
+
+> **Giữ bí mật phía máy chủ**
+>
+> Mã trình duyệt chỉ nên gọi các điểm cuối thuộc sở hữu của đối tác. Bí mật Agent API không bao giờ được chuyển sang mã frontend.
+
+<h2 id="production-checklist">Danh sách kiểm tra sản xuất</h2>
+
+- Lưu trữ apiSecret chỉ trong hạ tầng backend.
+- Sử dụng HTTPS cho các yêu cầu Agent API và URL webhook.
+- Duy trì các ánh xạ agentUserId, platformUserId, và agentOrderNo .
+- Biểu diễn số tiền bằng chuỗi thập phân thay vì giá trị số thực.
+- Xử lý PROCESSING như đang chờ xử lý, không phải thành công hay thất bại.
+- Xử lý webhook một cách idempotent vì việc thử lại là điều được mong đợi.

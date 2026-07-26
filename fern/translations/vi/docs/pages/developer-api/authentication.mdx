@@ -1,0 +1,73 @@
+---
+title: "6MM API Xác thực: Khóa JWT và API"
+description: "Tìm hiểu cách xác thực các yêu cầu 6MM API riêng tư bằng mã truy cập JWT hoặc khóa API và chọn phương pháp phù hợp cho từng tích hợp."
+slug: developer-api/authentication
+canonical-url: https://docs.6mm.com/vi/developer-api/authentication
+---
+
+6MM hỗ trợ mã truy cập JWT và khóa API để truy cập API riêng tư. Chọn phương thức dựa trên việc yêu cầu thuộc phiên người dùng tương tác hay tích hợp backend lâu dài.
+
+<h2 id="choose-an-authentication-method">Chọn phương thức xác thực</h2>
+
+| Nhu cầu tích hợp | Phương pháp được khuyến nghị | Tại sao |
+| --- | --- | --- |
+| Cuộc gọi API phiên người dùng | JWT | Sử dụng mã truy cập trả về sau khi đăng nhập. |
+| Tạo, cập nhật hoặc thu hồi Khóa API | JWT | API Key đầu cuối quản lý không chấp nhận API Key tự quản lý. |
+| Cuộc gọi giao dịch từ máy chủ này sang máy chủ khác | API Key + chữ ký HMAC | Hỗ trợ quyền có phạm vi và các yêu cầu backend đã ký. |
+
+<h2 id="jwt">JWT</h2>
+
+Sau khi đăng nhập, API trả về một `accessToken`. Khi gọi các điểm cuối riêng tư, bao gồm:
+
+```http
+Authorization: Bearer YOUR_ACCESS_TOKEN
+```
+
+Giữ token tránh xa URL và nhật ký. Khi một token hết hạn, hãy lấy token hợp lệ thông qua luồng đăng nhập hoặc làm mới đã được phê duyệt trước khi thử lại yêu cầu riêng tư.
+
+<h2 id="api-key">API Key</h2>
+
+Khi tiêu đề yêu cầu `X-API-KEY` xuất hiện, máy chủ sử dụng xác thực API Key HMAC :
+
+```http
+X-API-KEY: YOUR_API_KEY
+```
+
+API Key đầu cuối quản lý phải sử dụng JWT. API Keys không thể tự quản lý.
+
+API Key yêu cầu cũng yêu cầu dấu thời gian và chữ ký HMAC được mô tả trong [Ký yêu cầu](/vi/developer-api/request-signing). Lưu trữ bí mật API tương ứng chỉ trong hệ thống quản lý bí mật phía sau.
+
+<h2 id="api-key-permissions">Quyền API Key</h2>
+
+| Giá trị | Sự cho phép | Mô tả                                                                                                                                                                                    |
+| ----- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `1`   | Đọc       | Thông tin người dùng, tài sản, nhật ký thay đổi tài khoản, thống kê, listenKey, biểu tượng yêu thích và các điểm cuối liên quan đến người dùng/tài khoản. Các điểm cuối lệnh và vị thế, bao gồm cả truy vấn, yêu cầu quyền giao dịch |
+| `2`   | Thương mại      | Các điểm cuối đặt hàng và vị trí, bao gồm cả thao tác truy vấn và ghi                                                                                                                        |
+| `4`   | Rút lui   | Giấy phép quỹ dự trữ                                                                                                                                                                       |
+
+Để cấp cả quyền đọc và quyền giao dịch, hãy sử dụng `permissions=3`.
+
+Sử dụng bộ quyền nhỏ nhất cần thiết cho tích hợp. Dịch vụ dữ liệu thị trường không nên nhận quyền giao dịch, trong khi dịch vụ lệnh cần quyền giao dịch ngay cả khi chỉ truy vấn lệnh hoặc vị thế.
+
+<h2 id="production-security-checklist">Danh sách kiểm tra bảo mật sản xuất</h2>
+
+- Tạo các API Key riêng biệt cho phát triển, dàn dựng và sản xuất.
+- Áp dụng danh sách trắng IP khi tích hợp có địa chỉ đi ra ổn định.
+- Không bao giờ tiết lộ bí mật API trong mã ứng dụng trình duyệt, di động hoặc máy tính để bàn.
+- Đồng bộ thời gian máy chủ trước khi tạo các yêu cầu đã ký.
+- Xóa các tiêu đề ủy quyền, API Khóa, chữ ký và bí mật khỏi nhật ký ứng dụng.
+- Thu hồi và thay thế chìa khóa ngay lập tức khi nghi ngờ bị phơi nhiễm.
+
+<h2 id="next-steps">Các bước tiếp theo</h2>
+
+<CardGroup cols={3}>
+<Card title="Quản lý API Key" icon="fa-duotone fa-key" href="/vi/developer-api/api-key-management">
+Tạo khóa có phạm vi, cấu hình các hạn chế IP và lên kế hoạch xoay khóa.
+</Card>
+<Card title="Yêu cầu ký" icon="fa-duotone fa-signature" href="/vi/developer-api/request-signing">
+Xây dựng HMAC-SHA256 payload và ký các yêu cầu riêng tư.
+</Card>
+<Card title="Lỗi & Khắc phục sự cố" icon="fa-duotone fa-screwdriver-wrench" href="/vi/developer-api/error-codes-and-troubleshooting">
+Chẩn đoán thông tin đăng nhập, dấu thời gian, chữ ký và quyền bị từ chối.
+</Card>
+</CardGroup>

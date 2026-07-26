@@ -1,0 +1,223 @@
+---
+title: "Пользователь и аккаунт"
+description: "Используйте 6MM пользовательских и аккаунтных конечных точек для получения профилей, балансов, состояния аккаунта, разрешений и информации о связанных с партнёрами аккаунтах."
+slug: developer-api/rest-api/user-and-account
+canonical-url: https://docs.6mm.com/ru/developer-api/rest-api/user-and-account
+---
+
+Если не указано иное, следующие конечные точки могут использовать JWT или API Key подписи.
+
+<h2 id="user-info">Информация о пользователях</h2>
+
+```http
+GET /v1/private/user/info
+```
+
+Поля ответов:
+
+| Поле                  | Тип   | Описание      |
+| ---------------------- | ------ | ---------------- |
+| `userInfo.userId`      | string | Внешний идентификатор пользователя |
+| `userInfo.username`    | string | Имя пользователя         |
+| `userInfo.agentId`     | int64  | Идентификатор агента         |
+| `userInfo.vipLevel`    | int64  | VIP уровень        |
+| `userInfo.lastLoginAt` | int64  | Последнее время входа  |
+| `userInfo.lastLoginIp` | string | Последний вход IP    |
+
+<h2 id="user-assets">Пользовательские активы</h2>
+
+```http
+GET /v1/private/user/asset
+```
+
+Поля ответов:
+
+| Поле                     | Тип   | Описание                     |
+| ------------------------- | ------ | ------------------------------- |
+| `userAsset.userId`        | string | Внешний идентификатор пользователя                |
+| `userAsset.assetType`     | string | Тип актива                      |
+| `userAsset.walletBalance` | string | Баланс кошелька                  |
+| `userAsset.frozenMargin`  | string | Маржа заморожена неожиданными ордерами |
+| `userAsset.usedMargin`    | string | Маржа по позициям        |
+
+<h2 id="create-listenkey">Создайте listenKey</h2>
+
+```http
+POST /v1/private/user/listen-key
+```
+
+Создаёт ключ аутентификации для приватных WebSocket потоков.
+
+<h2 id="renew-listenkey">Обновить listenKey</h2>
+
+```http
+PUT /v1/private/user/listen-key
+```
+
+Расширяет listenKey валидность.
+
+<h2 id="close-listenkey">Закрыть listenKey</h2>
+
+```http
+DELETE /v1/private/user/listen-key
+```
+
+Закрывает указанный listenKey.
+
+<h2 id="account-change-logs">Журналы изменений аккаунта</h2>
+
+```http
+GET /v1/private/user/account-change-log?assetType=USDT&page=1&pageSize=20
+```
+
+Параметры запроса:
+
+| Параметр    | Тип   | Обязательно | Описание                  |
+| ------------ | ------ | -------- | ---------------------------- |
+| `assetType`  | string | Нет       | Тип актива, например, `USDT`   |
+| `changeType` | string | Нет       | Тип изменения                  |
+| `startTime`  | int64  | Нет       | Время начала                   |
+| `endTime`    | int64  | Нет       | Конец                     |
+| `page`       | int32  | Нет       | Номер страницы, по умолчанию `1`     |
+| `pageSize`   | int32  | Нет       | Пункты на странице, по умолчанию `20` |
+
+Поля ответов:
+
+| Поле                        | Тип   | Описание                  |
+| ---------------------------- | ------ | ---------------------------- |
+| `list[].assetType`           | string | Тип актива                   |
+| `list[].amount`              | string | Изменённая сумма               |
+| `list[].walletBalanceBefore` | string | Баланс кошелька до изменения |
+| `list[].walletBalanceAfter`  | string | Баланс кошелька после смены  |
+| `list[].frozenBalanceBefore` | string | Замороженный баланс до изменений |
+| `list[].frozenBalanceAfter`  | string | Замороженный баланс после изменения  |
+| `list[].changeType`          | string | Тип изменения                  |
+| `list[].referenceId`         | string | Связанный бизнес-идентификатор          |
+| `list[].createdAt`           | int64  | Время создания                |
+| `total`                      | int64  | Общее количество                  |
+
+<h2 id="30-day-volume-statistics">Статистика объёмов за 30 дней</h2>
+
+```http
+GET /v1/private/user/volume-stats
+```
+
+Поля ответов:
+
+| Поле         | Тип   | Описание                                     |
+| ------------- | ------ | ----------------------------------------------- |
+| `volume30d`   | string | Совокупный объём торгов за последние 30 дней |
+| `feeTotal30d` | string | Накопленные комиссии за последние 30 дней           |
+
+<h2 id="balance-history">История баланса</h2>
+
+```http
+GET /v1/private/user/balance-history?period=1D&limit=30
+```
+
+Параметры запроса:
+
+| Параметр | Тип   | Обязательно | Описание                            |
+| --------- | ------ | -------- | -------------------------------------- |
+| `period`  | string | Да      | `1D` / `1W` / `1M`                     |
+| `limit`   | int    | Нет       | Количество возвращённых товаров, по умолчанию `30` |
+
+Поля ответов:
+
+| Поле             | Тип   | Описание                 |
+| ----------------- | ------ | --------------------------- |
+| `items[].date`    | string | Дата агрегации            |
+| `items[].balance` | string | Баланс кошелька              |
+| `items[].pnl`     | string | Реализовал PnL за этот период |
+
+<h2 id="trade-overview">Обзор торговли</h2>
+
+```http
+GET /v1/private/user/trade-overview?type=1M
+```
+
+Параметры запроса:
+
+| Параметр | Тип   | Обязательно | Описание                                     |
+| --------- | ------ | -------- | ----------------------------------------------- |
+| `type`    | string | Да      | Диапазон трендов: `1D`, `1W`, `1M`, `3M`, `6M`, `1Y` |
+
+Поля ответов:
+
+| Поле                | Тип   | Описание                                                          |
+| -------------------- | ------ | -------------------------------------------------------------------- |
+| `todayPnl`           | string | Сегодняшний реализованный PnL                                                 |
+| `todayVolume`        | string | Сегодняшний объём торговли по контрактам                                      |
+| `totalVolume`        | string | Накопленный объём торговли по контрактам                                   |
+| `totalPnl`           | string | Кумулятивный реализованный PnL                                              |
+| `maxDrawdown30d`     | string | Максимальная сумма понижения за последние 30 дней                        |
+| `maxDrawdown30dRate` | string | Максимальный темп снижения за последние 30 дней, десятичный от `0` до `1` |
+| `transferIn`         | string | Накопленные переводные средства                                      |
+| `transferOut`        | string | Кумулятивные переводные средства                                     |
+| `items[]`            | array  | Данные о тенденциях активов                                                     |
+
+<h2 id="asset-overview-summary">Обзор активов</h2>
+
+```http
+GET /v1/private/user/asset/overview/summary
+```
+
+Поля ответов совпадают с полями обзора торговли, за исключением `items[]`.
+
+<h2 id="asset-overview-trend">Обзор трендов активов</h2>
+
+```http
+GET /v1/private/user/asset/overview/trend?type=1M
+```
+
+Параметры запроса:
+
+| Параметр | Тип   | Обязательно | Описание                                     |
+| --------- | ------ | -------- | ----------------------------------------------- |
+| `type`    | string | Да      | Диапазон трендов: `1D`, `1W`, `1M`, `3M`, `6M`, `1Y` |
+
+Поля ответов:
+
+| Поле                  | Тип   | Описание                     |
+| ---------------------- | ------ | ------------------------------- |
+| `items[].snapshotTime` | int64  | Время снимка                   |
+| `items[].balance`      | string | Баланс текущего счета         |
+| `items[].pnl`          | string | PnL за текущий период      |
+| `items[].pnlRate`      | string | Ставка PnL за текущий период |
+| `items[].totalPnl`     | string | Кумулятивный PnL                  |
+
+<h2 id="favorite-symbols">Любимые символы</h2>
+
+<h2 id="save">Сохранить</h2>
+
+```http
+POST /v1/private/user/favorite-symbols
+Content-Type: application/json
+```
+
+Запрос:
+
+```json
+{
+  "symbols": ["BTCUSDT", "ETHUSDT"]
+}
+```
+
+<h2 id="query">Запрос</h2>
+
+```http
+GET /v1/private/user/favorite-symbols
+```
+
+Поля ответов:
+
+| Поле     | Тип      | Описание          |
+| --------- | --------- | -------------------- |
+| `symbols` | String\[] | Список любимых символов |
+
+<h2 id="related-documentation">Связанная документация</h2>
+
+- [Частный пользовательский канал](/ru/developer-api/websocket/private-user-channel)
+- [Аутентификация](/ru/developer-api/authentication)
+- [Передача активов](/ru/trading/getting-started/asset-transfer)
+- [Коды ошибок и устранение неполадок](/ru/developer-api/error-codes-and-troubleshooting)

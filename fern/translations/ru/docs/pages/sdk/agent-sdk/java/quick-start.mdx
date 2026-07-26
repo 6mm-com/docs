@@ -1,0 +1,90 @@
+---
+title: "Java Быстрый старт"
+subtitle: "Установите и инициализируйте Java SDK из бэкенд-сервиса."
+slug: sdk/agent-sdk/java/quick-start
+canonical-url: https://docs.6mm.com/ru/sdk/agent-sdk/java/quick-start
+---
+
+<h2 id="install">Установка</h2>
+
+Публичный SDK источник в настоящее время документирует тег `v0.1.1` с такими координатами Maven:
+
+```xml
+<dependency>
+    <groupId>com.sixmm.exchange.sdk</groupId>
+    <artifactId>agent</artifactId>
+    <version>0.1.1</version>
+</dependency>
+```
+
+GitHub не выполняет функции репозитория зависимостей Maven. Установите тегированный исходный код локально перед разрешением зависимости:
+
+```bash
+git clone https://github.com/6mm-com/agent-java-sdk.git
+cd agent-java-sdk
+git checkout v0.1.1
+mvn install
+```
+
+> **Командные сборки**
+>
+> Опубликуйте одобренный артефакт в репозитории Maven вашей организации для CI, тестирования и производственных сборок. Подтвердите одобренную версию с помощью 6MM до запуска в производство.
+
+Исходный код и примеры использования доступны в официальном репозитории Java SDK :
+
+[6mm-com/agent-java-sdk] (https://github.com/6mm-com/agent-java-sdk)
+
+<h2 id="before-you-start">Прежде чем начать</h2>
+
+- Подтвердите вашего производственного агента API базовой URL с командой 6MM .
+- Store apiSecret только в бэкенд-менеджменте секретов.
+- Подготовить стабильное отображение между platformUserId и agentUserId.
+- Включить структурированные логи вокруг потоков связывания, передачи, порядка и вебхуков.
+
+<h2 id="initialize-client">Инициализация клиента</h2>
+
+```java
+import com.sixmm.agent.AgentClient;
+import com.sixmm.agent.AgentClientConfig;
+
+AgentClient client = new AgentClient(AgentClientConfig.builder()
+        .baseUrl("https://agent-api.6mm.com")
+        .agentCode("AGENT001")
+        .apiSecret("your-api-secret")
+        .defaultCurrency("USDT")
+        .build());
+```
+
+> **Только для бэкенда**
+>
+> Не инициализировать Agent SDK из кода браузера, мобильного устройства или настольного клиента. SDK подписывает привилегированные запросы API Агента.
+
+<h2 id="example-transfer-funds-in">Пример: перевод средств в</h2>
+
+```java
+TransferResponse resp = client.transfer(TransferRequest.fixed(
+        "AGT-ORDER-1001",
+        "agent-user-001",
+        Direction.IN,
+        "USDT",
+        "10.00"));
+```
+
+Используйте уникальный номер заказа на стороне партнёра для каждого запроса на передачу. Если срок действия запроса истек, запросите исходный заказ перед созданием нового.
+
+<h2 id="next-steps">Следующие шаги</h2>
+
+| Потребность | Следующая страница |
+| --- | --- |
+| Выдать Trading Widget удостоверение | [Создать токен встраивания] (/sdk/agent-sdk/java/embed-token) |
+| Проверьте обратные звонки от 6MM | [Вебхуки и идемпотентность] (/sdk/security/webhooks-idempotency) |
+| Пересмотр поведения при подписании | [Секреты и жесты] (/sdk/security/secrets-signing) |
+| Диагностика проблемы интеграции | [SDK Устранение неполадок ] (/sdk/security/troubleshooting) |
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">Связанные страницы</h2>
+
+- [Создать токен встраивания](/ru/sdk/agent-sdk/java/embed-token)
+- [Верификация и идемпотентность подписи Webhook](/ru/sdk/security/webhooks-idempotency)
+- [Agent SDK Секреты и HMAC подписи](/ru/sdk/security/secrets-signing)
+- [SDK Устранение неполадок интеграции](/ru/sdk/security/troubleshooting)
+<!-- sixmm-localized-link-repair:end -->

@@ -1,0 +1,109 @@
+---
+title: "REST API"
+description: "檢視 6MM REST API 慣例、認證選項、請求格式、回應結構、權限及端點群組。"
+slug: developer-api/rest-api
+canonical-url: https://docs.6mm.com/zh-TW/developer-api/rest-api
+---
+
+<h2 id="public-endpoints">公共端點</h2>
+
+| 終點                   | 方法 | 路徑                                        | 描述                                                    |
+| -------------------------- | ------ | ------------------------------------------- | -------------------------------------------------------------- |
+| 服役版本            | GET    | `/v1/version`                               | 取得服務版本資訊                                |
+| 伺服器時間                | GET    | `/v1/time`                                  | 累積伺服器時間                                                |
+| 使用者登入                 | POST   | `/v1/public/user/login`                     | 使用使用者名稱和密碼取得 `accessToken`              |
+| 刷新令牌              | POST   | `/v1/public/user/refresh-token`             | 透過 Cookie 刷新登入狀態                                 |
+| 代理票券交換      | POST   | `/v1/public/agent-sso/exchange-ticket`      | 將代理人入場券換成登入狀態              |
+| 代理嵌入代幣交換 | POST   | `/v1/public/agent-sso/exchange-embed-token` | 以內嵌交易的短命代幣交換登入狀態 |
+| 符號配置       | GET    | `/v1/public/market/symbols`                 | 取得股票代碼、交易規則及費用等級配置         |
+| 資金利率配置 | GET    | `/v1/public/market/funding-rate`            | 查詢資金率配置                               |
+| 目前資金率       | GET    | `/v1/public/market/funding-rate/current`    | Paginate 目前資金率                                 |
+| 資金率歷史       | GET    | `/v1/public/market/funding-rate/history`    | 查詢資金利率歷史                                     |
+| 克萊恩                     | GET    | `/v1/public/market/klines`                  | 查詢交易價格、指數價格或標記價格 Klines           |
+| PnL 排行榜            | GET    | `/v1/public/leaderboard/pnl`                | 查詢 7 / 30 / 90 天點算排行榜                          |
+
+<h2 id="private-user-endpoints">私人使用者端點</h2>
+
+除非另有說明，以下端點可使用 JWT 或 API Key 簽名。
+
+| 終點                 | 方法 | 路徑                                      | 允許   | 描述                                 |
+| ------------------------ | ------ | ----------------------------------------- | ------------ | ------------------------------------------- |
+| 使用者資訊                | GET    | `/v1/private/user/info`                   | 閱讀         | 查詢目前使用者資料                  |
+| 使用者資產              | GET    | `/v1/private/user/asset`                  | 閱讀         | 查詢錢包餘額與保證金使用情況       |
+| 創造 listenKey         | POST   | `/v1/private/user/listen-key`             | 閱讀         | 建立私有 WebSocket 認證金鑰 |
+| 續約 listenKey          | PUT    | `/v1/private/user/listen-key`             | 閱讀         | 擴展 listenKey 有效性                   |
+| 接近的 listenKey          | DELETE | `/v1/private/user/listen-key`             | 閱讀         | 接近的 listenKey                             |
+| 帳號變更日誌      | GET    | `/v1/private/user/account-change-log`     | 閱讀         | 查詢資金流動紀錄                 |
+| 30天成交量統計 | GET    | `/v1/private/user/volume-stats`           | 閱讀         | 查詢近期30天交易量與費用 |
+| 平衡歷史          | GET    | `/v1/private/user/balance-history`        | 閱讀         | 查詢餘額歷史                       |
+| 貿易概述           | GET    | `/v1/private/user/trade-overview`         | 閱讀         | 查詢PnL、交易量與資產趨勢          |
+| 資產概覽摘要   | GET    | `/v1/private/user/asset/overview/summary` | 閱讀         | 查詢資產摘要指標                 |
+| 資產概覽趨勢     | GET    | `/v1/private/user/asset/overview/trend`   | 閱讀         | 查詢資產趨勢                           |
+| 儲存喜愛的符號    | POST   | `/v1/private/user/favorite-symbols`       | 閱讀         | 覆寫最愛符號                  |
+| 取得最愛的符號     | GET    | `/v1/private/user/favorite-symbols`       | 閱讀         | 查詢最愛符號                      |
+| 登出                   | POST   | `/v1/private/user/logout`                 | JWT + 餅乾 | 清除登入狀態                           |
+
+<h2 id="api-key-management-endpoints">API Key 管理端點</h2>
+
+API Key 管理端點只接受 JWT。
+
+| 終點            | 方法 | 路徑                                  | 描述                                         |
+| ------------------- | ------ | ------------------------------------- | --------------------------------------------------- |
+| 創造 API Key      | POST   | `/v1/private/user/api-key/create`     | 建立 API Key; `apiSecret` 只回傳一次   |
+| API Key 列表        | GET    | `/v1/private/user/api-key/list`       | 查詢目前使用者的 API 鍵                       |
+| 更新 API Key      | PUT    | `/v1/private/user/api-key/update`     | 更新標籤、權限、 IP 白名單與狀態 |
+| 刪除 API Key      | POST   | `/v1/private/user/api-key/delete`     | 刪除指定的 API Key                          |
+| 刪除所有 API 鍵 | POST   | `/v1/private/user/api-key/delete-all` | 刪除目前使用者的所有 API 金鑰             |
+
+<h2 id="order-endpoints">序端點</h2>
+
+訂單端點需要交易權限。
+
+| 終點                    | 方法 | 路徑                                  | 描述                                                       |
+| --------------------------- | ------ | ------------------------------------- | ----------------------------------------------------------------- |
+| 查詢單序          | GET    | `/v1/private/order`                   | 按`symbol + orderId/clientOrderId`精確查詢                   |
+| 下單                 | POST   | `/v1/private/order/place`             | 限價單或市價單                                             |
+| 位置條件排序       | POST   | `/v1/private/order/place-condition`   | 停損、獲利了結、追蹤止損及其他條件單 |
+| 策略排序        | POST   | `/v1/private/order/place-strategy`    | OTO / OCO / OTOCO 策略順序                                  |
+| 批量下單          | POST   | `/v1/private/order/batch-place`       | 提交多個正常訂單                                     |
+| 取消訂單                | POST   | `/v1/private/order/cancel`            | 取消指定的正常順序                                   |
+| 修訂命令                 | POST   | `/v1/private/order/move`              | 修改正常待成交價格與數量                    |
+| 批次修訂命令          | POST   | `/v1/private/order/batch-move`        | 批次會修改同一符號的正常待處理訂單            |
+| 批次取消訂單         | POST   | `/v1/private/order/batch-cancel`      | 批次取消正常訂單                                        |
+| 全部取消                  | POST   | `/v1/private/order/batch-cancel-all`  | 按類型批次取消訂單                                       |
+| 取消條件命令      | POST   | `/v1/private/order/cancel-condition`  | 取消指定的條件命令                                |
+| 現行正規順序       | GET    | `/v1/private/order/current`           | 查詢目前正常待處理訂單                               |
+| 現行狀況命令    | GET    | `/v1/private/order/current-condition` | 查詢目前未觸發的條件順序                        |
+| 歷史正常順序    | GET    | `/v1/private/order/history`           | 頁碼歷史正常順序                                 |
+| 歷史狀況命令 | GET    | `/v1/private/order/history-condition` | 頁數歷史狀態順序                              |
+| 貿易紀錄               | GET    | `/v1/private/order/trades`            | Paginate 貿易紀錄                                            |
+| 策略順序細節       | GET    | `/v1/private/order/strategy`          | 查詢策略順序與子順序                               |
+
+<h2 id="position-endpoints">位置端點</h2>
+
+位置端點需要交易許可。
+
+| 終點          | 方法 | 路徑                               | 描述                                  |
+| ----------------- | ------ | ---------------------------------- | -------------------------------------------- |
+| 設定邊距模式   | POST   | `/v1/private/position/margin-mode` | 切換隔離/交叉邊緣               |
+| 設定槓桿      | POST   | `/v1/private/position/leverage`    | 設定符號槓桿                          |
+| 位置設定 | GET    | `/v1/private/position/settings`    | 查詢槓桿與保證金模式  |
+| 現任職務 | GET    | `/v1/private/position/positions`   | 查詢目前位置                      |
+| 職位歷史  | GET    | `/v1/private/position/history`     | 查詢歷史位置與成交紀錄 |
+
+<h2 id="endpoint-groups">終點群組</h2>
+
+- [公共端點]（/developer-api/rest-api/public-endpoints）
+- [使用者與帳號]（/developer-api/rest-api/user-and-account）
+- [命令]（/developer-api/rest-api/order）
+- [位置]（/developer-api/rest-api/position）
+- [市場數據]（/developer-api/rest-api/market-data）
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">相關頁面</h2>
+
+- [公共端點](/zh-TW/developer-api/rest-api/public-endpoints)
+- [使用者與帳號](/zh-TW/developer-api/rest-api/user-and-account)
+- [秩序](/zh-TW/developer-api/rest-api/order)
+- [職位](/zh-TW/developer-api/rest-api/position)
+- [市場數據](/zh-TW/developer-api/rest-api/market-data)
+<!-- sixmm-localized-link-repair:end -->

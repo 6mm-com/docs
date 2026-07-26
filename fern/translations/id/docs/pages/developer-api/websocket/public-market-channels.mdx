@@ -1,0 +1,84 @@
+---
+title: "WebSocket Saluran Data Pasar Publik"
+description: "Streaming 6MM buku pesanan, perdagangan, candlestick, dan data ticker melalui saluran WebSocket publik dengan panduan berlangganan dan reconnect."
+slug: developer-api/websocket/public-market-channels
+canonical-url: https://docs.6mm.com/id/developer-api/websocket/public-market-channels
+---
+
+Gunakan saluran pasar publik ketika sebuah aplikasi membutuhkan pembaruan terus-menerus untuk harga, perdagangan, candlestick, atau kedalaman buku pesanan tanpa harus berulang kali melakukan polling REST titik akhir. Aliran ini dapat mendukung layar perdagangan, tampilan harga, peringatan, dan pemantauan pasar.
+
+<h2 id="connection-url">Koneksi URL</h2>
+
+```
+wss://ws.6mm.com/ws
+```
+
+WebSocket publik tidak memerlukan autentikasi.
+
+Untuk siklus hidup koneksi, berhenti berlangganan, ping, dan melakukan reconnect, lihat [Connection, Subscription & Heartbeat](/id/developer-api/websocket/connection-subscription-and-heartbeat).
+
+<h2 id="common-channels">Saluran Umum</h2>
+
+| Saluran                            | Deskripsi                                                        |
+| ---------------------------------- | ------------------------------------------------------------------ |
+| `market.depth.{symbol}`            | Kedalaman pesan buku. Mengirim snapshot terlebih dahulu, lalu pembaruan bertahap |
+| `market.trade.{symbol}`            | Perdagangan terbaru                                                      |
+| `market.kline.{symbol}.{interval}` | Klines                                                             |
+| `market.ticker.{symbol}`           | Ringkasan ticker simbol tunggal                                       |
+| `market.tickers`                   | Ringkasan ticker semua simbol                                          |
+
+<h2 id="choose-a-channel">Pilih saluran</h2>
+
+| Kebutuhan aplikasi | Saluran |
+| --- | --- |
+| Buat atau pemelihara buku pesanan | `market.depth.{symbol}` |
+| Tampilkan feed perdagangan langsung | `market.trade.{symbol}` |
+| Gambar grafik candlestick | `market.kline.{symbol}.{interval}` |
+| Tampilkan satu ringkasan pasar | `market.ticker.{symbol}` |
+| Jaga gambaran pasar | `market.tickers` |
+
+<h2 id="subscription-example">Contoh Langganan</h2>
+
+```json
+{ "id": "1772007814666", "op": "subscribe", "args": ["market.depth.BTCUSDT"] }
+```
+
+<h2 id="push-message-wrapper">Pembungkus Pesan Push</h2>
+
+```json
+{
+  "topic": "market.depth.BTCUSDT",
+  "event": "data",
+  "ts": 1772007815000,
+  "data": {}
+}
+```
+
+Gunakan `topic` untuk mengarahkan setiap pesan ke handler yang benar dan `ts` untuk mengamati waktu pengiriman. Objek `data` berisi payload untuk saluran yang dilangganan.
+
+<h2 id="order-book-handling">Penanganan buku pesanan</h2>
+
+Channel kedalaman mengirimkan snapshot terlebih dahulu lalu pembaruan bertahap. Inisialisasi buku lokal dari snapshot sebelum menerapkan pembaruan. Setelah terhubung kembali, buat sesi baru, berlangganan lagi, dan bangun ulang buku lokal dari snapshot berikutnya daripada melanjutkan dari status lama di memori.
+
+<h2 id="production-recommendations">Rekomendasi produksi</h2>
+
+- Buat `id` unik untuk setiap permintaan langganan, berhenti berlangganan, dan ping.
+- Konfirmasi pengakuan langganan sebelum memperlakukan saluran sebagai aktif.
+- Berlangganan ulang setiap topik yang diperlukan setelah terhubung kembali.
+- Pisahkan pembacaan jaringan dari pemrosesan database atau UI yang lebih lambat.
+- Pantau frekuensi pemutusan hubungan, lag pemrosesan pesan, dan muatan yang cacat.
+- Gunakan [Private User Channel](/id/developer-api/websocket/private-user-channel) untuk pembaruan akun dan pesanan yang terautentikasi.
+
+<h2 id="related-api-docs">Dokumen API terkait</h2>
+
+<CardGroup cols={3}>
+<Card title="WebSocket Ikhtisar" icon="fa-duotone fa-wave-pulse" href="/id/developer-api/websocket">
+Pilih antara koneksi streaming publik dan privat.
+</Card>
+<Card title="Koneksi & Detak Jantung" icon="fa-duotone fa-heart-pulse" href="/id/developer-api/websocket/connection-subscription-and-heartbeat">
+Terapkan penanganan langganan, berhenti berlangganan, ping, dan reconnect.
+</Card>
+<Card title="Data Pasar REST" icon="fa-duotone fa-chart-line" href="/id/developer-api/rest-api/market-data">
+Gunakan data pasar berbasis permintaan bersama dengan saluran streaming.
+</Card>
+</CardGroup>

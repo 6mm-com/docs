@@ -1,0 +1,223 @@
+---
+title: "Utilisateur et compte"
+description: "Utilisez 6MM points d’accès utilisateur et compte pour récupérer les profils, soldes, état du compte, permissions et informations liées au partenaire."
+slug: developer-api/rest-api/user-and-account
+canonical-url: https://docs.6mm.com/fr/developer-api/rest-api/user-and-account
+---
+
+Sauf indication contraire, les points de terminaison suivants peuvent utiliser JWT ou API Key signature.
+
+<h2 id="user-info">Informations utilisateur</h2>
+
+```http
+GET /v1/private/user/info
+```
+
+Champs de réponse :
+
+| Terrain                  | Type   | Description      |
+| ---------------------- | ------ | ---------------- |
+| `userInfo.userId`      | string | ID utilisateur externe |
+| `userInfo.username`    | string | Nom d’utilisateur         |
+| `userInfo.agentId`     | int64  | Identification d’agent         |
+| `userInfo.vipLevel`    | int64  | VIP niveau        |
+| `userInfo.lastLoginAt` | int64  | Dernière heure de connexion  |
+| `userInfo.lastLoginIp` | string | Dernière connexion IP    |
+
+<h2 id="user-assets">Ressources utilisateur</h2>
+
+```http
+GET /v1/private/user/asset
+```
+
+Champs de réponse :
+
+| Terrain                     | Type   | Description                     |
+| ------------------------- | ------ | ------------------------------- |
+| `userAsset.userId`        | string | ID utilisateur externe                |
+| `userAsset.assetType`     | string | Type d’actif                      |
+| `userAsset.walletBalance` | string | Solde portefeuille                  |
+| `userAsset.frozenMargin`  | string | Marge gelée par des ordres en attente |
+| `userAsset.usedMargin`    | string | Marge utilisée par les positions        |
+
+<h2 id="create-listenkey">Créez listenKey</h2>
+
+```http
+POST /v1/private/user/listen-key
+```
+
+Crée une clé d’authentification pour les flux privés WebSocket .
+
+<h2 id="renew-listenkey">Renouveler listenKey</h2>
+
+```http
+PUT /v1/private/user/listen-key
+```
+
+Cela prolonge listenKey validité.
+
+<h2 id="close-listenkey">Fermer listenKey</h2>
+
+```http
+DELETE /v1/private/user/listen-key
+```
+
+Ferme la listenKeyspécifiée.
+
+<h2 id="account-change-logs">Journaux de modifications de compte</h2>
+
+```http
+GET /v1/private/user/account-change-log?assetType=USDT&page=1&pageSize=20
+```
+
+Paramètres de la demande :
+
+| Paramètre    | Type   | Obligatoire | Description                  |
+| ------------ | ------ | -------- | ---------------------------- |
+| `assetType`  | string | Non       | Type d’actif, comme `USDT`   |
+| `changeType` | string | Non       | Changement de type                  |
+| `startTime`  | int64  | Non       | Heure de début                   |
+| `endTime`    | int64  | Non       | Fin des temps                     |
+| `page`       | int32  | Non       | Numéro de page, `1` par défaut     |
+| `pageSize`   | int32  | Non       | Éléments par page, `20` par défaut |
+
+Champs de réponse :
+
+| Terrain                        | Type   | Description                  |
+| ---------------------------- | ------ | ---------------------------- |
+| `list[].assetType`           | string | Type d’actif                   |
+| `list[].amount`              | string | Montant modifié               |
+| `list[].walletBalanceBefore` | string | Solde portefeuille avant le changement |
+| `list[].walletBalanceAfter`  | string | Solde portefeuille après changement  |
+| `list[].frozenBalanceBefore` | string | Solde figé avant le changement |
+| `list[].frozenBalanceAfter`  | string | Solde gelé après changement  |
+| `list[].changeType`          | string | Changement de type                  |
+| `list[].referenceId`         | string | Identification d’entreprise associée          |
+| `list[].createdAt`           | int64  | Temps de création                |
+| `total`                      | int64  | Comptage total                  |
+
+<h2 id="30-day-volume-statistics">Statistiques de volume sur 30 jours</h2>
+
+```http
+GET /v1/private/user/volume-stats
+```
+
+Champs de réponse :
+
+| Terrain         | Type   | Description                                     |
+| ------------- | ------ | ----------------------------------------------- |
+| `volume30d`   | string | Volume cumulé des transactions sur les 30 derniers jours |
+| `feeTotal30d` | string | Frais cumulés sur les 30 derniers jours           |
+
+<h2 id="balance-history">Historique de la balance</h2>
+
+```http
+GET /v1/private/user/balance-history?period=1D&limit=30
+```
+
+Paramètres de la demande :
+
+| Paramètre | Type   | Obligatoire | Description                            |
+| --------- | ------ | -------- | -------------------------------------- |
+| `period`  | string | Oui      | `1D` / `1W` / `1M`                     |
+| `limit`   | int    | Non       | Nombre d’éléments retournés, par défaut `30` |
+
+Champs de réponse :
+
+| Terrain             | Type   | Description                 |
+| ----------------- | ------ | --------------------------- |
+| `items[].date`    | string | Date d’agrégation            |
+| `items[].balance` | string | Solde portefeuille              |
+| `items[].pnl`     | string | PnL réalisé pour cette période |
+
+<h2 id="trade-overview">Aperçu des échanges</h2>
+
+```http
+GET /v1/private/user/trade-overview?type=1M
+```
+
+Paramètres de la demande :
+
+| Paramètre | Type   | Obligatoire | Description                                     |
+| --------- | ------ | -------- | ----------------------------------------------- |
+| `type`    | string | Oui      | Plage de tendances : `1D`, `1W`, `1M`, `3M`, `6M` `1Y` |
+
+Champs de réponse :
+
+| Terrain                | Type   | Description                                                          |
+| -------------------- | ------ | -------------------------------------------------------------------- |
+| `todayPnl`           | string | Le PnL réalisé aujourd’hui                                                 |
+| `todayVolume`        | string | Volume des contrats d’aujourd’hui                                      |
+| `totalVolume`        | string | Volume cumulatif des transactions de contrats                                   |
+| `totalPnl`           | string | PnL réalisé cumulatif                                              |
+| `maxDrawdown30d`     | string | Montant maximal de retrait sur les 30 derniers jours                        |
+| `maxDrawdown30dRate` | string | Taux maximal de réduction des 30 derniers jours, décimal de `0` à `1` |
+| `transferIn`         | string | Fonds cumulés transférés                                      |
+| `transferOut`        | string | Fonds transférés cumulés                                     |
+| `items[]`            | array  | Données sur les tendances des actifs                                                     |
+
+<h2 id="asset-overview-summary">Résumé de l’ensemble des actifs</h2>
+
+```http
+GET /v1/private/user/asset/overview/summary
+```
+
+Les champs de réponse sont les mêmes que les champs de résumé des synthèses commerciales, à l’exception de `items[]`.
+
+<h2 id="asset-overview-trend">Tendance de présentation des actifs</h2>
+
+```http
+GET /v1/private/user/asset/overview/trend?type=1M
+```
+
+Paramètres de la demande :
+
+| Paramètre | Type   | Obligatoire | Description                                     |
+| --------- | ------ | -------- | ----------------------------------------------- |
+| `type`    | string | Oui      | Plage de tendances : `1D`, `1W`, `1M`, `3M`, `6M` `1Y` |
+
+Champs de réponse :
+
+| Terrain                  | Type   | Description                     |
+| ---------------------- | ------ | ------------------------------- |
+| `items[].snapshotTime` | int64  | Temps de capture d’écran                   |
+| `items[].balance`      | string | Solde du compte courant         |
+| `items[].pnl`          | string | PnL pour la période actuelle      |
+| `items[].pnlRate`      | string | Taux PnL pour la période actuelle |
+| `items[].totalPnl`     | string | PnL cumulé                  |
+
+<h2 id="favorite-symbols">Symboles favoris</h2>
+
+<h2 id="save">Sauvegarder</h2>
+
+```http
+POST /v1/private/user/favorite-symbols
+Content-Type: application/json
+```
+
+Corps de la demande :
+
+```json
+{
+  "symbols": ["BTCUSDT", "ETHUSDT"]
+}
+```
+
+<h2 id="query">Requête</h2>
+
+```http
+GET /v1/private/user/favorite-symbols
+```
+
+Champs de réponse :
+
+| Terrain     | Type      | Description          |
+| --------- | --------- | -------------------- |
+| `symbols` | ficelle\[] | Liste de symboles préférés |
+
+<h2 id="related-documentation">Documentation associée</h2>
+
+- [Canal utilisateur privé](/fr/developer-api/websocket/private-user-channel)
+- [Authentification](/fr/developer-api/authentication)
+- [Transfert d’Actif](/fr/trading/getting-started/asset-transfer)
+- [Codes d’erreur et dépannage](/fr/developer-api/error-codes-and-troubleshooting)

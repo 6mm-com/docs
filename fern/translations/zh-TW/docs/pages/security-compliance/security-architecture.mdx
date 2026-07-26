@@ -1,0 +1,56 @@
+---
+title: "平台安全架構"
+subtitle: "了解 6MM 交易基礎設施、 APIs、 SDKs、webhooks及合作夥伴整合中所採用的安全層。"
+slug: security-compliance/security-architecture
+canonical-url: https://docs.6mm.com/zh-TW/security-compliance/security-architecture
+---
+
+6MM 安全文件著重於合作夥伴的生產準備度。目標是在保持交易基礎設施穩定的同時，明確責任界限。
+
+<h2 id="security-layers">安全層</h2>
+
+| 層 | 焦點 |
+| --- | --- |
+| 基礎設施 | 網路隔離、加密服務通訊、監控與故障轉移。 |
+| 交易系統 | 確定性匹配、保證金檢查、風險控制及濫用預防。 |
+| 整合安全性 | API 金鑰、 HMAC 簽名、Webhook 簽名、重播保護，以及僅後端的秘密。 |
+| 合作夥伴營運 | 使用者會話驗證、資產保管、客戶支援及本地合規控制。 |
+
+<h2 id="partner-responsibilities">夥伴職責</h2>
+
+- API 瀏覽器及行動應用程式中隱藏秘密與登出金鑰。
+- 在發出交易進入憑證前，驗證合作夥伴使用者會話。
+- 實作 webhook 冪性與終端狀態檢查。
+- 維護帳戶、訂單、轉帳及 webhook 流程的操作日誌。
+
+<h2 id="integration-trust-boundaries">整合信任邊界</h2>
+
+| 邊界 | 所需控制 |
+| --- | --- |
+| 瀏覽器或應用程式對合作夥伴後端 | 在發出任何交易憑證前，先驗證合作夥伴會話。 |
+| 合作夥伴後端到 6MM API | 使用有範圍的憑證、請求簽署、時間同步及受保護的秘密儲存。 |
+| 6MM webhook to partner endpoint | 驗證簽章與原始請求實體，拒絕過時或無效訊息，並消除重複重試。 |
+| 交易狀態到合作夥伴的紀錄 | 利用耐用識別碼與終端狀態檢查來對帳訂單、部位、餘額及轉帳。 |
+
+<h2 id="production-verification">生產驗證</h2>
+
+- 測試過期、撤銷及錯誤範圍的憑證。
+- 測試修改的 webhook 主體、重複回撥、延遲回撥及端點逾時。
+- 確認日誌中隱藏的秘密、存取權杖及敏感請求有效載荷。
+- 對重複簽章失敗、異常順序活動、對帳差異及連線不穩定發出警示。
+- 記錄憑證暴露、webhook 失敗及交易事件的擁有者與回應路徑。
+
+<h2 id="related-security-guides">相關安全指南</h2>
+
+- 【秘密與簽名】（/sdk/security/secrets-signing）
+- [Webhooks 與冪性]（/sdk/security/webhooks-idempotency）
+- [事件應變]（/security-compliance/incident-response）
+- [夥伴責任矩陣]（/security-compliance/partner-responsibilities）
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">相關頁面</h2>
+
+- [Agent SDK 祕密與 HMAC 手語](/zh-TW/sdk/security/secrets-signing)
+- [Webhook 簽名驗證與冪性](/zh-TW/sdk/security/webhooks-idempotency)
+- [事件應變](/zh-TW/security-compliance/incident-response)
+- [6MM 與夥伴責任矩陣](/zh-TW/security-compliance/partner-responsibilities)
+<!-- sixmm-localized-link-repair:end -->

@@ -1,0 +1,90 @@
+---
+title: "Java Mulai Cepat"
+subtitle: "Instal dan inisialisasi Java SDK dari layanan backend."
+slug: sdk/agent-sdk/java/quick-start
+canonical-url: https://docs.6mm.com/id/sdk/agent-sdk/java/quick-start
+---
+
+<h2 id="install">Instal</h2>
+
+Sumber SDK publik saat ini mendokumentasikan tag `v0.1.1` dengan koordinat Maven berikut:
+
+```xml
+<dependency>
+    <groupId>com.sixmm.exchange.sdk</groupId>
+    <artifactId>agent</artifactId>
+    <version>0.1.1</version>
+</dependency>
+```
+
+GitHub tidak berfungsi sebagai repositori ketergantungan Maven. Instal sumber yang ditandai secara lokal sebelum menyelesaikan ketergantungan:
+
+```bash
+git clone https://github.com/6mm-com/agent-java-sdk.git
+cd agent-java-sdk
+git checkout v0.1.1
+mvn install
+```
+
+> **Membangun tim**
+>
+> Publikasikan artefak yang disetujui ke repositori Maven organisasi Anda untuk build CI, pengujian, dan produksi. Konfirmasi versi yang disetujui dengan 6MM sebelum penerapan produksi.
+
+Kode sumber dan contoh penggunaan tersedia di repositori resmi Java SDK :
+
+[6mm-com/agent-java-sdk] (https://github.com/6mm-com/agent-java-sdk)
+
+<h2 id="before-you-start">Sebelum Anda mulai</h2>
+
+- Konfirmasi Agen produksi Anda API URL markas dengan tim 6MM .
+- Simpan apiSecret hanya di manajemen rahasia backend.
+- Siapkan pemetaan stabil antara platformUserId dan agentUserId.
+- Aktifkan log terstruktur di sekitar aliran bind, transfer, order, dan webhook.
+
+<h2 id="initialize-client">Inisialisasi klien</h2>
+
+```java
+import com.sixmm.agent.AgentClient;
+import com.sixmm.agent.AgentClientConfig;
+
+AgentClient client = new AgentClient(AgentClientConfig.builder()
+        .baseUrl("https://agent-api.6mm.com")
+        .agentCode("AGENT001")
+        .apiSecret("your-api-secret")
+        .defaultCurrency("USDT")
+        .build());
+```
+
+> **Hanya backend**
+>
+> Jangan inisialisasi Agent SDK dari kode klien browser, mobile, atau desktop. SDK menandatangani permintaan API Agen yang memiliki hak istimewa.
+
+<h2 id="example-transfer-funds-in">Contoh: transfer dana ke</h2>
+
+```java
+TransferResponse resp = client.transfer(TransferRequest.fixed(
+        "AGT-ORDER-1001",
+        "agent-user-001",
+        Direction.IN,
+        "USDT",
+        "10.00"));
+```
+
+Gunakan nomor pesanan sisi mitra yang unik untuk setiap permintaan transfer. Jika permintaan habis waktu, kueri pesanan asli sebelum membuat yang baru.
+
+<h2 id="next-steps">Langkah selanjutnya</h2>
+
+| Kebutuhan | Halaman berikutnya |
+| --- | --- |
+| Terbitkan kredensial Trading Widget | [Buat Token Embed] (/sdk/agent-sdk/java/embed-token) |
+| Verifikasi callback dari 6MM | [Webhooks & Idempotensi] (/sdk/security/webhooks-idempotency) |
+| Tinjau perilaku penandatanganan | [Rahasia & Penandatanganan] (/sdk/security/secrets-signing) |
+| Mendiagnosis masalah integrasi | [SDK Pemecahan Masalah ] (/sdk/security/troubleshooting) |
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">Halaman terkait</h2>
+
+- [Buat Token Sematan](/id/sdk/agent-sdk/java/embed-token)
+- [Verifikasi & Idempotensi Tanda Tangan Webhook](/id/sdk/security/webhooks-idempotency)
+- [Agent SDK Secrets & HMAC Penandatanganan](/id/sdk/security/secrets-signing)
+- [Pemecahan Masalah Integrasi SDK](/id/sdk/security/troubleshooting)
+<!-- sixmm-localized-link-repair:end -->

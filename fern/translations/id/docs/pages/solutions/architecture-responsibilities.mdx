@@ -1,0 +1,39 @@
+---
+title: "Arsitektur & Tanggung Jawab"
+subtitle: "Jelaskan apa yang dimiliki sistem mitra dan apa yang disediakan infrastruktur 6MM dalam penyebaran trading tertanam."
+slug: solutions/architecture-responsibilities
+canonical-url: https://docs.6mm.com/id/solutions/architecture-responsibilities
+---
+
+Peluncuran trading embedded yang bersih bergantung pada batas tanggung jawab yang jelas. Sistem mitra harus menjaga kepemilikan bisnis yang sensitif, sementara 6MM menyediakan infrastruktur perdagangan dan kemampuan siklus hidup.
+
+<h2 id="responsibility-model">Model tanggung jawab</h2>
+
+| Luas | Sistem mitra | 6MM infrastruktur |
+| --- | --- | --- |
+| Hubungan pengguna | Memiliki akun pengguna, status login, identitas dukungan pelanggan, dan pemeriksaan kelayakan. | Menerima konteks trading entry yang tervalidasi dan mempertahankan status trading-side. |
+| Rahasia dan penandatanganan | Menyimpan kunci API mitra di backend dan menandatangani permintaan sisi server. | Memverifikasi permintaan yang ditandatangani dan memproses tindakan yang diotorisasi. |
+| Pengalaman trading | Menyediakan titik masuk, navigasi, dan konteks produk. | Menyediakan antarmuka perdagangan, siklus hidup pesanan, data pasar, posisi, risiko, dan perilaku penyelesaian. |
+| Operasi | Menangani alur kerja dukungan, analitik bisnis, dan eskalasi internal. | Mengeluarkan event, webhook, dan informasi status yang dibutuhkan untuk integrasi. |
+
+<h2 id="production-principles">Prinsip produksi</h2>
+
+- Simpan semua rahasia mitra di backend.
+- Perlakukan token sematan sebagai kredensial masuk yang berumur pendek.
+- Proses webhook secara idempotensial dan menyimpan ID event.
+- Gunakan pemantauan terkait penerbitan token, alur transfer, dan perubahan status pesanan.
+- Menjaga konsistensi salinan yang berhadapan langsung dengan pelanggan di halaman entri, trading, dan dukungan.
+
+<h2 id="related-docs">Dokumen terkait</h2>
+
+<CardGroup cols={3}>
+<Card title="Autentikasi" icon="fa-duotone fa-user-shield" href="/id/developer-api/authentication">
+Tinjau ekspektasi autentikasi backend.
+</Card>
+<Card title="Penandatanganan Permintaan" icon="fa-duotone fa-signature" href="/id/developer-api/request-signing">
+Pahami panggilan API yang ditandatangani.
+</Card>
+<Card title="Keamanan Webhook" icon="fa-duotone fa-webhook" href="/id/sdk/security/webhooks-idempotency">
+Tangani pengiriman acara dengan aman.
+</Card>
+</CardGroup>

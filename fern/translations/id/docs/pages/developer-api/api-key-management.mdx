@@ -1,0 +1,128 @@
+---
+title: "Manajemen API Key"
+description: "Buat, periksa, perbarui, dan cabut kunci 6MM API sambil menerapkan izin, pembatasan IP , penyimpanan rahasia, dan praktik rotasi yang sesuai."
+slug: developer-api/api-key-management
+canonical-url: https://docs.6mm.com/id/developer-api/api-key-management
+---
+
+Endpoint manajemen API Key hanya menerima autentikasi JWT.
+
+<h2 id="create-api-key">Buat API Key</h2>
+
+```http
+POST /v1/private/user/api-key/create
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+Parameter permintaan:
+
+| Parameter     | Tipe      | Wajib | Deskripsi                                                           |
+| ------------- | --------- | -------- | --------------------------------------------------------------------- |
+| `label`       | string    | Ya      | API Key label, panjang 1 - 64                                          |
+| `permissions` | int       | Tidak       | Bitmask izin, `1`default, rentang `1` - `7`                      |
+| `ipWhitelist` | senar\[] | Tidak       | IP daftar putih, hingga 20 entri. Jika dihilangkan, IP sumber tidak dibatasi |
+
+Contoh permintaan:
+
+```bash
+curl -X POST https://api.6mm.com/v1/private/user/api-key/create \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -d '{
+    "label": "external-service-prod",
+    "permissions": 3,
+    "ipWhitelist": ["203.0.113.10"]
+  }'
+```
+
+Contoh respons:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "apiKey": "fx_xxxxxxxxxxxxxxxxxxxxxxxx",
+    "apiSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  },
+  "requestId": "req-api-key"
+}
+```
+
+`apiSecret` hanya dikembalikan sekali saat API Key dibuat. Simpan segera dalam sistem manajemen rahasia. Jangan menuliskannya ke repositori kode sumber atau log.
+
+Setiap pengguna dapat membuat hingga 30 API Key.
+
+<h2 id="list-api-keys">Daftar Kunci API</h2>
+
+```http
+GET /v1/private/user/api-key/list
+Authorization: Bearer YOUR_ACCESS_TOKEN
+```
+
+Bidang respons:
+
+| Lapangan                | Tipe      | Deskripsi                       |
+| -------------------- | --------- | --------------------------------- |
+| `list[].id`          | string    | ID API Key                        |
+| `list[].label`       | string    | Label                             |
+| `list[].apiKey`      | string    | Pengidentifikasi API Key publik         |
+| `list[].permissions` | int       | Bitmask izin                |
+| `list[].ipWhitelist` | senar\[] | IP daftar putih                      |
+| `list[].status`      | int       | Status: `1` diaktifkan, `0` dinonaktifkan |
+| `list[].lastUsedAt`  | int64     | Waktu terakhir digunakan                    |
+| `list[].createdAt`   | int64     | Waktu penciptaan                     |
+
+<h2 id="update-api-key">Pembaruan API Key</h2>
+
+```http
+PUT /v1/private/user/api-key/update
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+Parameter permintaan:
+
+| Parameter     | Tipe      | Wajib | Deskripsi               |
+| ------------- | --------- | -------- | ------------------------- |
+| `id`          | string    | Ya      | ID API Key                |
+| `label`       | string    | Tidak       | Label baru                 |
+| `permissions` | int       | Tidak       | Bitmask izin baru    |
+| `ipWhitelist` | senar\[] | Tidak       | Daftar putih IP baru          |
+| `status`      | int       | Tidak       | `1` diaktifkan, `0` dinonaktifkan |
+
+<h2 id="delete-api-key">Hapus API Key</h2>
+
+```http
+POST /v1/private/user/api-key/delete
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+Badan permintaan:
+
+```json
+{ "id": "1001" }
+```
+
+<h2 id="delete-all-api-keys">Hapus Semua Kunci API</h2>
+
+```http
+POST /v1/private/user/api-key/delete-all
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+Bidang respons:
+
+| Lapangan     | Tipe  | Deskripsi                |
+| --------- | ----- | -------------------------- |
+| `deleted` | int64 | Jumlah Kunci API yang dihapus |
+
+<h2 id="related-security-guides">Panduan keamanan terkait</h2>
+
+- [Autentikasi](/id/developer-api/authentication)
+- [Penandatanganan Permintaan](/id/developer-api/request-signing)
+- [Rahasia & Penandatanganan](/id/sdk/security/secrets-signing)
+- [Rekomendasi Integrasi](/id/developer-api/integration-recommendations)

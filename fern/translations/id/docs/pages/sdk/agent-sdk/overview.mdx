@@ -1,0 +1,73 @@
+---
+title: "6MM Agent SDK untuk Java dan PHP"
+subtitle: "Integrasikan panggilan API Agen yang ditandatangani, pengikatan pengguna, transfer, URL entri, dan verifikasi webhook dari layanan backend mitra."
+slug: sdk/agent-sdk/overview
+canonical-url: https://docs.6mm.com/id/sdk/agent-sdk/overview
+---
+
+6MM Agent SDK ini untuk layanan backend mitra yang perlu memanggil APIs Agen yang memiliki hak istimewa tanpa menerapkan penandatanganan dan penanganan permintaan dari awal. Perangkat ini tidak boleh berjalan di browser, mobile, atau kode desktop publik karena integrasi menggunakan partner API secret.
+
+<h2 id="when-to-use-the-agent-sdk">Kapan menggunakan Agent SDK</h2>
+
+Gunakan Agent SDK saat backend Anda perlu mengikat pengguna mitra, memindahkan aset melalui alur kerja yang disetujui, menelusuri catatan perdagangan, membuat URLentri perdagangan yang disematkan, atau memverifikasi notifikasi webhook. Gunakan [Trading Widget SDK](/id/sdk/trading-widget/overview) secara terpisah ketika frontend mitra perlu menampilkan antarmuka trading.
+
+<h2 id="capabilities">Kemampuan</h2>
+
+| Skenario | Java SDK | PHP SDK |
+| --- | --- | --- |
+| Ikat pengguna | Didukung | Didukung |
+| Transfer jumlah tetap | Didukung | Didukung |
+| Transfer semua | Didukung | Didukung |
+| Transfer balik | Didukung | Didukung |
+| Perintah kueri | Didukung | Didukung |
+| Buat entri URL | Didukung | Didukung |
+| Verifikasi Webhook | Didukung | Didukung |
+
+<h2 id="common-configuration">Konfigurasi umum</h2>
+
+| Kunci | Contoh | Deskripsi |
+| --- | --- | --- |
+| baseUrl | `https://agent-api.6mm.com` | 6MM Agen API layanan URL tanpa garis miring di belakang. |
+| agentCode | AGENT001 | Kode agen mitra. |
+| apiSecret | rahasia api Anda | API rahasia penandatanganan hanya disimpan di backend. |
+| defaultCurrency | USDT | Mata uang default untuk transfer dan APIsakun. |
+| webhookUrl | https://partner.example.com/6mm/webhook | Endpoint mitra untuk notifikasi webhook 6MM . |
+
+<h2 id="typical-integration-flow">Alur integrasi yang khas</h2>
+
+1. Frontend mitra mengautentikasi pengguna melalui sistem akun mitra sendiri.
+2. Backend mitra memetakan pengguna ke pengenal sisi mitra yang stabil.
+3. Backend memanggil Agent SDK dengan `agentCode` dan rahasia API yang dilindungi.
+4. SDK menandatangani dan mengirimkan permintaan API kepada Agen.
+5. Backend menyimpan identifikasi bisnis yang dikembalikan dan memproses webhook berikutnya secara identik.
+6. Frontend hanya menerima hasil jangka pendek atau kredensial entri yang dibutuhkan.
+
+<h2 id="choose-an-sdk">Pilih SDK</h2>
+
+| Tumpukan backend | Mulailah dari sini |
+| --- | --- |
+| Java | [Java SDK Ikhtisar](/id/sdk/agent-sdk/java/overview) dan [Java Quick Start](/id/sdk/agent-sdk/java/quick-start) |
+| PHP | [PHP SDK Ikhtisar](/id/sdk/agent-sdk/php/overview) dan [PHP Quick Start](/id/sdk/agent-sdk/php/quick-start) |
+
+<h2 id="production-checklist">Daftar periksa produksi</h2>
+
+- Muat `apiSecret` dari manajer rahasia backend, bukan dari kode sumber.
+- Pisahkan kredensial pengembangan, penataan, dan produksi.
+- Gunakan pemetaan pengguna mitra yang stabil dan pengidentifikasi pesanan bisnis yang unik.
+- Pertahankan pengenal asli saat memeriksa status permintaan yang sudah habis waktu.
+- Verifikasi tanda tangan webhook dan simpan event ID yang telah diproses.
+- Menyuntingkan rahasia dan tanda tangan dari log sambil mempertahankan ID permintaan untuk dukungan.
+
+<h2 id="next-steps">Langkah selanjutnya</h2>
+
+<CardGroup cols={3}>
+<Card title="Java Mulai Cepat" icon="fa-brands fa-java" href="/id/sdk/agent-sdk/java/quick-start">
+Instal dan inisialisasi Agent SDK di backend Java .
+</Card>
+<Card title="PHP Mulai Cepat" icon="fa-brands fa-php" href="/id/sdk/agent-sdk/php/quick-start">
+Instal dan inisialisasi Agent SDK di backend PHP .
+</Card>
+<Card title="Webhook & Idempotensi" icon="fa-duotone fa-webhook" href="/id/sdk/security/webhooks-idempotency">
+Verifikasi callback dan cegah pemrosesan bisnis duplikat.
+</Card>
+</CardGroup>

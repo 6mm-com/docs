@@ -1,0 +1,73 @@
+---
+title: "6MM Agent SDK per Java e PHP"
+subtitle: "Integra chiamate API Agent firmate, legami utente, trasferimenti, URL di accesso e verifica webhook dai servizi backend partner."
+slug: sdk/agent-sdk/overview
+canonical-url: https://docs.6mm.com/it/sdk/agent-sdk/overview
+---
+
+La 6MM Agent SDK riguarda i servizi backend partner che devono chiamare APIs Agente Privilegiato senza implementare la gestione delle firme e delle richieste da zero. Non deve funzionare in codice browser, mobile o desktop pubblico perché l'integrazione utilizza un partner API segreto.
+
+<h2 id="when-to-use-the-agent-sdk">Quando usare il Agent SDK</h2>
+
+Usa un Agent SDK quando il tuo backend deve legare un utente partner, sposta asset attraverso un flusso di lavoro approvato, interroga i registri di trading, crea una voce di trading incorporata URLo verifica le notifiche tramite webhook. Usa il [Trading Widget SDK](/it/sdk/trading-widget/overview) separatamente quando il frontend partner deve mostrare l'interfaccia di trading.
+
+<h2 id="capabilities">Capacità</h2>
+
+| Scenario | Java SDK | PHP SDK |
+| --- | --- | --- |
+| Associare l'utente | Supportati | Supportati |
+| Trasferimento a importo fisso | Supportati | Supportati |
+| Trasferisci tutto fuori | Supportati | Supportati |
+| Trasferimento inverso | Supportati | Supportati |
+| Ordini di query | Supportati | Supportati |
+| Crea URL | Supportati | Supportati |
+| Verifica Webhook | Supportati | Supportati |
+
+<h2 id="common-configuration">Configurazione comune</h2>
+
+| Chiave | Esempio | Descrizione |
+| --- | --- | --- |
+| baseUrl | `https://agent-api.6mm.com` | 6MM Agent API servizio URL senza slash di seguimento. |
+| agentCode | AGENT001 | Codice agente partner. |
+| apiSecret | your-api-secret | API segreto di firma memorizzato solo nel backend. |
+| defaultCurrency | USDT | Valuta predefinita per trasferimenti e APIsconto. |
+| webhookUrl | https://partner.example.com/6mm/webhook | Partner endpoint per notifiche 6MM webhook. |
+
+<h2 id="typical-integration-flow">Flusso tipico di integrazione</h2>
+
+1. Il frontend del partner autentica l'utente tramite il sistema account del partner.
+2. Il backend partner mappa l'utente a un identificatore stabile lato partner.
+3. Il backend chiama il Agent SDK con `agentCode` e il API protetto segreto.
+4. Il SDK firma e invia l'Agente API richiesta.
+5. Il backend memorizza l'identificativo di business restituito e processa ipotentemente i webhook successivi.
+6. Il frontend riceve solo il risultato di breve durata o la credenziali di ingresso necessaria.
+
+<h2 id="choose-an-sdk">Scegli un SDK</h2>
+
+| Stack backend | Inizia da qui |
+| --- | --- |
+| Java | [Java SDK Panoramica](/it/sdk/agent-sdk/java/overview) e [Java Avvio Rapido] (/sdk/agent-sdk/java/quick-start) |
+| PHP | [PHP SDK Panoramica](/it/sdk/agent-sdk/php/overview) e [PHP Avvio Rapido] (/sdk/agent-sdk/php/quick-start) |
+
+<h2 id="production-checklist">Elenco di controllo della produzione</h2>
+
+- Carica `apiSecret` da un gestore di segreti backend, non dal codice sorgente.
+- Mantenere separati le credenziali di sviluppo, staging e produzione.
+- Utilizzare una mappatura utente partner stabile e identificatori unici.
+- Preservare l'identificatore originale quando si verifica lo stato di una richiesta con timeout.
+- Verifica le firme dei webhook e memorizza gli ID degli eventi processati.
+- Oscurare segreti e firme dai log mantenendo gli ID delle richieste per il supporto.
+
+<h2 id="next-steps">Passi successivi</h2>
+
+<CardGroup cols={3}>
+<Card title="Java Avvio rapido" icon="fa-brands fa-java" href="/it/sdk/agent-sdk/java/quick-start">
+Installa e inizializza il Agent SDK in un backend Java .
+</Card>
+<Card title="PHP Avvio rapido" icon="fa-brands fa-php" href="/it/sdk/agent-sdk/php/quick-start">
+Installa e inizializza il Agent SDK in un backend PHP .
+</Card>
+<Card title="Ragazzi e Idempotenza" icon="fa-duotone fa-webhook" href="/it/sdk/security/webhooks-idempotency">
+Verifica i callback e evita l'elaborazione duplicata del business.
+</Card>
+</CardGroup>

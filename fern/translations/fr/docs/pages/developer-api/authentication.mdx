@@ -1,0 +1,73 @@
+---
+title: "6MM API Authentification : JWT et API Clés"
+description: "Apprenez à authentifier les requêtes de 6MM API privées avec des jetons d’accès JWT ou des clés API et choisissez la méthode appropriée pour chaque intégration."
+slug: developer-api/authentication
+canonical-url: https://docs.6mm.com/fr/developer-api/authentication
+---
+
+6MM prend en charge les jetons d’accès JWT et les clés API pour l’accès privé API . Choisissez la méthode en fonction du fait que la requête appartient à une session utilisateur interactive ou à une intégration backend de longue date.
+
+<h2 id="choose-an-authentication-method">Choisir une méthode d’authentification</h2>
+
+| Besoin d’intégration | Méthode recommandée | Pourquoi |
+| --- | --- | --- |
+| Appels de API de session utilisateur | JWT | Utilise le jeton d’accès retourné après la connexion. |
+| Créer, mettre à jour ou révoquer API Clés | JWT | API Key les terminaux de gestion n’acceptent pas API Key 'autogestion. |
+| Compte serveur à serveur ou appels de trading | API Key + HMAC signature | Prend en charge les autorisations à portée de portée et les requêtes backend signées. |
+
+<h2 id="jwt">JWT</h2>
+
+Après la connexion, le API renvoie un `accessToken`. Lors de l’appel des points de terminaison privés, incluez :
+
+```http
+Authorization: Bearer YOUR_ACCESS_TOKEN
+```
+
+Gardez le jeton hors des URL et des journaux. Quand un jeton expire, obtenez un jeton valide via le flux de connexion ou de rafraîchissement approuvé avant de réessayer la requête privée.
+
+<h2 id="api-key">API Key</h2>
+
+Lorsque l’en-tête de la requête `X-API-KEY` est présent, le serveur utilise API Key HMAC authentification :
+
+```http
+X-API-KEY: YOUR_API_KEY
+```
+
+API Key terminaux de gestion doivent utiliser JWT. API Les clés ne peuvent pas se gérer seules.
+
+API Key requêtes nécessitent également l’horodatage et la signature HMAC décrites dans [Signature de requête](/fr/developer-api/request-signing). Stockez le API secret correspondant uniquement dans un système de gestion de secrets en arrière-plan.
+
+<h2 id="api-key-permissions">API Key Autorisations</h2>
+
+| Valeur | Permission | Description                                                                                                                                                                                    |
+| ----- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `1`   | Lire       | Informations utilisateur, actifs, journaux de modifications de compte, statistiques, listenKey, symboles favoris et terminaux utilisateur/compte associés. Les terminaux de commande et de position, y compris les requêtes, nécessitent une autorisation d’échange |
+| `2`   | Commerce      | Ordres et positions des extrémités, incluant à la fois les opérations de requête et d’écriture                                                                                                                        |
+| `4`   | Retrait   | Autorisation de fonds réservés                                                                                                                                                                       |
+
+Pour accorder à la fois les permissions de lecture et d’échange, utilisez `permissions=3`.
+
+Utilisez le plus petit ensemble de permissions requis par l’intégration. Un service de données de marché ne devrait pas recevoir d’autorisations de transaction, tandis qu’un service d’ordres a besoin de cette permission même lorsqu’il ne sollicite que des ordres ou des positions.
+
+<h2 id="production-security-checklist">Liste de contrôle de la sécurité de la production</h2>
+
+- Créer des clés API séparées pour le développement, la mise en scène et la production.
+- Appliquer une liste blanche IP où l’intégration dispose d’adresses sortantes stables.
+- Ne jamais exposer API secrets dans le code d’une application navigateur, mobile ou bureau.
+- Synchroniser l’heure du serveur avant de générer des requêtes signées.
+- Expurger les en-têtes d’autorisation, API les clés, les signatures et les secrets des journaux d’application.
+- Révoquer et remplacer immédiatement une clé lorsqu’une exposition est suspectée.
+
+<h2 id="next-steps">Prochaines étapes</h2>
+
+<CardGroup cols={3}>
+<Card title="API Key Gestion" icon="fa-duotone fa-key" href="/fr/developer-api/api-key-management">
+Créez des clés à périmètre, configurez IP restrictions et planifiez la rotation des clés.
+</Card>
+<Card title="Signature de la demande" icon="fa-duotone fa-signature" href="/fr/developer-api/request-signing">
+Construis le HMACSHA256 la charge utile et signe les requêtes privées.
+</Card>
+<Card title="Erreurs et dépannage" icon="fa-duotone fa-screwdriver-wrench" href="/fr/developer-api/error-codes-and-troubleshooting">
+Diagnostiquez les identifiants, horodatages, signatures et autorisations rejetés.
+</Card>
+</CardGroup>

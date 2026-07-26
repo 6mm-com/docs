@@ -1,0 +1,56 @@
+---
+title: "Agent Java SDK"
+subtitle: "安裝 6MM Agent Java SDK 並使用簽署後端 APIs 進行使用者綁定、傳輸、存取憑證及 webhook 驗證。"
+slug: sdk/agent-sdk/java/overview
+canonical-url: https://docs.6mm.com/zh-TW/sdk/agent-sdk/java/overview
+---
+
+<h2 id="official-repository">官方資料庫</h2>
+
+Java SDK 倉庫是SDK原始碼、釋出說明、使用範例及實作細節的真實來源：
+
+[6mm-com/agent-java-sdk]（https://github.com/6mm-com/agent-java-sdk）
+
+<h2 id="runtime">運行時間</h2>
+
+| 項目 | 價值 |
+| --- | --- |
+| 最低 Java 版本 | Java 8+ |
+| 推薦的建構工具 | Maven 3.9+ |
+| Maven 群 | `com.sixmm.exchange.sdk` |
+| Maven 神器 | `agent` |
+| 文件來源標籤 | `v0.1.1` |
+
+公開的 GitHub 倉庫是原始碼主機，不是 Maven 相依套件庫。在團隊建置前，請先在本地建置並安裝已標記的原始碼，或將核准的產物發佈到組織的私人 Maven 倉庫。
+
+<h2 id="typical-backend-responsibilities">典型後端職責</h2>
+
+- 驗證合作夥伴使用者會話。
+- 將合作夥伴使用者映射到 agentUserId。
+- 在首次交易或轉帳流前進行買權綁定。
+- 致電 createEntryUrl 申請一次性全站 SSO。
+- 呼叫createEmbedTokenTrading Widget夥伴標記模式。
+- 驗證傳輸 webhook 並以冪零方式處理。
+
+<h2 id="security-and-operational-rules">安全與操作規則</h2>
+
+- 僅將 `apiSecret` 儲存在後端秘密管理器或受保護的環境變數中。
+- 保持伺服器時間同步，因為簽署請求包含時間戳記。
+- 將 `agentOrderNo` 視為持久的冪性密鑰，並保持其全域唯一性。
+- 將 `platformUserId` 儲存為字串，並持續維持其與 `agentUserId`的關係。
+- 在逾時或網路結果不確定後，先查詢原始傳輸。
+
+<h2 id="next-steps">下一步</h2>
+
+- [Java 快速啟動 ]（/sdk/agent-sdk/java/quick-start）：安裝標籤的原始碼並初始化 `AgentClient`。
+- [建立嵌入令牌]（/sdk/agent-sdk/java/embed-token）：為 Trading Widget發出短暫的憑證。
+- [秘密與簽名]（/sdk/security/secrets-signing）：理解自動 HMAC 簽名與秘密處理。
+- [Webhooks 與 idempotency]（/sdk/security/webhooks-idempotency）：驗證回調並防止重複處理。
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">相關頁面</h2>
+
+- [Java 快速入門](/zh-TW/sdk/agent-sdk/java/quick-start)
+- [建立嵌入令牌](/zh-TW/sdk/agent-sdk/java/embed-token)
+- [Agent SDK 祕密與 HMAC 手語](/zh-TW/sdk/security/secrets-signing)
+- [Webhook 簽名驗證與冪性](/zh-TW/sdk/security/webhooks-idempotency)
+<!-- sixmm-localized-link-repair:end -->

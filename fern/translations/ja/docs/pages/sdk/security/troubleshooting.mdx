@@ -1,0 +1,68 @@
+---
+title: "SDK 統合トラブルシューティング"
+subtitle: "サポート要請をエスカレーションする前に、 Trading Widget、 Agent SDK、署名、ウェブフック、タイムアウト、環境の問題を診断してください。"
+slug: sdk/security/troubleshooting
+canonical-url: https://docs.6mm.com/ja/sdk/security/troubleshooting
+---
+
+まず、失敗した操作の環境、タイムスタンプ、ビジネス識別子から始めます。構造化チェックは通常、設定問題と認証、ネットワーク、非同期処理の問題を区別します。
+
+<h2 id="diagnostic-order">推奨診断順</h2>
+
+1. 影響を受ける環境と基地 URLを確認する。
+2. UTC の時間範囲と最初の失敗リクエストを記録します。
+3. モジュールを特定する: Trading Widget、 Agent SDK、 REST API、 WebSocket、またはwebhook。
+4. リクエストID、パートナーユーザーID、 `agentOrderNo`、注文ID、またはウェブフックイベントIDを取得する。
+5. 最近のコード、認証情報、 IP ホワイトリスト、またはデプロイの変更を確認しましょう。
+6. 最小の安全なテストケースで繁殖すること。
+
+<h2 id="trading-widget-issues">Trading Widget 号</h2>
+
+| 症状 | 原因としては | 修正 |
+| --- | --- | --- |
+| iFrameがパートナーのローカルドメインを要求します | baseUrl が欠けている | パス baseUrl: 『https://app.6mm.com』。 |
+| iframeは見えないか非常に短いです | 親コンテナには高さがありません | 容器の高さやパスの高さを設定してください。 |
+| token_provider_missing | パートナートークンモードにはプロバイダーがありません | 認証を追加。tokenProvider。 |
+| auth_exchange_failed | 無効、期限切れ、または不一致の埋め込みトークン | バックエンドのトークン応答と channelIdを確認してください。 |
+
+<h2 id="agent-sdk-issues">Agent SDK 号</h2>
+
+| 症状 | 原因としては | 修正 |
+| --- | --- | --- |
+| 署名拒否 | 間違った秘密、時計のドリフト、または署名欄の手動変更 | 署名フィールドの生成とサーバータイムの同期を SDK します。 |
+| 重複資金移動リスク | タイムアウト後に使用した新しい注文番号 | まずは元の agentOrderNo でクエリを出してください。 |
+| PROCESSING 失敗者として扱われる | 州の未解決の誤解 | ウェブフックを待つか、 queryOrderに電話してください。 |
+| Webhookは複数回処理されました | 冪等性のない再試行動 | 冪等性キーと最終状態のチェックを追加してください。 |
+
+<h2 id="evidence-to-capture">証拠を押収する</h2>
+
+| 統合 | 有用な証拠 |
+| --- | --- |
+| Trading Widget | ページ URL、 SDK バージョンパス、ブラウザコンソール、ネットワークリクエスト失敗、 `onError` ペイロード、コンテナ寸法。 |
+| Agent SDK | 言語・バージョンSDK、ベースURL、UTCタイムスタンプ、リクエストID、`agentOrderNo`、レスポンスコード、そしてサニタイズされたログです。 |
+| ウェブフック | 配信時間、イベントまたはビジネスキー、署名検証結果、処理状態、そしてサニティ化された生のハッシュ。 |
+| REST API | メソッド、パス、環境、リクエストID、レスポンスコード、サニティ化されたパラメータ。 |
+
+パスワード、アクセストークン、 API シークレット、完全な署名、秘密鍵、または編集されていない個人データは診断に含めてはいけません。
+
+<h2 id="before-escalating">エスカレートする前に</h2>
+
+- 操作が安全に再試行可能と記録されている場合のみ再試行。
+- タイムアウト後、新しい事業者識別子を作成する代わりに元のビジネス識別子をクエリする。
+- システムクロックおよび認証情報環境のシグネチャエラーの確認。
+- 最初の失敗とその後の再試行結果を保持する。
+- 次の [サポートリクエストテンプレート](/ja/resources/support-request-template) 完全な黒塗り報告書を送ること。
+
+<h2 id="related-docs">関連文書</h2>
+
+<CardGroup cols={3}>
+<Card title="Trading Widget クイックスタート" icon="fa-duotone fa-chart-line" href="/ja/sdk/trading-widget/quick-start">
+スクリプトの読み込み、コンテナサイズ、設定、コールバックの確認。
+</Card>
+<Card title="秘密と署名" icon="fa-duotone fa-shield-keyhole" href="/ja/sdk/security/secrets-signing">
+Agent SDK認証情報、時計、署名済みフィールドをチェックしてください。
+</Card>
+<Card title="ウェブフックと冪等性" icon="fa-duotone fa-webhook" href="/ja/sdk/security/webhooks-idempotency">
+コールバック検証と重複イベント処理の確認。
+</Card>
+</CardGroup>

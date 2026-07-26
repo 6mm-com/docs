@@ -1,0 +1,426 @@
+---
+title: "الترتيب"
+description: "استخدم نقاط نهاية 6MM للأوامر لإنشاء واستعلام وإلغاء وإدارة الأوامر الدائمة أثناء التعامل مع الأذونات والمعرفات وحالات دورة الحياة."
+slug: developer-api/rest-api/order
+canonical-url: https://docs.6mm.com/ar/developer-api/rest-api/order
+---
+
+> **ملاحظة**
+>
+> نقاط نهاية الأوامر تتطلب إذن تداول.
+
+<h2 id="place-order">ترتيب الأماكن</h2>
+
+```http
+POST /v1/private/order/place
+Content-Type: application/json
+```
+
+**معايير الطلب:**
+
+| المعلمة       | النوع   | مطلوب               | الوصف                                                                                                                   |
+| --------------- | ------ | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `symbol`        | string | نعم                    | الرمز                                                                                                                        |
+| `type`          | string | نعم                    | `LIMIT` / `MARKET`                                                                                                            |
+| `side`          | string | نعم                    | `BUY` / `SELL`                                                                                                                |
+| `positionSide`  | string | لا                     | `BOTH` / `LONG` / `SHORT`، `BOTH` الافتراضي                                                                                     |
+| `price`         | string | مطلوب مشروطا | مطلوب لأوامر الحد                                                                                                     |
+| `quantity`      | string | مطلوب مشروطا | الكمية. يمكن حذفها عندما `closePosition=true`                                                                            |
+| `timeInForce`   | string | لا                     | `GTC` / `IOC` / `FOK`، `GTC` الافتراضي                                                                                          |
+| `reduceOnly`    | bool   | لا                     | التقليل فقط، `false` الافتراضي                                                                                                  |
+| `makerOnly`     | bool   | لا                     | المصمم فقط، `false` الافتراضي                                                                                                   |
+| `closePosition` | bool   | لا                     | أغلق المركز بالكامل، `false`                                                                                    |
+| `clientOrderId` | string | لا                     | معرف الطلب المعرف من العميل                                                                                                       |
+| `placeType`     | string | لا                     | علامة نوع ترتيب الطلب                                                                                                   |
+| `priceType`     | int32  | لا                     | نوع السعر BBO: `0` السعر المحدد، `1` الخصم 1، `2` الخصم 5، `3` سعر الجانب نفسه 1، `4` سعر الجانب نفسه 5 |
+
+**مثال طلب:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "type": "LIMIT",
+  "side": "BUY",
+  "price": "85000",
+  "quantity": "0.1",
+  "timeInForce": "GTC",
+  "makerOnly": true,
+  "clientOrderId": "ext-1772710377808-001"
+}
+```
+
+**حقول الاستجابة:**
+
+| الميدان           | النوع   | الوصف             |
+| --------------- | ------ | ----------------------- |
+| `orderId`       | string | معرف ترتيب الخادم         |
+| `clientOrderId` | string | معرف الطلب المعرف من العميل |
+| `status`        | string | حالة الترتيب            |
+| `timestamp`     | int64  | الطابع الزمني               |
+
+<h2 id="batch-place-orders">أوامر التوزيع الدفعي</h2>
+
+```http
+POST /v1/private/order/batch-place
+Content-Type: application/json
+```
+
+**جسم الطلب:**
+
+```json
+{
+  "orders": [
+    {
+      "symbol": "BTCUSDT",
+      "type": "LIMIT",
+      "side": "BUY",
+      "price": "85000",
+      "quantity": "0.1",
+      "clientOrderId": "ext-buy-001"
+    }
+  ]
+}
+```
+
+**حقول الاستجابة:**
+
+| الميدان          | النوع  | الوصف                 |
+| -------------- | ----- | --------------------------- |
+| `successCount` | int32 | عدد الطلبات الناجحة |
+| `failedCount`  | int32 | عدد الطلبات الفاشلة     |
+| `results[]`    | array | النتيجة لكل ترتيب       |
+
+<h2 id="place-condition-order">ترتيب حالة الأماكن</h2>
+
+```http
+POST /v1/private/order/place-condition
+Content-Type: application/json
+```
+
+**معايير الطلب:**
+
+| المعلمة       | النوع   | مطلوب               | الوصف                                                                                 |
+| --------------- | ------ | ---------------------- | ------------------------------------------------------------------------------------------- |
+| `symbol`        | string | نعم                    | الرمز                                                                                      |
+| `type`          | string | نعم                    | `STOP_MARKET` / `TAKE_PROFIT_MARKET` / `STOP_LIMIT` / `TAKE_PROFIT_LIMIT` / `TRAILING_STOP` |
+| `side`          | string | نعم                    | `BUY` / `SELL`                                                                              |
+| `positionSide`  | string | لا                     | `BOTH` / `LONG` / `SHORT`                                                                   |
+| `price`         | string | مطلوب مشروطا | مطلوب ل `STOP_LIMIT` / `TAKE_PROFIT_LIMIT`                                             |
+| `quantity`      | string | مطلوب مشروطا | الكمية. يمكن حذفها عندما `closePosition=true`                                          |
+| `timeInForce`   | string | لا                     | `GTC` / `IOC` / `FOK` / `GTE_GTC`                                                           |
+| `reduceOnly`    | bool   | لا                     | التقليل فقط                                                                                 |
+| `clientOrderId` | string | لا                     | معرف الطلب المعرف من العميل                                                                     |
+| `stopPrice`     | string | مطلوب مشروطا | سعر الزناد                                                                               |
+| `workingType`   | string | لا                     | `MARK_PRICE` / `CONTRACT_PRICE`، `CONTRACT_PRICE` الافتراضي                                   |
+| `priceProtect`  | bool   | لا                     | هل يتم تمكين حماية الأسعار                                                         |
+| `activatePrice` | string | مطلوب مشروطا | سعر تفعيل الأوامر المتأخرة                                                             |
+| `callbackRate`  | string | مطلوب مشروطا | معدل استدعاء الأوامر اللاحقة                                                                |
+| `closePosition` | bool   | لا                     | أغلق المركز بالكامل                                                                   |
+
+**حقول الاستجابة:**
+
+| الميدان             | النوع   | الوصف            |
+| ----------------- | ------ | ---------------------- |
+| `conditionId`     | string | معرف ترتيب الحالة     |
+| `conditionStatus` | string | حالة ترتيب الحالة |
+| `timestamp`       | int64  | الطابع الزمني              |
+
+<h2 id="place-strategy-order">ترتيب استراتيجية الأماكن</h2>
+
+```http
+POST /v1/private/order/place-strategy
+Content-Type: application/json
+```
+
+**معايير الطلب:**
+
+| المعلمة      | النوع   | مطلوب | الوصف             |
+| -------------- | ------ | -------- | ----------------------- |
+| `strategyType` | string | نعم      | `OTOCO` / `OTO` / `OCO` |
+| `subOrderList` | array  | نعم      | قائمة الترتيب الفرعي          |
+
+الحقول في `subOrderList[]` هي في الغالب نفسها الترتيبات العادية وترتيبات الشروط، مع حقول تبعية إضافية:
+
+| المعلمة        | النوع   | الوصف                                     |
+| ---------------- | ------ | ----------------------------------------------- |
+| `strategySubId`  | int64  | معرف الترتيب الفرعي                                    |
+| `firstDrivenId`  | int64  | أول معرف أمر قيادة. `0` يعني عدم وجود تبعية |
+| `firstDrivenOn`  | string | الحالة الأولى للمحفز                         |
+| `firstTrigger`   | string | أول حركة زناد                            |
+| `secondDrivenId` | int64  | رقم التعريف الثاني لأمر القيادة                         |
+| `secondDrivenOn` | string | الحالة الثانية للزناد                        |
+| `secondTrigger`  | string | الفعل الثاني للزناد                           |
+
+**حقول الاستجابة:**
+
+| الميدان            | النوع   | الوصف     |
+| ---------------- | ------ | --------------- |
+| `strategyId`     | string | معرف الاستراتيجية     |
+| `strategyStatus` | string | حالة الاستراتيجية |
+| `timestamp`      | int64  | الطابع الزمني       |
+
+<h2 id="query-single-order">الاستعلام بترتيب واحد</h2>
+
+```http
+GET /v1/private/order?symbol=BTCUSDT&orderId=2022543809547603968
+```
+
+**معايير الطلب:**
+
+| المعلمة       | النوع   | مطلوب | الوصف             |
+| --------------- | ------ | -------- | ----------------------- |
+| `symbol`        | string | نعم      | الرمز                  |
+| `orderId`       | string | لا       | معرف ترتيب الخادم         |
+| `clientOrderId` | string | لا       | معرف الطلب المعرف من العميل |
+
+يجب توفير واحد على الأقل من `orderId` `clientOrderId` . إذا تم توفير كلاهما، يقوم الخادم بإجراء تطابق دقيق على كلا الشرطين.
+
+<h2 id="current-normal-orders">الأوامر العادية الحالية</h2>
+
+```http
+GET /v1/private/order/current?symbol=BTCUSDT
+```
+
+**معايير الطلب:**
+
+| المعلمة     | النوع   | مطلوب | الوصف        |
+| ------------- | ------ | -------- | ------------------ |
+| `symbol`      | string | لا       | الرمز             |
+| `limit`       | int32  | لا       | حد عدد الإرجاع |
+| `lastOrderId` | int64  | لا       | حقل المؤشر       |
+
+**حقول الاستجابة:**
+
+| الميدان    | النوع  | الوصف               |
+| -------- | ----- | ------------------------- |
+| `list[]` | array | قائمة الترتيب العادية الحالية |
+| `total`  | int32 | الكونت                     |
+
+<h2 id="current-condition-orders">أوامر الحالة الحالية</h2>
+
+```http
+GET /v1/private/order/current-condition?symbol=BTCUSDT
+```
+
+**معايير الطلب:**
+
+| المعلمة | النوع   | مطلوب | الوصف |
+| --------- | ------ | -------- | ----------- |
+| `symbol`  | string | لا       | الرمز      |
+
+<h2 id="historical-normal-orders">الأوامر الطبيعية التاريخية</h2>
+
+```http
+GET /v1/private/order/history?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+**معايير الطلب:**
+
+| المعلمة       | النوع   | مطلوب | الوصف                              |
+| --------------- | ------ | -------- | ---------------------------------------- |
+| `symbol`        | string | لا       | الرمز                                   |
+| `orderId`       | string | لا       | فلتر معرف الطلب الدقيق                    |
+| `clientOrderId` | string | لا       | فلتر معرف أوامر العميل الدقيق             |
+| `type`          | int32  | لا       | نوع الطلب: الحد `1`، السوق `2` |
+| `side`          | int32  | لا       | المرشح الجانبي: `1` الشراء، `2` البيع           |
+| `status`        | int32  | لا       | مرشح الحالة                            |
+| `startTime`     | int64  | لا       | وقت البدء                               |
+| `endTime`       | int64  | لا       | نهاية الزمن                                 |
+| `page`          | int64  | لا       | رقم الصفحة، `1` الافتراضي                 |
+| `pageSize`      | int64  | لا       | العناصر في كل صفحة، `20` الافتراضي             |
+
+<h2 id="historical-condition-orders">أوامر الحالة التاريخية</h2>
+
+```http
+GET /v1/private/order/history-condition?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+**معايير الطلب:**
+
+| المعلمة   | النوع   | مطلوب | الوصف                    |
+| ----------- | ------ | -------- | ------------------------------ |
+| `symbol`    | string | لا       | الرمز                         |
+| `side`      | int32  | لا       | المرشح الجانبي: `1` الشراء، `2` البيع |
+| `status`    | int32  | لا       | مرشح الحالة                  |
+| `startTime` | int64  | لا       | وقت البدء                     |
+| `endTime`   | int64  | لا       | نهاية الزمن                       |
+| `page`      | int64  | لا       | رقم الصفحة، `1` الافتراضي       |
+| `pageSize`  | int64  | لا       | العناصر في كل صفحة، `20` الافتراضي   |
+
+<h2 id="trade-records">سجلات التجارة</h2>
+
+```http
+GET /v1/private/order/trades?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+**معايير الطلب:**
+
+| المعلمة   | النوع   | مطلوب | الوصف                  |
+| ----------- | ------ | -------- | ---------------------------- |
+| `symbol`    | string | لا       | الرمز                       |
+| `orderId`   | string | لا       | مرشح معرف الطلب              |
+| `startTime` | int64  | لا       | وقت البدء                   |
+| `endTime`   | int64  | لا       | نهاية الزمن                     |
+| `page`      | int64  | لا       | رقم الصفحة، `1` الافتراضي     |
+| `pageSize`  | int64  | لا       | العناصر في كل صفحة، `20` الافتراضي |
+
+**حقول الاستجابة:**
+
+| الميدان                 | النوع   | الوصف       |
+| --------------------- | ------ | ----------------- |
+| `list[].fillId`       | string | معرف التفاصيل التابع    |
+| `list[].tradeId`      | string | معرف سجل التجارة   |
+| `list[].orderId`      | string | رقم الطلب          |
+| `list[].symbol`       | string | الرمز            |
+| `list[].side`         | string | الجانب              |
+| `list[].roleType`     | string | `maker` / `taker` |
+| `list[].price`        | string | السعر المكتمل      |
+| `list[].quantity`     | string | كمية مملوءة   |
+| `list[].tradeValue`   | string | قيمة التجارة       |
+| `list[].handlingFee`  | string | رسوم التعامل      |
+| `list[].realizedPnl`  | string | PnL المحقق      |
+| `list[].positionSide` | string | جانب المركز     |
+| `list[].createdAt`    | int64  | وقت التبادل        |
+| `total`               | int64  | إجمالي العدد       |
+
+<h2 id="cancel-order">إلغاء الطلب</h2>
+
+```http
+POST /v1/private/order/cancel
+Content-Type: application/json
+```
+
+**جسم الطلب:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "orderId": "2022543809547603968"
+}
+```
+
+يمكن أيضا استخدام `clientOrderId` لإلغاء الطلب.
+
+<h2 id="amend-order">أمر التعديل</h2>
+
+```http
+POST /v1/private/order/move
+Content-Type: application/json
+```
+
+**جسم الطلب:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "orderId": "2022543809547603968",
+  "price": "85100",
+  "quantity": "0.2"
+}
+```
+
+`quantity` هو الكمية النهائية الكلية للأمر بعد التعديل، وليس الكمية المتبقية.
+
+<h2 id="batch-amend-orders">أوامر التعديل الدفعي</h2>
+
+```http
+POST /v1/private/order/batch-move
+Content-Type: application/json
+```
+
+**جسم الطلب:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "orders": [
+    {
+      "orderId": "2022543809547603968",
+      "price": "85100",
+      "quantity": "0.2"
+    }
+  ]
+}
+```
+
+<h2 id="batch-cancel-orders">إلغاء الطلبات دفعة واحدة</h2>
+
+```http
+POST /v1/private/order/batch-cancel
+Content-Type: application/json
+```
+
+**جسم الطلب:**
+
+```json
+{
+  "orders": [
+    {
+      "symbol": "BTCUSDT",
+      "orderId": "2022543809547603968"
+    }
+  ]
+}
+```
+
+<h2 id="cancel-all">إلغاء الجميع</h2>
+
+```http
+POST /v1/private/order/batch-cancel-all
+Content-Type: application/json
+```
+
+**معايير الطلب:**
+
+| المعلمة    | النوع   | مطلوب | الوصف                                                                         |
+| ------------ | ------ | -------- | ----------------------------------------------------------------------------------- |
+| `symbol`     | string | لا       | الرمز                                                                              |
+| `cancelType` | int32  | لا       | `0` جميع الأوامر العادية، `1` أوامر الحد فقط، `2` جميع أوامر الشروط. `0` الافتراضي |
+
+يتم قبول إلغاء كل شيء للأوامر العادية بشكل غير متزامن. يجب تحديد الحالة النهائية بواسطة نقاط نهاية WebSocket `ORDER_TRADE_UPDATE` أو الاستعلام.
+
+<h2 id="cancel-condition-order">إلغاء طلب الشرط</h2>
+
+```http
+POST /v1/private/order/cancel-condition
+Content-Type: application/json
+```
+
+**جسم الطلب:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "conditionId": "2022543809547603968"
+}
+```
+
+<h2 id="strategy-order-detail">تفاصيل ترتيب الاستراتيجية</h2>
+
+```http
+GET /v1/private/order/strategy?strategyId=2022543809547603968
+```
+
+**حقول الاستجابة:**
+
+| الميدان            | النوع   | الوصف                          |
+| ---------------- | ------ | ------------------------------------ |
+| `strategyId`     | string | معرف الاستراتيجية                          |
+| `strategyType`   | string | `OTOCO` / `OTO` / `OCO`              |
+| `strategyStatus` | string | `WORKING` / `ALL_DONE` / `CANCELLED` |
+| `bookTime`       | int64  | زمن الخلق                        |
+| `subOrders[]`    | array  | تفاصيل الترتيب الفرعي                    |
+| `updateTime`     | int64  | وقت التحديث                          |
+
+<h2 id="related-documentation">وثائق ذات صلة</h2>
+
+- [أنواع الطلبات](/ar/trading/order-types)
+- [الإينومات الشائعة](/ar/developer-api/common-enums)
+- [قناة المستخدمين الخاصة] (/developer-api/websocket/private-user-channel)
+- [توصيات التكامل] (/developer-api/integration-recommendations)
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">صفحات ذات صلة</h2>
+
+- [قناة المستخدم الخاص](/ar/developer-api/websocket/private-user-channel)
+- [توصيات التكامل](/ar/developer-api/integration-recommendations)
+<!-- sixmm-localized-link-repair:end -->

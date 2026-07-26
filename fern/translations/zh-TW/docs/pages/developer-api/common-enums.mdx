@@ -1,0 +1,58 @@
+---
+title: "常見的列舉"
+description: "參考常見 6MM API 列舉順序狀態、邊、順序類型、生效時間、位置模式、轉移及積分響應。"
+slug: developer-api/common-enums
+canonical-url: https://docs.6mm.com/zh-TW/developer-api/common-enums
+---
+
+<h2 id="orders">命令</h2>
+
+| 列舉                 | 價值觀                                                                                                    |
+| -------------------- | --------------------------------------------------------------------------------------------------------- |
+| 順序端           | `BUY` / `SELL`                                                                                            |
+| 位置側        | `BOTH` / `LONG` / `SHORT`                                                                                 |
+| 正規順序類型    | `LIMIT` / `MARKET`                                                                                        |
+| 條件順序類型 | `STOP_MARKET` / `STOP_LIMIT` / `TAKE_PROFIT_MARKET` / `TAKE_PROFIT_LIMIT` / `TRAILING_STOP`               |
+| 有效期限        | `GTC` / `IOC` / `FOK` / `GTE_GTC`                                                                         |
+| 觸發價格類型   | `MARK_PRICE` / `CONTRACT_PRICE`                                                                           |
+| 修會狀態         | `NEW` / `PENDING` / `PARTIALLY_FILLED` / `FILLED` / `CANCELED` / `REJECTED` / `PARTIALLY_FILLED_CANCELED` |
+
+`NEW` 表示訂單請求已被接受並退回。 `PENDING` 表示訂單已進入待處理或未開訂單狀態。
+
+<h2 id="positions">職位</h2>
+
+| 列舉                      | 價值觀                                                      |
+| ------------------------- | ----------------------------------------------------------- |
+| 保證金模式請求值 | `1` 十字架， `2` 孤立                                     |
+| 邊界模式字串        | `ISOLATED` / `CROSS`                                        |
+| 關閉觸發模式        | `1` 手動操作， `2` 獲利了結， `3` 停損， `4` 清倉 |
+
+<h2 id="integration-rules">積分規則</h2>
+
+- 將列舉值視為大小寫區分線路值。
+- 將未知值保存在日誌中並安全失效，而非靜默地將它們映射到已知狀態。
+- 不要推斷每個非最終順序狀態都可以安全重試。查詢該順序或將其與私有 WebSocket 事件調和。
+- 同時儲存原始 API 值與面向合作夥伴的顯示標籤，以便在不更改歷史紀錄的情況下支援新值。
+
+<h2 id="order-state-handling">訂單狀態處理</h2>
+
+| 國家集團 | 價值觀 | 建議操作方法 |
+| --- | --- | --- |
+| 接受或開放 | `NEW`， `PENDING`， `PARTIALLY_FILLED` | 保持訂單有效，並與 WebSocket 或 REST 更新進行對帳。 |
+| 完成 | `FILLED` | 套用最終填滿的數量與執行紀錄。 |
+| 未完全填滿即封閉 | `CANCELED`， `REJECTED`， `PARTIALLY_FILLED_CANCELED` | 停止主動處理，保留原因及任何已執行的數量。 |
+
+<h2 id="related-documentation">相關文件</h2>
+
+- [訂單 API]（/developer-api/rest-api/order）：請求欄位及訂單生命週期操作。
+- [訂單類型]（/trading/order-types）：限價單、市價單及條件單的產品行為。
+- [私人用戶通道]（/developer-api/websocket/private-user-channel）：即時訂單與帳戶狀態。
+- [錯誤代碼與故障排除]（/developer-api/error-codes-and-troubleshooting）：商業代碼與診斷工作流程。
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">相關頁面</h2>
+
+- [秩序](/zh-TW/developer-api/rest-api/order)
+- [訂單類型](/zh-TW/trading/order-types)
+- [私人用戶通道](/zh-TW/developer-api/websocket/private-user-channel)
+- [錯誤代碼與故障排除](/zh-TW/developer-api/error-codes-and-troubleshooting)
+<!-- sixmm-localized-link-repair:end -->

@@ -1,0 +1,96 @@
+---
+title: "الاتصال، الاشتراك والنبض"
+subtitle: "اتصل ببث 6MM WebSocket ، اشترك في المواضيع، حافظ على الاتصالات، ومعالجة أظرف الرسائل بأمان."
+slug: developer-api/websocket/connection-subscription-and-heartbeat
+canonical-url: https://docs.6mm.com/ar/developer-api/websocket/connection-subscription-and-heartbeat
+---
+
+استخدم تدفقات WebSocket لبيانات السوق وتحديثات حالة المستخدم الخاصة التي يجب أن تبقى محدثة دون إجراء استطلاعات.
+
+<h2 id="connection-url">URL الاتصال</h2>
+
+```text
+wss://ws.6mm.com/ws
+```
+
+تتطلب التدفقات الخاصة سياق مصادقة مثل listenKey أو رمز الوصول كما هو موضح في وثائق القناة الخاصة.
+
+<h2 id="subscribe">اشترك</h2>
+
+```json
+{ "id": "1772007814666", "op": "subscribe", "args": ["market.depth.BTCUSDT"] }
+```
+
+تأكيد الاشتراك الناجح:
+
+```json
+{
+  "id": "1772007814666",
+  "event": "subscribe",
+  "success": true,
+  "data": ["market.depth.BTCUSDT"]
+}
+```
+
+<h2 id="unsubscribe">إلغاء الاشتراك</h2>
+
+```json
+{ "id": "1772007814667", "op": "unsubscribe", "args": ["market.depth.BTCUSDT"] }
+```
+
+<h2 id="application-ping">تصغير التطبيق</h2>
+
+```json
+{ "id": "1772007814668", "op": "ping", "args": [] }
+```
+
+<h2 id="message-envelope">ظرف الرسالة</h2>
+
+الدفع العام يستخدم ظرفا ثابتا:
+
+```json
+{
+  "topic": "market.depth.BTCUSDT",
+  "event": "data",
+  "ts": 1772007815000,
+  "data": {}
+}
+```
+
+<h2 id="operational-recommendations">التوصيات التشغيلية</h2>
+
+- إنشاء `id` فريد على جانب العميل لكل طلب اشتراك، إلغاء اشتراك، وطلب ping.
+- اعتبر إعادة الاتصال كجلسة جديدة وأعد الاشتراك في المواضيع المطلوبة.
+- التحقق من أن `topic` المردود يطابق القناة التي تتوقعها خدمتك.
+- الحفاظ على معالجة الرسائل ذات القدرة الذاتية عندما يتعلق الأمر بأوامر خاصة أو أحداث حساب.
+- تسجيل تغييرات حالة الاتصال، تأكيدات الاشتراك، والانقطاعات غير الطبيعية.
+
+<h2 id="reconnect-workflow">إعادة ربط سير العمل</h2>
+
+1. أغلق أو تخلص من المقبس السابق وأنشئ اتصالا جديدا.
+2. إعادة التحقق من صحة التدفقات الخاصة باستخدام listenKey أو رمز وصول صالح.
+3. أعد الاشتراك في كل موضوع مطلوب وانتظر التقدير الناجح.
+4. استبدال الولاية المحلية في دفتر الأوامر بصورة جديدة قبل تطبيق تحديثات تدريجية.
+5. التوفيق بين الأوامر المفتوحة والمواقف والتوازنات من خلال REST إذا كان قد فاتت الأحداث الخاصة.
+
+استخدم ارتداد أسي محدود مع التذبذب لمحاولات إعادة الاتصال. يجب على العميل الذي يعيد الاتصال بشكل مستمر تنبيه المشغلين بدلا من إعادة المحاولة إلى أجل غير مسمى دون رؤية واضحة.
+
+<h2 id="heartbeat-and-stale-connections">نبض القلب والروابط القديمة</h2>
+
+- تتبع أحدث رسالة واردة وتأكيد ناجح للتنبيه.
+- استخدم فترة نبض القلب وعتبة الخمول المعتمدة لبيئة الإنتاج.
+- عامل الاتصال على أنه قديم عندما يتجاوز الحد المكون، حتى لو كان مقبس TCP لا يزال مفتوحا.
+- لا تعيد استخدام الاشتراكات من مقبس قديم؛ أعد الاشتراك بشكل صريح بعد كل إعادة اتصال.
+
+<h2 id="related-documentation">وثائق ذات صلة</h2>
+
+- [قنوات السوق العامة] (/developer-api/websocket/public-market-channels): المواضيع، استمرارية دفتر الطلبات، التداولات، الشموع، والنشرات.
+- [قناة المستخدم الخاصة] (/developer-api/websocket/private-user-channel): دورة حياة listenKey والأحداث المصادقة.
+- [توصيات التكامل] (/developer-api/integration-recommendations): المحاولات، التقدير، المراقبة، واختبار الإطلاق.
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">صفحات ذات صلة</h2>
+
+- [WebSocket قنوات بيانات السوق العامة](/ar/developer-api/websocket/public-market-channels)
+- [قناة المستخدم الخاص](/ar/developer-api/websocket/private-user-channel)
+- [توصيات التكامل](/ar/developer-api/integration-recommendations)
+<!-- sixmm-localized-link-repair:end -->

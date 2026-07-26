@@ -1,0 +1,70 @@
+---
+title: "PHP Быстрый старт"
+subtitle: "Установите и инициализируйте PHP SDK из бэкенд-сервиса."
+slug: sdk/agent-sdk/php/quick-start
+canonical-url: https://docs.6mm.com/ru/sdk/agent-sdk/php/quick-start
+---
+
+<h2 id="install">Установка</h2>
+
+```json
+{
+  "require": {
+    "sixmm/agent-sdk": "VERSION_PROVIDED_BY_6MM"
+  }
+}
+```
+
+> **Доступ к посылке**
+>
+> 6MM предоставляет утверждённое название пакета, репозиторий и версию Composer во время адаптации партнёров. Не следует считать, что пакет существует на публичном Packagist.
+
+<h2 id="before-you-start">Прежде чем начать</h2>
+
+- Подтвердите, что агент API базовый URL с 6MM.
+- Загружать apiSecret из переменных среды или управления секретами.
+- Оставьте SDK использование только внутри серверных сервисов.
+- Подготовить идемпотентную обработку для потоков передачи и вебхука.
+
+<h2 id="initialize-client">Инициализация клиента</h2>
+
+```php
+<?php
+
+use Sixmm\Agent\AgentClient;
+use Sixmm\Agent\AgentConfig;
+
+$client = new AgentClient(new AgentConfig(
+    'https://agent-api.6mm.com',
+    'AGENT001',
+    getenv('AGENT_API_SECRET') ?: '',
+    'USDT'
+));
+```
+
+> **Только для бэкенда**
+>
+> PHP SDK подписывает запросы Agent API и не должен быть раскрыт через публичный исходный код или фронтенд-среды выполнения.
+
+<h2 id="example-transfer-funds-in">Пример: перевод средств в</h2>
+
+```php
+$response = $client->transfer([
+    'agentOrderNo' => 'AGT-ORDER-1001',
+    'agentUserId' => 'agent-user-001',
+    'direction' => 'IN',
+    'currency' => 'USDT',
+    'amount' => '10.00',
+]);
+```
+
+Используйте десятичные строки для сумм и сохраняйте исходный agentOrderNo при повторной попытке или запросе статуса передачи.
+
+<h2 id="next-steps">Следующие шаги</h2>
+
+| Потребность | Следующая страница |
+| --- | --- |
+| Понимайте Agent SDK возможности | [Agent SDK Обзор ](/ru/sdk/agent-sdk/overview) |
+| Пересмотр поведения при подписании | [Секреты и жесты](/ru/sdk/security/secrets-signing) |
+| Проверьте обратную доставку | [Вебхуки и идемпотентность](/ru/sdk/security/webhooks-idempotency) |
+| Диагностика проблемы интеграции | [SDK Устранение неполадок](/ru/sdk/security/troubleshooting) |

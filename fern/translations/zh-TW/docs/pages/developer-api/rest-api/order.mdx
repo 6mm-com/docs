@@ -1,0 +1,428 @@
+---
+title: "秩序"
+description: "利用 6MM 訂單端點來建立、查詢、取消及管理永續訂單，同時處理權限、識別碼及生命週期狀態。"
+slug: developer-api/rest-api/order
+canonical-url: https://docs.6mm.com/zh-TW/developer-api/rest-api/order
+---
+
+> **註解**
+>
+> 訂單端點需要交易許可。
+
+<h2 id="place-order">下單</h2>
+
+```http
+POST /v1/private/order/place
+Content-Type: application/json
+```
+
+**請求參數：**
+
+| 參數       | 類型   | 必修               | 描述                                                                                                                   |
+| --------------- | ------ | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `symbol`        | string | 是的                    | 象徵                                                                                                                        |
+| `type`          | string | 是的                    | `LIMIT` / `MARKET`                                                                                                            |
+| `side`          | string | 是的                    | `BUY` / `SELL`                                                                                                                |
+| `positionSide`  | string | 不                     | `BOTH` / `LONG` / `SHORT`，預設 `BOTH`                                                                                     |
+| `price`         | string | 有條件要求 | 限價單必須                                                                                                     |
+| `quantity`      | string | 有條件要求 | 數量。`closePosition=true`時可以省略                                                                            |
+| `timeInForce`   | string | 不                     | `GTC` / `IOC` / `FOK`，預設 `GTC`                                                                                          |
+| `reduceOnly`    | bool   | 不                     | 僅減少，預設 `false`                                                                                                  |
+| `makerOnly`     | bool   | 不                     | 僅限 Maker 支援，預設 `false`                                                                                                   |
+| `closePosition` | bool   | 不                     | 預設 `false`                                                                                    |
+| `clientOrderId` | string | 不                     | 客戶端定義訂單識別碼                                                                                                       |
+| `placeType`     | string | 不                     | 訂單放置類型標記                                                                                                   |
+| `priceType`     | int32  | 不                     | BBO 價格類型： `0` 指定價格， `1` 對手價格1， `2` 對手價格5， `3` 同方價格1， `4` 同方價格5 |
+
+**請求範例：**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "type": "LIMIT",
+  "side": "BUY",
+  "price": "85000",
+  "quantity": "0.1",
+  "timeInForce": "GTC",
+  "makerOnly": true,
+  "clientOrderId": "ext-1772710377808-001"
+}
+```
+
+**回應欄位：**
+
+| 場地           | 類型   | 描述             |
+| --------------- | ------ | ----------------------- |
+| `orderId`       | string | 伺服器訂單識別碼         |
+| `clientOrderId` | string | 客戶端定義訂單識別碼 |
+| `status`        | string | 修會狀態            |
+| `timestamp`     | int64  | 時間戳記               |
+
+<h2 id="batch-place-orders">批量下單</h2>
+
+```http
+POST /v1/private/order/batch-place
+Content-Type: application/json
+```
+
+**請求正文：**
+
+```json
+{
+  "orders": [
+    {
+      "symbol": "BTCUSDT",
+      "type": "LIMIT",
+      "side": "BUY",
+      "price": "85000",
+      "quantity": "0.1",
+      "clientOrderId": "ext-buy-001"
+    }
+  ]
+}
+```
+
+**回應欄位：**
+
+| 場地          | 類型  | 描述                 |
+| -------------- | ----- | --------------------------- |
+| `successCount` | int32 | 成功訂單數量 |
+| `failedCount`  | int32 | 訂單失敗次數     |
+| `results[]`    | array | 各訂單的結果       |
+
+<h2 id="place-condition-order">擺放條件順序</h2>
+
+```http
+POST /v1/private/order/place-condition
+Content-Type: application/json
+```
+
+**請求參數：**
+
+| 參數       | 類型   | 必修               | 描述                                                                                 |
+| --------------- | ------ | ---------------------- | ------------------------------------------------------------------------------------------- |
+| `symbol`        | string | 是的                    | 象徵                                                                                      |
+| `type`          | string | 是的                    | `STOP_MARKET` / `TAKE_PROFIT_MARKET` / `STOP_LIMIT` / `TAKE_PROFIT_LIMIT` / `TRAILING_STOP` |
+| `side`          | string | 是的                    | `BUY` / `SELL`                                                                              |
+| `positionSide`  | string | 不                     | `BOTH` / `LONG` / `SHORT`                                                                   |
+| `price`         | string | 有條件要求 | `STOP_LIMIT` / `TAKE_PROFIT_LIMIT` 必修                                             |
+| `quantity`      | string | 有條件要求 | 數量。`closePosition=true`時可以省略                                          |
+| `timeInForce`   | string | 不                     | `GTC` / `IOC` / `FOK` / `GTE_GTC`                                                           |
+| `reduceOnly`    | bool   | 不                     | 僅剩還約                                                                                 |
+| `clientOrderId` | string | 不                     | 客戶端定義訂單識別碼                                                                     |
+| `stopPrice`     | string | 有條件要求 | 觸發價格                                                                               |
+| `workingType`   | string | 不                     | `MARK_PRICE` / `CONTRACT_PRICE`，預設 `CONTRACT_PRICE`                                   |
+| `priceProtect`  | bool   | 不                     | 是否啟用價格保護                                                         |
+| `activatePrice` | string | 有條件要求 | 尾盤啟動價格                                                             |
+| `callbackRate`  | string | 有條件要求 | 尾隨訂單回撥率                                                                |
+| `closePosition` | bool   | 不                     | 關閉整個陣地                                                                   |
+
+**回應欄位：**
+
+| 場地             | 類型   | 描述            |
+| ----------------- | ------ | ---------------------- |
+| `conditionId`     | string | 條件順序識別碼     |
+| `conditionStatus` | string | 狀態順序 |
+| `timestamp`       | int64  | 時間戳記              |
+
+<h2 id="place-strategy-order">策略順序</h2>
+
+```http
+POST /v1/private/order/place-strategy
+Content-Type: application/json
+```
+
+**請求參數：**
+
+| 參數      | 類型   | 必修 | 描述             |
+| -------------- | ------ | -------- | ----------------------- |
+| `strategyType` | string | 是的      | `OTOCO` / `OTO` / `OCO` |
+| `subOrderList` | array  | 是的      | 亞目列表          |
+
+`subOrderList[]` 中的欄位大多與一般順序和條件順序相同，並附加了依賴欄位：
+
+| 參數        | 類型   | 描述                                     |
+| ---------------- | ------ | ----------------------------------------------- |
+| `strategySubId`  | int64  | 亞目識別碼                                    |
+| `firstDrivenId`  | int64  | 第一次駕駛命令證件。 `0` 代表沒有依賴性 |
+| `firstDrivenOn`  | string | 第一個觸發條件                         |
+| `firstTrigger`   | string | 第一次觸發動作                            |
+| `secondDrivenId` | int64  | 第二張駕駛令證件                         |
+| `secondDrivenOn` | string | 第二個觸發條件                        |
+| `secondTrigger`  | string | 第二次觸發動作                           |
+
+**回應欄位：**
+
+| 場地            | 類型   | 描述     |
+| ---------------- | ------ | --------------- |
+| `strategyId`     | string | 策略識別     |
+| `strategyStatus` | string | 策略狀態 |
+| `timestamp`      | int64  | 時間戳記       |
+
+<h2 id="query-single-order">查詢單序</h2>
+
+```http
+GET /v1/private/order?symbol=BTCUSDT&orderId=2022543809547603968
+```
+
+**請求參數：**
+
+| 參數       | 類型   | 必修 | 描述             |
+| --------------- | ------ | -------- | ----------------------- |
+| `symbol`        | string | 是的      | 象徵                  |
+| `orderId`       | string | 不       | 伺服器訂單識別碼         |
+| `clientOrderId` | string | 不       | 客戶端定義訂單識別碼 |
+
+必須至少提供 `orderId` 和 `clientOrderId` 其中一項。若兩者皆提供，伺服器在兩者條件下都會進行精確匹配。
+
+<h2 id="current-normal-orders">現行正規順序</h2>
+
+```http
+GET /v1/private/order/current?symbol=BTCUSDT
+```
+
+**請求參數：**
+
+| 參數     | 類型   | 必修 | 描述        |
+| ------------- | ------ | -------- | ------------------ |
+| `symbol`      | string | 不       | 象徵             |
+| `limit`       | int32  | 不       | 退貨次數限制 |
+| `lastOrderId` | int64  | 不       | 游標場       |
+
+**回應欄位：**
+
+| 場地    | 類型  | 描述               |
+| -------- | ----- | ------------------------- |
+| `list[]` | array | 目前正規順序列表 |
+| `total`  | int32 | 伯爵                     |
+
+<h2 id="current-condition-orders">現行狀況命令</h2>
+
+```http
+GET /v1/private/order/current-condition?symbol=BTCUSDT
+```
+
+**請求參數：**
+
+| 參數 | 類型   | 必修 | 描述 |
+| --------- | ------ | -------- | ----------- |
+| `symbol`  | string | 不       | 象徵      |
+
+<h2 id="historical-normal-orders">歷史常規秩序</h2>
+
+```http
+GET /v1/private/order/history?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+**請求參數：**
+
+| 參數       | 類型   | 必修 | 描述                              |
+| --------------- | ------ | -------- | ---------------------------------------- |
+| `symbol`        | string | 不       | 象徵                                   |
+| `orderId`       | string | 不       | 精確順序 ID 濾鏡                    |
+| `clientOrderId` | string | 不       | 精確客戶訂單ID篩選器             |
+| `type`          | int32  | 不       | 訂單類型篩選： `1` 限額， `2` 市場 |
+| `side`          | int32  | 不       | 側邊過濾器： `1` 買入， `2` 賣出           |
+| `status`        | int32  | 不       | 狀態過濾器                            |
+| `startTime`     | int64  | 不       | 開賽時間                               |
+| `endTime`       | int64  | 不       | 終結時間                                 |
+| `page`          | int64  | 不       | 頁碼，預設 `1`                 |
+| `pageSize`      | int64  | 不       | 每頁項目數，預設 `20`             |
+
+<h2 id="historical-condition-orders">歷史狀況命令</h2>
+
+```http
+GET /v1/private/order/history-condition?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+**請求參數：**
+
+| 參數   | 類型   | 必修 | 描述                    |
+| ----------- | ------ | -------- | ------------------------------ |
+| `symbol`    | string | 不       | 象徵                         |
+| `side`      | int32  | 不       | 側邊過濾器： `1` 買入， `2` 賣出 |
+| `status`    | int32  | 不       | 狀態過濾器                  |
+| `startTime` | int64  | 不       | 開賽時間                     |
+| `endTime`   | int64  | 不       | 終結時間                       |
+| `page`      | int64  | 不       | 頁碼，預設 `1`       |
+| `pageSize`  | int64  | 不       | 每頁項目數，預設 `20`   |
+
+<h2 id="trade-records">貿易紀錄</h2>
+
+```http
+GET /v1/private/order/trades?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+**請求參數：**
+
+| 參數   | 類型   | 必修 | 描述                  |
+| ----------- | ------ | -------- | ---------------------------- |
+| `symbol`    | string | 不       | 象徵                       |
+| `orderId`   | string | 不       | 訂單識別碼過濾器              |
+| `startTime` | int64  | 不       | 開賽時間                   |
+| `endTime`   | int64  | 不       | 終結時間                     |
+| `page`      | int64  | 不       | 頁碼，預設 `1`     |
+| `pageSize`  | int64  | 不       | 每頁項目數，預設 `20` |
+
+**回應欄位：**
+
+| 場地                 | 類型   | 描述       |
+| --------------------- | ------ | ----------------- |
+| `list[].fillId`       | string | 填寫詳細識別碼    |
+| `list[].tradeId`      | string | 貿易紀錄識別碼   |
+| `list[].orderId`      | string | 訂單識別碼          |
+| `list[].symbol`       | string | 象徵            |
+| `list[].side`         | string | 側邊              |
+| `list[].roleType`     | string | `maker` / `taker` |
+| `list[].price`        | string | 成交價      |
+| `list[].quantity`     | string | 填充量   |
+| `list[].tradeValue`   | string | 貿易價值       |
+| `list[].handlingFee`  | string | 手續費      |
+| `list[].realizedPnl`  | string | 實現的PnL      |
+| `list[].positionSide` | string | 位置側     |
+| `list[].createdAt`    | int64  | 交易時間        |
+| `total`               | int64  | 總計數       |
+
+<h2 id="cancel-order">取消訂單</h2>
+
+```http
+POST /v1/private/order/cancel
+Content-Type: application/json
+```
+
+**請求正文：**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "orderId": "2022543809547603968"
+}
+```
+
+`clientOrderId` 也可以用來取消訂單。
+
+<h2 id="amend-order">修訂命令</h2>
+
+```http
+POST /v1/private/order/move
+Content-Type: application/json
+```
+
+**請求正文：**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "orderId": "2022543809547603968",
+  "price": "85100",
+  "quantity": "0.2"
+}
+```
+
+`quantity` 是修訂後的最終總訂單數量，而非剩餘數量。
+
+<h2 id="batch-amend-orders">批次修訂命令</h2>
+
+```http
+POST /v1/private/order/batch-move
+Content-Type: application/json
+```
+
+**請求正文：**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "orders": [
+    {
+      "orderId": "2022543809547603968",
+      "price": "85100",
+      "quantity": "0.2"
+    }
+  ]
+}
+```
+
+<h2 id="batch-cancel-orders">批次取消訂單</h2>
+
+```http
+POST /v1/private/order/batch-cancel
+Content-Type: application/json
+```
+
+**請求正文：**
+
+```json
+{
+  "orders": [
+    {
+      "symbol": "BTCUSDT",
+      "orderId": "2022543809547603968"
+    }
+  ]
+}
+```
+
+<h2 id="cancel-all">取消一切</h2>
+
+```http
+POST /v1/private/order/batch-cancel-all
+Content-Type: application/json
+```
+
+**請求參數：**
+
+| 參數    | 類型   | 必修 | 描述                                                                         |
+| ------------ | ------ | -------- | ----------------------------------------------------------------------------------- |
+| `symbol`     | string | 不       | 象徵                                                                              |
+| `cancelType` | int32  | 不       | `0` 所有普通訂單， `1` 僅限限價訂單， `2` 所有條件訂單。預設 `0` |
+
+正常訂單的取消全數（cancel-all）可非同步接受。最終狀態應由 WebSocket `ORDER_TRADE_UPDATE` 或查詢端點決定。
+
+<h2 id="cancel-condition-order">取消條件命令</h2>
+
+```http
+POST /v1/private/order/cancel-condition
+Content-Type: application/json
+```
+
+**請求正文：**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "conditionId": "2022543809547603968"
+}
+```
+
+<h2 id="strategy-order-detail">策略順序細節</h2>
+
+```http
+GET /v1/private/order/strategy?strategyId=2022543809547603968
+```
+
+**回應欄位：**
+
+| 場地            | 類型   | 描述                          |
+| ---------------- | ------ | ------------------------------------ |
+| `strategyId`     | string | 策略識別                          |
+| `strategyType`   | string | `OTOCO` / `OTO` / `OCO`              |
+| `strategyStatus` | string | `WORKING` / `ALL_DONE` / `CANCELLED` |
+| `bookTime`       | int64  | 創作時間                        |
+| `subOrders[]`    | array  | 亞目詳情                    |
+| `updateTime`     | int64  | 更新時間                          |
+
+<h2 id="related-documentation">相關文件</h2>
+
+- [訂單類型]（/trading/order-types）
+- [常見枚舉]（/developer-api/common-enums）
+- [私人用戶通道]（/developer-api/websocket/private-user-channel）
+- [整合建議]（/developer-api/integration-recommendations）
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">相關頁面</h2>
+
+- [訂單類型](/zh-TW/trading/order-types)
+- [常見的列舉](/zh-TW/developer-api/common-enums)
+- [私人用戶通道](/zh-TW/developer-api/websocket/private-user-channel)
+- [整合建議](/zh-TW/developer-api/integration-recommendations)
+<!-- sixmm-localized-link-repair:end -->

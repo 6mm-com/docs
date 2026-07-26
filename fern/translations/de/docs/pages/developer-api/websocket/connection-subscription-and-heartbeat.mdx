@@ -1,0 +1,89 @@
+---
+title: "Verbindung, Abonnement & Herzschlag"
+subtitle: "Verbinden Sie sich mit 6MM WebSocket Streams, abonnieren Sie Themen, halten Sie Verbindungen lebendig und verarbeiten Sie Nachrichtenumschläge sicher."
+slug: developer-api/websocket/connection-subscription-and-heartbeat
+canonical-url: https://docs.6mm.com/de/developer-api/websocket/connection-subscription-and-heartbeat
+---
+
+Nutzen Sie WebSocket Streams für Marktdaten und private User-State-Updates, die ohne Umfragen aktuell bleiben müssen.
+
+<h2 id="connection-url">Verbindung URL</h2>
+
+```text
+wss://ws.6mm.com/ws
+```
+
+Private Streams benötigen Authentifizierungskontext wie einen listenKey oder Zugriffstoken, wie in der Dokumentation des privaten Kanals beschrieben.
+
+<h2 id="subscribe">Abonnieren</h2>
+
+```json
+{ "id": "1772007814666", "op": "subscribe", "args": ["market.depth.BTCUSDT"] }
+```
+
+Erfolgreiche Abonnementbestätigung:
+
+```json
+{
+  "id": "1772007814666",
+  "event": "subscribe",
+  "success": true,
+  "data": ["market.depth.BTCUSDT"]
+}
+```
+
+<h2 id="unsubscribe">Abmelden</h2>
+
+```json
+{ "id": "1772007814667", "op": "unsubscribe", "args": ["market.depth.BTCUSDT"] }
+```
+
+<h2 id="application-ping">Anwendungsping</h2>
+
+```json
+{ "id": "1772007814668", "op": "ping", "args": [] }
+```
+
+<h2 id="message-envelope">Nachrichtenumschlag</h2>
+
+Öffentliche Vorstöße nutzen eine einheitliche Grenze:
+
+```json
+{
+  "topic": "market.depth.BTCUSDT",
+  "event": "data",
+  "ts": 1772007815000,
+  "data": {}
+}
+```
+
+<h2 id="operational-recommendations">Betriebsempfehlungen</h2>
+
+- Generiere eine eindeutige clientseitige `id` für jede Abonnieren-, Abmelde- und Ping-Anfrage.
+- Behandeln Sie die Wiederverbindung als neue Sitzung und abonnieren Sie erneut erforderliche Themen.
+- Überprüfen Sie, dass die zurückgegebene `topic` mit dem Kanal übereinstimmt, den Ihr Dienst erwartet.
+- Halte die Nachrichtenverarbeitung idempotent, wenn private Bestellungen oder Kontoereignisse betroffen sind.
+- Protokollieren Sie Verbindungszustandsänderungen, Abonnementbestätigungen und abnormale Verbindungsabbrüche.
+
+<h2 id="reconnect-workflow">Workflow Wiederverbinden</h2>
+
+1. Schließe oder entsorge die vorherige Buchse und stelle eine neue Verbindung her.
+2. Private Streams mit einem gültigen listenKey oder Zugriffstoken erneut authentifizieren.
+3. Abonniere jedes erforderliche Thema erneut und warte auf erfolgreiche Danksagungen.
+4. Ersetze den lokalen Orderbuch-Status durch einen neuen Snapshot, bevor du inkrementelle Updates anwendest.
+5. Offene Befehle, Positionen und Bilanzen durch REST abzustimmen, falls private Veranstaltungen übersehen wurden.
+
+Nutze bounded exponential backoff mit Jitter für Wiederverbindungsversuche. Ein kontinuierlich wiederverbundener Client sollte die Bediener alarmieren, anstatt es unbegrenzt ohne Sicht zu versuchen.
+
+<h2 id="heartbeat-and-stale-connections">Herzschlag und abgestandene Verbindungen</h2>
+
+- Verfolgen Sie die aktuellste eingehende Nachricht und die erfolgreiche Ping-Bestätigung.
+- Verwenden Sie das für die Produktionsumgebung genehmigte Herzschlagintervall und Leerlaufschwelle.
+- Behandle eine Verbindung als veraltet, wenn der konfigurierte Schwellenwert überschritten wird, selbst wenn der TCP Sockel noch offen erscheint.
+- Keine Abonnements von einem alten Socket wiederverwenden; Abonniere dich nach jeder Wiederverbindung ausdrücklich wieder.
+
+<h2 id="related-documentation">Verwandte Dokumentation</h2>
+
+- [Public Market Channels](/de/developer-api/websocket/public-market-channels): Themen, Orderbuchkontinuität, Trades, Kerzen und Ticker.
+- [Private User Channel](/de/developer-api/websocket/private-user-channel): listenKey Lebenszyklus und authentifizierte Ereignisse.
+- [Integrationsempfehlungen](/de/developer-api/integration-recommendations): Wiederholungen, Idempotenz, Überwachung und Starttests.

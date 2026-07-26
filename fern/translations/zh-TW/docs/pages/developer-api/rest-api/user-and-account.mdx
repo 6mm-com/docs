@@ -1,0 +1,231 @@
+---
+title: "使用者與帳號"
+description: "使用 6MM 用戶與帳戶端點來取得個人資料、餘額、帳戶狀態、權限及合作夥伴連結帳戶資訊。"
+slug: developer-api/rest-api/user-and-account
+canonical-url: https://docs.6mm.com/zh-TW/developer-api/rest-api/user-and-account
+---
+
+除非另有說明，以下端點可使用 JWT 或 API Key 簽名。
+
+<h2 id="user-info">使用者資訊</h2>
+
+```http
+GET /v1/private/user/info
+```
+
+回應欄位：
+
+| 場地                  | 類型   | 描述      |
+| ---------------------- | ------ | ---------------- |
+| `userInfo.userId`      | string | 外部使用者識別碼 |
+| `userInfo.username`    | string | 用戶名         |
+| `userInfo.agentId`     | int64  | 代理識別碼         |
+| `userInfo.vipLevel`    | int64  | VIP 層        |
+| `userInfo.lastLoginAt` | int64  | 最後一次登入時間  |
+| `userInfo.lastLoginIp` | string | 最後登入 IP    |
+
+<h2 id="user-assets">使用者資產</h2>
+
+```http
+GET /v1/private/user/asset
+```
+
+回應欄位：
+
+| 場地                     | 類型   | 描述                     |
+| ------------------------- | ------ | ------------------------------- |
+| `userAsset.userId`        | string | 外部使用者識別碼                |
+| `userAsset.assetType`     | string | 資產類型                      |
+| `userAsset.walletBalance` | string | 錢包餘額                  |
+| `userAsset.frozenMargin`  | string | 因待處理訂單而凍結的邊界 |
+| `userAsset.usedMargin`    | string | 位置所使用的邊距        |
+
+<h2 id="create-listenkey">創造 listenKey</h2>
+
+```http
+POST /v1/private/user/listen-key
+```
+
+為私有 WebSocket 串流建立認證金鑰。
+
+<h2 id="renew-listenkey">續約 listenKey</h2>
+
+```http
+PUT /v1/private/user/listen-key
+```
+
+這也 listenKey 有效性。
+
+<h2 id="close-listenkey">接近的 listenKey</h2>
+
+```http
+DELETE /v1/private/user/listen-key
+```
+
+閉合指定的 listenKey。
+
+<h2 id="account-change-logs">帳號變更日誌</h2>
+
+```http
+GET /v1/private/user/account-change-log?assetType=USDT&page=1&pageSize=20
+```
+
+請求參數：
+
+| 參數    | 類型   | 必修 | 描述                  |
+| ------------ | ------ | -------- | ---------------------------- |
+| `assetType`  | string | 不       | 資產類型，例如 `USDT`   |
+| `changeType` | string | 不       | 變更類型                  |
+| `startTime`  | int64  | 不       | 開賽時間                   |
+| `endTime`    | int64  | 不       | 終結時間                     |
+| `page`       | int32  | 不       | 頁碼，預設 `1`     |
+| `pageSize`   | int32  | 不       | 每頁項目數，預設 `20` |
+
+回應欄位：
+
+| 場地                        | 類型   | 描述                  |
+| ---------------------------- | ------ | ---------------------------- |
+| `list[].assetType`           | string | 資產類型                   |
+| `list[].amount`              | string | 金額變更               |
+| `list[].walletBalanceBefore` | string | 找零前的錢包餘額 |
+| `list[].walletBalanceAfter`  | string | 找零後的錢包餘額  |
+| `list[].frozenBalanceBefore` | string | 變動前凍結餘額 |
+| `list[].frozenBalanceAfter`  | string | 變動後凍結餘額  |
+| `list[].changeType`          | string | 變更類型                  |
+| `list[].referenceId`         | string | 相關商業識別          |
+| `list[].createdAt`           | int64  | 創作時間                |
+| `total`                      | int64  | 總計數                  |
+
+<h2 id="30-day-volume-statistics">30天成交量統計</h2>
+
+```http
+GET /v1/private/user/volume-stats
+```
+
+回應欄位：
+
+| 場地         | 類型   | 描述                                     |
+| ------------- | ------ | ----------------------------------------------- |
+| `volume30d`   | string | 過去30天累計交易量 |
+| `feeTotal30d` | string | 過去30天累積費用           |
+
+<h2 id="balance-history">平衡歷史</h2>
+
+```http
+GET /v1/private/user/balance-history?period=1D&limit=30
+```
+
+請求參數：
+
+| 參數 | 類型   | 必修 | 描述                            |
+| --------- | ------ | -------- | -------------------------------------- |
+| `period`  | string | 是的      | `1D` / `1W` / `1M`                     |
+| `limit`   | 智力    | 不       | 退回物品數量，預設 `30` |
+
+回應欄位：
+
+| 場地             | 類型   | 描述                 |
+| ----------------- | ------ | --------------------------- |
+| `items[].date`    | string | 合併日期            |
+| `items[].balance` | string | 錢包餘額              |
+| `items[].pnl`     | string | 當時實現的PnL |
+
+<h2 id="trade-overview">貿易概覽</h2>
+
+```http
+GET /v1/private/user/trade-overview?type=1M
+```
+
+請求參數：
+
+| 參數 | 類型   | 必修 | 描述                                     |
+| --------- | ------ | -------- | ----------------------------------------------- |
+| `type`    | string | 是的      | 趨勢範圍： `1D`、 `1W`、 `1M`、 `3M`、 `6M`、 `1Y` |
+
+回應欄位：
+
+| 場地                | 類型   | 描述                                                          |
+| -------------------- | ------ | -------------------------------------------------------------------- |
+| `todayPnl`           | string | 今日實現的PnL                                                 |
+| `todayVolume`        | string | 今日合約交易量                                      |
+| `totalVolume`        | string | 累積合約交易量                                   |
+| `totalPnl`           | string | 累積實現PnL                                              |
+| `maxDrawdown30d`     | string | 過去30天的最大提領金額                        |
+| `maxDrawdown30dRate` | string | 過去30天的最大回撤率，從`0`到`1`按小數排列 |
+| `transferIn`         | string | 累積轉入資金                                      |
+| `transferOut`        | string | 累積轉出資金                                     |
+| `items[]`            | array  | 資產趨勢資料                                                     |
+
+<h2 id="asset-overview-summary">資產概覽摘要</h2>
+
+```http
+GET /v1/private/user/asset/overview/summary
+```
+
+回應欄位與交易概覽摘要欄位相同，但不包含 `items[]`。
+
+<h2 id="asset-overview-trend">資產概覽趨勢</h2>
+
+```http
+GET /v1/private/user/asset/overview/trend?type=1M
+```
+
+請求參數：
+
+| 參數 | 類型   | 必修 | 描述                                     |
+| --------- | ------ | -------- | ----------------------------------------------- |
+| `type`    | string | 是的      | 趨勢範圍： `1D`、 `1W`、 `1M`、 `3M`、 `6M`、 `1Y` |
+
+回應欄位：
+
+| 場地                  | 類型   | 描述                     |
+| ---------------------- | ------ | ------------------------------- |
+| `items[].snapshotTime` | int64  | 快照時間                   |
+| `items[].balance`      | string | 經常帳餘額         |
+| `items[].pnl`          | string | PnL 現行時期      |
+| `items[].pnlRate`      | string | 本期PnL利率 |
+| `items[].totalPnl`     | string | 累積損益                  |
+
+<h2 id="favorite-symbols">最喜愛的象徵</h2>
+
+<h2 id="save">存檔</h2>
+
+```http
+POST /v1/private/user/favorite-symbols
+Content-Type: application/json
+```
+
+請求正文：
+
+```json
+{
+  "symbols": ["BTCUSDT", "ETHUSDT"]
+}
+```
+
+<h2 id="query">查詢</h2>
+
+```http
+GET /v1/private/user/favorite-symbols
+```
+
+回應欄位：
+
+| 場地     | 類型      | 描述          |
+| --------- | --------- | -------------------- |
+| `symbols` | 弦\[] | 最喜愛的符號列表 |
+
+<h2 id="related-documentation">相關文件</h2>
+
+- [私人用戶通道]（/developer-api/websocket/private-user-channel）
+- [認證]（/developer-api/authentication）
+- [資產轉移]（/trading/getting-started/asset-transfer）
+- [錯誤代碼與故障排除]（/developer-api/error-codes-and-troubleshooting）
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">相關頁面</h2>
+
+- [私人用戶通道](/zh-TW/developer-api/websocket/private-user-channel)
+- [6MM API 認證： JWT 與 API 金鑰](/zh-TW/developer-api/authentication)
+- [資產轉移](/zh-TW/trading/getting-started/asset-transfer)
+- [錯誤代碼與故障排除](/zh-TW/developer-api/error-codes-and-troubleshooting)
+<!-- sixmm-localized-link-repair:end -->

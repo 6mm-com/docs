@@ -1,0 +1,44 @@
+---
+title: "Agent PHP SDK"
+subtitle: "ユーザーバインディング、転送、エントリーURL、ウェブフックの検証には、バックエンドサービスから承認された 6MM エージェント PHP パッケージを使用してください。"
+slug: sdk/agent-sdk/php/overview
+canonical-url: https://docs.6mm.com/ja/sdk/agent-sdk/php/overview
+---
+
+<h2 id="runtime">ランタイム</h2>
+
+| アイテム | 価値 |
+| --- | --- |
+| パッケージ | sixmm/agent-sdk |
+| 最小 PHP バージョン | PHP 7.4+ |
+| 推奨 PHP バージョン | PHP 8.1+または現在サポートされているバージョン |
+| 必要な拡張 | ext-json, ext-curl |
+
+パッケージ PHP SDK ソースと承認されたバージョンは、パートナーのオンボーディング時に提供されます。パッケージが公開のPackagistから入手可能だとは思わないでください。組織に提供されたComposerリポジトリを設定してください。
+
+<h2 id="supported-scenarios">対応シナリオ</h2>
+
+| シナリオ | SDK 方法 |
+| --- | --- |
+| バインドユーザー | バインド |
+| 固定額の移転 | 転校 |
+| 全員転送 | transferAllOut |
+| 逆転送 | 裏面 |
+| クエリの順序 | queryOrder |
+| エントリーURL作成 | createEntryUrl |
+| ウェブフック検証 | WebhookVerifier::verify |
+
+<h2 id="backend-integration-rules">バックエンド統合ルール</h2>
+
+- シークレットマネージャや保護環境変数から `apiSecret` をロードする。
+- ユーザーのバインディング、転送、署名、ウェブフックのロジックをブラウザコードから排除する。
+- 浮動小数点の丸めを避けるために資産額に小数列を用いましょう。
+- 不確実な転送結果をクエリする際に元の `agentOrderNo` を再利用する。
+- デコードや変更前に、ウェブフックのシグネチャを生のリクエストボディと照合する。
+
+<h2 id="next-steps">今後のステップ</h2>
+
+- [PHP クイックスタート](/ja/sdk/agent-sdk/php/quick-start): Composerの設定とクライアントの初期化。
+- [Agent SDK 概要](/ja/sdk/agent-sdk/overview):バックエンド統合の完全なプロセスを確認してください。
+- [秘密と署名](/ja/sdk/security/secrets-signing)認証情報を保護し、署名 HMAC 理解してください。
+- [ウェブフックと冪等性](/ja/sdk/security/webhooks-idempotency):繰り返しコールバックを安全に処理してください。

@@ -1,0 +1,56 @@
+---
+title: "Ambienti e convenzioni comuni"
+description: "Rivedere 6MM API ambienti e convenzioni condivise per URL base, timestamp, campi numerici, simboli, ID delle richieste, paginazione e risposte."
+slug: developer-api/environments-and-common-conventions
+canonical-url: https://docs.6mm.com/it/developer-api/environments-and-common-conventions
+---
+
+<h2 id="service-endpoints">Endpoint di servizio</h2>
+
+| Tipo      | Punto finale              |
+| --------- | --------------------- |
+| REST API  | `https://api.6mm.com` |
+| WebSocket | `wss://ws.6mm.com/ws`    |
+
+<h2 id="time-and-numeric-values">Tempo e valori numerici</h2>
+
+* Salvo diversa specificazione, i campi temporali sono timestamp Unix millisecondi.
+* Le statistiche giornaliere, le istantanee di saldo e le statistiche sul volume di scambi utilizzano di default i confini UTC giorni.
+* I campi sensibili alla precisione come importo, prezzo, quantità e velocità vengono trasmessi come stringhe.
+* ID interi grandi come `orderId`, `conditionId` `strategyId` e  sono restituiti come stringhe in JSON.
+
+<h2 id="response-format">Formato di risposta</h2>
+
+Risposta positiva:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {},
+  "requestId": "req-12345678"
+}
+```
+
+Risposta all'errore:
+
+```json
+{
+  "code": 1003,
+  "message": "Invalid token",
+  "requestId": "req-12345678"
+}
+```
+
+Note:
+
+* Gli errori di business di solito restituiscono ancora la struttura unificata JSON . Gli integratori dovrebbero verificare prima `code` .
+* I fallimenti di autenticazione possono restituire HTTP `401`; la limitazione di velocità può restituire HTTP `429`.
+* Puoi inviare `X-Request-ID` nell'intestazione della richiesta. Il server la restituirà come `requestId` nella risposta.
+
+<h2 id="related-documentation">Documentazione correlata</h2>
+
+- [Autenticazione](/it/developer-api/authentication): scegli JWT o API Key firma.
+- [Firma delle richieste](/it/developer-api/request-signing): costruire e verificare le richieste firmate.
+- [REST API](/it/developer-api/rest-api): applicare queste convenzioni ai gruppi endpoint.
+- [Codici di errore e risoluzione dei problemi](/it/developer-api/error-codes-and-troubleshooting): diagnosticare errori HTTP e di business.

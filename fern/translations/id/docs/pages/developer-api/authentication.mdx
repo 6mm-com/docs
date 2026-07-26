@@ -1,0 +1,73 @@
+---
+title: "Autentikasi 6MM API: Kunci JWT dan API"
+description: "Pelajari cara mengautentikasi permintaan 6MM API privat dengan token akses JWT atau kunci API dan pilih metode yang sesuai untuk setiap integrasi."
+slug: developer-api/authentication
+canonical-url: https://docs.6mm.com/id/developer-api/authentication
+---
+
+6MM mendukung token akses JWT dan kunci API untuk akses API privat. Pilih metode berdasarkan apakah permintaan tersebut termasuk dalam sesi pengguna interaktif atau integrasi backend yang sudah lama berjalan.
+
+<h2 id="choose-an-authentication-method">Pilih metode autentikasi</h2>
+
+| Kebutuhan integrasi | Metode yang direkomendasikan | Mengapa |
+| --- | --- | --- |
+| Panggilan API sesi pengguna | JWT | Menggunakan token akses yang dikembalikan setelah masuk. |
+| Buat, perbarui, atau cabut API Keys | JWT | Endpoint manajemen API Key tidak menerima manajemen mandiri API Key. |
+| Akun server-ke-server atau panggilan trading | API Key + tanda tangan HMAC | Mendukung izin terbatas dan permintaan backend yang ditandatangani. |
+
+<h2 id="jwt">JWT</h2>
+
+Setelah masuk, API mengembalikan `accessToken`. Saat memanggil endpoint privat, sertai:
+
+```http
+Authorization: Bearer YOUR_ACCESS_TOKEN
+```
+
+Jaga token agar tidak masuk ke URL dan log. Ketika token kedaluwarsa, dapatkan token yang valid melalui alur login atau refresh yang disetujui sebelum mencoba permintaan privat ulang.
+
+<h2 id="api-key">API Key</h2>
+
+Ketika header permintaan `X-API-KEY` hadir, server menggunakan autentikasi API Key HMAC :
+
+```http
+X-API-KEY: YOUR_API_KEY
+```
+
+API Key endpoint manajemen harus menggunakan JWT. API Keys tidak dapat mengelola dirinya sendiri.
+
+Permintaan API Key juga memerlukan cap waktu dan tanda tangan HMAC yang dijelaskan dalam [Penandatanganan Permintaan](/id/developer-api/request-signing). Simpan rahasia API yang sesuai hanya dalam sistem manajemen rahasia backend.
+
+<h2 id="api-key-permissions">Izin API Key</h2>
+
+| Nilai | Izin | Deskripsi                                                                                                                                                                                    |
+| ----- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `1`   | Baca       | Info pengguna, aset, log perubahan akun, statistik, listenKey, simbol favorit, dan endpoint pengguna/akun terkait. Endpoint pesanan dan posisi, termasuk query, memerlukan izin perdagangan |
+| `2`   | Perdagangan      | Titik akhir urutan dan posisi, termasuk operasi kueri dan penulisan                                                                                                                        |
+| `4`   | menarik diri   | Izin dana cadangan                                                                                                                                                                       |
+
+Untuk memberikan izin membaca dan memperdagangkan, gunakan `permissions=3`.
+
+Gunakan set izin terkecil yang diperlukan oleh integrasi. Layanan data pasar tidak boleh menerima izin perdagangan, sementara layanan pesanan memerlukan izin perdagangan meskipun hanya melakukan kueri pada pesanan atau posisi.
+
+<h2 id="production-security-checklist">Daftar periksa keamanan produksi</h2>
+
+- Buat API Keys terpisah untuk pengembangan, penataan, dan produksi.
+- Terapkan daftar putih IP di mana integrasi memiliki alamat keluar yang stabil.
+- Jangan pernah mengungkap rahasia API dalam kode browser, mobile, atau aplikasi desktop.
+- Sinkronkan waktu server sebelum menghasilkan permintaan yang ditandatangani.
+- Menyuntingkan header otorisasi, API Kunci, tanda tangan, dan rahasia dari log aplikasi.
+- Cabut dan ganti kunci segera saat diduga terpapar kecaman.
+
+<h2 id="next-steps">Langkah selanjutnya</h2>
+
+<CardGroup cols={3}>
+<Card title="Manajemen API Key" icon="fa-duotone fa-key" href="/id/developer-api/api-key-management">
+Buat kunci yang dibatasi cakupannya, konfigurasikan pembatasan IP , dan rencanakan rotasi kunci.
+</Card>
+<Card title="Penandatanganan Permintaan" icon="fa-duotone fa-signature" href="/id/developer-api/request-signing">
+Bangun HMAC-SHA256 payload dan tandatangani permintaan pribadi.
+</Card>
+<Card title="Kesalahan & Pemecahan Masalah" icon="fa-duotone fa-screwdriver-wrench" href="/id/developer-api/error-codes-and-troubleshooting">
+Diagnosis kredensial, timestamp, tanda tangan, dan izin yang ditolak.
+</Card>
+</CardGroup>

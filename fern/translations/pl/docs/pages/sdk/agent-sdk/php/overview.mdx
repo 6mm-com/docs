@@ -1,0 +1,44 @@
+---
+title: "Agent PHP SDK"
+subtitle: "Korzystaj z zatwierdzonego pakietu 6MM Agent PHP z backendu do wiązania użytkowników, transferów, wpisów URL oraz weryfikacji webhooków."
+slug: sdk/agent-sdk/php/overview
+canonical-url: https://docs.6mm.com/pl/sdk/agent-sdk/php/overview
+---
+
+<h2 id="runtime">Czas trwania</h2>
+
+| Przedmiot | Wartość |
+| --- | --- |
+| Pakiet | sixmm/agent-sdk |
+| Wersja minimalna PHP | PHP 7.4+ |
+| Zalecana wersja PHP | PHP wersje 8.1+ lub obecnie wspierane |
+| Wymagane przedłużenia | ext-json, ext-curl |
+
+Źródło PHP SDK pakietu i zatwierdzona wersja są udostępniane podczas onboardingu partnerów. Nie zakładaj, że pakiet jest dostępny w publicznym Packagist; skonfiguruj repozytorium Composer udostępnione dla Twojej organizacji.
+
+<h2 id="supported-scenarios">Wspierane scenariusze</h2>
+
+| Scenariusz | SDK metoda |
+| --- | --- |
+| Użytkownik przypisania | Wiązanie |
+| Transfer o stałej kwotie | Transfer |
+| Przenieś wszystkich na zewnątrz | transferAllOut |
+| Transfer wsteczny | Rewers |
+| Kolejność zapytań | queryOrder |
+| Utwórz URL | createEntryUrl |
+| Weryfikacja Webhook | WebhookVerifier::verify |
+
+<h2 id="backend-integration-rules">Reguły integracji backendowej</h2>
+
+- Ładowanie `apiSecret` z menedżera tajemnic lub chronionej zmiennej środowiskowej.
+- Utrzymanie logiki wiązania użytkownika, transferu, podpisywania i webhooków poza kodem przeglądarki.
+- Używanie ciągów dziesiętnych dla wartości aktywów, aby uniknąć zaokrągleń zmiennoprzecinkowych.
+- Ponownie użyć oryginalnego `agentOrderNo` podczas zapytania o niepewny wynik transferu.
+- Weryfikacja sygnatur webhooków względem surowego ciała żądania przed jego dekodowaniem lub zmianą.
+
+<h2 id="next-steps">Kolejne kroki</h2>
+
+- [PHP Quick Start](/pl/sdk/agent-sdk/php/quick-start): skonfiguruj Composer i inicjalizuj klienta.
+- [Agent SDK Przegląd](/pl/sdk/agent-sdk/overview): przegląd całego procesu integracji backendu.
+- [Sekrety i podpisywanie](/pl/sdk/security/secrets-signing): chroń dane uwierzytelniające i rozumiej HMAC podpisywaniu.
+- [Webhooks & Idempotency](/pl/sdk/security/webhooks-idempotency): przetwarza powtarzające się callbacki bezpiecznie.

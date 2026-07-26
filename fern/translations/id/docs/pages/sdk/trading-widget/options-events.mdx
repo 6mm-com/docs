@@ -1,0 +1,69 @@
+---
+title: "Opsi & Acara"
+subtitle: "Opsi inisialisasi, peristiwa runtime, dan kode kesalahan umum."
+slug: sdk/trading-widget/options-events
+canonical-url: https://docs.6mm.com/id/sdk/trading-widget/options-events
+---
+
+<h2 id="options">Opsi</h2>
+
+| Lapangan | Tipe | Gagal bayar | Catatan |
+| --- | --- | --- | --- |
+| baseUrl | string | SDK asal aksara | Domain iframe. Pass secara eksplisit di halaman partner. |
+| simbol | string | BTCUSDT | Dinormalisasi menjadi huruf kapital dan strip - / _. |
+| tema | gelap \| cahaya | gelap | Parameter tema awal. |
+| lokasi | en \| en-US \| zh-CN | Browser/default | Bahasa Inggris dan Mandarin Sederhana didukung. |
+| tata letak | default \| kompak | gagal bayar | Opsi tata letak yang dicadangkan. |
+| menampilkan | object | `showHeader: false`, `showTicker: false`, `hidden: []` | Kontrol menyematkan area shell dan kontainer trading tingkat tinggi. |
+| auth | object | tidak ada | Gunakan partner-token untuk integrasi SSO baru. |
+
+<h2 id="display-controls">Kontrol tampilan</h2>
+
+`display` mengontrol shell halaman trading yang tertanam dan kontainer tingkat tinggi. Dalam embed mitra, header PC dan ticker pasar bawah secara default tersembunyi.
+
+```js
+display: {
+  showHeader: false,
+  showTicker: false,
+  hidden: ['chart', 'orderBook'],
+}
+```
+
+| Lapangan | Tipe | Gagal bayar | Catatan |
+| --- | --- | --- | --- |
+| showHeader | boolean | palsu | Apakah akan menampilkan header embed PC di dalam iframe. |
+| showTicker | boolean | palsu | Apakah akan menampilkan ticker pasar terendah di shell embed. |
+| tersembunyi | senar[] | [] | Menyembunyikan kontainer tingkat tinggi di halaman trading. |
+
+Nilai `display.hidden` yang didukung:
+
+| Nilai | Kontainer |
+| --- | --- |
+| bagan | Kontainer grafik |
+| orderBook | Pesan wadah buku |
+| orderForm | Panel formulir pesanan |
+| posisi-posisi | Posisi bawah dan panel pesanan terbuka |
+| akun | Kontainer aset akun |
+
+`display.hidden` hanya menyembunyikan seluruh kontainer. Ia tidak menyembunyikan tombol, bidang, atau alat individual di dalam kontainer. Nilai yang tidak dipetakan ke viewport saat ini diabaikan.
+
+<h2 id="events">Acara</h2>
+
+| Acara | Pemicu |
+| --- | --- |
+| siap | Inisialisasi iframe selesai. |
+| kesalahan | SDK, iframe, atau kesalahan autentikasi. |
+| state_changed | SDK keadaan siklus hidup berubah. |
+| auth_state_changed | Status otorisasi token mitra berubah. |
+| symbol_changed | Simbol iframe sebenarnya berubah. |
+| locale_changed | Lokasi iframe sebenarnya berubah. |
+| order_created | Pengguna membuat pesanan di dalam iframe. |
+| order_failed | Pengiriman pesanan gagal. |
+| dihancurkan | SDK dihancurkan. |
+
+<h2 id="related-widget-guides">Panduan Widget Terkait</h2>
+
+- [Trading Widget Quick Start](/id/sdk/trading-widget/quick-start)
+- [Autentikasi](/id/sdk/trading-widget/authentication)
+- [Metode Instansi](/id/sdk/trading-widget/instance-methods)
+- [Pemecahan Masalah](/id/sdk/security/troubleshooting)

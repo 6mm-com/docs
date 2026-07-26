@@ -1,0 +1,66 @@
+---
+title: "Architecture de sécurité de l’intégration des partenaires"
+subtitle: "Concevoir des limites de confiance et des contrôles de production pour le trading embarqué, le API, le SDK, le webhook, le transfert d’actifs et les intégrations opérationnelles."
+slug: solutions/security-architecture
+canonical-url: https://docs.6mm.com/fr/solutions/security-architecture
+---
+
+Cette page se concentre sur la manière dont un partenaire doit concevoir une intégration sécurisée 6MM . Pour les couches de sécurité plus larges utilisées sur la plateforme de trading, voir [Architecture de sécurité de la plateforme](/fr/security-compliance/security-architecture).
+
+L’architecture de sécurité doit être convenue avant le début de l’intégration en production. Elle influence la manière dont les systèmes partenaires valident les utilisateurs, émettent des jetons, stockent des secrets, reçoivent des événements, surveillent les opérations et répondent aux incidents.
+
+<h2 id="recommended-trust-boundary">Limite de confiance recommandée</h2>
+
+| Composant | Peut contenir | Ne doit pas contenir |
+| --- | --- | --- |
+| Interface partenaire | Configuration publique, résultat d’entrée de courte durée, état de l’interface utilisateur non sensible | Partenaire API secret, clé de signature, identifiants backend privilégiés |
+| Backend partenaire | Cartographie utilisateur, identifiants protégés, logique de signature, traitement par webhook | Secrets révélés via les réponses des clients ou les journaux publics |
+| 6MM points d’intégration | Demandes signées approuvées, jetons et livraison par webhook | Hypothèses non vérifiées des utilisateurs du côté des partenaires |
+
+Le frontend partenaire doit appeler le backend partenaire pour des opérations privilégiées. Le backend valide l’utilisateur partenaire, appelle 6MM via le API ou le SDKapprouvé, et ne retourne que le résultat de courte durée nécessaire au frontend.
+
+<h2 id="security-layers">Couches de sécurité</h2>
+
+| Couche | Concentration requise |
+| --- | --- |
+| API Diplômes | Stockage uniquement en backend, plan de rotation et contrôle d’accès. |
+| Signature de demande | Gestion cohérente de la protection contre les temps et signatures et reprises. |
+| Incorporation des jetons | Émission éphémère, vérifications d’éligibilité et comportement d’invalidation clair. |
+| Webhooks | Vérification de signature, idempotence, tentatives et journaux d’audit d’événements. |
+| Opérations | Accéder aux rôles, escalader les incidents, surveiller et conserver les preuves. |
+
+<h2 id="production-control-plan">Plan de contrôle de la production</h2>
+
+| Zone de contrôle | Preuves minimales de mise en œuvre |
+| --- | --- |
+| Stockage des accréditations | Localisation du gestionnaire secret, propriétaire de l’accès, séparation de l’environnement et processus de rotation. |
+| Entrée utilisateur | Validation de session, vérification d’éligibilité, flux de jetons de courte durée et gestion des échecs. |
+| Demandes signées | Environnement correct, temps synchronisé, journalisation des requêtes et alertes d’erreur de signature. |
+| Opérations d’actifs | Identifiants métier uniques, rapprochement des délais d’attente, requêtes de statut et chemin de revue opérateur. |
+| Webhooks | Vérification de signature du corps brut, contrôles de relecture, stockage d’idempotence et traitement sécurisé pour les retentatives. |
+| Surveillance | Alertes en cas d’échecs d’authentification, de tentatives anormales, de latence sur le webhook et d’erreurs opérationnelles. |
+| Intervention en cas d’incident | Propriétaire désigné, canal d’escalade, conservation des preuves et procédure de révocation de titres. |
+
+<h2 id="launch-review">Critique du lancement</h2>
+
+Avant la production :
+
+1. Dessiner les flux de données utilisateur, jeton, requête, asset et webhook.
+2. Marquez où chaque diplôme est créé, stocké, utilisé, enregistré, tourné et révoqué.
+3. Tester les jetons expirés, les signatures invalides, les délais d’attente, les webhooks en double et le comportement de reconnexion.
+4. Confirmer que les équipes de support peuvent localiser une opération à partir de sa requête ou de son identifiant métier.
+5. Compléter la [Liste de contrôle du lancement de production](/fr/solutions/production-launch-checklist).
+
+<h2 id="recommended-docs">Médecins recommandés</h2>
+
+<CardGroup cols={3}>
+<Card title="Secrets & Signature" icon="fa-duotone fa-key" href="/fr/sdk/security/secrets-signing">
+Protège Agent SDK références et demandes signées.
+</Card>
+<Card title="Signature de la demande" icon="fa-duotone fa-signature" href="/fr/developer-api/request-signing">
+Implémentez la signature directe de API des demandes par le développeur.
+</Card>
+<Card title="Webhook & Idempotence" icon="fa-duotone fa-webhook" href="/fr/sdk/security/webhooks-idempotency">
+Traitez les événements en toute sécurité.
+</Card>
+</CardGroup>

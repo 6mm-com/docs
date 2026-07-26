@@ -1,0 +1,56 @@
+---
+title: "Создать токен встраивания"
+subtitle: "Выпускать кратковременные встраиваемые токены Trading Widget режима партнёра-токен."
+slug: sdk/agent-sdk/java/embed-token
+canonical-url: https://docs.6mm.com/ru/sdk/agent-sdk/java/embed-token
+---
+
+<h2 id="sdk-call">SDK звонок</h2>
+
+Создайте встраиваемые токены с вашего бэкенда после проверки сессии партнера. Браузер должен вызывать вашу конечную точку, а ваша кончатая точка — 6MM через Agent SDK.
+
+```java
+CreateEmbedTokenResponse resp = client.createEmbedToken(
+        CreateEmbedTokenRequest.of("agent-user-001", "tw_abc123")
+                .withSymbol("ETHUSDT"));
+
+System.out.println(resp.embedToken);
+System.out.println(resp.expireAt);
+```
+
+> **Одноразовая квалификация**
+>
+> embedToken кратковременный и одноразовый. Не помещайте его в строку URL запроса.
+
+<h2 id="backend-endpoint-example">Пример бэкенд-эндпоинта</h2>
+
+```java
+@PostMapping("/api/trading/embed-token")
+public EmbedTokenView createEmbedToken(@RequestBody EmbedTokenRequest request,
+                                       PartnerSession session) {
+    String agentUserId = session.getAgentUserId();
+    CreateEmbedTokenResponse resp = agentClient.createEmbedToken(
+            CreateEmbedTokenRequest.of(agentUserId, request.getChannelId())
+                    .withSymbol(request.getSymbol()));
+
+    return new EmbedTokenView(resp.embedToken, resp.expireAt, request.getChannelId());
+}
+```
+
+Возвращайте только поля, необходимые поставщику Trading Widget токенов. Не возвращайте apiSecret, сырые поля подписи или внутреннюю конфигурацию сервиса.
+
+<h2 id="failure-handling">Обработка отказов</h2>
+
+| Состояние | Рекомендуемое обращение |
+| --- | --- |
+| Пользовательская сессия отсутствует или истекает | Верните 401 с партнёрской конечной точки и попросите пользователя войти снова. |
+| Пользователь агента не связан | Сначала привяжите пользователя, затем попробуйте создать токен. |
+| 6MM возвращает временную ошибку | Верните повторяемую ошибку на фронтенд и запишите requestId для поддержки. |
+| channelId не совпадает с экземпляром виджета | Отклоните запрос и создайте сессию виджета заново. |
+
+<h2 id="related-documentation">Связанная документация</h2>
+
+- [Trading Widget Аутентификация](/ru/sdk/trading-widget/authentication): подключить `tokenProvider` к партнерской конечной точке.
+- [Java Быстрый старт](/ru/sdk/agent-sdk/java/quick-start): установка и инициализация `AgentClient`.
+- [Секреты и подписи](/ru/sdk/security/secrets-signing): защищать агента API секрете.
+- [Webhooks and Idempotency](/ru/sdk/security/webhooks-idempotency): обеспечивает безопасность сторони обратного вызова интеграции.

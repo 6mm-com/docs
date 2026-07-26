@@ -1,0 +1,159 @@
+---
+title: "公開エンドポイント"
+description: "商品、ティッカー、注文帳、取引、その他の認証されていない市場情報の公開 6MM API エンドポイントにアクセスできます。"
+slug: developer-api/rest-api/public-endpoints
+canonical-url: https://docs.6mm.com/ja/developer-api/rest-api/public-endpoints
+---
+
+<h2 id="base-url">ベース URL</h2>
+
+```
+https://api.6mm.com
+```
+
+<h2 id="service-version">サービスバージョン</h2>
+
+```http
+GET /v1/version
+```
+
+サービスバージョン情報を入手しましょう。
+
+<h2 id="server-time">サーバータイム</h2>
+
+```http
+GET /v1/time
+```
+
+サーバー時間を取得しましょう。このエンドポイントは、署名前のクライアント時間のキャリブレーション API Key 使えます。
+
+<h2 id="user-login">ユーザーログイン</h2>
+
+```http
+POST /v1/public/user/login
+```
+
+リクエストパラメータ:
+
+| パラメータ    | 種類   | 必須 | 概要                             |
+| ------------ | ------ | -------- | --------------------------------------- |
+| `username`   | string | はい      | ユーザー名、長さ3 - 32                 |
+| `password`   | string | はい      | パスワード、長さ1 - 64                 |
+| `deviceId`   | string | いいえ       | デバイス指紋、最大64文字まで |
+| `deviceName` | string | いいえ       | デバイス名、最大128文字       |
+
+依頼例:
+
+```bash
+curl -X POST https://api.6mm.com/v1/public/user/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "alice",
+    "password": "yourPassword",
+    "deviceId": "device-001",
+    "deviceName": "server-001"
+  }'
+```
+
+回答例:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "accessToken": "YOUR_ACCESS_TOKEN",
+    "accessExpire": 1769676656
+  },
+  "requestId": "req-login"
+}
+```
+
+<h2 id="refresh-token">リフレッシュトークン</h2>
+
+```http
+POST /v1/public/user/refresh-token
+```
+
+通常の統合シナリオでは、ログイン状態はクッキーによって更新されます。ログイン応答で返されるクッキーを保持してください。
+
+応答フィールド:
+
+| フィールド          | 種類   | 概要              |
+| -------------- | ------ | ------------------------ |
+| `accessToken`  | string | 新しいアクセストークン         |
+| `accessExpire` | int64  | アクセストークンの有効期限 |
+
+<h2 id="agent-sso">エージェント SSO</h2>
+
+<h2 id="ticket-exchange">チケット交換</h2>
+
+```http
+POST /v1/public/agent-sso/exchange-ticket
+```
+
+リクエストパラメータ:
+
+| パラメータ  | 種類   | 必須 | 概要                                 |
+| ---------- | ------ | -------- | ------------------------------------------- |
+| `ticket`   | string | はい      | 代理店サービスが発行する一回限りのチケット |
+| `deviceId` | string | いいえ       | デバイス指紋、最大64文字まで     |
+
+応答フィールド:
+
+| フィールド          | 種類   | 概要              |
+| -------------- | ------ | ------------------------ |
+| `accessToken`  | string | アクセストークン             |
+| `accessExpire` | int64  | アクセストークンの有効期限 |
+| `redirectPath` | string | 提案されたリダイレクトパス  |
+
+<h2 id="embed-token-exchange">埋め込みトークン交換</h2>
+
+```http
+POST /v1/public/agent-sso/exchange-embed-token
+```
+
+リクエストパラメータ:
+
+| パラメータ    | 種類   | 必須 | 概要                                                    |
+| ------------ | ------ | -------- | -------------------------------------------------------------- |
+| `embedToken` | string | はい      | エージェントサービスによって発行された短命の組み込みトレーディングトークン |
+| `channelId`  | string | はい      | 埋め込みiframeチャンネルID、最大128文字まで               |
+| `deviceId`   | string | いいえ       | デバイス指紋、最大64文字まで                        |
+
+応答フィールド:
+
+| フィールド          | 種類   | 概要              |
+| -------------- | ------ | ------------------------ |
+| `accessToken`  | string | アクセストークン             |
+| `accessExpire` | int64  | アクセストークンの有効期限 |
+
+<h2 id="pnl-leaderboard">PnLリーダーボード</h2>
+
+```http
+GET /v1/public/leaderboard/pnl?period=30d
+```
+
+リクエストパラメータ:
+
+| パラメータ | 種類   | 必須 | 概要          |
+| --------- | ------ | -------- | -------------------- |
+| `period`  | string | はい      | `7d` / `30d` / `90d` |
+
+応答フィールド:
+
+| フィールド              | 種類   | 概要                                                       |
+| ------------------ | ------ | ----------------------------------------------------------------- |
+| `list[].rank`      | int32  | 階級                                                              |
+| `list[].userId`    | string | 外部ユーザーID                                                  |
+| `list[].trader`    | string | 仮面商人名                                                |
+| `list[].volume`    | string | ウィンドウ内の取引量                                      |
+| `list[].pnlAmount` | string | ウィンドウで実現されたPnL                                        |
+| `list[].pnlPct`    | string | PnL比率、`0`から`1`までの小数進数                                |
+| `myRank`           | int32  | 現在のユーザーのランク。認証されていないかランク付けされていない `0` 返します |
+
+<h2 id="related-documentation">関連文書</h2>
+
+- [市場データ](/ja/developer-api/rest-api/market-data)
+- [公共 WebSocket チャンネル](/ja/developer-api/websocket/public-market-channels)
+- [環境と一般的な規則](/ja/developer-api/environments-and-common-conventions)

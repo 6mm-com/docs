@@ -1,0 +1,56 @@
+---
+title: "Muhitlar va umumiy konventsiyalar"
+description: "Asosiy URLlar, vaqt tamg'alari, sonli maydonlar, belgilar, so'rov identifikatorlari, sahifalash va javoblar uchun 6MM API muhitlar va umumiy konventsiyalarni ko'rib chiqing."
+slug: developer-api/environments-and-common-conventions
+canonical-url: https://docs.6mm.com/uz/developer-api/environments-and-common-conventions
+---
+
+<h2 id="service-endpoints">Xizmat nuqtalari</h2>
+
+| Turi      | Oxirgi nuqta              |
+| --------- | --------------------- |
+| REST API  | `https://api.6mm.com` |
+| WebSocket | `wss://ws.6mm.com/ws`    |
+
+<h2 id="time-and-numeric-values">Vaqt va son qiymatlari</h2>
+
+* Agar boshqacha ko'rsatilmagan bo'lsa, vaqt maydonlari Unix millisekund vaqt tamg'asidir.
+* Kunlik statistika, balans snapshotlari va savdo hajmi statistikasi standart ravishda UTC kun chegaralaridan foydalanadi.
+* Miqdori, narxi, miqdori va tezligi kabi aniqlikka sezgir maydonlar string shaklida uzatiladi.
+* `orderId`, `conditionId`va `strategyId` kabi katta butun sonli identifikatorlar JSONda satrlar sifatida qaytariladi.
+
+<h2 id="response-format">Javob formati</h2>
+
+Muvaffaqiyatli javob:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {},
+  "requestId": "req-12345678"
+}
+```
+
+Xatolik javobi:
+
+```json
+{
+  "code": 1003,
+  "message": "Invalid token",
+  "requestId": "req-12345678"
+}
+```
+
+Izohlar:
+
+* Biznes xatolari odatda yagona JSON tuzilmasini qaytaradi. Integratorlar avval `code` tekshirishi kerak.
+* Autentifikatsiyadagi xatoliklar HTTP `401`qaytishi mumkin ; Tezlik cheklovi HTTP `429`qaytishi mumkin.
+* So'rov sarlavhasiga `X-Request-ID` yuborishingiz mumkin. Server uni javobda `requestId` sifatida qaytaradi.
+
+<h2 id="related-documentation">Tegishli hujjatlar</h2>
+
+- [Autentifikatsiya](/uz/developer-api/authentication): imzolash JWT yoki API Key tanlang.
+- [Request Signing](/uz/developer-api/request-signing): imzolangan so'rovlarni tuzish va tasdiqlash.
+- [REST API](/uz/developer-api/rest-api): ushbu konventsiyalarni endpoint guruhlariga qo'llash.
+- [Xatolik kodlari va muammolarni hal qilish](/uz/developer-api/error-codes-and-troubleshooting): HTTP va biznes xatolarini aniqlash.

@@ -1,0 +1,89 @@
+---
+title: "Connexion, abonnement et battement de cœur"
+subtitle: "Connectez-vous à 6MM WebSocket streams, abonnez-vous aux sujets, maintenez les connexions vivantes et traitez les enveloppes de messages en toute sécurité."
+slug: developer-api/websocket/connection-subscription-and-heartbeat
+canonical-url: https://docs.6mm.com/fr/developer-api/websocket/connection-subscription-and-heartbeat
+---
+
+Utilisez WebSocket flux pour les données de marché et les mises à jour privées de l’état des utilisateurs qui doivent rester à jour sans sondage.
+
+<h2 id="connection-url">Connexion URL</h2>
+
+```text
+wss://ws.6mm.com/ws
+```
+
+Les flux privés nécessitent un contexte d’authentification tel qu’un listenKey ou un jeton d’accès tel que décrit dans la documentation du canal privé.
+
+<h2 id="subscribe">Abonnez-vous</h2>
+
+```json
+{ "id": "1772007814666", "op": "subscribe", "args": ["market.depth.BTCUSDT"] }
+```
+
+Accusé de réception d’abonnement réussi :
+
+```json
+{
+  "id": "1772007814666",
+  "event": "subscribe",
+  "success": true,
+  "data": ["market.depth.BTCUSDT"]
+}
+```
+
+<h2 id="unsubscribe">Désabonnement</h2>
+
+```json
+{ "id": "1772007814667", "op": "unsubscribe", "args": ["market.depth.BTCUSDT"] }
+```
+
+<h2 id="application-ping">Ping d’application</h2>
+
+```json
+{ "id": "1772007814668", "op": "ping", "args": [] }
+```
+
+<h2 id="message-envelope">Enveloppe de messages</h2>
+
+Les campagnes publiques utilisent une enveloppe cohérente :
+
+```json
+{
+  "topic": "market.depth.BTCUSDT",
+  "event": "data",
+  "ts": 1772007815000,
+  "data": {}
+}
+```
+
+<h2 id="operational-recommendations">Recommandations opérationnelles</h2>
+
+- Générer un `id` unique côté client pour chaque demande d’abonnement, de désabonnement et de ping.
+- Considérer la reconnexion comme une nouvelle session et s’abonner à nouveau aux sujets requis.
+- Valider que le `topic` retourné correspond au canal attendu par votre service.
+- Garder le traitement des messages idempotent lorsque des ordres privés ou des événements de compte sont impliqués.
+- Modifications de l’état de connexion du journal, accusés de réception d’abonnement et déconnexions anormales.
+
+<h2 id="reconnect-workflow">Flux de reconnexion</h2>
+
+1. Fermer ou jeter la prise précédente et créer une nouvelle connexion.
+2. Réauthentifier les flux privés avec un listenKey ou un jeton d’accès valide.
+3. Réabonnez-vous à tous les sujets requis et attendez les remerciements réussis.
+4. Remplacer l’état local du carnet d’ordres par un nouvel instantané avant d’appliquer des mises à jour incrémentales.
+5. Concilier les ordres ouverts, les positions et les soldes par REST si des événements privés ont pu être manqués.
+
+Utilisez un backoff exponentiel borné avec gigue pour les tentatives de reconnexion. Un client qui se reconnecte continuellement devrait alerter les opérateurs au lieu de réessayer indéfiniment sans visibilité.
+
+<h2 id="heartbeat-and-stale-connections">Battement de cœur et connexions fades</h2>
+
+- Suivre le dernier message entrant et la confirmation réussie du ping.
+- Utiliser l’intervalle des battements de cœur et le seuil d’inactivité approuvés pour l’environnement de production.
+- Considérer une connexion comme obsolète lorsque le seuil configuré est dépassé, même si le socket TCP semble toujours ouvert.
+- Ne pas réutiliser les abonnements d’un ancien socket ; Réabonnez-vous explicitement après chaque reconnexion.
+
+<h2 id="related-documentation">Documentation associée</h2>
+
+- [Canaux du marché public](/fr/developer-api/websocket/public-market-channels) : sujets, continuité du carnet d’ordres, transactions, bougies et tickers.
+- [Canal utilisateur privé](/fr/developer-api/websocket/private-user-channel) : listenKey cycle de vie et événements authentifiés.
+- [Recommandations d’intégration](/fr/developer-api/integration-recommendations) : essais, idempotence, surveillance et tests de lancement.

@@ -1,0 +1,73 @@
+---
+title: "SDK 整合故障排除"
+subtitle: "在升級支援請求前，先診斷 Trading Widget、 Agent SDK、簽署、webhook、逾時及環境問題。"
+slug: sdk/security/troubleshooting
+canonical-url: https://docs.6mm.com/zh-TW/sdk/security/troubleshooting
+---
+
+從失敗操作的環境、時間戳及商業識別碼開始。結構化檢查通常能將配置問題與認證、網路及非同步處理問題區分開來。
+
+<h2 id="diagnostic-order">建議診斷順序</h2>
+
+1. 確認受影響的環境與基地 URL。
+2. 記錄 UTC 時間範圍及第一次失敗的請求。
+3. 識別模組： Trading Widget、 Agent SDK、 REST API、 WebSocket或webhook。
+4. 擷取請求ID、合作夥伴用戶ID、 `agentOrderNo`、訂單ID或Webhook事件ID。
+5. 檢查近期程式碼、憑證、 IP 白名單或部署變更。
+6. 以最小安全測試案例繁殖。
+
+<h2 id="trading-widget-issues">Trading Widget 問題</h2>
+
+| 症狀 | 可能的原因 | 修正 |
+| --- | --- | --- |
+| iframe 請求合作夥伴本地網域 | baseUrl 不見了 | 傳 baseUrl：「https://app.6mm.com」。 |
+| iframe 是隱形或非常短的 | 母容器沒有高度 | 設定容器高度或通道高度。 |
+| token_provider_missing | 夥伴標記模式沒有提供者 | 新增授權。tokenProvider。 |
+| auth_exchange_failed | 無效、過期或不匹配的嵌入令牌 | 請檢查後端的 token 回應和 channelId。 |
+
+<h2 id="agent-sdk-issues">Agent SDK 問題</h2>
+
+| 症狀 | 可能的原因 | 修正 |
+| --- | --- | --- |
+| 簽名被拒絕 | 錯誤的秘密、時鐘漂移，或是手動更改簽名欄位 | 讓 SDK 產生簽名欄位並同步伺服器時間。 |
+| 重複資金流動風險 | 超時後使用新訂單號碼 | 請先按原始 agentOrderNo 查詢。 |
+| PROCESSING 被視為失敗 | 待審狀態被誤解 | 等 webhook 或打電話給 queryOrder。 |
+| Webhook 處理了多次 | 無冪性重試行為 | 新增冪性鍵與最終狀態檢查。 |
+
+<h2 id="evidence-to-capture">要捕捉的證據</h2>
+
+| 整合 | 有用的證據 |
+| --- | --- |
+| Trading Widget | 頁面 URL、 SDK 版本路徑、瀏覽器主控台、失敗的網路請求、 `onError` 有效載荷，以及容器尺寸。 |
+| Agent SDK | SDK 語言/版本、基礎 URL、 UTC 時間戳、請求 ID、 `agentOrderNo`、回應代碼，以及經過消毒的日誌。 |
+| 網路鉤 | 交付時間、事件或商業金鑰、簽章驗證結果、處理狀態，以及經過消毒的原始雜湊。 |
+| REST API | 方法、路徑、環境、請求ID、回應代碼及淨化參數。 |
+
+診斷中切勿包含密碼、存取權杖、 API 秘密、完整簽名、私鑰或未經遮蔽的個人資料。
+
+<h2 id="before-escalating">在升級之前</h2>
+
+- 只有當操作被記錄為安全可重試時才可重試。
+- 逾時後，查詢原始商業識別碼，而非建立新的。
+- 確認系統時鐘與憑證環境是否有簽章錯誤。
+- 保留第一次失敗及後續重試結果。
+- 使用[支援請求模板]（/resources/support-request-template）傳送完整且已塗黑的報告。
+
+<h2 id="related-docs">相關文件</h2>
+
+<CardGroup cols={3}>
+<Card title="Trading Widget 快速入門" icon="fa-duotone fa-chart-line" href="/zh-TW/sdk/trading-widget/quick-start">
+檢查腳本載入、容器大小、設定及回調。
+</Card>
+<Card title="秘密與簽名" icon="fa-duotone fa-shield-keyhole" href="/zh-TW/sdk/security/secrets-signing">
+檢查 Agent SDK 憑證、時鐘和簽名欄位。
+</Card>
+<Card title="Webhook 與冪性" icon="fa-duotone fa-webhook" href="/zh-TW/sdk/security/webhooks-idempotency">
+檢視回撥驗證與重複事件處理。
+</Card>
+</CardGroup>
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">相關頁面</h2>
+
+- [技術支援申請範本](/zh-TW/resources/support-request-template)
+<!-- sixmm-localized-link-repair:end -->

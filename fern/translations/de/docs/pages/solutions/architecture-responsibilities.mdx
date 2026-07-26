@@ -1,0 +1,39 @@
+---
+title: "Architektur & Verantwortlichkeiten"
+subtitle: "Erläutern, was das Partnersystem besitzt und was 6MM Infrastruktur bei eingebetteten Handelseinsätzen bereitstellt."
+slug: solutions/architecture-responsibilities
+canonical-url: https://docs.6mm.com/de/solutions/architecture-responsibilities
+---
+
+Ein sauberer Leading-Embedded-Trading-Start hängt von klaren Verantwortungsgrenzen ab. Partnersysteme sollten sensible Geschäftseigentumsverhältnisse behalten, während 6MM die Handelsinfrastruktur und Lebenszyklusfunktionen bereitstellt.
+
+<h2 id="responsibility-model">Verantwortungsmodell</h2>
+
+| Gebiet | Partnersystem | 6MM Infrastruktur |
+| --- | --- | --- |
+| Benutzerbeziehung | Er besitzt das Benutzerkonto, den Login-Status, die Kundensupport-Identität und die Berechtigungsprüfungen. | Erhält validierten Handels-Eingangskontext und behält den Trading-Side-Zustand. |
+| Geheimnisse und Signieren | Die Filialen arbeiten API Schlüssel im Backend zusammen und unterschreiben serverseitige Anfragen. | Verifiziert signierte Anfragen und verarbeitet autorisierte Aktionen. |
+| Handelserfahrung | Bietet Einstiegspunkte, Navigation und Produktkontext. | Bietet Handels-UI, Orderlebenszyklus, Marktdaten, Positionen, Risiken und Abwicklungsverhalten. |
+| Betrieb | Kümmert sich um Support-Workflows, Business Analytics und interne Eskalation. | Emittiert Events, Webhooks und Statusinformationen, die für die Integration benötigt werden. |
+
+<h2 id="production-principles">Produktionsprinzipien</h2>
+
+- Alle Partnergeheimnisse im Backend behalten.
+- Einbettungstoken als kurzlebige Zugangsdaten behandeln.
+- Webhooks idempotent verarbeiten und Ereignis-IDs speichern.
+- Verwenden Sie Überwachung rund um Token-Ausgabe, Übertragungsflüsse und Änderungen von Ordnungszuständen.
+- Halte kundenorientierte Texte konsistent auf Eingangs-, Handels- und Support-Seiten.
+
+<h2 id="related-docs">Verwandte Dokumente</h2>
+
+<CardGroup cols={3}>
+<Card title="Authentifizierung" icon="fa-duotone fa-user-shield" href="/de/developer-api/authentication">
+Überprüfen Sie die Erwartungen an die Backend-Authentifizierung.
+</Card>
+<Card title="Unterschrift der Anfrage" icon="fa-duotone fa-signature" href="/de/developer-api/request-signing">
+Verstehen Sie unterschriebene API Anrufe.
+</Card>
+<Card title="Webhook-Sicherheit" icon="fa-duotone fa-webhook" href="/de/sdk/security/webhooks-idempotency">
+Führen Sie die Veranstaltungslieferung sicher ab.
+</Card>
+</CardGroup>

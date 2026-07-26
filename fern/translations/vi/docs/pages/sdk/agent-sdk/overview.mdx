@@ -1,0 +1,79 @@
+---
+title: "6MM Agent SDK Java và PHP"
+subtitle: "Tích hợp các cuộc gọi Agent API đã ký, liên kết người dùng, chuyển truyện, URL nhập và xác minh webhook từ các dịch vụ backend đối tác."
+slug: sdk/agent-sdk/overview
+canonical-url: https://docs.6mm.com/vi/sdk/agent-sdk/overview
+---
+
+6MM Agent SDK này dành cho các dịch vụ backend đối tác cần gọi APIs Agent đặc quyền mà không cần triển khai ký và xử lý yêu cầu từ đầu. Nó không được chạy trên trình duyệt, di động hoặc mã máy tính công cộng vì tích hợp sử dụng bí mật API đối tác.
+
+<h2 id="when-to-use-the-agent-sdk">Khi nào nên sử dụng Agent SDK</h2>
+
+Sử dụng Agent SDK khi backend của bạn cần liên kết người dùng đối tác, di chuyển tài sản qua quy trình đã được phê duyệt, truy vấn hồ sơ giao dịch, tạo URLmục giao dịch nhúng hoặc xác minh thông báo webhook. Sử dụng [Trading Widget SDK](/vi/sdk/trading-widget/overview) riêng biệt khi frontend đối tác cần hiển thị giao diện giao dịch.
+
+<h2 id="capabilities">Khả năng</h2>
+
+| Kịch bản | Java SDK | PHP SDK |
+| --- | --- | --- |
+| Liên kết người dùng | Được hỗ trợ | Được hỗ trợ |
+| Chuyển khoản cố định | Được hỗ trợ | Được hỗ trợ |
+| Chuyển toàn bộ ra ngoài | Được hỗ trợ | Được hỗ trợ |
+| Chuyển ngược | Được hỗ trợ | Được hỗ trợ |
+| Thứ tự truy vấn | Được hỗ trợ | Được hỗ trợ |
+| Tạo URL nhập | Được hỗ trợ | Được hỗ trợ |
+| Xác minh Webhook | Được hỗ trợ | Được hỗ trợ |
+
+<h2 id="common-configuration">Cấu hình chung</h2>
+
+| Chìa khóa | Ví dụ | Mô tả |
+| --- | --- | --- |
+| baseUrl | `https://agent-api.6mm.com` | 6MM Agent API dịch vụ URL không có dấu gạch chéo. |
+| agentCode | AGENT001 | Mã agent đối tác. |
+| apiSecret | your-api-secret | API bí mật ký chỉ được lưu trên backend. |
+| defaultCurrency | USDT | Tiền tệ mặc định cho chuyển khoản và APIstài khoản. |
+| webhookUrl | https://partner.example.com/6mm/webhook | Điểm cuối đối tác cho 6MM thông báo webhook. |
+
+<h2 id="typical-integration-flow">Quy trình tích hợp điển hình</h2>
+
+1. Giao diện đối tác xác thực người dùng thông qua hệ thống tài khoản riêng của đối tác.
+2. Backend đối tác ánh xạ người dùng với định danh ổn định phía đối tác.
+3. Backend gọi Agent SDK với `agentCode` và bảo vệ API bí mật.
+4. SDK ký và gửi yêu cầu API cho Đại lý.
+5. Backend lưu trữ định danh doanh nghiệp trả về và xử lý các webhook sau đó một cách đồng nhất.
+6. Frontend chỉ nhận được kết quả ngắn hạn hoặc xác nhận nhập khẩu mà nó cần.
+
+<h2 id="choose-an-sdk">Chọn một SDK</h2>
+
+| Ngăn xếp backend | Bắt đầu từ đây |
+| --- | --- |
+| Java | [Java SDK Tổng quan] (/sdk/agent-sdk/java/overview) và [Java Quick Start](/vi/sdk/agent-sdk/java/quick-start) |
+| PHP | [PHP SDK Tổng quan] (/sdk/agent-sdk/php/overview) và [PHP Quick Start](/vi/sdk/agent-sdk/php/quick-start) |
+
+<h2 id="production-checklist">Danh sách kiểm tra sản xuất</h2>
+
+- Tải `apiSecret` từ trình quản lý bí mật backend, không phải mã nguồn.
+- Giữ chứng chỉ phát triển, dàn dựng và sản xuất riêng biệt.
+- Sử dụng ánh xạ người dùng đối tác ổn định và định danh đơn hàng kinh doanh duy nhất.
+- Giữ nguyên định danh gốc khi kiểm tra trạng thái của yêu cầu hết thời gian.
+- Xác minh chữ ký webhook và lưu trữ các ID sự kiện đã xử lý.
+- Chỉnh sửa bí mật và chữ ký khỏi nhật ký đồng thời giữ lại ID yêu cầu để hỗ trợ.
+
+<h2 id="next-steps">Các bước tiếp theo</h2>
+
+<CardGroup cols={3}>
+<Card title="Java Khởi Đầu Nhanh" icon="fa-brands fa-java" href="/vi/sdk/agent-sdk/java/quick-start">
+Cài đặt và khởi tạo Agent SDK trong backend Java .
+</Card>
+<Card title="PHP Khởi Đầu Nhanh" icon="fa-brands fa-php" href="/vi/sdk/agent-sdk/php/quick-start">
+Cài đặt và khởi tạo Agent SDK trong backend PHP .
+</Card>
+<Card title="Webhooks & Idmpotency" icon="fa-duotone fa-webhook" href="/vi/sdk/security/webhooks-idempotency">
+Xác minh các cuộc gọi lại và ngăn chặn xử lý kinh doanh trùng lặp.
+</Card>
+</CardGroup>
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">Trang liên quan</h2>
+
+- [Agent Java SDK](/vi/sdk/agent-sdk/java/overview)
+- [Agent PHP SDK](/vi/sdk/agent-sdk/php/overview)
+<!-- sixmm-localized-link-repair:end -->

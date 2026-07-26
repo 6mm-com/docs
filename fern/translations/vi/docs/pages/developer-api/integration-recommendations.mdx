@@ -1,0 +1,42 @@
+---
+title: "Khuyến nghị tích hợp"
+description: "Áp dụng các thực hành 6MM được khuyến nghị cho xác thực, thử lại, tính đồng thời, ghi nhật ký, xử lý tốc độ, giám sát, bảo mật và sẵn sàng khởi động."
+slug: developer-api/integration-recommendations
+canonical-url: https://docs.6mm.com/vi/developer-api/integration-recommendations
+---
+
+Sử dụng các khuyến nghị này làm cơ sở sẵn sàng sản xuất. Chúng bổ sung cho tham chiếu điểm cuối và giúp tích hợp phục hồi an toàn sau các lần hết thời gian, kết nối lại, yêu cầu trùng lặp và sự cố xác thực.
+
+<h2 id="authentication-and-secrets">Xác thực và bí mật</h2>
+
+- Ưu tiên [API Key ký](/vi/developer-api/authentication) cho các chương trình giao dịch phía máy chủ JWT và ưu tiên cho các hành động giao diện do người dùng điều khiển.
+- Giữ `apiSecret` trong quản lý bí mật phía sau. Nó chỉ được hiển thị một lần và không bao giờ được gửi đến trình duyệt hoặc ứng dụng di động.
+- Áp dụng quyền API Key tối thiểu cần thiết và giới hạn IP nguồn khi môi trường tích hợp hỗ trợ địa chỉ thoát ổn định.
+- Vô hiệu hóa hoặc xóa khóa bị rò rỉ ngay lập tức, sau đó xem lại nhật ký yêu cầu trước khi cấp khóa thay thế.
+
+<h2 id="request-validation-and-idempotency">Xác thực yêu cầu và tính đồng nhất</h2>
+
+- Trước khi đặt hàng, hãy truy vấn `/v1/public/market/symbols` và xác thực `tickSize`, `stepSize`, giá trị danh nghĩa tối thiểu và số lượng tối đa tại chỗ.
+- Tạo một `clientOrderId` duy nhất cho mỗi lần ghi lệnh để các yêu cầu có thể được đối chiếu sau khi bị ngắt kết nối.
+- Giữ nguyên định danh gốc khi kết quả HTTP không chắc chắn. Truy vấn đơn hàng hiện có trước khi tạo yêu cầu thay thế.
+- Coi các số và giá thập phân là chuỗi hoặc kiểu thập phân, không phải giá trị số thực nhị phân.
+
+<h2 id="order-and-websocket-state">Trạng thái trật tự và WebSocket</h2>
+
+- Xác định trạng thái cuối cùng sau các thao tác hủy, hủy toàn bộ hoặc sửa đổi từ [sự kiện WebSocket riêng tư](/vi/developer-api/websocket/private-user-channel) hoặc truy vấn REST .
+- Xem mỗi lần kết nối lại như một phiên WebSocket mới và khôi phục tất cả các đăng ký cần thiết.
+- Kiểm tra tính liên tục của sổ đơn hàng với `endVersion`. Nếu xuất hiện khoảng trống phiên bản, hãy loại bỏ sách cục bộ và đăng ký lại để nhận ảnh chụp mới.
+- Loại bỏ trùng lặp các sự kiện lệnh và tài khoản riêng trước khi áp dụng cho số dư, vị thế hoặc bản ghi đối tác.
+
+<h2 id="logging-monitoring-and-retries">Ghi nhật ký, giám sát và thử lại</h2>
+
+- Ghi lại ID yêu cầu, ID đơn hàng khách hàng, trạng thái HTTP , mã kinh doanh API , độ trễ và số lần thử lại mà không cần lưu lại bí mật hoặc token đầy đủ.
+- Chỉ thử lại các thao tác đã được chứng minh là an toàn, sử dụng chế độ lùi hàm mũ bị giới hạn và jitter.
+- Cảnh báo khi thất bại xác thực, lỗi chữ ký, phản hồi giới hạn tốc độ, vòng lặp kết nối lại WebSocket , khoảng trống chuỗi và sự khác biệt trong đối chiếu thứ tự.
+- Giữ đồng bộ đồng hồ máy chủ vì xác thực và ký phụ thuộc vào dấu thời gian.
+
+<h2 id="before-production">Trước khi sản xuất</h2>
+
+- Các kịch bản thời gian chờ, yêu cầu trùng lặp, kết nối lại, xoay khóa và thử lại webhook trong môi trường không phải sản xuất.
+- Chỉ định chủ sở hữu cho việc luân phiên thông tin đăng nhập, sự cố giao dịch, lỗi webhook và đối chiếu.
+- Hoàn thành [danh sách kiểm tra khởi động sản xuất](/vi/resources/production-launch-checklist) và sử dụng [mẫu yêu cầu hỗ trợ](/vi/resources/support-request-template) khi cần nâng cấp.

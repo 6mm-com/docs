@@ -1,0 +1,73 @@
+---
+title: "6MM API Authentifizierung: JWT und API Schlüssel"
+description: "Lernen Sie, wie Sie private 6MM API Anfragen mit JWT Zugriffstoken oder API Schlüsseln authentifizieren und wählen Sie für jede Integration die passende Methode aus."
+slug: developer-api/authentication
+canonical-url: https://docs.6mm.com/de/developer-api/authentication
+---
+
+6MM unterstützt JWT Zugriffstoken und API Schlüssel für privaten API Zugriff. Wählen Sie die Methode basierend darauf, ob die Anfrage zu einer interaktiven Benutzersitzung oder einer langjährigen Backend-Integration gehört.
+
+<h2 id="choose-an-authentication-method">Wählen Sie eine Authentifizierungsmethode</h2>
+
+| Integrationsbedarf | Empfohlene Methode | Warum |
+| --- | --- | --- |
+| Benutzersitzungs- API Aufrufe | JWT | Verwendet das nach der Anmeldung zurückgegebene Zugriffstoken. |
+| Erstelle, aktualisiere oder widerrufe API Schlüssel | JWT | API Key Management-Endpunkte akzeptieren API Key Selbstverwaltung nicht. |
+| Server-zu-Server-Konto oder Handelsaufrufe | API Key + HMAC Signatur | Unterstützt Scoped-Berechtigungen und signierte Backend-Anfragen. |
+
+<h2 id="jwt">JWT</h2>
+
+Nach der Anmeldung gibt das API ein `accessToken`zurück. Beim Aufruf privater Endpunkte umfassen folgende:
+
+```http
+Authorization: Bearer YOUR_ACCESS_TOKEN
+```
+
+Halten Sie das Token aus URLs und Logs heraus. Wenn ein Token abläuft, erhalten Sie ein gültiges Token über den genehmigten Login- oder Aktualisierungsfluss, bevor Sie die private Anfrage erneut versuchen.
+
+<h2 id="api-key">API Key</h2>
+
+Wenn der `X-API-KEY` Request-Header vorhanden ist, verwendet der Server API Key HMAC Authentifizierung:
+
+```http
+X-API-KEY: YOUR_API_KEY
+```
+
+API Key Management-Endpunkte müssen JWTverwenden. API Keys können sich nicht selbst beherrschen.
+
+API Key-Anfragen benötigen außerdem den Zeitstempel und die HMAC-Signatur, wie unter [Request Signing](/de/developer-api/request-signing) beschrieben. Speichern Sie das zugehörige API-Geheimnis ausschließlich in einem Backend-Geheimnisverwaltungssystem.
+
+<h2 id="api-key-permissions">API Key Berechtigungen</h2>
+
+| Wert | Genehmigung | Beschreibung                                                                                                                                                                                    |
+| ----- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `1`   | Lesen       | Benutzerinformationen, Assets, Kontoänderungsprotokolle, Statistiken, listenKey, Lieblingssymbole und zugehörige Benutzer-/Konto-Endpunkte. Order- und Positionsendpunkte, einschließlich Abfragen, erfordern eine Handelserlaubnis |
+| `2`   | Handel      | Ordnungs- und Positionsendpunkte, einschließlich sowohl Abfrage- als auch Schreiboperationen                                                                                                                        |
+| `4`   | Rückzug   | Genehmigung für reservierte Fonds                                                                                                                                                                       |
+
+Um sowohl Lese- als auch Handelsberechtigungen zu erteilen, verwenden Sie `permissions=3`.
+
+Verwenden Sie den kleinsten von der Integration benötigten Berechtigungssatz. Ein Marktdatendienst sollte keine Handelserlaubnisse erhalten, während ein Auftragsdienst diese Erlaubnis benötigt, selbst wenn er nur Aufträge oder Positionen abfragt.
+
+<h2 id="production-security-checklist">Produktionssicherheits-Checkliste</h2>
+
+- Erstellen Sie separate API Keys für Entwicklung, Staging und Produktion.
+- Verwenden Sie eine IP Whitelist, bei der die Integration stabile ausgehende Adressen hat.
+- Niemals API Geheimnisse im Browser-, Mobil- oder Desktop-Anwendungscode offenlegen.
+- Serverzeit vor der Erstellung signierter Anfragen synchronisieren.
+- Redact-Autorisierungsheader, API Schlüssel, Signaturen und Geheimnisse aus Anwendungsprotokollen.
+- Einen Schlüssel sofort entziehen und ersetzen, wenn eine Exposition vermutet wird.
+
+<h2 id="next-steps">Nächste Schritte</h2>
+
+<CardGroup cols={3}>
+<Card title="API Key Management" icon="fa-duotone fa-key" href="/de/developer-api/api-key-management">
+Erstellen Sie Scoped-Schlüssel, konfigurieren Sie IP Einschränkungen und planen Sie die Schlüsselrotation.
+</Card>
+<Card title="Unterschrift der Anfrage" icon="fa-duotone fa-signature" href="/de/developer-api/request-signing">
+Baue die HMAC–SHA256 Nutzlast und unterschreibe private Anfragen.
+</Card>
+<Card title="Fehler und Fehlerbehebung" icon="fa-duotone fa-screwdriver-wrench" href="/de/developer-api/error-codes-and-troubleshooting">
+Diagnostiziere abgelehnte Zugangsdaten, Zeitstempel, Unterschriften und Berechtigungen.
+</Card>
+</CardGroup>

@@ -1,0 +1,107 @@
+---
+title: "قناة المستخدم الخاص"
+description: "اشترك في أحداث 6MM WebSocket المصادقة للأوامر والمراكز والأرصدة وتغييرات الحسابات من خلال إنشاء وصيانة مفتاح الاستماع."
+slug: developer-api/websocket/private-user-channel
+canonical-url: https://docs.6mm.com/ar/developer-api/websocket/private-user-channel
+---
+
+أنشئ `listenKey` أولا:
+
+```http
+POST /v1/private/user/listen-key
+```
+
+مثال على الرد:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "listenKey": "f57cb61ef604ce76be09e753a5dbdd8c",
+    "expireAt": 1777539918867
+  },
+  "requestId": "req-listen-key"
+}
+```
+
+`listenKey` صالحة لمدة 60 دقيقة بشكل افتراضي. يوصى بالتجديد كل 30 دقيقة.
+
+<h2 id="renew">تجديد</h2>
+
+```http
+PUT /v1/private/user/listen-key
+Content-Type: application/json
+```
+
+```json
+{ "listenKey": "f57cb61ef604ce76be09e753a5dbdd8c" }
+```
+
+<h2 id="close">إغلاق</h2>
+
+```http
+DELETE /v1/private/user/listen-key
+Content-Type: application/json
+```
+
+```json
+{ "listenKey": "f57cb61ef604ce76be09e753a5dbdd8c" }
+```
+
+<h2 id="connect-to-private-websocket">اتصل ب WebSocket</h2>
+
+```
+wss://ws.6mm.com/ws?listenKey=YOUR_LISTEN_KEY
+```
+
+طريقة الاتصال JWT المتوافقة:
+
+```
+wss://ws.6mm.com/ws?token=YOUR_ACCESS_TOKEN
+```
+
+بعد نجاح المصادقة، يشترك الخادم تلقائيا في الاتصال بقناة المستخدم الخاصة الحالية. لا يتطلب اشتراكا يدويا.
+
+تأكيد المصادقة الناجح:
+
+```json
+{ "event": "auth", "success": true, "data": "1188041528" }
+```
+
+<h2 id="common-private-events">الفعاليات الخاصة الشائعة</h2>
+
+| الحدث                | الوصف                                                                   |
+| -------------------- | ----------------------------------------------------------------------------- |
+| `ORDER_TRADE_UPDATE` | تغييرات حالة الطلب، بما في ذلك الطلب الجديد، والتعديل، والتبادل، والإلغاء |
+| `ACCOUNT_UPDATE`     | توازن الحساب وتغيرات المراكز                                          |
+
+غلاف الرسالة الدفعية الخاص:
+
+```json
+{
+  "topic": "user.5794",
+  "ts": 1771047000000,
+  "data": {
+    "eventType": "ORDER_TRADE_UPDATE"
+  }
+}
+```
+
+REST الاستعلام تستخدم نقاط نهاية التدفقات الخاصة WebSocket مخططات منفصلة. يجب على العملاء تحليل كل مخطط بشكل مستقل وعدم افتراض أن أسماء الحقول متطابقة.
+
+<h2 id="common-differences">الاختلافات الشائعة</h2>
+
+| المجال         | REST الحقل     | WebSocket الحقل                                             |
+| -------------- | -------------- | ----------------------------------------------------------- |
+| حالة الترتيب   | `status`       | `orderStatus`                                               |
+| التوازن المجمد | `frozenMargin` | `frozenBalance`                                             |
+| وضع الهامش    | `marginMode`   | `marginMode`، يعاد كوتار في المواقع والتيارات |
+
+<h2 id="recovery-and-reconciliation">التعافي والمصالحة</h2>
+
+- تجديد listenKey قبل انتهاء الصلاحية وإنشاء  جديد إذا فشل التجديد.
+- إعادة الاتصال، وإعادة المصادقة، والتعامل مع المقبس الجديد كجلسة حدث جديدة.
+- إلغاء تكرار الأحداث قبل تغيير أرصدة الشركاء أو سجلات الأوامر.
+- إذا كان قد فاتت أحداث، استفسر عن [الترتيبات](/ar/developer-api/rest-api/order) ، [المواقع](/ar/developer-api/rest-api/position) و[حالة الحساب](/ar/developer-api/rest-api/user-and-account) عبر REST.
+- اتبع [دليل الاتصال ونبض القلب](/ar/developer-api/websocket/connection-subscription-and-heartbeat) لإعادة المحاولة والتعامل مع الاتصال الراكد.

@@ -1,0 +1,48 @@
+---
+title: "Architettura della Sicurezza della Piattaforma"
+subtitle: "Comprendi i livelli di sicurezza utilizzati nell'infrastruttura di 6MM trading, APIs, SDKs, webhook e integrazioni con i partner."
+slug: security-compliance/security-architecture
+canonical-url: https://docs.6mm.com/it/security-compliance/security-architecture
+---
+
+6MM documentazione di sicurezza si concentra sulla prontezza produttiva dei partner. L'obiettivo è mantenere stabile l'infrastruttura di trading rendendo chiari i confini delle responsabilità.
+
+<h2 id="security-layers">Livelli di sicurezza</h2>
+
+| Strato | Focus |
+| --- | --- |
+| Infrastrutture | Isolamento di rete, comunicazione dei servizi criptati, monitoraggio e failover. |
+| Sistemi di negoziazione | Matching deterministico, controllo dei margini, controllo del rischio e prevenzione degli abusi. |
+| Sicurezza dell'integrazione | API chiavi, firma HMAC , firme webhook, protezione contro la riproduzione e segreti solo backend. |
+| Operazioni partner | Validazione della sessione utente, custodia degli asset, assistenza clienti e controlli di conformità locali. |
+
+<h2 id="partner-responsibilities">Responsabilità del partner</h2>
+
+- Tenere API segreti e tasti di firma fuori dai browser e dalle app mobili.
+- Validare le sessioni degli utenti partner prima di rilasciare credenziali di ingresso di trading.
+- Implementare controlli di idempotenza e stato terminale tramite webhook.
+- Mantenere i log operativi per i flussi di conto, ordini, trasferimenti e webhook.
+
+<h2 id="integration-trust-boundaries">Confini di fiducia per l'integrazione</h2>
+
+| Confine | Controllo richiesto |
+| --- | --- |
+| Browser o app verso backend partner | Valida la sessione partner prima di rilasciare qualsiasi credenziale di trading. |
+| Partner backend per 6MM API | Usa credenziali con scopo, firma delle richieste, sincronizzazione temporale e archiviazione segreta protetta. |
+| 6MM webhook al partner endpoint | Verifica la firma rispetto al corpo grezzo della richiesta, rifiuta i messaggi obsoleti o non validi e deduplica i tentativi di ripetizione. |
+| Scambio di record tra stato e partner | Riconcilia ordini, posizioni, saldi e trasferimenti utilizzando identificatori durevoli e controlli dello stato terminale. |
+
+<h2 id="production-verification">Verifica della produzione</h2>
+
+- Test scadente, revocato e con l'ambito di ambito errato del test.
+- Testare corpi modificati di webhook, callback duplicati, callback ritardati e timeout degli endpoint.
+- Confermare che i log oscurano segreti, token di accesso e payload di richieste sensibili.
+- Allerta su ripetuti fallimenti di firma, attività anomala dell'ordine, differenze di riconciliazione e instabilità della connessione.
+- Documentare il proprietario e il percorso di risposta per l'esposizione delle credenziali, il guasto del webhook e gli incidenti di trading.
+
+<h2 id="related-security-guides">Guide alla sicurezza correlate</h2>
+
+- [Segreti e Firma](/it/sdk/security/secrets-signing)
+- [Ragazzi e Idempotenza](/it/sdk/security/webhooks-idempotency)
+- [Risposta all'Incidente](/it/security-compliance/incident-response)
+- [Matrice di Responsabilità del Partner](/it/security-compliance/partner-responsibilities)

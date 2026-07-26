@@ -1,0 +1,90 @@
+---
+title: "Java Avvio rapido"
+subtitle: "Installa e inizializza il Java SDK da un servizio backend."
+slug: sdk/agent-sdk/java/quick-start
+canonical-url: https://docs.6mm.com/it/sdk/agent-sdk/java/quick-start
+---
+
+<h2 id="install">Installazione</h2>
+
+La fonte pubblica SDK documenta attualmente i tag `v0.1.1` con queste coordinate Maven:
+
+```xml
+<dependency>
+    <groupId>com.sixmm.exchange.sdk</groupId>
+    <artifactId>agent</artifactId>
+    <version>0.1.1</version>
+</dependency>
+```
+
+GitHub non funge da repository di dipendenza Maven. Installa localmente il codice sorgente taggato prima di risolvere la dipendenza:
+
+```bash
+git clone https://github.com/6mm-com/agent-java-sdk.git
+cd agent-java-sdk
+git checkout v0.1.1
+mvn install
+```
+
+> **Costruzioni di squadre**
+>
+> Pubblica l'artefatto approvato nel repository Maven della tua organizzazione per CI, test e build di produzione. Conferma la versione approvata con 6MM prima della distribuzione in produzione.
+
+Esempi di codice sorgente e utilizzo sono disponibili nel repository ufficiale Java SDK :
+
+[6mm-com/agente-java-sdk] (https://github.com/6mm-com/agent-java-sdk)
+
+<h2 id="before-you-start">Prima che iniziate</h2>
+
+- Conferma il tuo agente di produzione API URL base con il team 6MM .
+- Memorizza apiSecret solo nella gestione dei segreti backend.
+- Preparare una mappatura stabile tra platformUserId e agentUserId.
+- Abilitare log strutturati attorno ai flussi bind, transfer, order e webhook.
+
+<h2 id="initialize-client">Inizializzare client</h2>
+
+```java
+import com.sixmm.agent.AgentClient;
+import com.sixmm.agent.AgentClientConfig;
+
+AgentClient client = new AgentClient(AgentClientConfig.builder()
+        .baseUrl("https://agent-api.6mm.com")
+        .agentCode("AGENT001")
+        .apiSecret("your-api-secret")
+        .defaultCurrency("USDT")
+        .build());
+```
+
+> **Solo backend**
+>
+> Non inizializzare il Agent SDK dal codice client del browser, mobile o desktop. Il SDK firma le richieste dell'Agente API privilegiato.
+
+<h2 id="example-transfer-funds-in">Esempio: trasferire fondi in</h2>
+
+```java
+TransferResponse resp = client.transfer(TransferRequest.fixed(
+        "AGT-ORDER-1001",
+        "agent-user-001",
+        Direction.IN,
+        "USDT",
+        "10.00"));
+```
+
+Usa un numero d'ordine unico per ogni richiesta di trasferimento. Se una richiesta scade il tempo, consulta l'ordine originale prima di crearne uno nuovo.
+
+<h2 id="next-steps">Passi successivi</h2>
+
+| Bisogno | Pagina successiva |
+| --- | --- |
+| Rilascia una Trading Widget credenziale | [Crea Getto Incorpora] (/sdk/agent-sdk/java/embed-token) |
+| Verifica i callback da 6MM | [Ragnatela e Idempotenza] (/sdk/security/webhooks-idempotency) |
+| Rivedi il comportamento di firma | [Segreti e Firma] (/sdk/security/secrets-signing) |
+| Diagnosticare un problema di integrazione | [SDK Risoluzione dei problemi] (/sdk/security/troubleshooting) |
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">Pagine correlate</h2>
+
+- [Crea Embed Token](/it/sdk/agent-sdk/java/embed-token)
+- [Verifica della firma Webhook e Idempotenza](/it/sdk/security/webhooks-idempotency)
+- [Agent SDK Segreti e HMAC Firma](/it/sdk/security/secrets-signing)
+- [SDK Risoluzione dei problemi di integrazione](/it/sdk/security/troubleshooting)
+<!-- sixmm-localized-link-repair:end -->

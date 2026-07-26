@@ -1,0 +1,135 @@
+---
+title: "Instanzmethoden"
+subtitle: "Kontrolliere eine erstellte Widget-Instanz nach TradingWidget.create()."
+slug: sdk/trading-widget/instance-methods
+canonical-url: https://docs.6mm.com/de/sdk/trading-widget/instance-methods
+---
+
+<h2 id="method-summary">Methodenzusammenfassung</h2>
+
+| Methode | Zweck |
+| --- | --- |
+| destroy() | Entferne das iframe und lasse die Event-Listener frei. |
+| getState() | Lesen Sie den aktuellen Lebenszykluszustand SDK . |
+| whenReady() | Warte, bis der iframe die Initialisierung abgeschlossen hat. |
+| setSymbol(Symbol) | Tausche das Handelspaar innerhalb des iframes. |
+| setTheme(Thema) | Aktualisiere den iframe-Theme-Parameter. |
+| setLocale(Ort) | Wechsel die iframe-Sprache. |
+| setSize(Breite, Höhe) | Aktualisiere die iframe-Maße. |
+| Reload() | Lade den aktuellen iframe neu. |
+| refreshAuth(Grund) | Löse den Widget-Auth-Refresh-Flow aus. |
+| setTokenProvider(Anbieter) | Ersetzen Sie den Anbieter, der im Partner-Token-Modus verwendet wird. |
+| on(Event, Handler) | Abonnieren Sie Laufzeitereignisse und erhalten Sie eine Abmeldungsfunktion. |
+
+<h2 id="destroy">destroy()</h2>
+
+Entferne das iframe, lösche die Hörer und emittiere einmal deaktiviert für die aktuelle Instanz.
+
+```js
+widget.destroy()
+```
+
+<h2 id="getstate">getState()</h2>
+
+Lesen Sie den aktuellen Lebenszykluszustand der Widget-Instanz.
+
+```js
+const state = widget.getState()
+```
+
+Rückgabewerte umfassen Laden, Authentifizierung, Bereitschaft, Fehler und Zerstörung.
+
+<h2 id="whenready">whenReady()</h2>
+
+Warte, bis der iFrame die Initialisierung abgeschlossen hat, bevor du abhängige UI-Logik ausführst.
+
+```js
+await widget.whenReady()
+```
+
+<h2 id="setsymbol-symbol">setSymbol(Symbol)</h2>
+
+Tausche das Handelspaar innerhalb des iframes. Wenn der iframe noch initialisiert, stellt der SDK den Befehl in die Warteschlange und sendet ihn nach Ready.
+
+```js
+widget.setSymbol('ETHUSDT')
+```
+
+<h2 id="settheme-theme">setTheme(Thema)</h2>
+
+Aktualisieren Sie den Theme-Parameter, der vom eingebetteten Handels-iframe verwendet wird.
+
+```js
+widget.setTheme('dark')
+widget.setTheme('light')
+```
+
+<h2 id="setlocale-locale">setLocale(Ort)</h2>
+
+Wechsel die iframe-Sprache. Unterstützte Werte sind en, en-US und zh-CN.
+
+```js
+widget.setLocale('en')
+widget.setLocale('en-US')
+widget.setLocale('zh-CN')
+```
+
+<h2 id="setsize-width-height">setSize(Breite, Höhe)</h2>
+
+Aktualisieren Sie die Größe DOM iframe und informieren Sie den iframe über die neue äußere Größe. Numerische Werte werden in px umgewandelt.
+
+```js
+widget.setSize('100%', 720)
+```
+
+<h2 id="reload">Reload()</h2>
+
+Lade den aktuellen iFrame neu und warte, bis er erneut initialisiert.
+
+```js
+widget.reload()
+```
+
+<h2 id="refreshauth-reason">refreshAuth(Grund)</h2>
+
+Bitten Sie den iframe, den aktuellen Authentifizierungsfluss zu aktualisieren. Der optionale Begründungswert wird für Logging und Flusskontrolle weitergeleitet.
+
+```js
+widget.refreshAuth('manual')
+```
+
+<h2 id="settokenprovider-provider">setTokenProvider(Anbieter)</h2>
+
+Ersetzen Sie die tokenProvider im Partner-Token-Modus. Der SDK ruft den Anbieter auf, wenn der iframe ein frisches Einbettungstoken anfordert.
+
+```js
+widget.setTokenProvider(async ({ channelId, symbol, reason }) => {
+  const resp = await fetch('/api/trading/embed-token', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ channelId, symbol, reason }),
+  })
+
+  return resp.json()
+})
+```
+
+<h2 id="on-event-handler">on(Event, Handler)</h2>
+
+Abonnieren Sie ein Runtime-Event. Die zurückgegebene Funktion entfernt den Listener.
+
+```js
+const off = widget.on('order_created', (event) => {
+  console.log(event)
+})
+
+off()
+```
+
+<h2 id="related-widget-guides">Verwandte Widget-Anleitungen</h2>
+
+- [Trading Widget Schnellstart](/de/sdk/trading-widget/quick-start)
+- [Optionen & Events](/de/sdk/trading-widget/options-events)
+- [Authentifizierung](/de/sdk/trading-widget/authentication)
+- [Fehlersuche](/de/sdk/security/troubleshooting)

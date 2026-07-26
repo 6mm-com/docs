@@ -1,0 +1,39 @@
+---
+title: "Architecture et responsabilités"
+subtitle: "Clarifiez ce que possède le système partenaire et ce que 6MM 'infrastructure fournit lors des déploiements de trading embarqués."
+slug: solutions/architecture-responsibilities
+canonical-url: https://docs.6mm.com/fr/solutions/architecture-responsibilities
+---
+
+Un lancement de trading intégré propre dépend de limites claires de responsabilités. Les systèmes partenaires doivent maintenir une propriété sensible de l’entreprise, tandis que 6MM fournit l’infrastructure de trading et les capacités de cycle de vie.
+
+<h2 id="responsibility-model">Modèle de responsabilité</h2>
+
+| Superficie | Système partenaire | 6MM infrastructures |
+| --- | --- | --- |
+| Relation utilisateur | Il possède le compte utilisateur, l’état de connexion, l’identité du support client et les vérifications d’éligibilité. | Reçoit le contexte d’entrée validé et maintient l’état côté trading. |
+| Secrets et signature | Stocke les clés partenaires API en backend et signe les requêtes côté serveur. | Vérifie les demandes signées et traite les actions autorisées. |
+| Expérience en trading | Fournit des points d’entrée, la navigation et le contexte produit. | Fournit une interface de trading, le cycle de vie des ordres, les données de marché, les positions, le risque et le comportement de règlement. |
+| Opérations | Les gères, prennent en charge les flux de travail, l’analyse métier et l’escalade interne. | Émets des événements, des webhooks et des informations de statut nécessaires à l’intégration. |
+
+<h2 id="production-principles">Principes de production</h2>
+
+- Gardez tous les secrets des partenaires en arrière-plan.
+- Considérer les jetons d’intégration comme des identifiants d’entrée de courte durée.
+- Traiter les webhooks de manière idempotente et stocker les identifiants d’événements.
+- Utiliser la surveillance autour de l’émission de jetons, des flux de transfert et des changements d’état d’ordre.
+- Maintenir la cohérence des textes destinés aux clients sur les pages d’entrée, de trading et de support.
+
+<h2 id="related-docs">Documents connexes</h2>
+
+<CardGroup cols={3}>
+<Card title="Authentification" icon="fa-duotone fa-user-shield" href="/fr/developer-api/authentication">
+Examinez les attentes d’authentification en arrière-plan.
+</Card>
+<Card title="Signature de la demande" icon="fa-duotone fa-signature" href="/fr/developer-api/request-signing">
+Comprenez les appels API signés.
+</Card>
+<Card title="Sécurité des webhooks" icon="fa-duotone fa-webhook" href="/fr/sdk/security/webhooks-idempotency">
+Gérez la livraison des événements en toute sécurité.
+</Card>
+</CardGroup>

@@ -1,0 +1,42 @@
+---
+title: "Raccomandazioni per l'integrazione"
+description: "Applica le pratiche 6MM raccomandate per autenticazione, tentativi, idempotenza, registrazione, gestione delle tariffe, monitoraggio, sicurezza e prontezza al lancio."
+slug: developer-api/integration-recommendations
+canonical-url: https://docs.6mm.com/it/developer-api/integration-recommendations
+---
+
+Usa queste raccomandazioni come base di prontezza alla produzione. Esse completano il riferimento endpoint e aiutano le integrazioni a recuperare in sicurezza da timeout, riconnessioni, richieste duplicate e incidenti di credenziali.
+
+<h2 id="authentication-and-secrets">Autenticazione e segreti</h2>
+
+- Preferire [API Key firming](/it/developer-api/authentication) per programmi di trading lato server e JWT per azioni frontend guidate dall'utente.
+- Mantenere `apiSecret` nella gestione dei segreti backend. Viene mostrato solo una volta e non deve mai essere inviato a un browser o a un client mobile.
+- Applicare i permessi minimi richiesti API Key e limitare gli IP sorgente quando l'ambiente di integrazione supporta indirizzi di uscita stabili.
+- Disabilitare o cancellare immediatamente una chiave trapelata, poi esaminare i log delle richieste prima di emettere una sostituzione.
+
+<h2 id="request-validation-and-idempotency">Validazione delle richieste e idempotenza</h2>
+
+- Prima di effettuare ordini, interrogare `/v1/public/market/symbols` e validare localmente `tickSize`, `stepSize`, valore minimo nozionale e quantità massima.
+- Generare un `clientOrderId` unico per ogni scrittura di ordine, così che le richieste possano essere riconciliate dopo una disconnessione.
+- Preservare l'identificatore originale quando un risultato HTTP è incerto. Interrogare l'ordine esistente prima di creare una richiesta di sostituzione.
+- Trattare importi decimali e prezzi come stringhe o tipi decimali, non come valori binari in virgola mobile.
+
+<h2 id="order-and-websocket-state">Ordine e WebSocket stato</h2>
+
+- Determinare lo stato finale dopo operazioni di cancellazione, cancellazione o modifica da [eventi privati WebSocket ](/it/developer-api/websocket/private-user-channel) o da una query REST .
+- Trattare ogni riconnessione come una nuova sessione WebSocket e ripristinare tutti gli abbonamenti necessari.
+- Verifica la continuità del libretto ordini con `endVersion`. Se appare un vuoto di versione, scartare il libro locale e abbonarsi di nuovo per una nuova istantanea.
+- Deduplicare gli eventi privati di ordini e account prima di applicarli a saldi, posizioni o record partner.
+
+<h2 id="logging-monitoring-and-retries">Registrazione, monitoraggio e ritentativi</h2>
+
+- Record ID richiesta, ID ordine client, stato HTTP , codice aziendale API , latenza e conteggio dei tentativi senza registrare segreti o token completi.
+- Ritentare solo operazioni documentate come sicure, utilizzando backoff esponenziale limitato e jitter.
+- Allerta su fallimenti di autenticazione, errori di firma, risposte al limite di velocità, WebSocket cicli di riconnessione, lacune di sequenza e differenze di riconciliazione degli ordini.
+- Mantenere sincronizzati gli orologi dei server perché autenticazione e firma dipendono dai timestamp.
+
+<h2 id="before-production">Prima della produzione</h2>
+
+- Esercizio di timeout, richiesta duplicata, riconnessione, rotazione delle chiavi e scenari di ritenti tramite webhook in un ambiente non produttivo.
+- Assegnare i proprietari per la rotazione delle credenziali, gli incidenti di trading, i guasti dei webhook e la riconciliazione.
+- Completare la [checklist di lancio in produzione](/it/resources/production-launch-checklist) e utilizzare il [template di richiesta supporto](/it/resources/support-request-template) quando è richiesta l'escalation.

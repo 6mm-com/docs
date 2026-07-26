@@ -1,0 +1,68 @@
+---
+title: "Pemecahan Masalah Integrasi SDK"
+subtitle: "Diagnosis masalah Trading Widget, Agent SDK, penandatanganan, webhook, timeout, dan lingkungan sebelum mengeskalasi permintaan dukungan."
+slug: sdk/security/troubleshooting
+canonical-url: https://docs.6mm.com/id/sdk/security/troubleshooting
+---
+
+Mulailah dengan lingkungan, timestamp, dan pengenal bisnis untuk operasi yang gagal. Pemeriksaan terstruktur biasanya memisahkan masalah konfigurasi dari autentikasi, jaringan, dan masalah pemrosesan asinkron.
+
+<h2 id="diagnostic-order">Urutan diagnostik yang direkomendasikan</h2>
+
+1. Konfirmasi lingkungan yang terdampak dan URLdasar.
+2. Catat rentang waktu UTC dan permintaan pertama yang gagal.
+3. Identifikasi modul: Trading Widget, Agent SDK, REST API, WebSocket, atau webhook.
+4. Tangkap ID permintaan, ID pengguna mitra, `agentOrderNo`, ID pesanan, atau ID event webhook.
+5. Periksa kode terbaru, kredensial, IP whitelist, atau perubahan deployment.
+6. Perbanyak dengan kasus uji aman terkecil.
+
+<h2 id="trading-widget-issues">Trading Widget masalah</h2>
+
+| Gejala | Penyebab yang mungkin | Memperbaiki |
+| --- | --- | --- |
+| iframe meminta domain lokal mitra | baseUrl hilang | Pass baseUrl: 'https://app.6mm.com'. |
+| iframe tidak terlihat atau sangat pendek | Kontainer induk tidak memiliki tinggi | Atur tinggi wadah atau tinggi pass. |
+| token_provider_missing | mode token mitra tidak memiliki penyedia | Tambahkan autentikasitokenProvider. |
+| auth_exchange_failed | Token embed yang tidak valid, kedaluwarsa, atau tidak cocok | Periksa respons token backend dan channelId. |
+
+<h2 id="agent-sdk-issues">Agent SDK masalah</h2>
+
+| Gejala | Penyebab yang mungkin | Memperbaiki |
+| --- | --- | --- |
+| Tanda tangan ditolak | Rahasia yang salah, pergeseran jam, atau kolom bertanda yang diubah secara manual | Biarkan SDK menghasilkan bidang penandatanganan dan menyinkronkan waktu server. |
+| Risiko pergerakan dana duplikat | Nomor pesanan baru digunakan setelah timeout | Query berdasarkan agentOrderNo asli terlebih dahulu. |
+| PROCESSING diperlakukan sebagai kegagalan | Negara bagian yang sedang diproses disalahpahami | Tunggu webhook atau hubungi queryOrder. |
+| Webhook diproses beberapa kali | Perilaku coba ulang tanpa idempotency | Tambahkan kunci idempotensi dan pemeriksaan keadaan akhir. |
+
+<h2 id="evidence-to-capture">Bukti yang harus ditangkap</h2>
+
+| Integrasi | Bukti berguna |
+| --- | --- |
+| Trading Widget | Page URL, jalur versi SDK , konsol browser, permintaan jaringan yang gagal, payload `onError` , dan dimensi kontainer. |
+| Agent SDK | SDK bahasa/versi, URLdasar, timestamp UTC , ID permintaan, `agentOrderNo`, kode respons, dan log yang sudah disanitasi. |
+| Webhook | Waktu pengiriman, event atau kunci bisnis, hasil validasi tanda tangan, status pemrosesan, dan hash raw body yang telah disanitasi. |
+| REST API | Metode, jalur, lingkungan, ID permintaan, kode respons, dan parameter yang telah disanitasi. |
+
+Jangan pernah menyertakan kata sandi, token akses, rahasia API , tanda tangan lengkap, kunci privat, atau data pribadi yang belum disunting dalam diagnostik.
+
+<h2 id="before-escalating">Sebelum meningkatkan eskalasi</h2>
+
+- Coba ulang hanya ketika operasi terdokumentasi aman untuk dicoba ulang.
+- Setelah timeout, query pengenal bisnis asli daripada membuat yang baru.
+- Konfirmasi lingkungan clock sistem dan kredensial untuk kesalahan tanda tangan.
+- Menjaga kegagalan pertama dan hasil percobaan ulang berikutnya.
+- Gunakan [Support Request Template](/id/resources/support-request-template) untuk mengirim laporan lengkap yang telah disunting.
+
+<h2 id="related-docs">Dokumen terkait</h2>
+
+<CardGroup cols={3}>
+<Card title="Trading Widget Mulai Cepat" icon="fa-duotone fa-chart-line" href="/id/sdk/trading-widget/quick-start">
+Verifikasi pemuatan skrip, ukuran kontainer, konfigurasi, dan callback.
+</Card>
+<Card title="Rahasia & Penandatanganan" icon="fa-duotone fa-shield-keyhole" href="/id/sdk/security/secrets-signing">
+Periksa kredensial Agent SDK , jam, dan kolom yang ditandatangani.
+</Card>
+<Card title="Webhook & Idempotensi" icon="fa-duotone fa-webhook" href="/id/sdk/security/webhooks-idempotency">
+Tinjau verifikasi callback dan penanganan event duplikat.
+</Card>
+</CardGroup>

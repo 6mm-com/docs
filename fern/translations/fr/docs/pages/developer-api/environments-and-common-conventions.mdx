@@ -1,0 +1,56 @@
+---
+title: "Environnements et conventions communes"
+description: "Examinez 6MM API environnements et conventions partagées pour les URL de base, les horodatages, les champs numériques, les symboles, les identifiants de requête, la pagination et les réponses."
+slug: developer-api/environments-and-common-conventions
+canonical-url: https://docs.6mm.com/fr/developer-api/environments-and-common-conventions
+---
+
+<h2 id="service-endpoints">Points de terminaison de service</h2>
+
+| Type      | Extrémité              |
+| --------- | --------------------- |
+| REST API  | `https://api.6mm.com` |
+| WebSocket | `wss://ws.6mm.com/ws`    |
+
+<h2 id="time-and-numeric-values">Temps et valeurs numériques</h2>
+
+* Sauf indication contraire, les champs temporels sont des horodatages Unix milliseconde.
+* Les statistiques quotidiennes, les instantanés de solde et les statistiques de volume de transactions utilisent par défaut les limites UTC jours.
+* Les champs sensibles à la précision tels que quantité, prix, quantité et débit sont transmis sous forme de chaînes de caractères.
+* Les grands IDs entiers tels que `orderId`, `conditionId`, et `strategyId` sont retournés sous forme de chaînes dans JSON.
+
+<h2 id="response-format">Format de réponse</h2>
+
+Réponse réussie :
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {},
+  "requestId": "req-12345678"
+}
+```
+
+Réponse à l’erreur :
+
+```json
+{
+  "code": 1003,
+  "message": "Invalid token",
+  "requestId": "req-12345678"
+}
+```
+
+Notes :
+
+* Les erreurs métier retournent généralement toujours la structure JSON unifiée. Les intégrateurs doivent vérifier `code` d’abord.
+* Les échecs d’authentification peuvent retourner HTTP `401`; la limitation de taux peut retourner HTTP `429`.
+* Vous pouvez envoyer `X-Request-ID` dans l’en-tête de la requête. Le serveur le retournera comme `requestId` dans la réponse.
+
+<h2 id="related-documentation">Documentation associée</h2>
+
+- [Authentification](/fr/developer-api/authentication) : choisissez l’authentification JWT ou la signature API Key.
+- [Signature de requêtes](/fr/developer-api/request-signing) : construire et vérifier les requêtes signées.
+- [REST API](/fr/developer-api/rest-api) : appliquer ces conventions aux groupes d’extrémité.
+- [Codes d’erreur et dépannage](/fr/developer-api/error-codes-and-troubleshooting) : diagnostiquer les erreurs HTTP et métier.

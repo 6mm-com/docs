@@ -1,0 +1,44 @@
+---
+title: "匹配引擎與核心模組"
+subtitle: "了解白標交易平台背後的核心交換模組。"
+slug: solutions/matching-engine
+canonical-url: https://docs.6mm.com/zh-TW/solutions/matching-engine
+---
+
+白標交易所需要的不僅僅是前端殼層。使用者體驗依賴於交易、帳戶、風險與結算背後可靠的核心模組。
+
+<h2 id="core-modules">核心模組</h2>
+
+| 模組 | 角色 |
+| --- | --- |
+| 配對與訂單生命週期 | 處理訂單提交、狀態匹配、取消及執行記錄。 |
+| 帳戶與位置系統 | 維護餘額、保證金狀態、持倉及交易可用性。 |
+| 風險控制 | 協調槓桿、保證金、清算及異常市場行為。 |
+| 市場數據 | 將價格、深度、交易及圖表資料分發至交易介面。 |
+| 定居與紀錄 | 保持交易歷史、餘額變動及營運紀錄的一致性。 |
+
+<h2 id="documentation-path">文件路徑</h2>
+
+在整合 API 之前，先從交易規則開始。產品、營運與開發團隊應該對訂單類型、保證金行為、費用及清算邏輯有相同的理解。
+
+<CardGroup cols={3}>
+<Card title="訂單類型" icon="fa-duotone fa-list-check" href="/zh-TW/trading/order-types">
+檢視支持的命令行為。
+</Card>
+<Card title="保證金規則" icon="fa-duotone fa-scale-balanced" href="/zh-TW/trading/margin-rules">
+了解保證金要求。
+</Card>
+<Card title="REST API" icon="fa-duotone fa-code" href="/zh-TW/developer-api/rest-api">
+連結後端工作流程。
+</Card>
+</CardGroup>
+
+<h2 id="implementation-questions">實作問題</h2>
+
+- 哪些順序與條件順序類型會暴露給使用者？
+- 哪個服務擁有符號規則、精確驗證及交易可用性？
+- 訂單、交易、持倉、餘額及結算紀錄如何對帳？
+- 哪些識別碼在 REST 回應、 WebSocket 事件及合作夥伴紀錄中保持穩定？
+- 當匹配、風險或市場資料無法取得時，應適用何種監控與回滾路徑？
+
+在前端開發前回答這些問題，讓產品行為、 API 處理、營運和支援使用相同的交易模式。

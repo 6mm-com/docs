@@ -1,0 +1,128 @@
+---
+title: "API Key Gestione"
+description: "Creare, ispezionare, aggiornare e revocare 6MM API chiavi applicando le autorizzazioni appropriate, IP restrizioni, archiviazione segreta e pratiche di rotazione."
+slug: developer-api/api-key-management
+canonical-url: https://docs.6mm.com/it/developer-api/api-key-management
+---
+
+API Key endpoint di gestione accettano solo JWT autenticazione.
+
+<h2 id="create-api-key">Crea API Key</h2>
+
+```http
+POST /v1/private/user/api-key/create
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+Parametri della richiesta:
+
+| Parametro     | Tipo      | Richiesto | Descrizione                                                           |
+| ------------- | --------- | -------- | --------------------------------------------------------------------- |
+| `label`       | string    | Sì      | API Key etichetta, lunghezza 1 - 64                                          |
+| `permissions` | int       | No       | Permesso bitmaschera, `1`predefinito, intervallo `1` - `7`                      |
+| `ipWhitelist` | string\[] | No       | IP whitelist, fino a 20 voci. Se omesso, il IP di sorgente è senza restrizioni |
+
+Esempio di richiesta:
+
+```bash
+curl -X POST https://api.6mm.com/v1/private/user/api-key/create \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -d '{
+    "label": "external-service-prod",
+    "permissions": 3,
+    "ipWhitelist": ["203.0.113.10"]
+  }'
+```
+
+Esempio di risposta:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "apiKey": "fx_xxxxxxxxxxxxxxxxxxxxxxxx",
+    "apiSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  },
+  "requestId": "req-api-key"
+}
+```
+
+`apiSecret` viene restituito una sola volta quando il API Key viene creato. Memorizzalo immediatamente in un sistema di gestione segreto. Non scriverlo in repository o log del codice sorgente.
+
+Ogni utente può creare fino a 30 chiavi API .
+
+<h2 id="list-api-keys">Elenco API Chiavi</h2>
+
+```http
+GET /v1/private/user/api-key/list
+Authorization: Bearer YOUR_ACCESS_TOKEN
+```
+
+Campi di risposta:
+
+| Campo                | Tipo      | Descrizione                       |
+| -------------------- | --------- | --------------------------------- |
+| `list[].id`          | string    | API Key ID                        |
+| `list[].label`       | string    | Etichetta                             |
+| `list[].apiKey`      | string    | Identificatore pubblico API Key         |
+| `list[].permissions` | int       | Bitmask di permesso                |
+| `list[].ipWhitelist` | string\[] | IP whitelist                      |
+| `list[].status`      | int       | Stato: `1` abilitato, `0` disabilitato |
+| `list[].lastUsedAt`  | int64     | Ultimo tempo utilizzato                    |
+| `list[].createdAt`   | int64     | Tempo di creazione                     |
+
+<h2 id="update-api-key">Aggiornamento API Key</h2>
+
+```http
+PUT /v1/private/user/api-key/update
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+Parametri della richiesta:
+
+| Parametro     | Tipo      | Richiesto | Descrizione               |
+| ------------- | --------- | -------- | ------------------------- |
+| `id`          | string    | Sì      | API Key ID                |
+| `label`       | string    | No       | Nuova etichetta                 |
+| `permissions` | int       | No       | Nuova bitmask di permesso    |
+| `ipWhitelist` | string\[] | No       | Whitelist dei nuovi IP          |
+| `status`      | int       | No       | `1` abilitato `0` disabilitato |
+
+<h2 id="delete-api-key">Elimina API Key</h2>
+
+```http
+POST /v1/private/user/api-key/delete
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+Corpo della richiesta:
+
+```json
+{ "id": "1001" }
+```
+
+<h2 id="delete-all-api-keys">Elimina tutte le API chiavi</h2>
+
+```http
+POST /v1/private/user/api-key/delete-all
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+Campi di risposta:
+
+| Campo     | Tipo  | Descrizione                |
+| --------- | ----- | -------------------------- |
+| `deleted` | int64 | Numero di chiavi API eliminate |
+
+<h2 id="related-security-guides">Guide alla sicurezza correlate</h2>
+
+- [Autenticazione](/it/developer-api/authentication)
+- [Firma della richiesta](/it/developer-api/request-signing)
+- [Segreti e Firma](/it/sdk/security/secrets-signing)
+- [Raccomandazioni di Integrazione](/it/developer-api/integration-recommendations)

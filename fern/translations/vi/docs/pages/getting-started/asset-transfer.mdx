@@ -1,0 +1,94 @@
+---
+title: "Chuyển giao tài sản"
+description: "Tìm hiểu cách tài sản di chuyển giữa các hệ thống đối tác và tài khoản giao dịch 6MM , bao gồm trách nhiệm chuyển giao, xử lý trạng thái và kiểm tra vận hành."
+slug: trading/getting-started/asset-transfer
+canonical-url: https://docs.6mm.com/vi/trading/getting-started/asset-transfer
+---
+
+6MM hoạt động theo mô hình dòng tài sản do đối tác quản lý.
+
+6MM không chấp nhận nạp hoặc rút tiền trực tiếp từ người dùng cuối.
+
+Tất cả các dòng vốn vào và ra của người dùng đều được xử lý độc quyền bởi các đại lý được ủy quyền hoặc nền tảng đối tác.
+
+Thiết kế này đảm bảo sự tách biệt rõ ràng giữa trách nhiệm tài chính, phạm vi quản lý và quyền sở hữu người dùng giữa 6MM và các đối tác.
+
+***
+
+<h2 id="partner-managed-deposits-and-withdrawals">Gửi và rút tiền do đối tác quản lý</h2>
+
+* Người dùng chỉ nạp và rút tiền qua nền tảng đối tác
+* 6MM không cung cấp địa chỉ gửi tiền trên chuỗi hoặc ngoài chuỗi cho người dùng cuối
+* 6MM không trực tiếp quản lý hoặc thanh toán tiền của người dùng ngoài quá trình thực hiện giao dịch
+
+Các đối tác vẫn hoàn toàn chịu trách nhiệm về:
+
+* Quản lý số dư người dùng
+* Xử lý nạp và rút tiền
+* Tuân thủ và kiểm soát rủi ro liên quan đến việc lưu ký quỹ
+
+***
+
+<h2 id="automated-balance-transfer-to-6mm">Chuyển số dư tự động sang 6MM</h2>
+
+Để cho phép giao dịch, người dùng có thể chuyển một phần số dư do đối tác quản lý vào 6MM thông qua cơ chế chuyển nội bộ tự động.
+
+Các đặc điểm chính của quá trình chuyển giao này bao gồm:
+
+* Việc chuyển giao được khởi tạo và phê duyệt bởi hệ thống đối tác
+* Quy trình được thực hiện tự động ở cấp hạ tầng
+* Không cần tương tác thủ công với 6MM
+* Chuyển giao diễn ra theo thời gian thực hoặc gần như thời gian thực
+
+Từ góc nhìn của người dùng, quá trình này giống như một sự phân bổ số dư liền mạch, thay vì một khoản tiền gửi truyền thống.
+
+***
+
+<h2 id="account-structure-within-6mm">Cấu trúc tài khoản trong 6MM</h2>
+
+Trong 6MM, tài sản chuyển giao được phân bổ hợp lý vào hai tài khoản nội bộ riêng biệt:
+
+**Tài khoản giao ngay**
+
+* Đóng vai trò là tài khoản nhận tiền ban đầu cho các khoản tiền đã chuyển
+* Đóng vai trò là quỹ tài sản cho quản lý vốn nội bộ
+* Không hỗ trợ hoạt động giao dịch trực tiếp
+
+**Tài khoản vĩnh viễn**
+
+* Tiền được chuyển từ Tài khoản Giao ngay sang Tài khoản Vĩnh viễn
+* Chỉ tài sản trong Tài khoản Vĩnh viễn mới được sử dụng để đặt lệnh
+* Ký quỹ, vị thế và PnL chưa thực hiện được tính ở mức này
+
+Cấu trúc hai lớp này cho phép cô lập vốn chính xác, hiệu quả ký quỹ và kiểm soát rủi ro cho giao dịch liên tục.
+
+***
+
+<h2 id="internal-transfers-between-accounts">Chuyển khoản nội bộ giữa các tài khoản</h2>
+
+* Số tiền chuyển vào Tài khoản Spot có thể được phân bổ tự do và ngay lập tức vào Tài khoản Vĩnh viễn
+* Chuyển khoản nội bộ được xử lý mà không cần tương tác blockchain
+* Việc truyền dữ liệu được thiết kế với độ trễ thấp và tính xác định
+
+Kiến trúc này đảm bảo luồng vốn diễn ra suôn sẻ đồng thời duy trì sự tách biệt nghiêm ngặt giữa việc lưu giữ tài sản và thực hiện giao dịch.
+
+***
+
+<h2 id="design-principles">Nguyên tắc thiết kế</h2>
+
+Hệ thống chuyển giao tài sản của 6MM được xây dựng dựa trên các nguyên tắc sau:
+
+* Không có nạp hoặc rút tiền trực tiếp từ người dùng tại 6MM
+* Toàn bộ quyền quản lý tài sản vẫn thuộc về các nền tảng đối tác
+* Phân bổ quỹ tự động, được đối tác ủy quyền
+* Phân biệt rõ ràng giữa tài khoản Giao ngay và Tài khoản Vĩnh viễn
+* Tối ưu hóa hiệu quả giao dịch và cách ly rủi ro
+
+Thông qua mô hình này, 6MM hoạt động như một lớp hạ tầng giao dịch thuần túy, trong khi các đối tác giữ toàn quyền kiểm soát quỹ người dùng và các mối quan hệ tài chính.
+
+<h2 id="implementation-and-safety-guides">Triển khai và hướng dẫn an toàn</h2>
+
+- [Tổng quanAgent SDK ](/vi/sdk/agent-sdk/overview): ràng buộc người dùng, chuyển khoản, truy vấn đơn hàng và đối chiếu.
+- [Webhooks & Idempotency](/vi/sdk/security/webhooks-idempotency): xác minh callback trạng thái cuối cùng và loại bỏ các lần thử lại.
+- [Ma trận Trách nhiệm Đối tác](/vi/security-compliance/partner-responsibilities): quyền giám hộ và quyền sở hữu hoạt động.
+- [Rủi ro & Thanh lý](/vi/trading/risk-and-liquidations): hiểu cách phân bổ tài khoản giao dịch ảnh hưởng đến rủi ro.

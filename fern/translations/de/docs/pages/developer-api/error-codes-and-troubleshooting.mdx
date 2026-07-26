@@ -1,0 +1,60 @@
+---
+title: "Fehlercodes und Fehlerbehebung"
+description: "Diagnostizieren 6MM API Fehler mithilfe von Antwortcodes, Nachrichten, Anfrage-IDs, Anweisungen für Wiederholungen, Authentifizierungsprüfungen und Integrationsfehlerbehebungen."
+slug: developer-api/error-codes-and-troubleshooting
+canonical-url: https://docs.6mm.com/de/developer-api/error-codes-and-troubleshooting
+---
+
+<h2 id="error-response-format">Fehlerantwort-Format</h2>
+
+```json
+{
+  "code": 1003,
+  "message": "Invalid token",
+  "requestId": "req-12345678"
+}
+```
+
+Geschäftsfehler geben in der Regel weiterhin die einheitliche JSON zurück. Integratoren sollten `code` zuerst überprüfen. Authentifizierungsfehler können HTTP `401`; Zinsbegrenzung kann HTTP `429`zurückführen.
+
+<h2 id="common-error-codes">Häufige Fehlercodes</h2>
+
+| Fehlercode      | Beschreibung                                  |
+| --------------- | -------------------------------------------- |
+| `0`             | Erfolg                                      |
+| `1001`          | Keine gültigen Authentifizierungsinformationen bereitgestellt |
+| `1002`          | Token abgelaufen                                |
+| `1003`          | Ungültiges Token, API Keyoder Signatur         |
+| `1004`          | Token widerrufen                                |
+| `1006`          | Quelle IP Mismatch                           |
+| `2001`          | Fehlender erforderlicher Parameter                   |
+| `2002`          | Ungültiger Parameterwert                      |
+| `2003`          | Parameter außerhalb des Bereichs                       |
+| `3001`          | Unzureichendes Gleichgewicht                         |
+| `3003`          | Ordnung nicht gefunden                              |
+| `3004`          | Doppelte Anfrage                            |
+| `3005`          | Bestellung kann nicht storniert werden                     |
+| `3006`          | Erlaubnis abgelehnt                            |
+| `3100` - `3112` | Fehler zur Validierung von Bedingungsparametern   |
+| `5001`          | Interner Serverfehler                        |
+| `5002`          | Dienst vorübergehend nicht verfügbar              |
+| `5003`          | Ausgelöste Ratenbegrenzung                         |
+
+<h2 id="troubleshooting">Fehlerbehebung</h2>
+
+| Problem                                     | Empfehlung                                                                                   |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `1001` keine gültigen Authentifizierungsinformationen  | Prüfen Sie, ob `Authorization: Bearer <accessToken>` oder `X-API-KEY` enthalten ist.                  |
+| `1002` Token abgelaufen                        | Aktualisieren Sie den Token oder melden Sie sich erneut an, bevor Sie es erneut versuchen.                                                   |
+| `1003` ungültiges Token, API Keyoder Signatur | Überprüfen Sie API Key, Signaturnutzlast, Request-Body JSON String und Reihenfolge der Abfrageparameter.           |
+| `1006` Quelle IP Diskrepanz                   | Überprüfe die Konfiguration der API Key IP Whitelist.                                                    |
+| `3004` Duplikat-Anfrage                    | Verwenden Sie dieselbe Signatur nicht für ordnungsbezogene Pfade wieder. Regeneriere `timestamp` und `signature`. |
+| `5003` Rate-Limit ausgelöst                 | Reduziere die Anfragefrequenz und nutze exponentiellen Backoff, wenn du es erneut versuchst.                                |
+| `Timestamp outside of tolerance window`     | Rufen Sie `/v1/time` an, um den Zeitversatz zu kalibrieren und den Antrag erneut zu unterschreiben.                             |
+
+<h2 id="related-diagnostic-guides">Verwandte diagnostische Leitfäden</h2>
+
+- [Umgebungen & Gemeinsame Konventionen](/de/developer-api/environments-and-common-conventions)
+- [Authentifizierung](/de/developer-api/authentication)
+- [Integrationsempfehlungen](/de/developer-api/integration-recommendations)
+- [Vorlage für Support-Anfragen](/de/resources/support-request-template)

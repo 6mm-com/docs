@@ -1,0 +1,99 @@
+---
+title: "Transfert d’actifs"
+description: "Découvrez comment les actifs circulent entre les systèmes partenaires et les comptes de 6MM trading, y compris les responsabilités de transfert, la gestion de l’état et les vérifications opérationnelles."
+slug: trading/getting-started/asset-transfer
+canonical-url: https://docs.6mm.com/fr/trading/getting-started/asset-transfer
+---
+
+6MM fonctionne selon un modèle de flux d’actifs géré par des partenaires.
+
+6MM n’accepte pas les dépôts bancaires ni les retraits de la part des utilisateurs finaux.
+
+Tous les flux d’entrées et de sorties de fonds utilisateurs sont gérés exclusivement par des agents autorisés ou des plateformes partenaires.
+
+Cette conception assure une séparation claire de la responsabilité financière, du champ réglementaire et de la propriété des utilisateurs entre 6MM et ses partenaires.
+
+***
+
+<h2 id="partner-managed-deposits-and-withdrawals">Dépôts et retraits gérés par les partenaires</h2>
+
+* Les utilisateurs déposent et retirent des fonds uniquement via la plateforme partenaire
+* 6MM ne fournit pas d’adresses de dépôt en chaîne ou hors chaîne aux utilisateurs finaux
+* 6MM ne détient ni ne règle directement les fonds des utilisateurs en dehors de l’exécution des transactions
+
+Les partenaires restent pleinement responsables de :
+
+* Gestion de l’équilibre utilisateur
+* Traitement des dépôts et retraits
+* Conformité et contrôles des risques liés à la garde des fonds
+
+***
+
+<h2 id="automated-balance-transfer-to-6mm">Transfert automatisé de solde vers 6MM</h2>
+
+Pour permettre le trading, les utilisateurs peuvent transférer une partie de leur solde géré par leur partenaire dans 6MM via un mécanisme interne automatisé de transfert.
+
+Les caractéristiques clés de ce processus de transfert incluent :
+
+* Les transferts sont initiés et autorisés par le système partenaire
+* Le processus est exécuté automatiquement au niveau de l’infrastructure
+* Aucune interaction manuelle de l’utilisateur avec 6MM n’est requise
+* Les transferts se produisent en temps réel ou quasiment en temps réel
+
+Du point de vue de l’utilisateur, ce processus apparaît comme une allocation équilibrée sans faille, plutôt qu’un dépôt traditionnel.
+
+***
+
+<h2 id="account-structure-within-6mm">Structure de compte au sein de 6MM</h2>
+
+Au sein de 6MM, les actifs transférés sont logiquement répartis dans deux comptes internes distincts :
+
+**Compte Spot**
+
+* Sert de compte de réception initial pour les fonds transférés
+* Agit comme pool d’actifs pour la gestion interne du capital
+* Ne supporte pas l’activité de trading direct
+
+**Compte Perpétuel**
+
+* Les fonds sont transférés du compte au comptant vers le compte perpétuel
+* Seuls les actifs du compte perpétuel peuvent être utilisés pour la commande
+* La marge, les positions et le PnL non réalisé sont calculés à ce niveau
+
+Cette structure à deux niveaux permet une isolation précise du capital, une efficacité de marge et un contrôle des risques pour le trading perpétuel.
+
+***
+
+<h2 id="internal-transfers-between-accounts">Transferts internes entre comptes</h2>
+
+* Les fonds transférés dans le compte au comptant peuvent être alloués librement et instantanément au compte perpétuel
+* Les transferts internes sont traités sans interaction blockchain
+* Les transferts sont conçus pour être à faible latence et déterministes
+
+Cette architecture assure un mouvement fluide du capital tout en maintenant une séparation stricte entre la garde des actifs et l’exécution des transactions.
+
+***
+
+<h2 id="design-principles">Principes de conception</h2>
+
+Le système de transfert d’actifs de 6MM repose sur les principes suivants :
+
+* Aucun dépôt ou retrait direct des utilisateurs à 6MM
+* Toute la garde des actifs reste avec les plateformes partenaires
+* Allocation automatisée des fonds autorisée par les partenaires
+* Séparation claire entre les comptes Spot et les comptes perpétuels
+* Optimisé pour l’efficacité du trading et l’isolation des risques
+
+Grâce à ce modèle, 6MM fonctionne comme une couche d’infrastructure de trading pure, tandis que les partenaires conservent le contrôle total des fonds utilisateurs et des relations financières.
+
+<h2 id="implementation-and-safety-guides">Mise en œuvre et guides de sécurité</h2>
+
+- [Agent SDK Aperçu général] (/sdk/agent-sdk/overview) : liaison utilisateur, transferts, requêtes de commandes et réconciliation.
+- [Webhooks & Idempotency](/fr/sdk/security/webhooks-idempotency) : vérifier les rappels d’état final et dédupliquer les tentatives.
+- [Matrice de responsabilité des partenaires](/fr/security-compliance/partner-responsibilities) : garde et propriété opérationnelle.
+- [Risque & Liquidations](/fr/trading/risk-and-liquidations) : comprendre comment l’allocation des comptes de trading influence le risque.
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">Pages associées</h2>
+
+- [6MM Agent SDK pour Java et PHP](/fr/sdk/agent-sdk/overview)
+<!-- sixmm-localized-link-repair:end -->

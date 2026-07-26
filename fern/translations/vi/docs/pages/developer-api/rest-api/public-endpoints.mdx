@@ -1,0 +1,159 @@
+---
+title: "Các điểm cuối công khai"
+description: "Truy cập các điểm cuối 6MM API công khai cho các công cụ, mã chứng khoán, sổ lệnh, giao dịch và các thông tin thị trường chưa được xác thực khác."
+slug: developer-api/rest-api/public-endpoints
+canonical-url: https://docs.6mm.com/vi/developer-api/rest-api/public-endpoints
+---
+
+<h2 id="base-url">Cơ sở URL</h2>
+
+```
+https://api.6mm.com
+```
+
+<h2 id="service-version">Phiên bản dịch vụ</h2>
+
+```http
+GET /v1/version
+```
+
+Lấy thông tin phiên bản dịch vụ.
+
+<h2 id="server-time">Thời gian máy chủ</h2>
+
+```http
+GET /v1/time
+```
+
+Hãy tận dụng thời gian phục vụ. Điểm cuối này có thể được sử dụng để hiệu chỉnh thời gian khách hàng trước khi API Key ký.
+
+<h2 id="user-login">Đăng nhập người dùng</h2>
+
+```http
+POST /v1/public/user/login
+```
+
+Tham số yêu cầu:
+
+| Tham số    | Loại   | Bắt buộc | Mô tả                             |
+| ------------ | ------ | -------- | --------------------------------------- |
+| `username`   | string | Đúng vậy      | Tên người dùng, độ dài 3 - 32                 |
+| `password`   | string | Đúng vậy      | Mật khẩu, độ dài 1 - 64                 |
+| `deviceId`   | string | Không       | Vân tay thiết bị, lên đến 64 ký tự |
+| `deviceName` | string | Không       | Tên thiết bị, tối đa 128 ký tự       |
+
+Yêu cầu ví dụ:
+
+```bash
+curl -X POST https://api.6mm.com/v1/public/user/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "alice",
+    "password": "yourPassword",
+    "deviceId": "device-001",
+    "deviceName": "server-001"
+  }'
+```
+
+Ví dụ phản hồi:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "accessToken": "YOUR_ACCESS_TOKEN",
+    "accessExpire": 1769676656
+  },
+  "requestId": "req-login"
+}
+```
+
+<h2 id="refresh-token">Refresh Token</h2>
+
+```http
+POST /v1/public/user/refresh-token
+```
+
+Trong các kịch bản tích hợp thông thường, trạng thái đăng nhập được làm mới qua Cookie. Giữ lại Cookie trả về theo phản hồi đăng nhập.
+
+Trường phản hồi:
+
+| Lĩnh vực          | Loại   | Mô tả              |
+| -------------- | ------ | ------------------------ |
+| `accessToken`  | string | Token truy cập mới         |
+| `accessExpire` | int64  | Thời gian hết hạn của Access Token |
+
+<h2 id="agent-sso">Đặc vụ SSO</h2>
+
+<h2 id="ticket-exchange">Đổi vé</h2>
+
+```http
+POST /v1/public/agent-sso/exchange-ticket
+```
+
+Tham số yêu cầu:
+
+| Tham số  | Loại   | Bắt buộc | Mô tả                                 |
+| ---------- | ------ | -------- | ------------------------------------------- |
+| `ticket`   | string | Đúng vậy      | Vé một lần do dịch vụ đại lý phát hành |
+| `deviceId` | string | Không       | Vân tay thiết bị, lên đến 64 ký tự     |
+
+Trường phản hồi:
+
+| Lĩnh vực          | Loại   | Mô tả              |
+| -------------- | ------ | ------------------------ |
+| `accessToken`  | string | Mã truy cập             |
+| `accessExpire` | int64  | Thời gian hết hạn của Access Token |
+| `redirectPath` | string | Đường dẫn chuyển hướng được đề xuất  |
+
+<h2 id="embed-token-exchange">Tích hợp Trao đổi Token</h2>
+
+```http
+POST /v1/public/agent-sso/exchange-embed-token
+```
+
+Tham số yêu cầu:
+
+| Tham số    | Loại   | Bắt buộc | Mô tả                                                    |
+| ------------ | ------ | -------- | -------------------------------------------------------------- |
+| `embedToken` | string | Đúng vậy      | Token giao dịch nhúng ngắn hạn do dịch vụ đại lý phát hành |
+| `channelId`  | string | Đúng vậy      | ID kênh iframe nhúng, tối đa 128 ký tự               |
+| `deviceId`   | string | Không       | Vân tay thiết bị, lên đến 64 ký tự                        |
+
+Trường phản hồi:
+
+| Lĩnh vực          | Loại   | Mô tả              |
+| -------------- | ------ | ------------------------ |
+| `accessToken`  | string | Mã truy cập             |
+| `accessExpire` | int64  | Thời gian hết hạn của Access Token |
+
+<h2 id="pnl-leaderboard">Bảng xếp hạng PnL</h2>
+
+```http
+GET /v1/public/leaderboard/pnl?period=30d
+```
+
+Tham số yêu cầu:
+
+| Tham số | Loại   | Bắt buộc | Mô tả          |
+| --------- | ------ | -------- | -------------------- |
+| `period`  | string | Đúng vậy      | `7d` / `30d` / `90d` |
+
+Trường phản hồi:
+
+| Lĩnh vực              | Loại   | Mô tả                                                       |
+| ------------------ | ------ | ----------------------------------------------------------------- |
+| `list[].rank`      | int32  | Cấp bậc                                                              |
+| `list[].userId`    | string | ID người dùng bên ngoài                                                  |
+| `list[].trader`    | string | Tên thương nhân đeo mặt nạ                                                |
+| `list[].volume`    | string | Khối lượng giao dịch trong cửa sổ                                      |
+| `list[].pnlAmount` | string | PnL đã thực hiện trong cửa sổ                                        |
+| `list[].pnlPct`    | string | Tỷ lệ PnL, thập phân từ `0` đến `1`                                |
+| `myRank`           | int32  | Xếp hạng người dùng hiện tại. Trả về `0` nếu chưa xác thực hoặc không xếp hạng |
+
+<h2 id="related-documentation">Tài liệu liên quan</h2>
+
+- [Dữ liệu thị trường](/vi/developer-api/rest-api/market-data)
+- [Kênh WebSocket công cộng](/vi/developer-api/websocket/public-market-channels)
+- [Môi trường & Quy ước Chung](/vi/developer-api/environments-and-common-conventions)

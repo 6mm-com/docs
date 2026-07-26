@@ -1,0 +1,50 @@
+---
+title: "Enum comuni"
+description: "Consulta gli enum di 6MM API comuni per stati d'ordine, lati, tipi di ordine, tempo in forza, modalità di posizione, trasferimenti e risposte di integrazione."
+slug: developer-api/common-enums
+canonical-url: https://docs.6mm.com/it/developer-api/common-enums
+---
+
+<h2 id="orders">Ordini</h2>
+
+| Enum                 | Valori                                                                                                    |
+| -------------------- | --------------------------------------------------------------------------------------------------------- |
+| Lato ordine           | `BUY` / `SELL`                                                                                            |
+| Lato posizione        | `BOTH` / `LONG` / `SHORT`                                                                                 |
+| Tipo di ordine normale    | `LIMIT` / `MARKET`                                                                                        |
+| Tipo di ordine di condizione | `STOP_MARKET` / `STOP_LIMIT` / `TAKE_PROFIT_MARKET` / `TAKE_PROFIT_LIMIT` / `TRAILING_STOP`               |
+| Periodo di vigore        | `GTC` / `IOC` / `FOK` / `GTE_GTC`                                                                         |
+| Tipo di prezzo di attivazione   | `MARK_PRICE` / `CONTRACT_PRICE`                                                                           |
+| Stato dell'ordine         | `NEW` / `PENDING` / `PARTIALLY_FILLED` / `FILLED` / `CANCELED` / `REJECTED` / `PARTIALLY_FILLED_CANCELED` |
+
+`NEW` significa che la richiesta di ordine è stata accettata e restituita. `PENDING` significa che l'ordine è entrato in stato di ordine in sospeso o aperto.
+
+<h2 id="positions">Posizioni</h2>
+
+| Enum                      | Valori                                                      |
+| ------------------------- | ----------------------------------------------------------- |
+| Valore della richiesta in modalità margine | `1` croce, `2` isolato                                     |
+| Stringa in modalità margine        | `ISOLATED` / `CROSS`                                        |
+| Modalità di innesco chiuso        | `1` manuale, `2` take profit, `3` stop loss `4` liquidazione |
+
+<h2 id="integration-rules">Regole di integrazione</h2>
+
+- Trattare i valori di enum come valori di filo sensibili alla maiuscola e minuscola.
+- Preservare valori sconosciuti nei log e fallire in sicurezza invece di mappareli silenziosamente a uno stato noto.
+- Non dedurre che ogni stato d'ordine non finale sia sicuro da riprovare. Interroga l'ordine o riconciliarlo con un evento WebSocket privato.
+- Memorizzare sia il valore originale del API sia l'etichetta di visualizzazione rivolta al partner in modo che i nuovi valori possano essere supportati senza modificare i record storici.
+
+<h2 id="order-state-handling">Gestione dello stato dell'ordine</h2>
+
+| Gruppo statale | Valori | Manipolazione consigliata |
+| --- | --- | --- |
+| Accettato o aperto | `NEW`, `PENDING`, `PARTIALLY_FILLED` | Mantieni l'ordine attivo e riconcilia con WebSocket o REST aggiornamenti. |
+| Completato | `FILLED` | Applica la quantità finale e i dati di esecuzione completati. |
+| Chiuso senza riempimento completo | `CANCELED`, `REJECTED`, `PARTIALLY_FILLED_CANCELED` | Ferma l'elaborazione attiva e preserva la ragione e qualsiasi quantità eseguita. |
+
+<h2 id="related-documentation">Documentazione correlata</h2>
+
+- [Ordine API](/it/developer-api/rest-api/order): campi di richiesta e operazioni del ciclo di vita dell'ordine.
+- [Tipi di ordine](/it/trading/order-types): comportamento del prodotto per ordini limite, di mercato e condizionali.
+- [Canale Utente Privato](/it/developer-api/websocket/private-user-channel): ordine in tempo reale e stato dell'account.
+- [Codici di errore e risoluzione dei problemi](/it/developer-api/error-codes-and-troubleshooting): codici aziendali e flusso di lavoro diagnostico.

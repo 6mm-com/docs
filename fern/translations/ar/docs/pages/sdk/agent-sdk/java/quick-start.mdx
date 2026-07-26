@@ -1,0 +1,90 @@
+---
+title: "Java البداية السريعة"
+subtitle: "قم بتثبيت وتهيئة Java SDK من خدمة خلفية."
+slug: sdk/agent-sdk/java/quick-start
+canonical-url: https://docs.6mm.com/ar/sdk/agent-sdk/java/quick-start
+---
+
+<h2 id="install">التثبيت</h2>
+
+يوثق المصدر العام SDK حاليا `v0.1.1` العلامة مع إحداثيات مافن هذه:
+
+```xml
+<dependency>
+    <groupId>com.sixmm.exchange.sdk</groupId>
+    <artifactId>agent</artifactId>
+    <version>0.1.1</version>
+</dependency>
+```
+
+لا يعمل GitHub كمستودع اعتماد لمافن. قم بتثبيت المصدر الموسوم محليا قبل حل الاعتماد:
+
+```bash
+git clone https://github.com/6mm-com/agent-java-sdk.git
+cd agent-java-sdk
+git checkout v0.1.1
+mvn install
+```
+
+> **بناء الفريق**
+>
+> انشر القطعة المعتمدة في مستودع Maven الخاص بمؤسستك لبناء CI والاختبار والإنتاج. تأكد من النسخة المعتمدة مع 6MM قبل نشر الإنتاج.
+
+أمثلة على الشيفرة المصدرية والاستخدام متوفرة في المستودع الرسمي Java SDK :
+
+[6mm-com/agent-java-sdk] (https://github.com/6mm-com/agent-java-sdk)
+
+<h2 id="before-you-start">قبل أن تبدأ</h2>
+
+- أكد URL API وكيل الإنتاج مع فريق 6MM.
+- تخزين apiSecret في إدارة السرية الخلفية فقط.
+- إعداد رسم خرائط مستقر بين platformUserId و agentUserId.
+- تمكين سجلات منظمة حول تدفقات الربط، والنقل، والترتيب، والتدفقات عبر الويبهوك.
+
+<h2 id="initialize-client">تهيئة العميل</h2>
+
+```java
+import com.sixmm.agent.AgentClient;
+import com.sixmm.agent.AgentClientConfig;
+
+AgentClient client = new AgentClient(AgentClientConfig.builder()
+        .baseUrl("https://agent-api.6mm.com")
+        .agentCode("AGENT001")
+        .apiSecret("your-api-secret")
+        .defaultCurrency("USDT")
+        .build());
+```
+
+> **الواجهة الخلفية فقط**
+>
+> لا تهيئة Agent SDK من كود العميل في المتصفح أو الهاتف المحمول أو سطح المكتب. يوقع SDK طلبات API الوكيل المميزة.
+
+<h2 id="example-transfer-funds-in">مثال: تحويل الأموال إلى</h2>
+
+```java
+TransferResponse resp = client.transfer(TransferRequest.fixed(
+        "AGT-ORDER-1001",
+        "agent-user-001",
+        Direction.IN,
+        "USDT",
+        "10.00"));
+```
+
+استخدم رقم أمر فريد من جهة الشريك لكل طلب نقل. إذا انتهى وقت الطلب، استفسر عن الأمر الأصلي قبل إنشاء طلب جديد.
+
+<h2 id="next-steps">الخطوات التالية</h2>
+
+| الحاجة | الصفحة التالية |
+| --- | --- |
+| إصدار بطاقة Trading Widget | [إنشاء رمز تضمين] (/sdk/agent-sdk/java/embed-token) |
+| تحقق من المكالمات المتكررة من 6MM | [خطافات الويب والهوبية] (/sdk/security/webhooks-idempotency) |
+| راجع سلوك التوقيع | [أسرار وإشارة] (/sdk/security/secrets-signing) |
+| تشخيص مشكلة التكامل | [SDK استكشاف الأخطاء] (/sdk/security/troubleshooting) |
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">صفحات ذات صلة</h2>
+
+- [إنشاء رمز التضمين](/ar/sdk/agent-sdk/java/embed-token)
+- [التحقق من توقيع Webhook & Idemopency](/ar/sdk/security/webhooks-idempotency)
+- [Agent SDK أسرار وتوقيع HMAC](/ar/sdk/security/secrets-signing)
+- [SDK استكشاف أخطاء التكامل](/ar/sdk/security/troubleshooting)
+<!-- sixmm-localized-link-repair:end -->

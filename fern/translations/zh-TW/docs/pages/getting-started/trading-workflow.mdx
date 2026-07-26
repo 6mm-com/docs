@@ -1,0 +1,145 @@
+---
+title: "交易工作流程"
+description: "6MM 支援 U 保證金永續合約，允許用戶交易以穩定幣結算及保證金的永續期貨（例如 USDT）。"
+slug: trading/getting-started/trading-workflow
+canonical-url: https://docs.6mm.com/zh-TW/trading/getting-started/trading-workflow
+---
+
+<h2 id="u-margined-perpetual-contracts">U 邊界永續合約</h2>
+
+6MM 支援 U 保證金永續合約，允許用戶交易以穩定幣結算及保證金的永續期貨（例如 USDT）。
+
+本節說明核心交易流程及在 6MM下注與管理永續合約訂單的關鍵機制。
+
+***
+
+<h2 id="contract-overview">合約概述</h2>
+
+* 合約類型：U 邊際永續合約
+* 結算資產：穩定幣（例如 USDT）
+* 無到期：持倉不會過期，且可無限期持有
+* 標記價格風險控制：用於保證金計算與清算
+
+***
+
+<h2 id="order-types">訂單類型</h2>
+
+6MM 支援常用的訂單類型，以適應不同的交易策略：
+
+<h2 id="market-order">市價單</h2>
+
+* 立即以最佳市場價格成交
+* 優先考量執行速度而非價格精確度
+* 適合快速進出
+
+<h2 id="limit-order">限價單</h2>
+
+* 僅以指定價格或更高價格執行
+* 提供價格控制
+* 可能持續營業，直到報滿或取消
+
+<h2 id="stop-order">停止命令</h2>
+
+* 當觸發價格達到時，觸發市價或限價單
+* 常用於止損或突破策略
+
+> 訂單可用性可能因交易對及整合模式而異。
+
+***
+
+<h2 id="leverage-and-margin">槓桿與保證金</h2>
+
+* 槓桿讓用戶能以較少資本控制較大的部位
+* 保證金的計算依據：
+  * 位置大小
+  * 槓桿等級
+  * 馬克·普萊斯
+
+較高的槓桿會增加潛在報酬，但也增加了清算風險。
+
+***
+
+<h2 id="funding-rate-mechanism">資金率機制</h2>
+
+永續合約採用資金利率機制，使合約價格與現貨市場保持一致。
+
+* 資金支付於預定時間間隔進行
+* 若資金率為正：
+  * 多頭部位支付空頭
+* 若資金利率為負：
+  * 空頭部位支付多頭
+
+資金手續費會在交易者之間直接交換。
+
+6MM 不將資金支付作為收入收取。
+
+***
+
+<h2 id="fees-and-slippage">費用與滑落</h2>
+
+<h2 id="trading-fees">交易費用</h2>
+
+* 訂單執行時會收取費用
+* 費用率可能有所不同：
+  * 製作者訂單
+  * 執行命令
+
+收費標準由合作夥伴平台定義，且可能有所不同。
+
+<h2 id="slippage">滑移</h2>
+
+* 滑點發生在市場流動性不足以以預期價格完成訂單時
+* 在高波動性或使用市價單時較為常見
+
+用戶可以透過使用限價單和管理訂單大小來降低滑點。
+
+***
+
+<h2 id="position-lifecycle">職位生命週期</h2>
+
+1. 資金分配至永續帳戶
+2. 下單並由 6MM 匹配引擎配對
+3. 執行時職位空缺
+4. 即時的邊際與平均差更新
+5. 資金費用按預定時間間隔繳納
+6. 位置可手動或透過 TP/SL 關閉
+7. 最終損益結算至永續帳戶
+
+***
+
+<h2 id="risk-management-and-liquidation">風險管理與清算</h2>
+
+* 6MM 實時監控保證金比率
+* 當利潤低於維持門檻時：
+  * 持倉可能部分或全部清算
+* 清算價格是依標價計算，而非最後成交價
+
+此機制有助於減少因短期市場波動而造成的不必要清算。
+
+***
+
+<h2 id="summary">摘要</h2>
+
+6MM 上的 U 保證金永續交易工作流程設計為：
+
+* 提供熟悉且彈性的訂單類型
+* 透過資金利率維持價格一致
+* 提供透明的費用與結算機制
+* 提供機構級風險控制
+
+此結構使合作夥伴能提供專業的永續交易，同時維持無縫的使用者體驗。
+
+<h2 id="related-trading-guides">相關交易指南</h2>
+
+- [永續合約]（/trading/perpetual-contracts）：合約、資金、保證金及結算基礎。
+- [訂單類型]（/trading/order-types）：限價、市場、條件及生效時間行為。
+- [費用與滑移]（/trading/fees-and-slippage）：執行成本與流動性影響。
+- [風險與清算]（/trading/risk-and-liquidations）：保證金風險與強制收盤行為。
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">相關頁面</h2>
+
+- [永久合約](/zh-TW/trading/perpetual-contracts)
+- [訂單類型](/zh-TW/trading/order-types)
+- [交易成本：費用與滑點](/zh-TW/trading/fees-and-slippage)
+- [風險與清算](/zh-TW/trading/risk-and-liquidations)
+<!-- sixmm-localized-link-repair:end -->

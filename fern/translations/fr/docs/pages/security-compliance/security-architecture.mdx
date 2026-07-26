@@ -1,0 +1,48 @@
+---
+title: "Architecture de sécurité de la plateforme"
+subtitle: "Comprenez les couches de sécurité utilisées dans 6MM infrastructure de trading, APIs, SDKs, webhooks et intégrations avec partenaires."
+slug: security-compliance/security-architecture
+canonical-url: https://docs.6mm.com/fr/security-compliance/security-architecture
+---
+
+6MM documentation de sécurité se concentre sur la préparation à la production des partenaires. L’objectif est de maintenir une infrastructure de trading stable tout en clarifiant les limites des responsabilités.
+
+<h2 id="security-layers">Couches de sécurité</h2>
+
+| Couche | Focus |
+| --- | --- |
+| Infrastructures | Isolation réseau, communication de service chiffrée, surveillance et basculement. |
+| Systèmes de négociation | Appariement déterministe, vérifications de marges, contrôles des risques et prévention des abus. |
+| Sécurité de l’intégration | API clés, HMAC signatures, signatures webhook, protection contre la relecture et secrets uniquement en backend. |
+| Opérations partenaires | Validation de la session utilisateur, garde des actifs, support client et contrôles locaux de conformité. |
+
+<h2 id="partner-responsibilities">Responsabilités des partenaires</h2>
+
+- Garder API secrets et clés de signature hors des navigateurs et applications mobiles.
+- Valider les sessions des utilisateurs partenaires avant d’émettre les identifiants d’entrée de trading.
+- Implémenter des vérifications d’idempotence et d’état terminal du webhook.
+- Tenir des journaux opérationnels pour les flux de compte, de commande, de transfert et de webhook.
+
+<h2 id="integration-trust-boundaries">Limites de confiance en intégration</h2>
+
+| Frontière | Contrôle requis |
+| --- | --- |
+| Navigateur ou application vers le backend partenaire | Validez la session partenaire avant de délivrer toute certification de trading. |
+| Partenaire backend à 6MM API | Utilisez des identifiants à portée de contrôle, la signature de requêtes, la synchronisation temporelle et un stockage secret protégé. |
+| 6MM webhook vers le point de terminaison partenaire | Vérifiez la signature par rapport au corps brut de la requête, rejetez les messages obsolètes ou invalides, et dédupliquez les tentatives. |
+| Échanger les records de l’état vers le partenaire | Conciliez les ordres, positions, soldes et transferts à l’aide d’identifiants durables et de vérifications de l’état terminal. |
+
+<h2 id="production-verification">Vérification de la production</h2>
+
+- Test expiré, révoqué et inadéquatement dans le cadre des identifiants.
+- Tester les corps modifiés des webhooks, les rappels en double, les rappels retardés et les délais d’attente des points de terminaison.
+- Confirmer que les journaux occultent les secrets, les jetons d’accès et les charges utiles sensibles des requêtes.
+- Alerte en cas d’échecs répétés de signature, d’activité d’ordre anormale, de différences de rapprochement et d’instabilité de connexion.
+- Documenter le propriétaire et le chemin de réponse en cas d’exposition des identifiants, de défaillances de webhook et d’incidents de trading.
+
+<h2 id="related-security-guides">Guides de sécurité associés</h2>
+
+- [Secrets et Signatures](/fr/sdk/security/secrets-signing)
+- [Crochets et Idempotence](/fr/sdk/security/webhooks-idempotency)
+- [Intervention en cas d’incident](/fr/security-compliance/incident-response)
+- [Matrice de responsabilité du partenaire](/fr/security-compliance/partner-responsibilities)

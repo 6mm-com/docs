@@ -1,0 +1,68 @@
+---
+title: "錯誤代碼與故障排除"
+description: "利用回應碼、訊息、請求 ID、重試指引、驗證檢查及整合故障排除步驟診斷 6MM API 錯誤。"
+slug: developer-api/error-codes-and-troubleshooting
+canonical-url: https://docs.6mm.com/zh-TW/developer-api/error-codes-and-troubleshooting
+---
+
+<h2 id="error-response-format">錯誤回應格式</h2>
+
+```json
+{
+  "code": 1003,
+  "message": "Invalid token",
+  "requestId": "req-12345678"
+}
+```
+
+商業錯誤通常仍會回傳統一的 JSON 結構。整合商應該先檢查 `code` 。認證失敗可能會返回 HTTP `401`;速率限制可能會回歸 HTTP `429`。
+
+<h2 id="common-error-codes">常見錯誤代碼</h2>
+
+| 錯誤代碼      | 描述                                  |
+| --------------- | -------------------------------------------- |
+| `0`             | 成功                                      |
+| `1001`          | 未提供有效的認證資訊 |
+| `1002`          | 代幣已過期                                |
+| `1003`          | 無效的標記、 API Key或簽名         |
+| `1004`          | 代幣被撤銷                                |
+| `1006`          | 不匹配 IP 來源                           |
+| `2001`          | 缺少所需參數                   |
+| `2002`          | 無效參數值                      |
+| `2003`          | 參數超出範圍                       |
+| `3001`          | 餘額不足                         |
+| `3003`          | 訂單未找到                              |
+| `3004`          | 重複請求                            |
+| `3005`          | 訂單無法取消                     |
+| `3006`          | 許可被拒                            |
+| `3100` - `3112` | 條件順序參數驗證錯誤   |
+| `5001`          | 內部伺服器錯誤                        |
+| `5002`          | 服務暫時無法提供              |
+| `5003`          | 觸發費率上限                         |
+
+<h2 id="troubleshooting">故障排除</h2>
+
+| 問題                                     | 推薦                                                                                   |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `1001` 沒有有效的認證資訊  | 請確認是否包含 `Authorization: Bearer <accessToken>` 或 `X-API-KEY` 。                  |
+| `1002` 代幣已過期                        | 重新嘗試前請重新整理 Token 或重新登入。                                                   |
+| `1003` 無效的 Token、 API Key或 Signature | 檢查 API Key、簽章有效載入、請求主體 JSON 字串，以及查詢參數順序。           |
+| `1006` 來源 IP 不匹配                   | 檢查 API Key IP 白名單設定。                                                    |
+| `3004` 重複請求                    | 不要重複使用相同的簽名作為與順序相關的路徑。再生 `timestamp` 並 `signature`。 |
+| `5003` 費率上限已觸發                 | 減少請求頻率，重試時使用指數退讓。                                |
+| `Timestamp outside of tolerance window`     | 打電話給 `/v1/time` 校準時間偏移，並再次簽署申請。                             |
+
+<h2 id="related-diagnostic-guides">相關診斷指南</h2>
+
+- [環境與常見慣例]（/developer-api/environments-and-common-conventions）
+- [認證]（/developer-api/authentication）
+- [整合建議]（/developer-api/integration-recommendations）
+- [支援請求範本]（/resources/support-request-template）
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">相關頁面</h2>
+
+- [環境與常見慣例](/zh-TW/developer-api/environments-and-common-conventions)
+- [6MM API 認證： JWT 與 API 金鑰](/zh-TW/developer-api/authentication)
+- [整合建議](/zh-TW/developer-api/integration-recommendations)
+- [技術支援申請範本](/zh-TW/resources/support-request-template)
+<!-- sixmm-localized-link-repair:end -->

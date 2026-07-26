@@ -1,0 +1,95 @@
+---
+title: "Trading Widget Autentikasi"
+subtitle: "Gunakan token-partner untuk integrasi SSO trading tertanam baru."
+slug: sdk/trading-widget/authentication
+canonical-url: https://docs.6mm.com/id/sdk/trading-widget/authentication
+---
+
+<h2 id="recommended-mode-partner-token">Mode yang direkomendasikan: token mitra</h2>
+
+partner-token menghindari menempatkan token pendek di URL dan menjaga apiSecret di backend mitra.
+
+```js
+const widget = TradingWidget.create('#trading-widget', {
+  baseUrl: 'https://app.6mm.com',
+  auth: {
+    mode: 'partner-token',
+    tokenProvider: async ({ channelId, symbol, reason }) => {
+      const resp = await fetch('/api/trading/embed-token', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ channelId, symbol, reason }),
+      })
+
+      if (!resp.ok) {
+        throw new Error('Failed to request embed token')
+      }
+
+      return resp.json()
+    },
+  },
+})
+```
+
+<h2 id="related-documentation">Dokumentasi terkait</h2>
+
+- [Create Embed Token](/id/sdk/agent-sdk/java/embed-token): contoh penerbitan token backend.
+- [Trading Widget Quick Start](/id/sdk/trading-widget/quick-start): alur inisialisasi lengkap.
+- [Secrets & Signing](/id/sdk/security/secrets-signing): simpan kredensial Agen yang berhak milik di backend.
+- [Pemecahan Masalah](/id/sdk/security/troubleshooting): mendiagnosis kegagalan sesi, token, asal, dan inisialisasi.
+
+<h2 id="backend-flow">Alur backend</h2>
+
+```text
+1. Partner frontend receives auth_request from the iframe.
+2. SDK calls tokenProvider.
+3. Partner frontend calls its own backend.
+4. Partner backend validates the partner session.
+5. Partner backend calls 6MM Agent API or Java SDK createEmbedToken.
+6. SDK sends embedToken to the iframe through postMessage.
+7. iframe exchanges embedToken for a 6MM access token.
+8. iframe continues initialization and emits ready.
+```
+
+<h2 id="tokenprovider-contract">kontrak tokenProvider</h2>
+
+| Lapangan | Arah | Deskripsi |
+| --- | --- | --- |
+| channelId | SDK -> Backend Mitra | Pengidentifikasi sesi widget unik. Backend seharusnya meneruskannya ke createEmbedToken. |
+| simbol | SDK -> Backend Mitra | Simbol perdagangan yang diminta saat ini. Gunakan untuk scope token saat dibutuhkan. |
+| alasan | SDK -> Backend Mitra | Mengapa SDK meminta token, seperti pemuatan awal atau refresh. |
+| embedToken | Backend mitra -> SDK | Token berumur pendek yang dibuat oleh Agent SDK atau Agent API. |
+| expireAt | Backend mitra -> SDK | Cap waktu kedaluwarsa token dikembalikan oleh 6MM. |
+
+<h2 id="failure-handling">Penanganan kegagalan</h2>
+
+| Kondisi | Penanganan yang direkomendasikan |
+| --- | --- |
+| Sesi mitra telah kedaluwarsa | Kembalikan 401 dari endpoint mitra dan minta pengguna untuk masuk lagi. |
+| Pembuatan token gagal sementara | Masukkan error ke tokenProvider dan biarkan widget muncul error autentikasi. |
+| ketidakcocokan channelId | Tolak permintaan dan buat ulang instance widget. |
+| Pengguna tidak diperbolehkan untuk berdagang | Kembalikan error yang dikendalikan mitra dan jangan buat token embed. |
+
+<h2 id="compatibility-mode-agent-sso">Mode kompatibilitas: agent-sso</h2>
+
+agent-sso mempertahankan alur tiket /agent-entry yang lebih lama. Pilih token-partner untuk integrasi baru.
+
+```js
+const widget = TradingWidget.create('#trading-widget', {
+  baseUrl: 'https://app.6mm.com',
+  auth: {
+    mode: 'agent-sso',
+    entryUrlProvider: async ({ redirectPath }) => {
+      const resp = await fetch('/api/trading-entry', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ redirectPath }),
+      })
+      const data = await resp.json()
+      return data.webUrl
+    },
+  },
+})
+```

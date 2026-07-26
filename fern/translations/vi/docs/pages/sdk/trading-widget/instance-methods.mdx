@@ -1,0 +1,135 @@
+---
+title: "Phương thức thể hiện"
+subtitle: "Điều khiển một phiên bản widget đã tạo sau TradingWidget.create()."
+slug: sdk/trading-widget/instance-methods
+canonical-url: https://docs.6mm.com/vi/sdk/trading-widget/instance-methods
+---
+
+<h2 id="method-summary">Tóm tắt phương pháp</h2>
+
+| Phương pháp | Mục đích |
+| --- | --- |
+| destroy() | Gỡ bỏ iframe và thả các trình lắng nghe sự kiện. |
+| getState() | Đọc trạng thái vòng đời SDK hiện tại. |
+| whenReady() | Chờ đến khi iframe hoàn tất khởi tạo. |
+| setSymbol(biểu tượng) | Chuyển đổi cặp giao dịch bên trong iframe. |
+| setTheme(chủ đề) | Cập nhật tham số chủ đề iframe. |
+| setLocale(địa phương) | Chuyển đổi ngôn ngữ iframe. |
+| setSize(chiều rộng, chiều cao) | Cập nhật kích thước iframe. |
+| reload() | Tải lại iframe hiện tại. |
+| refreshAuth(lý do) | Kích hoạt luồng làm mới xác thực widget. |
+| setTokenProvider(nhà cung cấp) | Thay thế nhà cung cấp được sử dụng bởi chế độ token đối tác. |
+| on(event, handler) | Đăng ký nhận các sự kiện thời gian chạy và nhận chức năng hủy đăng ký. |
+
+<h2 id="destroy">destroy()</h2>
+
+Gỡ bỏ iframe, xóa listener và phát hành đã hủy một lần cho phiên bản hiện tại.
+
+```js
+widget.destroy()
+```
+
+<h2 id="getstate">getState()</h2>
+
+Đọc trạng thái vòng đời hiện tại của thể hiện widget.
+
+```js
+const state = widget.getState()
+```
+
+Các giá trị trả về bao gồm loading, authenticating, ready, error và destroyed.
+
+<h2 id="whenready">whenReady()</h2>
+
+Chờ iframe hoàn tất khởi tạo trước khi chạy logic giao diện phụ thuộc.
+
+```js
+await widget.whenReady()
+```
+
+<h2 id="setsymbol-symbol">setSymbol(biểu tượng)</h2>
+
+Chuyển đổi cặp giao dịch bên trong iframe. Nếu iframe vẫn đang khởi tạo, SDK sẽ xếp hàng lệnh và gửi sau khi đã sẵn sàng.
+
+```js
+widget.setSymbol('ETHUSDT')
+```
+
+<h2 id="settheme-theme">setTheme(chủ đề)</h2>
+
+Cập nhật tham số chủ đề được sử dụng bởi iframe giao dịch nhúng.
+
+```js
+widget.setTheme('dark')
+widget.setTheme('light')
+```
+
+<h2 id="setlocale-locale">setLocale(địa phương)</h2>
+
+Chuyển đổi ngôn ngữ iframe. Các giá trị được hỗ trợ là en, en-US và zh-CN.
+
+```js
+widget.setLocale('en')
+widget.setLocale('en-US')
+widget.setLocale('zh-CN')
+```
+
+<h2 id="setsize-width-height">setSize(chiều rộng, chiều cao)</h2>
+
+Cập nhật kích thước DOM iframe và thông báo cho iframe về kích thước ngoài mới. Giá trị số được chuyển đổi thành px.
+
+```js
+widget.setSize('100%', 720)
+```
+
+<h2 id="reload">reload()</h2>
+
+Tải lại iframe hiện tại và chờ nó khởi tạo lại.
+
+```js
+widget.reload()
+```
+
+<h2 id="refreshauth-reason">refreshAuth(lý do)</h2>
+
+Yêu cầu iframe làm mới luồng xác thực hiện tại. Giá trị lý do tùy chọn được chuyển tiếp cho ghi nhật ký và kiểm soát luồng.
+
+```js
+widget.refreshAuth('manual')
+```
+
+<h2 id="settokenprovider-provider">setTokenProvider(nhà cung cấp)</h2>
+
+Thay thế tokenProvider được sử dụng bởi chế độ token đối tác. SDK gọi nhà cung cấp khi iframe yêu cầu token nhúng mới.
+
+```js
+widget.setTokenProvider(async ({ channelId, symbol, reason }) => {
+  const resp = await fetch('/api/trading/embed-token', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ channelId, symbol, reason }),
+  })
+
+  return resp.json()
+})
+```
+
+<h2 id="on-event-handler">on(event, handler)</h2>
+
+Đăng ký một sự kiện thời gian chạy. Hàm trả về sẽ xóa trình lắng nghe.
+
+```js
+const off = widget.on('order_created', (event) => {
+  console.log(event)
+})
+
+off()
+```
+
+<h2 id="related-widget-guides">Hướng dẫn Widget liên quan</h2>
+
+- [Trading Widget Khởi Đầu Nhanh](/vi/sdk/trading-widget/quick-start)
+- [Tùy chọn & Sự kiện](/vi/sdk/trading-widget/options-events)
+- [Xác thực](/vi/sdk/trading-widget/authentication)
+- [Khắc phục sự cố](/vi/sdk/security/troubleshooting)

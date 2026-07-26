@@ -1,0 +1,39 @@
+---
+title: "Arquitetura e Responsabilidades"
+subtitle: "Esclareça o que o sistema parceiro possui e o que 6MM infraestrutura oferece nas implantações de negociação embarcadas."
+slug: solutions/architecture-responsibilities
+canonical-url: https://docs.6mm.com/pt-BR/solutions/architecture-responsibilities
+---
+
+Um lançamento de negociação embutido limpo depende de limites claros de responsabilidade. Os sistemas parceiros devem manter a propriedade sensível do negócio, enquanto 6MM fornece a infraestrutura de negociação e as capacidades do ciclo de vida.
+
+<h2 id="responsibility-model">Modelo de responsabilidade</h2>
+
+| Área | Sistema de parceiros | 6MM infraestrutura |
+| --- | --- | --- |
+| Relacionamento com o usuário | Possui a conta de usuário, estado de login, identidade de suporte ao cliente e verificações de elegibilidade. | Recebe o contexto validado de entrada de negociação e mantém o estado do lado da negociação. |
+| Segredos e assinatura | Armazena chaves API parceiros no backend e assina as requisições do lado do servidor. | Verifica solicitações assinadas e processa ações autorizadas. |
+| Experiência em negociação | Fornece pontos de entrada, navegação e contexto do produto. | Fornece interface de negociação, ciclo de vida das ordens, dados de mercado, posições, risco e comportamento de liquidação. |
+| Operações | Os controles suportam fluxos de trabalho, análises de negócios e escalonamento interno. | Emite eventos, webhooks e informações de status necessárias para integração. |
+
+<h2 id="production-principles">Princípios de produção</h2>
+
+- Mantenha todos os segredos dos parceiros na parte de trás.
+- Tratar tokens de embeds como credenciais de entrada de curta duração.
+- Processar webhooks de forma idempotente e armazenar IDs de eventos.
+- Utilizar monitoramento em torno da emissão de tokens, fluxos de transferência e mudanças no estado da ordem.
+- Mantenha o texto voltado para o cliente consistente nas páginas de entrada, negociação e suporte.
+
+<h2 id="related-docs">Documentação relacionada</h2>
+
+<CardGroup cols={3}>
+<Card title="Autenticação" icon="fa-duotone fa-user-shield" href="/pt-BR/developer-api/authentication">
+Revise as expectativas de autenticação no backend.
+</Card>
+<Card title="Assinatura de Solicitação" icon="fa-duotone fa-signature" href="/pt-BR/developer-api/request-signing">
+Entenda ligações API assinadas.
+</Card>
+<Card title="Segurança Webhook" icon="fa-duotone fa-webhook" href="/pt-BR/sdk/security/webhooks-idempotency">
+Gerencie a entrega do evento com segurança.
+</Card>
+</CardGroup>

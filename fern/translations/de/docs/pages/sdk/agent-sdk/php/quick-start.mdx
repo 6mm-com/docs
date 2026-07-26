@@ -1,0 +1,78 @@
+---
+title: "PHP Schneller Start"
+subtitle: "Installiere und initialisiere die PHP SDK von einem Backend-Service aus."
+slug: sdk/agent-sdk/php/quick-start
+canonical-url: https://docs.6mm.com/de/sdk/agent-sdk/php/quick-start
+---
+
+<h2 id="install">Installation</h2>
+
+```json
+{
+  "require": {
+    "sixmm/agent-sdk": "VERSION_PROVIDED_BY_6MM"
+  }
+}
+```
+
+> **Paketzugriff**
+>
+> 6MM stellt den Namen des genehmigten Composer-Pakets, das Repository und die Version während des Partner-Onboardings bereit. Das Paket sollte nicht als Existenz auf dem öffentlichen Packagist angenommen werden.
+
+<h2 id="before-you-start">Bevor du anfängst</h2>
+
+- Bestätigen Sie den Agenten API Basis URL mit 6MM.
+- Laden apiSecret aus Umgebungsvariablen oder Geheimnisverwaltung.
+- Halten Sie SDK Nutzung nur innerhalb von Backend-Diensten.
+- Bereite idempotente Handhabung für Transfer- und Webhook-Flows vor.
+
+<h2 id="initialize-client">Client initialisieren</h2>
+
+```php
+<?php
+
+use Sixmm\Agent\AgentClient;
+use Sixmm\Agent\AgentConfig;
+
+$client = new AgentClient(new AgentConfig(
+    'https://agent-api.6mm.com',
+    'AGENT001',
+    getenv('AGENT_API_SECRET') ?: '',
+    'USDT'
+));
+```
+
+> **Nur Backend**
+>
+> Die PHP SDK signiert Agent- API -Anfragen und darf nicht über öffentlichen Quellcode oder Frontend-Laufzeitumgebungen freigegeben werden.
+
+<h2 id="example-transfer-funds-in">Beispiel: Gelder überweisen</h2>
+
+```php
+$response = $client->transfer([
+    'agentOrderNo' => 'AGT-ORDER-1001',
+    'agentUserId' => 'agent-user-001',
+    'direction' => 'IN',
+    'currency' => 'USDT',
+    'amount' => '10.00',
+]);
+```
+
+Verwenden Sie Dezimalzeichenketten für Beträge und bewahren Sie die ursprüngliche agentOrderNo beim erneuten Versuch oder Abfrage des Übertragungsstatus.
+
+<h2 id="next-steps">Nächste Schritte</h2>
+
+| Bedarf | Nächste Seite |
+| --- | --- |
+| Verstehen Sie Agent SDK Fähigkeiten | [Agent SDK Überblick ] (/sdk/agent-sdk/overview) |
+| Überprüfen Sie das Signierverhalten | [Geheimnisse & Gebärden] (/sdk/security/secrets-signing) |
+| Überprüfen Sie die Rückrufzustellung | [Webhooks & Idempotenz] (/sdk/security/webhooks-idempotency) |
+| Diagnose eines Integrationsproblems | [SDK Fehlersuche ] (/sdk/security/troubleshooting) |
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">Verwandte Seiten</h2>
+
+- [6MM Agent SDK für Java und PHP](/de/sdk/agent-sdk/overview)
+- [Agent SDK Secrets & HMAC Signing](/de/sdk/security/secrets-signing)
+- [Webhook-Signaturverifizierung und Idempotenz](/de/sdk/security/webhooks-idempotency)
+- [SDK Integrationsfehlerbehebung](/de/sdk/security/troubleshooting)
+<!-- sixmm-localized-link-repair:end -->

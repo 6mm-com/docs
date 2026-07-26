@@ -1,0 +1,141 @@
+---
+title: "Posisi"
+description: "Gunakan endpoint posisi 6MM untuk mengquery posisi terbuka, detail margin, leverage, laba rugi yang belum direalisasikan, dan operasi terkait posisi."
+slug: developer-api/rest-api/position
+canonical-url: https://docs.6mm.com/id/developer-api/rest-api/position
+---
+
+> **Catatan**
+>
+> Endpoint posisi memerlukan izin perdagangan.
+
+<h2 id="set-leverage">Tetapkan Leverage</h2>
+
+```http
+POST /v1/private/position/leverage
+Content-Type: application/json
+```
+
+Badan permintaan:
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "leverage": 20
+}
+```
+
+Bidang respons:
+
+| Lapangan       | Tipe   | Deskripsi |
+| ----------- | ------ | ----------- |
+| `symbol`    | string | Simbol      |
+| `leverage`  | int32  | Leverage    |
+| `timestamp` | int64  | Cap waktu   |
+
+<h2 id="set-margin-mode">Atur Mode Margin</h2>
+
+```http
+POST /v1/private/position/margin-mode
+Content-Type: application/json
+```
+
+Badan permintaan:
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "marginMode": 1
+}
+```
+
+`marginMode`: `1` bersilang, `2` terisolasi.
+
+<h2 id="position-settings">Pengaturan Posisi</h2>
+
+```http
+GET /v1/private/position/settings?symbol=BTCUSDT
+```
+
+Bidang respons:
+
+| Lapangan        | Tipe   | Deskripsi             |
+| ------------ | ------ | ----------------------- |
+| `symbol`     | string | Simbol                  |
+| `marginMode` | int32  | `1` salib, `2` terisolasi |
+| `leverage`   | int32  | Leverage                |
+
+<h2 id="current-positions">Posisi Saat Ini</h2>
+
+```http
+GET /v1/private/position/positions?symbol=BTCUSDT
+```
+
+Parameter permintaan:
+
+| Parameter | Tipe   | Wajib | Deskripsi |
+| --------- | ------ | -------- | ----------- |
+| `symbol`  | string | Tidak       | Simbol      |
+
+Bidang respons:
+
+| Lapangan                         | Tipe   | Deskripsi                |
+| ----------------------------- | ------ | -------------------------- |
+| `positions[].symbol`          | string | Simbol                     |
+| `positions[].marginMode`      | string | Mode margin                |
+| `positions[].positionSide`    | string | Sisi posisi              |
+| `positions[].leverage`        | int32  | Leverage                   |
+| `positions[].quantity`        | string | Kuantitas posisi          |
+| `positions[].entryPrice`      | string | Harga masuk                |
+| `positions[].breakEvenPrice`  | string | Harga impas           |
+| `positions[].liqPrice`        | string | Harga likuidasi          |
+| `positions[].marginRatio`     | string | Rasio margin               |
+| `positions[].unrealizedPnl`   | string | PnL yang belum direalisasikan             |
+| `positions[].roe`             | string | Pengembalian ekuitas           |
+| `positions[].nextFundingFee`  | string | Perkiraan biaya pendanaan berikutnya |
+| `positions[].fundingFeeAccum` | string | Biaya pendanaan yang terkumpul    |
+| `positions[].tpPrice`         | string | Harga laba ambil          |
+| `positions[].slPrice`         | string | Harga stop-loss            |
+
+<h2 id="position-history">Sejarah Posisi</h2>
+
+```http
+GET /v1/private/position/history?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+Parameter permintaan:
+
+| Parameter   | Tipe   | Wajib | Deskripsi                  |
+| ----------- | ------ | -------- | ---------------------------- |
+| `symbol`    | string | Tidak       | Simbol                       |
+| `side`      | string | Tidak       | `long` / `short`             |
+| `startTime` | int64  | Tidak       | Waktu mulai                   |
+| `endTime`   | int64  | Tidak       | Waktu akhir                     |
+| `page`      | int64  | Tidak       | Nomor halaman, `1` default     |
+| `pageSize`  | int64  | Tidak       | Item per halaman, `20` default |
+
+Bidang respons:
+
+| Lapangan                    | Tipe   | Deskripsi               |
+| ------------------------ | ------ | ------------------------- |
+| `list[].symbol`          | string | Simbol                    |
+| `list[].positionSide`    | string | Sisi posisi             |
+| `list[].leverage`        | int32  | Leverage                  |
+| `list[].maxQuantity`     | string | Kuantitas posisi maksimum |
+| `list[].entryPrice`      | string | Harga masuk               |
+| `list[].closePrice`      | string | Harga penutupan               |
+| `list[].pnl`             | string | Terwujud PnL              |
+| `list[].roe`             | string | Pengembalian ekuitas          |
+| `list[].marginMode`      | string | Mode margin               |
+| `list[].triggerMode`     | int32  | Mode pemicu tutup        |
+| `list[].fundingFeeAccum` | string | Biaya pendanaan yang terkumpul   |
+| `list[].openedAt`        | int64  | Waktu buka                 |
+| `list[].closedAt`        | int64  | Waktu tutup                |
+| `total`                  | int64  | Total jumlah               |
+
+<h2 id="related-documentation">Dokumentasi terkait</h2>
+
+- [Aturan Margin](/id/trading/margin-rules)
+- [Mekanika Leverage](/id/trading/leverage-mechanics)
+- [Risiko & Likuidasi](/id/trading/risk-and-liquidations)
+- [Saluran Pengguna Pribadi](/id/developer-api/websocket/private-user-channel)

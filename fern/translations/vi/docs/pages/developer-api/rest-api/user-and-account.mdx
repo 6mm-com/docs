@@ -1,0 +1,223 @@
+---
+title: "Người dùng và Tài khoản"
+description: "Sử dụng 6MM điểm cuối người dùng và tài khoản để lấy hồ sơ, số dư, trạng thái tài khoản, quyền truy cập và thông tin tài khoản liên kết với đối tác."
+slug: developer-api/rest-api/user-and-account
+canonical-url: https://docs.6mm.com/vi/developer-api/rest-api/user-and-account
+---
+
+Trừ khi có chỉ định khác, các điểm cuối sau đây có thể sử dụng ký JWT hoặc API Key .
+
+<h2 id="user-info">Thông tin người dùng</h2>
+
+```http
+GET /v1/private/user/info
+```
+
+Trường phản hồi:
+
+| Lĩnh vực                  | Loại   | Mô tả      |
+| ---------------------- | ------ | ---------------- |
+| `userInfo.userId`      | string | ID người dùng bên ngoài |
+| `userInfo.username`    | string | Tên người dùng         |
+| `userInfo.agentId`     | int64  | ID đại lý         |
+| `userInfo.vipLevel`    | int64  | cấp VIP        |
+| `userInfo.lastLoginAt` | int64  | Thời gian đăng nhập cuối cùng  |
+| `userInfo.lastLoginIp` | string | Đăng nhập lần IP    |
+
+<h2 id="user-assets">Tài sản người dùng</h2>
+
+```http
+GET /v1/private/user/asset
+```
+
+Trường phản hồi:
+
+| Lĩnh vực                     | Loại   | Mô tả                     |
+| ------------------------- | ------ | ------------------------------- |
+| `userAsset.userId`        | string | ID người dùng bên ngoài                |
+| `userAsset.assetType`     | string | Loại tài sản                      |
+| `userAsset.walletBalance` | string | Số dư ví                  |
+| `userAsset.frozenMargin`  | string | Ký quỹ bị đóng băng bởi các lệnh chờ xử lý |
+| `userAsset.usedMargin`    | string | Ký quỹ sử dụng bởi các vị thế        |
+
+<h2 id="create-listenkey">Tạo listenKey</h2>
+
+```http
+POST /v1/private/user/listen-key
+```
+
+Tạo khóa xác thực cho các luồng WebSocket riêng tư.
+
+<h2 id="renew-listenkey">Gia hạn listenKey</h2>
+
+```http
+PUT /v1/private/user/listen-key
+```
+
+Kéo dài hiệu lực listenKey .
+
+<h2 id="close-listenkey">Đóng listenKey</h2>
+
+```http
+DELETE /v1/private/user/listen-key
+```
+
+Đóng listenKeyđược chỉ định.
+
+<h2 id="account-change-logs">Nhật ký thay đổi tài khoản</h2>
+
+```http
+GET /v1/private/user/account-change-log?assetType=USDT&page=1&pageSize=20
+```
+
+Tham số yêu cầu:
+
+| Tham số    | Loại   | Bắt buộc | Mô tả                  |
+| ------------ | ------ | -------- | ---------------------------- |
+| `assetType`  | string | Không       | Loại tài sản, chẳng hạn như `USDT`   |
+| `changeType` | string | Không       | Thay đổi loại                  |
+| `startTime`  | int64  | Không       | Thời gian bắt đầu                   |
+| `endTime`    | int64  | Không       | Thời gian kết thúc                     |
+| `page`       | int32  | Không       | Số trang, `1` mặc định     |
+| `pageSize`   | int32  | Không       | Số lượng mục trên mỗi trang, `20` mặc định |
+
+Trường phản hồi:
+
+| Lĩnh vực                        | Loại   | Mô tả                  |
+| ---------------------------- | ------ | ---------------------------- |
+| `list[].assetType`           | string | Loại tài sản                   |
+| `list[].amount`              | string | Số tiền đã thay đổi               |
+| `list[].walletBalanceBefore` | string | Số dư ví trước khi thay đổi |
+| `list[].walletBalanceAfter`  | string | Số dư ví sau khi thay đổi  |
+| `list[].frozenBalanceBefore` | string | Số dư bị đóng băng trước khi thay đổi |
+| `list[].frozenBalanceAfter`  | string | Số dư bị đóng băng sau khi thay đổi  |
+| `list[].changeType`          | string | Thay đổi loại                  |
+| `list[].referenceId`         | string | Mã doanh nghiệp liên quan          |
+| `list[].createdAt`           | int64  | Thời gian sáng tạo                |
+| `total`                      | int64  | Tổng số lượng                  |
+
+<h2 id="30-day-volume-statistics">Thống kê khối lượng 30 ngày</h2>
+
+```http
+GET /v1/private/user/volume-stats
+```
+
+Trường phản hồi:
+
+| Lĩnh vực         | Loại   | Mô tả                                     |
+| ------------- | ------ | ----------------------------------------------- |
+| `volume30d`   | string | Khối lượng giao dịch tích lũy trong 30 ngày qua |
+| `feeTotal30d` | string | Phí tích lũy trong 30 ngày qua           |
+
+<h2 id="balance-history">Lịch sử cân bằng</h2>
+
+```http
+GET /v1/private/user/balance-history?period=1D&limit=30
+```
+
+Tham số yêu cầu:
+
+| Tham số | Loại   | Bắt buộc | Mô tả                            |
+| --------- | ------ | -------- | -------------------------------------- |
+| `period`  | string | Đúng vậy      | `1D` / `1W` / `1M`                     |
+| `limit`   | int    | Không       | Số lượng mục trả lại, `30` mặc định |
+
+Trường phản hồi:
+
+| Lĩnh vực             | Loại   | Mô tả                 |
+| ----------------- | ------ | --------------------------- |
+| `items[].date`    | string | Ngày tổng hợp            |
+| `items[].balance` | string | Số dư ví              |
+| `items[].pnl`     | string | PnL thực hiện trong kỳ |
+
+<h2 id="trade-overview">Tổng quan về giao dịch</h2>
+
+```http
+GET /v1/private/user/trade-overview?type=1M
+```
+
+Tham số yêu cầu:
+
+| Tham số | Loại   | Bắt buộc | Mô tả                                     |
+| --------- | ------ | -------- | ----------------------------------------------- |
+| `type`    | string | Đúng vậy      | Phạm vi xu hướng: `1D`, `1W`, `1M`, `3M`, `6M`, `1Y` |
+
+Trường phản hồi:
+
+| Lĩnh vực                | Loại   | Mô tả                                                          |
+| -------------------- | ------ | -------------------------------------------------------------------- |
+| `todayPnl`           | string | PnL hiện thực hiện hôm nay                                                 |
+| `todayVolume`        | string | Khối lượng giao dịch hợp đồng hôm nay                                      |
+| `totalVolume`        | string | Khối lượng giao dịch hợp đồng tích lũy                                   |
+| `totalPnl`           | string | PnL tích lũy                                              |
+| `maxDrawdown30d`     | string | Số tiền rút tối đa trong 30 ngày qua                        |
+| `maxDrawdown30dRate` | string | Tỷ lệ rút nước tối đa trong 30 ngày qua, từ `0` đến `1` |
+| `transferIn`         | string | Số tiền chuyển vào tích lũy                                      |
+| `transferOut`        | string | Số tiền chuyển ra cộng dồn                                     |
+| `items[]`            | array  | Dữ liệu xu hướng tài sản                                                     |
+
+<h2 id="asset-overview-summary">Tổng quan Tài sản Tóm tắt</h2>
+
+```http
+GET /v1/private/user/asset/overview/summary
+```
+
+Các trường phản hồi giống với các trường tóm tắt tổng quan giao dịch, ngoại trừ `items[]`.
+
+<h2 id="asset-overview-trend">Xu hướng Tổng quan Tài sản</h2>
+
+```http
+GET /v1/private/user/asset/overview/trend?type=1M
+```
+
+Tham số yêu cầu:
+
+| Tham số | Loại   | Bắt buộc | Mô tả                                     |
+| --------- | ------ | -------- | ----------------------------------------------- |
+| `type`    | string | Đúng vậy      | Phạm vi xu hướng: `1D`, `1W`, `1M`, `3M`, `6M`, `1Y` |
+
+Trường phản hồi:
+
+| Lĩnh vực                  | Loại   | Mô tả                     |
+| ---------------------- | ------ | ------------------------------- |
+| `items[].snapshotTime` | int64  | Thời gian chụp nhanh                   |
+| `items[].balance`      | string | Cán cân tài khoản vãng lai         |
+| `items[].pnl`          | string | PnL cho kỳ hiện tại      |
+| `items[].pnlRate`      | string | Lãi suất PnL cho kỳ hiện tại |
+| `items[].totalPnl`     | string | PnL tích lũy                  |
+
+<h2 id="favorite-symbols">Biểu tượng yêu thích</h2>
+
+<h2 id="save">Lưu</h2>
+
+```http
+POST /v1/private/user/favorite-symbols
+Content-Type: application/json
+```
+
+Nội dung yêu cầu:
+
+```json
+{
+  "symbols": ["BTCUSDT", "ETHUSDT"]
+}
+```
+
+<h2 id="query">Truy vấn</h2>
+
+```http
+GET /v1/private/user/favorite-symbols
+```
+
+Trường phản hồi:
+
+| Lĩnh vực     | Loại      | Mô tả          |
+| --------- | --------- | -------------------- |
+| `symbols` | string\[] | Danh sách biểu tượng yêu thích |
+
+<h2 id="related-documentation">Tài liệu liên quan</h2>
+
+- [Kênh Người dùng Riêng tư](/vi/developer-api/websocket/private-user-channel)
+- [Xác thực](/vi/developer-api/authentication)
+- [Chuyển giao tài sản](/vi/trading/getting-started/asset-transfer)
+- [Mã lỗi & Khắc phục sự cố](/vi/developer-api/error-codes-and-troubleshooting)

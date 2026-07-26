@@ -1,0 +1,70 @@
+---
+title: "PHP Avvio rapido"
+subtitle: "Installa e inizializza il PHP SDK da un servizio backend."
+slug: sdk/agent-sdk/php/quick-start
+canonical-url: https://docs.6mm.com/it/sdk/agent-sdk/php/quick-start
+---
+
+<h2 id="install">Installazione</h2>
+
+```json
+{
+  "require": {
+    "sixmm/agent-sdk": "VERSION_PROVIDED_BY_6MM"
+  }
+}
+```
+
+> **Accesso al pacchetto**
+>
+> 6MM fornisce il nome del pacchetto Composer approvato, il repository e la versione durante l'onboarding del partner. Il pacchetto non dovrebbe essere presumibilmente esista su Packagist pubblico.
+
+<h2 id="before-you-start">Prima che iniziate</h2>
+
+- Conferma che l'Agente API base URL con 6MM.
+- Carica apiSecret dalle variabili ambientali o dalla gestione dei segreti.
+- Mantenere SDK utilizzo solo all'interno dei servizi backend.
+- Preparare la gestione degli idempotenti per i flussi di trasferimento e webhook.
+
+<h2 id="initialize-client">Inizializzare client</h2>
+
+```php
+<?php
+
+use Sixmm\Agent\AgentClient;
+use Sixmm\Agent\AgentConfig;
+
+$client = new AgentClient(new AgentConfig(
+    'https://agent-api.6mm.com',
+    'AGENT001',
+    getenv('AGENT_API_SECRET') ?: '',
+    'USDT'
+));
+```
+
+> **Solo backend**
+>
+> Il PHP SDK firma le richieste dell'Agent API e non deve essere esposto tramite codice sorgente pubblico o ambienti frontend.
+
+<h2 id="example-transfer-funds-in">Esempio: trasferire fondi in</h2>
+
+```php
+$response = $client->transfer([
+    'agentOrderNo' => 'AGT-ORDER-1001',
+    'agentUserId' => 'agent-user-001',
+    'direction' => 'IN',
+    'currency' => 'USDT',
+    'amount' => '10.00',
+]);
+```
+
+Usa stringhe decimali per gli importi e conserva il agentOrderNo originale quando riprovi o interroghi lo stato del trasferimento.
+
+<h2 id="next-steps">Passi successivi</h2>
+
+| Bisogno | Pagina successiva |
+| --- | --- |
+| Comprendi Agent SDK capacità | [Agent SDK Panoramica](/it/sdk/agent-sdk/overview) |
+| Rivedi il comportamento di firma | [Segreti e Firma](/it/sdk/security/secrets-signing) |
+| Verifica la consegna di callback | [Ragazzini e Idempotenza](/it/sdk/security/webhooks-idempotency) |
+| Diagnosticare un problema di integrazione | [SDK Risoluzione dei problemi](/it/sdk/security/troubleshooting) |

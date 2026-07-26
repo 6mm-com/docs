@@ -1,0 +1,69 @@
+---
+title: "Optionen & Veranstaltungen"
+subtitle: "Initialisierungsoptionen, Laufzeitereignisse und häufige Fehlercodes."
+slug: sdk/trading-widget/options-events
+canonical-url: https://docs.6mm.com/de/sdk/trading-widget/options-events
+---
+
+<h2 id="options">Optionen</h2>
+
+| Spielfeld | Typ | Default | Anmerkungen |
+| --- | --- | --- | --- |
+| baseUrl | string | SDK Schriftursprung | iframe-Domäne. Explizit auf Partnerseiten weitergeben. |
+| Symbol | string | BTCUSDT | Normalisiert auf Großbuchstaben und Streifen - / _. |
+| Thema | dunkel \| Licht | Dunkel | Anfangsthema-Parameter. |
+| Standort | en \| en-US \| zh-CN | Browser/Standard | Englisch und vereinfachtes Chinesisch werden unterstützt. |
+| Aufbau | Standard \| Kompakt | Default | Option für reserviertes Layout. |
+| Anzeige | object | `showHeader: false`, `showTicker: false`, `hidden: []` | Kontrolliert Einbettungsbereiche und hochrangige Handelscontainer. |
+| Authentifizierung | object | Keine | Verwenden Sie Partner-Token für neue SSO -Integrationen. |
+
+<h2 id="display-controls">Display-Steuerungen</h2>
+
+`display` kontrolliert die eingebettete Handelsseiten-Shell und High-Level-Container. In Partner-Embeds sind der PC-Header und der Bottom-Market Ticker standardmäßig verborgen.
+
+```js
+display: {
+  showHeader: false,
+  showTicker: false,
+  hidden: ['chart', 'orderBook'],
+}
+```
+
+| Spielfeld | Typ | Default | Anmerkungen |
+| --- | --- | --- | --- |
+| showHeader | boolean | falsch | Ob man den PC-Embed-Header im iframe anzeigen soll. |
+| showTicker | boolean | falsch | Ob der Ticker des unteren Marktes in der Embed-Hülle angezeigt werden soll. |
+| Versteckt | String[] | [] | Versteckt High-Level-Container auf der Handelsseite. |
+
+Unterstützte `display.hidden` Werte:
+
+| Wert | Behälter |
+| --- | --- |
+| Chart | Kartencontainer |
+| orderBook | Bestellbuchcontainer |
+| orderForm | Bestellformular-Panel |
+| Positionen | Panel für untere Positionen und offene Bestellungen |
+| Bericht | Kontovermögensbehälter |
+
+`display.hidden` versteckt nur ganze Container. Es versteckt keine einzelnen Buttons, Felder oder Werkzeuge innerhalb eines Containers. Werte, die nicht auf das aktuelle Viewport abgebildet sind, werden ignoriert.
+
+<h2 id="events">Veranstaltungen</h2>
+
+| Veranstaltung | Auslöser |
+| --- | --- |
+| Bereit | iframe-Initialisierung abgeschlossen. |
+| Fehler | SDK, iframe oder Authentifizierungsfehler. |
+| state_changed | SDK Lebenszykluszustand hat sich geändert. |
+| auth_state_changed | Der Status der Partner-Token-Authentifizierung hat sich geändert. |
+| symbol_changed | Das tatsächliche iframe-Symbol wurde geändert. |
+| locale_changed | Der tatsächliche iframe-Standort wurde geändert. |
+| order_created | Der Benutzer erstellte eine Bestellung innerhalb des iframes. |
+| order_failed | Die Einreichung der Bestellung scheiterte. |
+| zerstört | SDK Instanz zerstört. |
+
+<h2 id="related-widget-guides">Verwandte Widget-Anleitungen</h2>
+
+- [Trading Widget Schnellstart](/de/sdk/trading-widget/quick-start)
+- [Authentifizierung](/de/sdk/trading-widget/authentication)
+- [Instanzmethoden](/de/sdk/trading-widget/instance-methods)
+- [Fehlersuche](/de/sdk/security/troubleshooting)

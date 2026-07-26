@@ -1,0 +1,94 @@
+---
+title: "Vermögensübertragung"
+description: "Erfahren Sie, wie Vermögenswerte zwischen Partnersystemen und 6MM Handelskonten übertragen werden, einschließlich Übertragungsverantwortlichkeiten, Statusabwicklung und Betriebsprüfungen."
+slug: trading/getting-started/asset-transfer
+canonical-url: https://docs.6mm.com/de/trading/getting-started/asset-transfer
+---
+
+6MM arbeitet nach einem von Partnern verwalteten Asset-Flow-Modell.
+
+6MM akzeptiert keine Direkteinzahlungen oder Auszahlungen von Endnutzern.
+
+Alle Zuflüsse und Abflüsse von Nutzergeldern werden ausschließlich von autorisierten Vertretern oder Partnerplattformen abgewickelt.
+
+Dieses Design sorgt für eine klare Trennung der finanziellen Verantwortung, des regulatorischen Umfangs und des Nutzereigentums zwischen 6MM und seinen Partnern.
+
+***
+
+<h2 id="partner-managed-deposits-and-withdrawals">Partnerverwaltete Ein- und Auszahlungen</h2>
+
+* Nutzer zahlen Gelder nur über die Partnerplattform ein und nehmen sie ab.
+* 6MM stellt den Endnutzern keine On-Chain- oder Off-Chain-Einzahlungsadressen zur Verfügung
+* 6MM verwahrt oder begleicht Benutzergelder nicht direkt außerhalb der Handelsausführung
+
+Partner bleiben voll verantwortlich für:
+
+* Benutzerbilanzverwaltung
+* Einzahlungs- und Auszahlungsabwicklung
+* Compliance- und Risikokontrollen im Zusammenhang mit der Verwahrung von Fonds
+
+***
+
+<h2 id="automated-balance-transfer-to-6mm">Automatisierte Saldoübertragung auf 6MM</h2>
+
+Um den Handel zu ermöglichen, können Nutzer einen Teil ihres vom Partner verwalteten Guthabens über einen automatisierten internen Transfermechanismus in 6MM übertragen.
+
+Zu den wichtigsten Merkmalen dieses Übertragungsprozesses gehören:
+
+* Übertragungen werden vom Partnersystem initiiert und genehmigt
+* Der Prozess wird automatisch auf Infrastrukturebene ausgeführt
+* Manuelle Benutzerinteraktion mit 6MM ist keine manuelle Interaktion mit  erforderlich.
+* Transfers erfolgen in Echtzeit oder nahezu in Echtzeit
+
+Aus Sicht des Nutzers wirkt dieser Prozess eher wie eine nahtlose Saldozuweisung als eine traditionelle Einzahlung.
+
+***
+
+<h2 id="account-structure-within-6mm">Kontostruktur innerhalb 6MM</h2>
+
+Innerhalb 6MMwerden übertragene Vermögenswerte logisch auf zwei verschiedene interne Konten verteilt:
+
+**Spot-Konto**
+
+* Dient als erstes Empfangskonto für überwiesene Gelder
+* Fungiert als Asset Pool für das interne Kapitalmanagement
+* Unterstützt keine direkte Handelsaktivitäten
+
+**Ewiges Konto**
+
+* Gelder werden vom Spot-Konto auf das Ewige Konto überwiesen
+* Nur Vermögenswerte im Ewigen Konto können für die Auftragsermittlung verwendet werden
+* Marge, Positionen und nicht realisiertes PnL werden auf diesem Niveau berechnet
+
+Diese zweischichtige Struktur ermöglicht präzise Kapitalisolation, Margeneffizienz und Risikokontrolle für den ewigen Handel.
+
+***
+
+<h2 id="internal-transfers-between-accounts">Interne Überweisungen zwischen Konten</h2>
+
+* Gelder, die auf das Spot-Konto überwiesen werden, können frei und sofort auf das Perpetual Account zugewiesen werden
+* Interne Überweisungen werden ohne Blockchain-Interaktion verarbeitet
+* Übertragungen sind darauf ausgelegt, latenzarm und deterministisch zu sein
+
+Diese Architektur gewährleistet eine reibungslose Kapitalbewegung und hält gleichzeitig eine strikte Trennung zwischen Vermögensverwahrung und Handelsausführung wahr.
+
+***
+
+<h2 id="design-principles">Konstruktionsprinzipien</h2>
+
+Das Vermögenstransfersystem von 6MM basiert auf folgenden Prinzipien:
+
+* Keine direkten Einzahlungen oder Auszahlungen des Nutzers bei 6MM
+* Alle Vermögensverwahrungen bleiben bei Partnerplattformen
+* Automatisierte, vom Partner autorisierte Fondsallokation
+* Klare Trennung zwischen Spot- und Perpetual-Konten
+* Optimiert für Handelseffizienz und Risikoisolation
+
+Durch dieses Modell agiert 6MM als reine Handelsinfrastrukturschicht, während die Partner die volle Kontrolle über Nutzergelder und finanzielle Beziehungen behalten.
+
+<h2 id="implementation-and-safety-guides">Implementierungs- und Sicherheitsleitfäden</h2>
+
+- [Agent SDK Übersicht](/de/sdk/agent-sdk/overview): Benutzerbindung, Übertragungen, Bestellanfragen und Abstimmung.
+- [Webhooks & Idempotenz](/de/sdk/security/webhooks-idempotency): Überprüfen Sie Endzustands-Callbacks und deduplizieren Wiederholungen.
+- [Partner Responsibility Matrix](/de/security-compliance/partner-responsibilities): Sorgerecht und betriebliches Eigentum.
+- [Risiko & Liquidationen](/de/trading/risk-and-liquidations): Verstehen Sie, wie die Zuteilung von Handelskonten das Risiko beeinflusst.

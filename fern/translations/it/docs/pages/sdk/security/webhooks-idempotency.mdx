@@ -1,0 +1,85 @@
+---
+title: "Verifica della firma Webhook e Idempotenza"
+subtitle: "Verifica i webhook 6MM Agent con il corpo grezzo della richiesta e procedi a ripetizioni, timeout ed eventi ripetuti senza azioni aziendali duplicate."
+slug: sdk/security/webhooks-idempotency
+canonical-url: https://docs.6mm.com/it/sdk/security/webhooks-idempotency
+---
+
+I Webhook notificano un backend partner riguardo ai cambiamenti asincroni dello stato aziendale. Poiché la consegna può essere riprovata, ogni ricevente deve verificare la firma prima di analizzare i dati affidabili e deve elaborare l'evento in modo idempotente.
+
+<h2 id="webhook-headers">Header Webhook</h2>
+
+| Intestazione | Descrizione |
+| --- | --- |
+| X-Agente-Timestamp | Timestamp Unix in pochi secondi. |
+| X-Agente-Nonce | Protezione contro le rigiocazioni. |
+| X-Agente-Firma | HMAC-SHA256 firma. |
+
+```text
+timestamp + nonce + rawBody
+```
+
+Usa il corpo della richiesta grezzo esatto ricevuto su HTTP quando ricostruisci il valore firmato. Parsing e riserializzazione JSON prima può cambiare l'ordine degli spazi bianchi o dei campi e produrre una firma diversa.
+
+<h2 id="verification-flow">Flusso di verifica</h2>
+
+1. Leggere i timestamp, nonce e le intestazioni signature.
+2. Cattura il corpo grezzo della richiesta non modificato.
+3. Costruisci `timestamp + nonce + rawBody`.
+4. Calcola HMAC-SHA256 con il partner API segreto.
+5. Confrontare le firme calcolate e ricevute utilizzando un confronto a tempo costante.
+6. Applicare i controlli approvati di freschezza e nonce-riutilizzo.
+7. Parizzare ed elaborare l'evento solo dopo che la verifica è stata riuscita a verificare.
+
+Quando è disponibile un verificatore ufficiale Agent SDK , usalo invece di mantenere un codice di firma indipendente.
+
+<h2 id="order-idempotency">Idempotenza dell'ordine</h2>
+
+| Caso | Comportamento |
+| --- | --- |
+| Richiesta iniziale di trasferimento | Crea un agentOrderNounico a livello globale. |
+| HTTP timeout | Consulta la agentOrderNo originale prima di crearne una nuova. |
+| PROCESSING risposta | Aspetta lo stato del webhook o dell'ordine di interrogazione. |
+| Webhook ripetuto | Deduplica tramite chiave di idempotenza e stato finale. |
+
+<h2 id="recommended-idempotency-record">Record di idempotenza raccomandato</h2>
+
+Memorizza abbastanza informazioni per riconoscere una consegna ripetuta e recuperare in sicurezza:
+
+| Campo | Scopo |
+| --- | --- |
+| Chiave dell'evento o dell'azienda | Identifica in modo univoco la notifica o l'operazione. |
+| Numero d'ordine partner | Collega l'evento alla richiesta originale. |
+| Hash del payload | Aiuta a identificare carichi utili ripetuti in conflitto. |
+| Stato attuale di elaborazione | Distingue il lavoro ricevuto, elaborato, riuscito e fallito. |
+| Stato aziendale finale | Impedisce che un'azione terminale venga applicata due volte. |
+| Timestamp elaborato | Supporta le politiche di indagine e mantenimento. |
+
+Effettua commit del record di cambiamento aziendale e di idempotenza nella stessa transazione dove possibile. Un evento ripetuto dovrebbe restituire il risultato già noto invece di applicare nuovamente il saldo, l'ordine o la modifica dell'utente.
+
+<h2 id="timeout-and-retry-rule">Regola del timeout e del ritentativo</h2>
+
+Un timeout HTTP non dimostra che la richiesta originale è fallita. Interroga l'operazione usando il `agentOrderNo`originale, oppure attendi il suo webhook, prima di decidere se sia necessaria un'altra azione. Creare un nuovo numero di ordine aziendale dopo ogni timeout può causare movimenti duplicati del fondo.
+
+<h2 id="production-checklist">Elenco di controllo della produzione</h2>
+
+- Verificare la firma prima di JSON analisi o elaborazione aziendale.
+- Preservare il corpo grezzo indipendentemente dal carico utile analizzato.
+- Rifiutare richieste obsolete o rigiocate secondo la politica di integrazione approvata.
+- Rendere l'elaborazione degli eventi sicura per consegne ripetute e fuori ordine.
+- Registra gli ID degli eventi, i numeri d'ordine dei partner, il risultato di elaborazione e il tempo della richiesta.
+- Oscurare segreti e valori di firma da log e allegati di supporto.
+
+<h2 id="related-docs">Documentazione correlata</h2>
+
+<CardGroup cols={3}>
+<Card title="Segreti e HMAC Firma" icon="fa-duotone fa-shield-keyhole" href="/it/sdk/security/secrets-signing">
+Proteggi il segreto API usato per la verifica delle richieste e dei webhook.
+</Card>
+<Card title="Agent SDK Panoramica" icon="fa-duotone fa-server" href="/it/sdk/agent-sdk/overview">
+Rivedi l'intero flusso di lavoro di integrazione backend.
+</Card>
+<Card title="SDK Risoluzione dei problemi" icon="fa-duotone fa-screwdriver-wrench" href="/it/sdk/security/troubleshooting">
+Indagare su firme rifiutate, eventi ripetuti e operazioni in sospeso.
+</Card>
+</CardGroup>

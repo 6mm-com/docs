@@ -1,0 +1,128 @@
+---
+title: "API Key Management"
+description: "Erstelle, inspizieren, aktualisieren und widerrufe 6MM API Schlüssel, während entsprechende Berechtigungen, IP Einschränkungen, geheime Speicherung und Rotationspraktiken angewendet werden."
+slug: developer-api/api-key-management
+canonical-url: https://docs.6mm.com/de/developer-api/api-key-management
+---
+
+API Key Management-Endpunkte akzeptieren nur JWT Authentifizierung.
+
+<h2 id="create-api-key">Erstellen Sie API Key</h2>
+
+```http
+POST /v1/private/user/api-key/create
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+Anfrageparameter:
+
+| Parameter     | Typ      | Erforderlich | Beschreibung                                                           |
+| ------------- | --------- | -------- | --------------------------------------------------------------------- |
+| `label`       | string    | Ja      | API Key Label, Länge 1 - 64                                          |
+| `permissions` | Int       | Nein       | Berechtigungs-Bitmaske, Standard- `1`, Reichweite `1` - `7`                      |
+| `ipWhitelist` | String\[] | Nein       | IP Whitelist bis zu 20 Einträge. Wenn ausgelassen, ist die Quelle IP unbeschränkt |
+
+Beispiel für eine Anfrage:
+
+```bash
+curl -X POST https://api.6mm.com/v1/private/user/api-key/create \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -d '{
+    "label": "external-service-prod",
+    "permissions": 3,
+    "ipWhitelist": ["203.0.113.10"]
+  }'
+```
+
+Antwortbeispiel:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "apiKey": "fx_xxxxxxxxxxxxxxxxxxxxxxxx",
+    "apiSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  },
+  "requestId": "req-api-key"
+}
+```
+
+`apiSecret` wird nur einmal zurückgegeben, wenn das API Key erstellt wird. Speichern Sie es sofort in einem Geheimmanagementsystem. Schreiben Sie es nicht in Quellcode-Repositories oder Protokolle.
+
+Jeder Nutzer kann bis zu 30 API Keys erstellen.
+
+<h2 id="list-api-keys">Liste API Schlüssel</h2>
+
+```http
+GET /v1/private/user/api-key/list
+Authorization: Bearer YOUR_ACCESS_TOKEN
+```
+
+Antwortfelder:
+
+| Spielfeld                | Typ      | Beschreibung                       |
+| -------------------- | --------- | --------------------------------- |
+| `list[].id`          | string    | API Key ID                        |
+| `list[].label`       | string    | Label                             |
+| `list[].apiKey`      | string    | Öffentliche API Key -Kennung         |
+| `list[].permissions` | Int       | Erlaubnis-Bitmask                |
+| `list[].ipWhitelist` | String\[] | IP Whitelist                      |
+| `list[].status`      | Int       | Status: `1` aktiviert, `0` deaktiviert |
+| `list[].lastUsedAt`  | int64     | Letzte verwendete Zeit                    |
+| `list[].createdAt`   | int64     | Entstehungszeit                     |
+
+<h2 id="update-api-key">Update API Key</h2>
+
+```http
+PUT /v1/private/user/api-key/update
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+Anfrageparameter:
+
+| Parameter     | Typ      | Erforderlich | Beschreibung               |
+| ------------- | --------- | -------- | ------------------------- |
+| `id`          | string    | Ja      | API Key ID                |
+| `label`       | string    | Nein       | Neues Label                 |
+| `permissions` | Int       | Nein       | Neue Berechtigungs-Bitmaske    |
+| `ipWhitelist` | String\[] | Nein       | Weißliste für neue IP          |
+| `status`      | Int       | Nein       | `1` aktiviert, `0` deaktiviert |
+
+<h2 id="delete-api-key">Lösche API Key</h2>
+
+```http
+POST /v1/private/user/api-key/delete
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+Antragstext:
+
+```json
+{ "id": "1001" }
+```
+
+<h2 id="delete-all-api-keys">Alle API Schlüssel löschen</h2>
+
+```http
+POST /v1/private/user/api-key/delete-all
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+Antwortfelder:
+
+| Spielfeld     | Typ  | Beschreibung                |
+| --------- | ----- | -------------------------- |
+| `deleted` | int64 | Anzahl der gelöschten API Schlüssel |
+
+<h2 id="related-security-guides">Verwandte Sicherheitsleitfäden</h2>
+
+- [Authentifizierung](/de/developer-api/authentication)
+- [Unterschrift für Anfrage](/de/developer-api/request-signing)
+- [Geheimnisse & Unterschriften](/de/sdk/security/secrets-signing)
+- [Integrationsempfehlungen](/de/developer-api/integration-recommendations)

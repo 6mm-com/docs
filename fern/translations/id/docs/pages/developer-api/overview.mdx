@@ -1,0 +1,44 @@
+---
+title: "6MM Pengembang API"
+subtitle: "Rencanakan integrasi 6MM API antar lingkungan, autentikasi, penandatanganan, REST APIs, WebSocket stream, dan pemecahan masalah."
+slug: developer-api/overview
+canonical-url: https://docs.6mm.com/id/developer-api/overview
+---
+
+Bagian Pengembang ditujukan untuk insinyur backend dan tim platform yang langsung berintegrasi dengan 6MM APIs. Dokumen ini menjelaskan konvensi, model keamanan, sumber daya REST , saluran streaming, dan pemeriksaan operasional yang diperlukan sebelum penggunaan produksi.
+
+<h2 id="recommended-integration-path">Jalur integrasi yang direkomendasikan</h2>
+
+<CardGroup cols={2}>
+<Card title="Ikhtisar Integrasi" icon="fa-duotone fa-diagram-project" href="/id/developer-api/integration-overview">
+Pahami model akses API dan urutan koneksi yang direkomendasikan.
+</Card>
+<Card title="Lingkungan & Konvensi" icon="fa-duotone fa-server" href="/id/developer-api/environments-and-common-conventions">
+Tinjau URL dasar, cap waktu, bidang numerik, dan format respons.
+</Card>
+<Card title="Autentikasi & Penandatanganan" icon="fa-duotone fa-shield-keyhole" href="/id/developer-api/request-signing">
+Siapkan akses JWT , kunci API , dan tanda tangan HMAC .
+</Card>
+<Card title="REST API" icon="fa-duotone fa-brackets-curly" href="/id/developer-api/rest-api">
+Jelajahi titik akhir data akun, pesanan, posisi, dan pasar.
+</Card>
+</CardGroup>
+
+<h2 id="documentation-areas">Area dokumentasi</h2>
+
+| Luas | Apa yang dibahas |
+| --- | --- |
+| Pengaturan integrasi | Alamat layanan, konvensi permintaan, bentuk respons, dan mode akses. |
+| Autentikasi & keamanan | JWT, izin API Key , penandatanganan HMAC , perlindungan replay, dan sinkronisasi waktu. |
+| REST API | Endpoint publik, data pengguna/akun, pesanan, posisi, dan data pasar. |
+| WebSocket | Siklus hidup koneksi, aliran pasar publik, dan aliran pengguna pribadi. |
+| Referensi & pemecahan masalah | Enum, kode kesalahan, dan rekomendasi integrasi praktis. |
+
+<h2 id="production-checklist">Daftar periksa produksi</h2>
+
+- Simpan rahasia API hanya di backend.
+- Sinkronkan waktu server sebelum permintaan yang ditandatangani.
+- Perlakukan semua bidang presisi numerik sebagai string kecuali halaman secara eksplisit menyatakan sebaliknya.
+- Gunakan idempotensi, ID permintaan, dan log terstruktur seputar alur pesanan.
+- Berlangganan aliran WebSocket untuk status yang harus tetap terkini dalam sistem operasional.
+- Tinjau kode kesalahan dan mencoba ulang perilaku sebelum peluncuran.

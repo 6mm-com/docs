@@ -1,0 +1,56 @@
+---
+title: "Crea Embed Token"
+subtitle: "Emettete token embed di breve durata per Trading Widget modalità partner-token."
+slug: sdk/agent-sdk/java/embed-token
+canonical-url: https://docs.6mm.com/it/sdk/agent-sdk/java/embed-token
+---
+
+<h2 id="sdk-call">SDK chiamata</h2>
+
+Crea token embed dal tuo backend dopo aver validato la sessione utente partner. Il browser dovrebbe chiamare il tuo endpoint, e il tuo endpoint dovrebbe chiamare 6MM tramite il Agent SDK.
+
+```java
+CreateEmbedTokenResponse resp = client.createEmbedToken(
+        CreateEmbedTokenRequest.of("agent-user-001", "tw_abc123")
+                .withSymbol("ETHUSDT"));
+
+System.out.println(resp.embedToken);
+System.out.println(resp.expireAt);
+```
+
+> **Accreditazione una tantum**
+>
+> embedToken è di breve durata e usa una tantum. Non inserirlo in una stringa di query URL .
+
+<h2 id="backend-endpoint-example">Esempio di endpoint backend</h2>
+
+```java
+@PostMapping("/api/trading/embed-token")
+public EmbedTokenView createEmbedToken(@RequestBody EmbedTokenRequest request,
+                                       PartnerSession session) {
+    String agentUserId = session.getAgentUserId();
+    CreateEmbedTokenResponse resp = agentClient.createEmbedToken(
+            CreateEmbedTokenRequest.of(agentUserId, request.getChannelId())
+                    .withSymbol(request.getSymbol()));
+
+    return new EmbedTokenView(resp.embedToken, resp.expireAt, request.getChannelId());
+}
+```
+
+Restituisci solo i campi necessari al fornitore Trading Widget token. Non restituire apiSecret, campi di firma grezzi o configurazione interna del servizio.
+
+<h2 id="failure-handling">Gestione dei guasti</h2>
+
+| Condizioni | Manipolazione consigliata |
+| --- | --- |
+| La sessione utente è mancante o scaduta | Restituisci il 401 dall'endpoint partner e chiedi all'utente di accedere di nuovo. |
+| L'utente agente non è vincolato | Assegna prima l'utente, poi riprova a creare il token. |
+| 6MM restituisce un errore temporaneo | Restituisci un errore riprovabile al frontend e registra requestId per il supporto. |
+| channelId non corrisponde all'istanza del widget | Rifiuta la richiesta e ricrea la sessione del widget. |
+
+<h2 id="related-documentation">Documentazione correlata</h2>
+
+- [Trading Widget Autenticazione](/it/sdk/trading-widget/authentication): collega `tokenProvider` al punto finale partner.
+- [Java Avvio Rapido](/it/sdk/agent-sdk/java/quick-start): installare e inizializzare `AgentClient`.
+- [Segreti e Firma](/it/sdk/security/secrets-signing): proteggi l'Agente API segreto.
+- [Webhook & Idempotency](/it/sdk/security/webhooks-idempotency): protegge il lato callback dell'integrazione.

@@ -1,0 +1,42 @@
+---
+title: "Recommandations d’intégration"
+description: "Appliquez les pratiques 6MM recommandées pour l’authentification, les tentatives, l’idempotence, la journalisation, la gestion des tarifs, la surveillance, la sécurité et la préparation au lancement."
+slug: developer-api/integration-recommendations
+canonical-url: https://docs.6mm.com/fr/developer-api/integration-recommendations
+---
+
+Utilisez ces recommandations comme base de préparation à la production. Elles complètent la référence du point de terminaison et aident les intégrations à récupérer en toute sécurité après les délais d’attente, les reconnexions, les demandes de doublons et les incidents de crédentiels.
+
+<h2 id="authentication-and-secrets">Authentification et secrets</h2>
+
+- Préfère [API Key signature](/fr/developer-api/authentication) pour les programmes de trading côté serveur et JWT pour les actions frontend pilotées par l’utilisateur.
+- Conserver `apiSecret` en gestion des secrets en arrière-plan. Il n’est affiché qu’une seule fois et ne doit jamais être envoyé à un navigateur ou un client mobile.
+- Appliquer le minimum requis API Key autorisations et restreindre les IP sources lorsque l’environnement d’intégration prend en charge des adresses de sortie stables.
+- Désactiver ou supprimer immédiatement une clé fuitée, puis examiner les journaux de requêtes avant d’en émettre un remplacement.
+
+<h2 id="request-validation-and-idempotency">Validation des requêtes et idempotence</h2>
+
+- Avant de passer des ordres, interrogez `/v1/public/market/symbols` et validez localement `tickSize`, `stepSize`, valeur notionnelle minimale et quantité maximale.
+- Générer un `clientOrderId` unique pour chaque écriture d’ordre afin que les requêtes puissent être rapprochées après une déconnexion.
+- Préserver l’identifiant original lorsqu’un résultat HTTP est incertain. Interroger l’ordre existant avant de créer une demande de remplacement.
+- Considérer les quantités décimales et les prix comme des chaînes ou des types décimaux, et non comme des valeurs en virgule flottante binaires.
+
+<h2 id="order-and-websocket-state">Ordre et WebSocket État</h2>
+
+- Déterminer l’état final après les opérations d’annulation, d’annulation ou d’amendement à partir d’événements de WebSocket privés](/fr/developer-api/websocket/private-user-channel) ou d’une requête REST .
+- Traiter chaque reconnexion comme une nouvelle session WebSocket et restaurer tous les abonnements nécessaires.
+- Vérifier la continuité du carnet d’ordres avec `endVersion`. Si un trou de version apparaît, supprimer le livre local et se réabonner pour obtenir un instantané neuf.
+- Dédupliquer les événements privés d’ordre et de compte avant de les appliquer aux soldes, positions ou enregistrements partenaires.
+
+<h2 id="logging-monitoring-and-retries">Enregistrement, surveillance et réessais</h2>
+
+- Enregistrer l’ID de requête, l’ID de commande client, le statut HTTP , API code métier, la latence et le nombre de retentatives sans enregistrer les secrets ni les jetons complets.
+- Opérations de réessai seulement documentées comme sûres, utilisant un retour exponentiel borné et un jitter.
+- Alerte en cas d’échecs d’authentification, d’erreurs de signature, de réponses de limite de débit, de boucles de reconnexion WebSocket , de lacunes de séquence et de différences de rapprochement d’ordre.
+- Garder les horloges des serveurs synchronisées car l’authentification et la signature dépendent des horodatages.
+
+<h2 id="before-production">Avant la production</h2>
+
+- Exercice de délais d’expiration, demande de doublon, reconnexion, rotation de clé et réessai webhook dans un environnement non production.
+- Attribuer les propriétaires pour la rotation des identifiants, les incidents de trading, les défaillances de webhooks et la réconciliation.
+- Compléter la [checklist de lancement en production](/fr/resources/production-launch-checklist) et utiliser le [support request template](/fr/resources/support-request-template) lorsque l’escalade est nécessaire.

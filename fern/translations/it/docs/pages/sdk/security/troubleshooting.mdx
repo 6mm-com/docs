@@ -1,0 +1,68 @@
+---
+title: "SDK Risoluzione dei problemi di integrazione"
+subtitle: "Diagnostica problemi di Trading Widget, Agent SDK, firma, webhook, timeout e ambiente prima di escalare una richiesta di supporto."
+slug: sdk/security/troubleshooting
+canonical-url: https://docs.6mm.com/it/sdk/security/troubleshooting
+---
+
+Inizia dall'ambiente, dall'ora e dall'identificatore aziendale per l'operazione fallita. Un controllo strutturato di solito separa i problemi di configurazione da quelli di autenticazione, di rete e di elaborazione asincrona.
+
+<h2 id="diagnostic-order">Ordine diagnostico raccomandato</h2>
+
+1. Confermare l'ambiente e la URLdi base interessati.
+2. Registra l'intervallo di tempo UTC e la prima richiesta fallita.
+3. Identifica il modulo: Trading Widget, Agent SDK, REST API, WebSocketo webhook.
+4. Cattura l'ID richiesta, l'ID utente partner, `agentOrderNo`, l'ID ordine o l'ID evento webhook.
+5. Controlla codice, credenziali, whitelist IP o modifiche al deployment.
+6. Riprodurre con il caso di prova più piccolo e sicuro.
+
+<h2 id="trading-widget-issues">Trading Widget problemi</h2>
+
+| Sintomo | Causa probabile | Fissaggio |
+| --- | --- | --- |
+| iframe richiede il dominio locale partner | baseUrl manca | Passo baseUrl: 'https://app.6mm.com'. |
+| iframe è invisibile o molto corto | Il contenitore genitore non ha altezza | Imposta l'altezza del contenitore o l'altezza del passaggio. |
+| token_provider_missing | La modalità partner-token non ha un provider | Aggiungi autenticazionetokenProvider. |
+| auth_exchange_failed | Token embed invalido, scaduto o non corrispondente | Controlla la risposta del token backend e channelId. |
+
+<h2 id="agent-sdk-issues">Agent SDK problemi</h2>
+
+| Sintomo | Causa probabile | Fissaggio |
+| --- | --- | --- |
+| Firma respinta | Segreto sbagliato, deriva di clock o cambiato manualmente i campi firmati | Lascia SDK generare campi di firma e sincronizzare il tempo del server. |
+| Rischio di movimento di fondi duplicati | Nuovo numero d'ordine usato dopo il timeout | Prima invia la query per agentOrderNo originale. |
+| PROCESSING trattato come fallimento | Stato in attesa frainteso | Aspetta il webhook o chiama queryOrder. |
+| Webhook elaborato più volte | Comportamento di riprova senza idempotenza | Aggiungi la chiave di idempotenza e i controlli di stato finale. |
+
+<h2 id="evidence-to-capture">Prove da catturare</h2>
+
+| Integrazione | Prove utili |
+| --- | --- |
+| Trading Widget | Pagina URL, percorso SDK versione, console browser, richieste di rete fallite, payload `onError` e dimensioni del container. |
+| Agent SDK | SDK lingua/versione, URLbase, UTC timestamp, ID richiesta, `agentOrderNo`, codice di risposta e log sanificati. |
+| Webhook | Tempo di consegna, chiave di evento o business, risultato di validazione della firma, stato di elaborazione e hash del corpo grezzo sanitizzato. |
+| REST API | Metodo, percorso, ambiente, ID richiesta, codice di risposta e parametri sanificati. |
+
+Non includere mai password, token di accesso, API segreti, firme complete, chiavi private o dati personali non oscurati nelle diagnostiche.
+
+<h2 id="before-escalating">Prima di degenerare</h2>
+
+- Ritentare solo quando l'operazione è documentata come sicura da riprovare.
+- Dopo un timeout, interrogare l'identificativo originale dell'azienda invece di crearne uno nuovo.
+- Confermare l'orologio di sistema e l'ambiente delle credenziali per errori di firma.
+- Conservare il primo fallimento e eventuali risultati di ritenti successivi.
+- Utilizzare il [Modello di Richiesta di Supporto](/it/resources/support-request-template) per inviare un report completo e oscurato.
+
+<h2 id="related-docs">Documentazione correlata</h2>
+
+<CardGroup cols={3}>
+<Card title="Trading Widget Avvio rapido" icon="fa-duotone fa-chart-line" href="/it/sdk/trading-widget/quick-start">
+Verifica il caricamento degli script, la dimensione del container, la configurazione e i callback.
+</Card>
+<Card title="Segreti e firma" icon="fa-duotone fa-shield-keyhole" href="/it/sdk/security/secrets-signing">
+Controlla Agent SDK credenziali, orologi e campi firmati.
+</Card>
+<Card title="Ragazzi e Idempotenza" icon="fa-duotone fa-webhook" href="/it/sdk/security/webhooks-idempotency">
+Rivedi la verifica del callback e la gestione degli eventi duplicati.
+</Card>
+</CardGroup>

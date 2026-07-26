@@ -1,0 +1,84 @@
+---
+title: "WebSocket 公開市場データチャネル"
+description: "6MM注文帳、トレード、ローソク、ティッカーデータを、サブスクリプションと再接続のガイダンス付きで公開WebSocketチャネルを通じてストリーミングできます。"
+slug: developer-api/websocket/public-market-channels
+canonical-url: https://docs.6mm.com/ja/developer-api/websocket/public-market-channels
+---
+
+アプリケーションが継続的に価格、取引、ローグソードルスティック、または注文帳の深さを繰り返しポーリングすることなく、パブリックマーケットチャネル REST 利用してください。これらのストリームは、取引画面、価格表示、アラート、市場監視をサポートできます。
+
+<h2 id="connection-url">接続 URL</h2>
+
+```
+wss://ws.6mm.com/ws
+```
+
+パブリック WebSocket 認証は必要ありません。
+
+接続ライフサイクル、アンサブスクライブ、ping、再接続の動作については、こちらをご覧ください [コネクション、サブスクリプション、そしてハートビート](/ja/developer-api/websocket/connection-subscription-and-heartbeat).
+
+<h2 id="common-channels">共通チャンネル</h2>
+
+| チャンネル                            | 概要                                                        |
+| ---------------------------------- | ------------------------------------------------------------------ |
+| `market.depth.{symbol}`            | ブックの深さを注文します。まずスナップショットを送信し、その後に段階的な更新を行います |
+| `market.trade.{symbol}`            | 最新取引                                                      |
+| `market.kline.{symbol}.{interval}` | クラインズ                                                             |
+| `market.ticker.{symbol}`           | 単一シンボルのティッカー概要                                       |
+| `market.tickers`                   | 全記号ティッカー概要                                          |
+
+<h2 id="choose-a-channel">チャンネルを選びましょう</h2>
+
+| アプリケーションニーズ | チャンネル |
+| --- | --- |
+| 注文帳を作成または維持する | `market.depth.{symbol}` |
+| ライブトレードフィードを表示する | `market.trade.{symbol}` |
+| ろうそくチャートを描いてください | `market.kline.{symbol}.{interval}` |
+| 市場概要を1つ表示 | `market.ticker.{symbol}` |
+| 市場全体像を把握しましょう | `market.tickers` |
+
+<h2 id="subscription-example">サブスクリプションの例</h2>
+
+```json
+{ "id": "1772007814666", "op": "subscribe", "args": ["market.depth.BTCUSDT"] }
+```
+
+<h2 id="push-message-wrapper">プッシュメッセージラッパー</h2>
+
+```json
+{
+  "topic": "market.depth.BTCUSDT",
+  "event": "data",
+  "ts": 1772007815000,
+  "data": {}
+}
+```
+
+`topic`を使って各メッセージを正しいハンドラーにルーティングし、`ts`で配信タイミングを観察します。`data`オブジェクトには加入チャネルのペイロードが含まれています。
+
+<h2 id="order-book-handling">受注帳処理</h2>
+
+深度チャネルはまずスナップショットを送信し、その後に増分更新を行います。更新を適用する前にスナップショットからローカルブックを初期化してください。再接続後、新しいセッションを作成し、再度サブスクライブして、古いメモリ状態から続けるのではなく、次のスナップショットからローカルブックを再構築します。
+
+<h2 id="production-recommendations">制作推奨事項</h2>
+
+- すべての購読、解約、pingリクエストごとに一意の `id` を生成する。
+- チャンネルをアクティブとして扱う前に、購読確認を確認しましょう。
+- 再接続後、必要なトピックをすべて再登録してください。
+- ネットワークの読み取りを遅いデータベースやUI処理と分けて行う。
+- 切断頻度、メッセージ処理遅延、不完全なペイロードの監視。
+- 用途 [プライベートユーザーチャネル](/ja/developer-api/websocket/private-user-channel) 認証済みアカウントや注文の更新情報。
+
+<h2 id="related-api-docs">関連文書API</h2>
+
+<CardGroup cols={3}>
+<Card title="WebSocket 概要" icon="fa-duotone fa-wave-pulse" href="/ja/developer-api/websocket">
+パブリックとプライベートストリーミングのどちらかを選びましょう。
+</Card>
+<Card title="コネクションとハートビート" icon="fa-duotone fa-heart-pulse" href="/ja/developer-api/websocket/connection-subscription-and-heartbeat">
+購読解除、ping、再接続の処理を実装してください。
+</Card>
+<Card title="REST 市場データ" icon="fa-duotone fa-chart-line" href="/ja/developer-api/rest-api/market-data">
+リクエストベースの市場データをストリーミングチャンネルと併用しましょう。
+</Card>
+</CardGroup>

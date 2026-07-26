@@ -1,0 +1,73 @@
+---
+title: "JavaとPHP6MM Agent SDK"
+subtitle: "パートナーバックエンドサービスからの署名済みエージェント API コール、ユーザーバインディング、転送、エントリーURL、ウェブフック検証を統合します。"
+slug: sdk/agent-sdk/overview
+canonical-url: https://docs.6mm.com/ja/sdk/agent-sdk/overview
+---
+
+この 6MM Agent SDK は、署名やリクエスト処理を一から実装せずに特権エージェント APIs を呼び出す必要があるパートナーバックエンドサービス向けです。統合はパートナー API シークレットを使用するため、ブラウザ、モバイル、公開デスクトップコードで動作してはなりません。
+
+<h2 id="when-to-use-the-agent-sdk">いつAgent SDKを使うべきか</h2>
+
+バックエンドがパートナーユーザーのバインド、承認されたワークフローを通じて資産を移動する、取引記録の照会、埋め込み取引エントリーURLの作成、ウェブフック通知の検証などが必要なときにAgent SDKを活用しましょう。以下の [Trading Widget SDK](/ja/sdk/trading-widget/overview) パートナーフロントエンドが取引インターフェースを表示する必要がある場合は別々に。
+
+<h2 id="capabilities">機能</h2>
+
+| シナリオ | Java SDK | PHP SDK |
+| --- | --- | --- |
+| バインドユーザー | サポート | サポート |
+| 固定額の移転 | サポート | サポート |
+| 全員転送 | サポート | サポート |
+| 逆転送 | サポート | サポート |
+| クエリの順序 | サポート | サポート |
+| エントリーURL作成 | サポート | サポート |
+| ウェブフック検証 | サポート | サポート |
+
+<h2 id="common-configuration">一般的な構成</h2>
+
+| キー | 例 | 概要 |
+| --- | --- | --- |
+| baseUrl | `https://agent-api.6mm.com` | 6MM エージェント API サービス URL トレーリングスラッシュなしで。 |
+| agentCode | AGENT001 | パートナーエージェントコード。 |
+| apiSecret | your-api-secret | API 署名の秘密はバックエンドにのみ保存されます。 |
+| defaultCurrency | USDT | 送金および口座 APIsのデフォルト通貨。 |
+| webhookUrl | https://partner.example.com/6mm/webhook | 6MMウェブフック通知のためのパートナーエンドポイント。 |
+
+<h2 id="typical-integration-flow">典型的な積分フロー</h2>
+
+1. パートナーのフロントエンドがパートナー自身のアカウントシステムを通じてユーザーを認証します。
+2. パートナーバックエンドはユーザーを安定したパートナー側識別子にマッピングします。
+3. バックエンドは、`agentCode`と保護されたAPIを秘密にするAgent SDKを呼び出します。
+4. SDK が署名し、エージェントにリクエスト API 送る。
+5. バックエンドは返還されたビジネス識別子を保存し、後でウェブフックを冪等的に処理します。
+6. フロントエンドは必要な短命な結果またはエントリー認証のみを受け取ります。
+
+<h2 id="choose-an-sdk">SDKを選んでください</h2>
+
+| バックエンドスタック | ここから始めましょう |
+| --- | --- |
+| Java | [Java SDK 概要](/ja/sdk/agent-sdk/java/overview) および [Java クイックスタート](/ja/sdk/agent-sdk/java/quick-start) |
+| PHP | [PHP SDK 概要](/ja/sdk/agent-sdk/php/overview) および [PHP クイックスタート](/ja/sdk/agent-sdk/php/quick-start) |
+
+<h2 id="production-checklist">生産チェックリスト</h2>
+
+- `apiSecret` をソースコードではなくバックエンドのシークレットマネージャから読み込む。
+- 開発、ステージング、制作の資格を分けておくこと。
+- 安定したパートナーユーザーマッピングと一意のビジネスオーダー識別子を使用すること。
+- タイムアウトリクエストのステータスを確認する際に元の識別子を保持すること。
+- ウェブフック署名の検証と処理済みイベントIDの保存。
+- ログからの秘密情報や署名を黒塗りしつつ、サポートのためにリクエストIDを保持すること。
+
+<h2 id="next-steps">今後のステップ</h2>
+
+<CardGroup cols={3}>
+<Card title="Java クイックスタート" icon="fa-brands fa-java" href="/ja/sdk/agent-sdk/java/quick-start">
+JavaバックエンドでAgent SDKをインストールして初期化してください。
+</Card>
+<Card title="PHP クイックスタート" icon="fa-brands fa-php" href="/ja/sdk/agent-sdk/php/quick-start">
+PHPバックエンドでAgent SDKをインストールして初期化してください。
+</Card>
+<Card title="ウェブフックと冪等性" icon="fa-duotone fa-webhook" href="/ja/sdk/security/webhooks-idempotency">
+コールバックを確認し、重複したビジネス処理を防いでいます。
+</Card>
+</CardGroup>

@@ -1,0 +1,141 @@
+---
+title: "Позиція"
+description: "Використовуйте 6MM кінцеві точки позицій для запиту відкритих позицій, деталей маржі, кредитного плеча, нереалізованих прибутків і збитків, а також операцій, пов'язаних із позиціями."
+slug: developer-api/rest-api/position
+canonical-url: https://docs.6mm.com/uk/developer-api/rest-api/position
+---
+
+> **Примітка**
+>
+> Кінцеві точки позиції потребують дозволу на торгівлю.
+
+<h2 id="set-leverage">Важіль для набору</h2>
+
+```http
+POST /v1/private/position/leverage
+Content-Type: application/json
+```
+
+Тіло запиту:
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "leverage": 20
+}
+```
+
+Поля відповіді:
+
+| Поле       | Тип   | Опис |
+| ----------- | ------ | ----------- |
+| `symbol`    | string | Символ      |
+| `leverage`  | int32  | Важіль    |
+| `timestamp` | int64  | Часова мітка   |
+
+<h2 id="set-margin-mode">Режим налаштування поля</h2>
+
+```http
+POST /v1/private/position/margin-mode
+Content-Type: application/json
+```
+
+Тіло запиту:
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "marginMode": 1
+}
+```
+
+`marginMode`: `1` хрест, `2` ізольований.
+
+<h2 id="position-settings">Налаштування позиції</h2>
+
+```http
+GET /v1/private/position/settings?symbol=BTCUSDT
+```
+
+Поля відповіді:
+
+| Поле        | Тип   | Опис             |
+| ------------ | ------ | ----------------------- |
+| `symbol`     | string | Символ                  |
+| `marginMode` | int32  | `1` схрестя, `2` ізольована |
+| `leverage`   | int32  | Важіль                |
+
+<h2 id="current-positions">Поточні посади</h2>
+
+```http
+GET /v1/private/position/positions?symbol=BTCUSDT
+```
+
+Параметри запиту:
+
+| Параметр | Тип   | Обов'язкове | Опис |
+| --------- | ------ | -------- | ----------- |
+| `symbol`  | string | Ні       | Символ      |
+
+Поля відповіді:
+
+| Поле                         | Тип   | Опис                |
+| ----------------------------- | ------ | -------------------------- |
+| `positions[].symbol`          | string | Символ                     |
+| `positions[].marginMode`      | string | Режим margin                |
+| `positions[].positionSide`    | string | Позиція              |
+| `positions[].leverage`        | int32  | Важіль                   |
+| `positions[].quantity`        | string | Кількість позицій          |
+| `positions[].entryPrice`      | string | Вартість входу                |
+| `positions[].breakEvenPrice`  | string | Ціна на беззбитковість           |
+| `positions[].liqPrice`        | string | Ціна ліквідації          |
+| `positions[].marginRatio`     | string | Коефіцієнт маржі               |
+| `positions[].unrealizedPnl`   | string | Нереалізований PnL             |
+| `positions[].roe`             | string | Рентабельність власного капіталу           |
+| `positions[].nextFundingFee`  | string | Орієнтовна наступна плата за фінансування |
+| `positions[].fundingFeeAccum` | string | Накопичена плата за фінансування    |
+| `positions[].tpPrice`         | string | Ціна take-profit          |
+| `positions[].slPrice`         | string | Стоп-лосс ціна            |
+
+<h2 id="position-history">Історія посади</h2>
+
+```http
+GET /v1/private/position/history?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+Параметри запиту:
+
+| Параметр   | Тип   | Обов'язкове | Опис                  |
+| ----------- | ------ | -------- | ---------------------------- |
+| `symbol`    | string | Ні       | Символ                       |
+| `side`      | string | Ні       | `long` / `short`             |
+| `startTime` | int64  | Ні       | Час початку                   |
+| `endTime`   | int64  | Ні       | Кінець часу                     |
+| `page`      | int64  | Ні       | Номер сторінки, стандартний `1`     |
+| `pageSize`  | int64  | Ні       | Пункти на сторінку, стандартні `20` |
+
+Поля відповіді:
+
+| Поле                    | Тип   | Опис               |
+| ------------------------ | ------ | ------------------------- |
+| `list[].symbol`          | string | Символ                    |
+| `list[].positionSide`    | string | Позиція             |
+| `list[].leverage`        | int32  | Важіль                  |
+| `list[].maxQuantity`     | string | Максимальна кількість позиції |
+| `list[].entryPrice`      | string | Вартість входу               |
+| `list[].closePrice`      | string | Ціна закриття               |
+| `list[].pnl`             | string | Реалізований PnL              |
+| `list[].roe`             | string | Рентабельність власного капіталу          |
+| `list[].marginMode`      | string | Режим margin               |
+| `list[].triggerMode`     | int32  | Режим закриття тригера        |
+| `list[].fundingFeeAccum` | string | Накопичена плата за фінансування   |
+| `list[].openedAt`        | int64  | Відкритий час                 |
+| `list[].closedAt`        | int64  | Час закриття                |
+| `total`                  | int64  | Загальна кількість               |
+
+<h2 id="related-documentation">Пов'язана документація</h2>
+
+- [Правила поля](/uk/trading/margin-rules)
+- [Механіка важелів](/uk/trading/leverage-mechanics)
+- [Ризики та ліквідації](/uk/trading/risk-and-liquidations)
+- [Приватний користувацький канал](/uk/developer-api/websocket/private-user-channel)

@@ -1,0 +1,58 @@
+---
+title: "WebSocket"
+description: "Kết nối với dịch vụ 6MM WebSocket cho các luồng thị trường công khai và sự kiện tài khoản cá nhân, với hướng dẫn nhịp tim và đăng ký."
+slug: developer-api/websocket
+canonical-url: https://docs.6mm.com/vi/developer-api/websocket
+---
+
+<h2 id="service-endpoint">Điểm cuối dịch vụ</h2>
+
+```
+wss://ws.6mm.com/ws
+```
+
+WebSocket kênh được chia thành kênh công khai và kênh riêng:
+
+| Loại             | Xác thực              | Mô tả                                            |
+| ---------------- | --------------------------- | ------------------------------------------------------ |
+| Các kênh công khai  | Không bắt buộc                | Dữ liệu thị trường như độ sâu, giao dịch, Klines và mã chứng khoán |
+| Kênh riêng tư | Yêu cầu `listenKey` hoặc JWT | Luồng thứ tự, tài khoản và vị trí của người dùng              |
+
+<h2 id="public-channels">Các kênh công khai</h2>
+
+WebSocket công khai không yêu cầu xác thực. Sau khi kết nối, gửi yêu cầu `subscribe` để đăng ký các kênh thị trường.
+
+Các kênh phổ biến:
+
+| Kênh                            | Mô tả                                                        |
+| ---------------------------------- | ------------------------------------------------------------------ |
+| `market.depth.{symbol}`            | Độ sâu sách đặt hàng. Gửi snapshot trước, sau đó cập nhật từng phần |
+| `market.trade.{symbol}`            | Giao dịch mới nhất                                                      |
+| `market.kline.{symbol}.{interval}` | Klines                                                             |
+| `market.ticker.{symbol}`           | Tóm tắt mã chứng khoán đơn                                       |
+| `market.tickers`                   | Tóm tắt mã chứng khoán toàn bộ ký hiệu                                          |
+
+<h2 id="private-channels">Kênh riêng tư</h2>
+
+<h2 id="listenkey">listenKey</h2>
+Đối với luồng WebSocket riêng tư, hãy tạo `listenKey` qua REST API trước, sau đó kết nối đến:
+
+```
+wss://ws.6mm.com/ws?listenKey=YOUR_LISTEN_KEY
+```
+
+<h2 id="jwt">JWT</h2>
+Phương thức kết nối JWT tương thích:
+
+```
+wss://ws.6mm.com/ws?token=YOUR_ACCESS_TOKEN
+```
+
+Sau khi xác thực thành công, máy chủ sẽ tự động đăng ký kết nối đến kênh riêng tư của người dùng hiện tại. Không cần đăng ký thủ công.
+
+<h2 id="choose-the-next-guide">Chọn hướng dẫn viên tiếp theo</h2>
+
+- [Kết nối, Đăng ký & Nhịp tim](/vi/developer-api/websocket/connection-subscription-and-heartbeat): vòng đời kết nối, ping, kết nối lại và đăng ký lại.
+- [Kênh Thị trường Công khai](/vi/developer-api/websocket/public-market-channels): chiều sâu, giao dịch, Kline, mã chứng khoán và xử lý chuỗi.
+- [Kênh Người dùng Riêng tư](/vi/developer-api/websocket/private-user-channel): listenKey vòng đời và sự kiện tài khoản đã xác thực.
+- [Khuyến nghị tích hợp](/vi/developer-api/integration-recommendations): giám sát, tính đồng thời, thử lại và kiểm thử sản xuất.

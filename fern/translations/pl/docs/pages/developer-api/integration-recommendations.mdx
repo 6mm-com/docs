@@ -1,0 +1,42 @@
+---
+title: "Rekomendacje dotyczące integracji"
+description: "Stosuj zalecane praktyki 6MM do uwierzytelniania, prób, identyfikacji, logowania, obsługi stawek, monitoringu, bezpieczeństwa i gotowości do startu."
+slug: developer-api/integration-recommendations
+canonical-url: https://docs.6mm.com/pl/developer-api/integration-recommendations
+---
+
+Wykorzystaj te zalecenia jako punkt odniesienia do gotowości produkcyjnej. Uzupełniają one referencje do punktów końcowych i pomagają integracjom bezpiecznie odzyskiwać przeszkody po przerwach czasowych, ponownych połączeniach, duplikatach żądań i incydentach związanych z uprawnieniami.
+
+<h2 id="authentication-and-secrets">Uwierzytelnianie i sekrety</h2>
+
+- Preferować [API Key signing](/pl/developer-api/authentication) dla programów handlowych po stronie serwera oraz JWT dla działań frontendowych sterowanych przez użytkownika.
+- Zachowaj `apiSecret` w backendowym zarządzaniu tajemnicami. Jest wyświetlany tylko raz i nigdy nie może być wysyłany do przeglądarki ani klienta mobilnego.
+- Stosuj minimalne wymagane uprawnienia API Key i ograniczaj adresy IP źródłowe, gdy środowisko integracyjne obsługuje stabilne adresy wyjściowe.
+- Natychmiast wyłącz lub usuń wyciekły klucz, a następnie przejrzyj logi żądań przed wydaniem zastępstwa.
+
+<h2 id="request-validation-and-idempotency">Walidacja żądań i idempotencja</h2>
+
+- Przed złożeniem zamówień lokalnie zapytaj `/v1/public/market/symbols` i zweryfikowaj `tickSize`, `stepSize`, minimalną wartość nominalną oraz maksymalną ilość.
+- Generowanie unikalnego `clientOrderId` dla każdego zapisu zamówienia, aby żądania mogły być uzgadniane po rozłączeniu.
+- Zachowaj oryginalny identyfikator, gdy wynik HTTP jest niepewny. Zapytaj istniejące zamówienie przed utworzeniem żądania zastępczego.
+- Traktować wartości i ceny dziesiętne jako ciągi lub typy dziesiętne, a nie binarne wartości zmiennoprzecinkowe.
+
+<h2 id="order-and-websocket-state">Porządek i WebSocket stan</h2>
+
+- Określenie ostatecznego stanu po operacjach cancel, cancel-all lub amended z [zdarzenia prywatnych WebSocket ](/pl/developer-api/websocket/private-user-channel) lub zapytania REST .
+- Traktuj każde ponowne połączenie jako nową sesję WebSocket i przywracaj wszystkie wymagane subskrypcje.
+- Sprawdzić ciągłość książki zamówień z `endVersion`. Jeśli pojawi się luka wersyjna, odrzuć lokalną książkę i ponownie zasubskrybować dla nowego zdjęcia.
+- Deduplikować prywatne zdarzenia zamówień i kont przed zastosowaniem ich do sald, pozycji lub rekordów partnerów.
+
+<h2 id="logging-monitoring-and-retries">Logowanie, monitorowanie i ponowne próby</h2>
+
+- ID żądania zapisu, ID zlecenia klienta, HTTP status, API kod biznesowy, opóźnienia i liczba powtórek bez logowania sekretów lub pełnych tokenów.
+- Operacje Retry tylko udokumentowane jako bezpieczne, wykorzystujące ograniczone wykładnicze cofnięcie i jitter.
+- Alert o awariach uwierzytelniania, błędach podpisów, odpowiedziach na ograniczenia prędkości WebSocket , pętlach ponownego połączenia, lukach w sekwencji oraz różnicach w uzgodnieniu zamówień.
+- Utrzymywanie synchronizacji zegarów serwera, ponieważ uwierzytelnianie i podpisywanie zależą od znaczników czasu.
+
+<h2 id="before-production">Przed produkcją</h2>
+
+- Scenariusze ćwiczeń timeout, duplikatów żądań, ponownego połączenia, rotacji klucza i próby powtórek przez webhook w środowisku nieprodukcyjnym.
+- Przydzielenie właścicieli do rotacji poświadczeń, incydentów handlowych, awarii webhooków oraz uzgadniania.
+- Wypełnij [listę kontrolną uruchomienia produkcji](/pl/resources/production-launch-checklist) i użyj [szablonu żądania wsparcia](/pl/resources/support-request-template), gdy wymagana jest eskalacja.

@@ -1,0 +1,111 @@
+---
+title: "Dane rynkowe"
+description: "Używaj nieuwierzytelnionych danych 6MM rynku REST endpointach do pobierania symboli, tickerów, ksiąg zleceń, transakcji i innych publicznych informacji handlowych."
+slug: developer-api/rest-api/market-data
+canonical-url: https://docs.6mm.com/pl/developer-api/rest-api/market-data
+---
+
+Dane rynkowe REST punkty końcowe nie wymagają uwierzytelniania.
+
+<h2 id="symbol-configuration">Konfiguracja symboli</h2>
+
+```http
+GET /v1/public/market/symbols
+```
+
+Typowe pola odpowiedzi:
+
+| Pole                      | Typ   | Opis                   |
+| -------------------------- | ------ | ----------------------------- |
+| `list[].symbol`            | string | Symbol                        |
+| `list[].baseAsset`         | string | Podstawowy zasób                    |
+| `list[].quoteAsset`        | string | Aktywa wyceny                   |
+| `list[].minQuantity`       | string | Minimalna ilość zamówienia        |
+| `list[].minNotional`       | string | Minimalna wartość nominalna        |
+| `list[].tickSize`          | string | Rozmiar cena               |
+| `list[].stepSize`          | string | Wielkość kroku wielkości            |
+| `list[].pricePrecision`    | int64  | Precyzja cenowa               |
+| `list[].maxLimitOrderQty`  | string | Maksymalna ilość zamówienia limitowego  |
+| `list[].maxMarketOrderQty` | string | Maksymalna ilość zleceń rynkowych |
+| `list[].maxOpenOrders`     | int64  | Maksymalna liczba otwartych zamówień na użytkownika  |
+| `list[].defaultLeverage`   | int64  | Dźwignia domyślna              |
+| `list[].defaultMarginMode` | int64  | Domyślny tryb marginesów           |
+| `list[].leverageTiers[]`   | array  | Poziomy marży dźwigni         |
+| `handlingFeeLevelConfig[]` | array  | Konfiguracja poziomów opłat        |
+
+<h2 id="funding-rate-configuration">Konfiguracja stopy finansowania</h2>
+
+```http
+GET /v1/public/market/funding-rate?symbol=BTCUSDT
+```
+
+Parametry żądania:
+
+| Parametr | Typ   | Wymagane | Opis                     |
+| --------- | ------ | -------- | ------------------------------- |
+| `symbol`  | string | Nie       | Jeśli zostanie pominięte, zwraca wszystkie symbole |
+
+<h2 id="current-funding-rate">Aktualna stopa finansowania</h2>
+
+```http
+GET /v1/public/market/funding-rate/current?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+Parametry żądania:
+
+| Parametr  | Typ   | Wymagane | Opis                  |
+| ---------- | ------ | -------- | ---------------------------- |
+| `symbol`   | string | Nie       | Symbol                       |
+| `page`     | int32  | Nie       | Numer strony, domyślny `1`     |
+| `pageSize` | int32  | Nie       | Liczba elementów na stronę, domyślny `20` |
+
+<h2 id="funding-rate-history">Historia stopy finansowania</h2>
+
+```http
+GET /v1/public/market/funding-rate/history?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+Parametry żądania:
+
+| Parametr   | Typ   | Wymagane | Opis                  |
+| ----------- | ------ | -------- | ---------------------------- |
+| `symbol`    | string | Tak      | Symbol                       |
+| `startTime` | int64  | Nie       | Czas rozpoczęcia                   |
+| `endTime`   | int64  | Nie       | Koniec czasu                     |
+| `page`      | int32  | Nie       | Numer strony, domyślny `1`     |
+| `pageSize`  | int32  | Nie       | Liczba elementów na stronę, domyślny `20` |
+
+<h2 id="klines">Klines</h2>
+
+```http
+GET /v1/public/market/klines?symbol=BTCUSDT&interval=1m&limit=500
+```
+
+Parametry żądania:
+
+| Parametr   | Typ   | Wymagane | Opis                                                              |
+| ----------- | ------ | -------- | ------------------------------------------------------------------------ |
+| `symbol`    | string | Tak      | Symbol                                                                   |
+| `interval`  | string | Tak      | Interwał, taki jak `1m`, `5m`, `15m`, `30m`, `1h`, `4h`, `1d`, `1w`, `1M` |
+| `priceType` | string | Nie       | `indexPrice` / `markPrice`. Jeśli zostanie pominięte, zwroty są ceną Klines       |
+| `startTime` | int64  | Nie       | Czas rozpoczęcia                                                               |
+| `endTime`   | int64  | Nie       | Koniec czasu                                                                 |
+| `limit`     | int32  | Nie       | Liczba zwróconych przedmiotów, domyślny `500`, maksymalna `1000`                  |
+
+Pola odpowiedzi:
+
+| Pole              | Typ   | Opis |
+| ------------------ | ------ | ----------- |
+| `list[].openTime`  | int64  | Czas otwarcia   |
+| `list[].open`      | string | Cena otwarta  |
+| `list[].high`      | string | Wysoka cena  |
+| `list[].low`       | string | Niska cena   |
+| `list[].close`     | string | Cena zamknięcia |
+| `list[].volume`    | string | Volumy      |
+| `list[].closeTime` | int64  | Czas zamknięcia  |
+
+<h2 id="related-documentation">Powiązana dokumentacja</h2>
+
+- [Publiczne Punkty Końcowe](/pl/developer-api/rest-api/public-endpoints)
+- [Kanały WebSocket publiczne](/pl/developer-api/websocket/public-market-channels)
+- [Głębokość i rozrzut rynku](/pl/solutions/market-depth-spread)

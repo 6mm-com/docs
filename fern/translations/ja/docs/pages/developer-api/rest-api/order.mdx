@@ -1,0 +1,420 @@
+---
+title: "秩序"
+description: "6MM注文エンドポイントを使って、永続的な注文の作成、クエリ、キャンセル、管理を行い、権限、識別子、ライフサイクル状態を管理できます。"
+slug: developer-api/rest-api/order
+canonical-url: https://docs.6mm.com/ja/developer-api/rest-api/order
+---
+
+> **注**
+>
+> Orderエンドポイントには取引許可が必要です。
+
+<h2 id="place-order">注文</h2>
+
+```http
+POST /v1/private/order/place
+Content-Type: application/json
+```
+
+**要求パラメータ:**
+
+| パラメータ       | 種類   | 必須               | 概要                                                                                                                   |
+| --------------- | ------ | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `symbol`        | string | はい                    | シンボル                                                                                                                        |
+| `type`          | string | はい                    | `LIMIT` / `MARKET`                                                                                                            |
+| `side`          | string | はい                    | `BUY` / `SELL`                                                                                                                |
+| `positionSide`  | string | いいえ                     | `BOTH` / `LONG` / `SHORT`、デフォルト `BOTH`                                                                                     |
+| `price`         | string | 条件付き必須 | 指値注文に必須                                                                                                     |
+| `quantity`      | string | 条件付き必須 | 量。省略できる `closePosition=true`                                                                            |
+| `timeInForce`   | string | いいえ                     | `GTC` / `IOC` / `FOK`、デフォルト `GTC`                                                                                          |
+| `reduceOnly`    | bool   | いいえ                     | リデュースのみ、デフォルト `false`                                                                                                  |
+| `makerOnly`     | bool   | いいえ                     | メイカー専用、デフォルト `false`                                                                                                   |
+| `closePosition` | bool   | いいえ                     | ポジション全体を閉じる、デフォルト `false`                                                                                    |
+| `clientOrderId` | string | いいえ                     | クライアント定義注文ID                                                                                                       |
+| `placeType`     | string | いいえ                     | 注文配置タイプマーカー                                                                                                   |
+| `priceType`     | int32  | いいえ                     | BBO 価格タイプ:指定価格 `0` 、 `1` 相手価格1、 `2` 相手価格5、 `3` 同一価格1、 `4` 同一価格5 |
+
+**リクエスト例:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "type": "LIMIT",
+  "side": "BUY",
+  "price": "85000",
+  "quantity": "0.1",
+  "timeInForce": "GTC",
+  "makerOnly": true,
+  "clientOrderId": "ext-1772710377808-001"
+}
+```
+
+**レスポンスフィールド:**
+
+| フィールド           | 種類   | 概要             |
+| --------------- | ------ | ----------------------- |
+| `orderId`       | string | サーバー注文ID         |
+| `clientOrderId` | string | クライアント定義注文ID |
+| `status`        | string | 修道会の状況            |
+| `timestamp`     | int64  | タイムスタンプ               |
+
+<h2 id="batch-place-orders">バッチ注文</h2>
+
+```http
+POST /v1/private/order/batch-place
+Content-Type: application/json
+```
+
+**本文をリクエスト:**
+
+```json
+{
+  "orders": [
+    {
+      "symbol": "BTCUSDT",
+      "type": "LIMIT",
+      "side": "BUY",
+      "price": "85000",
+      "quantity": "0.1",
+      "clientOrderId": "ext-buy-001"
+    }
+  ]
+}
+```
+
+**レスポンスフィールド:**
+
+| フィールド          | 種類  | 概要                 |
+| -------------- | ----- | --------------------------- |
+| `successCount` | int32 | 成功した注文数 |
+| `failedCount`  | int32 | 失敗した命令の数     |
+| `results[]`    | array | 各命令の結果       |
+
+<h2 id="place-condition-order">配置条件の順序</h2>
+
+```http
+POST /v1/private/order/place-condition
+Content-Type: application/json
+```
+
+**要求パラメータ:**
+
+| パラメータ       | 種類   | 必須               | 概要                                                                                 |
+| --------------- | ------ | ---------------------- | ------------------------------------------------------------------------------------------- |
+| `symbol`        | string | はい                    | シンボル                                                                                      |
+| `type`          | string | はい                    | `STOP_MARKET` / `TAKE_PROFIT_MARKET` / `STOP_LIMIT` / `TAKE_PROFIT_LIMIT` / `TRAILING_STOP` |
+| `side`          | string | はい                    | `BUY` / `SELL`                                                                              |
+| `positionSide`  | string | いいえ                     | `BOTH` / `LONG` / `SHORT`                                                                   |
+| `price`         | string | 条件付き必須 | `STOP_LIMIT`/`TAKE_PROFIT_LIMIT`に必須                                             |
+| `quantity`      | string | 条件付き必須 | 量。省略できる `closePosition=true`                                          |
+| `timeInForce`   | string | いいえ                     | `GTC` / `IOC` / `FOK` / `GTE_GTC`                                                           |
+| `reduceOnly`    | bool   | いいえ                     | リデュースのみ                                                                                 |
+| `clientOrderId` | string | いいえ                     | クライアント定義注文ID                                                                     |
+| `stopPrice`     | string | 条件付き必須 | トリガー価格                                                                               |
+| `workingType`   | string | いいえ                     | `MARK_PRICE` / `CONTRACT_PRICE`、デフォルト `CONTRACT_PRICE`                                   |
+| `priceProtect`  | bool   | いいえ                     | 価格保護が有効かどうか                                                         |
+| `activatePrice` | string | 条件付き必須 | トレーリング注文発動価格                                                             |
+| `callbackRate`  | string | 条件付き必須 | トレーリングオーダーコールバック率                                                                |
+| `closePosition` | bool   | いいえ                     | 全ポジションを閉じろ                                                                   |
+
+**レスポンスフィールド:**
+
+| フィールド             | 種類   | 概要            |
+| ----------------- | ------ | ---------------------- |
+| `conditionId`     | string | 条件順序ID     |
+| `conditionStatus` | string | 条件の順序の状況 |
+| `timestamp`       | int64  | タイムスタンプ              |
+
+<h2 id="place-strategy-order">配置戦略の順序</h2>
+
+```http
+POST /v1/private/order/place-strategy
+Content-Type: application/json
+```
+
+**要求パラメータ:**
+
+| パラメータ      | 種類   | 必須 | 概要             |
+| -------------- | ------ | -------- | ----------------------- |
+| `strategyType` | string | はい      | `OTOCO` / `OTO` / `OCO` |
+| `subOrderList` | array  | はい      | サブオーダー一覧          |
+
+`subOrderList[]`のフィールドは、通常順序や条件順序とほぼ同じですが、追加の依存フィールドがあります。
+
+| パラメータ        | 種類   | 概要                                     |
+| ---------------- | ------ | ----------------------------------------------- |
+| `strategySubId`  | int64  | サブオーダーID                                    |
+| `firstDrivenId`  | int64  | 最初の運転命令IDは、依存関係がない `0` ことを意味します |
+| `firstDrivenOn`  | string | 最初のトリガー条件                         |
+| `firstTrigger`   | string | 最初のトリガーアクション                            |
+| `secondDrivenId` | int64  | 2回目の運転命令IDです                         |
+| `secondDrivenOn` | string | 第二のトリガー条件                        |
+| `secondTrigger`  | string | 第二トリガーアクション                           |
+
+**レスポンスフィールド:**
+
+| フィールド            | 種類   | 概要     |
+| ---------------- | ------ | --------------- |
+| `strategyId`     | string | 戦略ID     |
+| `strategyStatus` | string | 戦略の現状 |
+| `timestamp`      | int64  | タイムスタンプ       |
+
+<h2 id="query-single-order">クエリ シングルオーダー</h2>
+
+```http
+GET /v1/private/order?symbol=BTCUSDT&orderId=2022543809547603968
+```
+
+**要求パラメータ:**
+
+| パラメータ       | 種類   | 必須 | 概要             |
+| --------------- | ------ | -------- | ----------------------- |
+| `symbol`        | string | はい      | シンボル                  |
+| `orderId`       | string | いいえ       | サーバー注文ID         |
+| `clientOrderId` | string | いいえ       | クライアント定義注文ID |
+
+`orderId`と`clientOrderId`のいずれかが少なくとも提供されなければなりません。両方が提供された場合、サーバーは両方の条件で完全一致を行います。
+
+<h2 id="current-normal-orders">現在のノーマルオーダー</h2>
+
+```http
+GET /v1/private/order/current?symbol=BTCUSDT
+```
+
+**要求パラメータ:**
+
+| パラメータ     | 種類   | 必須 | 概要        |
+| ------------- | ------ | -------- | ------------------ |
+| `symbol`      | string | いいえ       | シンボル             |
+| `limit`       | int32  | いいえ       | 返品回数の上限 |
+| `lastOrderId` | int64  | いいえ       | カーソルフィールド       |
+
+**レスポンスフィールド:**
+
+| フィールド    | 種類  | 概要               |
+| -------- | ----- | ------------------------- |
+| `list[]` | array | 現在の正規順序一覧 |
+| `total`  | int32 | 伯爵                     |
+
+<h2 id="current-condition-orders">現行状態命令</h2>
+
+```http
+GET /v1/private/order/current-condition?symbol=BTCUSDT
+```
+
+**要求パラメータ:**
+
+| パラメータ | 種類   | 必須 | 概要 |
+| --------- | ------ | -------- | ----------- |
+| `symbol`  | string | いいえ       | シンボル      |
+
+<h2 id="historical-normal-orders">歴史的な正規秩序</h2>
+
+```http
+GET /v1/private/order/history?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+**要求パラメータ:**
+
+| パラメータ       | 種類   | 必須 | 概要                              |
+| --------------- | ------ | -------- | ---------------------------------------- |
+| `symbol`        | string | いいえ       | シンボル                                   |
+| `orderId`       | string | いいえ       | 完全順序IDフィルター                    |
+| `clientOrderId` | string | いいえ       | 正確なクライアント注文IDフィルター             |
+| `type`          | int32  | いいえ       | 注文タイプフィルター:`1`限度額、市場`2` |
+| `side`          | int32  | いいえ       | サイドフィルター:`1`買い、売`2`           |
+| `status`        | int32  | いいえ       | ステータスフィルター                            |
+| `startTime`     | int64  | いいえ       | 開始時間                               |
+| `endTime`       | int64  | いいえ       | 終焉                                 |
+| `page`          | int64  | いいえ       | ページ番号、デフォルトで `1`                 |
+| `pageSize`      | int64  | いいえ       | ページごとの項目数、デフォルト `20`             |
+
+<h2 id="historical-condition-orders">歴史的状態命令</h2>
+
+```http
+GET /v1/private/order/history-condition?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+**要求パラメータ:**
+
+| パラメータ   | 種類   | 必須 | 概要                    |
+| ----------- | ------ | -------- | ------------------------------ |
+| `symbol`    | string | いいえ       | シンボル                         |
+| `side`      | int32  | いいえ       | サイドフィルター:`1`買い、売`2` |
+| `status`    | int32  | いいえ       | ステータスフィルター                  |
+| `startTime` | int64  | いいえ       | 開始時間                     |
+| `endTime`   | int64  | いいえ       | 終焉                       |
+| `page`      | int64  | いいえ       | ページ番号、デフォルトで `1`       |
+| `pageSize`  | int64  | いいえ       | ページごとの項目数、デフォルト `20`   |
+
+<h2 id="trade-records">トレードレコード</h2>
+
+```http
+GET /v1/private/order/trades?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+**要求パラメータ:**
+
+| パラメータ   | 種類   | 必須 | 概要                  |
+| ----------- | ------ | -------- | ---------------------------- |
+| `symbol`    | string | いいえ       | シンボル                       |
+| `orderId`   | string | いいえ       | オーダーIDフィルター              |
+| `startTime` | int64  | いいえ       | 開始時間                   |
+| `endTime`   | int64  | いいえ       | 終焉                     |
+| `page`      | int64  | いいえ       | ページ番号、デフォルトで `1`     |
+| `pageSize`  | int64  | いいえ       | ページごとの項目数、デフォルト `20` |
+
+**レスポンスフィールド:**
+
+| フィールド                 | 種類   | 概要       |
+| --------------------- | ------ | ----------------- |
+| `list[].fillId`       | string | 詳細ID フィル    |
+| `list[].tradeId`      | string | トレードレコードID   |
+| `list[].orderId`      | string | 注文ID          |
+| `list[].symbol`       | string | シンボル            |
+| `list[].side`         | string | サイド              |
+| `list[].roleType`     | string | `maker` / `taker` |
+| `list[].price`        | string | 満たされた価格      |
+| `list[].quantity`     | string | 充填量   |
+| `list[].tradeValue`   | string | 貿易価値       |
+| `list[].handlingFee`  | string | 手数料      |
+| `list[].realizedPnl`  | string | 実現されたPnL      |
+| `list[].positionSide` | string | ポジション側     |
+| `list[].createdAt`    | int64  | トレードタイム        |
+| `total`               | int64  | 総数       |
+
+<h2 id="cancel-order">注文キャンセル</h2>
+
+```http
+POST /v1/private/order/cancel
+Content-Type: application/json
+```
+
+**本文をリクエスト:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "orderId": "2022543809547603968"
+}
+```
+
+`clientOrderId` は注文のキャンセルにも使えます。
+
+<h2 id="amend-order">改正命令</h2>
+
+```http
+POST /v1/private/order/move
+Content-Type: application/json
+```
+
+**本文をリクエスト:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "orderId": "2022543809547603968",
+  "price": "85100",
+  "quantity": "0.2"
+}
+```
+
+`quantity` は修正後の最終的な総注文数であり、残りの注文数ではありません。
+
+<h2 id="batch-amend-orders">バッチ修正命令</h2>
+
+```http
+POST /v1/private/order/batch-move
+Content-Type: application/json
+```
+
+**本文をリクエスト:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "orders": [
+    {
+      "orderId": "2022543809547603968",
+      "price": "85100",
+      "quantity": "0.2"
+    }
+  ]
+}
+```
+
+<h2 id="batch-cancel-orders">バッチキャンセル注文</h2>
+
+```http
+POST /v1/private/order/batch-cancel
+Content-Type: application/json
+```
+
+**本文をリクエスト:**
+
+```json
+{
+  "orders": [
+    {
+      "symbol": "BTCUSDT",
+      "orderId": "2022543809547603968"
+    }
+  ]
+}
+```
+
+<h2 id="cancel-all">すべてキャンセル</h2>
+
+```http
+POST /v1/private/order/batch-cancel-all
+Content-Type: application/json
+```
+
+**要求パラメータ:**
+
+| パラメータ    | 種類   | 必須 | 概要                                                                         |
+| ------------ | ------ | -------- | ----------------------------------------------------------------------------------- |
+| `symbol`     | string | いいえ       | シンボル                                                                              |
+| `cancelType` | int32  | いいえ       | `0` すべての通常注文、 `1` 指値注文のみ、 `2` すべての条件注文です。デフォルト注文 `0` |
+
+通常注文のキャンセルはすべて非同期で受け入れられます。最終状態は WebSocket `ORDER_TRADE_UPDATE` またはクエリエンドポイントによって決定されるべきです。
+
+<h2 id="cancel-condition-order">キャンセル条件命令</h2>
+
+```http
+POST /v1/private/order/cancel-condition
+Content-Type: application/json
+```
+
+**本文をリクエスト:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "conditionId": "2022543809547603968"
+}
+```
+
+<h2 id="strategy-order-detail">戦略順序の詳細</h2>
+
+```http
+GET /v1/private/order/strategy?strategyId=2022543809547603968
+```
+
+**レスポンスフィールド:**
+
+| フィールド            | 種類   | 概要                          |
+| ---------------- | ------ | ------------------------------------ |
+| `strategyId`     | string | 戦略ID                          |
+| `strategyType`   | string | `OTOCO` / `OTO` / `OCO`              |
+| `strategyStatus` | string | `WORKING` / `ALL_DONE` / `CANCELLED` |
+| `bookTime`       | int64  | 作成時間                        |
+| `subOrders[]`    | array  | サブオーダーの詳細                    |
+| `updateTime`     | int64  | 更新時間                          |
+
+<h2 id="related-documentation">関連文書</h2>
+
+- [注文の種類](/ja/trading/order-types)
+- [共通の列挙](/ja/developer-api/common-enums)
+- [プライベートユーザーチャネル](/ja/developer-api/websocket/private-user-channel)
+- [統合推奨事項](/ja/developer-api/integration-recommendations)

@@ -1,0 +1,73 @@
+---
+title: "6MM API Uwierzytelnianie: klucze JWT i API"
+description: "Dowiedz się, jak uwierzytelniać prywatne żądania 6MM API za pomocą tokenów dostępu JWT lub kluczy API i wybierz odpowiednią metodę dla każdej integracji."
+slug: developer-api/authentication
+canonical-url: https://docs.6mm.com/pl/developer-api/authentication
+---
+
+6MM obsługuje JWT tokeny dostępu oraz klucze API dla prywatnego dostępu API . Wybierz metodę w zależności od tego, czy żądanie należy do interaktywnej sesji użytkownika, czy do długotrwałej integracji backendowej.
+
+<h2 id="choose-an-authentication-method">Wybierz metodę uwierzytelniania</h2>
+
+| Potrzeba integracji | Zalecana metoda | Dlaczego |
+| --- | --- | --- |
+| Wywołania API sesji użytkownika | JWT | Używa tokena dostępu zwracanego po zalogowaniu. |
+| Utworz, zaktualizuj lub cofnij API Keys | JWT | API Key endpointów zarządzania nie akceptują API Key samozarządzania. |
+| Konto serwer-serwer lub połączenia handlowe | API Key + HMAC podpis | Obsługuje uprawnienia ograniczone i podpisane żądania backendowe. |
+
+<h2 id="jwt">JWT</h2>
+
+Po zalogowaniu API zwraca `accessToken`. Podczas wywoływania prywatnych punktów końcowych uwzględnij:
+
+```http
+Authorization: Bearer YOUR_ACCESS_TOKEN
+```
+
+Trzymaj token z dala od adresów URL i logów. Gdy token wygaśnie, uzyskaj ważny token przez zatwierdzony proces logowania lub odświeżania przed ponowną próbą prywatnego żądania.
+
+<h2 id="api-key">API Key</h2>
+
+Gdy nagłówek `X-API-KEY` request jest obecny, serwer korzysta API Key HMAC uwierzytelniania:
+
+```http
+X-API-KEY: YOUR_API_KEY
+```
+
+API Key endpointy zarządzania muszą korzystać z JWT. API Klucze nie potrafią sobie radzić.
+
+API Key żądania wymagają również znacznika czasu i podpisu HMAC opisanego w [Request Signing](/pl/developer-api/request-signing). Przechowuj odpowiadające API sekrety tylko w systemie zarządzania tajemnicami na zapleczu.
+
+<h2 id="api-key-permissions">API Key Uprawnienia</h2>
+
+| Wartość | Pozwolenie | Opis                                                                                                                                                                                    |
+| ----- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `1`   | Przeczytaj       | Informacje o użytkowniku, zasoby, logi zmian kont, statystyki, listenKey, ulubione symbole oraz powiązane endpointy użytkowników/kont. Punkty końcowe dotyczące zleceń i pozycji, w tym zapytania, wymagają zgody na handel |
+| `2`   | Handel      | Końcowe porządki i pozycje, obejmujące zarówno operacje zapytań, jak i zapisu                                                                                                                        |
+| `4`   | Wycofanie się   | Pozwolenie na fundusz rezerwowy                                                                                                                                                                       |
+
+Aby przyznać zarówno uprawnienia do odczytu, jak i handlu, użyj `permissions=3`.
+
+Używaj najmniejszego zestawu uprawnień, którego wymaga integracja. Usługa danych rynkowych nie powinna otrzymywać zezwoleń na handel, podczas gdy usługa zleceń potrzebuje tego zezwolenia nawet wtedy, gdy zapytuje tylko zlecenia lub pozycje.
+
+<h2 id="production-security-checklist">Lista kontrolna bezpieczeństwa produkcji</h2>
+
+- Tworzenie oddzielnych API Kluczy do rozwoju, inscenizacji i produkcji.
+- Zastosowanie IP whitelist, gdzie integracja ma stabilne adresy wychodzące.
+- Nigdy nie ujawniaj API sekretów w kodzie aplikacji przeglądarkowej, mobilnej lub desktopowej.
+- Synchronizacja czasu serwera przed wygenerowaniem podpisanych żądań.
+- Redakcja nagłówków autoryzacji, API klucze, podpisy i sekrety z logów aplikacji.
+- Natychmiastowe cofnięcie i ponowne odwołanie klucza, gdy podejrzewa się narażenie.
+
+<h2 id="next-steps">Kolejne kroki</h2>
+
+<CardGroup cols={3}>
+<Card title="API Key Zarządzanie" icon="fa-duotone fa-key" href="/pl/developer-api/api-key-management">
+Tworz klucze z zakresem skalacji, konfiguruj IP ograniczenia i planuj rotację kluczy.
+</Card>
+<Card title="Podpisywanie wniosków" icon="fa-duotone fa-signature" href="/pl/developer-api/request-signing">
+Buduj HMAC-SHA256 ładunek i podpisuj prywatne żądania.
+</Card>
+<Card title="Błędy i rozwiązywanie problemów" icon="fa-duotone fa-screwdriver-wrench" href="/pl/developer-api/error-codes-and-troubleshooting">
+Diagnozuj odrzucone poświadczenia, znaczniki czasu, podpisy i uprawnienia.
+</Card>
+</CardGroup>

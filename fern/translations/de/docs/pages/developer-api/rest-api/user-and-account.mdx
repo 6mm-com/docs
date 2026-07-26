@@ -1,0 +1,223 @@
+---
+title: "Nutzer und Konto"
+description: "Nutzen Sie 6MM Benutzer- und Konto-Endpunkte, um Profile, Salden, Kontostatus, Berechtigungen und Partner-verknüpfte Kontoinformationen abzurufen."
+slug: developer-api/rest-api/user-and-account
+canonical-url: https://docs.6mm.com/de/developer-api/rest-api/user-and-account
+---
+
+Sofern nicht anders angegeben, können die folgenden Endpunkte JWT oder API Key Signing verwenden.
+
+<h2 id="user-info">Benutzerinformationen</h2>
+
+```http
+GET /v1/private/user/info
+```
+
+Antwortfelder:
+
+| Spielfeld                  | Typ   | Beschreibung      |
+| ---------------------- | ------ | ---------------- |
+| `userInfo.userId`      | string | Externe Benutzer-ID |
+| `userInfo.username`    | string | Benutzername         |
+| `userInfo.agentId`     | int64  | Agenten-ID         |
+| `userInfo.vipLevel`    | int64  | VIP Level        |
+| `userInfo.lastLoginAt` | int64  | Letzte Anmeldezeit  |
+| `userInfo.lastLoginIp` | string | Letzter Login IP    |
+
+<h2 id="user-assets">Benutzerressourcen</h2>
+
+```http
+GET /v1/private/user/asset
+```
+
+Antwortfelder:
+
+| Spielfeld                     | Typ   | Beschreibung                     |
+| ------------------------- | ------ | ------------------------------- |
+| `userAsset.userId`        | string | Externe Benutzer-ID                |
+| `userAsset.assetType`     | string | Vermögenstyp                      |
+| `userAsset.walletBalance` | string | Portemonnaie-Guthaben                  |
+| `userAsset.frozenMargin`  | string | Marge eingefroren durch ausstehende Befehle |
+| `userAsset.usedMargin`    | string | Nach Positionen verwendete Marge        |
+
+<h2 id="create-listenkey">Erstellen Sie listenKey</h2>
+
+```http
+POST /v1/private/user/listen-key
+```
+
+Erstellt einen Authentifizierungsschlüssel für private WebSocket Streams.
+
+<h2 id="renew-listenkey">Erneuern Sie listenKey</h2>
+
+```http
+PUT /v1/private/user/listen-key
+```
+
+Erweitert listenKey Gültigkeit.
+
+<h2 id="close-listenkey">Schließen Sie listenKey</h2>
+
+```http
+DELETE /v1/private/user/listen-key
+```
+
+Schließt das angegebene listenKey.
+
+<h2 id="account-change-logs">Kontoänderungsprotokolle</h2>
+
+```http
+GET /v1/private/user/account-change-log?assetType=USDT&page=1&pageSize=20
+```
+
+Anfrageparameter:
+
+| Parameter    | Typ   | Erforderlich | Beschreibung                  |
+| ------------ | ------ | -------- | ---------------------------- |
+| `assetType`  | string | Nein       | Asset-Typ, wie zum Beispiel `USDT`   |
+| `changeType` | string | Nein       | Änderungsart                  |
+| `startTime`  | int64  | Nein       | Startzeit                   |
+| `endTime`    | int64  | Nein       | Endzeit                     |
+| `page`       | int32  | Nein       | Seitenzahl, Standard- `1`     |
+| `pageSize`   | int32  | Nein       | Elemente pro Seite, Standard `20` |
+
+Antwortfelder:
+
+| Spielfeld                        | Typ   | Beschreibung                  |
+| ---------------------------- | ------ | ---------------------------- |
+| `list[].assetType`           | string | Vermögenstyp                   |
+| `list[].amount`              | string | Geänderter Betrag               |
+| `list[].walletBalanceBefore` | string | Wallet-Guthaben vor der Änderung |
+| `list[].walletBalanceAfter`  | string | Wallet-Guthaben nach der Änderung  |
+| `list[].frozenBalanceBefore` | string | Eingefrorenes Guthaben vor der Änderung |
+| `list[].frozenBalanceAfter`  | string | Eingefrorener Saldo nach der Änderung  |
+| `list[].changeType`          | string | Änderungsart                  |
+| `list[].referenceId`         | string | Verwandte Unternehmens-ID          |
+| `list[].createdAt`           | int64  | Entstehungszeit                |
+| `total`                      | int64  | Gesamtanzahl                  |
+
+<h2 id="30-day-volume-statistics">30-Tage-Volumenstatistiken</h2>
+
+```http
+GET /v1/private/user/volume-stats
+```
+
+Antwortfelder:
+
+| Spielfeld         | Typ   | Beschreibung                                     |
+| ------------- | ------ | ----------------------------------------------- |
+| `volume30d`   | string | Kumulatives Handelsvolumen der letzten 30 Tage |
+| `feeTotal30d` | string | Kumulierte Gebühren der letzten 30 Tage           |
+
+<h2 id="balance-history">Bilanzgeschichte</h2>
+
+```http
+GET /v1/private/user/balance-history?period=1D&limit=30
+```
+
+Anfrageparameter:
+
+| Parameter | Typ   | Erforderlich | Beschreibung                            |
+| --------- | ------ | -------- | -------------------------------------- |
+| `period`  | string | Ja      | `1D` / `1W` / `1M`                     |
+| `limit`   | Int    | Nein       | Anzahl der zurückgegebenen Artikel, Standard `30` |
+
+Antwortfelder:
+
+| Spielfeld             | Typ   | Beschreibung                 |
+| ----------------- | ------ | --------------------------- |
+| `items[].date`    | string | Aggregationsdatum            |
+| `items[].balance` | string | Portemonnaie-Guthaben              |
+| `items[].pnl`     | string | PnL für den Zeitraum realisiert |
+
+<h2 id="trade-overview">Handelsübersicht</h2>
+
+```http
+GET /v1/private/user/trade-overview?type=1M
+```
+
+Anfrageparameter:
+
+| Parameter | Typ   | Erforderlich | Beschreibung                                     |
+| --------- | ------ | -------- | ----------------------------------------------- |
+| `type`    | string | Ja      | Trendbereich: `1D`, `1W`, `1M`, `3M`, `6M`, `1Y` |
+
+Antwortfelder:
+
+| Spielfeld                | Typ   | Beschreibung                                                          |
+| -------------------- | ------ | -------------------------------------------------------------------- |
+| `todayPnl`           | string | Das heutige Realisierte PnL                                                 |
+| `todayVolume`        | string | Das heutige Kontrakthandelsvolumen                                      |
+| `totalVolume`        | string | Kumulatives Kontrakthandelsvolumen                                   |
+| `totalPnl`           | string | Kumulativ realisiertes PnL                                              |
+| `maxDrawdown30d`     | string | Maximaler Auszahlungsbetrag in den letzten 30 Tagen                        |
+| `maxDrawdown30dRate` | string | Maximale Rückzugsrate der letzten 30 Tage, dezimal von `0` bis `1` |
+| `transferIn`         | string | Kumulative überwiesene Mittel                                      |
+| `transferOut`        | string | Kumulative ausgezahlte Gelder                                     |
+| `items[]`            | array  | Vermögenstrenddaten                                                     |
+
+<h2 id="asset-overview-summary">Zusammenfassung der Vermögenswerte</h2>
+
+```http
+GET /v1/private/user/asset/overview/summary
+```
+
+Die Antwortfelder sind identisch mit den Übersichtsfeldern des Handelsüberblicks, mit Ausnahme `items[]`.
+
+<h2 id="asset-overview-trend">Trend zum Asset-Überblick</h2>
+
+```http
+GET /v1/private/user/asset/overview/trend?type=1M
+```
+
+Anfrageparameter:
+
+| Parameter | Typ   | Erforderlich | Beschreibung                                     |
+| --------- | ------ | -------- | ----------------------------------------------- |
+| `type`    | string | Ja      | Trendbereich: `1D`, `1W`, `1M`, `3M`, `6M`, `1Y` |
+
+Antwortfelder:
+
+| Spielfeld                  | Typ   | Beschreibung                     |
+| ---------------------- | ------ | ------------------------------- |
+| `items[].snapshotTime` | int64  | Snapshot-Zeit                   |
+| `items[].balance`      | string | Leistungsbilanz         |
+| `items[].pnl`          | string | PnL für den aktuellen Zeitraum      |
+| `items[].pnlRate`      | string | PnL-Satz für den aktuellen Zeitraum |
+| `items[].totalPnl`     | string | Kumulative PnL                  |
+
+<h2 id="favorite-symbols">Lieblingssymbole</h2>
+
+<h2 id="save">Speichern</h2>
+
+```http
+POST /v1/private/user/favorite-symbols
+Content-Type: application/json
+```
+
+Antragstext:
+
+```json
+{
+  "symbols": ["BTCUSDT", "ETHUSDT"]
+}
+```
+
+<h2 id="query">Abfrage</h2>
+
+```http
+GET /v1/private/user/favorite-symbols
+```
+
+Antwortfelder:
+
+| Spielfeld     | Typ      | Beschreibung          |
+| --------- | --------- | -------------------- |
+| `symbols` | String\[] | Lieblingssymbolliste |
+
+<h2 id="related-documentation">Verwandte Dokumentation</h2>
+
+- [Privatbenutzerkanal](/de/developer-api/websocket/private-user-channel)
+- [Authentifizierung](/de/developer-api/authentication)
+- [Vermögensübertragung](/de/trading/getting-started/asset-transfer)
+- [Fehlercodes & Fehlerbehebung](/de/developer-api/error-codes-and-troubleshooting)

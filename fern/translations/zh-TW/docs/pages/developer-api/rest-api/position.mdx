@@ -1,0 +1,149 @@
+---
+title: "職位"
+description: "利用 6MM 部位端點查詢未開放部位、保證金細節、槓桿、未實現損益及部位相關操作。"
+slug: developer-api/rest-api/position
+canonical-url: https://docs.6mm.com/zh-TW/developer-api/rest-api/position
+---
+
+> **註解**
+>
+> 位置端點需要交易許可。
+
+<h2 id="set-leverage">設定槓桿</h2>
+
+```http
+POST /v1/private/position/leverage
+Content-Type: application/json
+```
+
+請求正文：
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "leverage": 20
+}
+```
+
+回應欄位：
+
+| 場地       | 類型   | 描述 |
+| ----------- | ------ | ----------- |
+| `symbol`    | string | 象徵      |
+| `leverage`  | int32  | 槓桿    |
+| `timestamp` | int64  | 時間戳記   |
+
+<h2 id="set-margin-mode">設定邊際模式</h2>
+
+```http
+POST /v1/private/position/margin-mode
+Content-Type: application/json
+```
+
+請求正文：
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "marginMode": 1
+}
+```
+
+`marginMode`： `1` 十字架， `2` 孤立。
+
+<h2 id="position-settings">位置設定</h2>
+
+```http
+GET /v1/private/position/settings?symbol=BTCUSDT
+```
+
+回應欄位：
+
+| 場地        | 類型   | 描述             |
+| ------------ | ------ | ----------------------- |
+| `symbol`     | string | 象徵                  |
+| `marginMode` | int32  | `1` 十字架， `2` 孤立 |
+| `leverage`   | int32  | 槓桿                |
+
+<h2 id="current-positions">現任職務</h2>
+
+```http
+GET /v1/private/position/positions?symbol=BTCUSDT
+```
+
+請求參數：
+
+| 參數 | 類型   | 必修 | 描述 |
+| --------- | ------ | -------- | ----------- |
+| `symbol`  | string | 不       | 象徵      |
+
+回應欄位：
+
+| 場地                         | 類型   | 描述                |
+| ----------------------------- | ------ | -------------------------- |
+| `positions[].symbol`          | string | 象徵                     |
+| `positions[].marginMode`      | string | 邊際模式                |
+| `positions[].positionSide`    | string | 位置側              |
+| `positions[].leverage`        | int32  | 槓桿                   |
+| `positions[].quantity`        | string | 位置量          |
+| `positions[].entryPrice`      | string | 入場價格                |
+| `positions[].breakEvenPrice`  | string | 損益平衡價格           |
+| `positions[].liqPrice`        | string | 清算價格          |
+| `positions[].marginRatio`     | string | 利潤率               |
+| `positions[].unrealizedPnl`   | string | 未實現的PnL             |
+| `positions[].roe`             | string | 股東權益報酬率           |
+| `positions[].nextFundingFee`  | string | 預計下一筆資金 |
+| `positions[].fundingFeeAccum` | string | 累積資金費    |
+| `positions[].tpPrice`         | string | 獲利了結價格          |
+| `positions[].slPrice`         | string | 停損價格            |
+
+<h2 id="position-history">職位歷史</h2>
+
+```http
+GET /v1/private/position/history?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+請求參數：
+
+| 參數   | 類型   | 必修 | 描述                  |
+| ----------- | ------ | -------- | ---------------------------- |
+| `symbol`    | string | 不       | 象徵                       |
+| `side`      | string | 不       | `long` / `short`             |
+| `startTime` | int64  | 不       | 開賽時間                   |
+| `endTime`   | int64  | 不       | 終結時間                     |
+| `page`      | int64  | 不       | 頁碼，預設 `1`     |
+| `pageSize`  | int64  | 不       | 每頁項目數，預設 `20` |
+
+回應欄位：
+
+| 場地                    | 類型   | 描述               |
+| ------------------------ | ------ | ------------------------- |
+| `list[].symbol`          | string | 象徵                    |
+| `list[].positionSide`    | string | 位置側             |
+| `list[].leverage`        | int32  | 槓桿                  |
+| `list[].maxQuantity`     | string | 最大位置量 |
+| `list[].entryPrice`      | string | 入場價格               |
+| `list[].closePrice`      | string | 收盤價               |
+| `list[].pnl`             | string | 實現的PnL              |
+| `list[].roe`             | string | 股東權益報酬率          |
+| `list[].marginMode`      | string | 邊際模式               |
+| `list[].triggerMode`     | int32  | 關閉觸發模式        |
+| `list[].fundingFeeAccum` | string | 累積資金費   |
+| `list[].openedAt`        | int64  | 開放時間                 |
+| `list[].closedAt`        | int64  | 收工時間                |
+| `total`                  | int64  | 總計數               |
+
+<h2 id="related-documentation">相關文件</h2>
+
+- [保證金規則]（/trading/margin-rules）
+- 【槓桿機制】（/trading/leverage-mechanics）
+- [風險與清算]（/trading/risk-and-liquidations）
+- [私人用戶通道]（/developer-api/websocket/private-user-channel）
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">相關頁面</h2>
+
+- [保證金規則](/zh-TW/trading/margin-rules)
+- [槓桿機制](/zh-TW/trading/leverage-mechanics)
+- [風險與清算](/zh-TW/trading/risk-and-liquidations)
+- [私人用戶通道](/zh-TW/developer-api/websocket/private-user-channel)
+<!-- sixmm-localized-link-repair:end -->

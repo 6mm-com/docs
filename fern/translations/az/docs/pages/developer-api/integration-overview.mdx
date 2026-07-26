@@ -1,0 +1,51 @@
+---
+title: "İnteqrasiya Ümumi Baxışı"
+description: "Tövsiyə olunan mühit, autentifikasiya, imzalama, REST, WebSocket, test və istehsala hazırlıq ardıcıllığı ilə 6MM API inteqrasiyaya başlayın."
+slug: developer-api/integration-overview
+canonical-url: https://docs.6mm.com/az/developer-api/integration-overview
+---
+
+> REST Baza URL: `https://api.6mm.com`\
+> WebSocket URL: `wss://ws.6mm.com/ws`
+
+Bu sənədləşmə 6MM API xidməti ilə inteqrasiya olunmuş xarici sistemlər üçün nəzərdə tutulub. Bu proqram giriş, JWT autentifikasiya, API Key idarəetmə, API Key HMAC imzalama, hesab sorğuları, sifarişlər, mövqelər, bazar məlumatları və WebSocket axınlarını əhatə edir.
+
+Hesab təminatı və maliyyələşdirmənin hazırlanması platforma tərəfi prosesləri vasitəsilə həyata keçirilir. Bu sənədləşmə yalnız xaricdən çağırıla bilən API xidmət son nöqtələrini təsvir edir.
+
+<h2 id="service-endpoints">Xidmət Son Nöqtələri</h2>
+
+| Tip      | Son nöqtə              |
+| --------- | --------------------- |
+| REST API  | `https://api.6mm.com` |
+| WebSocket | `wss://ws.6mm.com/ws`    |
+
+<h2 id="integration-flow">İnteqrasiya Axını</h2>
+
+Tövsiyə olunan inteqrasiya ardıcıllığı:
+
+1. Platformanın təqdim etdiyi hesabla daxil olun və `accessToken`alın.
+2. Server tərəfi proqramatik giriş üçün JWT ilə API Key yaradın və bir dəfəlik qaytarılan `apiSecret`təhlükəsiz saxlayın.
+3. Şəxsi sorğular, sifariş və mövqe endpoint-ləri ya `Authorization: Bearer <accessToken>`, ya da API Key imzası ilə çağırıla bilər.
+4. Özəl WebSocket axınları üçün əvvəlcə `listenKey` yaradın, sonra `wss://ws.6mm.com/ws?listenKey=...`-ə qoşulun.
+5. Bazar məlumatları REST son nöqtələr və ictimai WebSocket kanalları autentifikasiya tələb etmir.
+
+<h2 id="authentication-choice">Autentifikasiya Seçimi</h2>
+
+| Ssenari                               | Tövsiyə olunan üsul         |
+| -------------------------------------- | -------------------------- |
+| Ön tərəf istifadəçi əməliyyatları                  | JWT                        |
+| Server tərəfi proqramatik çağırışlar         | API Key + HMAC imzası   |
+| API Key yaradılması, yenilənməsi və silinməsi | JWT                        |
+| İctimai bazar REST / ictimai WebSocket  | Autentifikasiya tələb olunmur |
+
+<h2 id="documentation-scope">Sənədləşdirmənin Əhatə dairəsi</h2>
+
+Bu sənədləşmə giriş, JWT autentifikasiya, API Key idarəetmə, API Key HMAC imzalama, hesab sorğuları, sifarişlər, mövqelər, bazar məlumatları və WebSocket axınlarını əhatə edir.
+
+<h2 id="recommended-reading-order">Tövsiyə olunan oxu ardıcıllığı</h2>
+
+1. [Mühitlər və Ümumi Konvensiyalar](/az/developer-api/environments-and-common-conventions)
+2. [Autentifikasiya](/az/developer-api/authentication) və [Sorğu İmzalaması](/az/developer-api/request-signing)
+3. [REST API](/az/developer-api/rest-api) və [WebSocket](/az/developer-api/websocket)
+4. [İnteqrasiya Tövsiyələri](/az/developer-api/integration-recommendations)
+5. [İstehsal Başlanğıcı Yoxlama Siyahısı](/az/resources/production-launch-checklist)

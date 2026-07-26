@@ -1,0 +1,60 @@
+---
+title: "نظرة عامة على التكامل"
+description: "ابدأ تكاملا 6MM API مع البيئة الموصى بها، والمصادقة، والتوقيع، و REST، و WebSocket، والاختبار، وتسلسل الاستعداد للإنتاج."
+slug: developer-api/integration-overview
+canonical-url: https://docs.6mm.com/ar/developer-api/integration-overview
+---
+
+> REST URLالقاعدة : `https://api.6mm.com`\
+> WebSocket URL: `wss://ws.6mm.com/ws`
+
+هذه الوثائق مخصصة للأنظمة الخارجية التي تتكامل مع خدمة 6MM API . يغطي تسجيل الدخول، المصادقة JWT ، إدارة API Key ، توقيع API Key HMAC ، استفسارات الحسابات، الطلبات، المراكز، بيانات السوق، وتدفقات WebSocket .
+
+يتم التعامل مع توفير الحسابات وإعداد التمويل من خلال عمليات على المنصة. تصف هذه التوثيق فقط نقاط نهاية الخدمة API القابلة للاستدعاء خارجيا.
+
+<h2 id="service-endpoints">نقاط نهاية الخدمة</h2>
+
+| النوع      | نقطة النهاية              |
+| --------- | --------------------- |
+| REST API  | `https://api.6mm.com` |
+| WebSocket | `wss://ws.6mm.com/ws`    |
+
+<h2 id="integration-flow">تدفق التكامل</h2>
+
+تسلسل التكامل الموصى به:
+
+1. سجل الدخول بالحساب الذي توفره المنصة واحصل على `accessToken`.
+2. للوصول البرمجي على جانب الخادم، أنشئ API Key مع JWT أولا، وقم بتخزين `apiSecret`المرتجعة مرة واحدة بأمان.
+3. يمكن استدعاء الاستعلامات الخاصة ونقاط نهاية الأوامر والمراكز باستخدام إما `Authorization: Bearer <accessToken>` أو توقيع API Key.
+4. بالنسبة للبثوث الخاصة WebSocket ، أنشئ `listenKey` أولا، ثم اتصل ب `wss://ws.6mm.com/ws?listenKey=...`.
+5. بيانات السوق REST نقاط النهاية وقنوات WebSocket العامة لا تتطلب المصادقة.
+
+<h2 id="authentication-choice">اختيار المصادقة</h2>
+
+| السيناريو                               | الطريقة الموصى بها         |
+| -------------------------------------- | -------------------------- |
+| إجراءات مستخدم الواجهة الأمامية                  | JWT                        |
+| المكالمات البرمجية على جانب الخادم         | توقيع API Key + HMAC   |
+| API Key إنشاء وتحديث وحذف | JWT                        |
+| REST السوق العامة / WebSocket العام  | لا حاجة للمصادقة |
+
+<h2 id="documentation-scope">نطاق التوثيق</h2>
+
+تغطي هذه الوثائق تسجيل الدخول، المصادقة JWT ، إدارة API Key ، توقيع API Key HMAC ، استعلامات الحسابات، الطلبات، المراكز، بيانات السوق، وتدفقات WebSocket .
+
+<h2 id="recommended-reading-order">ترتيب القراءة الموصى به</h2>
+
+1. [البيئات والاتفاقيات المشتركة](/ar/developer-api/environments-and-common-conventions)
+2. [توثيق] (/developer-api/authentication) و[توقيع الطلبات](/ar/developer-api/request-signing)
+3. [REST API] (/developer-api/rest-api) و [WebSocket] (/developer-api/websocket)
+4. [توصيات التكامل] (/developer-api/integration-recommendations)
+5. [قائمة إطلاق الإنتاج] (/resources/production-launch-checklist)
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">صفحات ذات صلة</h2>
+
+- [6MM API المصادقة: مفاتيح JWT وAPI](/ar/developer-api/authentication)
+- [REST API](/ar/developer-api/rest-api)
+- [WebSocket](/ar/developer-api/websocket)
+- [توصيات التكامل](/ar/developer-api/integration-recommendations)
+- [قائمة التحقق لإطلاق إنتاج الشركاء](/ar/resources/production-launch-checklist)
+<!-- sixmm-localized-link-repair:end -->

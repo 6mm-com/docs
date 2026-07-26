@@ -1,0 +1,78 @@
+---
+title: "PHP 快速入門"
+subtitle: "從後端服務安裝並初始化 PHP SDK 。"
+slug: sdk/agent-sdk/php/quick-start
+canonical-url: https://docs.6mm.com/zh-TW/sdk/agent-sdk/php/quick-start
+---
+
+<h2 id="install">安裝</h2>
+
+```json
+{
+  "require": {
+    "sixmm/agent-sdk": "VERSION_PROVIDED_BY_6MM"
+  }
+}
+```
+
+> **套件存取**
+>
+> 6MM 在合作夥伴啟用時提供經核准的 Composer 套件名稱、儲存庫及版本。該套件不應假設存在於公開的 Packagist。
+
+<h2 id="before-you-start">開始之前</h2>
+
+- 確認特工API基地URL6MM。
+- 從環境變數或秘密管理載入 apiSecret 。
+- SDK 僅在後端服務中使用。
+- 準備冪等處理以處理傳輸與 webhook 流。
+
+<h2 id="initialize-client">初始化用戶端</h2>
+
+```php
+<?php
+
+use Sixmm\Agent\AgentClient;
+use Sixmm\Agent\AgentConfig;
+
+$client = new AgentClient(new AgentConfig(
+    'https://agent-api.6mm.com',
+    'AGENT001',
+    getenv('AGENT_API_SECRET') ?: '',
+    'USDT'
+));
+```
+
+> **僅後端**
+>
+> PHP SDK 簽署代理 API 請求，且不得透過公開原始碼或前端執行環境公開。
+
+<h2 id="example-transfer-funds-in">範例：轉帳資金</h2>
+
+```php
+$response = $client->transfer([
+    'agentOrderNo' => 'AGT-ORDER-1001',
+    'agentUserId' => 'agent-user-001',
+    'direction' => 'IN',
+    'currency' => 'USDT',
+    'amount' => '10.00',
+]);
+```
+
+使用十進位字串表示金額，並在重試或查詢傳輸狀態時保留原始 agentOrderNo 。
+
+<h2 id="next-steps">下一步</h2>
+
+| 需求 | 下一頁 |
+| --- | --- |
+| 了解 Agent SDK 能力 | [Agent SDK 概述]（/sdk/agent-sdk/overview） |
+| 檢視簽署行為 | [秘密與簽名]（/sdk/security/secrets-signing） |
+| 驗證回撥送達 | 【網鉤與冪性】（/sdk/security/webhooks-idempotency） |
+| 診斷積分問題 | [SDK 故障排除中 ]（/sdk/security/troubleshooting） |
+<!-- sixmm-localized-link-repair:start -->
+<h2 id="localized-page-links">相關頁面</h2>
+
+- [6MM Agent SDK Java 和 PHP](/zh-TW/sdk/agent-sdk/overview)
+- [Agent SDK 祕密與 HMAC 手語](/zh-TW/sdk/security/secrets-signing)
+- [Webhook 簽名驗證與冪性](/zh-TW/sdk/security/webhooks-idempotency)
+- [SDK 整合故障排除](/zh-TW/sdk/security/troubleshooting)
+<!-- sixmm-localized-link-repair:end -->
