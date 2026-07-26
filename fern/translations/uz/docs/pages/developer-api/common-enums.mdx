@@ -1,0 +1,50 @@
+---
+title: "Common Enums"
+description: "Buyruq holatlari, tomonlar, buyruq turlari, kuchdagi vaqt, pozitsiya rejimlari, uzatishlar va integratsiya javoblari uchun umumiy 6MM API enumlariga murojaat qiling."
+slug: developer-api/common-enums
+canonical-url: https://docs.6mm.com/uz/developer-api/common-enums
+---
+
+<h2 id="orders">Buyruqlar</h2>
+
+| Enum                 | Qiymatlar                                                                                                    |
+| -------------------- | --------------------------------------------------------------------------------------------------------- |
+| Tartib tomoni           | `BUY` / `SELL`                                                                                            |
+| Pozitsiya tomoni        | `BOTH` / `LONG` / `SHORT`                                                                                 |
+| Normal tartib turi    | `LIMIT` / `MARKET`                                                                                        |
+| Shart tartibi turi | `STOP_MARKET` / `STOP_LIMIT` / `TAKE_PROFIT_MARKET` / `TAKE_PROFIT_LIMIT` / `TRAILING_STOP`               |
+| Amal qilgan davr        | `GTC` / `IOC` / `FOK` / `GTE_GTC`                                                                         |
+| Trigger narx turi   | `MARK_PRICE` / `CONTRACT_PRICE`                                                                           |
+| Buyurtma holati         | `NEW` / `PENDING` / `PARTIALLY_FILLED` / `FILLED` / `CANCELED` / `REJECTED` / `PARTIALLY_FILLED_CANCELED` |
+
+`NEW` buyurtma so'rovi qabul qilinganini va qaytarilganini anglatadi. `PENDING` buyruq kutayotgan yoki ochiq buyurtma holatiga kirganini anglatadi.
+
+<h2 id="positions">Lavozimlar</h2>
+
+| Enum                      | Qiymatlar                                                      |
+| ------------------------- | ----------------------------------------------------------- |
+| Margin rejimi so'rov qiymati | `1` xoch, `2` yolg'iz                                     |
+| Margin mode string        | `ISOLATED` / `CROSS`                                        |
+| Trigger rejimini yopish        | `1` qo'llanma, `2` foyda olish, `3` stop loss `4` likvidatsiya |
+
+<h2 id="integration-rules">Integratsiya qoidalari</h2>
+
+- Enum qiymatlarini harfga sezgir sim qiymatlari sifatida qabul qiling.
+- Loglarda noma'lum qiymatlarni saqlab, ularni ma'lum holatga jimjit xaritalash o'rniga xavfsiz tarzda muvaffaqiyatsizlikka uchraydi.
+- Har bir yakuniy bo'lmagan tartib holatini qayta sinab ko'rish xavfsiz deb hisoblamang. Buyruqni so'rang yoki uni shaxsiy WebSocket hodisasi bilan uyg'unlashtiring.
+- Asl API qiymati va hamkorga qaragan displey yorlig'ini saqlang, shunda yangi qiymatlar tarixiy yozuvlarni o'zgartirmasdan qo'llab-quvvatlanishi mumkin.
+
+<h2 id="order-state-handling">Buyruq holatini boshqarish</h2>
+
+| Shtat guruhi | Qiymatlar | Tavsiya etilgan boshqaruv |
+| --- | --- | --- |
+| Qabul qilingan yoki ochiq | `NEW`, `PENDING`, `PARTIALLY_FILLED` | Buyurtmani faol tuting va WebSocket yoki REST yangilanishlar bilan moslashtiring. |
+| Yakunlandi | `FILLED` | Yakuniy to'ldirilgan miqdor va bajarilish yozuvlarini qo'llang. |
+| To'liq to'ldirilmasdan yopilgan | `CANCELED`, `REJECTED`, `PARTIALLY_FILLED_CANCELED` | Faol ishlov berishni to'xtating va sabab hamda bajarilgan miqdorni saqlang. |
+
+<h2 id="related-documentation">Tegishli hujjatlar</h2>
+
+- [Buyruq API](/uz/developer-api/rest-api/order): maydonlarni so'rash va hayot siklini buyurtma qilish operatsiyalari.
+- [Order Types](/uz/trading/order-types): limit, bozor va shartli buyurtmalar uchun mahsulot xatti-harakati.
+- [Xususiy Foydalanuvchi Kanali](/uz/developer-api/websocket/private-user-channel): real vaqt rejimida buyurtma va hisob holati.
+- [Xatolik kodlari va muammolarni hal qilish](/uz/developer-api/error-codes-and-troubleshooting): biznes kodlari va diagnostika ish jarayoni.

@@ -1,28 +1,10 @@
 (function () {
   var siteUrl = "https://docs.6mm.com";
-  var localeCodes = [
-    "en-Asia",
-    "es-419",
-    "pt-BR",
-    "es-AR",
-    "zh-TW",
-    "ja",
-    "ru",
-    "it",
-    "fr",
-    "de",
-    "zh-CN",
-    "id",
-    "pl",
-    "vi",
-    "uk",
-    "pt",
-    "es",
-    "uz",
-    "fil",
-    "az",
-    "ar",
-  ];
+  var localeCodes = (window.__sixmmDocsLocales || [])
+    .map(function (locale) {
+      return locale.code;
+    })
+    .filter(Boolean);
   var homeNames = {
     en: "Home",
     "en-Asia": "Home",

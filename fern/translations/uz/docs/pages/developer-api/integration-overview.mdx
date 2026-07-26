@@ -1,0 +1,51 @@
+---
+title: "Integratsiyaga umumiy nazar"
+description: "Tavsiya etilgan muhit, autentifikatsiya, imzolash, REST, WebSocket, sinov va ishlab chiqarishga tayyorlik ketma-ketligi bilan 6MM API integratsiyani boshlang."
+slug: developer-api/integration-overview
+canonical-url: https://docs.6mm.com/uz/developer-api/integration-overview
+---
+
+> REST Baza URL: `https://api.6mm.com`\
+> WebSocket URL: `wss://ws.6mm.com/ws`
+
+Ushbu hujjatlar 6MM API xizmatiga integratsiyalashgan tashqi tizimlar uchun mo'ljallangan. U tizimga kirish, JWT autentifikatsiya, API Key boshqaruvi, API Key HMAC imzolash, hisob so'rovlari, buyurtmalar, pozitsiyalar, bozor ma'lumotlari va WebSocket oqimlarini qamrab oladi.
+
+Hisobni ta'minlash va moliyalashtirishni tayyorlash platforma tomonidagi jarayonlar orqali amalga oshiriladi. Ushbu hujjatlar faqat tashqi chaqiriladigan API xizmat nuqtalarini tasvirlaydi.
+
+<h2 id="service-endpoints">Xizmat nuqtalari</h2>
+
+| Turi      | Oxirgi nuqta              |
+| --------- | --------------------- |
+| REST API  | `https://api.6mm.com` |
+| WebSocket | `wss://ws.6mm.com/ws`    |
+
+<h2 id="integration-flow">Integratsiya oqimi</h2>
+
+Tavsiya etilgan integratsiya ketma-ketligi:
+
+1. Platforma tomonidan taqdim etilgan hisob orqali tizimga kirib, `accessToken`oling.
+2. Server tomonidagi dasturiy kirish uchun, avval JWT bilan API Key yarating va bir martalik qaytarilgan `apiSecret`xavfsiz saqlang.
+3. Shaxsiy so‘rovlar, buyurtma va pozitsiya endpoint-larini `Authorization: Bearer <accessToken>` yoki API Key imzosi bilan chaqirish mumkin.
+4. Xususiy WebSocket oqimlari uchun avval `listenKey` yarating, keyin `wss://ws.6mm.com/ws?listenKey=...`ga ulaning.
+5. Bozor ma'lumotlari, REST nuqtalar va ommaviy WebSocket kanallari autentifikatsiyani talab qilmaydi.
+
+<h2 id="authentication-choice">Autentifikatsiya tanlovi</h2>
+
+| Ssenariy                               | Tavsiya etilgan usul         |
+| -------------------------------------- | -------------------------- |
+| Frontend foydalanuvchi harakatlari                  | JWT                        |
+| Server tomonidagi dasturiy chaqiruvlar         | API Key + HMAC imzosi   |
+| API Key yaratish, yangilanish va o'chirish | JWT                        |
+| Ommaviy bozor REST / ommaviy WebSocket  | Autentifikatsiya talab qilinmaydi |
+
+<h2 id="documentation-scope">Hujjatlashtirish doirasi</h2>
+
+Ushbu hujjatlar tizimga kirish, JWT autentifikatsiyasi, API Key boshqaruvi, API Key HMAC imzolash, hisob so'rovlari, buyurtmalar, pozitsiyalar, bozor ma'lumotlari va WebSocket oqimlarini qamrab oladi.
+
+<h2 id="recommended-reading-order">Tavsiya etilgan o'qish tartibi</h2>
+
+1. [Muhitlar va Umumiy Konventsiyalar](/uz/developer-api/environments-and-common-conventions)
+2. [Autentifikatsiya](/uz/developer-api/authentication) va [So'rov imzolash](/uz/developer-api/request-signing)
+3. [REST API](/uz/developer-api/rest-api) va [WebSocket](/uz/developer-api/websocket)
+4. [Integratsiya tavsiyalari](/uz/developer-api/integration-recommendations)
+5. [Ishlab chiqarishni ishga tushirish ro'yxati](/uz/resources/production-launch-checklist)

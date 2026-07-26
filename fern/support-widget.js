@@ -5,74 +5,20 @@
 
   var WIDGET_SRC = 'https://csadmin.6mm.com/widget/widget.js';
   var APP_ID = '6mm-docs';
-  var localeRoutes = [
-    { route: 'en-Asia', widget: 'en-Asia' },
-    { route: 'es-419', widget: 'es-419' },
-    { route: 'zh-TW', widget: 'zh-TW' },
-    { route: 'pt-BR', widget: 'pt-BR' },
-    { route: 'es-AR', widget: 'es-AR' },
-    { route: 'pt', widget: 'pt' },
-    { route: 'es', widget: 'es' },
-    { route: 'ja', widget: 'ja' },
-    { route: 'ru', widget: 'ru' },
-    { route: 'it', widget: 'it' },
-    { route: 'fr', widget: 'fr' },
-    { route: 'de', widget: 'de' },
-    { route: 'zh-CN', widget: 'zh-CN' },
-    { route: 'id', widget: 'id' },
-    { route: 'pl', widget: 'pl' },
-    { route: 'vi', widget: 'vi' },
-    { route: 'uk', widget: 'uk' },
-    { route: 'ar', widget: 'ar' },
-    { route: 'uz', widget: 'uz' },
-    { route: 'fil', widget: 'fil' },
-    { route: 'az', widget: 'az' }
-  ];
-  var widgetLanguageRoutes = {
-    en: '',
-    'en-us': '',
-    'en-gb': '',
-    'en-asia': 'en-Asia',
-    'en-sg': 'en-Asia',
-    ja: 'ja',
-    'ja-jp': 'ja',
-    ru: 'ru',
-    'ru-ru': 'ru',
-    'es-419': 'es-419',
-    it: 'it',
-    'it-it': 'it',
-    fr: 'fr',
-    'fr-fr': 'fr',
-    de: 'de',
-    'de-de': 'de',
-    zh: 'zh-CN',
-    'zh-cn': 'zh-CN',
-    'zh-hans': 'zh-CN',
-    'zh-tw': 'zh-TW',
-    'zh-hant': 'zh-TW',
-    'pt-br': 'pt-BR',
-    id: 'id',
-    'id-id': 'id',
-    pl: 'pl',
-    'pl-pl': 'pl',
-    vi: 'vi',
-    'vi-vn': 'vi',
-    uk: 'uk',
-    'uk-ua': 'uk',
-    pt: 'pt',
-    'pt-pt': 'pt',
-    es: 'es',
-    'es-es': 'es',
-    'es-ar': 'es-AR',
-    ar: 'ar',
-    'ar-sa': 'ar',
-    uz: 'uz',
-    'uz-uz': 'uz',
-    fil: 'fil',
-    'fil-ph': 'fil',
-    az: 'az',
-    'az-az': 'az'
-  };
+  var locales = window.__sixmmDocsLocales || [];
+  var localeRoutes = locales
+    .filter(function (locale) {
+      return locale.code;
+    })
+    .map(function (locale) {
+      return { route: locale.code, widget: locale.widget || locale.code };
+    });
+  var widgetLanguageRoutes = {};
+  locales.forEach(function (locale) {
+    (locale.aliases || [locale.widget || locale.code]).forEach(function (alias) {
+      widgetLanguageRoutes[String(alias).toLowerCase()] = locale.code;
+    });
+  });
   var routePrefixes = localeRoutes.map(function (locale) {
     return locale.route;
   });
@@ -140,11 +86,8 @@
     var targetPath = (route ? '/' + route : '') + currentPagePath();
     if (targetPath === window.location.pathname) return;
 
-    var targetHref = targetPath + window.location.search + window.location.hash;
     if (typeof window.__sixmmNavigateDocsLocale === 'function') {
-      window.__sixmmNavigateDocsLocale(route, targetHref);
-    } else {
-      window.location.assign(targetHref);
+      window.__sixmmNavigateDocsLocale(route);
     }
   }
 
@@ -155,6 +98,7 @@
     if (currentTheme() === theme) return;
 
     var root = document.documentElement;
+    root.dataset.theme = theme;
     root.classList.remove('light', 'dark');
     root.classList.add(theme);
     root.style.colorScheme = theme;
@@ -215,9 +159,10 @@
     });
 
     window.setInterval(function () {
-      if (window.location.pathname === lastPathname) return;
-      lastPathname = window.location.pathname;
-      syncWidget();
+      if (window.location.pathname !== lastPathname) {
+        lastPathname = window.location.pathname;
+        syncWidget();
+      }
     }, 600);
   }
 

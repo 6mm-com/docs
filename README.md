@@ -25,8 +25,7 @@ The documentation covers:
 fern/
   docs.yml                         # English docs configuration, navigation, theme, redirects
   docs/pages/                      # English documentation pages
-  translations/<locale>/           # Fern-native translation overlays
-  docs/locales/<locale>/            # Standalone locale trees unsupported by Fern
+  translations/<locale>/           # Fern translation overlays for every locale
   docs/assets/                     # Logos, favicon, brand assets, and downloads
 scripts/
   generate-translations.mjs        # Translation generation and manifest refresh

@@ -2,6 +2,12 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { readFile, readdir, stat } from "node:fs/promises";
 import path from "node:path";
+import { runInNewContext } from "node:vm";
+import {
+  expectedLocales,
+  generatedLocaleSpecs,
+  generatorVersion,
+} from "./locale-config.mjs";
 
 const projectRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
 const fernRoot = path.join(projectRoot, "fern");
@@ -9,80 +15,23 @@ const configPath = path.join(fernRoot, "docs.yml");
 const sourceRoot = path.join(fernRoot, "docs");
 const translationsRoot = path.join(fernRoot, "translations");
 const manifestPath = path.join(translationsRoot, ".translation-manifest.json");
-const generatorVersion = 3;
-const expectedLocales = [
-  "en",
-  "en-Asia",
-  "ja",
-  "ru",
-  "es-419",
-  "it",
-  "fr",
-  "de",
-  "zh-CN",
-  "zh-TW",
-  "pt-BR",
-  "id",
-  "pl",
-  "vi",
-  "uk",
-  "pt",
-  "es",
-  "es-AR",
-  "uz",
-  "ar",
-  "fil",
-  "az",
-];
-const standaloneLocaleCodes = new Set(["en-Asia", "uz", "fil", "az"]);
-const aliasLocaleCodes = new Set();
-const standaloneRoutes = {
-  "en-Asia": "en-Asia",
-  uz: "uz",
-  fil: "fil",
-  az: "az",
-};
-const generatedLocaleTargetLanguages = {
-  "en-Asia": "copy",
-  ja: "ja",
-  ru: "ru",
-  "es-419": "es-MX",
-  it: "it",
-  fr: "fr",
-  de: "de",
-  "zh-TW": "zh-TW",
-  "pt-BR": "pt-BR",
-  id: "id",
-  pl: "pl",
-  vi: "vi",
-  uk: "uk",
-  pt: "pt-PT",
-  es: "es",
-  "es-AR": "es-AR",
-  uz: "uz",
-  ar: "ar",
-  fil: "fil",
-  az: "az",
-};
-const nativeLocales = expectedLocales.filter(
-  (locale) => !standaloneLocaleCodes.has(locale) && !aliasLocaleCodes.has(locale),
+const generatedLocaleTargetLanguages = Object.fromEntries(
+  generatedLocaleSpecs.map((locale) => [
+    locale.code,
+    locale.targetLanguage ?? "copy",
+  ]),
 );
-const translatedLocales = expectedLocales.filter(
-  (locale) => locale !== "en" && !aliasLocaleCodes.has(locale),
-);
-const generatedLocales = expectedLocales.filter(
-  (locale) => !["en", "zh-CN"].includes(locale),
-);
+const nativeLocales = expectedLocales;
+const translatedLocales = expectedLocales.filter((locale) => locale !== "en");
+const generatedLocales = generatedLocaleSpecs.map((locale) => locale.code);
 const errors = [];
 
 function localizedRoot(locale) {
-  return standaloneLocaleCodes.has(locale)
-    ? path.join(sourceRoot, "locales", locale)
-    : path.join(translationsRoot, locale);
+  return path.join(translationsRoot, locale);
 }
 
 function localeRoute(locale) {
-  return standaloneRoutes[locale] ?? locale;
+  return locale;
 }
 
 function loadYamlAsJson(filePath) {
@@ -122,18 +71,7 @@ function imageSources(content) {
 }
 
 function comparableImageSources(content, locale) {
-  return imageSources(content)
-    .map((source) => {
-      if (!standaloneLocaleCodes.has(locale)) return source;
-      if (source.startsWith("../../../../../assets/")) {
-        return source.replace("../../../../../assets/", "../../assets/");
-      }
-      if (source.startsWith("../../../../../pages/design-and-assets/")) {
-        return source.replace("../../../../../pages/design-and-assets/", "./");
-      }
-      return source;
-    })
-    .sort();
+  return imageSources(content);
 }
 
 function internalDestinations(content) {
@@ -216,26 +154,10 @@ const configuredStandaloneDirectories = collectFolderPaths(config)
   .map((folder) => folder.match(/^docs\/locales\/([^/]+)\/docs\/pages$/)?.[1])
   .filter(Boolean)
   .sort();
-const expectedStandaloneDirectories = [...standaloneLocaleCodes].sort();
+const expectedStandaloneDirectories = [];
 if (!sameArray(configuredStandaloneDirectories, expectedStandaloneDirectories)) {
   pushError(
     `Configured standalone locale folders do not match expected locales.\nExpected: ${expectedStandaloneDirectories.join(", ")}\nActual: ${configuredStandaloneDirectories.join(", ")}`,
-  );
-}
-
-const standaloneDirectories = (
-  await Promise.all(
-    (await readdir(path.join(sourceRoot, "locales"))).map(async (entry) => {
-      const entryPath = path.join(sourceRoot, "locales", entry);
-      return (await stat(entryPath)).isDirectory() ? entry : null;
-    }),
-  )
-)
-  .filter(Boolean)
-  .sort();
-if (!sameArray(standaloneDirectories, expectedStandaloneDirectories)) {
-  pushError(
-    `Standalone locale directories do not match expected locales.\nExpected: ${expectedStandaloneDirectories.join(", ")}\nActual: ${standaloneDirectories.join(", ")}`,
   );
 }
 
@@ -325,9 +247,7 @@ for (const relativePagePath of activePages) {
     if (!meta.title || !(meta.description || meta.subtitle) || !meta.slug) {
       pushError(`[${locale}] incomplete SEO frontmatter in ${relativePagePath}`);
     }
-    const expectedSlug = standaloneLocaleCodes.has(locale)
-      ? `${route}/${sourceMeta.slug}`
-      : sourceMeta.slug;
+    const expectedSlug = sourceMeta.slug;
     if (meta.slug !== expectedSlug) {
       pushError(`[${locale}] slug mismatch in ${relativePagePath}: ${meta.slug ?? "missing"}`);
     }
@@ -419,6 +339,55 @@ if (!/[\u0600-\u06ff]/.test(arabicHome)) {
 const directionScript = await readFile(path.join(fernRoot, "locale-direction.js"), "utf8");
 if (!/locale === "ar" \? "rtl" : "ltr"/.test(directionScript)) {
   pushError("Arabic RTL direction rule is missing");
+}
+
+const configuredScripts = (config.js ?? []).map((script) => script.path);
+if (configuredScripts[0] !== "./language-modal.js") {
+  pushError("The shared browser locale mapping must load before other custom scripts");
+}
+
+const languageScript = await readFile(path.join(fernRoot, "language-modal.js"), "utf8");
+const browserSandbox = {
+  window: {
+    addEventListener() {},
+    requestAnimationFrame() {},
+  },
+  document: {
+    readyState: "loading",
+    addEventListener() {},
+    documentElement: {},
+  },
+  MutationObserver: class {
+    observe() {}
+  },
+  URL,
+};
+runInNewContext(languageScript, browserSandbox);
+const browserLocales = browserSandbox.window.__sixmmDocsLocales ?? [];
+const browserLocaleCodes = browserLocales.map((locale) => locale.code || "en");
+if (!sameArray(browserLocaleCodes, expectedLocales)) {
+  pushError(
+    `Browser locale mapping does not match the translation config.\nExpected: ${expectedLocales.join(", ")}\nActual: ${browserLocaleCodes.join(", ")}`,
+  );
+}
+
+const supportScript = await readFile(path.join(fernRoot, "support-widget.js"), "utf8");
+if (/window\.location\.(?:assign|replace|reload)|window\.location\s*=/.test(
+  `${languageScript}\n${supportScript}`,
+)) {
+  pushError("Language switching must not trigger a full-page navigation");
+}
+for (const contract of [
+  "CSWidget",
+  "setLang",
+  "setTheme",
+  "cs-widget-lang-change",
+  "cs-widget-theme-change",
+  "__sixmmNavigateDocsLocale",
+]) {
+  if (!supportScript.includes(contract)) {
+    pushError(`Support widget integration is missing ${contract}`);
+  }
 }
 
 if (errors.length > 0) {

@@ -1,0 +1,48 @@
+---
+title: "Agent Java SDK"
+subtitle: "I-install ang 6MM Agent Java SDK at gamitin ang signed backend APIs para sa user binding, transfers, entry credentials, at webhook verification."
+slug: sdk/agent-sdk/java/overview
+canonical-url: https://docs.6mm.com/fil/sdk/agent-sdk/java/overview
+---
+
+<h2 id="official-repository">Opisyal na repositoryo</h2>
+
+Ang Java SDK repository ang pinagmumulan ng katotohanan para sa SDK source code, release notes, mga halimbawa ng paggamit, at mga detalye ng implementasyon:
+
+[6mm-com/agent-java-sdk] (https://github.com/6mm-com/agent-java-sdk)
+
+<h2 id="runtime">Haba ng Takbo</h2>
+
+| Item | Halaga |
+| --- | --- |
+| Minimum na bersyon ng Java | Java 8+ |
+| Inirerekomendang build tool | Maven 3.9+ |
+| Maven group | `com.sixmm.exchange.sdk` |
+| Maven artifact | `agent` |
+| Dokumentadong source tag | `v0.1.1` |
+
+Ang pampublikong GitHub repository ay source hosting, hindi isang Maven dependency repository. I-build at i-install ang tagged source nang lokal o i-publish ang aprubadong artifact sa pribadong Maven repository ng iyong organisasyon bago gamitin ito sa team builds.
+
+<h2 id="typical-backend-responsibilities">Karaniwang mga responsibilidad sa backend</h2>
+
+- I-validate ang partner user session.
+- I-map ang partner user sa agentUserId.
+- Call bind bago ang unang trading o transfer flows.
+- Tumawag sa createEntryUrl para sa isang beses na full-site SSO.
+- Tumawag createEmbedToken para sa Trading Widget partner-token mode.
+- I-verify ang mga transfer webhook at iproseso ang mga ito nang pareho.
+
+<h2 id="security-and-operational-rules">Mga patakaran sa seguridad at operasyon</h2>
+
+- Itago ang `apiSecret` lamang sa backend secret manager o protected environment variable.
+- Panatilihing naka-synchronize ang oras ng server dahil ang mga signed request ay may mga timestamp.
+- Ituring ang `agentOrderNo` bilang matibay na idempotency key at panatilihing natatangi ito sa buong mundo.
+- Itago ang `platformUserId` bilang string at panatilihin ang relasyon nito sa `agentUserId`.
+- I-query ang orihinal na transfer bago muling subukan pagkatapos ng timeout o hindi tiyak na resulta ng network.
+
+<h2 id="next-steps">Mga susunod na hakbang</h2>
+
+- [Java Quick Start](/fil/sdk/agent-sdk/java/quick-start): i-install ang tagged source at i-initialize ang `AgentClient`.
+- [Create Embed Token](/fil/sdk/agent-sdk/java/embed-token): mag-isyu ng panandaliang kredensyal para sa Trading Widget.
+- [Secrets & Signing](/fil/sdk/security/secrets-signing): nauunawaan ang awtomatikong HMAC signing at secret handling.
+- [Webhooks & Idempotency](/fil/sdk/security/webhooks-idempotency): beripikahin ang mga callback at pigilan ang dobleng pagproseso.

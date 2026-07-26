@@ -3,6 +3,10 @@ import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
+import {
+  generatedLocaleSpecs as localeSpecs,
+  generatorVersion,
+} from "./locale-config.mjs";
 
 const projectRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
 const fernRoot = path.join(projectRoot, "fern");
@@ -10,31 +14,6 @@ const sourceRoot = path.join(fernRoot, "docs");
 const translationsRoot = path.join(fernRoot, "translations");
 const docsConfigPath = path.join(fernRoot, "docs.yml");
 const manifestPath = path.join(translationsRoot, ".translation-manifest.json");
-const generatorVersion = 3;
-
-const localeSpecs = [
-  { code: "en-Asia", route: "en-Asia", sourceLanguage: "en", label: "English (Asia)" },
-  { code: "ja", sourceLanguage: "en", targetLanguage: "ja", label: "日本語" },
-  { code: "ru", sourceLanguage: "en", targetLanguage: "ru", label: "Русский" },
-  { code: "es-419", sourceLanguage: "en", targetLanguage: "es-MX", label: "Español (Latinoamérica)" },
-  { code: "it", sourceLanguage: "en", targetLanguage: "it", label: "Italiano" },
-  { code: "fr", sourceLanguage: "en", targetLanguage: "fr", label: "Français" },
-  { code: "de", sourceLanguage: "en", targetLanguage: "de", label: "Deutsch" },
-  { code: "zh-TW", sourceLanguage: "en", targetLanguage: "zh-TW", label: "繁體中文" },
-  { code: "pt-BR", sourceLanguage: "en", targetLanguage: "pt-BR", label: "Português (Brasil)" },
-  { code: "id", sourceLanguage: "en", targetLanguage: "id", label: "Bahasa Indonesia" },
-  { code: "pl", sourceLanguage: "en", targetLanguage: "pl", label: "Polski" },
-  { code: "vi", sourceLanguage: "en", targetLanguage: "vi", label: "Tiếng Việt" },
-  { code: "uk", sourceLanguage: "en", targetLanguage: "uk", label: "Українська" },
-  { code: "pt", sourceLanguage: "en", targetLanguage: "pt-PT", label: "Português (Internacional)" },
-  { code: "es", sourceLanguage: "en", targetLanguage: "es", label: "Español (Internacional)" },
-  { code: "es-AR", sourceLanguage: "en", targetLanguage: "es-AR", label: "Español (Argentina)" },
-  { code: "uz", route: "uz", sourceLanguage: "en", targetLanguage: "uz", label: "O‘zbek" },
-  { code: "ar", sourceLanguage: "en", targetLanguage: "ar", label: "العربية" },
-  { code: "fil", route: "fil", sourceLanguage: "en", targetLanguage: "fil", label: "Filipino" },
-  { code: "az", route: "az", sourceLanguage: "en", targetLanguage: "az", label: "Azərbaycan dili" },
-];
-const standaloneLocaleCodes = new Set(["en-Asia", "uz", "fil", "az"]);
 
 const args = new Set(process.argv.slice(2));
 const force = args.has("--force");
@@ -553,11 +532,7 @@ function regionalize(value, locale) {
 async function translateDocument(content, locale) {
   const route = locale.route ?? locale.code;
   if (!locale.targetLanguage) {
-    let output = canonicalForLocale(localizeInternalLinks(content, route), route);
-    if (standaloneLocaleCodes.has(locale.code)) {
-      output = output.replace(/^slug:\s*(.+)$/m, `slug: ${route}/$1`);
-    }
-    return output;
+    return canonicalForLocale(localizeInternalLinks(content, route), route);
   }
   const document = extractDocumentRecords(content);
   const translated = await translateRecords(
@@ -581,22 +556,10 @@ async function translateDocument(content, locale) {
   let output = document.lines.join("\n");
   output = localizeInternalLinks(output, route);
   output = canonicalForLocale(output, route);
-  if (standaloneLocaleCodes.has(locale.code)) {
-    output = output.replace(/^slug:\s*(.+)$/m, `slug: ${route}/$1`);
-  }
   if (locale.code === "vi" && /^slug:\s*legal\/privacy-policy\s*$/m.test(output)) {
     output = output.replace(/^title:.*$/m, 'title: "Chính sách quyền riêng tư"');
   }
   return output;
-}
-
-function rewriteStandaloneAssetPaths(content) {
-  return content
-    .replace(/\.\.\/\.\.\/assets\//g, "../../../../../assets/")
-    .replace(
-      /src="\.\/(6mm-(?:logo|entry-banner|card-entry)-assets-(?:en|zh)\.zip|6mm-logo-assets\.zip)"/g,
-      'src="../../../../../pages/design-and-assets/$1"',
-    );
 }
 
 function collectNavigationLabels(config) {
@@ -680,10 +643,7 @@ manifest.locales ??= {};
 console.log(`Generating ${activePages.length} active pages for ${selectedLocales.length} locale(s).`);
 
 for (const locale of selectedLocales) {
-  const standalone = standaloneLocaleCodes.has(locale.code);
-  const localeRoot = standalone
-    ? path.join(sourceRoot, "locales", locale.code)
-    : path.join(translationsRoot, locale.code);
+  const localeRoot = path.join(translationsRoot, locale.code);
   const localeManifest = (manifest.locales[locale.code] ??= { pages: {} });
   await mkdir(localeRoot, { recursive: true });
 
@@ -704,13 +664,11 @@ for (const locale of selectedLocales) {
   }
 
   const labels = await translatedLabelMap(config, locale);
-  if (!standalone) {
-    await writeFile(
-      path.join(localeRoot, "docs.yml"),
-      renderNavigationOverlay(config, labels),
-      "utf8",
-    );
-  }
+  await writeFile(
+    path.join(localeRoot, "docs.yml"),
+    renderNavigationOverlay(config, labels),
+    "utf8",
+  );
   if (labelsOnly) {
     console.log(`[${locale.code}] ${locale.label}: navigation labels generated`);
     continue;
@@ -729,8 +687,7 @@ for (const locale of selectedLocales) {
       skippedCount += 1;
       return;
     }
-    let translated = await translateDocument(source, locale);
-    if (standalone) translated = rewriteStandaloneAssetPaths(translated);
+    const translated = await translateDocument(source, locale);
     await mkdir(path.dirname(outputPath), { recursive: true });
     await writeFile(outputPath, translated, "utf8");
     localeManifest.pages[relativePagePath] = sourceHash;

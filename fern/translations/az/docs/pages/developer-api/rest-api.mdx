@@ -1,0 +1,100 @@
+---
+title: "REST API"
+description: "6MM REST API konvensiyalarını, autentifikasiya seçimlərini, sorğu formatlarını, cavab strukturlarını, icazələri və son nöqtə qruplarını nəzərdən keçirin."
+slug: developer-api/rest-api
+canonical-url: https://docs.6mm.com/az/developer-api/rest-api
+---
+
+<h2 id="public-endpoints">İctimai Son nöqtələr</h2>
+
+| Son nöqtə                   | Metod | Yol                                        | Təsvir                                                    |
+| -------------------------- | ------ | ------------------------------------------- | -------------------------------------------------------------- |
+| Xidmət versiyası            | GET    | `/v1/version`                               | Xidmət versiyası məlumatını əldə edin                                |
+| Server vaxtı                | GET    | `/v1/time`                                  | Server vaxtı alın                                                |
+| İstifadəçi girişi                 | POST   | `/v1/public/user/login`                     | İstifadəçi adı və şifrədən istifadə edərək `accessToken`              |
+| Refresh Token              | POST   | `/v1/public/user/refresh-token`             | Giriş vəziyyətini Cookie vasitəsilə yeniləyin                                 |
+| Agent Bilet mübadiləsi      | POST   | `/v1/public/agent-sso/exchange-ticket`      | Agent giriş biletini giriş vəziyyəti ilə dəyiş              |
+| Agent Embed Token mübadiləsi | POST   | `/v1/public/agent-sso/exchange-embed-token` | Giriş vəziyyəti üçün yerləşdirilmiş qısa müddətli ticarət tokenini dəyişmək |
+| Simvol konfiqurasiyası       | GET    | `/v1/public/market/symbols`                 | Simvolları, ticarət qaydalarını və ödəniş səviyyəsi konfiqurasiyasını əldə edin         |
+| Maliyyələşdirmə dərəcəsi konfiqurasiyası | GET    | `/v1/public/market/funding-rate`            | Sorğu maliyyələşdirmə dərəcəsi konfiqurasiyası                               |
+| Cari maliyyələşdirmə dərəcəsi       | GET    | `/v1/public/market/funding-rate/current`    | Cari maliyyələşdirmə faizlərini səhifələyin                                 |
+| Maliyyələşdirmə dərəcəsi tarixi       | GET    | `/v1/public/market/funding-rate/history`    | Sorğu maliyyələşdirmə faizi tarixçəsi                                     |
+| Klines-lər                     | GET    | `/v1/public/market/klines`                  | Ticarət qiyməti, indeks qiyməti və ya mark qiyməti Klines sorğusu           |
+| PnL lider cədvəli            | GET    | `/v1/public/leaderboard/pnl`                | Sorğu 7 / 30 / 90 günlük PnL lider cədvəli                          |
+
+<h2 id="private-user-endpoints">Özəl İstifadəçi Son Nöqtələri</h2>
+
+Başqa cür göstərilməyibsə, aşağıdakı son nöqtələr JWT və ya API Key işarələmədən istifadə edə bilər.
+
+| Son nöqtə                 | Metod | Yol                                      | İcazə   | Təsvir                                 |
+| ------------------------ | ------ | ----------------------------------------- | ------------ | ------------------------------------------- |
+| İstifadəçi məlumatı                | GET    | `/v1/private/user/info`                   | Oxu         | Cari istifadəçi profilinə sorğu                  |
+| İstifadəçi aktivləri              | GET    | `/v1/private/user/asset`                  | Oxu         | Sorğu cüzdanı balansı və marja istifadəsi       |
+| Yarat listenKey         | POST   | `/v1/private/user/listen-key`             | Oxu         | Özəl WebSocket autentifikasiya açarı yarat |
+| Yeniləyin listenKey          | PUT    | `/v1/private/user/listen-key`             | Oxu         | Etibarlılıq listenKey                   |
+| Yaxın listenKey          | DELETE | `/v1/private/user/listen-key`             | Oxu         | Yaxın listenKey                             |
+| Hesab dəyişiklikləri qeydləri      | GET    | `/v1/private/user/account-change-log`     | Oxu         | Fond hərəkəti qeydlərini sorğu                 |
+| 30 günlük həcm statistikası | GET    | `/v1/private/user/volume-stats`           | Oxu         | Son 30 günlük ticarət həcmi və komissiyaları sorğu |
+| Balans tarixi          | GET    | `/v1/private/user/balance-history`        | Oxu         | Sorğu balansı tarixçəsi                       |
+| Ticarət icmalı           | GET    | `/v1/private/user/trade-overview`         | Oxu         | PnL, həcm və aktiv tendensiyasını sorğu edin          |
+| Aktivlərin icmalı xülasəsi   | GET    | `/v1/private/user/asset/overview/summary` | Oxu         | Aktiv xülasə metrikalarını sorğu                 |
+| Aktivlərin ümumi baxış tendensiyası     | GET    | `/v1/private/user/asset/overview/trend`   | Oxu         | Sorğu aktiv trendi                           |
+| Sevimli simvolları yadda saxla    | POST   | `/v1/private/user/favorite-symbols`       | Oxu         | Sevimli simvolların üzərinə yaz                  |
+| Sevimli simvolları əldə edin     | GET    | `/v1/private/user/favorite-symbols`       | Oxu         | Sevimli simvolları sorğu                      |
+| Çıxış                   | POST   | `/v1/private/user/logout`                 | JWT + Cookie | Giriş vəziyyətini təmizləmək                           |
+
+<h2 id="api-key-management-endpoints">API Key İdarəetmə Endpoints</h2>
+
+API Key idarəetmə son nöqtələri yalnız JWTqəbul edir.
+
+| Son nöqtə            | Metod | Yol                                  | Təsvir                                         |
+| ------------------- | ------ | ------------------------------------- | --------------------------------------------------- |
+| Yarat API Key      | POST   | `/v1/private/user/api-key/create`     | Create API Key; `apiSecret` yalnız bir dəfə geri qaytarılır   |
+| API Key siyahısı        | GET    | `/v1/private/user/api-key/list`       | Cari istifadəçinin API açarlarını sorğulamaq                       |
+| Yeniləmə API Key      | PUT    | `/v1/private/user/api-key/update`     | Yeniləmə etiketi, icazələr, IP ağ siyahı və status |
+| Sil API Key      | POST   | `/v1/private/user/api-key/delete`     | Müəyyən edilmiş bir API Key sil                          |
+| Bütün API açarlarını sil | POST   | `/v1/private/user/api-key/delete-all` | Cari istifadəçinin bütün API açarlarını sil             |
+
+<h2 id="order-endpoints">Sıra Son nöqtələri</h2>
+
+Sifariş son nöqtələri üçün ticarət icazəsi tələb olunur.
+
+| Son nöqtə                    | Metod | Yol                                  | Təsvir                                                       |
+| --------------------------- | ------ | ------------------------------------- | ----------------------------------------------------------------- |
+| Sorğu tək ardıcıllıq          | GET    | `/v1/private/order`                   | Dəqiq sorğu `symbol + orderId/clientOrderId`                   |
+| Yer sıralaması                 | POST   | `/v1/private/order/place`             | Limit və ya bazar sifarişi                                             |
+| Yer şərti sırası       | POST   | `/v1/private/order/place-condition`   | Stop loss, take profit, trailing stop və digər şərt əmrləri |
+| Yerləşmə strategiyası sırası        | POST   | `/v1/private/order/place-strategy`    | OTO / OCO / OTOCO strategiya sırası                                  |
+| Toplu yer sifarişləri          | POST   | `/v1/private/order/batch-place`       | Bir neçə normal sifariş göndərin                                     |
+| Sifarişi ləğv et                | POST   | `/v1/private/order/cancel`            | Müəyyən edilmiş normal ardıcıllığı ləğv edin                                   |
+| Dəyişiklik əmri                 | POST   | `/v1/private/order/move`              | Normal gözləyən sifariş qiymətini və miqdarını dəyişdirin                    |
+| Sifarişləri dəyişmək üçün qrup          | POST   | `/v1/private/order/batch-move`        | Eyni simvol üçün normal gözlənilən sifarişləri toplu şəkildə dəyişdirin            |
+| Partiyadan ləğv sifarişləri         | POST   | `/v1/private/order/batch-cancel`      | Partiyadan normal sifarişləri ləğv et                                        |
+| Hamısını ləğv et                  | POST   | `/v1/private/order/batch-cancel-all`  | Sifarişlərin növünə görə partiya ləğvi                                       |
+| Şərt sifarişini ləğv et      | POST   | `/v1/private/order/cancel-condition`  | Müəyyən edilmiş şərt sırasını ləğv edin                                |
+| Cari normal sifarişlər       | GET    | `/v1/private/order/current`           | Cari normal gözləyən əmrləri sorğu                               |
+| Cari vəziyyət əmrləri    | GET    | `/v1/private/order/current-condition` | Cari tetiklenmemiş şərt əmrlərini sorğu                        |
+| Tarixi normal sifarişlər    | GET    | `/v1/private/order/history`           | Paginat tarixi normal sıralar                                 |
+| Tarixi vəziyyət əmrləri | GET    | `/v1/private/order/history-condition` | Paginat tarixi vəziyyət sıraları                              |
+| Ticarət rekordları               | GET    | `/v1/private/order/trades`            | Paginate ticarət rekordları                                            |
+| Strategiya sifarişi detalları       | GET    | `/v1/private/order/strategy`          | Sorğu strategiyası sırası və alt-sifarişlər                               |
+
+<h2 id="position-endpoints">Mövqe Son nöqtələri</h2>
+
+Mövqe son nöqtələri üçün ticarət icazəsi tələb olunur.
+
+| Son nöqtə          | Metod | Yol                               | Təsvir                                  |
+| ----------------- | ------ | ---------------------------------- | -------------------------------------------- |
+| Margin rejimini təyin et   | POST   | `/v1/private/position/margin-mode` | Açar izolyasiya / kəsişmə margin               |
+| Leverage təyin et      | POST   | `/v1/private/position/leverage`    | Simvol leverage təyin edin                          |
+| Mövqe parametrləri | GET    | `/v1/private/position/settings`    | Simvol üçün sorğu leverage və margin rejimi  |
+| Hazırkı vəzifələr | GET    | `/v1/private/position/positions`   | Cari vəzifələri sorğu                      |
+| Vəzifə tarixi  | GET    | `/v1/private/position/history`     | Tarixi mövqeləri və yaxın qeydləri sorğulayın |
+
+<h2 id="endpoint-groups">Son nöqtə qrupları</h2>
+
+- [İctimai Son Nöqtələr](/az/developer-api/rest-api/public-endpoints)
+- [İstifadəçi və Hesab](/az/developer-api/rest-api/user-and-account)
+- [Əmr](/az/developer-api/rest-api/order)
+- [Mövqelər](/az/developer-api/rest-api/position)
+- [Bazar Məlumatları](/az/developer-api/rest-api/market-data)

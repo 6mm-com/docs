@@ -1,32 +1,12 @@
 import { execFileSync } from "node:child_process";
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { generatedLocaleSpecs } from "./locale-config.mjs";
 
 const projectRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
 const fernRoot = path.join(projectRoot, "fern");
 const translationsRoot = path.join(fernRoot, "translations");
-const generatedLocales = [
-  "en-Asia",
-  "ja",
-  "ru",
-  "es-419",
-  "it",
-  "fr",
-  "de",
-  "zh-TW",
-  "pt-BR",
-  "id",
-  "pl",
-  "vi",
-  "uk",
-  "pt",
-  "es",
-  "es-AR",
-  "uz",
-  "ar",
-  "fil",
-  "az",
-];
+const generatedLocales = generatedLocaleSpecs.map((locale) => locale.code);
 const relatedPageLabels = {
   "en-Asia": "Related pages",
   ja: "関連ページ",
@@ -49,25 +29,11 @@ const relatedPageLabels = {
   fil: "Mga kaugnay na pahina",
   az: "Əlaqəli səhifələr",
 };
-const standaloneLocaleCodes = new Set(["en-Asia", "uz", "fil", "az"]);
-const standaloneRoutes = {
-  "en-Asia": "en-Asia",
-  "es-419": "es-419",
-  "pt-BR": "pt-BR",
-  pt: "pt",
-  es: "es",
-  "es-AR": "es-AR",
-  uz: "uz",
-  fil: "fil",
-  az: "az",
-};
 const repairStart = "{/* sixmm-localized-link-repair:start */}";
 const repairEnd = "{/* sixmm-localized-link-repair:end */}";
 
 function localeRoot(locale) {
-  return standaloneLocaleCodes.has(locale)
-    ? path.join(fernRoot, "docs", "locales", locale)
-    : path.join(translationsRoot, locale);
+  return path.join(translationsRoot, locale);
 }
 
 function loadYamlAsJson(filePath) {
@@ -119,7 +85,7 @@ let repairedPages = 0;
 let insertedLinks = 0;
 
 for (const locale of generatedLocales) {
-  const route = standaloneRoutes[locale] ?? locale;
+  const route = locale;
   const titlesBySlug = new Map();
   for (const relativePagePath of activePages) {
     const translated = await readFile(

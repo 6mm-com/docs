@@ -77,11 +77,10 @@ Use separate language routes:
 - `/` for English
 - `/<locale>/` for each localized version
 
-English is the source of truth. Fern-native translation overlays live under
-`fern/translations/`; unsupported standalone locale trees live under
-`fern/docs/locales/`. Do not mix languages in one page. Translate by concept,
-not sentence-by-sentence, and keep API names, method names, event names, headers,
-and code identifiers unchanged.
+English is the source of truth. Every translation overlay lives under
+`fern/translations/` and uses Fern's native locale routing. Do not mix languages
+in one page. Translate by concept, not sentence-by-sentence, and keep API names,
+method names, event names, headers, and code identifiers unchanged.
 
 ## Content Cleanup Before Launch
 

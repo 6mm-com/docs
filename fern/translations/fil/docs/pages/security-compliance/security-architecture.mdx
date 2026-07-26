@@ -1,0 +1,48 @@
+---
+title: "Arkitektura ng Seguridad ng Platform"
+subtitle: "Unawain ang mga security layer na ginagamit sa 6MM trading infrastructure, APIs, SDKs, webhooks, at partner integrations."
+slug: security-compliance/security-architecture
+canonical-url: https://docs.6mm.com/fil/security-compliance/security-architecture
+---
+
+6MM dokumentasyon ng seguridad ay nakatuon sa kahandaan sa produksyon ng mga kasosyo. Ang layunin ay panatilihing matatag ang trading infrastructure habang malinaw ang mga hangganan ng responsibilidad.
+
+<h2 id="security-layers">Mga layer ng seguridad</h2>
+
+| Layer | Pokus |
+| --- | --- |
+| Imprastruktura | Network isolation, encrypted service communication, monitoring, at failover. |
+| Mga sistema ng kalakalan | Deterministic matching, margin checks, risk controls, at pag-iwas sa abuso. |
+| Seguridad ng integrasyon | API keys, HMAC signing, webhook signatures, replay protection, at backend-only secrets. |
+| Operasyon ng Partner | Pag-validate ng user session, asset custody, customer support, at lokal na compliance controls. |
+
+<h2 id="partner-responsibilities">Mga Responsibilidad ng Partner</h2>
+
+- Panatilihing lihim API at pag-sign out ng mga key mula sa mga browser at mobile app.
+- I-validate ang partner user sessions bago magbigay ng trading entry credentials.
+- Ipatupad ang webhook idempotency at terminal state checks.
+- Panatilihin ang mga operational logs para sa account, order, transfer, at webhook flows.
+
+<h2 id="integration-trust-boundaries">Mga hangganan ng integrasyon ng tiwala</h2>
+
+| Hangganan | Kinakailangang kontrol |
+| --- | --- |
+| Browser o app para sa partner backend | I-validate ang partner session bago magbigay ng anumang trading credential. |
+| Partner backend sa 6MM API | Gamitin ang scoped credentials, request signing, time synchronization, at protected secret storage. |
+| 6MM webhook sa partner endpoint | I-verify ang signature laban sa raw request body, tanggihan ang mga luma o invalid na mensahe, at i-deduplicate ang retries. |
+| Mga rekord ng kalakalan mula estado patungong partner | I-reconcile ang mga order, posisyon, balanse, at transfer gamit ang durable identifiers at terminal-state checks. |
+
+<h2 id="production-verification">Beripikasyon ng produksyon</h2>
+
+- Expired, na-revoke, at mali ang scope ng mga kredensyal sa test.
+- Subukan ang mga binagong katawan ng webhook, dobleng callback, delayed callbacks, at endpoint timeouts.
+- Kumpirmahin na ang mga log ay nagre-redact ng mga lihim, access tokens, at sensitibong request payloads.
+- Alerto sa paulit-ulit na pagkabigo sa pirma, abnormal na aktibidad ng order, pagkakaiba sa pagkakasundo, at kawalang-tatag ng koneksyon.
+- Idokumento ang may-ari at response path para sa credential exposure, pagkabigo ng webhook, at mga insidente sa trading.
+
+<h2 id="related-security-guides">Kaugnay na mga gabay sa seguridad</h2>
+
+- [Mga Lihim at Pagpirma](/fil/sdk/security/secrets-signing)
+- [Webhooks & Idempotency](/fil/sdk/security/webhooks-idempotency)
+- [Tugon sa Insidente](/fil/security-compliance/incident-response)
+- [Partner Responsibility Matrix](/fil/security-compliance/partner-responsibilities)

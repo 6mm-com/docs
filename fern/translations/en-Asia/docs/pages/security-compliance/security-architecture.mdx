@@ -1,0 +1,48 @@
+---
+title: "Platform Security Architecture"
+subtitle: "Understand the security layers used across 6MM trading infrastructure, APIs, SDKs, webhooks, and partner integrations."
+slug: security-compliance/security-architecture
+canonical-url: https://docs.6mm.com/en-Asia/security-compliance/security-architecture
+---
+
+6MM security documentation focuses on partner production readiness. The goal is to keep trading infrastructure stable while making responsibility boundaries clear.
+
+<h2 id="security-layers">Security layers</h2>
+
+| Layer | Focus |
+| --- | --- |
+| Infrastructure | Network isolation, encrypted service communication, monitoring, and failover. |
+| Trading systems | Deterministic matching, margin checks, risk controls, and abuse prevention. |
+| Integration security | API keys, HMAC signing, webhook signatures, replay protection, and backend-only secrets. |
+| Partner operations | User session validation, asset custody, customer support, and local compliance controls. |
+
+<h2 id="partner-responsibilities">Partner responsibilities</h2>
+
+- Keep API secrets and signing keys out of browsers and mobile apps.
+- Validate partner user sessions before issuing trading entry credentials.
+- Implement webhook idempotency and terminal state checks.
+- Maintain operational logs for account, order, transfer, and webhook flows.
+
+<h2 id="integration-trust-boundaries">Integration trust boundaries</h2>
+
+| Boundary | Required control |
+| --- | --- |
+| Browser or app to partner backend | Validate the partner session before issuing any trading credential. |
+| Partner backend to 6MM API | Use scoped credentials, request signing, time synchronization, and protected secret storage. |
+| 6MM webhook to partner endpoint | Verify the signature against the raw request body, reject stale or invalid messages, and deduplicate retries. |
+| Trading state to partner records | Reconcile orders, positions, balances, and transfers using durable identifiers and terminal-state checks. |
+
+<h2 id="production-verification">Production verification</h2>
+
+- Test expired, revoked, and incorrectly scoped credentials.
+- Test altered webhook bodies, duplicate callbacks, delayed callbacks, and endpoint timeouts.
+- Confirm that logs redact secrets, access tokens, and sensitive request payloads.
+- Alert on repeated signature failures, abnormal order activity, reconciliation differences, and connection instability.
+- Document the owner and response path for credential exposure, webhook failure, and trading incidents.
+
+<h2 id="related-security-guides">Related security guides</h2>
+
+- [Secrets & Signing](/en-Asia/sdk/security/secrets-signing)
+- [Webhooks & Idempotency](/en-Asia/sdk/security/webhooks-idempotency)
+- [Incident Response](/en-Asia/security-compliance/incident-response)
+- [Partner Responsibility Matrix](/en-Asia/security-compliance/partner-responsibilities)

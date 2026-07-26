@@ -16,8 +16,7 @@ Documentation source files live under:
 
 - `fern/docs/pages/` for English pages
 - `fern/docs.yml` for English navigation, tabs, redirects, and site configuration
-- `fern/translations/<locale>/` for Fern-native translation overlays
-- `fern/docs/locales/<locale>/` for standalone locales that Fern does not support natively
+- `fern/translations/<locale>/` for every localized navigation and page overlay
 
 English is the source of truth. If an English page changes, regenerate the affected
 locales with `npm run translations:generate -- --locales=<locale>`. For a deliberate
