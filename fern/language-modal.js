@@ -20,7 +20,7 @@
     ar: "العربية",
   };
   var extraLocales = [
-    { code: "en-SG", label: "English (Asia)", prefix: "" },
+    { code: "en-SG", label: "English (Asia)", prefix: "en-SG" },
     { code: "uz-UZ", label: "O‘zbek", prefix: "uz" },
     { code: "fil-PH", label: "Filipino", prefix: "fil" },
     { code: "az-AZ", label: "Azərbaycan", prefix: "az" },
@@ -57,6 +57,7 @@
     )
     .filter(Boolean);
   var standaloneSectionLabels = {
+    "en-SG": "English (Asia)",
     uz: "O‘zbek",
     fil: "Filipino",
     az: "Azərbaycan dili",
@@ -127,7 +128,7 @@
 
         selector.classList.add("sixmm-language-globe");
         selector.setAttribute("aria-label", "Choose language");
-        selector.title = "Choose language";
+        selector.removeAttribute("title");
       },
     );
   }
@@ -139,7 +140,6 @@
         var themeButton = selector.nextElementSibling;
         if (
           !parent ||
-          parent.tagName !== "DIV" ||
           !themeButton ||
           themeButton.tagName !== "BUTTON" ||
           !themeButton.querySelector(
@@ -149,12 +149,15 @@
           return;
         }
 
-        parent.classList.add("sixmm-mobile-settings-bar");
-        themeButton.classList.add("sixmm-mobile-theme-trigger");
+        themeButton.classList.add("sixmm-theme-trigger");
+        if (parent.tagName === "DIV") {
+          parent.classList.add("sixmm-mobile-settings-bar");
+          themeButton.classList.add("sixmm-mobile-theme-trigger");
+        }
 
         var themeLabel = (themeButton.textContent || "").trim() || "Theme";
         themeButton.setAttribute("aria-label", themeLabel);
-        themeButton.title = themeLabel;
+        themeButton.removeAttribute("title");
       },
     );
   }
@@ -198,7 +201,11 @@
       : "";
   }
 
-  function syncNativeOptions(group) {
+  function localizedHref(prefix, pagePath) {
+    return (prefix ? "/" + prefix : "") + pagePath;
+  }
+
+  function syncNativeOptions(group, route) {
     Array.from(group.querySelectorAll('[role="menuitemradio"]')).forEach(
       function (option) {
         if (option.dataset.extraLocale) return;
@@ -206,6 +213,7 @@
         var prefix = nativePrefixFromOption(option);
         var label = nativeLocaleLabels[prefix];
         option.dataset.sixmmLocaleKey = "native:" + prefix;
+        option.href = localizedHref(prefix, route.pagePath);
 
         var labelElement = option.querySelector(
           ".fern-language-dropdown-item-label",
@@ -218,8 +226,8 @@
   }
 
   function syncExtraOptions(group, route) {
-
-    var isStandalone = ["uz", "fil", "az"].indexOf(route.prefix) >= 0;
+    var isStandalone =
+      ["en-SG", "uz", "fil", "az"].indexOf(route.prefix) >= 0;
     if (isStandalone) {
       var englishOption = Array.from(
         group.querySelectorAll('[role="menuitemradio"]'),
@@ -286,10 +294,39 @@
     if (!group) return;
 
     var route = currentRoute();
-    syncNativeOptions(group);
+    syncNativeOptions(group, route);
     syncExtraOptions(group, route);
-    syncNativeOptions(group);
+    syncNativeOptions(group, route);
     reorderOptions(group);
+  }
+
+  function guardStandaloneNativeNavigation(menu) {
+    if (menu.dataset.sixmmRouteGuard === "true") return;
+    menu.dataset.sixmmRouteGuard = "true";
+    menu.addEventListener(
+      "click",
+      function (event) {
+        var route = currentRoute();
+        if (
+          ["en-SG", "uz", "fil", "az"].indexOf(route.prefix) < 0
+        ) {
+          return;
+        }
+
+        var option =
+          event.target && event.target.closest
+            ? event.target.closest('[role="menuitemradio"]')
+            : null;
+        if (!option || option.dataset.extraLocale) return;
+
+        var href = option.getAttribute("href");
+        if (!href) return;
+        event.preventDefault();
+        event.stopPropagation();
+        window.location.assign(href);
+      },
+      true,
+    );
   }
 
   function enhanceMenus() {
@@ -303,6 +340,7 @@
         heading.textContent = "Choose language";
         menu.insertBefore(heading, menu.firstChild);
       }
+      guardStandaloneNativeNavigation(menu);
       syncMenuOptions(menu);
     });
   }

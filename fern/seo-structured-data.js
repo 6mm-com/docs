@@ -21,6 +21,7 @@
     "ar",
   ];
   var standaloneLocales = {
+    "en-SG": "en-SG",
     uz: "uz-UZ",
     fil: "fil-PH",
     az: "az-AZ",

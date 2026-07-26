@@ -31,9 +31,10 @@ const expectedLocales = [
   "fil-PH",
   "az-AZ",
 ];
-const standaloneLocaleCodes = new Set(["uz-UZ", "fil-PH", "az-AZ"]);
-const aliasLocaleCodes = new Set(["en-SG"]);
+const standaloneLocaleCodes = new Set(["en-SG", "uz-UZ", "fil-PH", "az-AZ"]);
+const aliasLocaleCodes = new Set();
 const standaloneRoutes = {
+  "en-SG": "en-SG",
   "uz-UZ": "uz",
   "fil-PH": "fil",
   "az-AZ": "az",
@@ -45,7 +46,7 @@ const translatedLocales = expectedLocales.filter(
   (locale) => locale !== "en" && !aliasLocaleCodes.has(locale),
 );
 const generatedLocales = expectedLocales.filter(
-  (locale) => !["en", "en-SG", "zh"].includes(locale),
+  (locale) => !["en", "zh"].includes(locale),
 );
 const errors = [];
 

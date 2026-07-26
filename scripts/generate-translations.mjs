@@ -13,6 +13,7 @@ const manifestPath = path.join(translationsRoot, ".translation-manifest.json");
 const generatorVersion = 3;
 
 const localeSpecs = [
+  { code: "en-SG", route: "en-SG", sourceLanguage: "en", label: "English (Asia)" },
   { code: "ja", sourceLanguage: "en", targetLanguage: "ja", label: "日本語" },
   { code: "ru", sourceLanguage: "en", targetLanguage: "ru", label: "Русский" },
   { code: "es-419", sourceLanguage: "en", targetLanguage: "es-MX", label: "Español (Latinoamérica)" },
@@ -33,10 +34,11 @@ const localeSpecs = [
   { code: "fil-PH", route: "fil", sourceLanguage: "en", targetLanguage: "fil", label: "Filipino" },
   { code: "az-AZ", route: "az", sourceLanguage: "en", targetLanguage: "az", label: "Azərbaycan dili" },
 ];
-const standaloneLocaleCodes = new Set(["uz-UZ", "fil-PH", "az-AZ"]);
+const standaloneLocaleCodes = new Set(["en-SG", "uz-UZ", "fil-PH", "az-AZ"]);
 
 const args = new Set(process.argv.slice(2));
 const force = args.has("--force");
+const labelsOnly = args.has("--labels-only");
 const requestedLocaleArgument = process.argv.find((argument) => argument.startsWith("--locales="));
 const requestedLocales = requestedLocaleArgument
   ? new Set(requestedLocaleArgument.slice("--locales=".length).split(",").filter(Boolean))
@@ -546,7 +548,11 @@ function regionalize(value, locale) {
 async function translateDocument(content, locale) {
   const route = locale.route ?? locale.code;
   if (!locale.targetLanguage) {
-    return canonicalForLocale(localizeInternalLinks(content, route), route);
+    let output = canonicalForLocale(localizeInternalLinks(content, route), route);
+    if (standaloneLocaleCodes.has(locale.code)) {
+      output = output.replace(/^slug:\s*(.+)$/m, `slug: ${route}/$1`);
+    }
+    return output;
   }
   const document = extractDocumentRecords(content);
   const translated = await translateRecords(
@@ -682,6 +688,10 @@ for (const locale of selectedLocales) {
       renderNavigationOverlay(config, labels),
       "utf8",
     );
+  }
+  if (labelsOnly) {
+    console.log(`[${locale.code}] ${locale.label}: navigation labels generated`);
+    continue;
   }
 
   let generatedCount = 0;

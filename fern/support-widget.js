@@ -6,6 +6,7 @@
   var WIDGET_SRC = 'https://csadmin.6mm.com/widget/widget.js';
   var APP_ID = '6mm-docs';
   var localeRoutes = [
+    { route: 'en-SG', widget: 'en-SG' },
     { route: 'es-419', widget: 'es-419' },
     { route: 'zh-TW', widget: 'zh-TW' },
     { route: 'pt-BR', widget: 'pt-BR' },
@@ -31,7 +32,7 @@
     en: '',
     'en-us': '',
     'en-gb': '',
-    'en-sg': '',
+    'en-sg': 'en-SG',
     ja: 'ja',
     'ja-jp': 'ja',
     ru: 'ru',

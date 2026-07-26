@@ -6,6 +6,7 @@ const projectRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname)
 const fernRoot = path.join(projectRoot, "fern");
 const translationsRoot = path.join(fernRoot, "translations");
 const generatedLocales = [
+  "en-SG",
   "ja",
   "ru",
   "es-419",
@@ -48,8 +49,9 @@ const relatedPageLabels = {
   "fil-PH": "Mga kaugnay na pahina",
   "az-AZ": "Əlaqəli səhifələr",
 };
-const standaloneLocaleCodes = new Set(["uz-UZ", "fil-PH", "az-AZ"]);
+const standaloneLocaleCodes = new Set(["en-SG", "uz-UZ", "fil-PH", "az-AZ"]);
 const standaloneRoutes = {
+  "en-SG": "en-SG",
   "uz-UZ": "uz",
   "fil-PH": "fil",
   "az-AZ": "az",
