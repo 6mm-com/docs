@@ -6,13 +6,13 @@
   var WIDGET_SRC = 'https://csadmin.6mm.com/widget/widget.js';
   var APP_ID = '6mm-docs';
   var localeRoutes = [
-    { route: 'en-SG', widget: 'en-SG' },
+    { route: 'en-SG', widget: 'en-Asia' },
     { route: 'es-419', widget: 'es-419' },
     { route: 'zh-TW', widget: 'zh-TW' },
     { route: 'pt-BR', widget: 'pt-BR' },
     { route: 'es-AR', widget: 'es-AR' },
-    { route: 'pt-PT', widget: 'pt-PT' },
-    { route: 'es-ES', widget: 'es-ES' },
+    { route: 'pt-PT', widget: 'pt' },
+    { route: 'es-ES', widget: 'es' },
     { route: 'ja', widget: 'ja' },
     { route: 'ru', widget: 'ru' },
     { route: 'it', widget: 'it' },
@@ -24,14 +24,15 @@
     { route: 'vi', widget: 'vi' },
     { route: 'uk', widget: 'uk' },
     { route: 'ar', widget: 'ar' },
-    { route: 'uz', widget: 'uz-UZ' },
-    { route: 'fil', widget: 'fil-PH' },
-    { route: 'az', widget: 'az-AZ' }
+    { route: 'uz', widget: 'uz' },
+    { route: 'fil', widget: 'fil' },
+    { route: 'az', widget: 'az' }
   ];
   var widgetLanguageRoutes = {
     en: '',
     'en-us': '',
     'en-gb': '',
+    'en-asia': 'en-SG',
     'en-sg': 'en-SG',
     ja: 'ja',
     'ja-jp': 'ja',
@@ -58,7 +59,9 @@
     'vi-vn': 'vi',
     uk: 'uk',
     'uk-ua': 'uk',
+    pt: 'pt-PT',
     'pt-pt': 'pt-PT',
+    es: 'es-ES',
     'es-es': 'es-ES',
     'es-ar': 'es-AR',
     ar: 'ar',

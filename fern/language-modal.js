@@ -20,14 +20,19 @@
     ar: "العربية",
   };
   var extraLocales = [
-    { code: "en-SG", label: "English (Asia)", prefix: "en-SG" },
-    { code: "uz-UZ", label: "O‘zbek", prefix: "uz" },
-    { code: "fil-PH", label: "Filipino", prefix: "fil" },
-    { code: "az-AZ", label: "Azərbaycan", prefix: "az" },
+    {
+      code: "en-Asia",
+      htmlLang: "en-SG",
+      label: "English (Asia)",
+      prefix: "en-SG",
+    },
+    { code: "uz", label: "O‘zbek", prefix: "uz" },
+    { code: "fil", label: "Filipino", prefix: "fil" },
+    { code: "az", label: "Azərbaycan", prefix: "az" },
   ];
   var menuOrder = [
     "native:",
-    "extra:en-SG",
+    "extra:en-Asia",
     "native:ja",
     "native:ru",
     "native:es-419",
@@ -44,10 +49,10 @@
     "native:pt-PT",
     "native:es-ES",
     "native:es-AR",
-    "extra:uz-UZ",
+    "extra:uz",
     "native:ar",
-    "extra:fil-PH",
-    "extra:az-AZ",
+    "extra:fil",
+    "extra:az",
   ];
   var routePrefixes = Object.keys(nativeLocaleLabels)
     .concat(
@@ -172,7 +177,7 @@
     link.className =
       "[&_svg]:size-icon fern-dropdown-item fern-language-dropdown-item sixmm-extra-language-option";
     link.href = extraLocaleHref(locale, route.pagePath);
-    link.lang = locale.code;
+    link.lang = locale.htmlLang || locale.code;
     link.dataset.extraLocale = locale.code;
     link.dataset.state = isActive ? "checked" : "unchecked";
     link.setAttribute("role", "menuitemradio");
