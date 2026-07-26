@@ -2,7 +2,6 @@ export const generatorVersion = 3;
 
 export const locales = [
   { code: "en", label: "English", default: true },
-  { code: "en-Asia", label: "English (Asia)", sourceLanguage: "en" },
   { code: "ja", label: "日本語", sourceLanguage: "en", targetLanguage: "ja" },
   { code: "ru", label: "Русский", sourceLanguage: "en", targetLanguage: "ru" },
   { code: "es-419", label: "Español (Latinoamérica)", sourceLanguage: "en", targetLanguage: "es-MX" },
@@ -18,7 +17,6 @@ export const locales = [
   { code: "uk", label: "Українська", sourceLanguage: "en", targetLanguage: "uk" },
   { code: "pt", label: "Português (Internacional)", sourceLanguage: "en", targetLanguage: "pt-PT" },
   { code: "es", label: "Español (Internacional)", sourceLanguage: "en", targetLanguage: "es" },
-  { code: "es-AR", label: "Español (Argentina)", sourceLanguage: "en", targetLanguage: "es-AR" },
   { code: "uz", label: "O‘zbek", sourceLanguage: "en", targetLanguage: "uz" },
   { code: "ar", label: "العربية", sourceLanguage: "en", targetLanguage: "ar" },
   { code: "fil", label: "Filipino", sourceLanguage: "en", targetLanguage: "fil" },
@@ -29,3 +27,9 @@ export const expectedLocales = locales.map((locale) => locale.code);
 export const generatedLocaleSpecs = locales.filter(
   (locale) => !locale.default && !locale.manual,
 );
+
+// Widget locale codes that intentionally share a Docs translation.
+export const widgetLocaleAliases = {
+  "en-Asia": "en",
+  "es-AR": "es-419",
+};

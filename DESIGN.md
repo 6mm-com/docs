@@ -82,6 +82,14 @@ English is the source of truth. Every translation overlay lives under
 in one page. Translate by concept, not sentence-by-sentence, and keep API names,
 method names, event names, headers, and code identifiers unchanged.
 
+The Docs site intentionally consolidates two Widget-only regional codes:
+
+- `en-Asia` uses the English Docs route.
+- `es-AR` uses the `es-419` Docs route.
+
+Keep accepting both codes from `cs-widget-lang-change`; they do not require
+duplicate translation directories.
+
 ## Content Cleanup Before Launch
 
 Before publishing, clean the source documents:

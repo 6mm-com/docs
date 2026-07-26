@@ -503,7 +503,7 @@ async function translateRecords(records, sourceLanguage, targetLanguage) {
 
 function regionalize(value, locale) {
   let output = value;
-  if (locale === "es-419" || locale === "es-AR") {
+  if (locale === "es-419") {
     output = output
       .replace(/\bordenador(?:es)?\b/gi, (match) => (match.toLowerCase().endsWith("es") ? "computadoras" : "computadora"))
       .replace(/\bfichero(?:s)?\b/gi, (match) => (match.toLowerCase().endsWith("s") ? "archivos" : "archivo"))

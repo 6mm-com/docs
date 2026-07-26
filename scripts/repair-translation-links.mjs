@@ -8,7 +8,6 @@ const fernRoot = path.join(projectRoot, "fern");
 const translationsRoot = path.join(fernRoot, "translations");
 const generatedLocales = generatedLocaleSpecs.map((locale) => locale.code);
 const relatedPageLabels = {
-  "en-Asia": "Related pages",
   ja: "関連ページ",
   ru: "Связанные страницы",
   "es-419": "Páginas relacionadas",
@@ -23,7 +22,6 @@ const relatedPageLabels = {
   uk: "Пов’язані сторінки",
   pt: "Páginas relacionadas",
   es: "Páginas relacionadas",
-  "es-AR": "Páginas relacionadas",
   uz: "Tegishli sahifalar",
   ar: "صفحات ذات صلة",
   fil: "Mga kaugnay na pahina",

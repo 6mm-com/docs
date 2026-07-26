@@ -1,10 +1,9 @@
 (function () {
   var locales = [
-    { code: "", label: "English", htmlLang: "en", widget: "en", aliases: ["en", "en-us", "en-gb"] },
-    { code: "en-Asia", label: "English (Asia)", htmlLang: "en-SG", widget: "en-Asia", aliases: ["en-asia", "en-sg"] },
+    { code: "", label: "English", htmlLang: "en", widget: "en", aliases: ["en", "en-us", "en-gb", "en-asia", "en-sg"] },
     { code: "ja", label: "日本語", widget: "ja", aliases: ["ja", "ja-jp"] },
     { code: "ru", label: "Русский", widget: "ru", aliases: ["ru", "ru-ru"] },
-    { code: "es-419", label: "Español (Latinoamérica)", widget: "es-419", aliases: ["es-419"] },
+    { code: "es-419", label: "Español (Latinoamérica)", widget: "es-419", aliases: ["es-419", "es-ar"] },
     { code: "it", label: "Italiano", widget: "it", aliases: ["it", "it-it"] },
     { code: "fr", label: "Français", widget: "fr", aliases: ["fr", "fr-fr"] },
     { code: "de", label: "Deutsch", widget: "de", aliases: ["de", "de-de"] },
@@ -17,7 +16,6 @@
     { code: "uk", label: "Українська", widget: "uk", aliases: ["uk", "uk-ua"] },
     { code: "pt", label: "Português (Internacional)", widget: "pt", aliases: ["pt", "pt-pt"] },
     { code: "es", label: "Español (Internacional)", widget: "es", aliases: ["es", "es-es"] },
-    { code: "es-AR", label: "Español (Argentina)", widget: "es-AR", aliases: ["es-ar"] },
     { code: "uz", label: "O‘zbek", widget: "uz", aliases: ["uz", "uz-uz"] },
     { code: "ar", label: "العربية", widget: "ar", aliases: ["ar", "ar-sa"] },
     { code: "fil", label: "Filipino", widget: "fil", aliases: ["fil", "fil-ph"] },

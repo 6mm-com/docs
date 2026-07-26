@@ -7,6 +7,7 @@ import {
   expectedLocales,
   generatedLocaleSpecs,
   generatorVersion,
+  widgetLocaleAliases,
 } from "./locale-config.mjs";
 
 const projectRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
@@ -369,6 +370,20 @@ if (!sameArray(browserLocaleCodes, expectedLocales)) {
   pushError(
     `Browser locale mapping does not match the translation config.\nExpected: ${expectedLocales.join(", ")}\nActual: ${browserLocaleCodes.join(", ")}`,
   );
+}
+
+for (const [widgetLocale, docsLocale] of Object.entries(widgetLocaleAliases)) {
+  const browserLocale = browserLocales.find(
+    (locale) => (locale.code || "en") === docsLocale,
+  );
+  const aliases = (browserLocale?.aliases ?? []).map((alias) =>
+    String(alias).toLowerCase(),
+  );
+  if (!aliases.includes(widgetLocale.toLowerCase())) {
+    pushError(
+      `Widget locale ${widgetLocale} must map to Docs locale ${docsLocale}`,
+    );
+  }
 }
 
 const supportScript = await readFile(path.join(fernRoot, "support-widget.js"), "utf8");

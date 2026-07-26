@@ -7,7 +7,6 @@
     .filter(Boolean);
   var homeNames = {
     en: "Home",
-    "en-Asia": "Home",
     ja: "ホーム",
     ru: "Главная",
     "es-419": "Inicio",
@@ -23,7 +22,6 @@
     uk: "Головна",
     pt: "Início",
     es: "Inicio",
-    "es-AR": "Inicio",
     uz: "Bosh sahifa",
     ar: "الرئيسية",
     fil: "Home",
