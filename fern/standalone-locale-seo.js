@@ -1,10 +1,12 @@
 (function () {
   var siteUrl = "https://docs.6mm.com";
-  var standaloneLocales = {
-    "en-SG": "en-SG",
-    uz: "uz-UZ",
-    fil: "fil-PH",
-    az: "az-AZ",
+  var routeLocaleOverrides = {
+    "en-Asia": "en-SG",
+    pt: "pt",
+    es: "es",
+    uz: "uz",
+    fil: "fil",
+    az: "az",
   };
   var lastPathname;
 
@@ -24,20 +26,26 @@
 
     var segments = pathname.split("/").filter(Boolean);
     var routeLocale = segments[0];
-    var hreflang = standaloneLocales[routeLocale];
+    var hreflang = routeLocaleOverrides[routeLocale];
     if (!hreflang) return;
 
     var pagePath = "/" + (segments.slice(1).join("/") || "home");
     var canonicalUrl = siteUrl + "/" + routeLocale + pagePath;
-    var englishUrl = siteUrl + pagePath;
+    var currentAlternate = document.querySelector(
+      'link[rel="alternate"][href="' + canonicalUrl + '"]',
+    );
+    if (currentAlternate) {
+      currentAlternate.hreflang = hreflang;
+    } else {
+      upsertAlternate(hreflang, canonicalUrl);
+    }
 
-    document.querySelectorAll('link[rel="alternate"][hreflang]').forEach(function (link) {
-      link.remove();
-    });
-
-    upsertAlternate(hreflang, canonicalUrl);
-    upsertAlternate("en", englishUrl);
-    upsertAlternate("x-default", englishUrl);
+    var englishAsiaAlternate = document.querySelector(
+      'link[rel="alternate"][href*="/en-Asia/"]',
+    );
+    if (englishAsiaAlternate) {
+      englishAsiaAlternate.hreflang = "en-SG";
+    }
 
     var canonical = document.querySelector('link[rel="canonical"]');
     if (!canonical) {

@@ -1,0 +1,73 @@
+---
+title: "6MM Agent SDK：Java 与 PHP"
+subtitle: "在合作方后端完成 Agent API 签名调用、用户绑定、资产划转、入口 URL 创建和 Webhook 验签。"
+slug: sdk/agent-sdk/overview
+canonical-url: https://docs.6mm.com/zh-CN/sdk/agent-sdk/overview
+---
+
+6MM Agent SDK 适用于需要调用高权限 Agent API 的合作方后端服务，避免自行实现底层签名和请求处理。由于接入需要使用合作方 API Secret，SDK 不能运行在浏览器、移动端或公开桌面客户端代码中。
+
+<h2 id="when-to-use-the-agent-sdk">何时使用 Agent SDK</h2>
+
+当后端需要绑定合作方用户、按批准流程划转资产、查询交易记录、创建嵌入式交易入口 URL，或者验证 Webhook 通知时，可以使用 Agent SDK。前端需要显示交易界面时，应另外使用 [Trading Widget SDK](/zh-CN/sdk/trading-widget/overview)。
+
+<h2 id="capabilities">能力范围</h2>
+
+| 场景 | Java SDK | PHP SDK |
+| --- | --- | --- |
+| 绑定用户 | 已支持 | 已支持 |
+| 固定金额划转 | 已支持 | 已支持 |
+| 一键全部划出 | 已支持 | 已支持 |
+| 冲正 | 已支持 | 已支持 |
+| 查询订单 | 已支持 | 已支持 |
+| 创建入口 URL | 已支持 | 已支持 |
+| Webhook 验签 | 已支持 | 已支持 |
+
+<h2 id="common-configuration">通用配置</h2>
+
+| 配置项 | 示例 | 说明 |
+| --- | --- | --- |
+| baseUrl | `https://agent-api.6mm.com` | 6MM Agent API 服务地址，不带末尾 /。 |
+| agentCode | AGENT001 | 代理商编码。 |
+| apiSecret | your-api-secret | API 签名密钥，只能保存在后端。 |
+| defaultCurrency | USDT | 划转和账户接口默认币种。 |
+| webhookUrl | https://partner.example.com/6mm/webhook | Partner 接收 6MM Webhook 的地址。 |
+
+<h2 id="typical-integration-flow">典型接入流程</h2>
+
+1. 合作方前端通过自己的账户系统验证用户身份。
+2. 合作方后端将用户映射为稳定的合作方用户标识。
+3. 后端使用 `agentCode` 和受保护的 API Secret 调用 Agent SDK。
+4. SDK 对 Agent API 请求签名并发送。
+5. 后端保存返回的业务标识，并对后续 Webhook 进行幂等处理。
+6. 前端只接收当前操作需要的短期结果或入口凭证。
+
+<h2 id="choose-an-sdk">选择 SDK</h2>
+
+| 后端技术栈 | 开始页面 |
+| --- | --- |
+| Java | [Java SDK 概览](/zh-CN/sdk/agent-sdk/java/overview)和 [Java 快速开始](/zh-CN/sdk/agent-sdk/java/quick-start) |
+| PHP | [PHP SDK 概览](/zh-CN/sdk/agent-sdk/php/overview)和 [PHP 快速开始](/zh-CN/sdk/agent-sdk/php/quick-start) |
+
+<h2 id="production-checklist">生产环境检查</h2>
+
+- 从后端密钥管理系统读取 `apiSecret`，不要写入源码。
+- 分离开发、测试和生产环境凭证。
+- 使用稳定的合作方用户映射和唯一业务订单号。
+- 查询超时请求状态时保留并使用原始业务标识。
+- 验证 Webhook 签名并保存已处理的事件 ID。
+- 日志中移除密钥和签名，同时保留可用于支持排查的请求 ID。
+
+<h2 id="next-steps">下一步</h2>
+
+<CardGroup cols={3}>
+<Card title="Java 快速开始" icon="fa-brands fa-java" href="/zh-CN/sdk/agent-sdk/java/quick-start">
+在 Java 后端安装并初始化 Agent SDK。
+</Card>
+<Card title="PHP 快速开始" icon="fa-brands fa-php" href="/zh-CN/sdk/agent-sdk/php/quick-start">
+在 PHP 后端安装并初始化 Agent SDK。
+</Card>
+<Card title="Webhook 与幂等" icon="fa-duotone fa-webhook" href="/zh-CN/sdk/security/webhooks-idempotency">
+验证回调并避免重复业务处理。
+</Card>
+</CardGroup>

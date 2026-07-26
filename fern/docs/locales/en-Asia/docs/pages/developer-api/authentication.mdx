@@ -1,0 +1,73 @@
+---
+title: "6MM API Authentication: JWT and API Keys"
+description: "Learn how to authenticate private 6MM API requests with JWT access tokens or API keys and choose the appropriate method for each integration."
+slug: en-Asia/developer-api/authentication
+canonical-url: https://docs.6mm.com/en-Asia/developer-api/authentication
+---
+
+6MM supports JWT access tokens and API Keys for private API access. Choose the method based on whether the request belongs to an interactive user session or a long-running backend integration.
+
+<h2 id="choose-an-authentication-method">Choose an authentication method</h2>
+
+| Integration need | Recommended method | Why |
+| --- | --- | --- |
+| User-session API calls | JWT | Uses the access token returned after login. |
+| Create, update, or revoke API Keys | JWT | API Key management endpoints do not accept API Key self-management. |
+| Server-to-server account or trading calls | API Key + HMAC signature | Supports scoped permissions and signed backend requests. |
+
+<h2 id="jwt">JWT</h2>
+
+After login, the API returns an `accessToken`. When calling private endpoints, include:
+
+```http
+Authorization: Bearer YOUR_ACCESS_TOKEN
+```
+
+Keep the token out of URLs and logs. When a token expires, obtain a valid token through the approved login or refresh flow before retrying the private request.
+
+<h2 id="api-key">API Key</h2>
+
+When the `X-API-KEY` request header is present, the server uses API Key HMAC authentication:
+
+```http
+X-API-KEY: YOUR_API_KEY
+```
+
+API Key management endpoints must use JWT. API Keys cannot manage themselves.
+
+API Key requests also require the timestamp and HMAC signature described in [Request Signing](/en-Asia/developer-api/request-signing). Store the corresponding API secret only in a backend secret-management system.
+
+<h2 id="api-key-permissions">API Key Permissions</h2>
+
+| Value | Permission | Description                                                                                                                                                                                    |
+| ----- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `1`   | Read       | User info, assets, account change logs, statistics, listenKey, favorite symbols, and related user/account endpoints. Order and position endpoints, including queries, require Trade permission |
+| `2`   | Trade      | Order and position endpoints, including both query and write operations                                                                                                                        |
+| `4`   | Withdraw   | Reserved fund permission                                                                                                                                                                       |
+
+To grant both read and trade permissions, use `permissions=3`.
+
+Use the smallest permission set required by the integration. A market-data service should not receive trade permissions, while an order service needs the trade permission even when it only queries orders or positions.
+
+<h2 id="production-security-checklist">Production security checklist</h2>
+
+- Create separate API Keys for development, staging, and production.
+- Apply an IP whitelist where the integration has stable outbound addresses.
+- Never expose API secrets in browser, mobile, or desktop application code.
+- Synchronize server time before generating signed requests.
+- Redact authorization headers, API Keys, signatures, and secrets from application logs.
+- Revoke and replace a key immediately when exposure is suspected.
+
+<h2 id="next-steps">Next steps</h2>
+
+<CardGroup cols={3}>
+<Card title="API Key Management" icon="fa-duotone fa-key" href="/en-Asia/developer-api/api-key-management">
+Create scoped keys, configure IP restrictions, and plan key rotation.
+</Card>
+<Card title="Request Signing" icon="fa-duotone fa-signature" href="/en-Asia/developer-api/request-signing">
+Build the HMAC-SHA256 payload and sign private requests.
+</Card>
+<Card title="Errors & Troubleshooting" icon="fa-duotone fa-screwdriver-wrench" href="/en-Asia/developer-api/error-codes-and-troubleshooting">
+Diagnose rejected credentials, timestamps, signatures, and permissions.
+</Card>
+</CardGroup>

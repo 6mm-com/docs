@@ -1,0 +1,66 @@
+---
+title: "合作方接入安全架构"
+subtitle: "为嵌入式交易、API、SDK、Webhook、资产划转和运营接入设计信任边界与生产安全控制。"
+slug: solutions/security-architecture
+canonical-url: https://docs.6mm.com/zh-CN/solutions/security-architecture
+---
+
+本页面重点说明合作方应该如何设计安全的 6MM 接入。交易平台整体使用的安全分层，请参阅[平台安全架构](/zh-CN/security-compliance/security-architecture)。
+
+生产接入前应先确认安全架构，因为它会影响合作方如何验证用户、签发 Token、存储密钥、接收事件、监控运营和响应事故。
+
+<h2 id="recommended-trust-boundary">建议的信任边界</h2>
+
+| 组件 | 可以包含 | 不得包含 |
+| --- | --- | --- |
+| 合作方前端 | 公开配置、短期入口结果、非敏感界面状态 | 合作方 API Secret、签名密钥、高权限后端凭证 |
+| 合作方后端 | 用户映射、受保护凭证、签名逻辑、Webhook 处理 | 通过客户端响应或公开日志暴露的密钥 |
+| 6MM 接入接口 | 已批准的签名请求、Token 和 Webhook 推送 | 未经验证的合作方用户身份假设 |
+
+高权限操作应由合作方前端调用合作方后端完成。后端验证用户后，通过已批准的 API 或 SDK 调用 6MM，最后只向前端返回当前操作需要的短期结果。
+
+<h2 id="security-layers">安全层</h2>
+
+| 层级 | 重点 |
+| --- | --- |
+| API 凭证 | 后端存储、轮换计划和访问控制。 |
+| 请求签名 | 统一处理时间戳、签名和防重放。 |
+| Embed Token | 短期签发、资格检查和明确的失效处理。 |
+| Webhook | 签名验证、幂等、重试和事件审计日志。 |
+| 运营 | 访问角色、事故升级、监控和证据保留。 |
+
+<h2 id="production-control-plan">生产控制计划</h2>
+
+| 控制范围 | 最低实现证据 |
+| --- | --- |
+| 凭证存储 | 密钥系统位置、访问负责人、环境隔离和轮换流程。 |
+| 用户入口 | 会话验证、资格检查、短期 Token 流程和失败处理。 |
+| 签名请求 | 正确环境、时间同步、请求日志和签名错误告警。 |
+| 资产操作 | 唯一业务 ID、超时对账、状态查询和人工复核路径。 |
+| Webhook | 原始请求体验签、防重放、幂等记录和可安全重试的处理。 |
+| 监控 | 鉴权失败、异常重试、Webhook 延迟和运营错误告警。 |
+| 事故响应 | 明确负责人、升级渠道、证据保存和凭证撤销流程。 |
+
+<h2 id="launch-review">上线审查</h2>
+
+正式上线前：
+
+1. 绘制用户、Token、请求、资产和 Webhook 数据流。
+2. 标记每个凭证在哪里创建、保存、使用、记录、轮换和撤销。
+3. 测试 Token 过期、签名错误、超时、Webhook 重复和重连场景。
+4. 确认支持团队可以通过 requestId 或业务标识找到对应操作。
+5. 完成[生产上线检查清单](/zh-CN/solutions/production-launch-checklist)。
+
+<h2 id="recommended-docs">推荐文档</h2>
+
+<CardGroup cols={3}>
+<Card title="密钥与签名" icon="fa-duotone fa-key" href="/zh-CN/sdk/security/secrets-signing">
+保护 Agent SDK 凭证和签名请求。
+</Card>
+<Card title="请求签名" icon="fa-duotone fa-signature" href="/zh-CN/developer-api/request-signing">
+实现直接 Developer API 请求签名。
+</Card>
+<Card title="Webhook 与幂等" icon="fa-duotone fa-webhook" href="/zh-CN/sdk/security/webhooks-idempotency">
+安全处理异步事件。
+</Card>
+</CardGroup>

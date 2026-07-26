@@ -1,0 +1,158 @@
+---
+title: "Assinatura do Pedido"
+description: "Assine 6MM API pedidos com HMAC-SHA256 usando a carga útil necessária, carimbo temporal, chave API , cabeçalhos de assinatura e regras de verificação."
+slug: pt/developer-api/request-signing
+canonical-url: https://docs.6mm.com/pt/developer-api/request-signing
+---
+
+<h2 id="request-format">Formato do Pedido</h2>
+
+| Localização | Campo       | Obrigatório            | Descrição                                   |
+| -------- | ----------- | ------------------- | --------------------------------------------- |
+| Cabeçalho   | `X-API-KEY` | Sim                 | `apiKey` devolvido quando a API Key é criada |
+| Consulta    | `timestamp` | Sim                 | Carimbo temporal de milissegundos Unix                    |
+| Consulta    | `signature` | Sim                 | HMAC-SHA256 assinatura, corda hexagonal minúscula   |
+| Carroçaria     | JSON        | Depende do endpoint | POST / PUT / DELETE órgão do pedido              |
+
+<h2 id="signature-payload">Carga Útil de Assinatura</h2>
+
+```
+payload = queryStringWithoutSignature + requestBody
+signature = HMAC-SHA256(apiSecret, payload)
+```
+
+Regras-chave:
+
+* `timestamp` deve ser um carimbo temporal de milissegundos do Unix. A janela de tolerância do servidor é de ±10 segundos.
+* `signature` é colocado na cadeia de consulta URL , mas não está incluído na carga útil da assinatura.
+* O servidor verifica a cadeia de consulta original após remover `signature`; não reordena os parâmetros da consulta.
+* A ordem dos parâmetros de consulta usada para assinar deve corresponder à solicitação real URL.
+* Se existir um corpo de pedido, a cadeia de JSON usada para assinar deve corresponder exatamente ao corpo transmitido realmente.
+* Caminhos relacionados com ordem realizam verificações de assinatura de repetição. Reutilizar a mesma assinatura num curto período retorna `Signature replay detected`.
+
+<h2 id="server-time">Tempo de Servidor</h2>
+
+```http
+GET /v1/time
+```
+
+Exemplo de resposta:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "timestamp": 1780473256,
+    "timestampMs": 1780473256708,
+    "iso": "2026-06-03T07:54:16Z",
+    "timezone": "UTC"
+  },
+  "requestId": "req-7cad3113"
+}
+```
+
+Os clientes devem calcular `timeOffsetMs = serverTimestampMs - localTimestampMs`, e depois usar `timestamp = nowMs + timeOffsetMs` para pedidos assinados subsequentes. Se o servidor devolver `Timestamp outside of tolerance window`, resincroniza imediatamente o tempo e regenera a assinatura.
+
+<h2 id="get-signing-example">GET Exemplo de Assinatura</h2>
+
+Pedido real:
+
+```
+GET /v1/private/order/current?symbol=BTCUSDT&timestamp=1772710377808&signature=...
+```
+
+Carga útil de assinatura:
+
+```
+symbol=BTCUSDT&timestamp=1772710377808
+```
+
+<h2 id="post-signing-example">POST Exemplo de Assinatura</h2>
+
+Pedido real:
+
+```
+POST /v1/private/order/place?timestamp=1772710377808&signature=...
+```
+
+Órgão do pedido:
+
+```json
+{"symbol":"BTCUSDT","type":"LIMIT","side":"BUY","price":"85000","quantity":"0.1","timeInForce":"GTC","makerOnly":true,"clientOrderId":"ext-1772710377808-001"}
+```
+
+Carga útil de assinatura:
+
+```
+timestamp=1772710377808{"symbol":"BTCUSDT","type":"LIMIT","side":"BUY","price":"85000","quantity":"0.1","timeInForce":"GTC","makerOnly":true,"clientOrderId":"ext-1772710377808-001"}
+```
+
+<h2 id="python-signing-example">Exemplo de Assinatura em Python</h2>
+
+```python
+import hashlib
+import hmac
+import json
+import time
+from urllib.parse import urlencode
+
+import requests
+
+BASE_URL = "https://api.6mm.com"
+API_KEY = "YOUR_API_KEY"
+API_SECRET = "YOUR_API_SECRET"
+TIME_OFFSET_MS = 0
+
+def sign(payload: str) -> str:
+    return hmac.new(
+        API_SECRET.encode("utf-8"),
+        payload.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+
+def sync_time_offset():
+    global TIME_OFFSET_MS
+    before = int(time.time() * 1000)
+    resp = requests.get(f"{BASE_URL}/v1/time", timeout=5)
+    after = int(time.time() * 1000)
+    resp.raise_for_status()
+
+    server_ts = int(resp.json()["data"]["timestampMs"])
+    local_midpoint = (before + after) // 2
+    TIME_OFFSET_MS = server_ts - local_midpoint
+
+def signed_request(method: str, path: str, params=None, body=None):
+    params = dict(params or {})
+    params["timestamp"] = str(int(time.time() * 1000) + TIME_OFFSET_MS)
+
+    query_string = urlencode(params)
+    body_string = ""
+    if body is not None:
+        body_string = json.dumps(body, separators=(",", ":"), ensure_ascii=False)
+
+    signature = sign(query_string + body_string)
+    url = f"{BASE_URL}{path}?{query_string}&signature={signature}"
+    headers = {
+        "X-API-KEY": API_KEY,
+        "Content-Type": "application/json",
+    }
+    resp = requests.request(method, url, headers=headers, data=body_string if body is not None else None, timeout=10)
+    resp.raise_for_status()
+    return resp.json()
+
+sync_time_offset()
+print(signed_request("GET", "/v1/private/order/current", {"symbol": "BTCUSDT"}))
+```
+
+<h2 id="related-security-guides">Guias de segurança relacionados</h2>
+
+- [Autenticação](/pt/developer-api/authentication)
+- [API Key Gestão] (/developer-api/api-key-management)
+- [Segredos e Assinatura](/pt/sdk/security/secrets-signing)
+- [Códigos de Erro e Resolução de Problemas](/pt/developer-api/error-codes-and-troubleshooting)
+{/* sixmm-localized-link-repair:start */}
+<h2 id="localized-page-links">Páginas relacionadas</h2>
+
+- [API Key Gestão](/pt/developer-api/api-key-management)
+{/* sixmm-localized-link-repair:end */}

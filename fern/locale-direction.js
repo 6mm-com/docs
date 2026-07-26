@@ -1,29 +1,29 @@
 (function () {
   var locales = [
-    "en-SG",
-    "es-419",
+    "en-Asia",
     "zh-TW",
-    "pt-BR",
-    "es-AR",
     "ja",
     "ru",
     "it",
     "fr",
     "de",
-    "zh",
+    "zh-CN",
     "id",
     "pl",
     "vi",
     "uk",
-    "pt-PT",
-    "es-ES",
     "ar",
   ];
   var standaloneLocales = {
-    "en-SG": "en-SG",
-    uz: "uz-UZ",
-    fil: "fil-PH",
-    az: "az-AZ",
+    "en-Asia": "en-SG",
+    pt: "pt",
+    es: "es",
+    "es-419": "es-419",
+    "pt-BR": "pt-BR",
+    "es-AR": "es-AR",
+    uz: "uz",
+    fil: "fil",
+    az: "az",
   };
   var lastPathname;
 

@@ -1,0 +1,42 @@
+---
+title: "接入建议"
+description: "应用 6MM 在鉴权、重试、幂等、日志、限流、监控、安全和生产上线方面的推荐接入实践。"
+slug: developer-api/integration-recommendations
+canonical-url: https://docs.6mm.com/zh-CN/developer-api/integration-recommendations
+---
+
+以下建议可作为生产接入基线，与接口参考配合使用，帮助系统安全处理超时、重连、重复请求和凭据泄露。
+
+<h2 id="authentication-and-secrets">鉴权与密钥</h2>
+
+- 服务端交易程序优先使用 [API Key 签名](/zh-CN/developer-api/authentication)，用户触发的前端操作优先使用 JWT。
+- `apiSecret` 只保存在后端密钥管理系统中，不得发送到浏览器或移动端。该密钥只展示一次。
+- 只授予 API Key 必要权限；如果接入环境有固定出口地址，应配置 IP 限制。
+- 密钥泄露后立即禁用或删除，并在签发替代密钥前检查请求日志。
+
+<h2 id="request-validation-and-idempotency">请求校验与幂等</h2>
+
+- 下单前读取 `/v1/public/market/symbols`，按 `tickSize`、`stepSize`、最小名义价值和最大数量做本地校验。
+- 每次订单写操作生成唯一 `clientOrderId`，用于断线或超时后的查询与对账。
+- HTTP 结果不确定时保留原始标识，先查询现有订单，不要直接创建替代请求。
+- 金额和价格使用字符串或十进制类型，不要使用二进制浮点数。
+
+<h2 id="order-and-websocket-state">订单与 WebSocket 状态</h2>
+
+- 撤单、全撤、改单后的最终状态以[私有 WebSocket 推送](/zh-CN/developer-api/websocket/private-user-channel)或 REST 查询结果为准。
+- 每次重连都视为新 WebSocket 会话，并恢复全部必要订阅。
+- 按 `endVersion` 检查订单簿连续性；发现版本跳跃时丢弃本地订单簿并重新订阅快照。
+- 私有订单和账户事件必须去重后，才能更新余额、仓位或合作方记录。
+
+<h2 id="logging-monitoring-and-retries">日志、监控与重试</h2>
+
+- 记录 request ID、client order ID、HTTP 状态、业务码、耗时和重试次数，但不得记录密钥或完整 Token。
+- 只重试文档明确允许安全重试的操作，并使用有次数上限的指数退避和随机抖动。
+- 对鉴权失败、签名错误、限流、WebSocket 重连循环、序列缺口和订单对账差异设置告警。
+- 保持服务器时间同步，因为鉴权和签名依赖时间戳。
+
+<h2 id="before-production">生产上线前</h2>
+
+- 在非生产环境验证超时、重复请求、重连、密钥轮换和 Webhook 重试场景。
+- 明确凭据轮换、交易异常、Webhook 故障和对账问题的负责人。
+- 完成[生产上线检查清单](/zh-CN/resources/production-launch-checklist)；需要升级处理时使用[技术支持请求模板](/zh-CN/resources/support-request-template)。

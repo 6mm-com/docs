@@ -9,35 +9,40 @@ const sourceRoot = path.join(fernRoot, "docs");
 const translationsRoot = path.join(fernRoot, "translations");
 const expectedLocales = [
   "en",
-  "en-SG",
+  "en-Asia",
   "ja",
   "ru",
   "es-419",
   "it",
   "fr",
   "de",
-  "zh",
+  "zh-CN",
   "zh-TW",
   "pt-BR",
   "id",
   "pl",
   "vi",
   "uk",
-  "pt-PT",
-  "es-ES",
+  "pt",
+  "es",
   "es-AR",
-  "uz-UZ",
+  "uz",
   "ar",
-  "fil-PH",
-  "az-AZ",
+  "fil",
+  "az",
 ];
-const standaloneLocaleCodes = new Set(["en-SG", "uz-UZ", "fil-PH", "az-AZ"]);
+const standaloneLocaleCodes = new Set(["en-Asia", "es-419", "pt-BR", "pt", "es", "es-AR", "uz", "fil", "az"]);
 const aliasLocaleCodes = new Set();
 const standaloneRoutes = {
-  "en-SG": "en-SG",
-  "uz-UZ": "uz",
-  "fil-PH": "fil",
-  "az-AZ": "az",
+  "en-Asia": "en-Asia",
+  "es-419": "es-419",
+  "pt-BR": "pt-BR",
+  pt: "pt",
+  es: "es",
+  "es-AR": "es-AR",
+  uz: "uz",
+  fil: "fil",
+  az: "az",
 };
 const nativeLocales = expectedLocales.filter(
   (locale) => !standaloneLocaleCodes.has(locale) && !aliasLocaleCodes.has(locale),
@@ -46,7 +51,7 @@ const translatedLocales = expectedLocales.filter(
   (locale) => locale !== "en" && !aliasLocaleCodes.has(locale),
 );
 const generatedLocales = expectedLocales.filter(
-  (locale) => !["en", "zh"].includes(locale),
+  (locale) => !["en", "zh-CN"].includes(locale),
 );
 const errors = [];
 

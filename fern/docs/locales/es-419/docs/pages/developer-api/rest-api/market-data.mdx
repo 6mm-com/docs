@@ -1,0 +1,111 @@
+---
+title: "Datos de mercado"
+description: "Utiliza datos de mercado 6MM no autenticados REST puntos finales para recuperar símbolos, tickers, libros de órdenes, operaciones y otra información pública de trading."
+slug: es-419/developer-api/rest-api/market-data
+canonical-url: https://docs.6mm.com/es-419/developer-api/rest-api/market-data
+---
+
+Los datos de mercado REST endpoints no requieren autenticación.
+
+<h2 id="symbol-configuration">Configuración de símbolos</h2>
+
+```http
+GET /v1/public/market/symbols
+```
+
+Campos de respuesta comunes:
+
+| Campo                      | Tipo   | Descripción                   |
+| -------------------------- | ------ | ----------------------------- |
+| `list[].symbol`            | string | Símbolo                        |
+| `list[].baseAsset`         | string | Activo base                    |
+| `list[].quoteAsset`        | string | Activo cotizado                   |
+| `list[].minQuantity`       | string | Cantidad mínima de pedido        |
+| `list[].minNotional`       | string | Valor nocional mínimo        |
+| `list[].tickSize`          | string | Tamaño del tick de precio               |
+| `list[].stepSize`          | string | Tamaño del paso en cantidad            |
+| `list[].pricePrecision`    | int64  | Precisión de precios               |
+| `list[].maxLimitOrderQty`  | string | Cantidad máxima límite de orden  |
+| `list[].maxMarketOrderQty` | string | Cantidad máxima de pedido de mercado |
+| `list[].maxOpenOrders`     | int64  | Órdenes abiertas máximas por usuario  |
+| `list[].defaultLeverage`   | int64  | Apalancamiento predeterminado              |
+| `list[].defaultMarginMode` | int64  | Modo de margen predeterminado           |
+| `list[].leverageTiers[]`   | array  | Niveles de margen de apalancamiento         |
+| `handlingFeeLevelConfig[]` | array  | Configuración por niveles de tarifas        |
+
+<h2 id="funding-rate-configuration">Configuración de la Tasa de Financiamiento</h2>
+
+```http
+GET /v1/public/market/funding-rate?symbol=BTCUSDT
+```
+
+Parámetros de la solicitud:
+
+| Parámetro | Tipo   | Obligatorio | Descripción                     |
+| --------- | ------ | -------- | ------------------------------- |
+| `symbol`  | string | No       | Si se omite, devuelve todos los símbolos |
+
+<h2 id="current-funding-rate">Tasa actual de financiamiento</h2>
+
+```http
+GET /v1/public/market/funding-rate/current?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+Parámetros de la solicitud:
+
+| Parámetro  | Tipo   | Obligatorio | Descripción                  |
+| ---------- | ------ | -------- | ---------------------------- |
+| `symbol`   | string | No       | Símbolo                       |
+| `page`     | int32  | No       | Número de página, `1` predeterminado     |
+| `pageSize` | int32  | No       | Elementos por página, `20` predeterminado |
+
+<h2 id="funding-rate-history">Historial de tasas de financiamiento</h2>
+
+```http
+GET /v1/public/market/funding-rate/history?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+Parámetros de la solicitud:
+
+| Parámetro   | Tipo   | Obligatorio | Descripción                  |
+| ----------- | ------ | -------- | ---------------------------- |
+| `symbol`    | string | Sí      | Símbolo                       |
+| `startTime` | int64  | No       | Hora de inicio                   |
+| `endTime`   | int64  | No       | Fin del tiempo                     |
+| `page`      | int32  | No       | Número de página, `1` predeterminado     |
+| `pageSize`  | int32  | No       | Elementos por página, `20` predeterminado |
+
+<h2 id="klines">Klines</h2>
+
+```http
+GET /v1/public/market/klines?symbol=BTCUSDT&interval=1m&limit=500
+```
+
+Parámetros de la solicitud:
+
+| Parámetro   | Tipo   | Obligatorio | Descripción                                                              |
+| ----------- | ------ | -------- | ------------------------------------------------------------------------ |
+| `symbol`    | string | Sí      | Símbolo                                                                   |
+| `interval`  | string | Sí      | Intervalo, como `1m`, `5m`, `15m`, `30m`, `1h`, `4h`, `1d`, `1w`, `1M` |
+| `priceType` | string | No       | `indexPrice` / `markPrice`. Si se omite, devuelve el precio de intercambio Klines       |
+| `startTime` | int64  | No       | Hora de inicio                                                               |
+| `endTime`   | int64  | No       | Fin del tiempo                                                                 |
+| `limit`     | int32  | No       | Número de artículos devueltos, `500`predeterminado, máximo `1000`                  |
+
+Campos de respuesta:
+
+| Campo              | Tipo   | Descripción |
+| ------------------ | ------ | ----------- |
+| `list[].openTime`  | int64  | Horario abierto   |
+| `list[].open`      | string | Precio abierto  |
+| `list[].high`      | string | Precio alto  |
+| `list[].low`       | string | Precio bajo   |
+| `list[].close`     | string | Precio cerrado |
+| `list[].volume`    | string | Volumen      |
+| `list[].closeTime` | int64  | Hora de cierre  |
+
+<h2 id="related-documentation">Documentación relacionada</h2>
+
+- [Endpoints Públicos](/es-419/developer-api/rest-api/public-endpoints)
+- [Canales de WebSocket Público](/es-419/developer-api/websocket/public-market-channels)
+- [Profundidad y Dispersión del Mercado](/es-419/solutions/market-depth-spread)

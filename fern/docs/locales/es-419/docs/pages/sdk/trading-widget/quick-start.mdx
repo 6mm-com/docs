@@ -1,0 +1,108 @@
+---
+title: "Incrustar el 6MM Trading Widget: Inicio rápido"
+subtitle: "Agrega el terminal de trading a una página web con un contenedor, el script v1 y TradingWidget.create()."
+slug: es-419/sdk/trading-widget/quick-start
+canonical-url: https://docs.6mm.com/es-419/sdk/trading-widget/quick-start
+---
+
+El Trading Widget SDK integra la interfaz de trading 6MM dentro de una página web propiedad del socio. La integración más rápida requiere un contenedor visible, el script de producción SDK y una llamada a `TradingWidget.create()`.
+
+<h2 id="before-you-start">Antes de que empieces</h2>
+
+- Ejecutar el ejemplo desde una página web que pueda cargar recursos desde `https://app.6mm.com`.
+- Dar al contenedor del widget un ancho y una altura explícitos.
+- Carga el SDK antes de llamar a `TradingWidget.create()`.
+- Planear el [flujo de autenticación](/es-419/sdk/trading-widget/authentication) antes de habilitar funciones de cuenta o trading en producción.
+
+<h2 id="minimal-example">Ejemplo mínimo</h2>
+
+```html
+<div id="trading-widget" style="width: 100%; height: 720px"></div>
+
+<script src="https://app.6mm.com/sdk/trading-widget/v1/index.js"></script>
+<script>
+  const widget = TradingWidget.create('#trading-widget', {
+    baseUrl: 'https://app.6mm.com',
+    symbol: 'BTCUSDT',
+    theme: 'dark',
+    locale: 'en',
+    layout: 'default',
+    display: {
+      showHeader: false,
+      showTicker: false,
+      hidden: [],
+    },
+    onReady(event) {
+      console.log('ready', event)
+    },
+    onError(error) {
+      console.error('error', error)
+    },
+  })
+</script>
+```
+
+Cuando la integración tiene éxito, el SDK crea un iframe dentro de `#trading-widget` y llama a `onReady`. Captura `onError` durante el desarrollo para que las fallas de configuración y carga sean visibles.
+
+<h2 id="sdk-urls">SDK URLs</h2>
+
+| Medio ambiente | Guion URL |
+| --- | --- |
+| Producción | https://app.6mm.com/sdk/trading-widget/v1/index.js |
+
+> **Establecido baseUrl explícitamente**
+>
+> Cuando pruebes desde páginas propiedad del socio, pasa baseUrl para que el iframe siempre apunte al dominio web 6MM .
+
+<h2 id="display-controls">Controles de pantalla</h2>
+
+Las incrustaciones de socios ocultan por defecto el encabezado de PC y el ticker de mercado más bajo. Usa `display` cuando necesites mostrar esas áreas de concha o esconder contenedores de alto nivel en la página de comercio incrustada.
+
+```js
+display: {
+  showHeader: false,
+  showTicker: false,
+  hidden: ['account'],
+}
+```
+
+<h2 id="container-size">Tamaño del contenedor</h2>
+
+| Superficie | Mínimo recomendado |
+| --- | --- |
+| Escritorio | 1024 x 720 |
+| Móvil | 390 x 700 |
+
+Para diseños responsivos, mantén el ancho fluido y establece una altura mínima adecuada para cada punto de interrupción. Un contenedor con altura cero puede cargar el SDK exitosamente mientras deja invisible la interfaz de intercambio.
+
+<h2 id="verify-the-integration">Verifica la integración</h2>
+
+1. Confirmar que el script de SDK regresa correctamente en el panel de red del navegador.
+2. Confirma `onReady` se dispara una vez que el iframe esté inicializado.
+3. Prueba el `symbol`configurado, `locale`, tema y secciones ocultas.
+4. Redimensiona la página entre los puntos de interrupción de escritorio y móvil.
+5. Completar una prueba autenticada con un usuario no productivo antes del lanzamiento.
+
+<h2 id="common-issues">Problemas comunes</h2>
+
+| Síntoma | Qué revisar |
+| --- | --- |
+| Área de widget en blanco | Confirma que el contenedor tiene ancho y altura visibles. |
+| `TradingWidget` es indefinido | Confirma que el script v1 cargó antes de la llamada create. |
+| Página o entorno equivocados | Establece `baseUrl` explícitamente y verifica el entorno configurado. |
+| El evento listo nunca se activa | Captura `onError` e inspecciona solicitudes de iframe o scripts bloqueados. |
+| Los datos de la cuenta no están disponibles | Completar el flujo de autenticación de widgets soportado. |
+
+<h2 id="next-steps">Próximos pasos</h2>
+
+<CardGroup cols={3}>
+<Card title="Autenticación de widgets" icon="fa-duotone fa-user-shield" href="/es-419/sdk/trading-widget/authentication">
+Conecta el terminal embebido a una sesión de usuario aprobada.
+</Card>
+<Card title="Opciones y Eventos" icon="fa-duotone fa-sliders" href="/es-419/sdk/trading-widget/options-events">
+Configura símbolos, ubicación, comportamiento de visualización y callbacks del ciclo de vida.
+</Card>
+<Card title="Métodos de instancia" icon="fa-duotone fa-code" href="/es-419/sdk/trading-widget/instance-methods">
+Controla la instancia del widget creado después de la inicialización.
+</Card>
+</CardGroup>

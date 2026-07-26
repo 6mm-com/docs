@@ -1,0 +1,73 @@
+---
+title: "6MM Agent SDK para Java e PHP"
+subtitle: "Integre chamadas de Agente API assinadas, vinculação de usuários, transferências, URLs de entrada e verificação de webhook dos serviços de backend parceiros."
+slug: pt-BR/sdk/agent-sdk/overview
+canonical-url: https://docs.6mm.com/pt-BR/sdk/agent-sdk/overview
+---
+
+A 6MM Agent SDK é para serviços de backend parceiros que precisam chamar o Agente privilegiado APIs sem implementar assinatura e tratamento de solicitações do zero. Não pode rodar em código de navegador, celular ou desktop público porque a integração usa um parceiro API segredo.
+
+<h2 id="when-to-use-the-agent-sdk">Quando usar o Agent SDK</h2>
+
+Use um Agent SDK quando seu backend precisar vincular um usuário parceiro, movimente ativos por um fluxo de trabalho aprovado, consulte registros de negociação, crie uma URLde entrada de negociação embutida ou verifique notificações de webhooks. Use o [Trading Widget SDK](/pt-BR/sdk/trading-widget/overview) separadamente quando o frontend parceiro precisar exibir a interface de negociação.
+
+<h2 id="capabilities">Capacidades</h2>
+
+| Cenário | Java SDK | PHP SDK |
+| --- | --- | --- |
+| Vincular usuário | Apoiado | Apoiado |
+| Transferência de valor fixo | Apoiado | Apoiado |
+| Transferir tudo para fora | Apoiado | Apoiado |
+| Transferência reversa | Apoiado | Apoiado |
+| Ordens de consulta | Apoiado | Apoiado |
+| Criar URL de entrada | Apoiado | Apoiado |
+| Verificação de Webhook | Apoiado | Apoiado |
+
+<h2 id="common-configuration">Configuração comum</h2>
+
+| Chave | Exemplo | Descrição |
+| --- | --- | --- |
+| baseUrl | `https://agent-api.6mm.com` | 6MM Agente API URL serviço sem slash de trança. |
+| agentCode | AGENT001 | Código do agente parceiro. |
+| apiSecret | Seu-API-Segredo | API segredo de assinatura armazenado apenas no backend. |
+| defaultCurrency | USDT | Moeda padrão para transferências e APIsda conta. |
+| webhookUrl | https://partner.example.com/6mm/webhook | Endpoint parceiro para notificações de webhook 6MM . |
+
+<h2 id="typical-integration-flow">Fluxo típico de integração</h2>
+
+1. A interface do parceiro autentica o usuário por meio do próprio sistema de conta do parceiro.
+2. O backend parceiro mapeia o usuário para um identificador estável do lado do parceiro.
+3. O backend chama o Agent SDK com `agentCode` e o API protegido como segredo.
+4. O SDK assina e envia o Agente API pedido.
+5. O backend armazena o identificador de negócio retornado e processa webhooks posteriores idempotentemente.
+6. O frontend recebe apenas o resultado de curta duração ou credencial de entrada que precisa.
+
+<h2 id="choose-an-sdk">Escolha um SDK</h2>
+
+| Pilha backend | Comece aqui |
+| --- | --- |
+| Java | [Java SDK Visão Geral](/pt-BR/sdk/agent-sdk/java/overview) e [Java Quick Start ] (/sdk/agent-sdk/java/quick-start) |
+| PHP | [PHP SDK Visão Geral](/pt-BR/sdk/agent-sdk/php/overview) e [PHP Quick Start ] (/sdk/agent-sdk/php/quick-start) |
+
+<h2 id="production-checklist">Checklist de produção</h2>
+
+- Carregar `apiSecret` de um gerenciador de segredos backend, não do código-fonte.
+- Mantenha as credenciais de desenvolvimento, encenação e produção separadas.
+- Utilizar um mapeamento de usuário de parceiro estável e identificadores únicos de ordem de negócios.
+- Preservar o identificador original ao verificar o status de uma solicitação com tempo de expiração.
+- Verificar assinaturas de webhooks e armazenar IDs de eventos processados.
+- Ocultar segredos e assinaturas dos logs enquanto retém IDs de solicitação para suporte.
+
+<h2 id="next-steps">Próximos passos</h2>
+
+<CardGroup cols={3}>
+<Card title="Java Início Rápido" icon="fa-brands fa-java" href="/pt-BR/sdk/agent-sdk/java/quick-start">
+Instale e inicialize o Agent SDK em um backend Java .
+</Card>
+<Card title="PHP Início Rápido" icon="fa-brands fa-php" href="/pt-BR/sdk/agent-sdk/php/quick-start">
+Instale e inicialize o Agent SDK em um backend PHP .
+</Card>
+<Card title="Webhooks & Idempotência" icon="fa-duotone fa-webhook" href="/pt-BR/sdk/security/webhooks-idempotency">
+Verifique retornos de chamada e evite processamento comercial duplicado.
+</Card>
+</CardGroup>

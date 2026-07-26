@@ -13,7 +13,7 @@ const manifestPath = path.join(translationsRoot, ".translation-manifest.json");
 const generatorVersion = 3;
 
 const localeSpecs = [
-  { code: "en-SG", route: "en-SG", sourceLanguage: "en", label: "English (Asia)" },
+  { code: "en-Asia", route: "en-Asia", sourceLanguage: "en", label: "English (Asia)" },
   { code: "ja", sourceLanguage: "en", targetLanguage: "ja", label: "日本語" },
   { code: "ru", sourceLanguage: "en", targetLanguage: "ru", label: "Русский" },
   { code: "es-419", sourceLanguage: "en", targetLanguage: "es-MX", label: "Español (Latinoamérica)" },
@@ -26,15 +26,15 @@ const localeSpecs = [
   { code: "pl", sourceLanguage: "en", targetLanguage: "pl", label: "Polski" },
   { code: "vi", sourceLanguage: "en", targetLanguage: "vi", label: "Tiếng Việt" },
   { code: "uk", sourceLanguage: "en", targetLanguage: "uk", label: "Українська" },
-  { code: "pt-PT", sourceLanguage: "en", targetLanguage: "pt-PT", label: "Português (Internacional)" },
-  { code: "es-ES", sourceLanguage: "en", targetLanguage: "es", label: "Español (Internacional)" },
+  { code: "pt", sourceLanguage: "en", targetLanguage: "pt-PT", label: "Português (Internacional)" },
+  { code: "es", sourceLanguage: "en", targetLanguage: "es", label: "Español (Internacional)" },
   { code: "es-AR", sourceLanguage: "en", targetLanguage: "es-AR", label: "Español (Argentina)" },
-  { code: "uz-UZ", route: "uz", sourceLanguage: "en", targetLanguage: "uz", label: "O‘zbek" },
+  { code: "uz", route: "uz", sourceLanguage: "en", targetLanguage: "uz", label: "O‘zbek" },
   { code: "ar", sourceLanguage: "en", targetLanguage: "ar", label: "العربية" },
-  { code: "fil-PH", route: "fil", sourceLanguage: "en", targetLanguage: "fil", label: "Filipino" },
-  { code: "az-AZ", route: "az", sourceLanguage: "en", targetLanguage: "az", label: "Azərbaycan dili" },
+  { code: "fil", route: "fil", sourceLanguage: "en", targetLanguage: "fil", label: "Filipino" },
+  { code: "az", route: "az", sourceLanguage: "en", targetLanguage: "az", label: "Azərbaycan dili" },
 ];
-const standaloneLocaleCodes = new Set(["en-SG", "uz-UZ", "fil-PH", "az-AZ"]);
+const standaloneLocaleCodes = new Set(["en-Asia", "es-419", "pt-BR", "pt", "es", "es-AR", "uz", "fil", "az"]);
 
 const args = new Set(process.argv.slice(2));
 const force = args.has("--force");
@@ -92,7 +92,7 @@ function localizedPath(value, locale) {
   ) {
     return value;
   }
-  const configuredLocalePrefixes = ["zh", ...localeSpecs.map((item) => item.code)];
+  const configuredLocalePrefixes = ["zh-CN", ...localeSpecs.map((item) => item.code)];
   if (configuredLocalePrefixes.some((prefix) => value === `/${prefix}` || value.startsWith(`/${prefix}/`))) {
     return value;
   }

@@ -1,0 +1,50 @@
+---
+title: "常用枚举"
+description: "查询 6MM API 常用枚举，包括订单状态、买卖方向、订单类型、有效方式、持仓模式、划转状态和接口响应。"
+slug: developer-api/common-enums
+canonical-url: https://docs.6mm.com/zh-CN/developer-api/common-enums
+---
+
+<h2 id="orders">订单</h2>
+
+| 枚举     | 取值                                                                                                        |
+| ------ | --------------------------------------------------------------------------------------------------------- |
+| 订单方向   | `BUY` / `SELL`                                                                                            |
+| 持仓方向   | `BOTH` / `LONG` / `SHORT`                                                                                 |
+| 普通订单类型 | `LIMIT` / `MARKET`                                                                                        |
+| 条件单类型  | `STOP_MARKET` / `STOP_LIMIT` / `TAKE_PROFIT_MARKET` / `TAKE_PROFIT_LIMIT` / `TRAILING_STOP`               |
+| 有效方式   | `GTC` / `IOC` / `FOK` / `GTE_GTC`                                                                         |
+| 触发价格类型 | `MARK_PRICE` / `CONTRACT_PRICE`                                                                           |
+| 订单状态   | `NEW` / `PENDING` / `PARTIALLY_FILLED` / `FILLED` / `CANCELED` / `REJECTED` / `PARTIALLY_FILLED_CANCELED` |
+
+`NEW` 表示下单请求已被接受并返回；`PENDING` 表示订单已进入待成交或挂单状态。
+
+<h2 id="positions">仓位</h2>
+
+| 枚举       | 取值                          |
+| -------- | --------------------------- |
+| 保证金模式请求值 | `1` 全仓，`2` 逐仓               |
+| 保证金模式字符串 | `ISOLATED` / `CROSS`        |
+| 平仓触发模式   | `1` 手动，`2` 止盈，`3` 止损，`4` 强平 |
+
+<h2 id="integration-rules">接入规则</h2>
+
+- 枚举值是区分大小写的接口传输值。
+- 日志中保留未知值，并采用安全失败处理；不要静默映射为已知状态。
+- 不要把所有非终态都理解为可以安全重试。应通过订单查询或私有 WebSocket 事件完成对账。
+- 同时保存接口原始值和合作方展示文案，避免新增枚举值时破坏历史记录。
+
+<h2 id="order-state-handling">订单状态处理</h2>
+
+| 状态组 | 取值 | 建议处理 |
+| --- | --- | --- |
+| 已接受或进行中 | `NEW`、`PENDING`、`PARTIALLY_FILLED` | 保持订单活动状态，并通过 WebSocket 或 REST 更新对账。 |
+| 已完成 | `FILLED` | 记录最终成交数量和成交明细。 |
+| 未完全成交即关闭 | `CANCELED`、`REJECTED`、`PARTIALLY_FILLED_CANCELED` | 停止活动处理，同时保留原因和已成交数量。 |
+
+<h2 id="related-documentation">相关文档</h2>
+
+- [订单 API](/zh-CN/developer-api/rest-api/order)：请求字段和订单生命周期操作。
+- [订单类型](/zh-CN/trading/order-types)：限价单、市价单和条件单的产品行为。
+- [私有用户频道](/zh-CN/developer-api/websocket/private-user-channel)：实时订单和账户状态。
+- [错误码与故障排查](/zh-CN/developer-api/error-codes-and-troubleshooting)：业务码和诊断流程。

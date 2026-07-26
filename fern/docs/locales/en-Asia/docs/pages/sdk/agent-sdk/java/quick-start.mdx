@@ -1,0 +1,82 @@
+---
+title: "Java Quick Start"
+subtitle: "Install and initialize the Java SDK from a backend service."
+slug: en-Asia/sdk/agent-sdk/java/quick-start
+canonical-url: https://docs.6mm.com/en-Asia/sdk/agent-sdk/java/quick-start
+---
+
+<h2 id="install">Install</h2>
+
+The public SDK source currently documents tag `v0.1.1` with these Maven coordinates:
+
+```xml
+<dependency>
+    <groupId>com.sixmm.exchange.sdk</groupId>
+    <artifactId>agent</artifactId>
+    <version>0.1.1</version>
+</dependency>
+```
+
+GitHub does not act as a Maven dependency repository. Install the tagged source locally before resolving the dependency:
+
+```bash
+git clone https://github.com/6mm-com/agent-java-sdk.git
+cd agent-java-sdk
+git checkout v0.1.1
+mvn install
+```
+
+> **Team builds**
+>
+> Publish the approved artifact to your organization's Maven repository for CI, testing, and production builds. Confirm the approved version with 6MM before production deployment.
+
+Source code and usage examples are available in the official Java SDK repository:
+
+[6mm-com/agent-java-sdk](https://github.com/6mm-com/agent-java-sdk)
+
+<h2 id="before-you-start">Before you start</h2>
+
+- Confirm your production Agent API base URL with the 6MM team.
+- Store apiSecret in backend secret management only.
+- Prepare a stable mapping between platformUserId and agentUserId.
+- Enable structured logs around bind, transfer, order, and webhook flows.
+
+<h2 id="initialize-client">Initialize client</h2>
+
+```java
+import com.sixmm.agent.AgentClient;
+import com.sixmm.agent.AgentClientConfig;
+
+AgentClient client = new AgentClient(AgentClientConfig.builder()
+        .baseUrl("https://agent-api.6mm.com")
+        .agentCode("AGENT001")
+        .apiSecret("your-api-secret")
+        .defaultCurrency("USDT")
+        .build());
+```
+
+> **Backend only**
+>
+> Do not initialize the Agent SDK from browser, mobile, or desktop client code. The SDK signs privileged Agent API requests.
+
+<h2 id="example-transfer-funds-in">Example: transfer funds in</h2>
+
+```java
+TransferResponse resp = client.transfer(TransferRequest.fixed(
+        "AGT-ORDER-1001",
+        "agent-user-001",
+        Direction.IN,
+        "USDT",
+        "10.00"));
+```
+
+Use a unique partner-side order number for each transfer request. If a request times out, query the original order before creating a new one.
+
+<h2 id="next-steps">Next steps</h2>
+
+| Need | Next page |
+| --- | --- |
+| Issue a Trading Widget credential | [Create Embed Token](/en-Asia/sdk/agent-sdk/java/embed-token) |
+| Verify callbacks from 6MM | [Webhooks & Idempotency](/en-Asia/sdk/security/webhooks-idempotency) |
+| Review signing behavior | [Secrets & Signing](/en-Asia/sdk/security/secrets-signing) |
+| Diagnose an integration problem | [SDK Troubleshooting](/en-Asia/sdk/security/troubleshooting) |

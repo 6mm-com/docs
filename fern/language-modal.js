@@ -3,20 +3,15 @@
     "": "English",
     ja: "日本語",
     ru: "Русский",
-    "es-419": "Español (Latinoamérica)",
     it: "Italiano",
     fr: "Français",
     de: "Deutsch",
-    zh: "简体中文",
+    "zh-CN": "简体中文",
     "zh-TW": "繁體中文",
-    "pt-BR": "Português (Brasil)",
     id: "Bahasa Indonesia",
     pl: "Polski",
     vi: "Tiếng Việt",
     uk: "Українська",
-    "pt-PT": "Português (Internacional)",
-    "es-ES": "Español (Internacional)",
-    "es-AR": "Español (Argentina)",
     ar: "العربية",
   };
   var extraLocales = [
@@ -24,8 +19,13 @@
       code: "en-Asia",
       htmlLang: "en-SG",
       label: "English (Asia)",
-      prefix: "en-SG",
+      prefix: "en-Asia",
     },
+    { code: "es-419", label: "Español (Latinoamérica)", prefix: "es-419" },
+    { code: "pt-BR", label: "Português (Brasil)", prefix: "pt-BR" },
+    { code: "pt", label: "Português (Internacional)", prefix: "pt" },
+    { code: "es", label: "Español (Internacional)", prefix: "es" },
+    { code: "es-AR", label: "Español (Argentina)", prefix: "es-AR" },
     { code: "uz", label: "O‘zbek", prefix: "uz" },
     { code: "fil", label: "Filipino", prefix: "fil" },
     { code: "az", label: "Azərbaycan", prefix: "az" },
@@ -35,20 +35,20 @@
     "extra:en-Asia",
     "native:ja",
     "native:ru",
-    "native:es-419",
+    "extra:es-419",
     "native:it",
     "native:fr",
     "native:de",
-    "native:zh",
+    "native:zh-CN",
     "native:zh-TW",
-    "native:pt-BR",
+    "extra:pt-BR",
     "native:id",
     "native:pl",
     "native:vi",
     "native:uk",
-    "native:pt-PT",
-    "native:es-ES",
-    "native:es-AR",
+    "extra:pt",
+    "extra:es",
+    "extra:es-AR",
     "extra:uz",
     "native:ar",
     "extra:fil",
@@ -62,7 +62,12 @@
     )
     .filter(Boolean);
   var standaloneSectionLabels = {
-    "en-SG": "English (Asia)",
+    "en-Asia": "English (Asia)",
+    "es-419": "Español (Latinoamérica)",
+    "pt-BR": "Português (Brasil)",
+    pt: "Português (Internacional)",
+    es: "Español (Internacional)",
+    "es-AR": "Español (Argentina)",
     uz: "O‘zbek",
     fil: "Filipino",
     az: "Azərbaycan dili",
@@ -124,6 +129,57 @@
         );
       });
     });
+  }
+
+  function standaloneTabLabel(pagePath) {
+    if (pagePath === "/home") return "Home";
+    if (pagePath.indexOf("/solutions/") === 0) return "Solutions";
+    if (
+      pagePath.indexOf("/trading/") === 0 ||
+      pagePath.indexOf("/getting-started/") === 0
+    ) {
+      return "Trading";
+    }
+    if (pagePath.indexOf("/developer-api/") === 0) return "Developers";
+    if (pagePath.indexOf("/sdk/") === 0) return "SDKs";
+    if (
+      pagePath.indexOf("/security/") === 0 ||
+      pagePath.indexOf("/security-compliance/") === 0 ||
+      pagePath.indexOf("/legal/") === 0
+    ) {
+      return "Security & Compliance";
+    }
+    return "Resources & Support";
+  }
+
+  function syncStandaloneLayout() {
+    var route = currentRoute();
+    var isStandalone = Object.prototype.hasOwnProperty.call(
+      standaloneSectionLabels,
+      route.prefix,
+    );
+    document.documentElement.classList.toggle(
+      "sixmm-standalone-locale",
+      isStandalone,
+    );
+    document.documentElement.classList.toggle(
+      "sixmm-standalone-home",
+      isStandalone && route.pagePath === "/home",
+    );
+    if (!isStandalone) return;
+
+    var activeLabel = standaloneTabLabel(route.pagePath);
+    Array.from(document.querySelectorAll('[role="tab"]')).forEach(
+      function (tab) {
+        var tabLabel = (tab.innerText || tab.textContent || "")
+          .trim()
+          .replace(/\s+/g, " ");
+        var isActive = tabLabel === activeLabel;
+        tab.setAttribute("aria-selected", isActive ? "true" : "false");
+        tab.dataset.state = isActive ? "active" : "inactive";
+        tab.tabIndex = isActive ? 0 : -1;
+      },
+    );
   }
 
   function enhanceTriggers() {
@@ -232,7 +288,7 @@
 
   function syncExtraOptions(group, route) {
     var isStandalone =
-      ["en-SG", "uz", "fil", "az"].indexOf(route.prefix) >= 0;
+      ["en-Asia", "es-419", "pt-BR", "pt", "es", "es-AR", "uz", "fil", "az"].indexOf(route.prefix) >= 0;
     if (isStandalone) {
       var englishOption = Array.from(
         group.querySelectorAll('[role="menuitemradio"]'),
@@ -305,29 +361,38 @@
     reorderOptions(group);
   }
 
-  function guardStandaloneNativeNavigation(menu) {
+  function guardLocaleNavigation(menu) {
     if (menu.dataset.sixmmRouteGuard === "true") return;
     menu.dataset.sixmmRouteGuard = "true";
     menu.addEventListener(
       "click",
       function (event) {
-        var route = currentRoute();
-        if (
-          ["en-SG", "uz", "fil", "az"].indexOf(route.prefix) < 0
-        ) {
-          return;
-        }
-
         var option =
           event.target && event.target.closest
             ? event.target.closest('[role="menuitemradio"]')
             : null;
-        if (!option || option.dataset.extraLocale) return;
+        if (!option) return;
+
+        var route = currentRoute();
+        var isStandalone =
+          [
+            "en-Asia",
+            "es-419",
+            "pt-BR",
+            "pt",
+            "es",
+            "es-AR",
+            "uz",
+            "fil",
+            "az",
+          ].indexOf(route.prefix) >= 0;
+        if (!option.dataset.extraLocale && !isStandalone) return;
 
         var href = option.getAttribute("href");
         if (!href) return;
         event.preventDefault();
         event.stopPropagation();
+        event.stopImmediatePropagation();
         window.location.assign(href);
       },
       true,
@@ -345,7 +410,7 @@
         heading.textContent = "Choose language";
         menu.insertBefore(heading, menu.firstChild);
       }
-      guardStandaloneNativeNavigation(menu);
+      guardLocaleNavigation(menu);
       syncMenuOptions(menu);
     });
   }
@@ -396,6 +461,7 @@
     enhanceMobileSettingsBars();
     enhanceMenus();
     syncStandaloneSidebar();
+    syncStandaloneLayout();
   }
 
   function scheduleSync() {

@@ -1,0 +1,73 @@
+---
+title: "6MM Agent SDK for Java and PHP"
+subtitle: "Integrate signed Agent API calls, user binding, transfers, entry URLs, and webhook verification from partner backend services."
+slug: en-Asia/sdk/agent-sdk/overview
+canonical-url: https://docs.6mm.com/en-Asia/sdk/agent-sdk/overview
+---
+
+The 6MM Agent SDK is for partner backend services that need to call privileged Agent APIs without implementing signing and request handling from scratch. It must not run in browser, mobile, or public desktop code because the integration uses a partner API secret.
+
+<h2 id="when-to-use-the-agent-sdk">When to use the Agent SDK</h2>
+
+Use an Agent SDK when your backend needs to bind a partner user, move assets through an approved workflow, query trading records, create an embedded trading entry URL, or verify webhook notifications. Use the [Trading Widget SDK](/en-Asia/sdk/trading-widget/overview) separately when the partner frontend needs to display the trading interface.
+
+<h2 id="capabilities">Capabilities</h2>
+
+| Scenario | Java SDK | PHP SDK |
+| --- | --- | --- |
+| Bind user | Supported | Supported |
+| Fixed amount transfer | Supported | Supported |
+| Transfer all out | Supported | Supported |
+| Reverse transfer | Supported | Supported |
+| Query orders | Supported | Supported |
+| Create entry URL | Supported | Supported |
+| Webhook verification | Supported | Supported |
+
+<h2 id="common-configuration">Common configuration</h2>
+
+| Key | Example | Description |
+| --- | --- | --- |
+| baseUrl | `https://agent-api.6mm.com` | 6MM Agent API service URL without trailing slash. |
+| agentCode | AGENT001 | Partner agent code. |
+| apiSecret | your-api-secret | API signing secret stored only on the backend. |
+| defaultCurrency | USDT | Default currency for transfer and account APIs. |
+| webhookUrl | https://partner.example.com/6mm/webhook | Partner endpoint for 6MM webhook notifications. |
+
+<h2 id="typical-integration-flow">Typical integration flow</h2>
+
+1. The partner frontend authenticates the user through the partner's own account system.
+2. The partner backend maps the user to a stable partner-side identifier.
+3. The backend calls the Agent SDK with `agentCode` and the protected API secret.
+4. The SDK signs and sends the Agent API request.
+5. The backend stores the returned business identifier and processes later webhooks idempotently.
+6. The frontend receives only the short-lived result or entry credential it needs.
+
+<h2 id="choose-an-sdk">Choose an SDK</h2>
+
+| Backend stack | Start here |
+| --- | --- |
+| Java | [Java SDK Overview](/en-Asia/sdk/agent-sdk/java/overview) and [Java Quick Start](/en-Asia/sdk/agent-sdk/java/quick-start) |
+| PHP | [PHP SDK Overview](/en-Asia/sdk/agent-sdk/php/overview) and [PHP Quick Start](/en-Asia/sdk/agent-sdk/php/quick-start) |
+
+<h2 id="production-checklist">Production checklist</h2>
+
+- Load `apiSecret` from a backend secret manager, not source code.
+- Keep development, staging, and production credentials separate.
+- Use a stable partner user mapping and unique business order identifiers.
+- Preserve the original identifier when checking the status of a timed-out request.
+- Verify webhook signatures and store processed event IDs.
+- Redact secrets and signatures from logs while retaining request IDs for support.
+
+<h2 id="next-steps">Next steps</h2>
+
+<CardGroup cols={3}>
+<Card title="Java Quick Start" icon="fa-brands fa-java" href="/en-Asia/sdk/agent-sdk/java/quick-start">
+Install and initialize the Agent SDK in a Java backend.
+</Card>
+<Card title="PHP Quick Start" icon="fa-brands fa-php" href="/en-Asia/sdk/agent-sdk/php/quick-start">
+Install and initialize the Agent SDK in a PHP backend.
+</Card>
+<Card title="Webhooks & Idempotency" icon="fa-duotone fa-webhook" href="/en-Asia/sdk/security/webhooks-idempotency">
+Verify callbacks and prevent duplicate business processing.
+</Card>
+</CardGroup>

@@ -1,0 +1,95 @@
+---
+title: "Trading Widget Autenticação"
+subtitle: "Use partner-token para novas integrações de negociação SSO embarcadas."
+slug: pt-BR/sdk/trading-widget/authentication
+canonical-url: https://docs.6mm.com/pt-BR/sdk/trading-widget/authentication
+---
+
+<h2 id="recommended-mode-partner-token">Modo recomendado: token-parceiro</h2>
+
+Partner-token evita colocar tokens curtos em URLs e mantém apiSecret no backend do parceiro.
+
+```js
+const widget = TradingWidget.create('#trading-widget', {
+  baseUrl: 'https://app.6mm.com',
+  auth: {
+    mode: 'partner-token',
+    tokenProvider: async ({ channelId, symbol, reason }) => {
+      const resp = await fetch('/api/trading/embed-token', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ channelId, symbol, reason }),
+      })
+
+      if (!resp.ok) {
+        throw new Error('Failed to request embed token')
+      }
+
+      return resp.json()
+    },
+  },
+})
+```
+
+<h2 id="related-documentation">Documentação relacionada</h2>
+
+- [Criar Embed Token](/pt-BR/sdk/agent-sdk/java/embed-token): exemplo de emissão de token backend.
+- [Trading Widget Início Rápido](/pt-BR/sdk/trading-widget/quick-start): fluxo de inicialização completo.
+- [Segredos & Assinatura](/pt-BR/sdk/security/secrets-signing): mantenha credenciais privilegiadas de Agente no backend.
+- [Solução de problemas](/pt-BR/sdk/security/troubleshooting): diagnosticar falhas de sessão, token, origem e inicialização.
+
+<h2 id="backend-flow">Fluxo de backend</h2>
+
+```text
+1. Partner frontend receives auth_request from the iframe.
+2. SDK calls tokenProvider.
+3. Partner frontend calls its own backend.
+4. Partner backend validates the partner session.
+5. Partner backend calls 6MM Agent API or Java SDK createEmbedToken.
+6. SDK sends embedToken to the iframe through postMessage.
+7. iframe exchanges embedToken for a 6MM access token.
+8. iframe continues initialization and emits ready.
+```
+
+<h2 id="tokenprovider-contract">tokenProvider contrato</h2>
+
+| Campo | Direção | Descrição |
+| --- | --- | --- |
+| channelId | SDK -> Backend parceiro | Identificador único de sessão de widget. O backend deve passar para createEmbedToken. |
+| Símbolo | SDK -> Backend parceiro | Símbolo de negociação solicitado atualmente. Use para usar o escopo do token quando necessário. |
+| Motivo | SDK -> Backend parceiro | Por que o SDK está solicitando um token, como carregamento inicial ou atualização. |
+| embedToken | Backend parceiro -> SDK | Token de curta duração criado pelo Agent SDK ou Agente API. |
+| expireAt | Backend parceiro -> SDK | O carimbo de tempo de expiração do token devolvido por 6MM. |
+
+<h2 id="failure-handling">Manuseio de falhas</h2>
+
+| Condição | Manuseio recomendado |
+| --- | --- |
+| Sessão de parceiros expirada | Devolva o 401 do endpoint parceiro e peça para o usuário fazer login novamente. |
+| A criação do token falhou temporariamente | Coloque um erro em tokenProvider e permita que o widget mostre um erro de autenticação. |
+| channelId descompasso | Rejeite a solicitação e recrie a instância do widget. |
+| O usuário não pode negociar | Devolva um erro controlado pelo parceiro e não crie um token embed. |
+
+<h2 id="compatibility-mode-agent-sso">Modo de compatibilidade: agente-sso</h2>
+
+Agent-SSO mantém o fluxo antigo de tickets /agent-entry. Prefira o partner-token para novas integrações.
+
+```js
+const widget = TradingWidget.create('#trading-widget', {
+  baseUrl: 'https://app.6mm.com',
+  auth: {
+    mode: 'agent-sso',
+    entryUrlProvider: async ({ redirectPath }) => {
+      const resp = await fetch('/api/trading-entry', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ redirectPath }),
+      })
+      const data = await resp.json()
+      return data.webUrl
+    },
+  },
+})
+```

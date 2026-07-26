@@ -6,7 +6,7 @@ const projectRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname)
 const fernRoot = path.join(projectRoot, "fern");
 const translationsRoot = path.join(fernRoot, "translations");
 const generatedLocales = [
-  "en-SG",
+  "en-Asia",
   "ja",
   "ru",
   "es-419",
@@ -19,16 +19,16 @@ const generatedLocales = [
   "pl",
   "vi",
   "uk",
-  "pt-PT",
-  "es-ES",
+  "pt",
+  "es",
   "es-AR",
-  "uz-UZ",
+  "uz",
   "ar",
-  "fil-PH",
-  "az-AZ",
+  "fil",
+  "az",
 ];
 const relatedPageLabels = {
-  "en-SG": "Related pages",
+  "en-Asia": "Related pages",
   ja: "関連ページ",
   ru: "Связанные страницы",
   "es-419": "Páginas relacionadas",
@@ -41,20 +41,25 @@ const relatedPageLabels = {
   pl: "Powiązane strony",
   vi: "Trang liên quan",
   uk: "Пов’язані сторінки",
-  "pt-PT": "Páginas relacionadas",
-  "es-ES": "Páginas relacionadas",
+  pt: "Páginas relacionadas",
+  es: "Páginas relacionadas",
   "es-AR": "Páginas relacionadas",
-  "uz-UZ": "Tegishli sahifalar",
+  uz: "Tegishli sahifalar",
   ar: "صفحات ذات صلة",
-  "fil-PH": "Mga kaugnay na pahina",
-  "az-AZ": "Əlaqəli səhifələr",
+  fil: "Mga kaugnay na pahina",
+  az: "Əlaqəli səhifələr",
 };
-const standaloneLocaleCodes = new Set(["en-SG", "uz-UZ", "fil-PH", "az-AZ"]);
+const standaloneLocaleCodes = new Set(["en-Asia", "es-419", "pt-BR", "pt", "es", "es-AR", "uz", "fil", "az"]);
 const standaloneRoutes = {
-  "en-SG": "en-SG",
-  "uz-UZ": "uz",
-  "fil-PH": "fil",
-  "az-AZ": "az",
+  "en-Asia": "en-Asia",
+  "es-419": "es-419",
+  "pt-BR": "pt-BR",
+  pt: "pt",
+  es: "es",
+  "es-AR": "es-AR",
+  uz: "uz",
+  fil: "fil",
+  az: "az",
 };
 const repairStart = "{/* sixmm-localized-link-repair:start */}";
 const repairEnd = "{/* sixmm-localized-link-repair:end */}";

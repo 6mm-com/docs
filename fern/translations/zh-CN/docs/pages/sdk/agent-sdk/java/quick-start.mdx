@@ -1,0 +1,82 @@
+---
+title: "Java 快速开始"
+subtitle: "在后端服务中安装并初始化 Java SDK。"
+slug: sdk/agent-sdk/java/quick-start
+canonical-url: https://docs.6mm.com/zh-CN/sdk/agent-sdk/java/quick-start
+---
+
+<h2 id="install">安装</h2>
+
+公开 SDK 源码当前使用 `v0.1.1` 标签，对应 Maven 坐标如下：
+
+```xml
+<dependency>
+    <groupId>com.sixmm.exchange.sdk</groupId>
+    <artifactId>agent</artifactId>
+    <version>0.1.1</version>
+</dependency>
+```
+
+GitHub 不是 Maven 依赖仓库。引用依赖前，先在本地安装对应标签的源码：
+
+```bash
+git clone https://github.com/6mm-com/agent-java-sdk.git
+cd agent-java-sdk
+git checkout v0.1.1
+mvn install
+```
+
+> **团队构建**
+>
+> CI、测试和生产构建应把确认后的构件发布到组织内部 Maven 仓库。生产上线前向 6MM 确认批准使用的版本。
+
+源码和使用示例可在官方 Java SDK 仓库查看：
+
+[6mm-com/agent-java-sdk](https://github.com/6mm-com/agent-java-sdk)
+
+<h2 id="before-you-start">开始前准备</h2>
+
+- 向 6MM 确认生产 Agent API base URL。
+- apiSecret 只保存在后端密钥管理中。
+- 准备 platformUserId 与 agentUserId 的稳定映射。
+- 为 bind、transfer、order 和 webhook 流程开启结构化日志。
+
+<h2 id="initialize-client">初始化客户端</h2>
+
+```java
+import com.sixmm.agent.AgentClient;
+import com.sixmm.agent.AgentClientConfig;
+
+AgentClient client = new AgentClient(AgentClientConfig.builder()
+        .baseUrl("https://agent-api.6mm.com")
+        .agentCode("AGENT001")
+        .apiSecret("your-api-secret")
+        .defaultCurrency("USDT")
+        .build());
+```
+
+> **仅后端使用**
+>
+> 不要在浏览器、移动端或桌面客户端中初始化 Agent SDK。Agent SDK 会签名高权限 Agent API 请求。
+
+<h2 id="example-transfer-funds-in">资金划入示例</h2>
+
+```java
+TransferResponse resp = client.transfer(TransferRequest.fixed(
+        "AGT-ORDER-1001",
+        "agent-user-001",
+        Direction.IN,
+        "USDT",
+        "10.00"));
+```
+
+每次划转请求都应使用唯一的合作方订单号。如果请求超时，请先查询原订单状态，再决定是否重试。
+
+<h2 id="next-steps">下一步</h2>
+
+| 需求 | 下一页 |
+| --- | --- |
+| 签发 Trading Widget 凭据 | [创建 Embed Token](/zh-CN/sdk/agent-sdk/java/embed-token) |
+| 验证 6MM 回调 | [Webhook 与幂等](/zh-CN/sdk/security/webhooks-idempotency) |
+| 查看签名行为 | [密钥与签名](/zh-CN/sdk/security/secrets-signing) |
+| 排查接入问题 | [SDK 故障排查](/zh-CN/sdk/security/troubleshooting) |

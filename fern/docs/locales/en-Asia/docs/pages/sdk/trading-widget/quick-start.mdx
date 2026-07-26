@@ -1,0 +1,108 @@
+---
+title: "Embed the 6MM Trading Widget: Quick Start"
+subtitle: "Add the trading terminal to a web page with a container, the v1 script, and TradingWidget.create()."
+slug: en-Asia/sdk/trading-widget/quick-start
+canonical-url: https://docs.6mm.com/en-Asia/sdk/trading-widget/quick-start
+---
+
+The Trading Widget SDK embeds the 6MM trading interface inside a partner-owned web page. The quickest integration requires a visible container, the production SDK script, and a call to `TradingWidget.create()`.
+
+<h2 id="before-you-start">Before you start</h2>
+
+- Run the example from a web page that can load resources from `https://app.6mm.com`.
+- Give the widget container an explicit width and height.
+- Load the SDK before calling `TradingWidget.create()`.
+- Plan the [authentication flow](/en-Asia/sdk/trading-widget/authentication) before enabling account or trading features in production.
+
+<h2 id="minimal-example">Minimal example</h2>
+
+```html
+<div id="trading-widget" style="width: 100%; height: 720px"></div>
+
+<script src="https://app.6mm.com/sdk/trading-widget/v1/index.js"></script>
+<script>
+  const widget = TradingWidget.create('#trading-widget', {
+    baseUrl: 'https://app.6mm.com',
+    symbol: 'BTCUSDT',
+    theme: 'dark',
+    locale: 'en',
+    layout: 'default',
+    display: {
+      showHeader: false,
+      showTicker: false,
+      hidden: [],
+    },
+    onReady(event) {
+      console.log('ready', event)
+    },
+    onError(error) {
+      console.error('error', error)
+    },
+  })
+</script>
+```
+
+When the integration succeeds, the SDK creates an iframe inside `#trading-widget` and calls `onReady`. Capture `onError` during development so configuration and loading failures are visible.
+
+<h2 id="sdk-urls">SDK URLs</h2>
+
+| Environment | Script URL |
+| --- | --- |
+| Production | https://app.6mm.com/sdk/trading-widget/v1/index.js |
+
+> **Set baseUrl explicitly**
+>
+> When testing from partner-owned pages, pass baseUrl so the iframe always points to the 6MM Web domain.
+
+<h2 id="display-controls">Display controls</h2>
+
+Partner embeds hide the PC header and bottom market ticker by default. Use `display` when you need to show those shell areas or hide high-level containers in the embedded trading page.
+
+```js
+display: {
+  showHeader: false,
+  showTicker: false,
+  hidden: ['account'],
+}
+```
+
+<h2 id="container-size">Container size</h2>
+
+| Surface | Recommended minimum |
+| --- | --- |
+| Desktop | 1024 x 720 |
+| Mobile | 390 x 700 |
+
+For responsive layouts, keep the width fluid and set an appropriate minimum height for each breakpoint. A container with zero height can load the SDK successfully while leaving the trading interface invisible.
+
+<h2 id="verify-the-integration">Verify the integration</h2>
+
+1. Confirm the SDK script returns successfully in the browser network panel.
+2. Confirm `onReady` fires once the iframe is initialized.
+3. Test the configured `symbol`, `locale`, theme, and hidden sections.
+4. Resize the page across desktop and mobile breakpoints.
+5. Complete an authenticated test with a non-production user before launch.
+
+<h2 id="common-issues">Common issues</h2>
+
+| Symptom | What to check |
+| --- | --- |
+| Blank widget area | Confirm the container has visible width and height. |
+| `TradingWidget` is undefined | Confirm the v1 script loaded before the create call. |
+| Wrong page or environment | Set `baseUrl` explicitly and verify the configured environment. |
+| Ready event never fires | Capture `onError` and inspect blocked iframe or script requests. |
+| Account data is unavailable | Complete the supported widget authentication flow. |
+
+<h2 id="next-steps">Next steps</h2>
+
+<CardGroup cols={3}>
+<Card title="Widget Authentication" icon="fa-duotone fa-user-shield" href="/en-Asia/sdk/trading-widget/authentication">
+Connect the embedded terminal to an approved user session.
+</Card>
+<Card title="Options & Events" icon="fa-duotone fa-sliders" href="/en-Asia/sdk/trading-widget/options-events">
+Configure symbols, locale, display behavior, and lifecycle callbacks.
+</Card>
+<Card title="Instance Methods" icon="fa-duotone fa-code" href="/en-Asia/sdk/trading-widget/instance-methods">
+Control the created widget instance after initialization.
+</Card>
+</CardGroup>

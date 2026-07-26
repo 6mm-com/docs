@@ -1,54 +1,53 @@
 (function () {
   var siteUrl = "https://docs.6mm.com";
   var localeCodes = [
-    "en-SG",
+    "en-Asia",
     "es-419",
-    "zh-TW",
     "pt-BR",
     "es-AR",
+    "en-Asia",
+    "zh-TW",
     "ja",
     "ru",
     "it",
     "fr",
     "de",
-    "zh",
+    "zh-CN",
     "id",
     "pl",
     "vi",
     "uk",
-    "pt-PT",
-    "es-ES",
+    "pt",
+    "es",
+    "uz",
+    "fil",
+    "az",
     "ar",
   ];
-  var standaloneLocales = {
-    "en-SG": "en-SG",
-    uz: "uz-UZ",
-    fil: "fil-PH",
-    az: "az-AZ",
-  };
+  var standaloneLocales = {};
   var homeNames = {
     en: "Home",
-    "en-SG": "Home",
+    "en-Asia": "Home",
     ja: "ホーム",
     ru: "Главная",
     "es-419": "Inicio",
     it: "Pagina iniziale",
     fr: "Accueil",
     de: "Startseite",
-    zh: "首页",
+    "zh-CN": "首页",
     "zh-TW": "首頁",
     "pt-BR": "Início",
     id: "Beranda",
     pl: "Strona główna",
     vi: "Trang chủ",
     uk: "Головна",
-    "pt-PT": "Início",
-    "es-ES": "Inicio",
+    pt: "Início",
+    es: "Inicio",
     "es-AR": "Inicio",
-    "uz-UZ": "Bosh sahifa",
+    uz: "Bosh sahifa",
     ar: "الرئيسية",
-    "fil-PH": "Home",
-    "az-AZ": "Ana səhifə",
+    fil: "Home",
+    az: "Ana səhifə",
   };
 
   function localeForPathname(pathname) {
@@ -93,7 +92,7 @@
       .replace(new RegExp("^" + locale.prefix.replace("-", "\\-") + "/"), "/")
       .replace(/^\//, "");
     var localePrefix = locale.prefix;
-    var isChinese = locale.code === "zh" || locale.code === "zh-TW";
+    var isChinese = locale.code === "zh-CN" || locale.code === "zh-TW";
     var labels =
       locale.code === "zh-TW"
         ? {

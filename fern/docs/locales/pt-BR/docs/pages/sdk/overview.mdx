@@ -1,0 +1,53 @@
+---
+title: "6MM SDKs"
+subtitle: "Escolha o caminho 6MM SDK certo para negociação embarcada, emissão de tokens backend, vinculação de contas, webhooks e operações de produção."
+slug: pt-BR/sdk/overview
+canonical-url: https://docs.6mm.com/pt-BR/sdk/overview
+---
+
+<h2 id="choose-an-sdk-path">Escolha um caminho SDK</h2>
+
+<CardGroup cols={3}>
+<Card title="Trading Widget SDK" icon="duotone chart-line" href="/pt-BR/sdk/trading-widget/quick-start">
+  Incorpore o terminal de negociação 6MM em um site, carteira, portal de corretores ou superfície de produto parceiro existente.
+</Card>
+<Card title="Agent SDK" icon="duotone server" href="/pt-BR/sdk/agent-sdk/overview">
+  Conecte um backend parceiro a 6MM para vinculação de usuários, incorporação de tokens, URLs de entrada, transferências, consultas de pedidos e webhooks.
+</Card>
+<Card title="Segurança e Operações" icon="duotone shield-check" href="/pt-BR/sdk/security/secrets-signing">
+  Prepare armazenamento secreto, assinatura de solicitações, idempotência do webhook, monitoramento e resolução de problemas de lançamento.
+</Card>
+</CardGroup>
+
+<h2 id="recommended-combination">Combinação recomendada</h2>
+
+| Objetivo do parceiro | Frontend | Backend | Por que isso importa |
+| --- | --- | --- | --- |
+| Adicionar um terminal de negociação embutido | Trading Widget SDK | Agent SDK | O widget gerencia a interface de negociação enquanto o backend parceiro emite tokens e mantém os segredos privados. |
+| Crie um ponto de entrada nativo para um aplicativo | Entrada nativa ou H5 | Agent SDK | O aplicativo abre uma 6MM URL de entrada após o parceiro validar a sessão do usuário. |
+| Construa um fluxo de negociação personalizado | UI Parceira | Revelador API + fluxos de SDK selecionados | Use APIs para dados de conta, pedidos, posição e mercado, mantendo os controles operacionais do lado do servidor. |
+
+<h2 id="reference-architecture">Arquitetura de referência</h2>
+
+```text
+Partner Web App
+  -> TradingWidget.create()
+  -> tokenProvider()
+  -> Partner Backend
+  -> 6MM Agent SDK
+  -> 6MM Agent API
+  -> 6MM Trading iframe
+```
+
+> **Guarde segredos do lado do servidor**
+>
+> O código do navegador deve chamar apenas endpoints pertencentes ao parceiro. O segredo do Agente API nunca deve ser enviado para o código frontend.
+
+<h2 id="production-checklist">Checklist de produção</h2>
+
+- Armazenar apiSecret apenas na infraestrutura backend.
+- Usar HTTPS para requisições de API de Agente e URLs de webhooks.
+- Persistir agentUserId, platformUserId agentOrderNo mapeamentos.
+- Representar valores monetários como cadeias decimais em vez de valores de ponto flutuante.
+- Tratar PROCESSING como pendente, não como sucesso ou fracasso.
+- Processar webhooks idempotentemente porque se esperam retentativas.
