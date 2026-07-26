@@ -1,0 +1,85 @@
+---
+title: "Verificação de Assinatura e Idempotência em Webhook"
+subtitle: "Verifique 6MM webhooks do Agente com o corpo bruto do pedido e processe tentativas, timeouts e eventos repetidos sem ações empresariais duplicadas."
+slug: sdk/security/webhooks-idempotency
+canonical-url: https://docs.6mm.com/pt-PT/sdk/security/webhooks-idempotency
+---
+
+Os Webhooks notificam o backend parceiro sobre alterações assíncronas no estado do negócio. Como a entrega pode ser tentada novamente, cada recetor deve verificar a assinatura antes de analisar dados confiáveis e deve processar o evento de forma idempotente.
+
+<h2 id="webhook-headers">Cabeçalhos Webhook</h2>
+
+| Cabeçalho | Descrição |
+| --- | --- |
+| X-Agent-Timestamp | Carimbo de data e hora do Unix em segundos. |
+| X-Agente-Nonce | Sem proteção contra repetições. |
+| X-Agent-Signature | HMAC-SHA256 assinatura. |
+
+```text
+timestamp + nonce + rawBody
+```
+
+Use o corpo bruto do pedido recebido ao longo de HTTP ao reconstruir o valor assinado. Analisar e voltar a serializar JSON primeiro pode alterar a ordem dos espaços em branco ou dos campos e produzir uma assinatura diferente.
+
+<h2 id="verification-flow">Fluxo de verificação</h2>
+
+1. Leia os cabeçalhos de carimbo temporal, nonce e assinatura.
+2. Capturar o corpo bruto do pedido não modificado.
+3. Construir `timestamp + nonce + rawBody`.
+4. Calcular HMAC-SHA256 com o parceiro API segredo.
+5. Compare as assinaturas calculadas e recebidas usando uma comparação em tempo constante.
+6. Aplicar as verificações aprovadas de carimbo temporal e não reutilização.
+7. Analisar e processar o evento apenas após o sucesso da verificação.
+
+Quando estiver disponível um verificador oficial de Agent SDK , utilize-o em vez de manter um código de assinatura independente.
+
+<h2 id="order-idempotency">Idempotência da ordem</h2>
+
+| Caso | Condução |
+| --- | --- |
+| Pedido inicial de transferência | Crie uma agentOrderNoglobalmente única. |
+| HTTP pausa | Consulta o agentOrderNo original antes de criar um novo. |
+| PROCESSING resposta | Aguarde pelo estado do webhook ou da encomenda de consulta. |
+| Webhook repetido | Desduplicar por chave de idempotência e estado final. |
+
+<h2 id="recommended-idempotency-record">Registo recomendado de idempotência</h2>
+
+Armazene informação suficiente para reconhecer uma entrega repetida e recuperar em segurança:
+
+| Campo | Finalidade |
+| --- | --- |
+| Chave do evento ou do negócio | Identifica de forma única a notificação ou operação. |
+| Número de encomenda do parceiro | Liga o evento ao pedido original. |
+| Hash da carga útil | Ajuda a identificar cargas úteis repetidas em conflito. |
+| Estado atual do processamento | Distingue trabalhos recebidos, processados, bem-sucedidos e falhados. |
+| Estado final do negócio | Impede que uma ação terminal seja aplicada duas vezes. |
+| Carimbo temporal processado | Apoia políticas de investigação e retenção. |
+
+Comprometa o registo de alteração do negócio e de idempotência na mesma transação sempre que possível. Um evento repetido deve devolver o resultado já conhecido em vez de aplicar novamente o saldo, a ordem ou a alteração do utilizador.
+
+<h2 id="timeout-and-retry-rule">Regra do tempo limite e da retentativa</h2>
+
+Um HTTP tempo não prova que o pedido original falhou. Consulte a operação usando o `agentOrderNo`original , ou espere pelo seu webhook, antes de decidir se é necessária outra ação. Criar um novo número de ordem de negócio após cada pausa pode causar movimentos duplicados de fundos.
+
+<h2 id="production-checklist">Lista de verificação de produção</h2>
+
+- Verificar a assinatura antes de JSON análise ou processamento empresarial.
+- Preservar o corpo bruto independentemente da carga útil analisada.
+- Rejeitar pedidos obsoletos ou reproduzidos de acordo com a política de integração aprovada.
+- Tornar o processamento de eventos seguro para entregas repetidas e fora de ordem.
+- Registar IDs de eventos, números de encomenda dos parceiros, resultados de processamento e tempo de pedido.
+- Redigir segredos e valores de assinatura dos registos e anexos de suporte.
+
+<h2 id="related-docs">Documentação relacionada</h2>
+
+<CardGroup cols={3}>
+<Card title="Segredos e HMAC Assinaturas" icon="fa-duotone fa-shield-keyhole" href="/pt-PT/sdk/security/secrets-signing">
+Proteja o segredo API usado para verificação de pedidos e webhooks.
+</Card>
+<Card title="Agent SDK Visão Geral" icon="fa-duotone fa-server" href="/pt-PT/sdk/agent-sdk/overview">
+Revê todo o fluxo de trabalho de integração do backend.
+</Card>
+<Card title="SDK Resolução de problemas" icon="fa-duotone fa-screwdriver-wrench" href="/pt-PT/sdk/security/troubleshooting">
+Investigar assinaturas rejeitadas, eventos repetidos e operações pendentes.
+</Card>
+</CardGroup>

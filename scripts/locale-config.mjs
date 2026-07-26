@@ -15,8 +15,8 @@ export const locales = [
   { code: "pl", label: "Polski", sourceLanguage: "en", targetLanguage: "pl" },
   { code: "vi", label: "Tiếng Việt", sourceLanguage: "en", targetLanguage: "vi" },
   { code: "uk", label: "Українська", sourceLanguage: "en", targetLanguage: "uk" },
-  { code: "pt", label: "Português (Internacional)", sourceLanguage: "en", targetLanguage: "pt-PT", standalone: true },
-  { code: "es", label: "Español (Internacional)", sourceLanguage: "en", targetLanguage: "es", standalone: true },
+  { code: "pt-PT", label: "Português (Internacional)", sourceLanguage: "en", targetLanguage: "pt-PT" },
+  { code: "es-ES", label: "Español (Internacional)", sourceLanguage: "en", targetLanguage: "es-ES" },
   { code: "uz", label: "O‘zbek", sourceLanguage: "en", targetLanguage: "uz", standalone: true },
   { code: "ar", label: "العربية", sourceLanguage: "en", targetLanguage: "ar" },
   { code: "fil", label: "Filipino", sourceLanguage: "en", targetLanguage: "fil", standalone: true },
@@ -38,4 +38,6 @@ export const generatedLocaleSpecs = locales.filter(
 export const widgetLocaleAliases = {
   "en-Asia": "en",
   "es-AR": "es-419",
+  pt: "pt-PT",
+  es: "es-ES",
 };

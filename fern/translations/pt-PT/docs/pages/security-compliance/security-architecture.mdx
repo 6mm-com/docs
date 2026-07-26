@@ -1,0 +1,48 @@
+---
+title: "Arquitetura de Segurança de Plataforma"
+subtitle: "Compreenda as camadas de segurança utilizadas em 6MM infraestrutura de trading, APIs, SDKs, webhooks e integrações com parceiros."
+slug: security-compliance/security-architecture
+canonical-url: https://docs.6mm.com/pt-PT/security-compliance/security-architecture
+---
+
+6MM documentação de segurança foca-se na prontidão de produção dos parceiros. O objetivo é manter a infraestrutura de comércio estável, mantendo os limites de responsabilidade claros.
+
+<h2 id="security-layers">Camadas de segurança</h2>
+
+| Camada | Foco |
+| --- | --- |
+| Infraestruturas | Isolamento de rede, comunicação encriptada de serviços, monitorização e failover. |
+| Sistemas de negociação | Correspondência determinística, verificações de margens, controlo de risco e prevenção do abuso. |
+| Segurança de integração | API chaves, HMAC assinaturas, assinaturas de webhooks, proteção contra replay e segredos exclusivos do backend. |
+| Operações com parceiros | Validação de sessões de utilizador, custódia de ativos, apoio ao cliente e controlos locais de conformidade. |
+
+<h2 id="partner-responsibilities">Responsabilidades dos parceiros</h2>
+
+- Manter API segredos e chaves de assinatura fora dos navegadores e aplicações móveis.
+- Validar as sessões dos utilizadores parceiros antes de emitir credenciais de entrada de negociação.
+- Implementar verificações de idempotência e estado de terminal em webhook.
+- Manter registos operacionais para fluxos de conta, encomenda, transferência e webhook.
+
+<h2 id="integration-trust-boundaries">Limites de confiança de integração</h2>
+
+| Fronteira | Controlo necessário |
+| --- | --- |
+| Navegador ou aplicação para backend parceiro | Valide a sessão do parceiro antes de emitir qualquer credencial de trading. |
+| Backend parceiro para 6MM API | Use credenciais com escopo, assinatura de pedidos, sincronização de tempo e armazenamento secreto protegido. |
+| 6MM webhook para endpoint parceiro | Verifique a assinatura em relação ao corpo bruto do pedido, rejeite mensagens obsoletas ou inválidas e deduplique as tentativas. |
+| Troca de estados para registos parceiros | Reconcilie ordens, posições, saldos e transferências usando identificadores duráveis e verificações de estado terminal. |
+
+<h2 id="production-verification">Verificação de produção</h2>
+
+- Credenciais expiradas, revogadas e com o âmbito do teste incorretamente.
+- Testar corpos alterados de webhooks, callbacks duplicados, callbacks atrasados e timeouts de endpoint.
+- Confirmar que os registos ocultam segredos, tokens de acesso e cargas úteis de pedidos sensíveis.
+- Alerta sobre falhas repetidas de assinatura, atividade anormal de ordens, diferenças de reconciliação e instabilidade na ligação.
+- Documentar o proprietário e o caminho de resposta para exposição a credenciais, falhas de webhook e incidentes de comércio.
+
+<h2 id="related-security-guides">Guias de segurança relacionados</h2>
+
+- [Segredos e Assinatura](/pt-PT/sdk/security/secrets-signing)
+- [Webhooks & Idempotência](/pt-PT/sdk/security/webhooks-idempotency)
+- [Resposta a Incidentes](/pt-PT/security-compliance/incident-response)
+- [Matriz de Responsabilidade do Parceiro](/pt-PT/security-compliance/partner-responsibilities)

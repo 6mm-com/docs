@@ -14,8 +14,8 @@
     { code: "pl", label: "Polski", widget: "pl", aliases: ["pl", "pl-pl"] },
     { code: "vi", label: "Tiếng Việt", widget: "vi", aliases: ["vi", "vi-vn"] },
     { code: "uk", label: "Українська", widget: "uk", aliases: ["uk", "uk-ua"] },
-    { code: "pt", label: "Português (Internacional)", widget: "pt", aliases: ["pt", "pt-pt"] },
-    { code: "es", label: "Español (Internacional)", widget: "es", aliases: ["es", "es-es"] },
+    { code: "pt-PT", label: "Português (Internacional)", widget: "pt", aliases: ["pt", "pt-pt"] },
+    { code: "es-ES", label: "Español (Internacional)", widget: "es", aliases: ["es", "es-es"] },
     { code: "uz", label: "O‘zbek", widget: "uz", aliases: ["uz", "uz-uz"] },
     { code: "ar", label: "العربية", widget: "ar", aliases: ["ar", "ar-sa"] },
     { code: "fil", label: "Filipino", widget: "fil", aliases: ["fil", "fil-ph"] },
@@ -28,10 +28,8 @@
   var localeOrder = locales.map(function (locale) {
     return locale.code;
   });
-  var standaloneLocaleCodes = ["pt", "es", "uz", "fil", "az"];
+  var standaloneLocaleCodes = ["uz", "fil", "az"];
   var standaloneSectionLabels = {
-    pt: "Português (Internacional)",
-    es: "Español (Internacional)",
     uz: "O‘zbek",
     fil: "Filipino",
     az: "Azərbaycan",

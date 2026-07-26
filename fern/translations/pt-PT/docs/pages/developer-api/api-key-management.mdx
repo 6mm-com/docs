@@ -1,0 +1,128 @@
+---
+title: "API Key Gestão"
+description: "Criar, inspecionar, atualizar e revogar chaves 6MM API aplicando as permissões apropriadas, restrições de IP , armazenamento secreto e práticas de rotação."
+slug: developer-api/api-key-management
+canonical-url: https://docs.6mm.com/pt-PT/developer-api/api-key-management
+---
+
+API Key endpoints de gestão só aceitam autenticação JWT .
+
+<h2 id="create-api-key">Crie API Key</h2>
+
+```http
+POST /v1/private/user/api-key/create
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+Parâmetros do pedido:
+
+| Parâmetro     | Tipo      | Obrigatório | Descrição                                                           |
+| ------------- | --------- | -------- | --------------------------------------------------------------------- |
+| `label`       | string    | Sim      | API Key rótulo, comprimento 1 - 64                                          |
+| `permissions` | int       | Não       | Máscara de bits de permissões, `1`padrão, intervalo `1` - `7`                      |
+| `ipWhitelist` | fio\[] | Não       | IP whitelist, até 20 entradas. Se omitido, a IP de origem é irrestrita |
+
+Exemplo de pedido:
+
+```bash
+curl -X POST https://api.6mm.com/v1/private/user/api-key/create \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -d '{
+    "label": "external-service-prod",
+    "permissions": 3,
+    "ipWhitelist": ["203.0.113.10"]
+  }'
+```
+
+Exemplo de resposta:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "apiKey": "fx_xxxxxxxxxxxxxxxxxxxxxxxx",
+    "apiSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  },
+  "requestId": "req-api-key"
+}
+```
+
+`apiSecret` é devolvido apenas uma vez quando o API Key é criado. Guarde-o imediatamente num sistema de gestão secreto. Não o escrevas em repositórios ou logs do código-fonte.
+
+Cada utilizador pode criar até 30 API Chaves.
+
+<h2 id="list-api-keys">Lista API Chaves</h2>
+
+```http
+GET /v1/private/user/api-key/list
+Authorization: Bearer YOUR_ACCESS_TOKEN
+```
+
+Campos de resposta:
+
+| Campo                | Tipo      | Descrição                       |
+| -------------------- | --------- | --------------------------------- |
+| `list[].id`          | string    | API Key ID                        |
+| `list[].label`       | string    | Editora                             |
+| `list[].apiKey`      | string    | Identificador público API Key         |
+| `list[].permissions` | int       | Máscara de bits de permissão                |
+| `list[].ipWhitelist` | fio\[] | IP lista branca                      |
+| `list[].status`      | int       | Estado: `1` ativado, `0` desativado |
+| `list[].lastUsedAt`  | int64     | Última utilização                    |
+| `list[].createdAt`   | int64     | Tempo de criação                     |
+
+<h2 id="update-api-key">Atualização API Key</h2>
+
+```http
+PUT /v1/private/user/api-key/update
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+Parâmetros do pedido:
+
+| Parâmetro     | Tipo      | Obrigatório | Descrição               |
+| ------------- | --------- | -------- | ------------------------- |
+| `id`          | string    | Sim      | API Key ID                |
+| `label`       | string    | Não       | Nova editora                 |
+| `permissions` | int       | Não       | Nova máscara de permissão    |
+| `ipWhitelist` | fio\[] | Não       | Lista branca de novos IP          |
+| `status`      | int       | Não       | `1` ativado, `0` desativado |
+
+<h2 id="delete-api-key">Apagar API Key</h2>
+
+```http
+POST /v1/private/user/api-key/delete
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+Órgão do pedido:
+
+```json
+{ "id": "1001" }
+```
+
+<h2 id="delete-all-api-keys">Apagar Todas as API Teclas</h2>
+
+```http
+POST /v1/private/user/api-key/delete-all
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+Campos de resposta:
+
+| Campo     | Tipo  | Descrição                |
+| --------- | ----- | -------------------------- |
+| `deleted` | int64 | Número de chaves de API eliminadas |
+
+<h2 id="related-security-guides">Guias de segurança relacionados</h2>
+
+- [Autenticação](/pt-PT/developer-api/authentication)
+- [Assinatura do Pedido](/pt-PT/developer-api/request-signing)
+- [Segredos e Assinatura](/pt-PT/sdk/security/secrets-signing)
+- [Recomendações de Integração](/pt-PT/developer-api/integration-recommendations)

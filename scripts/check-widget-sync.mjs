@@ -130,7 +130,8 @@ function completeDocsNavigation(pathname) {
 
 // Widget -> Docs: navigate the host and never write the language back.
 for (const [widgetLocale, docsLocale, pathname] of [
-  ["pt", "pt", "/pt/home"],
+  ["pt", "pt-PT", "/pt-PT/home"],
+  ["es", "es-ES", "/es-ES/home"],
   ["uz", "uz", "/uz/home"],
   ["fil", "fil", "/fil/home"],
   ["az", "az", "/az/home"],
