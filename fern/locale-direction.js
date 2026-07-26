@@ -26,6 +26,24 @@
   };
   var lastPathname;
 
+  function normalizeNestedStandaloneRoute() {
+    var segments = window.location.pathname.split("/").filter(Boolean);
+    var nativeLocale = segments[0];
+    var standaloneRoute = segments[1];
+    if (
+      locales.indexOf(nativeLocale) < 0 ||
+      !standaloneLocales[standaloneRoute]
+    ) {
+      return false;
+    }
+
+    var normalizedPath = "/" + segments.slice(1).join("/");
+    window.location.assign(
+      normalizedPath + window.location.search + window.location.hash,
+    );
+    return true;
+  }
+
   function localeFromPathname(pathname) {
     var firstSegment = pathname.split("/").filter(Boolean)[0];
     if (standaloneLocales[firstSegment]) return standaloneLocales[firstSegment];
@@ -46,6 +64,8 @@
       // Storage may be disabled; the page locale still works without persistence.
     }
   }
+
+  if (normalizeNestedStandaloneRoute()) return;
 
   syncLocale();
   window.addEventListener("popstate", syncLocale);

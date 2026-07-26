@@ -56,6 +56,11 @@
       }),
     )
     .filter(Boolean);
+  var standaloneSectionLabels = {
+    uz: "O‘zbek",
+    fil: "Filipino",
+    az: "Azərbaycan dili",
+  };
   var scheduled = false;
 
   function currentRoute() {
@@ -82,6 +87,37 @@
         return element.isConnected;
       })
     );
+  }
+
+  function syncStandaloneSidebar() {
+    var activeStandaloneLabel =
+      standaloneSectionLabels[currentRoute().prefix] || "";
+    var standaloneLabels = Object.keys(standaloneSectionLabels).map(
+      function (route) {
+        return standaloneSectionLabels[route];
+      },
+    );
+
+    Array.from(
+      document.querySelectorAll(
+        "#fern-sidebar-scroll-area ul.fern-sidebar-group.space-y-6",
+      ),
+    ).forEach(function (group) {
+      Array.from(group.children).forEach(function (section) {
+        var heading = section.querySelector(
+          ":scope > .fern-sidebar-heading > .fern-sidebar-heading-content",
+        );
+        var label = heading ? (heading.textContent || "").trim() : "";
+        var isStandalone = standaloneLabels.indexOf(label) >= 0;
+        var shouldHide = activeStandaloneLabel
+          ? label !== activeStandaloneLabel
+          : isStandalone;
+        section.classList.toggle(
+          "sixmm-hidden-sidebar-section",
+          shouldHide,
+        );
+      });
+    });
   }
 
   function enhanceTriggers() {
@@ -288,6 +324,7 @@
     scheduled = false;
     enhanceTriggers();
     enhanceMenus();
+    syncStandaloneSidebar();
   }
 
   function scheduleSync() {
