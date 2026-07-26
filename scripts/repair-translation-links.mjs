@@ -6,7 +6,6 @@ const projectRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname)
 const fernRoot = path.join(projectRoot, "fern");
 const translationsRoot = path.join(fernRoot, "translations");
 const generatedLocales = [
-  "en-SG",
   "ja",
   "ru",
   "es-419",
@@ -49,8 +48,20 @@ const relatedPageLabels = {
   "fil-PH": "Mga kaugnay na pahina",
   "az-AZ": "Əlaqəli səhifələr",
 };
+const standaloneLocaleCodes = new Set(["uz-UZ", "fil-PH", "az-AZ"]);
+const standaloneRoutes = {
+  "uz-UZ": "uz",
+  "fil-PH": "fil",
+  "az-AZ": "az",
+};
 const repairStart = "{/* sixmm-localized-link-repair:start */}";
 const repairEnd = "{/* sixmm-localized-link-repair:end */}";
+
+function localeRoot(locale) {
+  return standaloneLocaleCodes.has(locale)
+    ? path.join(fernRoot, "docs", "locales", locale)
+    : path.join(translationsRoot, locale);
+}
 
 function loadYamlAsJson(filePath) {
   const ruby = [
@@ -101,10 +112,11 @@ let repairedPages = 0;
 let insertedLinks = 0;
 
 for (const locale of generatedLocales) {
+  const route = standaloneRoutes[locale] ?? locale;
   const titlesBySlug = new Map();
   for (const relativePagePath of activePages) {
     const translated = await readFile(
-      path.join(translationsRoot, locale, relativePagePath),
+      path.join(localeRoot(locale), relativePagePath),
       "utf8",
     );
     const pageMetadata = metadata(translated);
@@ -113,11 +125,11 @@ for (const locale of generatedLocales) {
 
   for (const relativePagePath of activePages) {
     const source = await readFile(path.join(fernRoot, relativePagePath), "utf8");
-    const outputPath = path.join(translationsRoot, locale, relativePagePath);
+    const outputPath = path.join(localeRoot(locale), relativePagePath);
     const current = stripRepairSection(await readFile(outputPath, "utf8"));
     const actual = new Set(internalDestinations(current));
     const expected = new Set(
-      internalDestinations(source).map((destination) => `/${locale}${destination}`),
+      internalDestinations(source).map((destination) => `/${route}${destination}`),
     );
     const missing = [...expected].filter((destination) => !actual.has(destination));
     if (missing.length === 0) {
@@ -128,7 +140,7 @@ for (const locale of generatedLocales) {
     }
 
     const links = missing.map((destination) => {
-      const slug = destination.replace(new RegExp(`^/${locale}/?`), "");
+      const slug = destination.replace(new RegExp(`^/${route}/?`), "");
       const fallback = slug
         .split("/")
         .filter(Boolean)

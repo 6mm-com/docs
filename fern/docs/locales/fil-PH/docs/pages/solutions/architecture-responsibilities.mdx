@@ -1,0 +1,39 @@
+---
+title: "Arkitektura at mga Responsibilidad"
+subtitle: "Linawin kung ano ang pag-aari ng partner system at kung ano ang ibinibigay ng 6MM infrastructure sa embedded trading deployments."
+slug: fil/solutions/architecture-responsibilities
+canonical-url: https://docs.6mm.com/fil/solutions/architecture-responsibilities
+---
+
+Ang malinis na embedded trading launch ay nakasalalay sa malinaw na hangganan ng responsibilidad. Dapat panatilihin ng mga partner system ang sensitibong pagmamay-ari ng negosyo, habang 6MM ang nagbibigay ng trading infrastructure at lifecycle capabilities.
+
+<h2 id="responsibility-model">Modelo ng Responsibilidad</h2>
+
+| Lugar | Sistema ng Partner | 6MM imprastruktura |
+| --- | --- | --- |
+| Relasyon ng user | May-ari ng user account, estado ng login, customer support identity, at eligibility checks. | Tumatanggap ng validated trading entry context at pinananatili ang kalagayan sa trading-side. |
+| Mga lihim at pagpirma | Iniimbak ang partner API keys sa backend at pumipirma ng server-side requests. | Sinusuri ang mga signed request at pinoproseso ang mga awtorisadong aksyon. |
+| Karanasan sa Kalakalan | Nagbibigay ng entry point, navigation, at product context. | Nagbibigay ng trading UI, order lifecycle, market data, posisyon, risk, at settlement behavior. |
+| Mga Operasyon | Humahawak ng support workflows, business analytics, at internal escalation. | Naglalabas ng mga kaganapan, webhook, at impormasyon ng status na kailangan para sa integrasyon. |
+
+<h2 id="production-principles">Mga prinsipyo ng produksyon</h2>
+
+- Itago ang lahat ng lihim ng partner sa backend.
+- Ituring ang embed tokens bilang panandaliang entry credentials.
+- I-process ang webhooks nang idempotently at i-store ang event IDs.
+- Gamitin ang pagmamanman sa pag-isyu ng token, transfer flows, at pagbabago sa estado ng order.
+- Panatilihing pare-pareho ang kopya na nakaharap sa customer sa entry, trading, at support pages.
+
+<h2 id="related-docs">Kaugnay na mga dokumento</h2>
+
+<CardGroup cols={3}>
+<Card title="Pagpapatunay" icon="fa-duotone fa-user-shield" href="/fil/developer-api/authentication">
+Suriin ang mga inaasahan sa backend authentication.
+</Card>
+<Card title="Humiling ng Pagpirma" icon="fa-duotone fa-signature" href="/fil/developer-api/request-signing">
+Naiintindihan ang signed API calls.
+</Card>
+<Card title="Seguridad ng Webhook" icon="fa-duotone fa-webhook" href="/fil/sdk/security/webhooks-idempotency">
+Ligtas na hawakan ang paghahatid ng event.
+</Card>
+</CardGroup>

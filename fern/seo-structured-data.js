@@ -18,11 +18,13 @@
     "uk",
     "pt-PT",
     "es-ES",
-    "uz-UZ",
     "ar",
-    "fil-PH",
-    "az-AZ",
   ];
+  var standaloneLocales = {
+    uz: "uz-UZ",
+    fil: "fil-PH",
+    az: "az-AZ",
+  };
   var homeNames = {
     en: "Home",
     "en-SG": "Home",
@@ -50,10 +52,13 @@
 
   function localeForPathname(pathname) {
     var firstSegment = pathname.split("/").filter(Boolean)[0];
-    var code = localeCodes.indexOf(firstSegment) >= 0 ? firstSegment : "en";
+    var standaloneCode = standaloneLocales[firstSegment];
+    var code =
+      standaloneCode ||
+      (localeCodes.indexOf(firstSegment) >= 0 ? firstSegment : "en");
     return {
       code: code,
-      prefix: code === "en" ? "" : "/" + code,
+      prefix: code === "en" ? "" : "/" + firstSegment,
     };
   }
 

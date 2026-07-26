@@ -1,0 +1,78 @@
+---
+title: "PHP Mabilisang Simula"
+subtitle: "I-install at i-initialize ang PHP SDK mula sa isang backend service."
+slug: fil/sdk/agent-sdk/php/quick-start
+canonical-url: https://docs.6mm.com/fil/sdk/agent-sdk/php/quick-start
+---
+
+<h2 id="install">I-install</h2>
+
+```json
+{
+  "require": {
+    "sixmm/agent-sdk": "VERSION_PROVIDED_BY_6MM"
+  }
+}
+```
+
+> **Pag-access sa pakete**
+>
+> 6MM nagbibigay ng aprubadong pangalan ng Composer package, repository, at bersyon sa panahon ng partner onboarding. Hindi dapat ipalagay na umiiral ang package sa public Packagist.
+
+<h2 id="before-you-start">Bago ka magsimula</h2>
+
+- Kumpirmahin ang Agent API base URL gamit ang 6MM.
+- I-load ang apiSecret mula sa mga environment variable o secret management.
+- Panatilihin SDK paggamit sa loob lamang ng backend services.
+- Ihanda ang idempotent handling para sa transfer at webhook flows.
+
+<h2 id="initialize-client">I-initialize ang kliyente</h2>
+
+```php
+<?php
+
+use Sixmm\Agent\AgentClient;
+use Sixmm\Agent\AgentConfig;
+
+$client = new AgentClient(new AgentConfig(
+    'https://agent-api.6mm.com',
+    'AGENT001',
+    getenv('AGENT_API_SECRET') ?: '',
+    'USDT'
+));
+```
+
+> **Backend lamang**
+>
+> Ang PHP SDK ay pumipirma ng Agent API requests at hindi dapat ma-expose sa pamamagitan ng public source code o frontend runtime environments.
+
+<h2 id="example-transfer-funds-in">Halimbawa: maglipat ng pondo sa</h2>
+
+```php
+$response = $client->transfer([
+    'agentOrderNo' => 'AGT-ORDER-1001',
+    'agentUserId' => 'agent-user-001',
+    'direction' => 'IN',
+    'currency' => 'USDT',
+    'amount' => '10.00',
+]);
+```
+
+Gamitin ang decimal strings para sa mga halaga at panatilihin ang orihinal na agentOrderNo kapag muling sinusubukan o tinatanong ang transfer status.
+
+<h2 id="next-steps">Mga susunod na hakbang</h2>
+
+| Kailangan | Susunod na pahina |
+| --- | --- |
+| Unawain ang Agent SDK kakayahan | [Agent SDK Pangkalahatang-ideya ] (/sdk/agent-sdk/overview) |
+| Suriin ang pag-uugali sa paglagda | [Mga Lihim at Pagpirma] (/sdk/security/secrets-signing) |
+| Beripikahin ang paghahatid ng callback | [Webhooks & Idempotency] (/sdk/security/webhooks-idempotency) |
+| I-diagnose ang isang integration problem | [SDK Pag-troubleshoot ] (/sdk/security/troubleshooting) |
+{/* sixmm-localized-link-repair:start */}
+<h2 id="localized-page-links">Mga kaugnay na pahina</h2>
+
+- [6MM Agent SDK para sa Java at PHP](/fil/sdk/agent-sdk/overview)
+- [Agent SDK Mga Lihim at HMAC Signing](/fil/sdk/security/secrets-signing)
+- [Webhook Signature Verification & Idempotency](/fil/sdk/security/webhooks-idempotency)
+- [SDK Pag-troubleshoot ng Integrasyon](/fil/sdk/security/troubleshooting)
+{/* sixmm-localized-link-repair:end */}

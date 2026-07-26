@@ -1,0 +1,90 @@
+---
+title: "Java Tez Boshlash"
+subtitle: "Backend xizmatidan Java SDK o'rnatib, ishga tushiring."
+slug: uz/sdk/agent-sdk/java/quick-start
+canonical-url: https://docs.6mm.com/uz/sdk/agent-sdk/java/quick-start
+---
+
+<h2 id="install">O'rnatish</h2>
+
+Hozirda ommaviy SDK manba hujjatlari `v0.1.1` quyidagi Maven koordinatalari bilan belgilangan:
+
+```xml
+<dependency>
+    <groupId>com.sixmm.exchange.sdk</groupId>
+    <artifactId>agent</artifactId>
+    <version>0.1.1</version>
+</dependency>
+```
+
+GitHub Maven bog'liqlik ombori sifatida ishlamaydi. Bog'liqlikni hal qilishdan oldin teglangan manbani mahalliy ravishda o'rnating:
+
+```bash
+git clone https://github.com/6mm-com/agent-java-sdk.git
+cd agent-java-sdk
+git checkout v0.1.1
+mvn install
+```
+
+> **Jamoa quriladi**
+>
+> Tasdiqlangan artefaktni tashkilotingizning Maven omboriga CI, sinov va ishlab chiqarish qurilmalari uchun e'lon qiling. Tasdiqlangan versiyani ishlab chiqarishni joriy etishdan oldin 6MM bilan tasdiqlang.
+
+Manba kodi va foydalanish misollari rasmiy Java SDK omborida mavjud:
+
+[6mm-com/agent-java-sdk] (https://github.com/6mm-com/agent-java-sdk)
+
+<h2 id="before-you-start">Boshlashdan oldin</h2>
+
+- Ishlab chiqarish agenti API baza URL 6MM jamoasi bilan tasdiqlang.
+- Faqat orqa apiSecret maxfiy boshqaruvda saqlang.
+- platformUserId va o'rtada barqaror xaritalash agentUserId.
+- Bind, transfer, order va webhook oqimlari atrofida tuzilgan loglarni yoqish.
+
+<h2 id="initialize-client">Mijozni ishga tushirish</h2>
+
+```java
+import com.sixmm.agent.AgentClient;
+import com.sixmm.agent.AgentClientConfig;
+
+AgentClient client = new AgentClient(AgentClientConfig.builder()
+        .baseUrl("https://agent-api.6mm.com")
+        .agentCode("AGENT001")
+        .apiSecret("your-api-secret")
+        .defaultCurrency("USDT")
+        .build());
+```
+
+> **Faqat backend**
+>
+> Brauzer, mobil yoki ish stoli mijoz kodidan Agent SDK ishga tushirmang. SDK imtiyozli Agent API so'rovlarini imzolaydi.
+
+<h2 id="example-transfer-funds-in">Misol: mablag'larni o'tkazish</h2>
+
+```java
+TransferResponse resp = client.transfer(TransferRequest.fixed(
+        "AGT-ORDER-1001",
+        "agent-user-001",
+        Direction.IN,
+        "USDT",
+        "10.00"));
+```
+
+Har bir transfer so'rovi uchun noyob hamkor tomonidagi buyurtma raqamidan foydalaning. Agar so'rov vaqt tugasa, yangi buyurtma yaratishdan oldin asl buyurtmani so'rang.
+
+<h2 id="next-steps">Keyingi qadamlar</h2>
+
+| Ehtiyoj | Keyingi sahifa |
+| --- | --- |
+| Trading Widget guvohnomasini bering | [Embed tokenini yarating] (/sdk/agent-sdk/java/embed-token) |
+| Orqaga qo'ng'iroqlarni tekshir 6MM | [Webhooks va Idempotency] (/sdk/security/webhooks-idempotency) |
+| Imzolash xatti-harakatlarini ko'rib chiqish | [Sirlar va imzo] (/sdk/security/secrets-signing) |
+| Integratsiya muammosini aniqlash | [SDK Muammolarni hal qilish] (/sdk/security/troubleshooting) |
+{/* sixmm-localized-link-repair:start */}
+<h2 id="localized-page-links">Tegishli sahifalar</h2>
+
+- [Embed tokenini yaratish](/uz/sdk/agent-sdk/java/embed-token)
+- [Webhook imzosini tekshirish va idempotentsiya](/uz/sdk/security/webhooks-idempotency)
+- [Agent SDK Sirlar va HMAC imzolash](/uz/sdk/security/secrets-signing)
+- [SDK Integratsiyadagi muammolarni hal qilish](/uz/sdk/security/troubleshooting)
+{/* sixmm-localized-link-repair:end */}

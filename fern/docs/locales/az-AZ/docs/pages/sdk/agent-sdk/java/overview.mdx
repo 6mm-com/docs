@@ -1,0 +1,48 @@
+---
+title: "Agent Java SDK"
+subtitle: "6MM Agent Java SDK quraşdırın və istifadəçi bağlaması, transferlər, giriş etimadnamələri və webhook yoxlaması üçün imzalanmış backend APIs istifadə edin."
+slug: az/sdk/agent-sdk/java/overview
+canonical-url: https://docs.6mm.com/az/sdk/agent-sdk/java/overview
+---
+
+<h2 id="official-repository">Rəsmi arxiv</h2>
+
+Java SDK repozitoriyası SDK mənbə kodu, buraxılış qeydləri, istifadə nümunələri və tətbiq detalları üçün həqiqət mənbəyidir:
+
+[6mm-com/agent-java-sdk] (https://github.com/6mm-com/agent-java-sdk)
+
+<h2 id="runtime">İcra müddəti</h2>
+
+| Maddə | Dəyər |
+| --- | --- |
+| Minimum Java versiyası | Java 8+ |
+| Tövsiyə olunan qurulma aləti | Maven 3.9+ |
+| Maven qrupu | `com.sixmm.exchange.sdk` |
+| Maven artefaktı | `agent` |
+| Sənədləşdirilmiş mənbə etiketi | `v0.1.1` |
+
+İctimai GitHub repozitoriyası mənbə hostinqidir, Maven asılılıq deposu deyil. Etiketlənmiş mənbəni yerli olaraq qurun və quraşdırın və ya təsdiqlənmiş artefaktı komanda quruluşlarında istifadə etməzdən əvvəl təşkilatınızın özəl Maven deposunda yayımlayın.
+
+<h2 id="typical-backend-responsibilities">Tipik arxa plan məsuliyyətləri</h2>
+
+- Tərəfdaş istifadəçi sessiyasını təsdiqləyin.
+- Tərəfdaş istifadəçini agentUserIdilə xəritələyin.
+- Call bind ilk ticarət və ya transfer axınlarından əvvəl.
+- Bir dəfəlik tam sayt SSOüçün createEntryUrl zəng edin.
+- Partnyor-token rejimi Trading Widget üçün createEmbedToken çağırın.
+- Transfer webhook-larını təsdiqləmək və onları idempotal şəkildə işləmək.
+
+<h2 id="security-and-operational-rules">Təhlükəsizlik və əməliyyat qaydaları</h2>
+
+- `apiSecret` yalnız backend gizli menecerində və ya qorunan mühit dəyişənində saxla.
+- Server vaxtını sinxronlaşdırmaq, çünki imzalanmış sorğular zaman möhürləri ehtiva edir.
+- `agentOrderNo` davamlı idempotensiya açarı kimi qəbul edin və onu qlobal unikal saxlayın.
+- `platformUserId` sətir kimi saxla və `agentUserId`ilə əlaqəsini davam etdir.
+- Vaxt aşımı və ya qeyri-müəyyən şəbəkə nəticəsindən sonra yenidən cəhd etməzdən əvvəl orijinal ötürməni sorğulayın.
+
+<h2 id="next-steps">Növbəti addımlar</h2>
+
+- [Java Quick Start](/az/sdk/agent-sdk/java/quick-start): etiketlənmiş mənbəni quraşdırın və `AgentClient`başlatın.
+- [Create Embed Token](/az/sdk/agent-sdk/java/embed-token): Trading Widgetüçün qısaömürlü etimadnamələr ver.
+- [Secrets & Signing](/az/sdk/security/secrets-signing): avtomatik HMAC imzalama və gizli idarəetməni başa düşmək.
+- [Webhooks & Idempotency](/az/sdk/security/webhooks-idempotency): geri çağırışları yoxlayın və təkrarlanan işlənmənin qarşısını alın.

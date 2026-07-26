@@ -13,7 +13,6 @@ const manifestPath = path.join(translationsRoot, ".translation-manifest.json");
 const generatorVersion = 3;
 
 const localeSpecs = [
-  { code: "en-SG", sourceLanguage: "en", targetLanguage: null, label: "English (Asia)" },
   { code: "ja", sourceLanguage: "en", targetLanguage: "ja", label: "日本語" },
   { code: "ru", sourceLanguage: "en", targetLanguage: "ru", label: "Русский" },
   { code: "es-419", sourceLanguage: "en", targetLanguage: "es-MX", label: "Español (Latinoamérica)" },
@@ -29,11 +28,12 @@ const localeSpecs = [
   { code: "pt-PT", sourceLanguage: "en", targetLanguage: "pt-PT", label: "Português (Internacional)" },
   { code: "es-ES", sourceLanguage: "en", targetLanguage: "es", label: "Español (Internacional)" },
   { code: "es-AR", sourceLanguage: "en", targetLanguage: "es-AR", label: "Español (Argentina)" },
-  { code: "uz-UZ", sourceLanguage: "en", targetLanguage: "uz", label: "O‘zbek" },
+  { code: "uz-UZ", route: "uz", sourceLanguage: "en", targetLanguage: "uz", label: "O‘zbek" },
   { code: "ar", sourceLanguage: "en", targetLanguage: "ar", label: "العربية" },
-  { code: "fil-PH", sourceLanguage: "en", targetLanguage: "fil", label: "Filipino" },
-  { code: "az-AZ", sourceLanguage: "en", targetLanguage: "az", label: "Azərbaycan dili" },
+  { code: "fil-PH", route: "fil", sourceLanguage: "en", targetLanguage: "fil", label: "Filipino" },
+  { code: "az-AZ", route: "az", sourceLanguage: "en", targetLanguage: "az", label: "Azərbaycan dili" },
 ];
+const standaloneLocaleCodes = new Set(["uz-UZ", "fil-PH", "az-AZ"]);
 
 const args = new Set(process.argv.slice(2));
 const force = args.has("--force");
@@ -544,8 +544,9 @@ function regionalize(value, locale) {
 }
 
 async function translateDocument(content, locale) {
+  const route = locale.route ?? locale.code;
   if (!locale.targetLanguage) {
-    return canonicalForLocale(localizeInternalLinks(content, locale.code), locale.code);
+    return canonicalForLocale(localizeInternalLinks(content, route), route);
   }
   const document = extractDocumentRecords(content);
   const translated = await translateRecords(
@@ -567,12 +568,24 @@ async function translateDocument(content, locale) {
     }
   });
   let output = document.lines.join("\n");
-  output = localizeInternalLinks(output, locale.code);
-  output = canonicalForLocale(output, locale.code);
+  output = localizeInternalLinks(output, route);
+  output = canonicalForLocale(output, route);
+  if (standaloneLocaleCodes.has(locale.code)) {
+    output = output.replace(/^slug:\s*(.+)$/m, `slug: ${route}/$1`);
+  }
   if (locale.code === "vi" && /^slug:\s*legal\/privacy-policy\s*$/m.test(output)) {
     output = output.replace(/^title:.*$/m, 'title: "Chính sách quyền riêng tư"');
   }
   return output;
+}
+
+function rewriteStandaloneAssetPaths(content) {
+  return content
+    .replace(/\.\.\/\.\.\/assets\//g, "../../../../../assets/")
+    .replace(
+      /src="\.\/(6mm-(?:logo|entry-banner|card-entry)-assets-(?:en|zh)\.zip|6mm-logo-assets\.zip)"/g,
+      'src="../../../../../pages/design-and-assets/$1"',
+    );
 }
 
 function collectNavigationLabels(config) {
@@ -656,15 +669,20 @@ manifest.locales ??= {};
 console.log(`Generating ${activePages.length} active pages for ${selectedLocales.length} locale(s).`);
 
 for (const locale of selectedLocales) {
-  const localeRoot = path.join(translationsRoot, locale.code);
+  const standalone = standaloneLocaleCodes.has(locale.code);
+  const localeRoot = standalone
+    ? path.join(sourceRoot, "locales", locale.code)
+    : path.join(translationsRoot, locale.code);
   const localeManifest = (manifest.locales[locale.code] ??= { pages: {} });
   const labels = await translatedLabelMap(config, locale);
   await mkdir(localeRoot, { recursive: true });
-  await writeFile(
-    path.join(localeRoot, "docs.yml"),
-    renderNavigationOverlay(config, labels),
-    "utf8",
-  );
+  if (!standalone) {
+    await writeFile(
+      path.join(localeRoot, "docs.yml"),
+      renderNavigationOverlay(config, labels),
+      "utf8",
+    );
+  }
 
   let generatedCount = 0;
   let skippedCount = 0;
@@ -679,7 +697,8 @@ for (const locale of selectedLocales) {
       skippedCount += 1;
       return;
     }
-    const translated = await translateDocument(source, locale);
+    let translated = await translateDocument(source, locale);
+    if (standalone) translated = rewriteStandaloneAssetPaths(translated);
     await mkdir(path.dirname(outputPath), { recursive: true });
     await writeFile(outputPath, translated, "utf8");
     localeManifest.pages[relativePagePath] = sourceHash;

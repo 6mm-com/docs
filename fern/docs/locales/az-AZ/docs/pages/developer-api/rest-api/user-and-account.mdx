@@ -1,0 +1,228 @@
+---
+title: "İstifadəçi və Hesab"
+description: "6MM istifadəçi və hesab son nöqtələrindən istifadə edərək profilləri, balansları, hesab vəziyyətini, icazələri və tərəfdaşla əlaqəli hesab məlumatlarını əldə edin."
+slug: az/developer-api/rest-api/user-and-account
+canonical-url: https://docs.6mm.com/az/developer-api/rest-api/user-and-account
+---
+
+Başqa cür göstərilməyibsə, aşağıdakı son nöqtələr JWT və ya API Key işarələmədən istifadə edə bilər.
+
+<h2 id="user-info">İstifadəçi Məlumatı</h2>
+
+```http
+GET /v1/private/user/info
+```
+
+Cavab sahələri:
+
+| Sahə                  | Tip   | Təsvir      |
+| ---------------------- | ------ | ---------------- |
+| `userInfo.userId`      | string | Xarici istifadəçi ID-si |
+| `userInfo.username`    | string | İstifadəçi adı         |
+| `userInfo.agentId`     | int64  | Agent ID         |
+| `userInfo.vipLevel`    | int64  | VIP səviyyəsi        |
+| `userInfo.lastLoginAt` | int64  | Son giriş vaxtı  |
+| `userInfo.lastLoginIp` | string | Son giriş IP    |
+
+<h2 id="user-assets">İstifadəçi Aktivləri</h2>
+
+```http
+GET /v1/private/user/asset
+```
+
+Cavab sahələri:
+
+| Sahə                     | Tip   | Təsvir                     |
+| ------------------------- | ------ | ------------------------------- |
+| `userAsset.userId`        | string | Xarici istifadəçi ID-si                |
+| `userAsset.assetType`     | string | Aktiv növü                      |
+| `userAsset.walletBalance` | string | Cüzdan balansı                  |
+| `userAsset.frozenMargin`  | string | Gözləyən sifarişlər səbəbindən marja donduruldu |
+| `userAsset.usedMargin`    | string | Mövqelər üzrə istifadə olunan margin        |
+
+<h2 id="create-listenkey">Yarat listenKey</h2>
+
+```http
+POST /v1/private/user/listen-key
+```
+
+Özəl WebSocket axınları üçün autentifikasiya açarı yaradır.
+
+<h2 id="renew-listenkey">Yeniləyin listenKey</h2>
+
+```http
+PUT /v1/private/user/listen-key
+```
+
+Etibarlılığı listenKey edir.
+
+<h2 id="close-listenkey">Yaxın listenKey</h2>
+
+```http
+DELETE /v1/private/user/listen-key
+```
+
+Göstərilən listenKeybağlanır.
+
+<h2 id="account-change-logs">Hesab Dəyişiklikləri Qeydləri</h2>
+
+```http
+GET /v1/private/user/account-change-log?assetType=USDT&page=1&pageSize=20
+```
+
+Sorğu parametrləri:
+
+| Parametr    | Tip   | Tələb olunur | Təsvir                  |
+| ------------ | ------ | -------- | ---------------------------- |
+| `assetType`  | string | Xeyr       | Aktiv növü, məsələn `USDT`   |
+| `changeType` | string | Xeyr       | Növünü dəyiş                  |
+| `startTime`  | int64  | Xeyr       | Başlama vaxtı                   |
+| `endTime`    | int64  | Xeyr       | Son zaman                     |
+| `page`       | int32  | Xeyr       | Səhifə nömrəsi, standart `1`     |
+| `pageSize`   | int32  | Xeyr       | Səhifə üzrə elementlər, standart `20` |
+
+Cavab sahələri:
+
+| Sahə                        | Tip   | Təsvir                  |
+| ---------------------------- | ------ | ---------------------------- |
+| `list[].assetType`           | string | Aktiv növü                   |
+| `list[].amount`              | string | Dəyişən məbləğ               |
+| `list[].walletBalanceBefore` | string | Dəyişiklikdən əvvəl cüzdan balansı |
+| `list[].walletBalanceAfter`  | string | Dəyişiklikdən sonra pulqabının balansı  |
+| `list[].frozenBalanceBefore` | string | Dəyişiklikdən əvvəl donmuş balans |
+| `list[].frozenBalanceAfter`  | string | Dəyişiklikdən sonra donmuş balans  |
+| `list[].changeType`          | string | Növünü dəyiş                  |
+| `list[].referenceId`         | string | Əlaqəli biznes identifikasiyası          |
+| `list[].createdAt`           | int64  | Yaradılma vaxtı                |
+| `total`                      | int64  | Ümumi say                  |
+
+<h2 id="30-day-volume-statistics">30 Günlük Həcm Statistikası</h2>
+
+```http
+GET /v1/private/user/volume-stats
+```
+
+Cavab sahələri:
+
+| Sahə         | Tip   | Təsvir                                     |
+| ------------- | ------ | ----------------------------------------------- |
+| `volume30d`   | string | Son 30 gündə yığılmış ticarət həcmi |
+| `feeTotal30d` | string | Son 30 gündə yığılan ödənişlər           |
+
+<h2 id="balance-history">Balans Tarixi</h2>
+
+```http
+GET /v1/private/user/balance-history?period=1D&limit=30
+```
+
+Sorğu parametrləri:
+
+| Parametr | Tip   | Tələb olunur | Təsvir                            |
+| --------- | ------ | -------- | -------------------------------------- |
+| `period`  | string | Bəli      | `1D` / `1W` / `1M`                     |
+| `limit`   | int    | Xeyr       | Qaytarılan əşyaların sayı, standart `30` |
+
+Cavab sahələri:
+
+| Sahə             | Tip   | Təsvir                 |
+| ----------------- | ------ | --------------------------- |
+| `items[].date`    | string | Toplanma tarixi            |
+| `items[].balance` | string | Cüzdan balansı              |
+| `items[].pnl`     | string | Dövr üçün reallaşdırılmış PnL |
+
+<h2 id="trade-overview">Ticarət icmalı</h2>
+
+```http
+GET /v1/private/user/trade-overview?type=1M
+```
+
+Sorğu parametrləri:
+
+| Parametr | Tip   | Tələb olunur | Təsvir                                     |
+| --------- | ------ | -------- | ----------------------------------------------- |
+| `type`    | string | Bəli      | Trend aralığı: `1D`, `1W`, `1M`, `3M`, `6M`, `1Y` |
+
+Cavab sahələri:
+
+| Sahə                | Tip   | Təsvir                                                          |
+| -------------------- | ------ | -------------------------------------------------------------------- |
+| `todayPnl`           | string | Bugünkü reallaşmış PnL                                                 |
+| `todayVolume`        | string | Bugünkü müqavilə ticarət həcmi                                      |
+| `totalVolume`        | string | Yığılmış müqavilə ticarət həcmi                                   |
+| `totalPnl`           | string | Yığılmış reallaşmış PnL                                              |
+| `maxDrawdown30d`     | string | Son 30 gündə maksimum azalma məbləği                        |
+| `maxDrawdown30dRate` | string | Son 30 gündə maksimum azalma sürəti, `0` -dən `1` |
+| `transferIn`         | string | Yığılmış köçürülmüş vəsaitlər                                      |
+| `transferOut`        | string | Ümumi köçürülən vəsaitlər                                     |
+| `items[]`            | array  | Aktiv trend məlumatları                                                     |
+
+<h2 id="asset-overview-summary">Aktivlərin Ümumi Xülasəsi</h2>
+
+```http
+GET /v1/private/user/asset/overview/summary
+```
+
+Cavab sahələri ticarət icmalı xülasə sahələri ilə eynidir, `items[]`istisna olmaqla.
+
+<h2 id="asset-overview-trend">Aktivlərin İcmalı Trendi</h2>
+
+```http
+GET /v1/private/user/asset/overview/trend?type=1M
+```
+
+Sorğu parametrləri:
+
+| Parametr | Tip   | Tələb olunur | Təsvir                                     |
+| --------- | ------ | -------- | ----------------------------------------------- |
+| `type`    | string | Bəli      | Trend aralığı: `1D`, `1W`, `1M`, `3M`, `6M`, `1Y` |
+
+Cavab sahələri:
+
+| Sahə                  | Tip   | Təsvir                     |
+| ---------------------- | ------ | ------------------------------- |
+| `items[].snapshotTime` | int64  | Snapshot vaxtı                   |
+| `items[].balance`      | string | Cari hesab balansı         |
+| `items[].pnl`          | string | Cari dövr üçün PnL      |
+| `items[].pnlRate`      | string | Cari dövr üçün PnL məzənnəsi |
+| `items[].totalPnl`     | string | Yığılmış PnL                  |
+
+<h2 id="favorite-symbols">Sevimli Simvollar</h2>
+
+<h2 id="save">Xilas et</h2>
+
+```http
+POST /v1/private/user/favorite-symbols
+Content-Type: application/json
+```
+
+Tələb bədəni:
+
+```json
+{
+  "symbols": ["BTCUSDT", "ETHUSDT"]
+}
+```
+
+<h2 id="query">Sorğu</h2>
+
+```http
+GET /v1/private/user/favorite-symbols
+```
+
+Cavab sahələri:
+
+| Sahə     | Tip      | Təsvir          |
+| --------- | --------- | -------------------- |
+| `symbols` | String\[] | Sevimli simvollar siyahısı |
+
+<h2 id="related-documentation">Əlaqəli sənədlər</h2>
+
+- [Özəl İstifadəçi Kanalı](/az/developer-api/websocket/private-user-channel)
+- [Təsdiqləmə](/az/developer-api/authentication)
+- [Aktivlərin Transferi](/az/trading/getting-started/asset-transfer)
+- [Səhv Kodları və Problemlərin Həlli] (/developer-api/error-codes-and-troubleshooting)
+{/* sixmm-localized-link-repair:start */}
+<h2 id="localized-page-links">Əlaqəli səhifələr</h2>
+
+- [Xəta Kodları və Problemlərin Həlli](/az/developer-api/error-codes-and-troubleshooting)
+{/* sixmm-localized-link-repair:end */}

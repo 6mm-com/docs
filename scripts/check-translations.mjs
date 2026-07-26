@@ -31,8 +31,33 @@ const expectedLocales = [
   "fil-PH",
   "az-AZ",
 ];
-const generatedLocales = expectedLocales.filter((locale) => !["en", "zh"].includes(locale));
+const standaloneLocaleCodes = new Set(["uz-UZ", "fil-PH", "az-AZ"]);
+const aliasLocaleCodes = new Set(["en-SG"]);
+const standaloneRoutes = {
+  "uz-UZ": "uz",
+  "fil-PH": "fil",
+  "az-AZ": "az",
+};
+const nativeLocales = expectedLocales.filter(
+  (locale) => !standaloneLocaleCodes.has(locale) && !aliasLocaleCodes.has(locale),
+);
+const translatedLocales = expectedLocales.filter(
+  (locale) => locale !== "en" && !aliasLocaleCodes.has(locale),
+);
+const generatedLocales = expectedLocales.filter(
+  (locale) => !["en", "en-SG", "zh"].includes(locale),
+);
 const errors = [];
+
+function localizedRoot(locale) {
+  return standaloneLocaleCodes.has(locale)
+    ? path.join(sourceRoot, "locales", locale)
+    : path.join(translationsRoot, locale);
+}
+
+function localeRoute(locale) {
+  return standaloneRoutes[locale] ?? locale;
+}
 
 function loadYamlAsJson(filePath) {
   const ruby = [
@@ -70,6 +95,21 @@ function imageSources(content) {
   ].sort();
 }
 
+function comparableImageSources(content, locale) {
+  return imageSources(content)
+    .map((source) => {
+      if (!standaloneLocaleCodes.has(locale)) return source;
+      if (source.startsWith("../../../../../assets/")) {
+        return source.replace("../../../../../assets/", "../../assets/");
+      }
+      if (source.startsWith("../../../../../pages/design-and-assets/")) {
+        return source.replace("../../../../../pages/design-and-assets/", "./");
+      }
+      return source;
+    })
+    .sort();
+}
+
 function internalDestinations(content) {
   return [
     ...[...content.matchAll(/\bhref=["'](\/[^"']+)["']/g)].map((match) => match[1]),
@@ -92,7 +132,7 @@ function localizedDestination(destination, locale) {
   if (destination.startsWith("/docs/") || destination.startsWith("/assets/")) {
     return destination;
   }
-  return `/${locale}${destination}`;
+  return `/${localeRoute(locale)}${destination}`;
 }
 
 function pushError(message) {
@@ -101,9 +141,9 @@ function pushError(message) {
 
 const config = loadYamlAsJson(configPath);
 const configuredLocales = (config.translations ?? []).map((translation) => translation.lang);
-if (!sameArray(configuredLocales, expectedLocales)) {
+if (!sameArray(configuredLocales, nativeLocales)) {
   pushError(
-    `Configured locales do not match expected order.\nExpected: ${expectedLocales.join(", ")}\nActual: ${configuredLocales.join(", ")}`,
+    `Configured native locales do not match expected order.\nExpected: ${nativeLocales.join(", ")}\nActual: ${configuredLocales.join(", ")}`,
   );
 }
 
@@ -130,7 +170,7 @@ const translationDirectories = (
 )
   .filter(Boolean)
   .sort();
-const expectedDirectories = expectedLocales.filter((locale) => locale !== "en").sort();
+const expectedDirectories = nativeLocales.filter((locale) => locale !== "en").sort();
 if (!sameArray(translationDirectories, expectedDirectories)) {
   pushError(
     `Translation directories do not match configured locales.\nExpected: ${expectedDirectories.join(", ")}\nActual: ${translationDirectories.join(", ")}`,
@@ -158,8 +198,9 @@ for (const relativePagePath of activePages) {
   const sourceTables = tableSignatures(source);
   const sourceDestinations = internalDestinations(source);
 
-  for (const locale of expectedDirectories) {
-    const translatedPath = path.join(translationsRoot, locale, relativePagePath);
+  for (const locale of translatedLocales) {
+    const route = localeRoute(locale);
+    const translatedPath = path.join(localizedRoot(locale), relativePagePath);
     let translated;
     try {
       translated = await readFile(translatedPath, "utf8");
@@ -172,7 +213,13 @@ for (const relativePagePath of activePages) {
     if (!meta.title || !(meta.description || meta.subtitle) || !meta.slug) {
       pushError(`[${locale}] incomplete SEO frontmatter in ${relativePagePath}`);
     }
-    const expectedCanonical = `https://docs.6mm.com/${locale}/${sourceMeta.slug}`;
+    const expectedSlug = standaloneLocaleCodes.has(locale)
+      ? `${route}/${sourceMeta.slug}`
+      : sourceMeta.slug;
+    if (meta.slug !== expectedSlug) {
+      pushError(`[${locale}] slug mismatch in ${relativePagePath}: ${meta.slug ?? "missing"}`);
+    }
+    const expectedCanonical = `https://docs.6mm.com/${route}/${sourceMeta.slug}`;
     if (meta["canonical-url"] !== expectedCanonical) {
       pushError(
         `[${locale}] canonical mismatch in ${relativePagePath}: ${meta["canonical-url"] ?? "missing"}`,
@@ -192,7 +239,7 @@ for (const relativePagePath of activePages) {
       if (!sameArray(inlineCode(translated), sourceInlineCode)) {
         pushError(`[${locale}] inline code changed in ${relativePagePath}`);
       }
-      if (!sameArray(imageSources(translated), sourceImages)) {
+      if (!sameArray(comparableImageSources(translated, locale), sourceImages)) {
         pushError(`[${locale}] image source changed in ${relativePagePath}`);
       }
       if (!sameArray(tableSignatures(translated), sourceTables)) {
@@ -219,7 +266,7 @@ for (const relativePagePath of activePages) {
 
     for (const destination of internalDestinations(translated)) {
       if (
-        !destination.startsWith(`/${locale}/`) &&
+        !destination.startsWith(`/${route}/`) &&
         !destination.startsWith("/docs/") &&
         !destination.startsWith("/assets/")
       ) {
@@ -229,11 +276,11 @@ for (const relativePagePath of activePages) {
   }
 }
 
-for (const locale of expectedDirectories) {
+for (const locale of translatedLocales) {
   const titles = new Map();
   const descriptions = new Map();
   for (const relativePagePath of activePages) {
-    const content = await readFile(path.join(translationsRoot, locale, relativePagePath), "utf8");
+    const content = await readFile(path.join(localizedRoot(locale), relativePagePath), "utf8");
     const meta = frontmatter(content);
     for (const [field, value, collection] of [
       ["title", meta.title, titles],

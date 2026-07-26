@@ -1,0 +1,128 @@
+---
+title: "Pamamahala ng API Key"
+description: "Lumikha, mag-inspect, mag-update, at bawiin ang 6MM API keys habang naglalapat ng angkop na permissions, IP restrictions, secret storage, at rotation practices."
+slug: fil/developer-api/api-key-management
+canonical-url: https://docs.6mm.com/fil/developer-api/api-key-management
+---
+
+API Key management endpoints ay tumatanggap lamang ng JWT authentication.
+
+<h2 id="create-api-key">Gumawa ng API Key</h2>
+
+```http
+POST /v1/private/user/api-key/create
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+Mga parameter ng kahilingan:
+
+| Parameter     | Uri      | Kinakailangan | Paglalarawan                                                           |
+| ------------- | --------- | -------- | --------------------------------------------------------------------- |
+| `label`       | string    | Oo      | API Key label, haba 1 - 64                                          |
+| `permissions` | int       | Hindi       | Permission bitmask, default `1`, range `1` - `7`                      |
+| `ipWhitelist` | string\[] | Hindi       | IP whitelist, hanggang 20 entry. Kung hindi isinama, ang source IP ay walang limitasyon |
+
+Halimbawa ng kahilingan:
+
+```bash
+curl -X POST https://api.6mm.com/v1/private/user/api-key/create \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -d '{
+    "label": "external-service-prod",
+    "permissions": 3,
+    "ipWhitelist": ["203.0.113.10"]
+  }'
+```
+
+Halimbawa ng tugon:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "apiKey": "fx_xxxxxxxxxxxxxxxxxxxxxxxx",
+    "apiSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  },
+  "requestId": "req-api-key"
+}
+```
+
+`apiSecret` ibinabalik lamang nang isang beses kapag nilikha ang API Key . Itago ito agad sa isang secret management system. Huwag isulat ito sa source code repositories o logs.
+
+Bawat user ay maaaring lumikha ng hanggang 30 API Keys.
+
+<h2 id="list-api-keys">Listahan API Mga Susi</h2>
+
+```http
+GET /v1/private/user/api-key/list
+Authorization: Bearer YOUR_ACCESS_TOKEN
+```
+
+Mga field ng tugon:
+
+| Larangan                | Uri      | Paglalarawan                       |
+| -------------------- | --------- | --------------------------------- |
+| `list[].id`          | string    | API Key ID                        |
+| `list[].label`       | string    | Label                             |
+| `list[].apiKey`      | string    | Pampublikong API Key identifier         |
+| `list[].permissions` | int       | Bitmask ng pahintulot                |
+| `list[].ipWhitelist` | string\[] | IP whitelist                      |
+| `list[].status`      | int       | Status: `1` naka-enable, `0` naka-disable |
+| `list[].lastUsedAt`  | int64     | Huling ginamit na oras                    |
+| `list[].createdAt`   | int64     | Panahon ng Paglikha                     |
+
+<h2 id="update-api-key">Update API Key</h2>
+
+```http
+PUT /v1/private/user/api-key/update
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+Mga parameter ng kahilingan:
+
+| Parameter     | Uri      | Kinakailangan | Paglalarawan               |
+| ------------- | --------- | -------- | ------------------------- |
+| `id`          | string    | Oo      | API Key ID                |
+| `label`       | string    | Hindi       | Bagong label                 |
+| `permissions` | int       | Hindi       | Bagong permission bitmask    |
+| `ipWhitelist` | string\[] | Hindi       | Bagong IP whitelist          |
+| `status`      | int       | Hindi       | `1` naka-enable, `0` naka-disable |
+
+<h2 id="delete-api-key">Burahin API Key</h2>
+
+```http
+POST /v1/private/user/api-key/delete
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+Katawan ng kahilingan:
+
+```json
+{ "id": "1001" }
+```
+
+<h2 id="delete-all-api-keys">Tanggalin ang Lahat ng API Keys</h2>
+
+```http
+POST /v1/private/user/api-key/delete-all
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+Mga field ng tugon:
+
+| Larangan     | Uri  | Paglalarawan                |
+| --------- | ----- | -------------------------- |
+| `deleted` | int64 | Bilang ng mga tinanggal na API Keys |
+
+<h2 id="related-security-guides">Kaugnay na mga gabay sa seguridad</h2>
+
+- [Authentication](/fil/developer-api/authentication)
+- [Request Signing](/fil/developer-api/request-signing)
+- [Mga Lihim at Pagpirma](/fil/sdk/security/secrets-signing)
+- [Mga Rekomendasyon sa Integrasyon](/fil/developer-api/integration-recommendations)

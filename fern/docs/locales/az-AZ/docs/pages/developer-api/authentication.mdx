@@ -1,0 +1,73 @@
+---
+title: "6MM API Doğrulama: JWT və API Açarları"
+description: "Özəl 6MM API sorğularını JWT giriş tokenləri və ya API açarları ilə necə autentifikasiya etməyi öyrənin və hər inteqrasiya üçün uyğun metodu seçin."
+slug: az/developer-api/authentication
+canonical-url: https://docs.6mm.com/az/developer-api/authentication
+---
+
+6MM özəl API giriş üçün JWT giriş tokenləri və API açarlarını dəstəkləyir. Metodu sorğunun interaktiv istifadəçi sessiyasına və ya uzunmüddətli backend inteqrasiyasına aid olub-olmamasına əsaslanaraq seçin.
+
+<h2 id="choose-an-authentication-method">Autentifikasiya metodu seçin</h2>
+
+| İnteqrasiya ehtiyacı | Tövsiyə olunan üsul | Niyə |
+| --- | --- | --- |
+| İstifadəçi sessiyası API çağırışları | JWT | Girişdən sonra geri qaytarılan giriş tokenindən istifadə edir. |
+| Açarları yarat, yeniləyə və ya API ləğv et | JWT | API Key idarəetmə son nöqtələri API Key öz-özünə idarəetməni qəbul etmir. |
+| Serverdən-serverə hesab və ya ticarət çağırışları | API Key + HMAC imzası | Əhatə olunmuş icazələri və imzalanmış backend sorğularını dəstəkləyir. |
+
+<h2 id="jwt">JWT</h2>
+
+Daxil olduqdan sonra API `accessToken`qaytarır. Özəl son nöqtələri çağırarkən aşağıdakıları daxil edin:
+
+```http
+Authorization: Bearer YOUR_ACCESS_TOKEN
+```
+
+Tokeni URL-lərdən və loglardan uzaq tutun. Token müddəti bitdikdə, təsdiqlənmiş giriş və ya yeniləmə axını vasitəsilə etibarlı token əldə edin və sonra özəl sorğunu yenidən yoxlayın.
+
+<h2 id="api-key">API Key</h2>
+
+`X-API-KEY` sorğu başlığı mövcud olduqda, server API Key HMAC autentifikasiyadan istifadə edir:
+
+```http
+X-API-KEY: YOUR_API_KEY
+```
+
+API Key idarəetmə son nöqtələri JWTistifadə etməlidir. API Açarlar özlərini idarə edə bilmir.
+
+API Key sorğular həmçinin [Request Signing](/az/developer-api/request-signing) bölməsində təsvir olunan zaman möhürü və HMAC imzasını tələb edir. Müvafiq API sirrini yalnız arxa tərəf gizli idarəetmə sistemində saxla.
+
+<h2 id="api-key-permissions">API Key İcazələri</h2>
+
+| Dəyər | İcazə | Təsvir                                                                                                                                                                                    |
+| ----- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `1`   | Oxu       | İstifadəçi məlumatları, aktivlər, hesab dəyişiklik qeydləri, statistika, listenKey, sevimli simvollar və əlaqəli istifadəçi/hesab son nöqtələri. Sifariş və mövqe son nöqtələri, o cümlədən sorğular, Ticarət icazəsi tələb edir |
+| `2`   | Ticarət      | Sifariş və mövqe son nöqtələri, həm sorğu, həm də yazma əməliyyatları daxil olmaqla                                                                                                                        |
+| `4`   | Geri çəkilmə   | Rezerv edilmiş fond icazəsi                                                                                                                                                                       |
+
+Həm oxumaq, həm də ticarət icazəsi vermək üçün `permissions=3`istifadə edin.
+
+İnteqrasiyanın tələb etdiyi ən kiçik icazə dəstindən istifadə edin. Bazar məlumatları xidməti ticarət icazələri almamalıdır, sifariş xidməti isə yalnız sifariş və ya mövqeləri sorğuladığı halda belə ticarət icazəsinə ehtiyac duyur.
+
+<h2 id="production-security-checklist">İstehsalat təhlükəsizlik yoxlama siyahısı</h2>
+
+- İnkişaf, səhnələşdirmə və istehsal üçün ayrıca API açarları yaratmaq.
+- İnteqrasiyanın sabit çıxış ünvanları olduğu IP ağ siyahısı tətbiq edin.
+- Brauzer, mobil və ya masaüstü tətbiq kodunda API sirrləri heç vaxt açmamaq.
+- İmzalanmış sorğular yaratmadan əvvəl server vaxtını sinxronlaşdırmaq.
+- Avtorizasiya başlıqlarını, API Açarları, imzaları və tətbiq jurnallarından sirləri redaktə edin.
+- Açarı dərhal ləğv edib dəyişdirmək mümkündür.
+
+<h2 id="next-steps">Növbəti addımlar</h2>
+
+<CardGroup cols={3}>
+<Card title="API Key İdarəetmə" icon="fa-duotone fa-key" href="/az/developer-api/api-key-management">
+Scoped açarlar yaradın, IP məhdudiyyətləri konfiqurasiya edin və açarların rotasiyasını planlaşdırın.
+</Card>
+<Card title="Sorğu İmzalanması" icon="fa-duotone fa-signature" href="/az/developer-api/request-signing">
+HMACqurun - yüküSHA256 və şəxsi sorğuları imzalayın.
+</Card>
+<Card title="Səhvlər və Problemlərin Həlli" icon="fa-duotone fa-screwdriver-wrench" href="/az/developer-api/error-codes-and-troubleshooting">
+Rədd edilmiş etimadnamələri, vaxt möhürlərini, imzalarları və icazələri diaqnoz edin.
+</Card>
+</CardGroup>

@@ -1,0 +1,60 @@
+---
+title: "Xatolik kodlari va muammolarni hal qilish"
+description: "Xatolarni 6MM API kodlari, xabarlar, so'rov identifikatorlari, qayta urinish bo'yicha ko'rsatmalar, autentifikatsiya tekshiruvlari va integratsiyani aniqlash bosqichlari yordamida aniqlang."
+slug: uz/developer-api/error-codes-and-troubleshooting
+canonical-url: https://docs.6mm.com/uz/developer-api/error-codes-and-troubleshooting
+---
+
+<h2 id="error-response-format">Xatolik Javob Formati</h2>
+
+```json
+{
+  "code": 1003,
+  "message": "Invalid token",
+  "requestId": "req-12345678"
+}
+```
+
+Biznes xatolari odatda birlashtirilgan JSON tuzilmasini qaytaradi. Integratorlar avval `code` tekshirishi kerak. Autentifikatsiya xatoliklari HTTP `401`qaytishi mumkin; Tezlikni cheklash HTTP `429`qaytishi mumkin.
+
+<h2 id="common-error-codes">Keng tarqalgan xato kodlari</h2>
+
+| Xato kodi      | Tavsif                                  |
+| --------------- | -------------------------------------------- |
+| `0`             | Muvaffaqiyat                                      |
+| `1001`          | Haqiqiy autentifikatsiya ma'lumotlari taqdim etilmagan |
+| `1002`          | Token muddati o'tgan                                |
+| `1003`          | Noto'g'ri token, API Keyyoki imzo         |
+| `1004`          | Token bekor qilindi                                |
+| `1006`          | Manba IP mosligi                           |
+| `2001`          | Kerakli parametrning yo'qligi                   |
+| `2002`          | Noto'g'ri parametr qiymati                      |
+| `2003`          | Parametr diapazondan tashqarida                       |
+| `3001`          | Yetarli muvozanat yetishmasligi                         |
+| `3003`          | Buyruq topilmadi                              |
+| `3004`          | Dublikat so'rovi                            |
+| `3005`          | Buyurtmani bekor qilib bo'lmaydi                     |
+| `3006`          | Ruxsat berilmadi                            |
+| `3100` - `3112` | Shart tartibi parametrlarini tasdiqlash xatosi   |
+| `5001`          | Ichki server xatosi                        |
+| `5002`          | Xizmat vaqtincha mavjud emas              |
+| `5003`          | Tezlik cheklovi ishga tushirildi                         |
+
+<h2 id="troubleshooting">Muammolarni hal qilish</h2>
+
+| Muammo                                     | Tavsiya                                                                                   |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `1001` haqiqiy autentifikatsiya ma'lumotlari yo'q  | `Authorization: Bearer <accessToken>` yoki `X-API-KEY` kiritilganini tekshiring.                  |
+| `1002` Token muddati o'tgan                        | Tokenni yangilash yoki qayta kirishdan oldin qayta tiklang.                                                   |
+| `1003` noto'g'ri Token, API Keyyoki imzo | API Key, imzo yuklamasi, so'rov tanasi JSON satrini va so'rov parametr tartibini tekshiring.           |
+| `1006` manba IP mos kelmaydi                   | API Key IP oq ro'yxat konfiguratsiyasini tekshiring.                                                    |
+| `3004` nusxa so'rovi                    | Buyruq bilan bog'liq yo'llar uchun bir xil imzoni qayta ishlatmang. Regeneratsiya `timestamp` va `signature`. |
+| `5003` cheklovi ishga tushirildi                 | So'rovlar chastotasini kamaytiring va qayta urinishda eksponensial orqaga chekinishdan foydalaning.                                |
+| `Timestamp outside of tolerance window`     | Vaqt ofsetini kalibrlash `/v1/time` qo'ng'iroq qiling va so'rovni yana imzolang.                             |
+
+<h2 id="related-diagnostic-guides">Tegishli diagnostika qo'llanmalari</h2>
+
+- [Muhitlar va umumiy konventsiyalar](/uz/developer-api/environments-and-common-conventions)
+- [Autentifikatsiya](/uz/developer-api/authentication)
+- [Integratsiya tavsiyalari](/uz/developer-api/integration-recommendations)
+- [Qo'llab-quvvatlash so'rovi shabloni](/uz/resources/support-request-template)

@@ -17,15 +17,18 @@
     "uk",
     "pt-PT",
     "es-ES",
-    "uz-UZ",
     "ar",
-    "fil-PH",
-    "az-AZ",
   ];
+  var standaloneLocales = {
+    uz: "uz-UZ",
+    fil: "fil-PH",
+    az: "az-AZ",
+  };
   var lastPathname;
 
   function localeFromPathname(pathname) {
     var firstSegment = pathname.split("/").filter(Boolean)[0];
+    if (standaloneLocales[firstSegment]) return standaloneLocales[firstSegment];
     return locales.indexOf(firstSegment) >= 0 ? firstSegment : "en";
   }
 

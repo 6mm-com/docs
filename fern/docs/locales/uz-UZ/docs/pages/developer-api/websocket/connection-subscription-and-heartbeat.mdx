@@ -1,0 +1,89 @@
+---
+title: "Aloqa, Obuna va Yurak urishi"
+subtitle: "6MM WebSocket oqimga ulaning, mavzularga obuna bo'ling, aloqalarni jonli saqlang va xabar konvertlarini xavfsiz qayta ishlang."
+slug: uz/developer-api/websocket/connection-subscription-and-heartbeat
+canonical-url: https://docs.6mm.com/uz/developer-api/websocket/connection-subscription-and-heartbeat
+---
+
+Bozor ma'lumotlari va shaxsiy foydalanuvchi holati yangilanishlari uchun WebSocket oqimlaridan foydalaning, ular so'rovlarsiz ham yangilanishi kerak.
+
+<h2 id="connection-url">Aloqa URL</h2>
+
+```text
+wss://ws.6mm.com/ws
+```
+
+Xususiy oqimlar uchun maxfiy kanal hujjatlarida tasvirlangan listenKey yoki kirish tokeni kabi autentifikatsiya konteksti talab qilinadi.
+
+<h2 id="subscribe">Obuna bo'ling</h2>
+
+```json
+{ "id": "1772007814666", "op": "subscribe", "args": ["market.depth.BTCUSDT"] }
+```
+
+Muvaffaqiyatli obuna tasdiqi:
+
+```json
+{
+  "id": "1772007814666",
+  "event": "subscribe",
+  "success": true,
+  "data": ["market.depth.BTCUSDT"]
+}
+```
+
+<h2 id="unsubscribe">Obunani bekor qilish</h2>
+
+```json
+{ "id": "1772007814667", "op": "unsubscribe", "args": ["market.depth.BTCUSDT"] }
+```
+
+<h2 id="application-ping">Ilova ping</h2>
+
+```json
+{ "id": "1772007814668", "op": "ping", "args": [] }
+```
+
+<h2 id="message-envelope">Xabar konverti</h2>
+
+Ommaviy pushlar bir xil chegaradan foydalanadi:
+
+```json
+{
+  "topic": "market.depth.BTCUSDT",
+  "event": "data",
+  "ts": 1772007815000,
+  "data": {}
+}
+```
+
+<h2 id="operational-recommendations">Operatsion tavsiyalar</h2>
+
+- Har bir obuna bo'lish, obunani bekor qilish va ping so'rovi uchun noyob mijoz tomonidagi `id` yaratish.
+- Qayta ulanishni yangi sessiya sifatida qabul qiling va kerakli mavzularga qayta obuna bo'ling.
+- Qaytarilgan `topic` xizmatingiz kutayotgan kanalga mos kelishini tasdiqlang.
+- Shaxsiy buyurtma yoki hisob voqealari bo'lgan joylarda xabarlarni qayta ishlashni idempotent holda saqlang.
+- Log ulanish holati o'zgarishlari, obuna tasdiqlari va g'ayrioddiy uzilishlar ko'rsatilishi.
+
+<h2 id="reconnect-workflow">Qayta ulanish jarayoni</h2>
+
+1. Oldingi rozetkani yoping yoki tashlab, yangi ulanish yarating.
+2. Maxfiy oqimlarni haqiqiy listenKey yoki kirish tokeni bilan qayta autentifikatsiya qiling.
+3. Har bir kerakli mavzuga qayta obuna bo'ling va muvaffaqiyatli e'tiroflarni kuting.
+4. Mahalliy buyurtma kitobi holatini yangi snapshot bilan almashtiring, keyin bosqichma-bosqich yangilanishlar qo'llaning.
+5. Agar shaxsiy tadbirlar o'tkazib yuborilgan bo'lsa, ochiq buyruqlar, pozitsiyalar va balanslarni REST davomida muvofiqlashtiring.
+
+Qayta ulanish uchun jitter bilan cheklangan eksponensial orqaga chekinishdan foydalaning. Doimiy qayta ulanayotgan mijoz operatorlarni ogohlantirishi kerak, ko'rinmasdan cheksiz qayta urinish o'rniga.
+
+<h2 id="heartbeat-and-stale-connections">Yurak urishi va eskirgan aloqalar</h2>
+
+- Eng so'nggi kiruvchi xabar va muvaffaqiyatli ping tasdiqlanishini kuzatish.
+- Ishlab chiqarish muhitida tasdiqlangan yurak urishi intervali va bo'sh ish chegarasidan foydalaning.
+- Konfiguratsiya qilingan chegaradan oshilganda, TCP soketi hali ochiq bo'lsa ham, ulanishni eskirgan deb hisoblash.
+- Eski soketdan obunalarni qayta ishlatmang; Har bir qayta ulanishdan so'ng aniq qayta obuna bo'ling.
+
+<h2 id="related-documentation">Tegishli hujjatlar</h2>
+
+- [Ommaviy Bozor Kanallari](/uz/developer-api/websocket/public-market-channels): mavzular, buyurtmalar daftari uzluksizligi, savdolar, shamlar va tickerlar.
+- [Xususiy Foydalanuvchi Kanali](/uz/developer-api/websocket/private-user-channel): listenKey hayot sikli va autentifikatsiyalangan voqealar.
+- [Integratsiya tavsiyalari](/uz/developer-api/integration-recommendations): qayta urinishlar, idempotentsiya, monitoring va uchirish sinovlari.

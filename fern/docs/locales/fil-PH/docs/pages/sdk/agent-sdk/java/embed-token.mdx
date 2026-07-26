@@ -1,0 +1,56 @@
+---
+title: "Gumawa ng Embed Token"
+subtitle: "Mag-isyu ng panandaliang embed tokens para sa Trading Widget partner-token mode."
+slug: fil/sdk/agent-sdk/java/embed-token
+canonical-url: https://docs.6mm.com/fil/sdk/agent-sdk/java/embed-token
+---
+
+<h2 id="sdk-call">SDK tawag</h2>
+
+Gumawa ng embed tokens mula sa iyong backend pagkatapos ma-validate ang partner user session. Dapat tawagin ng browser ang iyong endpoint, at dapat tumawag ang iyong endpoint 6MM sa pamamagitan ng Agent SDK.
+
+```java
+CreateEmbedTokenResponse resp = client.createEmbedToken(
+        CreateEmbedTokenRequest.of("agent-user-001", "tw_abc123")
+                .withSymbol("ETHUSDT"));
+
+System.out.println(resp.embedToken);
+System.out.println(resp.expireAt);
+```
+
+> **Isang beses na kredensya**
+>
+> embedToken ay panandalian lamang at isang beses lang gamitin. Huwag ilagay ito sa URL query string.
+
+<h2 id="backend-endpoint-example">Halimbawa ng backend endpoint</h2>
+
+```java
+@PostMapping("/api/trading/embed-token")
+public EmbedTokenView createEmbedToken(@RequestBody EmbedTokenRequest request,
+                                       PartnerSession session) {
+    String agentUserId = session.getAgentUserId();
+    CreateEmbedTokenResponse resp = agentClient.createEmbedToken(
+            CreateEmbedTokenRequest.of(agentUserId, request.getChannelId())
+                    .withSymbol(request.getSymbol()));
+
+    return new EmbedTokenView(resp.embedToken, resp.expireAt, request.getChannelId());
+}
+```
+
+Ibalik lamang ang mga field na kailangan ng Trading Widget token provider. Huwag ibalik ang apiSecret, raw signing fields, o internal service configuration.
+
+<h2 id="failure-handling">Paghawak ng Pagkabigo</h2>
+
+| Kondisyon | Inirerekomendang paghawak |
+| --- | --- |
+| Nawawala o nag-expire ang user session | Ibalik ang 401 mula sa partner endpoint at hilingin sa user na mag-sign in muli. |
+| Hindi nakatali ang agent user | I-bind muna ang user, pagkatapos ay subukang gumawa muli ng token. |
+| 6MM nagbabalik ng pansamantalang error | Ibalik ang retryable error sa frontend at mag-log requestId para sa suporta. |
+| channelId hindi tumutugma sa widget instance | Tanggihan ang kahilingan at muling likhain ang widget session. |
+
+<h2 id="related-documentation">Kaugnay na dokumentasyon</h2>
+
+- [Trading Widget Authentication](/fil/sdk/trading-widget/authentication): ikonekta ang `tokenProvider` sa partner endpoint.
+- [Java Quick Start](/fil/sdk/agent-sdk/java/quick-start): i-install at i-initialize ang `AgentClient`.
+- [Secrets & Signing](/fil/sdk/security/secrets-signing): protektahan ang Agent API lihim.
+- [Webhooks & Idempotency](/fil/sdk/security/webhooks-idempotency): siguraduhin ang callback side ng integration.

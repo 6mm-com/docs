@@ -1,0 +1,127 @@
+---
+title: "Estruktura ng Perpetual Trading Fee"
+description: "Sanggunian ang modelo ng 6MM maker, taker, funding, liquidation, at settlement fee para sa U-margined perpetual contracts."
+slug: fil/trading/fee-structure
+canonical-url: https://docs.6mm.com/fil/trading/fee-structure
+---
+
+6MM ay gumagamit ng transparent at execution-based na modelo ng bayad para sa U-margined perpetual contracts.
+
+Ang mga bayarin ay sinisingil lamang kapag ang mga trade ay isinasagawa at idinisenyo upang umayon sa liquidity ng merkado at pag-uugali sa pangangalakal.
+
+Ang pahinang ito ang sanggunian para sa mga kategorya ng bayad at settlement. Upang maunawaan kung paano naaapektuhan ng lalim ng order-book at presyo ng pagpapatupad ang kabuuang gastos sa kalakalan, tingnan ang [Trading Costs: Fees & Slippage](/fil/trading/fees-and-slippage).
+
+***
+
+<h2 id="trading-fees-overview">Pangkalahatang-ideya ng Trading Fees</h2>
+
+Ang trading fees sa 6MM ay kinakalkula batay sa:
+
+* Naisakatuparan ang halaga ng kalakalan
+* Uri ng order (Gumawa o Taker)
+* Konfigurasyon ng trading pair at partner
+
+Ang mga hindi natapos o kinanselang order ay hindi nagdudulot ng anumang bayarin.
+
+Para sa isang naipatutupad na dami, ang pangkalahatang kalkulasyon ay:
+
+```text
+executed notional = execution price × executed quantity
+trading fee = executed notional × applicable maker or taker fee rate
+```
+
+Ang naaangkop na rate ay nakadepende sa trading pair at configuration ng partner. Kumpirmahin ang ipinakitang rate bago maglagay ng order.
+
+***
+
+<h2 id="maker-fees">Bayad sa Maker</h2>
+
+Ang maker fees ay naaangkop kapag ang isang order ay nagdagdag ng likwididad sa order book.
+
+Karaniwang order ng maker:
+
+* Limitahan ang mga order na hindi agad isinasagawa
+* Mga order na nakalagay sa order book
+
+Karaniwang mas mababa ang maker fees at maaaring hikayatin upang suportahan ang lalim ng merkado.
+
+***
+
+<h2 id="taker-fees">Bayad sa Taker</h2>
+
+Ang taker fees ay naaangkop kapag ang isang order ay nag-aalis ng liquidity mula sa order book.
+
+Karaniwang mga utos ng taker:
+
+* Mga order sa merkado
+* Limitahan ang mga order na agad na isinasagawa
+
+Mas mataas ang taker fees dahil sa agarang execution.
+
+***
+
+<h2 id="funding-fees">Bayad sa Pagpopondo</h2>
+
+Bukod sa trading fees, ang perpetual contracts ay may kasamang pagpopondo ng mga bayad.
+
+* Ang mga bayad sa pondo ay ipinagpapalit sa pagitan ng long at short positions
+* Hindi 6MM nangongolekta ng bayad sa pondo
+* Nagkakaiba-iba ang mga rate ng pondo depende sa kondisyon ng merkado
+
+Ang mga bayad sa pondo ay tumutulong upang mapanatiling naka-align ang presyo ng kontrata sa spot market.
+
+***
+
+<h2 id="liquidation-related-fees">Mga bayarin na may kaugnayan sa likwidasyon</h2>
+
+Kapag naganap ang likwidasyon:
+
+* Maaaring ipataw ang liquidation fee
+* Ginagamit ang mga bayarin upang masakop ang panganib ng sistema at gastos sa pagpapatupad ng merkado
+
+Ang mga partikular na patakaran sa liquidation fee ay nakadepende sa configuration ng partner.
+
+***
+
+<h2 id="fee-settlement">Pag-aayos ng Bayad</h2>
+
+* Ang mga bayarin ay nire-settle sa stablecoins (hal. USDT)
+* Ang mga bayarin ay direktang ibinabawas mula sa Perpetual Account
+* Ang mga kalkulasyon ng bayad ay nangyayari nang real time sa pagpapatupad
+
+***
+
+<h2 id="fee-transparency">Transparency ng Bayad</h2>
+
+6MM tinitiyak ang:
+
+* Ang lohika ng bayad ay deterministiko at maaaring i-audit
+* Makikita ang mga kalkulasyon ng bayad sa pagpapatupad ng order
+* Pinananatili ng mga kasosyo ang kontrol sa panghuling presentasyon ng bayad na nakaharap sa gumagamit
+
+***
+
+<h2 id="beginner-tips">Mga Tip para sa Baguhan</h2>
+
+* Gamitin ang limit orders para bawasan ang taker fees
+* Iwasan ang labis na labis na kalakalan
+* Isaalang-alang ang mga bayarin sa pagkalkula ng antas ng TP/SL
+* Suriin ang mga rate ng bayad bago magbukas ng malalaking posisyon
+
+***
+
+<h2 id="summary">Buod</h2>
+
+Sa 6MM:
+
+* Ang mga bayad ay nakabatay sa pagpapatupad at transparent
+* Sinusuportahan ng mga modelo ng maker at taker ang malusog na likwididad
+* Ang mga bayad sa pondo ay peer-to-peer, hindi kita mula sa platform
+
+Ang pag-unawa sa istruktura ng bayad ay tumutulong sa mga gumagamit na makipagkalakalan nang mas episyente at napapanatili.
+
+<h2 id="related-cost-guides">Kaugnay na gabay sa gastos</h2>
+
+- [Fees & Slippage](/fil/trading/fees-and-slippage): tinatayang kabuuang gastos sa pagpapatupad.
+- [Perpetual Contracts](/fil/trading/perpetual-contracts): unawain ang pagpopondo at settlement.
+- [Institutional Liquidity](/fil/solutions/institutional-liquidity): suriin ang papel ng lalim ng merkado at mga spread.

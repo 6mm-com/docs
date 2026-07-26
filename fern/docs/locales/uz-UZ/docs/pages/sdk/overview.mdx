@@ -1,0 +1,53 @@
+---
+title: "6MM SDKs"
+subtitle: "Joylashtirilgan savdo, backend token chiqarish, hisob bog'lanishi, veb-hooklar va ishlab chiqarish operatsiyalari uchun to'g'ri 6MM SDK yo'lni tanlang."
+slug: uz/sdk/overview
+canonical-url: https://docs.6mm.com/uz/sdk/overview
+---
+
+<h2 id="choose-an-sdk-path">SDK yo'lni tanlang</h2>
+
+<CardGroup cols={3}>
+<Card title="Trading Widget SDK" icon="duotone chart-line" href="/uz/sdk/trading-widget/quick-start">
+6MM savdo terminalini mavjud veb-sayt, hamyon, broker portali yoki hamkor mahsulot yuzasiga joylashtiring.
+</Card>
+<Card title="Agent SDK" icon="duotone server" href="/uz/sdk/agent-sdk/overview">
+  Foydalanuvchi bog'lash, tokenlarni joylashtirish, kirish URLlari, transferlar, buyurtma so'rovlari va webhooklar uchun hamkor backendni 6MM bilan bog'lang.
+</Card>
+<Card title="Xavfsizlik va operatsiyalar" icon="duotone shield-check" href="/uz/sdk/security/secrets-signing">
+  Maxfiy saqlash, so'rovlarni imzolash, webhook identpotentsiyasi, monitoring va ishga tushirish muammolarini aniqlashni tayyorlang.
+</Card>
+</CardGroup>
+
+<h2 id="recommended-combination">Tavsiya etilgan kombinatsiya</h2>
+
+| Hamkorlik maqsadi | Frontend | Backend | Nima uchun muhim? |
+| --- | --- | --- | --- |
+| O'rnatilgan savdo terminalini qo'shish | Trading Widget SDK | Agent SDK | Vidjet savdo interfeysini boshqaradi, hamkor backend esa tokenlarni chiqaradi va sirlarni maxfiy saqlaydi. |
+| Mahalliy ilova kirish nuqtasini yaratish | Native yoki H5 yozuvi | Agent SDK | Ilova sherik foydalanuvchi sessiyasini tasdiqlagandan so'ng URL 6MM yozuvini ochadi. |
+| Maxsus savdo oqimini yaratish | Hamkor interfeysi | Dasturchi API + tanlangan SDK oqimlari | Hisob, buyurtma, pozitsiya va bozor ma'lumotlari uchun APIs foydalaning, server tomonida operatsion nazoratni saqlang. |
+
+<h2 id="reference-architecture">Ma'lumotnoma arxitekturasi</h2>
+
+```text
+Partner Web App
+  -> TradingWidget.create()
+  -> tokenProvider()
+  -> Partner Backend
+  -> 6MM Agent SDK
+  -> 6MM Agent API
+  -> 6MM Trading iframe
+```
+
+> **Server tomonida sirlarni saqlang**
+>
+> Brauzer kodi faqat hamkorga tegishli endpointlarni chaqirishi kerak. Agent API maxfiyligi hech qachon frontend kodiga yuborilmasligi kerak.
+
+<h2 id="production-checklist">Ishlab chiqarish ro'yxati</h2>
+
+- Faqat orqa apiSecret infratuzilmasida saqlang.
+- Agent API so'rovlari va webhook URLlari uchun HTTPS dan foydalaning.
+- Persist agentUserId, platformUserIdva agentOrderNo xaritalari.
+- Pul miqdorini suzuvchi nuqta qiymatlari o'rniga o'nlik satrlar sifatida ifodalash.
+- PROCESSING muvaffaqiyat yoki muvaffaqiyatsizlik sifatida emas, balki kutilmoqda deb ko'rish.
+- Webhooklarni bir xil tarzda qayta ishlash, chunki qayta urinishlar kutiladi.

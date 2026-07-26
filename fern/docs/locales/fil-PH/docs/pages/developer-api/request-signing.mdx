@@ -1,0 +1,153 @@
+---
+title: "Humiling ng Pagpirma"
+description: "Pumirma ng 6MM API requests gamit ang HMAC-SHA256 gamit ang kinakailangang payload, timestamp, API key, signature headers, at verification rules."
+slug: fil/developer-api/request-signing
+canonical-url: https://docs.6mm.com/fil/developer-api/request-signing
+---
+
+<h2 id="request-format">Format ng Kahilingan</h2>
+
+| Lokasyon | Larangan       | Kinakailangan            | Paglalarawan                                   |
+| -------- | ----------- | ------------------- | --------------------------------------------- |
+| Header   | `X-API-KEY` | Oo                 | `apiKey` ibinalik kapag nilikha ang API Key |
+| Query    | `timestamp` | Oo                 | Unix millisecond timestamp                    |
+| Query    | `signature` | Oo                 | HMAC-SHA256 signature, maliit na hex string   |
+| Katawan     | JSON        | Depende sa endpoint | POST / PUT / DELETE request body              |
+
+<h2 id="signature-payload">Signature Payload</h2>
+
+```
+payload = queryStringWithoutSignature + requestBody
+signature = HMAC-SHA256(apiSecret, payload)
+```
+
+Pangunahing mga patakaran:
+
+* `timestamp` ay dapat isang Unix millisecond timestamp. Ang server tolerance window ay ±10 segundo.
+* `signature` ay inilalagay sa URL query string, ngunit hindi kasama sa signature payload.
+* Sinusuri ng server ang orihinal na query string pagkatapos alisin ang `signature`; Hindi nito nire-reorder ang mga query parameters.
+* Ang order ng query parameter na ginagamit sa pagpirma ay dapat tumugma sa aktwal na request URL.
+* Kung mayroong request body, ang JSON string na ginagamit sa pagpirma ay dapat eksaktong tumugma sa aktwal na ipinadalang katawan.
+* Ang mga ruta na may kaugnayan sa order ay nagsasagawa ng signature replay checks. Ang muling paggamit ng parehong pirma sa loob ng maikling panahon ay nagbabalik ng `Signature replay detected`.
+
+<h2 id="server-time">Oras ng Server</h2>
+
+```http
+GET /v1/time
+```
+
+Halimbawa ng tugon:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "timestamp": 1780473256,
+    "timestampMs": 1780473256708,
+    "iso": "2026-06-03T07:54:16Z",
+    "timezone": "UTC"
+  },
+  "requestId": "req-7cad3113"
+}
+```
+
+Dapat kalkulahin ng mga kliyente ang `timeOffsetMs = serverTimestampMs - localTimestampMs`, pagkatapos ay gamitin ang `timestamp = nowMs + timeOffsetMs` para sa mga susunod na signed request. Kung magbabalik ang server ng `Timestamp outside of tolerance window`, agad na i-resync ang oras at i-regenerate ang signature.
+
+<h2 id="get-signing-example">Halimbawa ng GET Signing</h2>
+
+Aktwal na kahilingan:
+
+```
+GET /v1/private/order/current?symbol=BTCUSDT&timestamp=1772710377808&signature=...
+```
+
+Signature payload:
+
+```
+symbol=BTCUSDT&timestamp=1772710377808
+```
+
+<h2 id="post-signing-example">Halimbawa ng POST Signing</h2>
+
+Aktwal na kahilingan:
+
+```
+POST /v1/private/order/place?timestamp=1772710377808&signature=...
+```
+
+Katawan ng kahilingan:
+
+```json
+{"symbol":"BTCUSDT","type":"LIMIT","side":"BUY","price":"85000","quantity":"0.1","timeInForce":"GTC","makerOnly":true,"clientOrderId":"ext-1772710377808-001"}
+```
+
+Signature payload:
+
+```
+timestamp=1772710377808{"symbol":"BTCUSDT","type":"LIMIT","side":"BUY","price":"85000","quantity":"0.1","timeInForce":"GTC","makerOnly":true,"clientOrderId":"ext-1772710377808-001"}
+```
+
+<h2 id="python-signing-example">Halimbawa ng Python Signing</h2>
+
+```python
+import hashlib
+import hmac
+import json
+import time
+from urllib.parse import urlencode
+
+import requests
+
+BASE_URL = "https://api.6mm.com"
+API_KEY = "YOUR_API_KEY"
+API_SECRET = "YOUR_API_SECRET"
+TIME_OFFSET_MS = 0
+
+def sign(payload: str) -> str:
+    return hmac.new(
+        API_SECRET.encode("utf-8"),
+        payload.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+
+def sync_time_offset():
+    global TIME_OFFSET_MS
+    before = int(time.time() * 1000)
+    resp = requests.get(f"{BASE_URL}/v1/time", timeout=5)
+    after = int(time.time() * 1000)
+    resp.raise_for_status()
+
+    server_ts = int(resp.json()["data"]["timestampMs"])
+    local_midpoint = (before + after) // 2
+    TIME_OFFSET_MS = server_ts - local_midpoint
+
+def signed_request(method: str, path: str, params=None, body=None):
+    params = dict(params or {})
+    params["timestamp"] = str(int(time.time() * 1000) + TIME_OFFSET_MS)
+
+    query_string = urlencode(params)
+    body_string = ""
+    if body is not None:
+        body_string = json.dumps(body, separators=(",", ":"), ensure_ascii=False)
+
+    signature = sign(query_string + body_string)
+    url = f"{BASE_URL}{path}?{query_string}&signature={signature}"
+    headers = {
+        "X-API-KEY": API_KEY,
+        "Content-Type": "application/json",
+    }
+    resp = requests.request(method, url, headers=headers, data=body_string if body is not None else None, timeout=10)
+    resp.raise_for_status()
+    return resp.json()
+
+sync_time_offset()
+print(signed_request("GET", "/v1/private/order/current", {"symbol": "BTCUSDT"}))
+```
+
+<h2 id="related-security-guides">Kaugnay na mga gabay sa seguridad</h2>
+
+- [Authentication](/fil/developer-api/authentication)
+- [API Key Management](/fil/developer-api/api-key-management)
+- [Mga Lihim at Pagpirma](/fil/sdk/security/secrets-signing)
+- [Error Codes & Troubleshooting](/fil/developer-api/error-codes-and-troubleshooting)

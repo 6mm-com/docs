@@ -1,0 +1,66 @@
+---
+title: "Tərəfdaş İnteqrasiyası Təhlükəsizlik Arxitekturası"
+subtitle: "Daxili ticarət, API, SDK, webhook, aktiv transferi və əməliyyat inteqrasiyaları üçün etibar sərhədləri və istehsal nəzarətləri dizayn edin."
+slug: az/solutions/security-architecture
+canonical-url: https://docs.6mm.com/az/solutions/security-architecture
+---
+
+Bu səhifə tərəfdaşın təhlükəsiz 6MM inteqrasiyasını necə dizayn etməli olduğuna diqqət yetirir. Ticarət platformasında istifadə olunan daha geniş təhlükəsizlik qatları üçün baxın [Platform Security Architecture](/az/security-compliance/security-architecture).
+
+Təhlükəsizlik arxitekturası istehsal inteqrasiyasına başlamazdan əvvəl razılaşdırılmalıdır. Bu, tərəfdaş sistemlərinin istifadəçiləri necə təsdiqlədiyini, tokenləri buraxmasını, sirrləri saxlamasını, hadisələri qəbul etməsini, əməliyyatları necə izlədiyini və hadisələrə necə cavab verdiyinə təsir edir.
+
+<h2 id="recommended-trust-boundary">Tövsiyə olunan etibar sərhədi</h2>
+
+| Komponent | Ehtiva edə bilər | Saxlamamalıdır |
+| --- | --- | --- |
+| Tərəfdaş ön tərəf | İctimai konfiqurasiya, qısa müddətli giriş nəticəsi, həssas olmayan istifadəçi interfeysi vəziyyəti | Tərəfdaş API sirr, imza açarı, imtiyazlı arxa plan məlumatları |
+| Tərəfdaş backend | İstifadəçi xəritələşdirməsi, qorunan etimadnamələr, imzalama məntiqi, veb hook işlənməsi | Müştəri cavabları və ya ictimai qeydlər vasitəsilə üzə çıxan sirlər |
+| 6MM inteqrasiya son nöqtələri | Təsdiqlənmiş imzalanmış sorğular, tokenlər və webhook çatdırılması | Təsdiqlənməmiş tərəfdaş tərəfi istifadəçi fərziyyələri |
+
+Tərəfdaş ön tərəf imtiyazlı əməliyyatlar üçün tərəfdaş backend-i çağırmalıdır. Backend tərəfdaş istifadəçini təsdiqləyir, təsdiqlənmiş API və ya SDKvasitəsilə 6MM çağırır və yalnız frontend üçün lazım olan qısa müddətli nəticəni qaytarır.
+
+<h2 id="security-layers">Təhlükəsizlik qatları</h2>
+
+| Qat | Tələb olunan diqqət |
+| --- | --- |
+| API sertifikatları | Yalnız arxa planda saxlama, rotasiya planı və giriş nəzarəti. |
+| Sorğunun imzalanması | Sabit vaxt möhürü, imza və təkrar baxış qorunması idarəsi. |
+| Tokenləri yerləşdirmək | Qısa müddətli veriliş, uyğunluq yoxlamaları və açıq etibarsızlıq davranışı. |
+| Webhooks | İmza təsdiqi, idempotensiya, təkrar cəhdlər və tədbir audit qeydləri. |
+| Əməliyyatlar | Giriş rolları, insidentlərin eskalasiyası, monitorinq və sübutların saxlanması. |
+
+<h2 id="production-control-plan">İstehsalat nəzarət planı</h2>
+
+| İdarəetmə sahəsi | Minimum tətbiq sübutu |
+| --- | --- |
+| Etimadnamə saxlanması | Gizli idarəedicinin yeri, giriş sahibi, mühitin ayrılması və rotasiya prosesi. |
+| İstifadəçi girişi | Sessiya təsdiqi, uyğunluq yoxlanışı, qısa müddətli token axını və uğursuzluqların idarə olunması. |
+| İmzalanmış sorğular | Düzgün mühit, sinxronlaşdırılmış vaxt, sorğu qeydiyyatı və imza səhvi xəbərdarlıqları. |
+| Aktiv əməliyyatları | Unikal biznes ID-ləri, vaxt aşımı uzlaşdırılması, status sorğuları və operator yoxlama yolu. |
+| Webhooks | Raw-body imza təsdiqi, təkrar oynatma idarəetmələri, idempotensiya yaddaşı və təkrar cəhd üçün təhlükəsiz işləmə. |
+| Monitorinq | Autentifikasiya uğursuzluqları, anormal təkrarlamalar, webhook gecikməsi və əməliyyat səhvləri üçün xəbərdarlıqlar. |
+| Hadisəyə cavab | Adlandırılmış sahib, eskalasiya kanalı, sübutların saxlanması və sertifikatın ləğvi proseduru. |
+
+<h2 id="launch-review">Buraxılış icmalı</h2>
+
+İstehsaldan əvvəl:
+
+1. İstifadəçi, token, sorğu, aktiv və webhook məlumat axınlarını çəkin.
+2. Hər bir etimadnamənin harada yaradıldığını, saxlandığını, istifadə olunduğunu, qeyd olunduğunu, dəyişdirildiyini və ləğv edildiyini işarələyin.
+3. Müddəti bitmiş tokenləri, etibarsız imzaları, vaxt aşımı nəticələrini, dublikat veb hook-ları və yenidən qoşulma davranışını yoxlayın.
+4. Dəstək komandalarının əməliyyatı sorğu və ya biznes identifikatoru vasitəsilə tapa biləcəyini təsdiqləyin.
+5. [İstehsal Başlatma Yoxlama Siyahısı](/az/solutions/production-launch-checklist) tamamla.
+
+<h2 id="recommended-docs">Tövsiyə olunan həkimlər</h2>
+
+<CardGroup cols={3}>
+<Card title="Sirlər və İmza" icon="fa-duotone fa-key" href="/az/sdk/security/secrets-signing">
+Agent SDK etimadnamələri və imzalanmış sorğuları qoruyun.
+</Card>
+<Card title="Sorğu İmzalanması" icon="fa-duotone fa-signature" href="/az/developer-api/request-signing">
+Birbaşa Developer API request imzalama tətbiq edin.
+</Card>
+<Card title="Webhook və İdempotensiya" icon="fa-duotone fa-webhook" href="/az/sdk/security/webhooks-idempotency">
+Hadisələri təhlükəsiz şəkildə işləyin.
+</Card>
+</CardGroup>
