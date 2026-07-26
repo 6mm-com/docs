@@ -1,9 +1,11 @@
 ---
-title: "Webhook 与幂等"
-subtitle: "校验 6MM Webhook 签名，并安全处理重复通知。"
+title: "Webhook 签名验证与幂等处理"
+subtitle: "使用原始请求体验证 6MM Agent Webhook，并在重试、超时和重复事件中避免重复业务操作。"
 slug: sdk/security/webhooks-idempotency
 canonical-url: https://docs.6mm.com/zh/sdk/security/webhooks-idempotency
 ---
+
+Webhook 用于通知合作方后端异步业务状态变化。由于通知可能重试，接收端必须先验证签名，再把数据作为可信内容解析，并且以幂等方式处理事件。
 
 <h2 id="webhook-headers">Webhook 请求头</h2>
 
@@ -17,6 +19,20 @@ canonical-url: https://docs.6mm.com/zh/sdk/security/webhooks-idempotency
 timestamp + nonce + rawBody
 ```
 
+重建签名内容时必须使用 HTTP 接收的原始请求体。先解析再重新序列化 JSON 可能改变空格或字段顺序，从而产生不同的签名。
+
+<h2 id="verification-flow">验证流程</h2>
+
+1. 读取 timestamp、nonce 和 signature 请求头。
+2. 保存未经修改的原始请求体。
+3. 拼接 `timestamp + nonce + rawBody`。
+4. 使用合作方 API Secret 计算 HMAC-SHA256。
+5. 使用恒定时间比较方式对比计算结果与收到的签名。
+6. 按已确认的接入策略检查时间有效性和 nonce 是否重复。
+7. 验证成功后再解析并处理事件。
+
+如果官方 Agent SDK 已提供验证器，应优先使用，避免长期维护独立签名代码。
+
 <h2 id="order-idempotency">订单幂等</h2>
 
 | 场景 | 处理方式 |
@@ -25,3 +41,45 @@ timestamp + nonce + rawBody
 | HTTP 超时 | 先查原 agentOrderNo，不要直接生成新订单号。 |
 | PROCESSING 响应 | 等待 Webhook 或查询订单状态。 |
 | Webhook 重复推送 | 按幂等键和终态去重。 |
+
+<h2 id="recommended-idempotency-record">建议保存的幂等记录</h2>
+
+保存足够的信息，以识别重复通知并支持安全恢复：
+
+| 字段 | 用途 |
+| --- | --- |
+| 事件或业务键 | 唯一标识通知或业务操作。 |
+| 合作方订单号 | 关联原始请求。 |
+| Payload Hash | 识别内容冲突的重复通知。 |
+| 当前处理状态 | 区分已接收、处理中、成功和失败。 |
+| 最终业务状态 | 避免终态操作被执行两次。 |
+| 处理时间 | 支持排查和数据保留策略。 |
+
+条件允许时，应在同一事务中提交业务变更和幂等记录。收到重复事件时返回已有处理结果，不要再次修改余额、订单或用户状态。
+
+<h2 id="timeout-and-retry-rule">超时与重试规则</h2>
+
+HTTP 超时不能证明原请求失败。再次操作前，应使用原始 `agentOrderNo` 查询状态，或等待对应 Webhook。每次超时后都创建新的业务订单号，可能造成重复资金变动。
+
+<h2 id="production-checklist">生产环境检查</h2>
+
+- 在 JSON 解析或业务处理前验证签名。
+- 分别保留原始请求体和解析后的数据。
+- 按已确认的接入策略拒绝过期或重复请求。
+- 确保重复和乱序事件不会造成错误业务结果。
+- 记录事件 ID、合作方订单号、处理结果和请求时间。
+- 从日志和支持附件中移除密钥和完整签名。
+
+<h2 id="related-docs">相关文档</h2>
+
+<CardGroup cols={3}>
+<Card title="密钥与 HMAC 签名" icon="fa-duotone fa-shield-keyhole" href="/zh/sdk/security/secrets-signing">
+保护请求和 Webhook 验证使用的 API Secret。
+</Card>
+<Card title="Agent SDK 概览" icon="fa-duotone fa-server" href="/zh/sdk/agent-sdk/overview">
+查看完整的后端接入流程。
+</Card>
+<Card title="SDK 接入排查" icon="fa-duotone fa-screwdriver-wrench" href="/zh/sdk/security/troubleshooting">
+排查签名失败、重复事件和待确认操作。
+</Card>
+</CardGroup>

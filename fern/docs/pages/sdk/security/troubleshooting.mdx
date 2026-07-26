@@ -1,8 +1,19 @@
 ---
-title: "Troubleshooting"
-subtitle: "Common integration checks for Trading Widget and Agent SDKs."
+title: "SDK Integration Troubleshooting"
+subtitle: "Diagnose Trading Widget, Agent SDK, signing, webhook, timeout, and environment problems before escalating a support request."
 slug: sdk/security/troubleshooting
 ---
+
+Start with the environment, timestamp, and business identifier for the failed operation. A structured check usually separates configuration problems from authentication, network, and asynchronous-processing issues.
+
+<h2 id="diagnostic-order">Recommended diagnostic order</h2>
+
+1. Confirm the affected environment and base URL.
+2. Record the UTC time range and the first failing request.
+3. Identify the module: Trading Widget, Agent SDK, REST API, WebSocket, or webhook.
+4. Capture the request ID, partner user ID, `agentOrderNo`, order ID, or webhook event ID.
+5. Check recent code, credential, IP whitelist, or deployment changes.
+6. Reproduce with the smallest safe test case.
 
 <h2 id="trading-widget-issues">Trading Widget issues</h2>
 
@@ -21,3 +32,36 @@ slug: sdk/security/troubleshooting
 | Duplicate funds movement risk | New order number used after timeout | Query by original agentOrderNo first. |
 | PROCESSING treated as failure | Pending state misunderstood | Wait for webhook or call queryOrder. |
 | Webhook processed multiple times | Retry behavior without idempotency | Add idempotency key and final-state checks. |
+
+<h2 id="evidence-to-capture">Evidence to capture</h2>
+
+| Integration | Useful evidence |
+| --- | --- |
+| Trading Widget | Page URL, SDK version path, browser console, failed network requests, `onError` payload, and container dimensions. |
+| Agent SDK | SDK language/version, base URL, UTC timestamp, request ID, `agentOrderNo`, response code, and sanitized logs. |
+| Webhook | Delivery time, event or business key, signature-validation result, processing state, and sanitized raw-body hash. |
+| REST API | Method, path, environment, request ID, response code, and sanitized parameters. |
+
+Never include passwords, access tokens, API secrets, full signatures, private keys, or unredacted personal data in diagnostics.
+
+<h2 id="before-escalating">Before escalating</h2>
+
+- Retry only when the operation is documented as safe to retry.
+- After a timeout, query the original business identifier instead of creating a new one.
+- Confirm the system clock and credential environment for signature errors.
+- Preserve the first failure and any later retry results.
+- Use the [Support Request Template](/resources/support-request-template) to send a complete, redacted report.
+
+<h2 id="related-docs">Related docs</h2>
+
+<CardGroup cols={3}>
+<Card title="Trading Widget Quick Start" icon="fa-duotone fa-chart-line" href="/sdk/trading-widget/quick-start">
+Verify script loading, container size, configuration, and callbacks.
+</Card>
+<Card title="Secrets & Signing" icon="fa-duotone fa-shield-keyhole" href="/sdk/security/secrets-signing">
+Check Agent SDK credentials, clocks, and signed fields.
+</Card>
+<Card title="Webhooks & Idempotency" icon="fa-duotone fa-webhook" href="/sdk/security/webhooks-idempotency">
+Review callback verification and duplicate-event handling.
+</Card>
+</CardGroup>
