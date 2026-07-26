@@ -1,0 +1,94 @@
+---
+title: "Aktivlərin Transferi"
+description: "Aktivlərin tərəfdaş sistemləri ilə 6MM ticarət hesabları arasında necə hərəkət etdiyini öyrənin, o cümlədən transfer məsuliyyətləri, status idarəetməsi və əməliyyat yoxlamaları."
+slug: trading/getting-started/asset-transfer
+canonical-url: https://docs.6mm.com/tr-TR/trading/getting-started/asset-transfer
+---
+
+6MM tərəfdaş tərəfindən idarə olunan aktiv axını modeli ilə fəaliyyət göstərir.
+
+6MM son istifadəçilərdən birbaşa depozit və ya çıxarış qəbul etmir.
+
+Bütün istifadəçi fondlarının giriş və çıxışları yalnız səlahiyyətli agentlər və ya tərəfdaş platformalar tərəfindən idarə olunur.
+
+Bu dizayn maliyyə məsuliyyətinin, tənzimləyici sahənin və istifadəçi mülkiyyətinin 6MM və tərəfdaşları arasında aydın ayrılmasını təmin edir.
+
+***
+
+<h2 id="partner-managed-deposits-and-withdrawals">Tərəfdaş tərəfindən idarə olunan depozitlər və çıxarışlar</h2>
+
+* İstifadəçilər yalnız tərəfdaş platforması vasitəsilə vəsait yatırır və çıxarırlar
+* 6MM son istifadəçilərə on-chain və ya off-chain depozit ünvanları təqdim etmir
+* 6MM istifadəçi vəsaitlərini ticarət icrası xaricində birbaşa saxlamır və ya hesablaşdırmır
+
+Tərəfdaşlar tam məsuliyyət daşıyır:
+
+* İstifadəçi balansının idarə olunması
+* Depozit və çıxarış işlənməsi
+* Fondun qorunması ilə bağlı uyğunluq və risk nəzarətləri
+
+***
+
+<h2 id="automated-balance-transfer-to-6mm">Avtomatlaşdırılmış Balans Köçürülməsi 6MM</h2>
+
+Ticarəti mümkün etmək üçün istifadəçilər tərəfdaş tərəfindən idarə olunan balanslarının bir hissəsini avtomatlaşdırılmış daxili transfer mexanizmi vasitəsilə 6MM -ə köçürə bilərlər.
+
+Bu transfer prosesinin əsas xüsusiyyətləri bunlardır:
+
+* Transferlər tərəfdaş sistemi tərəfindən başlanır və təsdiqlənir
+* Proses infrastruktur səviyyəsində avtomatik icra olunur
+* İstifadəçinin 6MM ilə əl ilə qarşılıqlı əlaqəsi tələb olunmur
+* Transferlər real vaxtda və ya demək olar ki, real vaxtda baş verir
+
+İstifadəçi baxımından bu proses ənənəvi depozit deyil, fasiləsiz balans bölgüsü kimi görünür.
+
+***
+
+<h2 id="account-structure-within-6mm">6MM daxilində hesab strukturu</h2>
+
+6MMərzində köçürülən aktivlər məntiqi olaraq iki fərqli daxili hesaba bölünür:
+
+**Spot Hesab**
+
+* Köçürülən vəsaitlər üçün ilkin qəbul hesabı kimi xidmət edir
+* Daxili kapitalın idarə olunması üçün aktiv hovuzu kimi fəaliyyət göstərir
+* Birbaşa ticarət fəaliyyətini dəstəkləmir
+
+**Əbədi Hesab**
+
+* Vəsaitlər Spot Hesabdan Daimi Hesaba köçürülür
+* Yalnız Daimi Hesabdakı aktivlər sifariş vermək üçün istifadə oluna bilər
+* Bu səviyyədə marja, mövqelər və reallaşmamış PnL hesablanır
+
+Bu iki qatlı struktur daimi ticarət üçün dəqiq kapital izolyasiyası, marja effektivliyi və risk nəzarəti təmin edir.
+
+***
+
+<h2 id="internal-transfers-between-accounts">Hesablar arasında daxili köçürmələr</h2>
+
+* Spot Hesabına köçürülən vəsaitlər sərbəst və dərhal Əbədi Hesaba köçürülə bilər
+* Daxili köçürmələr blokçeyn qarşılıqlı əlaqəsi olmadan işlənir
+* Transferlər aşağı gecikməli və deterministik şəkildə hazırlanıb
+
+Bu arxitektura kapitalın rahat hərəkətini təmin edir və aktivlərin saxlanması ilə ticarətin icrası arasında ciddi ayrılığı qoruyur.
+
+***
+
+<h2 id="design-principles">Dizayn Prinsipləri</h2>
+
+6MM aktivlərin ötürülməsi sistemi aşağıdakı prinsiplər ətrafında qurulub:
+
+* Heç bir istifadəçi tərəfindən birbaşa depozit və ya çıxarış 6MM
+* Bütün aktivlərin idarə olunması tərəfdaş platformalarda qalır
+* Avtomatlaşdırılmış, tərəfdaş tərəfindən təsdiqlənmiş fond bölgüsü
+* Spot və Perpetual hesabları arasında aydın ayrılıq
+* Ticarət səmərəliliyi və risklərin izolyasiyası üçün optimallaşdırılıb
+
+Bu model vasitəsilə 6MM saf ticarət infrastrukturu qatı kimi fəaliyyət göstərir, tərəfdaşlar isə istifadəçi vəsaitləri və maliyyə əlaqələri üzərində tam nəzarəti saxlayırlar.
+
+<h2 id="implementation-and-safety-guides">İcra və təhlükəsizlik bələdçiləri</h2>
+
+- [Agent SDK Ümumi Baxış](/tr-TR/sdk/agent-sdk/overview): istifadəçi bağlaması, transferlər, sifariş sorğuları və uzlaşdırma.
+- [Webhooks & Idempotency](/tr-TR/sdk/security/webhooks-idempotency): son vəziyyət geri çağırışlarını və deduplicate təkrarlamaları yoxlayın.
+- [Tərəfdaş Məsuliyyət Matrisi](/tr-TR/security-compliance/partner-responsibilities): qəyyumluq və əməliyyat mülkiyyəti.
+- [Risk və Likvidasiyalar](/tr-TR/trading/risk-and-liquidations): ticarət hesabı bölgüsünün riskə necə təsir etdiyini başa düşmək.

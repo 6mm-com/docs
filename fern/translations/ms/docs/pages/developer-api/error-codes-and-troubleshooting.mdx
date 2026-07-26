@@ -1,0 +1,60 @@
+---
+title: "Mga Error Code at Pag-troubleshoot"
+description: "I-diagnose ang 6MM API errors gamit ang response codes, messages, request IDs, retry guidance, authentication checks, at integration troubleshooting steps."
+slug: developer-api/error-codes-and-troubleshooting
+canonical-url: https://docs.6mm.com/ms/developer-api/error-codes-and-troubleshooting
+---
+
+<h2 id="error-response-format">Format ng Tugon sa Error</h2>
+
+```json
+{
+  "code": 1003,
+  "message": "Invalid token",
+  "requestId": "req-12345678"
+}
+```
+
+Karaniwan, ang mga pagkakamali sa negosyo ay bumabalik pa rin sa iisang JSON structure. Dapat muna suriin ng mga integrator ang `code` . Maaaring magbalik ang mga pagkabigo sa authentication ng HTTP `401`; Ang rate limiting ay maaaring magbalik ng HTTP `429`.
+
+<h2 id="common-error-codes">Karaniwang Error Code</h2>
+
+| Error code      | Paglalarawan                                  |
+| --------------- | -------------------------------------------- |
+| `0`             | Tagumpay                                      |
+| `1001`          | Walang valid na authentication information na ibinigay |
+| `1002`          | Nag-expire ang token                                |
+| `1003`          | Hindi wastong Token, API Key, o pirma         |
+| `1004`          | Token na binawi                                |
+| `1006`          | Pinagmulan IP hindi pagtutugma                           |
+| `2001`          | Nawawalang kinakailangang parameter                   |
+| `2002`          | Hindi wastong halaga ng parameter                      |
+| `2003`          | Parameter na wala sa saklaw                       |
+| `3001`          | Hindi sapat na balanse                         |
+| `3003`          | Hindi natagpuan ang order                              |
+| `3004`          | Dobleng kahilingan                            |
+| `3005`          | Hindi maaaring kanselahin ang order                     |
+| `3006`          | Tinanggihan ang pahintulot                            |
+| `3100` - `3112` | Error sa pag-validate ng parameter ng order ng kondisyon   |
+| `5001`          | Internal na error sa server                        |
+| `5002`          | Pansamantalang hindi magagamit ang serbisyo              |
+| `5003`          | Rate limit na na-trigger                         |
+
+<h2 id="troubleshooting">Pag-troubleshoot</h2>
+
+| Problema                                     | Rekomendasyon                                                                                   |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `1001` walang valid na authentication information  | Suriin kung kasama ang `Authorization: Bearer <accessToken>` o `X-API-KEY` .                  |
+| `1002` Token ay nag-expire na                        | I-refresh ang Token o mag-log in muli bago muling subukan.                                                   |
+| `1003` wastong Token, API Key, o pirma | Suriin ang API Key, signature payload, request body JSON string, at query parameter order.           |
+| `1006` pinagmulan IP hindi tugma                   | Suriin ang API Key IP whitelist configuration.                                                    |
+| `3004` dobleng kahilingan                    | Huwag muling gamitin ang parehong pirma para sa mga landas na may kaugnayan sa order. I-regenerate ang `timestamp` at `signature`. |
+| `5003` rate limit na na-trigger                 | Bawasan ang dalas ng request at gumamit ng exponential backoff kung susubukan ulit.                                |
+| `Timestamp outside of tolerance window`     | Tawagan `/v1/time` para i-calibrate ang time offset at pirmahan muli ang request.                             |
+
+<h2 id="related-diagnostic-guides">Kaugnay na mga gabay sa diagnostic</h2>
+
+- [Mga Kapaligiran at Karaniwang Kasunduan](/ms/developer-api/environments-and-common-conventions)
+- [Authentication](/ms/developer-api/authentication)
+- [Mga Rekomendasyon sa Integrasyon](/ms/developer-api/integration-recommendations)
+- [Support Request Template](/ms/resources/support-request-template)

@@ -1,0 +1,159 @@
+---
+title: "Mga Pampublikong Endpoint"
+description: "I-access ang mga pampublikong 6MM API endpoint para sa mga instrumento, ticker, order book, trades, at iba pang hindi na-authenticate na impormasyon sa merkado."
+slug: developer-api/rest-api/public-endpoints
+canonical-url: https://docs.6mm.com/ms/developer-api/rest-api/public-endpoints
+---
+
+<h2 id="base-url">Base URL</h2>
+
+```
+https://api.6mm.com
+```
+
+<h2 id="service-version">Bersyon ng Serbisyo</h2>
+
+```http
+GET /v1/version
+```
+
+Kunin ang impormasyon tungkol sa bersyon ng serbisyo.
+
+<h2 id="server-time">Oras ng Server</h2>
+
+```http
+GET /v1/time
+```
+
+Kumuha ng server time. Maaaring gamitin ang endpoint na ito upang i-calibrate ang client time bago API Key signing.
+
+<h2 id="user-login">Pag-login ng User</h2>
+
+```http
+POST /v1/public/user/login
+```
+
+Mga parameter ng kahilingan:
+
+| Parameter    | Uri   | Kinakailangan | Paglalarawan                             |
+| ------------ | ------ | -------- | --------------------------------------- |
+| `username`   | string | Oo      | Username, haba 3 - 32                 |
+| `password`   | string | Oo      | Password, haba 1 - 64                 |
+| `deviceId`   | string | Hindi       | Fingerprint ng device, hanggang 64 na karakter |
+| `deviceName` | string | Hindi       | Pangalan ng device, hanggang 128 karakter       |
+
+Halimbawa ng kahilingan:
+
+```bash
+curl -X POST https://api.6mm.com/v1/public/user/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "alice",
+    "password": "yourPassword",
+    "deviceId": "device-001",
+    "deviceName": "server-001"
+  }'
+```
+
+Halimbawa ng tugon:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "accessToken": "YOUR_ACCESS_TOKEN",
+    "accessExpire": 1769676656
+  },
+  "requestId": "req-login"
+}
+```
+
+<h2 id="refresh-token">I-refresh ang token</h2>
+
+```http
+POST /v1/public/user/refresh-token
+```
+
+Sa normal na integration scenarios, nire-refresh ang login state sa pamamagitan ng Cookie. Panatilihin ang Cookie na ibinabalik ng login response.
+
+Mga field ng tugon:
+
+| Larangan          | Uri   | Paglalarawan              |
+| -------------- | ------ | ------------------------ |
+| `accessToken`  | string | Bagong access Token         |
+| `accessExpire` | int64  | Oras ng pag-expire ng Access Token |
+
+<h2 id="agent-sso">Agent SSO</h2>
+
+<h2 id="ticket-exchange">palitan ng tiket</h2>
+
+```http
+POST /v1/public/agent-sso/exchange-ticket
+```
+
+Mga parameter ng kahilingan:
+
+| Parameter  | Uri   | Kinakailangan | Paglalarawan                                 |
+| ---------- | ------ | -------- | ------------------------------------------- |
+| `ticket`   | string | Oo      | Isang beses na ticket na inisyu ng agent service |
+| `deviceId` | string | Hindi       | Fingerprint ng device, hanggang 64 na karakter     |
+
+Mga field ng tugon:
+
+| Larangan          | Uri   | Paglalarawan              |
+| -------------- | ------ | ------------------------ |
+| `accessToken`  | string | Access Token             |
+| `accessExpire` | int64  | Oras ng pag-expire ng Access Token |
+| `redirectPath` | string | Iminungkahing landas ng redirect  |
+
+<h2 id="embed-token-exchange">Embed Token Exchange</h2>
+
+```http
+POST /v1/public/agent-sso/exchange-embed-token
+```
+
+Mga parameter ng kahilingan:
+
+| Parameter    | Uri   | Kinakailangan | Paglalarawan                                                    |
+| ------------ | ------ | -------- | -------------------------------------------------------------- |
+| `embedToken` | string | Oo      | Panandaliang embedded trading token na inisyu ng agent service |
+| `channelId`  | string | Oo      | Naka-embed na iframe channel ID, hanggang 128 karakter               |
+| `deviceId`   | string | Hindi       | Fingerprint ng device, hanggang 64 na karakter                        |
+
+Mga field ng tugon:
+
+| Larangan          | Uri   | Paglalarawan              |
+| -------------- | ------ | ------------------------ |
+| `accessToken`  | string | Access Token             |
+| `accessExpire` | int64  | Oras ng pag-expire ng Access Token |
+
+<h2 id="pnl-leaderboard">PnL Leaderboard</h2>
+
+```http
+GET /v1/public/leaderboard/pnl?period=30d
+```
+
+Mga parameter ng kahilingan:
+
+| Parameter | Uri   | Kinakailangan | Paglalarawan          |
+| --------- | ------ | -------- | -------------------- |
+| `period`  | string | Oo      | `7d` / `30d` / `90d` |
+
+Mga field ng tugon:
+
+| Larangan              | Uri   | Paglalarawan                                                       |
+| ------------------ | ------ | ----------------------------------------------------------------- |
+| `list[].rank`      | int32  | Ranggo                                                              |
+| `list[].userId`    | string | Panlabas na User ID                                                  |
+| `list[].trader`    | string | Pangalan ng mangangalakal na may maskara                                                |
+| `list[].volume`    | string | Dami ng kalakalan sa window                                      |
+| `list[].pnlAmount` | string | Narealize ang PnL sa bintana                                        |
+| `list[].pnlPct`    | string | PnL ratio, decimal mula `0` hanggang `1`                                |
+| `myRank`           | int32  | Ranggo ng kasalukuyang user. Nagbabalik ng `0` kung hindi na-authenticate o hindi niranggo |
+
+<h2 id="related-documentation">Kaugnay na dokumentasyon</h2>
+
+- [Datos ng Pamilihan](/ms/developer-api/rest-api/market-data)
+- [Public WebSocket Channels](/ms/developer-api/websocket/public-market-channels)
+- [Mga Kapaligiran at Karaniwang Kasunduan](/ms/developer-api/environments-and-common-conventions)

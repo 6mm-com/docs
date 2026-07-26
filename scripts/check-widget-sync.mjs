@@ -132,9 +132,9 @@ function completeDocsNavigation(pathname) {
 for (const [widgetLocale, docsLocale, pathname] of [
   ["pt", "pt-PT", "/pt-PT/home"],
   ["es", "es-ES", "/es-ES/home"],
-  ["uz", "uz", "/uz/home"],
-  ["fil", "fil", "/fil/home"],
-  ["az", "az", "/az/home"],
+  ["uz", "tr", "/tr/home"],
+  ["fil", "ms", "/ms/home"],
+  ["az", "tr-TR", "/tr-TR/home"],
   ["es-AR", "es-419", "/es-419/home"],
   ["en-Asia", "", "/home"],
 ]) {
@@ -160,7 +160,7 @@ emitWidgetLanguage("fil");
 emitWidgetLanguage("az");
 deferredNavigations[0](false);
 await Promise.resolve();
-completeDocsNavigation("/az/home");
+completeDocsNavigation("/tr-TR/home");
 assert.deepEqual(widgetCalls, []);
 deferredNavigations.slice(1).forEach((resolve) => resolve(false));
 sandboxWindow.__sixmmNavigateDocsLocale = originalNavigateDocsLocale;
@@ -174,31 +174,6 @@ for (const locale of [
   completeDocsNavigation(`${locale.code ? `/${locale.code}` : ""}/home`);
   assert.deepEqual(widgetCalls, [["lang", locale.widget]]);
 }
-
-// Multi-step Widget -> Docs navigation ignores intermediate Fern routes.
-widgetCalls.length = 0;
-emitWidgetLanguage("uz");
-listeners["sixmm-docs-locale-navigation-start"]({
-  detail: { id: 101, locale: "uz" },
-});
-completeDocsNavigation("/resources/overview");
-completeDocsNavigation("/uz/home");
-listeners["sixmm-docs-locale-navigation-settled"]({
-  detail: { id: 101, locale: "uz", success: true },
-});
-assert.deepEqual(widgetCalls, []);
-
-// Multi-step Docs -> Widget navigation sends only the final locale.
-widgetCalls.length = 0;
-listeners["sixmm-docs-locale-navigation-start"]({
-  detail: { id: 102, locale: "fil" },
-});
-completeDocsNavigation("/resources/overview");
-completeDocsNavigation("/fil/home");
-listeners["sixmm-docs-locale-navigation-settled"]({
-  detail: { id: 102, locale: "fil", success: true },
-});
-assert.deepEqual(widgetCalls, [["lang", "fil"]]);
 
 // Widget -> Docs theme: update the host without writing setTheme back.
 widgetCalls.length = 0;
@@ -349,19 +324,6 @@ const themeTrigger = {
   },
 };
 
-function routeLink(pathname) {
-  return {
-    href: `https://docs.6mm.com${pathname}`,
-    isConnected: true,
-    click() {
-      adapterWindow.location.pathname = pathname;
-    },
-  };
-}
-
-const resourcesTabLink = routeLink("/resources/overview");
-const uzStandaloneLink = routeLink("/uz/home");
-
 const adapterDocument = {
   readyState: "loading",
   documentElement: adapterRoot,
@@ -376,15 +338,7 @@ const adapterDocument = {
   },
   querySelectorAll(selector) {
     if (selector === ".fern-language-selector") return [languageSelector];
-    if (selector.includes(".sixmm-theme-trigger")) return [themeTrigger];
-    if (
-      selector.includes("#fern-sidebar-scroll-area") &&
-      selector.includes('[role="tab"]')
-    ) {
-      return adapterWindow.location.pathname === "/resources/overview"
-        ? [resourcesTabLink, uzStandaloneLink]
-        : [resourcesTabLink];
-    }
+    if (selector === ".fern-language-selector + button") return [themeTrigger];
     if (selector.includes(".fern-language-dropdown-content")) {
       return activeMenu ? [activeMenu] : [];
     }
@@ -404,10 +358,10 @@ const adapterSandbox = {
 };
 runInNewContext(languageScript, adapterSandbox);
 assert.equal(
-  await adapterWindow.__sixmmNavigateDocsLocale("uz"),
+  await adapterWindow.__sixmmNavigateDocsLocale("tr"),
   true,
 );
-assert.equal(adapterWindow.location.pathname, "/uz/home");
+assert.equal(adapterWindow.location.pathname, "/tr/home");
 activeMenu = null;
 assert.equal(
   await adapterWindow.__sixmmNavigateDocsTheme("dark"),

@@ -1,0 +1,111 @@
+---
+title: "Bazar Məlumatları"
+description: "Təsdiqlənməmiş 6MM bazar məlumatlarından REST son nöqtələrdən istifadə edərək simvolları, tickerləri, sifariş kitablarını, ticarətləri və digər ictimai ticarət məlumatlarını əldə edin."
+slug: developer-api/rest-api/market-data
+canonical-url: https://docs.6mm.com/tr-TR/developer-api/rest-api/market-data
+---
+
+Bazar məlumatları REST son nöqtələr autentifikasiya tələb etmir.
+
+<h2 id="symbol-configuration">Simvol Konfiqurasiyası</h2>
+
+```http
+GET /v1/public/market/symbols
+```
+
+Ümumi cavab sahələri:
+
+| Sahə                      | Tip   | Təsvir                   |
+| -------------------------- | ------ | ----------------------------- |
+| `list[].symbol`            | string | Simvol                        |
+| `list[].baseAsset`         | string | Əsas aktiv                    |
+| `list[].quoteAsset`        | string | Sitat aktiv                   |
+| `list[].minQuantity`       | string | Minimum sifariş miqdarı        |
+| `list[].minNotional`       | string | Minimum nəzəri dəyər        |
+| `list[].tickSize`          | string | Qiymət tick ölçüsü               |
+| `list[].stepSize`          | string | Kəmiyyət addım ölçüsü            |
+| `list[].pricePrecision`    | int64  | Qiymət dəqiqliyi               |
+| `list[].maxLimitOrderQty`  | string | Maksimum limit sifariş miqdarı  |
+| `list[].maxMarketOrderQty` | string | Maksimum bazar sifariş miqdarı |
+| `list[].maxOpenOrders`     | int64  | İstifadəçi başına maksimum açıq sifarişlər  |
+| `list[].defaultLeverage`   | int64  | Defolt leverage              |
+| `list[].defaultMarginMode` | int64  | Standart margin rejimi           |
+| `list[].leverageTiers[]`   | array  | Leverage margin səviyyələri         |
+| `handlingFeeLevelConfig[]` | array  | Fee tier konfiqurasiyası        |
+
+<h2 id="funding-rate-configuration">Maliyyələşdirmə Dərəcəsi Konfiqurasiyası</h2>
+
+```http
+GET /v1/public/market/funding-rate?symbol=BTCUSDT
+```
+
+Sorğu parametrləri:
+
+| Parametr | Tip   | Tələb olunur | Təsvir                     |
+| --------- | ------ | -------- | ------------------------------- |
+| `symbol`  | string | Xeyr       | Əgər çıxarılıbsa, bütün simvolları geri qaytarır |
+
+<h2 id="current-funding-rate">Cari Maliyyələşdirmə Faizi</h2>
+
+```http
+GET /v1/public/market/funding-rate/current?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+Sorğu parametrləri:
+
+| Parametr  | Tip   | Tələb olunur | Təsvir                  |
+| ---------- | ------ | -------- | ---------------------------- |
+| `symbol`   | string | Xeyr       | Simvol                       |
+| `page`     | int32  | Xeyr       | Səhifə nömrəsi, standart `1`     |
+| `pageSize` | int32  | Xeyr       | Səhifə üzrə elementlər, standart `20` |
+
+<h2 id="funding-rate-history">Maliyyələşdirmə Dərəcəsi Tarixi</h2>
+
+```http
+GET /v1/public/market/funding-rate/history?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+Sorğu parametrləri:
+
+| Parametr   | Tip   | Tələb olunur | Təsvir                  |
+| ----------- | ------ | -------- | ---------------------------- |
+| `symbol`    | string | Bəli      | Simvol                       |
+| `startTime` | int64  | Xeyr       | Başlama vaxtı                   |
+| `endTime`   | int64  | Xeyr       | Son zaman                     |
+| `page`      | int32  | Xeyr       | Səhifə nömrəsi, standart `1`     |
+| `pageSize`  | int32  | Xeyr       | Səhifə üzrə elementlər, standart `20` |
+
+<h2 id="klines">Klines-lər</h2>
+
+```http
+GET /v1/public/market/klines?symbol=BTCUSDT&interval=1m&limit=500
+```
+
+Sorğu parametrləri:
+
+| Parametr   | Tip   | Tələb olunur | Təsvir                                                              |
+| ----------- | ------ | -------- | ------------------------------------------------------------------------ |
+| `symbol`    | string | Bəli      | Simvol                                                                   |
+| `interval`  | string | Bəli      | Interval, məsələn `1m`, `5m`, `15m`, `30m`, `1h`, `4h`, `1d`, `1w`, `1M` |
+| `priceType` | string | Xeyr       | `indexPrice` / `markPrice`. Əgər çıxarılıbsa, ticarət qiyməti Klines qaytarılır       |
+| `startTime` | int64  | Xeyr       | Başlama vaxtı                                                               |
+| `endTime`   | int64  | Xeyr       | Son zaman                                                                 |
+| `limit`     | int32  | Xeyr       | Qaytarılan əşyaların sayı, standart `500`, maksimum `1000`                  |
+
+Cavab sahələri:
+
+| Sahə              | Tip   | Təsvir |
+| ------------------ | ------ | ----------- |
+| `list[].openTime`  | int64  | Açıq vaxt   |
+| `list[].open`      | string | Açıq qiymət  |
+| `list[].high`      | string | Yüksək qiymət  |
+| `list[].low`       | string | Aşağı qiymət   |
+| `list[].close`     | string | Yaxın qiymət |
+| `list[].volume`    | string | Həcm      |
+| `list[].closeTime` | int64  | Yaxın vaxt  |
+
+<h2 id="related-documentation">Əlaqəli sənədlər</h2>
+
+- [İctimai Son Nöqtələr](/tr-TR/developer-api/rest-api/public-endpoints)
+- [İctimai WebSocket kanalları](/tr-TR/developer-api/websocket/public-market-channels)
+- [Bazar Dərinliyi və Yayılması](/tr-TR/solutions/market-depth-spread)

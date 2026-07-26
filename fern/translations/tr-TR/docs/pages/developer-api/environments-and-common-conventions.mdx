@@ -1,0 +1,61 @@
+---
+title: "Mühitlər və Ümumi Konvensiyalar"
+description: "Əsas URL-lər, zaman möhürləri, rəqəmsal sahələr, simvollar, sorğu ID-ləri, səhifələmə və cavablar üçün 6MM API mühitləri və paylaşılan konvensiyaları nəzərdən keçirin."
+slug: developer-api/environments-and-common-conventions
+canonical-url: https://docs.6mm.com/tr-TR/developer-api/environments-and-common-conventions
+---
+
+<h2 id="service-endpoints">Xidmət Son Nöqtələri</h2>
+
+| Tip      | Son nöqtə              |
+| --------- | --------------------- |
+| REST API  | `https://api.6mm.com` |
+| WebSocket | `wss://ws.6mm.com/ws`    |
+
+<h2 id="time-and-numeric-values">Zaman və Rəqəmsal Dəyərlər</h2>
+
+* Başqa cür göstərilməyibsə, zaman sahələri Unix millisekund zaman möhürləridir.
+* Gündəlik statistikalar, balans snapshotları və ticarət həcmi statistikaları standart olaraq UTC gün sərhədlərindən istifadə edir.
+* Dəqiqliyə həssas sahələr, məsələn, miqdar, miqdar və sürət sətirlər kimi ötürülür.
+* `orderId`, `conditionId`və `strategyId` kimi böyük tam ədədi ID-lər JSON.
+
+<h2 id="response-format">Cavab Formatı</h2>
+
+Uğurlu cavab:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {},
+  "requestId": "req-12345678"
+}
+```
+
+Səhv cavabı:
+
+```json
+{
+  "code": 1003,
+  "message": "Invalid token",
+  "requestId": "req-12345678"
+}
+```
+
+Qeydlər:
+
+* Biznes səhvləri adətən hələ də birləşmiş JSON strukturunu qaytarır. İnteqratorlar əvvəlcə `code` yoxlamalıdırlar.
+* Autentifikasiya uğursuzluqları HTTP `401`qaytara bilər; sürət məhdudiyyəti HTTP `429`qaytara bilər.
+* Sorğu başlığında `X-Request-ID` göndərə bilərsiniz. Server cavabda `requestId` kimi qaytaracaq.
+
+<h2 id="related-documentation">Əlaqəli sənədlər</h2>
+
+- [Autentifikasiya](/tr-TR/developer-api/authentication): JWT və ya API Key imza seçimini seçin.
+- [Request Signing](/tr-TR/developer-api/request-signing): imzalanmış sorğuları qurmaq və təsdiqləmək.
+- [REST API](/tr-TR/developer-api/rest-api): bu konvensiyaları son nöqtə qruplarına tətbiq edin.
+- [Səhv Kodları və Problemlərin Həlli] (/developer-api/error-codes-and-troubleshooting): HTTP və biznes səhvlərini diaqnoz edin.
+{/* sixmm-localized-link-repair:start */}
+<h2 id="localized-page-links">Əlaqəli səhifələr</h2>
+
+- [error codes and troubleshooting](/tr-TR/developer-api/error-codes-and-troubleshooting)
+{/* sixmm-localized-link-repair:end */}

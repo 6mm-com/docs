@@ -1,0 +1,60 @@
+---
+title: "Xəta Kodları və Problemlərin Həlli"
+description: "Cavab kodları, mesajlar, sorğu ID-ləri, təkrar cəhd təlimatı, autentifikasiya yoxlamaları və inteqrasiya problemlərinin həlli addımları ilə 6MM API səhvləri diaqnoz edin."
+slug: developer-api/error-codes-and-troubleshooting
+canonical-url: https://docs.6mm.com/tr-TR/developer-api/error-codes-and-troubleshooting
+---
+
+<h2 id="error-response-format">Səhv Cavab Formatı</h2>
+
+```json
+{
+  "code": 1003,
+  "message": "Invalid token",
+  "requestId": "req-12345678"
+}
+```
+
+Biznes səhvləri adətən hələ də birləşmiş JSON strukturunu qaytarır. İnteqratorlar əvvəlcə `code` yoxlamalıdırlar. Autentifikasiya uğursuzluqları HTTP `401`qaytara bilər; sürət məhdudiyyəti HTTP `429`qaytara bilər.
+
+<h2 id="common-error-codes">Ümumi Səhv Kodları</h2>
+
+| Xəta kodu      | Təsvir                                  |
+| --------------- | -------------------------------------------- |
+| `0`             | Uğur                                      |
+| `1001`          | Heç bir etibarlı autentifikasiya məlumatı təqdim edilməyib |
+| `1002`          | Token müddəti bitdi                                |
+| `1003`          | Etibarsız Token, API Keyvə ya imza         |
+| `1004`          | Token ləğv edildi                                |
+| `1006`          | Mənbə IP uyğunsuzluq                           |
+| `2001`          | Tələb olunan parametrin olmaması                   |
+| `2002`          | Etibarsız parametr dəyəri                      |
+| `2003`          | Parametr diapazondan kənarda                       |
+| `3001`          | Kifayət qədər balans yoxdur                         |
+| `3003`          | Sifariş tapılmadı                              |
+| `3004`          | Təkrarlanan sorğu                            |
+| `3005`          | Sifariş ləğv edilə bilməz                     |
+| `3006`          | İcazə verilmədi                            |
+| `3100` - `3112` | Şərt sırası parametrlərinin təsdiqlənməsi xətası   |
+| `5001`          | Daxili server xətası                        |
+| `5002`          | Xidmət müvəqqəti olaraq mövcud deyil              |
+| `5003`          | Sürət limiti işə salındı                         |
+
+<h2 id="troubleshooting">Problemlərin həlli</h2>
+
+| Problem                                     | Tövsiyə                                                                                   |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `1001` etibarlı autentifikasiya məlumatı yoxdur  | `Authorization: Bearer <accessToken>` və ya `X-API-KEY` daxil olub-olmadığını yoxlayın.                  |
+| `1002` Token müddəti bitdi                        | Token-i yeniləyin və ya yenidən daxil olun, sonra yenidən cəhd edin.                                                   |
+| `1003` etibarsız Token, API Keyvə ya imza | API Key, imza yükü, sorğu bədəni JSON sətiri və sorğu parametr sırasını yoxlayın.           |
+| `1006` mənbə IP uyğunsuzluq                   | API Key IP ağ siyahı konfiqurasiyasını yoxlayın.                                                    |
+| `3004` təkrarlanan sorğu                    | Eyni imzanı sifarişlə əlaqəli yollar üçün təkrar istifadə etməyin. `timestamp` yenidən generasiya edin və `signature`. |
+| `5003` sürət limiti işə düşdü                 | Sorğu tezliyini azalt və təkrar cəhd edərkən eksponensial geri çəkilmədən istifadə et.                                |
+| `Timestamp outside of tolerance window`     | `/v1/time`-ə zəng edin, vaxt ofsetini kalibrləyin və sorğunu yenidən imzalayın.                             |
+
+<h2 id="related-diagnostic-guides">Əlaqəli diaqnostik bələdçilər</h2>
+
+- [Mühitlər və Ümumi Konvensiyalar](/tr-TR/developer-api/environments-and-common-conventions)
+- [Təsdiqləmə](/tr-TR/developer-api/authentication)
+- [İnteqrasiya Tövsiyələri](/tr-TR/developer-api/integration-recommendations)
+- [Dəstək Sorğusu Şablonu](/tr-TR/resources/support-request-template)

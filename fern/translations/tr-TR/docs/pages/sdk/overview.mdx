@@ -1,0 +1,53 @@
+---
+title: "6MM SDKs"
+subtitle: "Embedded ticarət, backend token buraxılışı, hesab əlaqəsi, webhook və istehsal əməliyyatları üçün düzgün 6MM SDK yolunu seçin."
+slug: sdk/overview
+canonical-url: https://docs.6mm.com/tr-TR/sdk/overview
+---
+
+<h2 id="choose-an-sdk-path">SDK yol seçin</h2>
+
+<CardGroup cols={3}>
+<Card title="Trading Widget SDK" icon="duotone chart-line" href="/tr-TR/sdk/trading-widget/quick-start">
+6MM ticarət terminalını mövcud vebsayta, cüzdana, broker portalına və ya tərəfdaş məhsul səthinə yerləşdirin.
+</Card>
+<Card title="Agent SDK" icon="duotone server" href="/tr-TR/sdk/agent-sdk/overview">
+  İstifadəçi bağlaması, tokenlər, giriş URL-ləri, transferlər, sifariş sorğuları və veb hook-lar üçün tərəfdaş backend-i 6MM -ə qoşun.
+</Card>
+<Card title="Təhlükəsizlik və Əməliyyatlar" icon="duotone shield-check" href="/tr-TR/sdk/security/secrets-signing">
+  Gizli saxlama, sorğu imzalama, webhook idempotensiyası, monitorinq və işə salma problemlərinin həlli üçün hazırlıq edin.
+</Card>
+</CardGroup>
+
+<h2 id="recommended-combination">Tövsiyə olunan kombinasiya</h2>
+
+| Tərəfdaş məqsədi | Ön hissə | Backend | Niyə önəmlidir |
+| --- | --- | --- | --- |
+| Daxili ticarət terminalı əlavə edin | Trading Widget SDK | Agent SDK | Widget ticarət interfeysini idarə edir, tərəfdaş backend isə tokenlər buraxır və sirləri gizli saxlayır. |
+| Yerli tətbiq giriş nöqtəsi yaradın | Native və ya H5 girişi | Agent SDK | Tətbiq tərəfdaş istifadəçi sessiyasını təsdiqlədikdən URL 6MM giriş açır. |
+| Xüsusi ticarət axını yaradın | Tərəfdaş UI | İnkişaf etdirici API + seçilmiş SDK axınları | Hesab, sifariş, mövqe və bazar məlumatları üçün APIs istifadə edin, əməliyyat nəzarətlərini server tərəfində saxlayın. |
+
+<h2 id="reference-architecture">İstinad arxitekturası</h2>
+
+```text
+Partner Web App
+  -> TradingWidget.create()
+  -> tokenProvider()
+  -> Partner Backend
+  -> 6MM Agent SDK
+  -> 6MM Agent API
+  -> 6MM Trading iframe
+```
+
+> **Server tərəfində sirləri saxla**
+>
+> Brauzer kodu yalnız tərəfdaşlara məxsus son nöqtələri çağırmalıdır. Agent API sirri heç vaxt frontend koduna göndərilməməlidir.
+
+<h2 id="production-checklist">İstehsal yoxlama siyahısı</h2>
+
+- apiSecret yalnız arxa plan infrastrukturunda saxlayın.
+- Agent API sorğuları və webhook URL-ləri üçün HTTPS istifadə edin.
+- Davamlı agentUserId, platformUserIdvə agentOrderNo xəritələmələri.
+- Pul məbləğlərini onluq sətirlər şəklində göstərmək, üzən nöqtə dəyərləri əvəzinə.
+- PROCESSING uğur və ya uğursuzluq kimi yox, gözləmədə kimi qəbul edin.
+- Webhook-ları idempotiv şəkildə işləyin, çünki təkrar cəhdlər gözlənilir.

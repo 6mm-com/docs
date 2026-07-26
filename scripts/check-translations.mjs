@@ -8,7 +8,6 @@ import {
   generatedLocaleSpecs,
   generatorVersion,
   nativeLocaleCodes,
-  standaloneLocaleCodes,
   widgetLocaleAliases,
 } from "./locale-config.mjs";
 
@@ -73,18 +72,6 @@ function imageSources(content) {
   ].sort();
 }
 
-function comparableImageSources(content, locale) {
-  return imageSources(content).map((source) => {
-    if (!standaloneLocaleCodes.has(locale)) return source;
-    return source
-      .replace("../../../../../docs/assets/", "../../assets/")
-      .replace(
-        "../../../../../docs/pages/design-and-assets/",
-        "./",
-      );
-  });
-}
-
 function internalDestinations(content) {
   return [
     ...[...content.matchAll(/\bhref=["'](\/[^"']+)["']/g)].map((match) => match[1]),
@@ -105,16 +92,6 @@ function sameArray(left, right) {
 
 function sha256(value) {
   return createHash("sha256").update(value).digest("hex");
-}
-
-function collectFolderPaths(value, result = []) {
-  if (Array.isArray(value)) {
-    value.forEach((item) => collectFolderPaths(item, result));
-  } else if (value && typeof value === "object") {
-    if (typeof value.folder === "string") result.push(value.folder);
-    Object.values(value).forEach((item) => collectFolderPaths(item, result));
-  }
-  return result;
 }
 
 async function validateRepositoryAssetUrls(content, context) {
@@ -159,17 +136,6 @@ const activePages = [
 ];
 if (activePages.length !== 87) {
   pushError(`Expected 87 active pages, found ${activePages.length}`);
-}
-
-const configuredStandaloneDirectories = collectFolderPaths(config)
-  .map((folder) => folder.match(/^translations\/([^/]+)\/docs\/pages$/)?.[1])
-  .filter(Boolean)
-  .sort();
-const expectedStandaloneDirectories = [...standaloneLocaleCodes].sort();
-if (!sameArray(configuredStandaloneDirectories, expectedStandaloneDirectories)) {
-  pushError(
-    `Configured standalone locale folders do not match expected locales.\nExpected: ${expectedStandaloneDirectories.join(", ")}\nActual: ${configuredStandaloneDirectories.join(", ")}`,
-  );
 }
 
 let manifest;
@@ -258,9 +224,7 @@ for (const relativePagePath of activePages) {
     if (!meta.title || !(meta.description || meta.subtitle) || !meta.slug) {
       pushError(`[${locale}] incomplete SEO frontmatter in ${relativePagePath}`);
     }
-    const expectedSlug = standaloneLocaleCodes.has(locale)
-      ? `${route}/${sourceMeta.slug}`
-      : sourceMeta.slug;
+    const expectedSlug = sourceMeta.slug;
     if (meta.slug !== expectedSlug) {
       pushError(`[${locale}] slug mismatch in ${relativePagePath}: ${meta.slug ?? "missing"}`);
     }
@@ -284,7 +248,7 @@ for (const relativePagePath of activePages) {
       if (!sameArray(inlineCode(translated), sourceInlineCode)) {
         pushError(`[${locale}] inline code changed in ${relativePagePath}`);
       }
-      if (!sameArray(comparableImageSources(translated, locale), sourceImages)) {
+      if (!sameArray(imageSources(translated), sourceImages)) {
         pushError(`[${locale}] image source changed in ${relativePagePath}`);
       }
       if (!sameArray(tableSignatures(translated), sourceTables)) {
@@ -360,6 +324,13 @@ if (configuredScripts[0] !== "./language-modal.js") {
 }
 
 const languageScript = await readFile(path.join(fernRoot, "language-modal.js"), "utf8");
+if (
+  /#fern-sidebar|\[role=["']tab|sixmm-(?:standalone|hidden-sidebar)|navigate(?:ToBasePage|StandaloneLocale)/.test(
+    languageScript,
+  )
+) {
+  pushError("Language switching must not alter the Fern sidebar, tabs, or page layout");
+}
 const browserSandbox = {
   window: {
     addEventListener() {},

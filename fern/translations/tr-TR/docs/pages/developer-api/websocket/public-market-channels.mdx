@@ -1,0 +1,84 @@
+---
+title: "WebSocket İctimai Bazar Məlumat Kanalları"
+description: "Abunə və yenidən əlaqə tövsiyəsi ilə ictimai WebSocket kanalları vasitəsilə 6MM sifariş kitablarını, ticarətləri, şamdanları və ticker məlumatlarını yayımlayın."
+slug: developer-api/websocket/public-market-channels
+canonical-url: https://docs.6mm.com/tr-TR/developer-api/websocket/public-market-channels
+---
+
+Tətbiqin davamlı yenilənən qiymətlərə, ticarətlərə, şamdanlara və ya sifariş kitabının dərinliyinə ehtiyacı olduqda, REST son nöqtələri təkrar-təkrar sorğu etmədən ictimai bazar kanallarından istifadə edin. Bu axınlar ticarət ekranlarını, qiymət göstəricilərini, xəbərdarlıqları və bazar monitorinqini dəstəkləyə bilər.
+
+<h2 id="connection-url">Əlaqə URL</h2>
+
+```
+wss://ws.6mm.com/ws
+```
+
+İctimai WebSocket autentifikasiya tələb etmir.
+
+Bağlantının həyat dövrü, abunəlikdən çıxma, ping və yenidən qoşulma davranışı üçün [Connection, Subscription & Heartbeat](/tr-TR/developer-api/websocket/connection-subscription-and-heartbeat) bölməsinə baxın.
+
+<h2 id="common-channels">Ümumi Kanallar</h2>
+
+| Kanal                            | Təsvir                                                        |
+| ---------------------------------- | ------------------------------------------------------------------ |
+| `market.depth.{symbol}`            | Kitab dərinliyini sifariş edin. Əvvəlcə snapshot göndərir, sonra tədricən yeniləmələr |
+| `market.trade.{symbol}`            | Son transferlər                                                      |
+| `market.kline.{symbol}.{interval}` | Klines-lər                                                             |
+| `market.ticker.{symbol}`           | Tək simvollu ticker xülasəsi                                       |
+| `market.tickers`                   | Bütün simvollar üzrə ticker xülasəsi                                          |
+
+<h2 id="choose-a-channel">Kanal seçin</h2>
+
+| Tətbiq ehtiyacı | Kanal |
+| --- | --- |
+| Sifariş kitabını yaratmaq və ya saxlamaq | `market.depth.{symbol}` |
+| Canlı ticarət yayımını göstərin | `market.trade.{symbol}` |
+| Şam cədvəli çək | `market.kline.{symbol}.{interval}` |
+| Bir bazar xülasəsini göstər | `market.ticker.{symbol}` |
+| Bazar icmalını saxlayın | `market.tickers` |
+
+<h2 id="subscription-example">Abunə nümunəsi</h2>
+
+```json
+{ "id": "1772007814666", "op": "subscribe", "args": ["market.depth.BTCUSDT"] }
+```
+
+<h2 id="push-message-wrapper">Push Message Wrapper</h2>
+
+```json
+{
+  "topic": "market.depth.BTCUSDT",
+  "event": "data",
+  "ts": 1772007815000,
+  "data": {}
+}
+```
+
+Hər mesajı düzgün idarəediciyə yönləndirmək üçün `topic` istifadə edin və çatdırılma vaxtını müşahidə `ts` . `data` obyekti abunə olmuş kanalın yükünü ehtiva edir.
+
+<h2 id="order-book-handling">Sifariş kitabının idarə olunması</h2>
+
+Dərinlik kanalı əvvəlcə snapshot göndərir, sonra isə tədrici yeniləmələr göndərir. Yeniləmələri tətbiq etməzdən əvvəl snapshot-dan lokal kitabı işə salın. Yenidən qoşulduqdan sonra yeni sessiya yaradın, yenidən abunə olun və yaddaşda köhnəlmiş vəziyyətdən davam etmək əvəzinə növbəti snapshot-dan yerli kitabı yenidən qurun.
+
+<h2 id="production-recommendations">İstehsal tövsiyələri</h2>
+
+- Hər abunəlik, abunəlikdən çıxma və ping sorğusu üçün unikal `id` yaradın.
+- Kanalı aktiv hesab etməzdən əvvəl abunə təsdiqləməsini təsdiqləyin.
+- Yenidən qoşulduqdan sonra bütün tələb olunan mövzulara yenidən abunə olun.
+- Şəbəkə oxunuşlarını yavaş verilənlər bazası və ya UI emalından ayrı saxlamaq.
+- Bağlantı kəsilmə tezliyini, mesaj işləmə gecikməsini və səhv formalaşdırılmış yükləri izləyin.
+- Autentifikasiya olunmuş hesab və sifariş yeniləmələri üçün [Şəxsi İstifadəçi Kanalı](/tr-TR/developer-api/websocket/private-user-channel) istifadə edin.
+
+<h2 id="related-api-docs">Əlaqəli API sənədləri</h2>
+
+<CardGroup cols={3}>
+<Card title="WebSocket Ümumi Baxış" icon="fa-duotone fa-wave-pulse" href="/tr-TR/developer-api/websocket">
+İctimai və özəl yayım bağlantıları arasında seçim edin.
+</Card>
+<Card title="Əlaqə və Ürək Döyüntüsü" icon="fa-duotone fa-heart-pulse" href="/tr-TR/developer-api/websocket/connection-subscription-and-heartbeat">
+Abunə olmaq, abunəlikdən çıxarmaq, ping və yenidən qoşulmaq idarəetməsini tətbiq edin.
+</Card>
+<Card title="REST Bazar Məlumatları" icon="fa-duotone fa-chart-line" href="/tr-TR/developer-api/rest-api/market-data">
+Axın kanalları ilə yanaşı sorğu əsaslı bazar məlumatlarından istifadə edin.
+</Card>
+</CardGroup>

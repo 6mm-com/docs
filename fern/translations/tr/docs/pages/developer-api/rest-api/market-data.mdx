@@ -1,0 +1,111 @@
+---
+title: "Bozor ma'lumotlari"
+description: "Tasdiqlanmagan 6MM bozor ma'lumotlari REST endpointlardan foydalanib, belgilar, tickerlar, buyurtma daftarlari, savdolar va boshqa ommaviy savdo ma'lumotlarini oling."
+slug: developer-api/rest-api/market-data
+canonical-url: https://docs.6mm.com/tr/developer-api/rest-api/market-data
+---
+
+Bozor ma'lumotlari REST endpointlar autentifikatsiyani talab qilmaydi.
+
+<h2 id="symbol-configuration">Belgilar konfiguratsiyasi</h2>
+
+```http
+GET /v1/public/market/symbols
+```
+
+Umumiy javob maydonlari:
+
+| Maydon                      | Turi   | Tavsif                   |
+| -------------------------- | ------ | ----------------------------- |
+| `list[].symbol`            | string | Ramz                        |
+| `list[].baseAsset`         | string | Asosiy aktiv                    |
+| `list[].quoteAsset`        | string | Iqtibos aktiv                   |
+| `list[].minQuantity`       | string | Minimal buyurtma miqdori        |
+| `list[].minNotional`       | string | Minimal notologik qiymat        |
+| `list[].tickSize`          | string | Narx belgisi o'lchami               |
+| `list[].stepSize`          | string | Quantity step o'lchami            |
+| `list[].pricePrecision`    | int64  | Narx aniqligi               |
+| `list[].maxLimitOrderQty`  | string | Maksimal limit buyurtma miqdori  |
+| `list[].maxMarketOrderQty` | string | Maksimal bozor buyurtma miqdori |
+| `list[].maxOpenOrders`     | int64  | Har bir foydalanuvchi uchun maksimal ochiq buyurtmalar  |
+| `list[].defaultLeverage`   | int64  | Default leverage              |
+| `list[].defaultMarginMode` | int64  | Standart margin rejimi           |
+| `list[].leverageTiers[]`   | array  | Leverage margin darajalari         |
+| `handlingFeeLevelConfig[]` | array  | Fee tier konfiguratsiyasi        |
+
+<h2 id="funding-rate-configuration">Moliyalashtirish stavkasi konfiguratsiyasi</h2>
+
+```http
+GET /v1/public/market/funding-rate?symbol=BTCUSDT
+```
+
+So'rov parametrlari:
+
+| Parametr | Turi   | Majburiy | Tavsif                     |
+| --------- | ------ | -------- | ------------------------------- |
+| `symbol`  | string | Yo'q       | Agar chiqarib tashlansa, barcha belgilar qaytariladi |
+
+<h2 id="current-funding-rate">Hozirgi moliyalashtirish darajasi</h2>
+
+```http
+GET /v1/public/market/funding-rate/current?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+So'rov parametrlari:
+
+| Parametr  | Turi   | Majburiy | Tavsif                  |
+| ---------- | ------ | -------- | ---------------------------- |
+| `symbol`   | string | Yo'q       | Ramz                       |
+| `page`     | int32  | Yo'q       | Sahifa raqami, standart `1`     |
+| `pageSize` | int32  | Yo'q       | Sahifa boshidagi elementlar, standart `20` |
+
+<h2 id="funding-rate-history">Moliyalashtirish darajasi tarixi</h2>
+
+```http
+GET /v1/public/market/funding-rate/history?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+So'rov parametrlari:
+
+| Parametr   | Turi   | Majburiy | Tavsif                  |
+| ----------- | ------ | -------- | ---------------------------- |
+| `symbol`    | string | Ha      | Ramz                       |
+| `startTime` | int64  | Yo'q       | Boshlanish vaqti                   |
+| `endTime`   | int64  | Yo'q       | Yakun vaqti                     |
+| `page`      | int32  | Yo'q       | Sahifa raqami, standart `1`     |
+| `pageSize`  | int32  | Yo'q       | Sahifa boshidagi elementlar, standart `20` |
+
+<h2 id="klines">Klines</h2>
+
+```http
+GET /v1/public/market/klines?symbol=BTCUSDT&interval=1m&limit=500
+```
+
+So'rov parametrlari:
+
+| Parametr   | Turi   | Majburiy | Tavsif                                                              |
+| ----------- | ------ | -------- | ------------------------------------------------------------------------ |
+| `symbol`    | string | Ha      | Ramz                                                                   |
+| `interval`  | string | Ha      | Interval, masalan, `1m`, `5m`, `15m`, `30m`, `1h`, `4h`, `1d`, `1w`, `1M` |
+| `priceType` | string | Yo'q       | `indexPrice` / `markPrice`. Agar chiqarib tashlansa, Klines savdo narxini qaytaradi       |
+| `startTime` | int64  | Yo'q       | Boshlanish vaqti                                                               |
+| `endTime`   | int64  | Yo'q       | Yakun vaqti                                                                 |
+| `limit`     | int32  | Yo'q       | Qaytarilgan elementlar soni, standart `500`, maksimal `1000`                  |
+
+Javob maydonlari:
+
+| Maydon              | Turi   | Tavsif |
+| ------------------ | ------ | ----------- |
+| `list[].openTime`  | int64  | Ochiq vaqt   |
+| `list[].open`      | string | Ochilish narxi  |
+| `list[].high`      | string | Yuqori narx  |
+| `list[].low`       | string | Arzon narx   |
+| `list[].close`     | string | Yaqin narx |
+| `list[].volume`    | string | Hajm      |
+| `list[].closeTime` | int64  | Yaqin vaqt  |
+
+<h2 id="related-documentation">Tegishli hujjatlar</h2>
+
+- [Ommaviy Endpoints](/tr/developer-api/rest-api/public-endpoints)
+- [Jamoat WebSocket kanallari](/tr/developer-api/websocket/public-market-channels)
+- [Bozor chuqurligi va tarqalishi](/tr/solutions/market-depth-spread)

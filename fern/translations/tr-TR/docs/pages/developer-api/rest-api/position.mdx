@@ -1,0 +1,141 @@
+---
+title: "Mövqe"
+description: "6MM mövqe son nöqtələrindən istifadə edərək açıq mövqeləri, marja detalları, leverage, reallaşmamış mənfəət və zərəri, həmçinin mövqeyə bağlı əməliyyatları sorğulayın."
+slug: developer-api/rest-api/position
+canonical-url: https://docs.6mm.com/tr-TR/developer-api/rest-api/position
+---
+
+> **Qeyd**
+>
+> Mövqe son nöqtələri ticarət icazəsi tələb edir.
+
+<h2 id="set-leverage">Leverage Təyin Edin</h2>
+
+```http
+POST /v1/private/position/leverage
+Content-Type: application/json
+```
+
+Tələb bədəni:
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "leverage": 20
+}
+```
+
+Cavab sahələri:
+
+| Sahə       | Tip   | Təsvir |
+| ----------- | ------ | ----------- |
+| `symbol`    | string | Simvol      |
+| `leverage`  | int32  | Leverage    |
+| `timestamp` | int64  | Zaman möhürü   |
+
+<h2 id="set-margin-mode">Margin Rejimini Təyin Et</h2>
+
+```http
+POST /v1/private/position/margin-mode
+Content-Type: application/json
+```
+
+Tələb bədəni:
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "marginMode": 1
+}
+```
+
+`marginMode`: `1` xaç, `2` təcrid olunub.
+
+<h2 id="position-settings">Mövqe Ayarları</h2>
+
+```http
+GET /v1/private/position/settings?symbol=BTCUSDT
+```
+
+Cavab sahələri:
+
+| Sahə        | Tip   | Təsvir             |
+| ------------ | ------ | ----------------------- |
+| `symbol`     | string | Simvol                  |
+| `marginMode` | int32  | `1` xaç `2` təcrid olunmuş |
+| `leverage`   | int32  | Leverage                |
+
+<h2 id="current-positions">Hazırkı vəzifələr</h2>
+
+```http
+GET /v1/private/position/positions?symbol=BTCUSDT
+```
+
+Sorğu parametrləri:
+
+| Parametr | Tip   | Tələb olunur | Təsvir |
+| --------- | ------ | -------- | ----------- |
+| `symbol`  | string | Xeyr       | Simvol      |
+
+Cavab sahələri:
+
+| Sahə                         | Tip   | Təsvir                |
+| ----------------------------- | ------ | -------------------------- |
+| `positions[].symbol`          | string | Simvol                     |
+| `positions[].marginMode`      | string | Kənar rejimi                |
+| `positions[].positionSide`    | string | Mövqe tərəfi              |
+| `positions[].leverage`        | int32  | Leverage                   |
+| `positions[].quantity`        | string | Mövqe miqdarı          |
+| `positions[].entryPrice`      | string | Giriş qiyməti                |
+| `positions[].breakEvenPrice`  | string | Bərabərlik qiyməti           |
+| `positions[].liqPrice`        | string | Likvidasiya qiyməti          |
+| `positions[].marginRatio`     | string | Marja nisbəti               |
+| `positions[].unrealizedPnl`   | string | Reallaşmamış PnL             |
+| `positions[].roe`             | string | Kapitalın gəliri           |
+| `positions[].nextFundingFee`  | string | Təxmin edilən növbəti maliyyələşdirmə haqqı |
+| `positions[].fundingFeeAccum` | string | Yığılmış maliyyələşdirmə haqqı    |
+| `positions[].tpPrice`         | string | Qazanc qiyməti          |
+| `positions[].slPrice`         | string | Stop-loss qiyməti            |
+
+<h2 id="position-history">Vəzifə Tarixi</h2>
+
+```http
+GET /v1/private/position/history?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+Sorğu parametrləri:
+
+| Parametr   | Tip   | Tələb olunur | Təsvir                  |
+| ----------- | ------ | -------- | ---------------------------- |
+| `symbol`    | string | Xeyr       | Simvol                       |
+| `side`      | string | Xeyr       | `long` / `short`             |
+| `startTime` | int64  | Xeyr       | Başlama vaxtı                   |
+| `endTime`   | int64  | Xeyr       | Son zaman                     |
+| `page`      | int64  | Xeyr       | Səhifə nömrəsi, standart `1`     |
+| `pageSize`  | int64  | Xeyr       | Səhifə üzrə elementlər, standart `20` |
+
+Cavab sahələri:
+
+| Sahə                    | Tip   | Təsvir               |
+| ------------------------ | ------ | ------------------------- |
+| `list[].symbol`          | string | Simvol                    |
+| `list[].positionSide`    | string | Mövqe tərəfi             |
+| `list[].leverage`        | int32  | Leverage                  |
+| `list[].maxQuantity`     | string | Maksimum mövqe miqdarı |
+| `list[].entryPrice`      | string | Giriş qiyməti               |
+| `list[].closePrice`      | string | Yaxın qiymət               |
+| `list[].pnl`             | string | Reallaşmış PnL              |
+| `list[].roe`             | string | Kapitalın gəliri          |
+| `list[].marginMode`      | string | Kənar rejimi               |
+| `list[].triggerMode`     | int32  | Bağlanma tetik rejimi        |
+| `list[].fundingFeeAccum` | string | Yığılmış maliyyələşdirmə haqqı   |
+| `list[].openedAt`        | int64  | Açıq vaxt                 |
+| `list[].closedAt`        | int64  | Yaxın vaxt                |
+| `total`                  | int64  | Ümumi say               |
+
+<h2 id="related-documentation">Əlaqəli sənədlər</h2>
+
+- [Kənar Qaydaları](/tr-TR/trading/margin-rules)
+- [Leverage Mechanics](/tr-TR/trading/leverage-mechanics)
+- [Risk və Likvidasiyalar](/tr-TR/trading/risk-and-liquidations)
+- [Özəl İstifadəçi Kanalı](/tr-TR/developer-api/websocket/private-user-channel)

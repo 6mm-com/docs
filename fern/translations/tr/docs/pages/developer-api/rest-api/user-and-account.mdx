@@ -1,0 +1,223 @@
+---
+title: "Foydalanuvchi va hisob"
+description: "6MM foydalanuvchi va hisob nuqtalaridan foydalanib, profillar, balanslar, hisob holati, ruxsatlar va hamkor bilan bog'liq hisob ma'lumotlarini oling."
+slug: developer-api/rest-api/user-and-account
+canonical-url: https://docs.6mm.com/tr/developer-api/rest-api/user-and-account
+---
+
+Agar boshqacha ko'rsatilmagan bo'lsa, quyidagi endpointlar JWT yoki API Key signingdan foydalanishi mumkin.
+
+<h2 id="user-info">Foydalanuvchi ma'lumotlari</h2>
+
+```http
+GET /v1/private/user/info
+```
+
+Javob maydonlari:
+
+| Maydon                  | Turi   | Tavsif      |
+| ---------------------- | ------ | ---------------- |
+| `userInfo.userId`      | string | Tashqi foydalanuvchi identifikatori |
+| `userInfo.username`    | string | Foydalanuvchi nomi         |
+| `userInfo.agentId`     | int64  | Agent ID         |
+| `userInfo.vipLevel`    | int64  | VIP darajasi        |
+| `userInfo.lastLoginAt` | int64  | Oxirgi kirish vaqti  |
+| `userInfo.lastLoginIp` | string | Oxirgi kirish IP    |
+
+<h2 id="user-assets">Foydalanuvchi aktivlari</h2>
+
+```http
+GET /v1/private/user/asset
+```
+
+Javob maydonlari:
+
+| Maydon                     | Turi   | Tavsif                     |
+| ------------------------- | ------ | ------------------------------- |
+| `userAsset.userId`        | string | Tashqi foydalanuvchi identifikatori                |
+| `userAsset.assetType`     | string | Aktiv turi                      |
+| `userAsset.walletBalance` | string | Hamyon balansi                  |
+| `userAsset.frozenMargin`  | string | Margin kutilayotgan buyurtmalar tufayli muzlatilgan |
+| `userAsset.usedMargin`    | string | Pozitsiyalar bo'yicha ishlatiladigan margin        |
+
+<h2 id="create-listenkey">Yarat listenKey</h2>
+
+```http
+POST /v1/private/user/listen-key
+```
+
+Shaxsiy WebSocket oqimlari uchun autentifikatsiya kalitini yaratadi.
+
+<h2 id="renew-listenkey">Yangilanish listenKey</h2>
+
+```http
+PUT /v1/private/user/listen-key
+```
+
+Bu listenKey amal qiladi.
+
+<h2 id="close-listenkey">Yaqin listenKey</h2>
+
+```http
+DELETE /v1/private/user/listen-key
+```
+
+Ko'rsatilgan listenKeyyopiladi.
+
+<h2 id="account-change-logs">Hisobni o'zgartirish jurnallari</h2>
+
+```http
+GET /v1/private/user/account-change-log?assetType=USDT&page=1&pageSize=20
+```
+
+So'rov parametrlari:
+
+| Parametr    | Turi   | Majburiy | Tavsif                  |
+| ------------ | ------ | -------- | ---------------------------- |
+| `assetType`  | string | Yo'q       | Aktiv turi, masalan `USDT`   |
+| `changeType` | string | Yo'q       | Turini o'zgartirish                  |
+| `startTime`  | int64  | Yo'q       | Boshlanish vaqti                   |
+| `endTime`    | int64  | Yo'q       | Yakun vaqti                     |
+| `page`       | int32  | Yo'q       | Sahifa raqami, standart `1`     |
+| `pageSize`   | int32  | Yo'q       | Sahifa boshidagi elementlar, standart `20` |
+
+Javob maydonlari:
+
+| Maydon                        | Turi   | Tavsif                  |
+| ---------------------------- | ------ | ---------------------------- |
+| `list[].assetType`           | string | Aktiv turi                   |
+| `list[].amount`              | string | O'zgartirilgan miqdor               |
+| `list[].walletBalanceBefore` | string | O'zgarishdan oldingi hamyon balansi |
+| `list[].walletBalanceAfter`  | string | O'zgarishdan keyingi hamyon balansi  |
+| `list[].frozenBalanceBefore` | string | O'zgarishdan oldingi muzlagan muvozanat |
+| `list[].frozenBalanceAfter`  | string | O'zgarishdan keyin muzlagan balans  |
+| `list[].changeType`          | string | Turini o'zgartirish                  |
+| `list[].referenceId`         | string | Tegishli biznes identifikatori          |
+| `list[].createdAt`           | int64  | Yaratilish vaqti                |
+| `total`                      | int64  | Umumiy hisob                  |
+
+<h2 id="30-day-volume-statistics">30 kunlik hajm statistikasi</h2>
+
+```http
+GET /v1/private/user/volume-stats
+```
+
+Javob maydonlari:
+
+| Maydon         | Turi   | Tavsif                                     |
+| ------------- | ------ | ----------------------------------------------- |
+| `volume30d`   | string | So'nggi 30 kun ichidagi yig'ma savdo hajmi |
+| `feeTotal30d` | string | So'nggi 30 kun ichidagi yig'ma to'lovlar           |
+
+<h2 id="balance-history">Muvozanat Tarixi</h2>
+
+```http
+GET /v1/private/user/balance-history?period=1D&limit=30
+```
+
+So'rov parametrlari:
+
+| Parametr | Turi   | Majburiy | Tavsif                            |
+| --------- | ------ | -------- | -------------------------------------- |
+| `period`  | string | Ha      | `1D` / `1W` / `1M`                     |
+| `limit`   | int    | Yo'q       | Qaytarilgan buyumlar soni, standart `30` |
+
+Javob maydonlari:
+
+| Maydon             | Turi   | Tavsif                 |
+| ----------------- | ------ | --------------------------- |
+| `items[].date`    | string | Yig'ilish sanasi            |
+| `items[].balance` | string | Hamyon balansi              |
+| `items[].pnl`     | string | O'sha davr uchun amalga oshirilgan PnL |
+
+<h2 id="trade-overview">Savdo bo'yicha umumiy ma'lumot</h2>
+
+```http
+GET /v1/private/user/trade-overview?type=1M
+```
+
+So'rov parametrlari:
+
+| Parametr | Turi   | Majburiy | Tavsif                                     |
+| --------- | ------ | -------- | ----------------------------------------------- |
+| `type`    | string | Ha      | Trend diapazoni: `1D`, `1W`, `1M`, `3M`, `6M`, `1Y` |
+
+Javob maydonlari:
+
+| Maydon                | Turi   | Tavsif                                                          |
+| -------------------- | ------ | -------------------------------------------------------------------- |
+| `todayPnl`           | string | Bugungi amalga oshgan PnL                                                 |
+| `todayVolume`        | string | Bugungi shartnoma savdo hajmi                                      |
+| `totalVolume`        | string | Yig'ma kontrakt savdo hajmi                                   |
+| `totalPnl`           | string | Yig'ma realizatsiyalangan PnL                                              |
+| `maxDrawdown30d`     | string | So'nggi 30 kun ichida maksimal pasayish miqdori                        |
+| `maxDrawdown30dRate` | string | So'nggi 30 kun ichida maksimal tushirish tezligi, o'nlik o'lcham `0` dan `1` |
+| `transferIn`         | string | Umumiy o'tkazilgan mablag'lar                                      |
+| `transferOut`        | string | Umumiy o'tkazilgan mablag'lar                                     |
+| `items[]`            | array  | Aktivlar tendentsiyasi ma'lumotlari                                                     |
+
+<h2 id="asset-overview-summary">Aktivlar haqida umumiy ma'lumot</h2>
+
+```http
+GET /v1/private/user/asset/overview/summary
+```
+
+Javob maydonlari savdo sharhi xulosa maydonlari bilan bir xil, faqat `items[]`.
+
+<h2 id="asset-overview-trend">Aktivlar haqida umumiy ko'rinish tendentsiyasi</h2>
+
+```http
+GET /v1/private/user/asset/overview/trend?type=1M
+```
+
+So'rov parametrlari:
+
+| Parametr | Turi   | Majburiy | Tavsif                                     |
+| --------- | ------ | -------- | ----------------------------------------------- |
+| `type`    | string | Ha      | Trend diapazoni: `1D`, `1W`, `1M`, `3M`, `6M`, `1Y` |
+
+Javob maydonlari:
+
+| Maydon                  | Turi   | Tavsif                     |
+| ---------------------- | ------ | ------------------------------- |
+| `items[].snapshotTime` | int64  | Snapshot vaqti                   |
+| `items[].balance`      | string | Joriy hisob balansi         |
+| `items[].pnl`          | string | Hozirgi davr uchun PnL      |
+| `items[].pnlRate`      | string | Joriy davr uchun PnL stavkasi |
+| `items[].totalPnl`     | string | Umumiy PnL                  |
+
+<h2 id="favorite-symbols">Sevimli ramzlar</h2>
+
+<h2 id="save">Saqlash</h2>
+
+```http
+POST /v1/private/user/favorite-symbols
+Content-Type: application/json
+```
+
+So'rov tanasi:
+
+```json
+{
+  "symbols": ["BTCUSDT", "ETHUSDT"]
+}
+```
+
+<h2 id="query">So'rov</h2>
+
+```http
+GET /v1/private/user/favorite-symbols
+```
+
+Javob maydonlari:
+
+| Maydon     | Turi      | Tavsif          |
+| --------- | --------- | -------------------- |
+| `symbols` | String\[] | Sevimli ramzlar ro'yxati |
+
+<h2 id="related-documentation">Tegishli hujjatlar</h2>
+
+- [Shaxsiy Foydalanuvchi Kanali](/tr/developer-api/websocket/private-user-channel)
+- [Autentifikatsiya](/tr/developer-api/authentication)
+- [Aktivlarni o'tkazish](/tr/trading/getting-started/asset-transfer)
+- [Xatolik kodlari va muammolarni hal qilish](/tr/developer-api/error-codes-and-troubleshooting)

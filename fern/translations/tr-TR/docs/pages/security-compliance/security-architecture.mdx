@@ -1,0 +1,48 @@
+---
+title: "Platforma Təhlükəsizlik Arxitekturası"
+subtitle: "6MM ticarət infrastrukturu, APIs, SDKs, webhooks və tərəfdaş inteqrasiyalarında istifadə olunan təhlükəsizlik qatlarını başa düşmək."
+slug: security-compliance/security-architecture
+canonical-url: https://docs.6mm.com/tr-TR/security-compliance/security-architecture
+---
+
+6MM təhlükəsizlik sənədləri tərəfdaş istehsalına hazırlığa fokuslanır. Məqsəd ticarət infrastrukturunu sabit saxlamaq və məsuliyyət sərhədlərini aydın etməkdir.
+
+<h2 id="security-layers">Təhlükəsizlik qatları</h2>
+
+| Qat | Fokus |
+| --- | --- |
+| İnfrastruktur | Şəbəkə izolyasiyası, şifrələnmiş xidmət rabitəsi, monitorinq və failover. |
+| Ticarət sistemləri | Deterministik uyğunluq, marja yoxlamaları, risk nəzarətləri və sui-istifadənin qarşısının alınması. |
+| İnteqrasiya təhlükəsizliyi | API açarlar, HMAC imzalama, webhook imzaları, təkrar baxış qorunması və yalnız backend sirləri. |
+| Tərəfdaş əməliyyatlar | İstifadəçi sessiyasının təsdiqi, aktivlərin qorunması, müştəri dəstəyi və yerli uyğunluq nəzarətləri. |
+
+<h2 id="partner-responsibilities">Tərəfdaş məsuliyyətləri</h2>
+
+- Brauzerlərdən və mobil tətbiqlərdən API sirr və giriş açarlarını saxlamaq.
+- Ticarət giriş məlumatlarını verməzdən əvvəl tərəfdaş istifadəçi sessiyalarını təsdiqləmək.
+- Webhook idempotentliyi və terminal vəziyyət yoxlamalarını həyata keçirin.
+- Hesab, sifariş, transfer və webhook axınları üçün əməliyyat qeydlərini saxlamaq.
+
+<h2 id="integration-trust-boundaries">İnteqrasiya etibar sərhədləri</h2>
+
+| Sərhəd | Tələb olunan idarəetmə |
+| --- | --- |
+| Brauzer və ya tətbiqdən tərəfdaş backend-ə | Hər hansı ticarət etimadnaməsi verməzdən əvvəl tərəfdaş sessiyasını təsdiqləyin. |
+| Tərəfdaş backend 6MM API | Geniş miqyaslı etimadnamələrdən, sorğu imzalamadan, vaxt sinxronizasiyasından və qorunan gizli yaddaşdan istifadə edin. |
+| 6MM webhook-dan tərəfdaş endpoint-ə | İmzanı xam sorğu bədəni ilə yoxlayın, köhnəlmiş və ya etibarsız mesajları rədd edin və təkrar cəhdləri deduplicate edin. |
+| Ticarət vəziyyətindən tərəfdaş rekordlara | Əmrləri, mövqeləri, balansları və transferləri davamlı identifikatorlar və terminal-vəziyyət yoxlamaları ilə uzlaşdırın. |
+
+<h2 id="production-verification">İstehsalın yoxlanılması</h2>
+
+- Müddəti bitmiş, ləğv edilmiş və səhv əhatə olunmuş etimadnamələri test etmək.
+- Dəyişdirilmiş webhook bədənlərini, təkrarlanan geri çağırışları, gecikmiş geri çağırışları və son nöqtə vaxtını test etmək.
+- Logların sirləri, giriş tokenlərini və həssas sorğu yüklərini gizlətdiyini təsdiqləyin.
+- Təkrarlanan imza uğursuzluqları, anormal sifariş fəaliyyəti, uyğunlaşma fərqləri və bağlantı qeyri-sabitliyi barədə xəbərdarlıq.
+- Sahib və cavab yolunu sənədləşdirin, çünki credential ifşası, webhook uğursuzluğu və ticarət hadisələri baş verir.
+
+<h2 id="related-security-guides">Əlaqəli təhlükəsizlik bələdçiləri</h2>
+
+- [Sirlər və İmzalama](/tr-TR/sdk/security/secrets-signing)
+- [Webhooks & Idempotency](/tr-TR/sdk/security/webhooks-idempotency)
+- [Hadisə Cavabı](/tr-TR/security-compliance/incident-response)
+- [Tərəfdaş Məsuliyyəti Matrisi](/tr-TR/security-compliance/partner-responsibilities)

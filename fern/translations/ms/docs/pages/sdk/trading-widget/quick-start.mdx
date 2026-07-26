@@ -1,0 +1,108 @@
+---
+title: "I-embed ang 6MM Trading Widget: Mabilisang Pagsisimula"
+subtitle: "Idagdag ang trading terminal sa isang web page na may container, ang v1 script, at TradingWidget.create()."
+slug: sdk/trading-widget/quick-start
+canonical-url: https://docs.6mm.com/ms/sdk/trading-widget/quick-start
+---
+
+Ini-embed ng Trading Widget SDK ang 6MM trading interface sa loob ng partner owned web page. Ang pinakamabilis na integration ay nangangailangan ng nakikitang container, production SDK script, at call to `TradingWidget.create()`.
+
+<h2 id="before-you-start">Bago ka magsimula</h2>
+
+- Patakbuhin ang halimbawa mula sa isang web page na maaaring mag-load ng mga resources mula sa `https://app.6mm.com`.
+- Bigyan ang widget container ng malinaw na lapad at taas.
+- I-load ang SDK bago tumawag `TradingWidget.create()`.
+- Planuhin ang [authentication flow](/ms/sdk/trading-widget/authentication) bago paganahin ang account o trading features sa production.
+
+<h2 id="minimal-example">Minimal na halimbawa</h2>
+
+```html
+<div id="trading-widget" style="width: 100%; height: 720px"></div>
+
+<script src="https://app.6mm.com/sdk/trading-widget/v1/index.js"></script>
+<script>
+  const widget = TradingWidget.create('#trading-widget', {
+    baseUrl: 'https://app.6mm.com',
+    symbol: 'BTCUSDT',
+    theme: 'dark',
+    locale: 'en',
+    layout: 'default',
+    display: {
+      showHeader: false,
+      showTicker: false,
+      hidden: [],
+    },
+    onReady(event) {
+      console.log('ready', event)
+    },
+    onError(error) {
+      console.error('error', error)
+    },
+  })
+</script>
+```
+
+Kapag nagtagumpay ang integrasyon, lumilikha ang SDK ng iframe sa loob ng `#trading-widget` at tinatawag ang `onReady`. Kunin ang `onError` habang nagde-develop upang makita ang mga pagkabigo sa configuration at loading.
+
+<h2 id="sdk-urls">SDK URL</h2>
+
+| Kapaligiran | Script URL |
+| --- | --- |
+| Produksyon | https://app.6mm.com/sdk/trading-widget/v1/index.js |
+
+> **Itakda baseUrl nang tahasan**
+>
+> Kapag nagte-test mula sa partner-owned pages, ipasa ang baseUrl para laging ituro ng iframe ang 6MM Web domain.
+
+<h2 id="display-controls">Mga kontrol sa pagpapakita</h2>
+
+Ang partner embeds ay nakatago ng PC header at bottom market ticker bilang default. Gamitin ang `display` kapag kailangan mong ipakita ang mga shell area o itago ang high-level containers sa embedded trading page.
+
+```js
+display: {
+  showHeader: false,
+  showTicker: false,
+  hidden: ['account'],
+}
+```
+
+<h2 id="container-size">Sukat ng lalagyan</h2>
+
+| Ibabaw | Inirerekomendang minimum |
+| --- | --- |
+| Desktop | 1024 x 720 |
+| Mobile | 390 x 700 |
+
+Para sa responsive na layout, panatilihing fluid ang lapad at magtakda ng angkop na minimum na taas para sa bawat breakpoint. Ang container na may zero height ay maaaring mag-load ng SDK nang matagumpay habang hindi nakikita ang trading interface.
+
+<h2 id="verify-the-integration">Beripikahin ang integrasyon</h2>
+
+1. Kumpirmahin ang matagumpay na pagbabalik ng SDK script sa browser network panel.
+2. Kumpirmahin `onReady` nag-fire kapag na-initialize na ang iframe.
+3. Subukan ang naka-configure na `symbol`, `locale`, theme, at hidden sections.
+4. Baguhin ang laki ng pahina sa desktop at mobile breakpoints.
+5. Kumpletuhin ang authenticated test kasama ang non-production user bago ilunsad.
+
+<h2 id="common-issues">Karaniwang mga isyu</h2>
+
+| Sintomas | Ano ang dapat suriin |
+| --- | --- |
+| Blangkong widget area | Tiyakin na ang lalagyan ay may nakikitang lapad at taas. |
+| `TradingWidget` ay hindi tinukoy | Kumpirmahin ang na-load na v1 script bago ang create call. |
+| Maling pahina o kapaligiran | Itakda `baseUrl` nang malinaw at suriin ang naka-configure na kapaligiran. |
+| Hindi kailanman nag-a-activate ang Ready event | Kunin ang `onError` at inspeksyunin ang mga naka-block na iframe o script requests. |
+| Hindi available ang datos ng account | Kumpletuhin ang suportadong daloy ng widget authentication. |
+
+<h2 id="next-steps">Mga susunod na hakbang</h2>
+
+<CardGroup cols={3}>
+<Card title="Pagpapatunay ng Widget" icon="fa-duotone fa-user-shield" href="/ms/sdk/trading-widget/authentication">
+Ikonekta ang embedded terminal sa isang aprubadong user session.
+</Card>
+<Card title="Mga Opsyon at Kaganapan" icon="fa-duotone fa-sliders" href="/ms/sdk/trading-widget/options-events">
+I-configure ang mga simbolo, locale, display behavior, at lifecycle callbacks.
+</Card>
+<Card title="Mga Paraan ng Halimbawa" icon="fa-duotone fa-code" href="/ms/sdk/trading-widget/instance-methods">
+Kontrolin ang nilikhang widget instance pagkatapos ng initialization.
+</Card>
+</CardGroup>

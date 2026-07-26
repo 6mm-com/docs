@@ -1,0 +1,74 @@
+---
+title: "Mga Opsyon at Kaganapan"
+subtitle: "Mga opsyon sa initialization, runtime events, at mga karaniwang error code."
+slug: sdk/trading-widget/options-events
+canonical-url: https://docs.6mm.com/ms/sdk/trading-widget/options-events
+---
+
+<h2 id="options">Mga Opsyon</h2>
+
+| Larangan | Uri | Default | Mga Tala |
+| --- | --- | --- | --- |
+| baseUrl | string | SDK pinagmulan ng script | iframe domain. Magpasa nang malinaw sa partner pages. |
+| simbolo | string | BTCUSDT | Na-normalize sa uppercase at strips - / _. |
+| tema | madilim \| ilaw | madilim | Panimulang parameter ng tema. |
+| lugar | en \| en-US \| zh-CN | Browser/default | Sinusuportahan ang Ingles at Simplified Chinese. |
+| ayos | default \| compact | default | Opsyon para sa reserved layout. |
+| ipakita | object | `showHeader: false`, `showTicker: false`, `hidden: []` | Ang mga kontrol ay naglalagay ng shell areas at high-level trading containers. |
+| auth | object | wala | Gamitin ang partner-token para sa mga bagong integrasyon ng SSO . |
+
+<h2 id="display-controls">Mga kontrol sa pagpapakita</h2>
+
+`display` kumokontrol sa embedded trading page shell at high-level containers. Sa partner embeds, ang PC header at bottom market ticker ay nakatago bilang default.
+
+```js
+display: {
+  showHeader: false,
+  showTicker: false,
+  hidden: ['chart', 'orderBook'],
+}
+```
+
+| Larangan | Uri | Default | Mga Tala |
+| --- | --- | --- | --- |
+| showHeader | boolean | mali | Kung ipapakita ang PC embed header sa loob ng iframe. |
+| showTicker | boolean | mali | Kung ipapakita ba ang bottom market ticker sa embed shell. |
+| nakatago | string[] | [] | Itinatago ang high-level containers sa trading page. |
+
+Mga suportadong `display.hidden` halaga:
+
+| Halaga | Lalagyan |
+| --- | --- |
+| tsart | Chart container |
+| orderBook | Order book container |
+| orderForm | Order form panel |
+| mga posisyon | Mga posisyon sa ibaba at bukas na panel ng mga order |
+| account | Container ng mga asset ng account |
+
+`display.hidden` nagtatago lamang ng buong lalagyan. Hindi nito itinatago ang mga indibidwal na button, field, o tool sa loob ng container. Ang mga value na hindi tumutugma sa kasalukuyang viewport ay hindi isinasaalang-alang.
+
+<h2 id="events">Mga kaganapan</h2>
+
+| Kaganapan | Trigger |
+| --- | --- |
+| handa na | Tapos na ang initialization ng iframe. |
+| pagkakamali | SDK, iframe, o authentication error. |
+| state_changed | Nagbago SDK estado ng lifecycle. |
+| auth_state_changed | Nagbago ang estado ng auth ng partner-token. |
+| symbol_changed | Nagbago ang aktwal na simbolo ng iframe. |
+| locale_changed | Nagbago ang aktwal na iframe locale. |
+| order_created | Gumawa ang user ng order sa loob ng iframe. |
+| order_failed | Nabigo ang pagsusumite ng order. |
+| winasak | SDK instance ay nawasak. |
+
+<h2 id="related-widget-guides">Mga gabay sa Kaugnay na Widget</h2>
+
+- [Trading Widget Mabilis na Pagsisimula] (/sdk/trading-widget/quick-start)
+- [Authentication](/ms/sdk/trading-widget/authentication)
+- [Mga Pamamaraan ng Instance](/ms/sdk/trading-widget/instance-methods)
+- [Pag-troubleshoot](/ms/sdk/security/troubleshooting)
+{/* sixmm-localized-link-repair:start */}
+<h2 id="localized-page-links">Mga kaugnay na pahina</h2>
+
+- [quick start](/ms/sdk/trading-widget/quick-start)
+{/* sixmm-localized-link-repair:end */}

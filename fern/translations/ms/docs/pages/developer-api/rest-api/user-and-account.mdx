@@ -1,0 +1,223 @@
+---
+title: "User at Account"
+description: "Gamitin ang 6MM user at account endpoints upang kunin ang mga profile, balanse, estado ng account, mga permiso, at impormasyon ng account na naka-link sa partner."
+slug: developer-api/rest-api/user-and-account
+canonical-url: https://docs.6mm.com/ms/developer-api/rest-api/user-and-account
+---
+
+Maliban kung may ibang tinukoy, ang mga sumusunod na endpoint ay maaaring gumamit ng JWT o API Key signing.
+
+<h2 id="user-info">Impormasyon ng User</h2>
+
+```http
+GET /v1/private/user/info
+```
+
+Mga field ng tugon:
+
+| Larangan                  | Uri   | Paglalarawan      |
+| ---------------------- | ------ | ---------------- |
+| `userInfo.userId`      | string | Panlabas na User ID |
+| `userInfo.username`    | string | Username         |
+| `userInfo.agentId`     | int64  | ID ng Ahente         |
+| `userInfo.vipLevel`    | int64  | VIP antas        |
+| `userInfo.lastLoginAt` | int64  | Huling oras ng pag-login  |
+| `userInfo.lastLoginIp` | string | Huling login IP    |
+
+<h2 id="user-assets">Mga Asset ng User</h2>
+
+```http
+GET /v1/private/user/asset
+```
+
+Mga field ng tugon:
+
+| Larangan                     | Uri   | Paglalarawan                     |
+| ------------------------- | ------ | ------------------------------- |
+| `userAsset.userId`        | string | Panlabas na User ID                |
+| `userAsset.assetType`     | string | Uri ng asset                      |
+| `userAsset.walletBalance` | string | Balanse ng wallet                  |
+| `userAsset.frozenMargin`  | string | Na-freeze ang margin dahil sa mga nakabinbing order |
+| `userAsset.usedMargin`    | string | Margin na ginagamit ng mga posisyon        |
+
+<h2 id="create-listenkey">Gumawa ng listenKey</h2>
+
+```http
+POST /v1/private/user/listen-key
+```
+
+Lumilikha ng authentication key para sa mga private WebSocket stream.
+
+<h2 id="renew-listenkey">I-renew listenKey</h2>
+
+```http
+PUT /v1/private/user/listen-key
+```
+
+Pinalalawig listenKey bisa.
+
+<h2 id="close-listenkey">Isara listenKey</h2>
+
+```http
+DELETE /v1/private/user/listen-key
+```
+
+Isinasara ang tinukoy na listenKey.
+
+<h2 id="account-change-logs">Mga Log ng Pagbabago sa Account</h2>
+
+```http
+GET /v1/private/user/account-change-log?assetType=USDT&page=1&pageSize=20
+```
+
+Mga parameter ng kahilingan:
+
+| Parameter    | Uri   | Kinakailangan | Paglalarawan                  |
+| ------------ | ------ | -------- | ---------------------------- |
+| `assetType`  | string | Hindi       | Uri ng asset, tulad ng `USDT`   |
+| `changeType` | string | Hindi       | Baguhin ang uri                  |
+| `startTime`  | int64  | Hindi       | Oras ng pagsisimula                   |
+| `endTime`    | int64  | Hindi       | Oras ng Pagtatapos                     |
+| `page`       | int32  | Hindi       | Numero ng pahina, default na `1`     |
+| `pageSize`   | int32  | Hindi       | Mga item kada pahina, default na `20` |
+
+Mga field ng tugon:
+
+| Larangan                        | Uri   | Paglalarawan                  |
+| ---------------------------- | ------ | ---------------------------- |
+| `list[].assetType`           | string | Uri ng asset                   |
+| `list[].amount`              | string | Binagong halaga               |
+| `list[].walletBalanceBefore` | string | Balanse ng wallet bago ang pagbabago |
+| `list[].walletBalanceAfter`  | string | Balanse ng wallet pagkatapos ng pagbabago  |
+| `list[].frozenBalanceBefore` | string | Nagyelong balanse bago ang pagbabago |
+| `list[].frozenBalanceAfter`  | string | Nagyelong balanse pagkatapos ng pagbabago  |
+| `list[].changeType`          | string | Baguhin ang uri                  |
+| `list[].referenceId`         | string | Kaugnay na business ID          |
+| `list[].createdAt`           | int64  | Panahon ng Paglikha                |
+| `total`                      | int64  | Kabuuang bilang                  |
+
+<h2 id="30-day-volume-statistics">30-Araw na Estadistika ng Dami</h2>
+
+```http
+GET /v1/private/user/volume-stats
+```
+
+Mga field ng tugon:
+
+| Larangan         | Uri   | Paglalarawan                                     |
+| ------------- | ------ | ----------------------------------------------- |
+| `volume30d`   | string | Kabuuang dami ng kalakalan sa nakalipas na 30 araw |
+| `feeTotal30d` | string | Pinagsama-samang bayarin sa nakalipas na 30 araw           |
+
+<h2 id="balance-history">Kasaysayan ng Balanse</h2>
+
+```http
+GET /v1/private/user/balance-history?period=1D&limit=30
+```
+
+Mga parameter ng kahilingan:
+
+| Parameter | Uri   | Kinakailangan | Paglalarawan                            |
+| --------- | ------ | -------- | -------------------------------------- |
+| `period`  | string | Oo      | `1D` / `1W` / `1M`                     |
+| `limit`   | int    | Hindi       | Bilang ng mga item na ibinalik, default na `30` |
+
+Mga field ng tugon:
+
+| Larangan             | Uri   | Paglalarawan                 |
+| ----------------- | ------ | --------------------------- |
+| `items[].date`    | string | Petsa ng pagsasama-sama            |
+| `items[].balance` | string | Balanse ng wallet              |
+| `items[].pnl`     | string | Naisakatuparan ang PnL para sa panahong iyon |
+
+<h2 id="trade-overview">Pangkalahatang-ideya ng Kalakalan</h2>
+
+```http
+GET /v1/private/user/trade-overview?type=1M
+```
+
+Mga parameter ng kahilingan:
+
+| Parameter | Uri   | Kinakailangan | Paglalarawan                                     |
+| --------- | ------ | -------- | ----------------------------------------------- |
+| `type`    | string | Oo      | Saklaw ng uso: `1D`, `1W`, `1M`, `3M`, `6M`, `1Y` |
+
+Mga field ng tugon:
+
+| Larangan                | Uri   | Paglalarawan                                                          |
+| -------------------- | ------ | -------------------------------------------------------------------- |
+| `todayPnl`           | string | Ang kasalukuyang natupad na PnL                                                 |
+| `todayVolume`        | string | Kasalukuyang dami ng kontrata sa kalakalan                                      |
+| `totalVolume`        | string | Kabuuang dami ng kontrata sa kalakalan                                   |
+| `totalPnl`           | string | Pinagsama-samang naisakatuparan na PnL                                              |
+| `maxDrawdown30d`     | string | Pinakamataas na halaga ng drawdown sa nakalipas na 30 araw                        |
+| `maxDrawdown30dRate` | string | Pinakamataas na rate ng drawdown sa nakalipas na 30 araw, decimal mula `0` hanggang `1` |
+| `transferIn`         | string | Pinagsama-samang nailipat na pondo                                      |
+| `transferOut`        | string | Pinagsama-samang nailipat na pondo                                     |
+| `items[]`            | array  | Datos ng trend ng asset                                                     |
+
+<h2 id="asset-overview-summary">Buod ng Pangkalahatang-ideya ng Asset</h2>
+
+```http
+GET /v1/private/user/asset/overview/summary
+```
+
+Ang mga response field ay kapareho ng trade overview summary fields, maliban sa `items[]`.
+
+<h2 id="asset-overview-trend">Pangkalahatang-ideya ng Asset Trend</h2>
+
+```http
+GET /v1/private/user/asset/overview/trend?type=1M
+```
+
+Mga parameter ng kahilingan:
+
+| Parameter | Uri   | Kinakailangan | Paglalarawan                                     |
+| --------- | ------ | -------- | ----------------------------------------------- |
+| `type`    | string | Oo      | Saklaw ng uso: `1D`, `1W`, `1M`, `3M`, `6M`, `1Y` |
+
+Mga field ng tugon:
+
+| Larangan                  | Uri   | Paglalarawan                     |
+| ---------------------- | ------ | ------------------------------- |
+| `items[].snapshotTime` | int64  | Oras ng snapshot                   |
+| `items[].balance`      | string | Balanse ng kasalukuyang account         |
+| `items[].pnl`          | string | PnL para sa kasalukuyang panahon      |
+| `items[].pnlRate`      | string | PnL rate para sa kasalukuyang panahon |
+| `items[].totalPnl`     | string | Kabuuang PnL                  |
+
+<h2 id="favorite-symbols">Mga Paboritong Simbolo</h2>
+
+<h2 id="save">I-save</h2>
+
+```http
+POST /v1/private/user/favorite-symbols
+Content-Type: application/json
+```
+
+Katawan ng kahilingan:
+
+```json
+{
+  "symbols": ["BTCUSDT", "ETHUSDT"]
+}
+```
+
+<h2 id="query">Query</h2>
+
+```http
+GET /v1/private/user/favorite-symbols
+```
+
+Mga field ng tugon:
+
+| Larangan     | Uri      | Paglalarawan          |
+| --------- | --------- | -------------------- |
+| `symbols` | string\[] | Listahan ng paboritong simbolo |
+
+<h2 id="related-documentation">Kaugnay na dokumentasyon</h2>
+
+- [Pribadong User Channel](/ms/developer-api/websocket/private-user-channel)
+- [Authentication](/ms/developer-api/authentication)
+- [Paglipat ng Ari-arian](/ms/trading/getting-started/asset-transfer)
+- [Error Codes & Troubleshooting](/ms/developer-api/error-codes-and-troubleshooting)
