@@ -132,6 +132,33 @@
     );
   }
 
+  function enhanceMobileSettingsBars() {
+    Array.from(document.querySelectorAll(".fern-language-selector")).forEach(
+      function (selector) {
+        var parent = selector.parentElement;
+        var themeButton = selector.nextElementSibling;
+        if (
+          !parent ||
+          parent.tagName !== "DIV" ||
+          !themeButton ||
+          themeButton.tagName !== "BUTTON" ||
+          !themeButton.querySelector(
+            "svg.lucide-sun, svg.lucide-moon, svg.lucide-monitor",
+          )
+        ) {
+          return;
+        }
+
+        parent.classList.add("sixmm-mobile-settings-bar");
+        themeButton.classList.add("sixmm-mobile-theme-trigger");
+
+        var themeLabel = (themeButton.textContent || "").trim() || "Theme";
+        themeButton.setAttribute("aria-label", themeLabel);
+        themeButton.title = themeLabel;
+      },
+    );
+  }
+
   function extraLocaleHref(locale, pagePath) {
     return (locale.prefix ? "/" + locale.prefix : "") + pagePath;
   }
@@ -323,6 +350,7 @@
   function sync() {
     scheduled = false;
     enhanceTriggers();
+    enhanceMobileSettingsBars();
     enhanceMenus();
     syncStandaloneSidebar();
   }
