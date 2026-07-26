@@ -1,0 +1,79 @@
+---
+title: "6MM Agent SDK por Java y PHP"
+subtitle: "Integra llamadas API de Agente firmado, vinculación de usuarios, transferencias, URLs de entrada y verificación de webhook desde servicios de backend de socios."
+slug: sdk/agent-sdk/overview
+canonical-url: https://docs.6mm.com/es-ES/sdk/agent-sdk/overview
+---
+
+La 6MM Agent SDK es para servicios de backend asociados que necesitan llamar a APIs de agente privilegiado sin implementar la gestión de firmas y solicitudes desde cero. No debe ejecutarse en código de navegador, móvil o escritorio público porque la integración utiliza un socio API secreto.
+
+<h2 id="when-to-use-the-agent-sdk">¿Cuándo usar el Agent SDK</h2>
+
+Usa un Agent SDK cuando tu backend necesite vincular a un usuario socio, mueve activos a través de un flujo de trabajo aprobado, consulta registros de trading, crea una entrada de trading incrustada URLo verifica notificaciones de webhook. Usa el [Trading Widget SDK](/es-ES/sdk/trading-widget/overview) por separado cuando el frontend del socio necesite mostrar la interfaz de trading.
+
+<h2 id="capabilities">Capacidades</h2>
+
+| Escenario | Java SDK | PHP SDK |
+| --- | --- | --- |
+| Vincular usuario | Apoyado | Apoyado |
+| Transferencia de cantidad fija | Apoyado | Apoyado |
+| Transfiere todo | Apoyado | Apoyado |
+| Transferencia inversa | Apoyado | Apoyado |
+| Órdenes de consulta | Apoyado | Apoyado |
+| Crear URL | Apoyado | Apoyado |
+| Verificación de Webhook | Apoyado | Apoyado |
+
+<h2 id="common-configuration">Configuración común</h2>
+
+| Clave | Ejemplo | Descripción |
+| --- | --- | --- |
+| baseUrl | `https://agent-api.6mm.com` | 6MM Agent API servicio URL sin barra lateral. |
+| agentCode | AGENT001 | Código de agente asociado. |
+| apiSecret | tu-api-secreto | API secreto de firma almacenado solo en el backend. |
+| defaultCurrency | USDT | Moneda predeterminada para transferencias y APIsde cuenta. |
+| webhookUrl | https://partner.example.com/6mm/webhook | Endpoint de socios para notificaciones de 6MM webhook. |
+
+<h2 id="typical-integration-flow">Flujo típico de integración</h2>
+
+1. El frontend del socio autentica al usuario a través del propio sistema de cuenta del socio.
+2. El backend del socio asigna al usuario a un identificador estable del lado del socio.
+3. El backend llama al Agent SDK con `agentCode` y el API protegido secreto.
+4. El SDK firma y envía la solicitud API Agente.
+5. El backend almacena el identificador de negocio retornado y procesa los webhooks posteriores de manera idempotente.
+6. El frontend solo recibe el resultado efímero o la credencial de entrada que necesita.
+
+<h2 id="choose-an-sdk">Elige un SDK</h2>
+
+| Pila de backend | Empieza aquí |
+| --- | --- |
+| Java | [Java SDK Resumen] (/sdk/agent-sdk/java/overview) y [Java Inicio Rápido](/es-ES/sdk/agent-sdk/java/quick-start) |
+| PHP | [PHP SDK Resumen] (/sdk/agent-sdk/php/overview) y [PHP Inicio Rápido](/es-ES/sdk/agent-sdk/php/quick-start) |
+
+<h2 id="production-checklist">Lista de verificación de producción</h2>
+
+- Cargar `apiSecret` desde un gestor de secretos backend, no desde el código fuente.
+- Mantener separadas las credenciales de desarrollo, puesta en escena y producción.
+- Utilizar un mapeo de usuario de socios estables e identificadores únicos de órdenes de negocio.
+- Conservar el identificador original al comprobar el estado de una solicitud con tiempo de espera.
+- Verificar firmas de webhook y almacenar los IDs de eventos procesados.
+- Redactar secretos y firmas de los registros mientras se conservan los IDs de solicitud para el soporte.
+
+<h2 id="next-steps">Próximos pasos</h2>
+
+<CardGroup cols={3}>
+<Card title="Java Inicio rápido" icon="fa-brands fa-java" href="/es-ES/sdk/agent-sdk/java/quick-start">
+Instala e inicializa el Agent SDK en un backend Java .
+</Card>
+<Card title="PHP Inicio rápido" icon="fa-brands fa-php" href="/es-ES/sdk/agent-sdk/php/quick-start">
+Instala e inicializa el Agent SDK en un backend PHP .
+</Card>
+<Card title="Webhooks e idempotencia" icon="fa-duotone fa-webhook" href="/es-ES/sdk/security/webhooks-idempotency">
+Verifica las devoluciones de llamada y evita el procesamiento empresarial duplicado.
+</Card>
+</CardGroup>
+{/* sixmm-localized-link-repair:start */}
+<h2 id="localized-page-links">Páginas relacionadas</h2>
+
+- [Agent Java SDK](/es-ES/sdk/agent-sdk/java/overview)
+- [Agent PHP SDK](/es-ES/sdk/agent-sdk/php/overview)
+{/* sixmm-localized-link-repair:end */}

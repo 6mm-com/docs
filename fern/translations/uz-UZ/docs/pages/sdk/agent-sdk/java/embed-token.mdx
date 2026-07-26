@@ -1,0 +1,56 @@
+---
+title: "Embed tokenini yaratish"
+subtitle: "Hamkor-token rejimi uchun qisqa muddatli embed tokenlarni Trading Widget ."
+slug: sdk/agent-sdk/java/embed-token
+canonical-url: https://docs.6mm.com/uz-UZ/sdk/agent-sdk/java/embed-token
+---
+
+<h2 id="sdk-call">SDK qo'ng'iroq</h2>
+
+Hamkor foydalanuvchi sessiyasini tasdiqlagandan so'ng backenddan embed tokenlarini yarating. Brauzer sizning endpointingizni chaqirishi kerak, endpointingiz esa 6MM orqali Agent SDK.
+
+```java
+CreateEmbedTokenResponse resp = client.createEmbedToken(
+        CreateEmbedTokenRequest.of("agent-user-001", "tw_abc123")
+                .withSymbol("ETHUSDT"));
+
+System.out.println(resp.embedToken);
+System.out.println(resp.expireAt);
+```
+
+> **Bir martalik sertifikat**
+>
+> embedToken qisqa muddatli va bir martalik foydalanish. Uni URL so'rov qatoriga joylashtirmang.
+
+<h2 id="backend-endpoint-example">Backend endpoint misoli</h2>
+
+```java
+@PostMapping("/api/trading/embed-token")
+public EmbedTokenView createEmbedToken(@RequestBody EmbedTokenRequest request,
+                                       PartnerSession session) {
+    String agentUserId = session.getAgentUserId();
+    CreateEmbedTokenResponse resp = agentClient.createEmbedToken(
+            CreateEmbedTokenRequest.of(agentUserId, request.getChannelId())
+                    .withSymbol(request.getSymbol()));
+
+    return new EmbedTokenView(resp.embedToken, resp.expireAt, request.getChannelId());
+}
+```
+
+Faqat Trading Widget token provayderi uchun kerak bo'lgan maydonlarni qaytaring. apiSecret, xom imzo maydonlari yoki ichki xizmat konfiguratsiyasini qaytarmang.
+
+<h2 id="failure-handling">Nosozliklarni boshqarish</h2>
+
+| Holati | Tavsiya etilgan boshqaruv |
+| --- | --- |
+| Foydalanuvchi sessiyasi yo'q yoki muddati tugagan | Hamkor nuqtadan 401 ni qaytaring va foydalanuvchidan yana tizimga kirishni so'rang. |
+| Agent foydalanuvchisi bog'lanmagan | Avval foydalanuvchini bog'lang, keyin token yaratishni qayta sinab ko'ring. |
+| 6MM vaqtinchalik xatoni qaytaradi | Qayta sinab ko'riladigan xatoni frontendga qaytaring va qo'llab requestId llab-quvvatlash uchun ro'yxatdan o'ting. |
+| channelId vidjet nusxasiga mos kelmaydi | So'rovni rad eting va vidjet sessiyasini qayta yarating. |
+
+<h2 id="related-documentation">Tegishli hujjatlar</h2>
+
+- [Trading Widget autentifikatsiya](/uz-UZ/sdk/trading-widget/authentication): `tokenProvider` hamkor nuqtaga ulaning.
+- [Java Tez Boshlash](/uz-UZ/sdk/agent-sdk/java/quick-start): o'rnatish va ishga tushirish `AgentClient`.
+- [Sirlar va Imzolash](/uz-UZ/sdk/security/secrets-signing): Agentni API sirini himoya qilish.
+- [Webhooks & Idempotency](/uz-UZ/sdk/security/webhooks-idempotency): integratsiyaning callback tomonini himoya qiling.

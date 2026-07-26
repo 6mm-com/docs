@@ -1,0 +1,85 @@
+---
+title: "Webhook Signature Verification & Idempotency"
+subtitle: "Verify 6MM Agent webhooks with the raw request body and process retries, timeouts, and repeated events without duplicate business actions."
+slug: sdk/security/webhooks-idempotency
+canonical-url: https://docs.6mm.com/en-SG/sdk/security/webhooks-idempotency
+---
+
+Webhooks notify a partner backend about asynchronous business-state changes. Because delivery may be retried, every receiver must verify the signature before parsing trusted data and must process the event idempotently.
+
+<h2 id="webhook-headers">Webhook headers</h2>
+
+| Header | Description |
+| --- | --- |
+| X-Agent-Timestamp | Unix timestamp in seconds. |
+| X-Agent-Nonce | Replay-protection nonce. |
+| X-Agent-Signature | HMAC-SHA256 signature. |
+
+```text
+timestamp + nonce + rawBody
+```
+
+Use the exact raw request body received over HTTP when reconstructing the signed value. Parsing and re-serializing JSON first can change whitespace or field order and produce a different signature.
+
+<h2 id="verification-flow">Verification flow</h2>
+
+1. Read the timestamp, nonce, and signature headers.
+2. Capture the unmodified raw request body.
+3. Build `timestamp + nonce + rawBody`.
+4. Calculate HMAC-SHA256 with the partner API secret.
+5. Compare the calculated and received signatures using a constant-time comparison.
+6. Apply the approved timestamp-freshness and nonce-reuse checks.
+7. Parse and process the event only after verification succeeds.
+
+When an official Agent SDK verifier is available, use it instead of maintaining independent signing code.
+
+<h2 id="order-idempotency">Order idempotency</h2>
+
+| Case | Handling |
+| --- | --- |
+| Initial transfer request | Create one globally unique agentOrderNo. |
+| HTTP timeout | Query the original agentOrderNo before creating a new one. |
+| PROCESSING response | Wait for webhook or query order status. |
+| Repeated webhook | Deduplicate by idempotency key and final status. |
+
+<h2 id="recommended-idempotency-record">Recommended idempotency record</h2>
+
+Store enough information to recognize a repeated delivery and recover safely:
+
+| Field | Purpose |
+| --- | --- |
+| Event or business key | Uniquely identifies the notification or operation. |
+| Partner order number | Connects the event to the original request. |
+| Payload hash | Helps identify conflicting repeated payloads. |
+| Current processing state | Distinguishes received, processing, succeeded, and failed work. |
+| Final business status | Prevents a terminal action from being applied twice. |
+| Processed timestamp | Supports investigation and retention policies. |
+
+Commit the business change and idempotency record in the same transaction where possible. A repeated event should return the already-known result instead of applying the balance, order, or user change again.
+
+<h2 id="timeout-and-retry-rule">Timeout and retry rule</h2>
+
+An HTTP timeout does not prove that the original request failed. Query the operation using the original `agentOrderNo`, or wait for its webhook, before deciding whether another action is required. Creating a new business order number after every timeout can cause duplicate fund movements.
+
+<h2 id="production-checklist">Production checklist</h2>
+
+- Verify the signature before JSON parsing or business processing.
+- Preserve the raw body independently from the parsed payload.
+- Reject stale or replayed requests according to the approved integration policy.
+- Make event processing safe for repeated and out-of-order delivery.
+- Log event IDs, partner order numbers, processing result, and request time.
+- Redact secrets and signature values from logs and support attachments.
+
+<h2 id="related-docs">Related docs</h2>
+
+<CardGroup cols={3}>
+<Card title="Secrets & HMAC Signing" icon="fa-duotone fa-shield-keyhole" href="/en-SG/sdk/security/secrets-signing">
+Protect the API secret used for request and webhook verification.
+</Card>
+<Card title="Agent SDK Overview" icon="fa-duotone fa-server" href="/en-SG/sdk/agent-sdk/overview">
+Review the complete backend integration workflow.
+</Card>
+<Card title="SDK Troubleshooting" icon="fa-duotone fa-screwdriver-wrench" href="/en-SG/sdk/security/troubleshooting">
+Investigate rejected signatures, repeated events, and pending operations.
+</Card>
+</CardGroup>

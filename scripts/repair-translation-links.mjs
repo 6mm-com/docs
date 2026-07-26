@@ -6,7 +6,7 @@ const projectRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname)
 const fernRoot = path.join(projectRoot, "fern");
 const translationsRoot = path.join(fernRoot, "translations");
 const generatedLocales = [
-  "en-142",
+  "en-SG",
   "ja",
   "ru",
   "es-419",
@@ -19,16 +19,16 @@ const generatedLocales = [
   "pl",
   "vi",
   "uk",
-  "pt",
-  "es",
+  "pt-PT",
+  "es-ES",
   "es-AR",
-  "uz",
+  "uz-UZ",
   "ar",
-  "fil",
-  "az",
+  "fil-PH",
+  "az-AZ",
 ];
 const relatedPageLabels = {
-  "en-142": "Related pages",
+  "en-SG": "Related pages",
   ja: "関連ページ",
   ru: "Связанные страницы",
   "es-419": "Páginas relacionadas",
@@ -41,13 +41,13 @@ const relatedPageLabels = {
   pl: "Powiązane strony",
   vi: "Trang liên quan",
   uk: "Пов’язані сторінки",
-  pt: "Páginas relacionadas",
-  es: "Páginas relacionadas",
+  "pt-PT": "Páginas relacionadas",
+  "es-ES": "Páginas relacionadas",
   "es-AR": "Páginas relacionadas",
-  uz: "Tegishli sahifalar",
+  "uz-UZ": "Tegishli sahifalar",
   ar: "صفحات ذات صلة",
-  fil: "Mga kaugnay na pahina",
-  az: "Əlaqəli səhifələr",
+  "fil-PH": "Mga kaugnay na pahina",
+  "az-AZ": "Əlaqəli səhifələr",
 };
 const repairStart = "{/* sixmm-localized-link-repair:start */}";
 const repairEnd = "{/* sixmm-localized-link-repair:end */}";

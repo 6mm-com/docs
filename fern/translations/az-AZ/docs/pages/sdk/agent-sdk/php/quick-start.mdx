@@ -1,0 +1,78 @@
+---
+title: "PHP Sürətli Başlanğıc"
+subtitle: "Backend xidmətindən PHP SDK quraşdırın və işə salın."
+slug: sdk/agent-sdk/php/quick-start
+canonical-url: https://docs.6mm.com/az-AZ/sdk/agent-sdk/php/quick-start
+---
+
+<h2 id="install">Quraşdırma</h2>
+
+```json
+{
+  "require": {
+    "sixmm/agent-sdk": "VERSION_PROVIDED_BY_6MM"
+  }
+}
+```
+
+> **Paketə giriş**
+>
+> 6MM tərəfdaşın işə salınması zamanı təsdiqlənmiş Composer paket adı, repozitoriyası və versiyasını təqdim edir. Paketin ictimai Packagist-də mövcud olduğu qəbul edilməməlidir.
+
+<h2 id="before-you-start">Başlamazdan əvvəl</h2>
+
+- Agent API baza URL 6MMilə təsdiqlə.
+- Mühit dəyişənlərindən və ya gizli idarəetmədən apiSecret yükləmək.
+- SDK istifadəni yalnız arxa xidmət daxilində saxlayın.
+- Transfer və webhook axınları üçün idempotent idarəetməni hazırlamaq.
+
+<h2 id="initialize-client">Müştərini başlat</h2>
+
+```php
+<?php
+
+use Sixmm\Agent\AgentClient;
+use Sixmm\Agent\AgentConfig;
+
+$client = new AgentClient(new AgentConfig(
+    'https://agent-api.6mm.com',
+    'AGENT001',
+    getenv('AGENT_API_SECRET') ?: '',
+    'USDT'
+));
+```
+
+> **Yalnız backend**
+>
+> PHP SDK Agent API sorğularını imzalayır və ictimai mənbə kodu və ya frontend icra mühitləri vasitəsilə ifşa edilməməlidir.
+
+<h2 id="example-transfer-funds-in">Nümunə: vəsaitlərin köçürülməsi</h2>
+
+```php
+$response = $client->transfer([
+    'agentOrderNo' => 'AGT-ORDER-1001',
+    'agentUserId' => 'agent-user-001',
+    'direction' => 'IN',
+    'currency' => 'USDT',
+    'amount' => '10.00',
+]);
+```
+
+Məbləğlər üçün onluq sətirlərdən istifadə edin və transfer statusunu yenidən yoxlayarkən və ya sorğu aparanda orijinal agentOrderNo saxlayın.
+
+<h2 id="next-steps">Növbəti addımlar</h2>
+
+| Ehtiyac | Növbəti səhifə |
+| --- | --- |
+| Agent SDK imkanlarını başa düşmək | [Agent SDK Ümumi Baxış] (/sdk/agent-sdk/overview) |
+| İmza davranışının nəzərdən keçirilməsi | [Sirlər və İşarə Səsləri] (/sdk/security/secrets-signing) |
+| Geri çağırış çatdırılmasını təsdiqlə | [Webhooks və İdempotensiya] (/sdk/security/webhooks-idempotency) |
+| İnteqrasiya problemini diaqnoz edin | [SDK Problemlərin Həlli ] (/sdk/security/troubleshooting) |
+{/* sixmm-localized-link-repair:start */}
+<h2 id="localized-page-links">Əlaqəli səhifələr</h2>
+
+- [6MM Agent SDK Java və PHP](/az-AZ/sdk/agent-sdk/overview)
+- [Agent SDK Sirlər və HMAC İmzalanması](/az-AZ/sdk/security/secrets-signing)
+- [Webhook İmzasının Təsdiqi və İdempotensiya](/az-AZ/sdk/security/webhooks-idempotency)
+- [SDK İnteqrasiya Problemlərinin Həlli](/az-AZ/sdk/security/troubleshooting)
+{/* sixmm-localized-link-repair:end */}

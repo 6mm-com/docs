@@ -1,0 +1,58 @@
+---
+title: "WebSocket"
+description: "Ommaviy bozor efirlari va shaxsiy hisob tadbirlari uchun 6MM WebSocket xizmatiga ulaning, yurak urishi va obuna bo'yicha yo'riqnomalar bilan."
+slug: developer-api/websocket
+canonical-url: https://docs.6mm.com/uz-UZ/developer-api/websocket
+---
+
+<h2 id="service-endpoint">Xizmat Oxirgi nuqtasi</h2>
+
+```
+wss://ws.6mm.com/ws
+```
+
+WebSocket kanallar jamoat va xususiy kanallarga bo'linadi:
+
+| Turi             | Autentifikatsiya              | Tavsif                                            |
+| ---------------- | --------------------------- | ------------------------------------------------------ |
+| Jamoat kanallari  | Majburiy emas                | Bozor ma'lumotlari, masalan, chuqurlik, savdolar, Klines va ticker |
+| Shaxsiy kanallar | `listenKey` yoki JWT kerak emas | Foydalanuvchi tartibi, hisob va pozitsiya oqimlari              |
+
+<h2 id="public-channels">Jamoat kanallari</h2>
+
+Ommaviy WebSocket autentifikatsiyani talab qilmaydi. Ulangandan so'ng, bozor kanallariga obuna bo'lish uchun `subscribe` so'rov yuboring.
+
+Umumiy kanallar:
+
+| Kanal                            | Tavsif                                                        |
+| ---------------------------------- | ------------------------------------------------------------------ |
+| `market.depth.{symbol}`            | Kitob chuqurligini buyurtma qiling. Avval snapshot yuboradi, keyin bosqichma-bosqich yangilanishlar |
+| `market.trade.{symbol}`            | So'nggi savdolar                                                      |
+| `market.kline.{symbol}.{interval}` | Klines                                                             |
+| `market.ticker.{symbol}`           | Yagona belgili ticker sharhi                                       |
+| `market.tickers`                   | Barcha belgilar bilan bog'liq ticker qisqacha mazmuni                                          |
+
+<h2 id="private-channels">Shaxsiy kanallar</h2>
+
+<h2 id="listenkey">listenKey</h2>
+Xususiy WebSocket oqimlari uchun avval REST API orqali `listenKey` yarating, so'ngra quyidagilarga ulaning:
+
+```
+wss://ws.6mm.com/ws?listenKey=YOUR_LISTEN_KEY
+```
+
+<h2 id="jwt">JWT</h2>
+Mos JWT ulanish usuli:
+
+```
+wss://ws.6mm.com/ws?token=YOUR_ACCESS_TOKEN
+```
+
+Autentifikatsiya muvaffaqiyatli bo'lgach, server avtomatik ravishda ulanishni joriy foydalanuvchining shaxsiy kanaliga obuna qiladi. Qo'lda obuna bo'lishi shart emas.
+
+<h2 id="choose-the-next-guide">Keyingi qo'llanmani tanlang</h2>
+
+- [Connection, Subscription & Heartbeat](/uz-UZ/developer-api/websocket/connection-subscription-and-heartbeat): ulanish hayotiy aylanishi, ping, qayta ulanish va qayta obuna bo'lish.
+- [Public Market Channels](/uz-UZ/developer-api/websocket/public-market-channels): chuqurlik, savdolar, Kline, tickerlar va ketma-ketlikni boshqarish.
+- [Xususiy Foydalanuvchi Kanali](/uz-UZ/developer-api/websocket/private-user-channel): listenKey hayotiy sikli va autentifikatsiyalangan hisob voqealari.
+- [Integratsiya tavsiyalari](/uz-UZ/developer-api/integration-recommendations): monitoring, idempotentsiya, qayta urinishlar va ishlab chiqarish sinovlari.

@@ -1,0 +1,73 @@
+---
+title: "6MM API Authentication: JWT at API Keys"
+description: "Alamin kung paano i-authenticate ang private 6MM API requests gamit ang JWT access tokens o API keys at piliin ang angkop na paraan para sa bawat integration."
+slug: developer-api/authentication
+canonical-url: https://docs.6mm.com/fil-PH/developer-api/authentication
+---
+
+Sinusuportahan ng 6MM ang JWT access tokens at API Keys para sa pribadong API access. Piliin ang paraan base kung ang kahilingan ay kabilang sa isang interactive user session o sa matagal nang backend integration.
+
+<h2 id="choose-an-authentication-method">Pumili ng authentication method</h2>
+
+| Pangangailangan sa integrasyon | Inirerekomendang paraan | Bakit |
+| --- | --- | --- |
+| User-session API calls | JWT | Ginagamit ang access token na ibinalik pagkatapos mag-login. |
+| Lumikha, mag-update, o bawiin ang API Keys | JWT | Hindi tinatanggap ng API Key management endpoints ang API Key self-management. |
+| Server-to-server account o trading calls | API Key + HMAC pirma | Sinusuportahan ang scoped permissions at signed backend requests. |
+
+<h2 id="jwt">JWT</h2>
+
+Pagkatapos mag-login, ang API ay nagbabalik ng `accessToken`. Kapag tumatawag ng mga pribadong endpoint, isama ang:
+
+```http
+Authorization: Bearer YOUR_ACCESS_TOKEN
+```
+
+Iwasan ang token sa mga URL at log. Kapag nag-expire ang token, kumuha ng valid token sa pamamagitan ng aprubadong login o refresh flow bago muling subukang gawin ang private request.
+
+<h2 id="api-key">API Key</h2>
+
+Kapag naroroon ang `X-API-KEY` request header, ginagamit ng server ang API Key HMAC authentication:
+
+```http
+X-API-KEY: YOUR_API_KEY
+```
+
+API Key mga endpoint ng pamamahala ay dapat gumamit ng JWT. API Hindi kayang pamahalaan ng mga susi ang kanilang sarili.
+
+Ang mga kahilingan API Key ay nangangailangan din ng timestamp at HMAC pirma na inilalarawan sa [Request Signing](/fil-PH/developer-api/request-signing). Itago ang kaukulang API secret lamang sa isang backend secret-management system.
+
+<h2 id="api-key-permissions">API Key Mga Pahintulot</h2>
+
+| Halaga | Pahintulot | Paglalarawan                                                                                                                                                                                    |
+| ----- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `1`   | Basahin       | Impormasyon ng gumagamit, mga asset, mga log ng pagbabago sa account, estadistika, listenKey, mga paboritong simbolo, at mga kaugnay na endpoint ng user/account. Ang order at position endpoints, kabilang ang mga query, ay nangangailangan ng Trade permission |
+| `2`   | Kalakalan      | Order at position endpoints, kabilang ang parehong query at write operations                                                                                                                        |
+| `4`   | Umatras   | Pahintulot para sa reserba ng pondo                                                                                                                                                                       |
+
+Upang magbigay ng parehong read at trade permissions, gamitin ang `permissions=3`.
+
+Gamitin ang pinakamaliit na permission set na kinakailangan ng integration. Ang market-data service ay hindi dapat makatanggap ng trade permissions, samantalang ang order service ay nangangailangan ng trade permission kahit na nag-query lamang ito ng mga order o posisyon.
+
+<h2 id="production-security-checklist">Checklist ng seguridad ng produksyon</h2>
+
+- Gumawa ng hiwalay na API Keys para sa development, staging, at production.
+- Maglagay ng IP whitelist kung saan ang integration ay may matatag na outbound address.
+- Huwag ilantad ang API mga lihim sa browser, mobile, o desktop application code.
+- I-synchronize ang oras ng server bago gumawa ng signed requests.
+- I-redact ang mga header ng awtorisasyon, API Keys, pirma, at mga lihim mula sa mga log ng aplikasyon.
+- Agad na bawiin at palitan ang isang susi kapag pinaghihinalaang na-expose.
+
+<h2 id="next-steps">Mga susunod na hakbang</h2>
+
+<CardGroup cols={3}>
+<Card title="Pamamahala ng API Key" icon="fa-duotone fa-key" href="/fil-PH/developer-api/api-key-management">
+Gumawa ng scoped keys, i-configure ang IP restrictions, at planuhin ang key rotation.
+</Card>
+<Card title="Humiling ng Pagpirma" icon="fa-duotone fa-signature" href="/fil-PH/developer-api/request-signing">
+Buuin ang HMAC-SHA256 payload at pumirma ng mga pribadong kahilingan.
+</Card>
+<Card title="Mga Error at Pag-troubleshoot" icon="fa-duotone fa-screwdriver-wrench" href="/fil-PH/developer-api/error-codes-and-troubleshooting">
+I-diagnose ang mga tinanggihang kredensyal, timestamp, pirma, at mga permiso.
+</Card>
+</CardGroup>

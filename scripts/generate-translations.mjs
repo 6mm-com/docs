@@ -13,7 +13,7 @@ const manifestPath = path.join(translationsRoot, ".translation-manifest.json");
 const generatorVersion = 3;
 
 const localeSpecs = [
-  { code: "en-142", sourceLanguage: "en", targetLanguage: null, label: "English (Asia)" },
+  { code: "en-SG", sourceLanguage: "en", targetLanguage: null, label: "English (Asia)" },
   { code: "ja", sourceLanguage: "en", targetLanguage: "ja", label: "日本語" },
   { code: "ru", sourceLanguage: "en", targetLanguage: "ru", label: "Русский" },
   { code: "es-419", sourceLanguage: "en", targetLanguage: "es-MX", label: "Español (Latinoamérica)" },
@@ -26,13 +26,13 @@ const localeSpecs = [
   { code: "pl", sourceLanguage: "en", targetLanguage: "pl", label: "Polski" },
   { code: "vi", sourceLanguage: "en", targetLanguage: "vi", label: "Tiếng Việt" },
   { code: "uk", sourceLanguage: "en", targetLanguage: "uk", label: "Українська" },
-  { code: "pt", sourceLanguage: "en", targetLanguage: "pt-PT", label: "Português (Internacional)" },
-  { code: "es", sourceLanguage: "en", targetLanguage: "es", label: "Español (Internacional)" },
+  { code: "pt-PT", sourceLanguage: "en", targetLanguage: "pt-PT", label: "Português (Internacional)" },
+  { code: "es-ES", sourceLanguage: "en", targetLanguage: "es", label: "Español (Internacional)" },
   { code: "es-AR", sourceLanguage: "en", targetLanguage: "es-AR", label: "Español (Argentina)" },
-  { code: "uz", sourceLanguage: "en", targetLanguage: "uz", label: "O‘zbek" },
+  { code: "uz-UZ", sourceLanguage: "en", targetLanguage: "uz", label: "O‘zbek" },
   { code: "ar", sourceLanguage: "en", targetLanguage: "ar", label: "العربية" },
-  { code: "fil", sourceLanguage: "en", targetLanguage: "fil", label: "Filipino" },
-  { code: "az", sourceLanguage: "en", targetLanguage: "az", label: "Azərbaycan dili" },
+  { code: "fil-PH", sourceLanguage: "en", targetLanguage: "fil", label: "Filipino" },
+  { code: "az-AZ", sourceLanguage: "en", targetLanguage: "az", label: "Azərbaycan dili" },
 ];
 
 const args = new Set(process.argv.slice(2));

@@ -1,0 +1,68 @@
+---
+title: "SDK Pag-troubleshoot ng Integrasyon"
+subtitle: "I-diagnose ang mga problema sa Trading Widget, Agent SDK, signing, webhook, timeout, at environment bago i-escalate ang support request."
+slug: sdk/security/troubleshooting
+canonical-url: https://docs.6mm.com/fil-PH/sdk/security/troubleshooting
+---
+
+Magsimula sa environment, timestamp, at business identifier para sa nabigong operasyon. Karaniwan, pinaghihiwalay ng structured check ang mga problema sa configuration mula sa authentication, network, at asynchronous-processing issues.
+
+<h2 id="diagnostic-order">Inirerekomendang diagnostic order</h2>
+
+1. Kumpirmahin ang apektadong kapaligiran at base URL.
+2. I-record ang UTC time range at ang unang failed request.
+3. Tukuyin ang module: Trading Widget, Agent SDK, REST API, WebSocket, o webhook.
+4. Kunin ang request ID, partner user ID, `agentOrderNo`, order ID, o webhook event ID.
+5. Suriin ang mga kamakailang code, kredensyal, IP whitelist, o mga pagbabago sa deployment.
+6. Ulitin gamit ang pinakamaliit na ligtas na test case.
+
+<h2 id="trading-widget-issues">Trading Widget mga isyu</h2>
+
+| Sintomas | Posibleng sanhi | Ayusin |
+| --- | --- | --- |
+| Hinihiling ng iframe ang lokal na domain ng partner | baseUrl nawawala | Ipasa baseUrl: 'https://app.6mm.com'. |
+| Ang iframe ay invisible o napakaikli | Walang taas ang parent container | Itakda ang taas ng lalagyan o taas ng pasa. |
+| token_provider_missing | Walang provider ang partner-token mode | Magdagdag ng auth.tokenProvider. |
+| auth_exchange_failed | Hindi wasto, expired, o hindi tugmang embed token | Suriin ang backend token response at channelId. |
+
+<h2 id="agent-sdk-issues">Agent SDK mga isyu</h2>
+
+| Sintomas | Posibleng sanhi | Ayusin |
+| --- | --- | --- |
+| Tinanggihan ang pirma | Maling lihim, clock drift, o manu-manong binago ang mga signed field | Hayaan SDK gumawa ng mga signing field at i-sync ang oras ng server. |
+| Panganib ng dobleng paggalaw ng pondo | Bagong order number na ginamit pagkatapos ng timeout | Mag-query muna gamit ang orihinal na agentOrderNo . |
+| PROCESSING itinuturing na kabiguan | Hindi naintindihan ang estado na nakabinbing | Maghintay ng webhook o tumawag sa queryOrder. |
+| Webhook na na-proseso nang maraming beses | Pag-uugali ng Retry nang walang idempotency | Magdagdag ng idempotency key at final-state checks. |
+
+<h2 id="evidence-to-capture">Ebidensyang dapat makuha</h2>
+
+| Integrasyon | Kapaki-pakinabang na ebidensya |
+| --- | --- |
+| Trading Widget | Page URL, SDK version path, browser console, failed network requests, `onError` payload, at mga sukat ng container. |
+| Agent SDK | SDK wika/bersyon, base URL, UTC timestamp, request ID, `agentOrderNo`, response code, at malinis na mga log. |
+| webhook | Oras ng paghahatid, event o business key, resulta ng signature-validation, estado ng pagproseso, at sanitized raw-body hash. |
+| REST API | Pamamaraan, landas, kapaligiran, request ID, response code, at mga sanitized na parameter. |
+
+Huwag kailanman isama ang mga password, access token, API secret, buong pirma, pribadong susi, o hindi tinanggal na personal na datos sa diagnostics.
+
+<h2 id="before-escalating">Bago lumala</h2>
+
+- Subukan muli lamang kapag ang operasyon ay naitala na ligtas subukang muli.
+- Pagkatapos ng timeout, i-query ang orihinal na business identifier sa halip na gumawa ng bago.
+- Kumpirmahin ang system clock at credential environment para sa mga error sa pirma.
+- Panatilihin ang unang pagkabigo at anumang resulta ng muling pagsubok sa mga susunod na taon.
+- Gamitin ang [Support Request Template](/fil-PH/resources/support-request-template) upang magpadala ng kumpleto, redacted na ulat.
+
+<h2 id="related-docs">Kaugnay na mga dokumento</h2>
+
+<CardGroup cols={3}>
+<Card title="Trading Widget Mabilisang Simula" icon="fa-duotone fa-chart-line" href="/fil-PH/sdk/trading-widget/quick-start">
+Suriin ang paglo-load ng script, laki ng container, configuration, at callbacks.
+</Card>
+<Card title="Mga Lihim at Pagpirma" icon="fa-duotone fa-shield-keyhole" href="/fil-PH/sdk/security/secrets-signing">
+Suriin ang Agent SDK credentials, clocks, at signed fields.
+</Card>
+<Card title="Webhooks at Idempotency" icon="fa-duotone fa-webhook" href="/fil-PH/sdk/security/webhooks-idempotency">
+Suriin ang beripikasyon ng callback at paghawak ng duplicate-event.
+</Card>
+</CardGroup>

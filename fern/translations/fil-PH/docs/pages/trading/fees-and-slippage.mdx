@@ -1,0 +1,132 @@
+---
+title: "Gastos sa Trading: Mga Bayarin at Slippage"
+description: "Tantiyahin ang perpetual trading costs sa pamamagitan ng pag-unawa sa execution fees, order-book slippage, liquidity, laki ng order, at uri ng order."
+slug: trading/fees-and-slippage
+canonical-url: https://docs.6mm.com/fil-PH/trading/fees-and-slippage
+---
+
+Ang panghuling gastos ng perpetual trade ay nakadepende sa parehong tahasang bayad at sa pagkakaiba ng inaasahan at aktwal na execution price.
+
+Ang pag-unawa sa mga gastusing ito ay tumutulong sa mga gumagamit na mas mahusay na tantiyahin ang mga resulta ng kalakalan at pamahalaan ang panganib.
+
+Ang pahinang ito ay nakatuon sa kalidad ng pagpapatupad at kabuuang gastos sa trading. Para sa mga patakaran sa maker, taker, funding, liquidation, at settlement, tingnan ang [Perpetual Trading Fee Structure](/fil-PH/trading/fee-structure).
+
+***
+
+<h2 id="trading-fees">Mga Bayad sa Kalakalan</h2>
+
+Ang trading fees ay sinisingil lamang kapag na-execute ang order.
+
+<h2 id="maker-and-taker-fees">Bayad sa Maker at Taker</h2>
+
+Gumagamit 6MM ng Maker / Taker fee model:
+
+* Bayad sa Gumawa
+  * Inilalapat kapag ang iyong order ay nagdagdag ng liquidity sa order book
+  * Karaniwang nagmumula ito sa mga limit order na hindi agad napupunan
+* Bayad sa Taker
+  * Inilalapat kapag ang iyong order ay nag-aalis ng liquidity mula sa order book
+  * Karaniwang nagmumula sa mga market order o agad na napunan na limit orders
+
+Maaaring mag-iba ang rate ng bayad depende sa trading pair at partner configuration.
+
+***
+
+<h2 id="when-are-fees-charged">Kailan Sinisingil ang Mga Bayarin?</h2>
+
+* Sinisingil ang mga bayarin sa pagsasagawa ng order
+* Ang mga bayarin ay kinakalkula batay sa naisakatuparang halaga ng trade
+* Ang mga bayarin ay ibinabawas mula sa Perpetual Account
+
+Ang mga hindi napunan o kinanselang order ay hindi nagdudulot ng bayad.
+
+***
+
+<h2 id="estimate-total-execution-cost">Tantiyahin ang Kabuuang Gastos sa Pagpapatupad</h2>
+
+Bago maglagay ng malaking order, isaalang-alang ang:
+
+```text
+estimated trading cost = trading fee + estimated slippage cost
+slippage cost = |average execution price - expected price| × executed quantity
+```
+
+Maaaring makaapekto rin ang mga bayad sa pondo sa gastos ng paghawak ng permanenteng posisyon sa buong event ng pondo. Ang mga singil na may kaugnayan sa likwidasyon ay naaangkop lamang kapag na-trigger ang mga patakaran sa likwidasyon.
+
+Ang pagtataya ay hindi garantisadong resulta ng pagpapatupad. Ang lalim ng available na order-book at volatility ng merkado ay maaaring magbago sa pagitan ng estimation at execution.
+
+***
+
+<h2 id="slippage">Pagdulas</h2>
+
+Ang slippage ay ang diperensya sa pagitan ng inaasahang presyo at aktwal na execution price.
+
+<h2 id="why-slippage-happens">Bakit Nangyayari ang Slippage</h2>
+
+Maaaring mangyari ang pagdulas dahil sa:
+
+* Mababang liquidity sa merkado
+* Malaking sukat ng order
+* Mataas na volatility ng merkado
+* Paggamit ng mga order sa merkado
+
+Mas kapansin-pansin ang slippage kapag mabilis gumalaw ang mga merkado.
+
+***
+
+<h2 id="how-to-reduce-slippage">Paano Bawasan ang Slippage</h2>
+
+* Gamitin ang Limit Orders sa halip na Market Orders
+* Magkalakalan sa panahon ng mas mataas na likwididad
+* Iwasan agad ang paglalagay ng malalaking order
+* Subaybayan ang lalim ng order book bago mag-trade
+
+***
+
+<h2 id="fees-vs-slippage">Mga Bayarin vs. Slippage</h2>
+
+| Uri ng Gastos    | Kapag Ito ay Nangyari   | maaaring kontrolin |
+| ------------ | ---------------- | ----------------- |
+| Mga Bayad sa Kalakalan | Pagkatapos ng pagbitay   | Bahagyang         |
+| Pagdulas     | Sa panahon ng pagbitay | Oo               |
+
+Bagaman predictable ang mga bayarin, ang slippage ay nakadepende sa kondisyon ng merkado at pag-uugali ng order.
+
+***
+
+<h2 id="cost-scenarios">Karaniwang Mga Senaryo ng Gastos</h2>
+
+| Senaryo | Pangunahing konsiderasyon sa gastos |
+| --- | --- |
+| Resting limit order | Maker fee at kung napupuno ang order. |
+| Kaayusan sa merkado | Taker fee at lalim ng available na order-book. |
+| Malaking order | Pagdulas sa iba't ibang antas ng presyo. |
+| Mabilis na paggalaw ng merkado | Kawalang-katiyakan sa pagpapatupad at presyo at mas malawak na epektibong spread. |
+| Posisyon na hawak sa buong pondo | Gastos sa trading kasama ang naaangkop na bayad sa pondo. |
+
+***
+
+<h2 id="beginner-tips">Mga Tip para sa Baguhan</h2>
+
+* Suriin ang mga rate ng bayad bago mag-trade
+* Iwasan ang madalas na maliliit na trade upang mabawasan ang kabuuang bayarin
+* Gamitin ang limit orders para pamahalaan ang execution price
+* Isaalang-alang ang parehong mga bayad at slippage kapag nagtatakda ng antas ng TP/SL
+
+***
+
+<h2 id="summary">Buod</h2>
+
+Sa 6MM:
+
+* Ang mga bayad ay transparent at nakabatay sa pagpapatupad
+* Ang slippage ay nakadepende sa likwididad at uri ng order
+* Mahalaga ang kamalayan sa gastos para sa tuloy-tuloy na pagganap sa trading
+
+Ang epektibong pamamahala ng fees at slippage ay mahalagang bahagi ng matagumpay na perpetual trading.
+
+<h2 id="related-cost-guides">Kaugnay na gabay sa gastos</h2>
+
+- [Fee Structure](/fil-PH/trading/fee-structure): maker, taker, funding, liquidation, at settlement fees.
+- [Market Depth & Spread](/fil-PH/solutions/market-depth-spread): kung paano naaapektuhan ng liquidity ang epekto sa presyo.
+- [Order Types](/fil-PH/trading/order-types): execution behavior na nagbabago sa slippage.

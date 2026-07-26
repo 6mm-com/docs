@@ -1,0 +1,108 @@
+---
+title: "Embed the 6MM Trading Widget: Quick Start"
+subtitle: "Savdo terminalini konteyner, v1 skripti va TradingWidget.create() bilan veb-sahifaga qo'shing."
+slug: sdk/trading-widget/quick-start
+canonical-url: https://docs.6mm.com/uz-UZ/sdk/trading-widget/quick-start
+---
+
+Trading Widget SDK 6MM savdo interfeysini hamkorga tegishli veb-sahifaga joylashtiradi. Eng tez integratsiya ko'rinadigan konteyner, ishlab chiqarish SDK skripti va `TradingWidget.create()`ga chaqiruvni talab qiladi.
+
+<h2 id="before-you-start">Boshlashdan oldin</h2>
+
+- Misolni resurslarni yuklay oladigan veb-sahifadan ishga tushiring `https://app.6mm.com`.
+- Vidjet konteyneriga aniq kenglik va balandlik bering.
+- Qo'ng'iroq qilishdan oldin SDK yuklang `TradingWidget.create()`.
+- Hisob yoki savdo funksiyalarini ishlab chiqarishda yoqishdan oldin [autentifikatsiya oqimi](/uz-UZ/sdk/trading-widget/authentication) ni rejalashtiring.
+
+<h2 id="minimal-example">Minimal misol</h2>
+
+```html
+<div id="trading-widget" style="width: 100%; height: 720px"></div>
+
+<script src="https://app.6mm.com/sdk/trading-widget/v1/index.js"></script>
+<script>
+  const widget = TradingWidget.create('#trading-widget', {
+    baseUrl: 'https://app.6mm.com',
+    symbol: 'BTCUSDT',
+    theme: 'dark',
+    locale: 'en',
+    layout: 'default',
+    display: {
+      showHeader: false,
+      showTicker: false,
+      hidden: [],
+    },
+    onReady(event) {
+      console.log('ready', event)
+    },
+    onError(error) {
+      console.error('error', error)
+    },
+  })
+</script>
+```
+
+Integratsiya muvaffaqiyatli bo'lgach, SDK `#trading-widget` ichida iframe yaratadi va `onReady`chaqiradi. Ishlab chiqish davomida `onError` ni ushlaydi, shunda konfiguratsiya va yuklash xatolari ko'rinadi.
+
+<h2 id="sdk-urls">SDK URLlar</h2>
+
+| Atrof-muhit | Ssenariy URL |
+| --- | --- |
+| Ishlab chiqarish | https://app.6mm.com/sdk/trading-widget/v1/index.js |
+
+> **Aniq baseUrl qo'ying**
+>
+> Hamkorga tegishli sahifalardan test o'tkazishda baseUrl o'ting, shunda iframe har doim 6MM Web domeniga yo'naltiriladi.
+
+<h2 id="display-controls">Displey boshqaruvlari</h2>
+
+Hamkor embedlar PC sarlavhasi va pastki bozor tickerini standart holatda yashiradi. Shell hududlarini ko'rsatish yoki yuqori darajadagi konteynerlarni joylashtirilgan savdo sahifasida yashirish uchun `display` ishlating.
+
+```js
+display: {
+  showHeader: false,
+  showTicker: false,
+  hidden: ['account'],
+}
+```
+
+<h2 id="container-size">Konteyner o'lchami</h2>
+
+| Yuzasi | Tavsiya etilgan minimal |
+| --- | --- |
+| Ish stoli | 1024 x 720 |
+| Mobil | 390 x 700 |
+
+Javob beruvchi tartiblar uchun kenglikni silliq saqlang va har bir breakpoint uchun mos minimal balandlikni belgilang. Nol balandlikdagi konteyner SDK muvaffaqiyatli yuklashi mumkin, lekin savdo interfeysi ko'rinmas qoladi.
+
+<h2 id="verify-the-integration">Integratsiyani tekshiring</h2>
+
+1. Brauzer tarmoq panelida SDK skript muvaffaqiyatli qaytishini tasdiqlang.
+2. iframe ishga tushirilgandan so `onReady` o'q otishini tasdiqlang.
+3. Konfiguratsiyalangan `symbol`, `locale`, mavzu va yashirin bo'limlarni sinab ko'ring.
+4. Sahifani ish stoli va mobil to'xtash nuqtalari bo'ylab o'lchamini o'zgartiring.
+5. Ishga tushirishdan oldin ishlab chiqarilmagan foydalanuvchi bilan autentifikatsiyalangan testni yakunlang.
+
+<h2 id="common-issues">Umumiy muammolar</h2>
+
+| Simptom | Nimani tekshirish kerak |
+| --- | --- |
+| Bo'sh vidjet maydoni | Konteynerning eni va balandligi ko'rinadigan ekanligini tasdiqlang. |
+| `TradingWidget` aniq emas | Yaratish chaqirig'idan oldin v1 skripti yuklanganini tasdiqlang. |
+| Noto'g'ri sahifa yoki muhit | `baseUrl` aniq sozlang va sozlangan muhitni tekshiring. |
+| Tayyor hodisa hech qachon ishlamaydi | Bloklangan iframe yoki skript so'rovlarini `onError` tutib, tekshiring. |
+| Hisob ma'lumotlari mavjud emas | Qo'llab-quvvatlanadigan vidjet autentifikatsiya jarayonini yakunlang. |
+
+<h2 id="next-steps">Keyingi qadamlar</h2>
+
+<CardGroup cols={3}>
+<Card title="Vidjetlarni autentifikatsiya qilish" icon="fa-duotone fa-user-shield" href="/uz-UZ/sdk/trading-widget/authentication">
+O'rnatilgan terminalni tasdiqlangan foydalanuvchi sessiyasiga ulaning.
+</Card>
+<Card title="Variantlar va tadbirlar" icon="fa-duotone fa-sliders" href="/uz-UZ/sdk/trading-widget/options-events">
+Belgilar, joylashuv, ko'rsatish xatti-harakati va hayot aylanishi bo'yicha qayta chaqiriqlarni sozlang.
+</Card>
+<Card title="Instansiya usullari" icon="fa-duotone fa-code" href="/uz-UZ/sdk/trading-widget/instance-methods">
+Ishga tushirilgandan so'ng yaratilgan vidjet instansiyasini boshqaring.
+</Card>
+</CardGroup>

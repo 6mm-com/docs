@@ -9,7 +9,7 @@ const sourceRoot = path.join(fernRoot, "docs");
 const translationsRoot = path.join(fernRoot, "translations");
 const expectedLocales = [
   "en",
-  "en-142",
+  "en-SG",
   "ja",
   "ru",
   "es-419",
@@ -23,13 +23,13 @@ const expectedLocales = [
   "pl",
   "vi",
   "uk",
-  "pt",
-  "es",
+  "pt-PT",
+  "es-ES",
   "es-AR",
-  "uz",
+  "uz-UZ",
   "ar",
-  "fil",
-  "az",
+  "fil-PH",
+  "az-AZ",
 ];
 const generatedLocales = expectedLocales.filter((locale) => !["en", "zh"].includes(locale));
 const errors = [];

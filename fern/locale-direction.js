@@ -1,6 +1,6 @@
 (function () {
   var locales = [
-    "en-142",
+    "en-SG",
     "es-419",
     "zh-TW",
     "pt-BR",
@@ -15,12 +15,12 @@
     "pl",
     "vi",
     "uk",
-    "pt",
-    "es",
-    "uz",
+    "pt-PT",
+    "es-ES",
+    "uz-UZ",
     "ar",
-    "fil",
-    "az",
+    "fil-PH",
+    "az-AZ",
   ];
   var lastPathname;
 

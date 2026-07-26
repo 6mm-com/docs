@@ -1,0 +1,89 @@
+---
+title: "Connection, Subscription & Heartbeat"
+subtitle: "Connect to 6MM WebSocket streams, subscribe to topics, keep connections alive, and process message envelopes safely."
+slug: developer-api/websocket/connection-subscription-and-heartbeat
+canonical-url: https://docs.6mm.com/en-SG/developer-api/websocket/connection-subscription-and-heartbeat
+---
+
+Use WebSocket streams for market data and private user-state updates that must stay current without polling.
+
+<h2 id="connection-url">Connection URL</h2>
+
+```text
+wss://ws.6mm.com/ws
+```
+
+Private streams require authentication context such as a listenKey or access token as described in the private channel documentation.
+
+<h2 id="subscribe">Subscribe</h2>
+
+```json
+{ "id": "1772007814666", "op": "subscribe", "args": ["market.depth.BTCUSDT"] }
+```
+
+Successful subscription acknowledgement:
+
+```json
+{
+  "id": "1772007814666",
+  "event": "subscribe",
+  "success": true,
+  "data": ["market.depth.BTCUSDT"]
+}
+```
+
+<h2 id="unsubscribe">Unsubscribe</h2>
+
+```json
+{ "id": "1772007814667", "op": "unsubscribe", "args": ["market.depth.BTCUSDT"] }
+```
+
+<h2 id="application-ping">Application ping</h2>
+
+```json
+{ "id": "1772007814668", "op": "ping", "args": [] }
+```
+
+<h2 id="message-envelope">Message envelope</h2>
+
+Public pushes use a consistent envelope:
+
+```json
+{
+  "topic": "market.depth.BTCUSDT",
+  "event": "data",
+  "ts": 1772007815000,
+  "data": {}
+}
+```
+
+<h2 id="operational-recommendations">Operational recommendations</h2>
+
+- Generate a unique client-side `id` for every subscribe, unsubscribe, and ping request.
+- Treat reconnect as a new session and resubscribe to required topics.
+- Validate that the returned `topic` matches the channel your service expects.
+- Keep message processing idempotent where private order or account events are involved.
+- Log connection state changes, subscription acknowledgements, and abnormal disconnects.
+
+<h2 id="reconnect-workflow">Reconnect workflow</h2>
+
+1. Close or discard the previous socket and create a new connection.
+2. Re-authenticate private streams with a valid listenKey or access token.
+3. Resubscribe to every required topic and wait for successful acknowledgements.
+4. Replace local order-book state with a new snapshot before applying incremental updates.
+5. Reconcile open orders, positions, and balances through REST if private events may have been missed.
+
+Use bounded exponential backoff with jitter for reconnect attempts. A continuously reconnecting client should alert operators instead of retrying indefinitely without visibility.
+
+<h2 id="heartbeat-and-stale-connections">Heartbeat and stale connections</h2>
+
+- Track the most recent inbound message and successful ping acknowledgement.
+- Use the heartbeat interval and idle threshold approved for the production environment.
+- Treat a connection as stale when the configured threshold is exceeded, even if the TCP socket still appears open.
+- Do not reuse subscriptions from an old socket; resubscribe explicitly after every reconnect.
+
+<h2 id="related-documentation">Related documentation</h2>
+
+- [Public Market Channels](/en-SG/developer-api/websocket/public-market-channels): topics, order-book continuity, trades, candles, and tickers.
+- [Private User Channel](/en-SG/developer-api/websocket/private-user-channel): listenKey lifecycle and authenticated events.
+- [Integration Recommendations](/en-SG/developer-api/integration-recommendations): retries, idempotency, monitoring, and launch testing.

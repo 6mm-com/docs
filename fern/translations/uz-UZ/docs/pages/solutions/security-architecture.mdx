@@ -1,0 +1,66 @@
+---
+title: "Hamkorlar integratsiyasi xavfsizlik arxitekturasi"
+subtitle: "Ichki savdo, API, SDK, webhook, aktivlarni o'tkazish va operatsion integratsiyalar uchun ishonch chegaralari va ishlab chiqarish nazoratlarini loyihalash."
+slug: solutions/security-architecture
+canonical-url: https://docs.6mm.com/uz-UZ/solutions/security-architecture
+---
+
+Ushbu sahifa hamkorning xavfsiz 6MM integratsiyasini qanday loyihalashi kerakligi haqida e'lon qilinadi. Savdo platformasida ishlatiladigan kengroq xavfsizlik qatlamlari uchun [Platform Security Architecture](/uz-UZ/security-compliance/security-architecture) sahifasiga qarang.
+
+Xavfsizlik arxitekturasi ishlab chiqarish integratsiyasi boshlanishidan oldin kelishilishi kerak. Bu hamkor tizimlarning foydalanuvchilarni qanday tasdiqlashi, tokenlarni chiqarishi, sirlarni saqlashi, voqealarni qabul qilishi, operatsiyalarni kuzatishi va hodisalarga qanday javob berishini ta'sir qiladi.
+
+<h2 id="recommended-trust-boundary">Tavsiya etilgan ishonch chegarasi</h2>
+
+| Tarkibiy qism | Ichkarida bo'lishi mumkin | O'z ichiga olmasligi kerak |
+| --- | --- | --- |
+| Hamkor frontend | Ommaviy konfiguratsiya, qisqa muddatli kirish natijasi, sezgir bo'lmagan UI holati | Hamkor API maxfiy, imzo kaliti, imtiyozli backend ma'lumotlari |
+| Hamkor backend | Foydalanuvchi xaritalash, himoyalangan ma'lumotlar, imzo mantiqi, webhook ishlov berish | Mijoz javoblari yoki ommaviy loglar orqali ochilgan sirlar |
+| 6MM integratsiya nuqtalari | Tasdiqlangan imzolangan so'rovlar, tokenlar va webhook yetkazib berish | Tasdiqlanmagan hamkor tomonidagi foydalanuvchi taxminlari |
+
+Hamkor frontend imtiyozli operatsiyalar uchun hamkor backendni chaqirishi kerak. Backend hamkor foydalanuvchini tasdiqlaydi, tasdiqlangan API yoki SDKorqali 6MM chaqiradi va faqat frontendga kerak bo'lgan qisqa muddatli natijani qaytaradi.
+
+<h2 id="security-layers">Xavfsizlik qatlamlari</h2>
+
+| Qatlam | Zarur e'tibor |
+| --- | --- |
+| API malaka | Faqat orqa tomonda saqlash, rotatsiya rejasi va kirish nazorati. |
+| So'rovlarni imzolash | Vaqt tamg'asi, imzo va qayta ko'rsatish himoyasi barqaror. |
+| Tokenlarni joylashtirish | Qisqa muddatli hujjatlarni chiqarish, muvofiqlik tekshiruvlari va aniq invalidatsiya xatti-harakatlari. |
+| Webhooks | Imzolarni tekshirish, idempotensiya, qayta urinishlar va tadbir audit jurnallari. |
+| Operatsiyalar | Kirish rollari, hodisalarni eskalatsiyalash, monitoring va dalillarni saqlash. |
+
+<h2 id="production-control-plan">Ishlab chiqarishni nazorat qilish rejasi</h2>
+
+| Nazorat hududi | Minimal amalga oshirish dalillari |
+| --- | --- |
+| Guvohnoma saqlash | Maxfiy menejer joylashuvi, kirish egasi, muhitni ajratish va aylantirish jarayoni. |
+| Foydalanuvchi yozuvi | Sessiya tasdiqlash, muvofiqlikni tekshirish, qisqa muddatli token oqimi va xatolarni boshqarish. |
+| Imzolangan so'rovlar | To'g'ri muhit, sinxronlashtirilgan vaqt, so'rovlarni yozish va imzo xatosi ogohlantirishlari. |
+| Aktiv operatsiyalari | Noyob biznes identifikatorlari, vaqt tugashi bilan muvofiqlashtirish, holat so'rovlari va operator ko'rib chiqish yo'li. |
+| Webhooks | Raw-body imzosini tekshirish, qayta ko'rish boshqaruvlari, idempotency saqlash va qayta urinish uchun xavfsiz ishlov berish. |
+| Monitoring | Autentifikatsiya xatolari, g'ayrioddiy qayta urinishlar, webhook lag'i va operatsion xatoliklar haqida ogohlantirishlar. |
+| Hodisalarga javob berish | Nomlangan egasi, eskalatsiya kanali, dalillarni saqlash va guvohnomani bekor qilish jarayoni. |
+
+<h2 id="launch-review">Uchirish sharhi</h2>
+
+Ishlab chiqarishdan oldin:
+
+1. Foydalanuvchi, token, so'rov, aktiv va webhook ma'lumot oqimlarini chizing.
+2. Har bir ma'lumot qayerda yaratilgan, saqlangan, ishlatilgan, qayerda yozilgan, aylantirilgan va bekor qilingan joylarni belgilang.
+3. Muddati o'tgan tokenlarni, noto'g'ri imzolarni, vaqt tugatishlarini, dublikat veb-hooklarni va qayta ulanish xatti-harakatlarini sinab ko'ring.
+4. Qo'llab-quvvatlash jamoalari operatsiyani uning so'rovi yoki biznes identifikatori orqali aniqlay olishini tasdiqlang.
+5. [Ishlab chiqarishni boshlash nazorat ro'yxati](/uz-UZ/solutions/production-launch-checklist) ni to'ldiring.
+
+<h2 id="recommended-docs">Tavsiya etilgan hujjatlar</h2>
+
+<CardGroup cols={3}>
+<Card title="Sirlar va imzolash" icon="fa-duotone fa-key" href="/uz-UZ/sdk/security/secrets-signing">
+Agent SDK ma'lumotlar va imzolangan so'rovlarni himoya qiling.
+</Card>
+<Card title="So'rovlarni imzolash" icon="fa-duotone fa-signature" href="/uz-UZ/developer-api/request-signing">
+To'g'ridan-to'g'ri Dasturchi API so'rov imzolashni amalga oshiring.
+</Card>
+<Card title="Webhook va Idempotency" icon="fa-duotone fa-webhook" href="/uz-UZ/sdk/security/webhooks-idempotency">
+Voqealarni xavfsiz ishlang.
+</Card>
+</CardGroup>

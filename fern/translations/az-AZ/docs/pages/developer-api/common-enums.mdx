@@ -1,0 +1,55 @@
+---
+title: "Ümumi Enumlar"
+description: "Əmr vəziyyətləri, tərəflər, əmr növləri, qüvvədə olan vaxt, mövqe rejimləri, transferlər və inteqrasiya cavabları üçün ümumi 6MM API enumlarına istinad edin."
+slug: developer-api/common-enums
+canonical-url: https://docs.6mm.com/az-AZ/developer-api/common-enums
+---
+
+<h2 id="orders">Sifarişlər</h2>
+
+| Enum                 | Dəyərlər                                                                                                    |
+| -------------------- | --------------------------------------------------------------------------------------------------------- |
+| Orden tərəfi           | `BUY` / `SELL`                                                                                            |
+| Mövqe tərəfi        | `BOTH` / `LONG` / `SHORT`                                                                                 |
+| Normal sifariş tipi    | `LIMIT` / `MARKET`                                                                                        |
+| Şərt sırası tipi | `STOP_MARKET` / `STOP_LIMIT` / `TAKE_PROFIT_MARKET` / `TAKE_PROFIT_LIMIT` / `TRAILING_STOP`               |
+| Qüvvədə olan vaxt        | `GTC` / `IOC` / `FOK` / `GTE_GTC`                                                                         |
+| Trigger qiymət növü   | `MARK_PRICE` / `CONTRACT_PRICE`                                                                           |
+| Orden statusu         | `NEW` / `PENDING` / `PARTIALLY_FILLED` / `FILLED` / `CANCELED` / `REJECTED` / `PARTIALLY_FILLED_CANCELED` |
+
+`NEW` o deməkdir ki, sifariş sorğusu qəbul olunub və geri qaytarılıb. `PENDING` o deməkdir ki, sifariş gözləmə və ya açıq sifariş vəziyyətinə keçib.
+
+<h2 id="positions">Vəzifələr</h2>
+
+| Enum                      | Dəyərlər                                                      |
+| ------------------------- | ----------------------------------------------------------- |
+| Margin rejimi sorğu dəyəri | `1` xaç `2` təcrid olunmuş                                     |
+| Kənar rejimi sətri        | `ISOLATED` / `CROSS`                                        |
+| Bağlanma tetik rejimi        | `1` manualı, `2` mənfəət götürmək, `3` stop loss `4` likvidasiya |
+
+<h2 id="integration-rules">İnteqrasiya qaydaları</h2>
+
+- Enum dəyərlərini hərf-həssas tel dəyərləri kimi qəbul edin.
+- Naməlum dəyərləri loglarda saxlayıb təhlükəsiz şəkildə uğursuz olmaq, onları səssizcə məlum vəziyyətə xəritələmək əvəzinə.
+- Hər qeyri-son əmr vəziyyətinin yenidən cəhd üçün təhlükəsiz olduğunu düşünməyin. Sifarişi sorğu edin və ya onu özəl WebSocket hadisəsi ilə uzlaşdırın.
+- Həm orijinal API dəyərini, həm də tərəfdaşa yönəlmiş ekran etiketini saxlayın ki, yeni dəyərlər tarixi qeydləri dəyişmədən dəstəklənsin.
+
+<h2 id="order-state-handling">Sifariş vəziyyətinin idarə olunması</h2>
+
+| Ştat qrupu | Dəyərlər | Tövsiyə olunan idarəetmə |
+| --- | --- | --- |
+| Qəbul edilmiş və ya açıq | `NEW`, `PENDING`, `PARTIALLY_FILLED` | Sifarişi aktiv saxlayın və WebSocket və ya REST yeniləmələrlə uyğunlaşın. |
+| Tamamlandı | `FILLED` | Son doldurulmuş miqdarı və icra qeydlərini tətbiq edin. |
+| Tam dolmadan bağlanıb | `CANCELED`, `REJECTED`, `PARTIALLY_FILLED_CANCELED` | Aktiv emalı dayandırın və səbəbi və icra olunan miqdarı saxlayın. |
+
+<h2 id="related-documentation">Əlaqəli sənədlər</h2>
+
+- [Order API](/az-AZ/developer-api/rest-api/order): tələb sahələri və həyat dövrü əməliyyatlarını sifariş etmək.
+- [Sifariş Növləri](/az-AZ/trading/order-types): limit, bazar və şərti sifarişlər üçün məhsul davranışı.
+- [Özəl İstifadəçi Kanalı](/az-AZ/developer-api/websocket/private-user-channel): real vaxt sifarişi və hesab vəziyyəti.
+- [Səhv Kodları və Problemlərin Həlli] (/developer-api/error-codes-and-troubleshooting): biznes kodları və diaqnostik iş axını.
+{/* sixmm-localized-link-repair:start */}
+<h2 id="localized-page-links">Əlaqəli səhifələr</h2>
+
+- [Xəta Kodları və Problemlərin Həlli](/az-AZ/developer-api/error-codes-and-troubleshooting)
+{/* sixmm-localized-link-repair:end */}

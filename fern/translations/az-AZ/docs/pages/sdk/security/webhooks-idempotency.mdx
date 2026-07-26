@@ -1,0 +1,85 @@
+---
+title: "Webhook İmzasının Təsdiqi və İdempotensiya"
+subtitle: "6MM Agent webhook-larını xam sorğu bədəni ilə yoxlayın və təkrarlanan biznes əməliyyatları olmadan təkrarlamalar, vaxt aşımı və təkrarlanan hadisələr prosesini aparın."
+slug: sdk/security/webhooks-idempotency
+canonical-url: https://docs.6mm.com/az-AZ/sdk/security/webhooks-idempotency
+---
+
+Webhooks tərəfdaş arxa tərəfə asinxron biznes vəziyyəti dəyişiklikləri barədə məlumat verir. Çünki çatdırılma təkrar cəhd edilə bilər, hər bir alıcı etibarlı məlumatı analiz etməzdən əvvəl imzanı yoxlamalı və hadisəni idempot şəkildə işləməlidir.
+
+<h2 id="webhook-headers">Webhook başlıqları</h2>
+
+| Başlıq | Təsvir |
+| --- | --- |
+| X-Agent-Zaman Möhürü | Unix zaman möhürü saniyələrlə. |
+| X-Agent-Nonce | Təkrar baxış qorunması nonce. |
+| X-Agent-İmzası | HMAC-SHA256 imzası. |
+
+```text
+timestamp + nonce + rawBody
+```
+
+İmzalanmış dəyəri bərpa edərkən HTTP üzərində alınan xam sorğu bədənindən dəqiq istifadə edin. Əvvəlcə JSON ayırmaq və yenidən seriyalaşdırmaq boşluq və ya sahə sırasını dəyişərək fərqli imza yarada bilər.
+
+<h2 id="verification-flow">Yoxlama axını</h2>
+
+1. Zaman möhürlərini, nonce və imza başlıqlarını oxuyun.
+2. Dəyişdirilməmiş xam istək bədənini ələ keçirin.
+3. Build `timestamp + nonce + rawBody`.
+4. Hesablayın HMAC-SHA256 tərəfdaşla API sirr.
+5. Hesablanmış və alınan imzaları sabit vaxt müqayisəsi ilə müqayisə edin.
+6. Təsdiqlənmiş vaxt möhürü təzəliyi və təkrar istifadə etməmə yoxlamalarını tətbiq edin.
+7. Hadisəni yalnız təsdiqləmə uğurlu olduqdan sonra analiz edib işləyin.
+
+Rəsmi Agent SDK yoxlayıcı mövcud olduqda, müstəqil imza kodunu saxlamaq əvəzinə onu istifadə edin.
+
+<h2 id="order-idempotency">Order idempotency</h2>
+
+| İş | İdarəetmə |
+| --- | --- |
+| İlkin transfer sorğusu | Qlobal unikal bir agentOrderNoyaradın. |
+| HTTP fasiləsi | Yeni bir agentOrderNo yaratmadan əvvəl orijinal  sorğusu. |
+| PROCESSING cavab | Webhook və ya sorğu sifarişi statusunu gözləyin. |
+| Təkrarlanan webhook | İdempotensiya açarı və son status ilə duplikat. |
+
+<h2 id="recommended-idempotency-record">Tövsiyə olunan idempotensiya qeydi</h2>
+
+Təkrarlanan çatdırmanı tanımaq və təhlükəsiz bərpa etmək üçün kifayət qədər məlumat saxla:
+
+| Sahə | Məqsəd |
+| --- | --- |
+| Tədbir və ya biznes açarı | Bildirişi və ya əməliyyatı unikal şəkildə müəyyən edir. |
+| Tərəfdaş sifariş nömrəsi | Hadisəni ilkin sorğuya qoşur. |
+| Yük hashı | Bu, ziddiyyətli təkrarlanan yükləri müəyyən etməyə kömək edir. |
+| Cari emal vəziyyəti | Alınan, işlənmiş, uğurlu və uğursuz işləri fərqləndirir. |
+| Son biznes statusu | Terminal əməliyyatın iki dəfə tətbiq olunmasının qarşısını alır. |
+| İşlənmiş zaman möhürü | İstintaq və saxlanma siyasətlərini dəstəkləyir. |
+
+Biznes dəyişikliyi və idempotensiya qeydlərini mümkün olduqda eyni əməliyyatda commit edin. Təkrarlanan hadisə balans, sifariş və ya istifadəçi dəyişikliyini yenidən tətbiq etmək əvəzinə artıq məlum olan nəticəni qaytarmalıdır.
+
+<h2 id="timeout-and-retry-rule">Vaxt dayandırma və təkrar cəhd qaydası</h2>
+
+HTTP vaxt aşımı ilkin sorğunun uğursuz olduğunu sübut etmir. Əməliyyatı orijinal `agentOrderNo`ilə sorğu edin və ya onun webhook-unu gözləyin, sonra başqa bir əməliyyatın tələb olunub-olunmadığını qərar verin. Hər timeout-dan sonra yeni biznes sifariş nömrəsi yaratmaq təkrarlanan fond hərəkətlərinə səbəb ola bilər.
+
+<h2 id="production-checklist">İstehsal yoxlama siyahısı</h2>
+
+- Təhlil və ya biznes emalı JSON əvvəl imzanı yoxlayın.
+- Xam bədəni ayrı-ayrılıqlı yükdən müstəqil şəkildə qoruyun.
+- Təsdiqlənmiş inteqrasiya siyasətinə uyğun olaraq köhnəlmiş və ya təkrar oynanan sorğuları rədd etmək.
+- Hadisə emalını təkrarlanan və sıradan çıxan çatdırılma üçün təhlükəsiz etmək.
+- Tədbir ID-lərini, tərəfdaş sifariş nömrələrini, emal nəticəsini və sorğu vaxtını qeyd edin.
+- Loglardan və dəstək əlavələrindən sirr və imza dəyərlərini redaktə etmək.
+
+<h2 id="related-docs">Əlaqəli sənədlər</h2>
+
+<CardGroup cols={3}>
+<Card title="Sirlər və HMAC İmzalanması" icon="fa-duotone fa-shield-keyhole" href="/az-AZ/sdk/security/secrets-signing">
+Sorğu və webhook yoxlaması üçün istifadə olunan API sirri qoruyun.
+</Card>
+<Card title="Agent SDK Ümumi Baxış" icon="fa-duotone fa-server" href="/az-AZ/sdk/agent-sdk/overview">
+Tam backend inteqrasiya iş axınını nəzərdən keçirin.
+</Card>
+<Card title="SDK Problemlərin Həlli" icon="fa-duotone fa-screwdriver-wrench" href="/az-AZ/sdk/security/troubleshooting">
+Rədd edilmiş imzaları, təkrarlanan hadisələri və gözlənilən əməliyyatları araşdırın.
+</Card>
+</CardGroup>

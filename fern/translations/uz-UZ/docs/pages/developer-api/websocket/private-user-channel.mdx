@@ -1,0 +1,107 @@
+---
+title: "Xususiy Foydalanuvchi Kanali"
+description: "Buyurtmalar, pozitsiyalar, balanslar va hisob o'zgarishlari uchun autentifikatsiyalangan 6MM WebSocket voqealariga tinglash kalitini yaratish va saqlash orqali obuna bo'ling."
+slug: developer-api/websocket/private-user-channel
+canonical-url: https://docs.6mm.com/uz-UZ/developer-api/websocket/private-user-channel
+---
+
+Avval `listenKey` yarating:
+
+```http
+POST /v1/private/user/listen-key
+```
+
+Javob misoli:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "listenKey": "f57cb61ef604ce76be09e753a5dbdd8c",
+    "expireAt": 1777539918867
+  },
+  "requestId": "req-listen-key"
+}
+```
+
+`listenKey` standart bo'yicha 60 daqiqa amal qiladi. Har 30 daqiqada yangilanish tavsiya etiladi.
+
+<h2 id="renew">Yangilanish</h2>
+
+```http
+PUT /v1/private/user/listen-key
+Content-Type: application/json
+```
+
+```json
+{ "listenKey": "f57cb61ef604ce76be09e753a5dbdd8c" }
+```
+
+<h2 id="close">Yaqin</h2>
+
+```http
+DELETE /v1/private/user/listen-key
+Content-Type: application/json
+```
+
+```json
+{ "listenKey": "f57cb61ef604ce76be09e753a5dbdd8c" }
+```
+
+<h2 id="connect-to-private-websocket">Shaxsiy WebSocket ulaning</h2>
+
+```
+wss://ws.6mm.com/ws?listenKey=YOUR_LISTEN_KEY
+```
+
+Mos JWT ulanish usuli:
+
+```
+wss://ws.6mm.com/ws?token=YOUR_ACCESS_TOKEN
+```
+
+Autentifikatsiya muvaffaqiyatli bo'lgach, server avtomatik ravishda ulanishni amaldagi foydalanuvchining shaxsiy kanaliga obuna qiladi. Qo'lda obuna talab qilinmaydi.
+
+Muvaffaqiyatli autentifikatsiya tasdiqlanishi:
+
+```json
+{ "event": "auth", "success": true, "data": "1188041528" }
+```
+
+<h2 id="common-private-events">Keng tarqalgan shaxsiy tadbirlar</h2>
+
+| Tadbir                | Tavsif                                                                   |
+| -------------------- | ----------------------------------------------------------------------------- |
+| `ORDER_TRADE_UPDATE` | Buyurtma holati o'zgarishlari, jumladan yangi buyurtma, o'zgartirish, savdo va bekor qilish |
+| `ACCOUNT_UPDATE`     | Hisob balansi va pozitsiya o'zgarishlari                                          |
+
+Shaxsiy push xabar o'ram:
+
+```json
+{
+  "topic": "user.5794",
+  "ts": 1771047000000,
+  "data": {
+    "eventType": "ORDER_TRADE_UPDATE"
+  }
+}
+```
+
+REST so'rov endpointlari va WebSocket xususiy oqimlar alohida sxemalardan foydalanadi. Mijozlar har bir sxemani mustaqil tahlil qilishi va maydon nomlari bir xil deb o'ylamasligi kerak.
+
+<h2 id="common-differences">Umumiy farqlar</h2>
+
+| Domen         | REST maydoni     | WebSocket maydoni                                             |
+| -------------- | -------------- | ----------------------------------------------------------- |
+| Buyurtma holati   | `status`       | `orderStatus`                                               |
+| Muzlab qolgan muvozanat | `frozenMargin` | `frozenBalance`                                             |
+| Margin rejimi    | `marginMode`   | `marginMode`, pozitsiyalar va oqimlarda sim sifatida qaytdi |
+
+<h2 id="recovery-and-reconciliation">Tiklanish va yarashuv</h2>
+
+- Muddati tugashidan oldin listenKey yangilash va yangilanish muvaffaqiyatsiz bo'lsa, yangi shartnoma yaratish.
+- Qayta ulanish, qayta autentifikatsiya qilish va yangi soketni yangi hodisa sessiyasi sifatida qabul qilish.
+- Hamkor balanslari yoki buyurtma yozuvlarini o'zgartirishdan oldin voqealarni deduplicate qilish.
+- Agar voqealar o'tkazib yuborilgan bo'lsa, [orders](/uz-UZ/developer-api/rest-api/order), [positions](/uz-UZ/developer-api/rest-api/position) va [account state](/uz-UZ/developer-api/rest-api/user-and-account) so'rov REST.
+- Qayta urinish va eskirgan ulanishni boshqarish uchun [ulanish va yurak urishi qo'llanmasi](/uz-UZ/developer-api/websocket/connection-subscription-and-heartbeat) ga amal qiling.

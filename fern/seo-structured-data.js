@@ -1,7 +1,7 @@
 (function () {
   var siteUrl = "https://docs.6mm.com";
   var localeCodes = [
-    "en-142",
+    "en-SG",
     "es-419",
     "zh-TW",
     "pt-BR",
@@ -16,16 +16,16 @@
     "pl",
     "vi",
     "uk",
-    "pt",
-    "es",
-    "uz",
+    "pt-PT",
+    "es-ES",
+    "uz-UZ",
     "ar",
-    "fil",
-    "az",
+    "fil-PH",
+    "az-AZ",
   ];
   var homeNames = {
     en: "Home",
-    "en-142": "Home",
+    "en-SG": "Home",
     ja: "ホーム",
     ru: "Главная",
     "es-419": "Inicio",
@@ -39,13 +39,13 @@
     pl: "Strona główna",
     vi: "Trang chủ",
     uk: "Головна",
-    pt: "Início",
-    es: "Inicio",
+    "pt-PT": "Início",
+    "es-ES": "Inicio",
     "es-AR": "Inicio",
-    uz: "Bosh sahifa",
+    "uz-UZ": "Bosh sahifa",
     ar: "الرئيسية",
-    fil: "Home",
-    az: "Ana səhifə",
+    "fil-PH": "Home",
+    "az-AZ": "Ana səhifə",
   };
 
   function localeForPathname(pathname) {
