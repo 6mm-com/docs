@@ -1,6 +1,7 @@
 (function () {
   if (window.__sixmmSupportWidgetLoader) return;
   window.__sixmmSupportWidgetLoader = true;
+  document.documentElement.classList.add('sixmm-support-widget-loading');
 
   var WIDGET_SRC = 'https://csadmin.6mm.com/widget/widget.js';
   var APP_ID = '6mm-docs';
@@ -170,7 +171,10 @@
   }
 
   function loadWidget() {
-    if (document.querySelector('script[data-sixmm-support-widget="true"]')) return;
+    if (document.querySelector('script[data-sixmm-support-widget="true"]')) {
+      document.documentElement.classList.remove('sixmm-support-widget-loading');
+      return;
+    }
 
     var initialLang = currentLang();
     var initialTheme = currentTheme();
@@ -182,7 +186,13 @@
     script.dataset.theme = initialTheme;
     script.dataset.color = currentAccentColor();
     script.dataset.appId = APP_ID;
-    script.onload = syncWidget;
+    script.onload = function () {
+      document.documentElement.classList.remove('sixmm-support-widget-loading');
+      syncWidget();
+    };
+    script.onerror = function () {
+      document.documentElement.classList.remove('sixmm-support-widget-loading');
+    };
     lastLang = initialLang;
     lastTheme = initialTheme;
     document.body.appendChild(script);
