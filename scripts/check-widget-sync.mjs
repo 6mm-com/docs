@@ -190,9 +190,12 @@ documentElement.dataset.theme = "light";
 observers[0].listener();
 assert.deepEqual(widgetCalls, [["theme", "light"]]);
 
-// Fern adapter: wait for and click the native language anchor and theme item.
+// Fern adapter: use the mounted Next.js router for locales and the native item
+// for themes.
 let activeMenu = null;
 let activeThemeIcon = "light";
+let languageTriggerClicks = 0;
+const directRouterNavigations = [];
 const adapterRootClasses = new Set(["light"]);
 const adapterRoot = {
   dataset: { theme: "light" },
@@ -203,13 +206,41 @@ const adapterRoot = {
   },
 };
 const adapterWindow = {
-  location: { origin: "https://docs.6mm.com", pathname: "/home" },
+  location: {
+    origin: "https://docs.6mm.com",
+    pathname: "/home",
+    search: "",
+    hash: "",
+  },
   addEventListener() {},
   requestAnimationFrame(listener) {
     listener();
   },
   setTimeout,
   clearTimeout,
+};
+const directRouter = {
+  push() {},
+  prefetch() {},
+  replace(url, options) {
+    directRouterNavigations.push([url, options]);
+    const target = new URL(url, adapterWindow.location.origin);
+    adapterWindow.location.pathname = target.pathname;
+    adapterWindow.location.search = target.search;
+    adapterWindow.location.hash = target.hash;
+  },
+};
+const mountedFernLink = {
+  href: "/home",
+  __reactFiber$test: {
+    dependencies: {
+      firstContext: {
+        memoizedValue: directRouter,
+        next: null,
+      },
+    },
+    return: null,
+  },
 };
 
 function makeClassList() {
@@ -266,15 +297,16 @@ const languageMenu = {
 };
 const languageSelector = {
   isConnected: true,
-  offsetParent: {},
+  offsetParent: null,
   dataset: { state: "closed" },
-  getClientRects: () => [1],
+  getClientRects: () => [],
   getAttribute(name) {
     if (name === "aria-controls") return "language-menu";
     if (name === "aria-expanded") return activeMenu === languageMenu ? "true" : "false";
     return null;
   },
   click() {
+    languageTriggerClicks += 1;
     activeMenu = languageMenu;
     this.dataset.state = "open";
   },
@@ -337,6 +369,7 @@ const adapterDocument = {
     return null;
   },
   querySelectorAll(selector) {
+    if (selector === "a[href]") return [mountedFernLink];
     if (selector === ".fern-language-selector") return [languageSelector];
     if (selector === ".fern-language-selector + button") return [themeTrigger];
     if (selector.includes(".fern-language-dropdown-content")) {
@@ -362,6 +395,23 @@ assert.equal(
   true,
 );
 assert.equal(adapterWindow.location.pathname, "/tr/home");
+assert.equal(directRouterNavigations.at(-1)[0], "/tr/home");
+assert.equal(directRouterNavigations.at(-1)[1].scroll, false);
+assert.equal(
+  languageTriggerClicks,
+  0,
+  "Widget locale navigation must not depend on clicking the hidden mobile language selector",
+);
+adapterWindow.location.search = "?from=widget";
+adapterWindow.location.hash = "#example";
+assert.equal(
+  await adapterWindow.__sixmmNavigateDocsLocale("ms"),
+  true,
+);
+assert.equal(adapterWindow.location.pathname, "/ms/home");
+assert.equal(adapterWindow.location.search, "?from=widget");
+assert.equal(adapterWindow.location.hash, "#example");
+assert.equal(directRouterNavigations.at(-1)[0], "/ms/home?from=widget#example");
 activeMenu = null;
 assert.equal(
   await adapterWindow.__sixmmNavigateDocsTheme("dark"),

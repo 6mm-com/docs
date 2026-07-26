@@ -79,10 +79,41 @@
     return localeForPathname(window.location.pathname);
   }
 
-  function visibleLanguageSelector() {
-    return Array.from(
-      document.querySelectorAll(".fern-language-selector"),
-    ).find(isVisible);
+  function looksLikeNextRouter(value) {
+    return Boolean(
+      value &&
+        typeof value === "object" &&
+        typeof value.push === "function" &&
+        typeof value.replace === "function" &&
+        typeof value.prefetch === "function",
+    );
+  }
+
+  function fernRouter() {
+    var links = document.querySelectorAll("a[href]");
+    for (var linkIndex = 0; linkIndex < links.length; linkIndex += 1) {
+      var link = links[linkIndex];
+      var fiberKey = Object.getOwnPropertyNames(link).find(function (key) {
+        return key.indexOf("__reactFiber$") === 0;
+      });
+      var fiber = fiberKey ? link[fiberKey] : null;
+      var depth = 0;
+
+      while (fiber && depth < 64) {
+        var context = fiber.dependencies
+          ? fiber.dependencies.firstContext
+          : null;
+        while (context) {
+          if (looksLikeNextRouter(context.memoizedValue)) {
+            return context.memoizedValue;
+          }
+          context = context.next;
+        }
+        fiber = fiber.return;
+        depth += 1;
+      }
+    }
+    return null;
   }
 
   function controlledMenu(trigger) {
@@ -96,18 +127,6 @@
         '.fern-language-dropdown-content, [role="menu"][data-state="open"]',
       ),
     ).find(isVisible);
-  }
-
-  function localeOption(menu, locale) {
-    return Array.from(
-      menu.querySelectorAll('[role="menuitemradio"][href], a[href]'),
-    ).find(function (option) {
-      return (
-        localeForPathname(
-          new URL(option.href, window.location.origin).pathname,
-        ) === locale
-      );
-    });
   }
 
   function syncLocaleLabels() {
@@ -140,25 +159,23 @@
     if (currentDocsLocale() === locale) return true;
 
     var navigationId = ++localeNavigationId;
-    var trigger = await waitFor(visibleLanguageSelector, 2500);
-    if (!trigger || navigationId !== localeNavigationId) return false;
-    if (
-      trigger.getAttribute("aria-expanded") !== "true" &&
-      trigger.dataset.state !== "open"
-    ) {
-      trigger.click();
-    }
+    var segments = window.location.pathname.split("/").filter(Boolean);
+    if (localeForPathname(window.location.pathname)) segments.shift();
+    var pagePath = "/" + segments.join("/");
+    if (pagePath === "/") pagePath = "/home";
+    var targetPath = (locale ? "/" + locale : "") + pagePath;
+    var targetUrl =
+      targetPath + window.location.search + window.location.hash;
 
-    var option = await waitFor(function () {
-      var menu = controlledMenu(trigger);
-      return menu ? localeOption(menu, locale) : null;
-    }, 2500);
-    if (!option || navigationId !== localeNavigationId) return false;
-
-    option.click();
+    // Fern does not expose a public locale API. Read the Next.js router already
+    // attached to Fern's mounted links and navigate directly without opening
+    // the language menu or reloading the support widget.
+    var router = await waitFor(fernRouter, 2500);
+    if (!router || navigationId !== localeNavigationId) return false;
+    router.replace(targetUrl, { scroll: false });
     var changed = await waitFor(function () {
       return currentDocsLocale() === locale ? true : null;
-    }, 4000);
+    }, 2500);
     return navigationId === localeNavigationId && Boolean(changed);
   }
 
