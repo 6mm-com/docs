@@ -135,7 +135,12 @@
     var targetPath = (route ? '/' + route : '') + currentPagePath();
     if (targetPath === window.location.pathname) return;
 
-    window.location.assign(targetPath + window.location.search + window.location.hash);
+    var targetHref = targetPath + window.location.search + window.location.hash;
+    if (typeof window.__sixmmNavigateDocsLocale === 'function') {
+      window.__sixmmNavigateDocsLocale(route, targetHref);
+    } else {
+      window.location.assign(targetHref);
+    }
   }
 
   function switchHostTheme(theme) {
@@ -167,15 +172,19 @@
   function loadWidget() {
     if (document.querySelector('script[data-sixmm-support-widget="true"]')) return;
 
+    var initialLang = currentLang();
+    var initialTheme = currentTheme();
     var script = document.createElement('script');
     script.src = WIDGET_SRC;
     script.async = true;
     script.dataset.sixmmSupportWidget = 'true';
-    script.dataset.lang = currentLang();
-    script.dataset.theme = currentTheme();
+    script.dataset.lang = initialLang;
+    script.dataset.theme = initialTheme;
     script.dataset.color = currentAccentColor();
     script.dataset.appId = APP_ID;
     script.onload = syncWidget;
+    lastLang = initialLang;
+    lastTheme = initialTheme;
     document.body.appendChild(script);
   }
 
