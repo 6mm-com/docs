@@ -153,9 +153,39 @@
     );
   }
 
+  function syncThemeTriggerAppearance(theme) {
+    Array.from(document.querySelectorAll(".sixmm-theme-trigger")).forEach(
+      function (trigger) {
+        var svg = trigger.querySelector(
+          "svg.lucide-sun, svg.lucide-moon, svg.lucide-monitor",
+        );
+        if (svg) {
+          svg.setAttribute(
+            "class",
+            "lucide " + (theme === "dark" ? "lucide-moon" : "lucide-sun"),
+          );
+          svg.innerHTML =
+            theme === "dark"
+              ? '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>'
+              : '<circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path>';
+        }
+        Array.from(trigger.childNodes).forEach(function (node) {
+          if (node.nodeType === 3 && node.textContent.trim()) {
+            node.textContent = theme === "dark" ? "Dark" : "Light";
+          }
+        });
+        trigger.setAttribute(
+          "aria-label",
+          theme === "dark" ? "Dark" : "Light",
+        );
+      },
+    );
+  }
+
   function navigateDocsTheme(theme) {
     if (theme !== "light" && theme !== "dark") return false;
 
+    syncThemeTriggerAppearance(theme);
     var trigger = visibleThemeTrigger();
     if (!trigger) return false;
     trigger.click();

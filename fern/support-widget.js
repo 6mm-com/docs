@@ -25,7 +25,7 @@
   var lastPathname = window.location.pathname;
   var lastTheme = null;
   var lastLang = null;
-  var ignoreWidgetLanguageEventsUntil = 0;
+  var syncingWidgetLanguage = false;
 
   function currentDocsLocale() {
     var firstSegment = window.location.pathname.split('/').filter(Boolean)[0] || '';
@@ -66,15 +66,16 @@
     var lang = currentLang();
     var lastDocsLocale = routeForWidgetLanguage(lastLang);
     if (lastDocsLocale !== currentDocsLocale()) {
-      // setLang can synchronously or asynchronously echo a language-change
-      // event. Ignore that echo so regional aliases do not bounce routes.
-      ignoreWidgetLanguageEventsUntil = Date.now() + 750;
-    }
-    if (
-      lastDocsLocale !== currentDocsLocale() &&
-      callWidget('setLang', lang)
-    ) {
-      lastLang = lang;
+      // Ignore only the event emitted by this host-initiated API call. The
+      // guard is released on the next task so real Widget clicks are never
+      // blocked by a time window.
+      syncingWidgetLanguage = true;
+      if (callWidget('setLang', lang)) {
+        lastLang = lang;
+      }
+      window.setTimeout(function () {
+        syncingWidgetLanguage = false;
+      }, 0);
     }
 
     var theme = currentTheme();
@@ -113,15 +114,6 @@
     if (theme !== 'light' && theme !== 'dark') return;
 
     lastTheme = theme;
-    if (
-      typeof window.__sixmmNavigateDocsTheme === 'function' &&
-      window.__sixmmNavigateDocsTheme(theme)
-    ) {
-      return;
-    }
-
-    if (currentTheme() === theme) return;
-
     var root = document.documentElement;
     root.dataset.theme = theme;
     root.classList.remove('light', 'dark');
@@ -133,10 +125,14 @@
     } catch (_error) {
       // Theme still changes for the current page when storage is unavailable.
     }
+
+    if (typeof window.__sixmmNavigateDocsTheme === 'function') {
+      window.__sixmmNavigateDocsTheme(theme);
+    }
   }
 
   function onWidgetLanguageChange(event) {
-    if (Date.now() < ignoreWidgetLanguageEventsUntil) return;
+    if (syncingWidgetLanguage) return;
     switchHostLanguage(event && event.detail ? event.detail.lang : '');
   }
 
