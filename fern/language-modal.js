@@ -91,11 +91,12 @@
     if (locale) segments.shift();
     return {
       locale: locale,
-      pagePath: "/" + (segments.join("/") || "home"),
+      pagePath: segments.length ? "/" + segments.join("/") : "/",
     };
   }
 
   function localizedPath(locale, pagePath) {
+    if (pagePath === "/") return locale ? "/" + locale : "/";
     return (locale ? "/" + locale : "") + pagePath;
   }
 

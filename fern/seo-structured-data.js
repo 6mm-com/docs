@@ -244,10 +244,13 @@
       segments.shift();
     }
 
-    return segments.length > 0 ? "/" + segments.join("/") : "/home";
+    return segments.length > 0 ? "/" + segments.join("/") : "/";
   }
 
   function localizedUrl(route, pagePath) {
+    if (pagePath === "/") {
+      return siteUrl + (route ? "/" + route : "");
+    }
     return siteUrl + (route ? "/" + route : "") + pagePath;
   }
 
@@ -301,7 +304,7 @@
     var items = [
       {
         name: homeNames[locale.code] || "Home",
-        item: siteUrl + localePrefix + "/home",
+        item: siteUrl + localePrefix,
       },
     ];
 
@@ -344,7 +347,7 @@
     var pagePath = pagePathForPathname(pathname);
     lastStructuredPath = pathname;
     var locale = localeForPathname(pathname);
-    var isHome = pagePath === "/home";
+    var isHome = pagePath === "/";
     var canonicalUrl = localizedUrl(locale.route, pagePath);
     var websiteId = siteUrl + "/#website";
 

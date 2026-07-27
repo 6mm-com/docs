@@ -164,8 +164,8 @@ for (const dynamicSetting of [
     pushError(`${dynamicSetting} must remain enabled`);
   }
 }
-if (config.logo?.href !== "/home") {
-  pushError("The Docs logo must link to the internal /home hierarchy");
+if (config.logo?.href !== "/") {
+  pushError("The Docs logo must link to the canonical root homepage");
 }
 
 const sourceTitles = new Map();
@@ -389,7 +389,9 @@ for (const relativePagePath of activePages) {
     if (meta.slug !== sourceMeta.slug) {
       pushError(`[${locale}] slug mismatch in ${relativePagePath}: ${meta.slug ?? "missing"}`);
     }
-    const expectedCanonical = `https://docs.6mm.com/${locale}/${sourceMeta.slug}`;
+    const expectedCanonical = `https://docs.6mm.com/${locale}${
+      sourceMeta.slug === "/" ? "" : `/${sourceMeta.slug}`
+    }`;
     if (meta["canonical-url"] !== expectedCanonical) {
       pushError(
         `[${locale}] canonical mismatch in ${relativePagePath}: ${meta["canonical-url"] ?? "missing"}`,
@@ -526,7 +528,7 @@ const browserSandbox = {
     location: {
       hash: "",
       origin: "https://docs.6mm.com",
-      pathname: "/home",
+      pathname: "/",
       search: "",
     },
   },

@@ -109,7 +109,8 @@ function canonicalForLocale(content, locale) {
   if (!slugMatch) {
     throw new Error("Page is missing a slug in frontmatter");
   }
-  const canonical = `https://docs.6mm.com/${locale}/${slugMatch[1].replace(/^\/+|\/+$/g, "")}`;
+  const normalizedSlug = slugMatch[1].replace(/^\/+|\/+$/g, "");
+  const canonical = `https://docs.6mm.com/${locale}${normalizedSlug ? `/${normalizedSlug}` : ""}`;
   if (/^canonical-url:/m.test(content)) {
     return content.replace(/^canonical-url:.*$/m, `canonical-url: ${canonical}`);
   }

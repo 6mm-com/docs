@@ -517,6 +517,22 @@ assert.equal(adapterWindow.location.hash, "#example");
 assert.equal(directRouterNavigations.at(-1)[0], "/de/home?from=widget#example");
 assert.deepEqual(directRouterRefreshes, []);
 
+adapterWindow.location.pathname = "/";
+adapterWindow.location.search = "";
+adapterWindow.location.hash = "";
+assert.equal(
+  await adapterWindow.__sixmmNavigateDocsLocale("ja"),
+  true,
+);
+assert.equal(adapterWindow.location.pathname, "/ja");
+assert.equal(directRouterNavigations.at(-1)[0], "/ja");
+assert.equal(
+  await adapterWindow.__sixmmNavigateDocsLocale(""),
+  true,
+);
+assert.equal(adapterWindow.location.pathname, "/");
+assert.equal(directRouterNavigations.at(-1)[0], "/");
+
 activeMenu = null;
 assert.equal(
   await adapterWindow.__sixmmNavigateDocsTheme("dark"),
