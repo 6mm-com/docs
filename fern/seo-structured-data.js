@@ -22,9 +22,6 @@
     { code: "el" },
     { code: "ar" },
   ];
-  var hreflangOverrides = {
-    "es-419": "es",
-  };
   var configuredLocales =
     window.__sixmmDocsLocales && window.__sixmmDocsLocales.length
       ? window.__sixmmDocsLocales
@@ -34,11 +31,6 @@
     return {
       route: route,
       code: route || "en",
-      hreflang:
-        hreflangOverrides[route] ||
-        locale.htmlLang ||
-        route ||
-        "en",
     };
   });
   var localeCodes = publicLocales
@@ -259,57 +251,6 @@
     return siteUrl + (route ? "/" + route : "") + pagePath;
   }
 
-  function syncAlternates(pagePath) {
-    var expected = publicLocales.map(function (locale) {
-      return {
-        hreflang: locale.hreflang,
-        href: localizedUrl(locale.route, pagePath),
-      };
-    });
-    expected.push({
-      hreflang: "x-default",
-      href: localizedUrl("", pagePath),
-    });
-
-    var links = Array.prototype.slice.call(
-      document.head.querySelectorAll('link[data-sixmm-seo="alternate"]'),
-    );
-    var available = new Map();
-
-    links.forEach(function (link) {
-      var key = (link.getAttribute("hreflang") || "").toLowerCase();
-      if (!available.has(key)) available.set(key, []);
-      available.get(key).push(link);
-    });
-
-    var retained = new Set();
-    expected.forEach(function (alternate) {
-      var key = alternate.hreflang.toLowerCase();
-      var matches = available.get(key) || [];
-      var link = matches.shift();
-
-      if (!link) {
-        link = document.createElement("link");
-        link.dataset.sixmmSeo = "alternate";
-        link.rel = "alternate";
-        document.head.appendChild(link);
-      }
-
-      link.rel = "alternate";
-      if (link.getAttribute("hreflang") !== alternate.hreflang) {
-        link.setAttribute("hreflang", alternate.hreflang);
-      }
-      if (link.getAttribute("href") !== alternate.href) {
-        link.setAttribute("href", alternate.href);
-      }
-      retained.add(link);
-    });
-
-    links.forEach(function (link) {
-      if (!retained.has(link)) link.remove();
-    });
-  }
-
   function upsertStructuredData(key, value) {
     var selector = 'script[data-sixmm-schema="' + key + '"]';
     var script = document.querySelector(selector);
@@ -406,8 +347,6 @@
     var isHome = pagePath === "/home";
     var canonicalUrl = localizedUrl(locale.route, pagePath);
 
-    syncAlternates(pagePath);
-
     upsertStructuredData(
       "website",
       isHome && locale.code === "en"
@@ -465,7 +404,6 @@
     if (!node || node.nodeType !== 1) return false;
 
     if (
-      node.getAttribute("data-sixmm-seo") === "alternate" ||
       node.hasAttribute("data-sixmm-schema")
     ) {
       return true;
@@ -474,7 +412,7 @@
     return Boolean(
       node.querySelector &&
         node.querySelector(
-          'link[data-sixmm-seo="alternate"], script[data-sixmm-schema]',
+          'script[data-sixmm-schema]',
         ),
     );
   }

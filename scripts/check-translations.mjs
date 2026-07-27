@@ -564,6 +564,19 @@ for (const contract of [
   }
 }
 
+const seoScript = await readFile(
+  path.join(fernRoot, "seo-structured-data.js"),
+  "utf8",
+);
+if (
+  seoScript.includes("data-sixmm-seo") ||
+  seoScript.includes("syncAlternates")
+) {
+  pushError(
+    "Fern must remain the single owner of server-rendered hreflang alternates",
+  );
+}
+
 if (errors.length > 0) {
   console.error(`Translation checks failed with ${errors.length} issue(s):`);
   errors.slice(0, 200).forEach((error) => console.error(`- ${error}`));

@@ -59,10 +59,10 @@ Preview routes:
 
 ```text
 English: http://127.0.0.1:3000/home
-Chinese: http://127.0.0.1:3000/zh-CN/home
-Uzbek: http://127.0.0.1:3000/uz/home
-Filipino: http://127.0.0.1:3000/fil/home
-Azerbaijani: http://127.0.0.1:3000/az/home
+Simplified Chinese: http://127.0.0.1:3000/zh-CN/home
+Turkish: http://127.0.0.1:3000/tr/home
+Korean: http://127.0.0.1:3000/ko/home
+Greek: http://127.0.0.1:3000/el/home
 ```
 
 ## Contributing
