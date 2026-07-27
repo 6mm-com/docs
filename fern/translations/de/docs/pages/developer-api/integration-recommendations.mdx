@@ -16,16 +16,16 @@ Nutzen Sie diese Empfehlungen als Basis für die Produktionsbereitschaft. Sie er
 
 <h2 id="request-validation-and-idempotency">Anfragevalidierung und Idempotenz</h2>
 
-- Vor der Bestellung `/v1/public/market/symbols` Abfrage und Validierung `tickSize`, `stepSize`, des minimalen Nominalwerts und der maximalen Menge lokal.
+- Vor der Order `/v1/public/market/symbols` Abfrage und Validierung `tickSize`, `stepSize`, des minimalen Nominalwerts und der maximalen Menge lokal.
 - Generiere für jeden Order-Write ein eindeutiges `clientOrderId` , damit Anfragen nach einer Trennung abgestimmt werden können.
 - Erhalte die ursprüngliche Kennung, wenn ein HTTP Ergebnis unsicher ist. Abfrage der bestehenden Reihenfolge vor der Erstellung einer Ersatzanfrage.
 - Behandle Dezimalbeträge und Preise als Strings oder Dezimaltypen, nicht als binäre Gleitkommawerte.
 
-<h2 id="order-and-websocket-state">Ordnung und WebSocket Zustand</h2>
+<h2 id="order-and-websocket-state">Order und WebSocket Zustand</h2>
 
 - Bestimmen Sie den Endzustand nach Operationen zum Cancel-, Cancel-All oder Ändern von [privaten WebSocket Events](/de/developer-api/websocket/private-user-channel) oder einer REST Abfrage.
 - Jede Wiederverbindung als neue WebSocket Sitzung behandeln und alle erforderlichen Abonnements wiederherstellen.
-- Überprüfen Sie die Kontinuität des Bestellbuchs mit `endVersion`. Tritt eine Versionslücke auf, verwerfen Sie das lokale Buch und abonnieren Sie erneut für eine neue Snapshotaufnahme.
+- Überprüfen Sie die Kontinuität des Orderbuchs mit `endVersion`. Tritt eine Versionslücke auf, verwerfen Sie das lokale Buch und abonnieren Sie erneut für eine neue Snapshotaufnahme.
 - Duplizieren Sie private Bestell- und Kontenereignisse, bevor sie auf Salden, Positionen oder Partneraufzeichnungen angewendet werden.
 
 <h2 id="logging-monitoring-and-retries">Protokollierung, Überwachung und Wiederholungsversuche</h2>

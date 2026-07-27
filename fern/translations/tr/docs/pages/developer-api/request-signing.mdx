@@ -1,42 +1,42 @@
 ---
-title: "So'rovlarni imzolash"
-description: "6MM API so'rovlarni kerakli yuklama, vaqt tamg'asi, API kaliti, imzo sarlavhalari va tekshirish qoidalariSHA256 HMACbilan imzolang."
+title: "İstek İmzaları"
+description: "6MM API istekleri gerekli yük, zaman damgası, API anahtarı, imza başlıkları ve doğrulama kuralları kullanarak HMACile -SHA256 ile imzalayın."
 slug: developer-api/request-signing
 canonical-url: https://docs.6mm.com/tr/developer-api/request-signing
 ---
 
-<h2 id="request-format">So'rov formati</h2>
+<h2 id="request-format">İstek Formatı</h2>
 
-| Joylashuvi | Maydon       | Majburiy            | Tavsif                                   |
+| Konum | Saha       | Gerekli            | Tanım                                   |
 | -------- | ----------- | ------------------- | --------------------------------------------- |
-| Sarlavha   | `X-API-KEY` | Ha                 | `apiKey` API Key yaratilganda qaytarildi |
-| So'rov    | `timestamp` | Ha                 | Unix millisekund vaqt tamg'asi                    |
-| So'rov    | `signature` | Ha                 | HMAC-SHA256 imzosi, kichik harflar bilan yozilgan olti harfli string   |
-| Kuzov     | JSON        | Oxirgi nuqtaga bog'liq | POST / PUT / DELETE so'rov tanasi              |
+| Başlık   | `X-API-KEY` | Evet                 | `apiKey` API Key oluşturulduğunda geri dönerdi |
+| Sorgu    | `timestamp` | Evet                 | Unix milisaniye zaman damgası                    |
+| Sorgu    | `signature` | Evet                 | HMAC-SHA256 imzası, küçük altıgen dizim   |
+| Gövde     | JSON        | Uç noktaya bağlı | POST / PUT / DELETE talep gövdesi              |
 
-<h2 id="signature-payload">Imzo yuklamasi</h2>
+<h2 id="signature-payload">İmza Yükü</h2>
 
 ```
 payload = queryStringWithoutSignature + requestBody
 signature = HMAC-SHA256(apiSecret, payload)
 ```
 
-Asosiy qoidalar:
+Ana kurallar:
 
-* `timestamp` Unix millisekund vaqt tamg'asi bo'lishi kerak. Server chidamlilik oynasi ±10 soniya.
-* `signature` URL so'rov qatoriga joylashtiriladi, lekin imzo yuklamasiga kiritilmaydi.
-* Server asl so'rov qatorini olib tashlagandan so'ng tekshiradi `signature`; u so'rov parametrlarini qayta tartiblamaydi.
-* Imzolash uchun ishlatiladigan so'rov parametr tartibi haqiqiy so'rov URLmos kelishi kerak.
-* Agar so'rov tanasi mavjud bo'lsa, imzolash uchun ishlatiladigan JSON satr haqiqiy uzatilgan tanaga aniq mos kelishi kerak.
-* Tartibga bog'liq yo'llar imzo qayta ko'rish tekshiruvlarini bajaradi. Bir xil imzoni qisqa vaqt ichida qayta ishlatish natijani `Signature replay detected`beradi.
+* `timestamp` Unix milisaniyelik zaman damgası olmalı. Sunucu tolerans penceresi ±10 saniyedir.
+* `signature` URL sorgu dizisine yerleştirilir, ancak imza yüküne dahil edilmez.
+* Sunucu, orijinal sorgu dizisini kaldırdıktan sonra doğrular `signature`; sorgu parametrelerini yeniden sıralamaz.
+* İmza için kullanılan sorgu parametre sırası, gerçek istekle eşleşmelidir URL.
+* Bir talep gövdesi varsa, imzalamak için kullanılan JSON dizisi tam olarak iletilen gövdeyle eşleşmelidir.
+* Sırayla ilgili yollar imza tekrar kontrolleri yapar. Aynı imzayı kısa sürede tekrar kullanmak `Signature replay detected`getirir.
 
-<h2 id="server-time">Server vaqti</h2>
+<h2 id="server-time">Server Zamanı</h2>
 
 ```http
 GET /v1/time
 ```
 
-Javob misoli:
+Yanıt örneği:
 
 ```json
 {
@@ -52,43 +52,43 @@ Javob misoli:
 }
 ```
 
-Mijozlar `timeOffsetMs = serverTimestampMs - localTimestampMs`hisoblashlari, so'ngra keyingi imzolangan so'rovlar uchun `timestamp = nowMs + timeOffsetMs` ishlatishlari kerak. Agar server `Timestamp outside of tolerance window`qaytarsa, darhol vaqtni qayta sinxronlashtiring va imzoni tiklang.
+İstemciler `timeOffsetMs = serverTimestampMs - localTimestampMs`hesaplamalı, ardından sonraki imzalanan istekler için `timestamp = nowMs + timeOffsetMs` kullanmalı. Sunucu `Timestamp outside of tolerance window`dönerse, hemen zamanı yeniden senkronize et ve imzayı yeniden oluştur.
 
-<h2 id="get-signing-example">GET Imzolash misoli</h2>
+<h2 id="get-signing-example">GET İmza Örneği</h2>
 
-Haqiqiy so'rov:
+Gerçek istek:
 
 ```
 GET /v1/private/order/current?symbol=BTCUSDT&timestamp=1772710377808&signature=...
 ```
 
-Imzo yuklamasi:
+İmza yükü:
 
 ```
 symbol=BTCUSDT&timestamp=1772710377808
 ```
 
-<h2 id="post-signing-example">POST Imzolash misoli</h2>
+<h2 id="post-signing-example">POST İmza Örneği</h2>
 
-Haqiqiy so'rov:
+Gerçek istek:
 
 ```
 POST /v1/private/order/place?timestamp=1772710377808&signature=...
 ```
 
-So'rov tanasi:
+Talep bedeni:
 
 ```json
 {"symbol":"BTCUSDT","type":"LIMIT","side":"BUY","price":"85000","quantity":"0.1","timeInForce":"GTC","makerOnly":true,"clientOrderId":"ext-1772710377808-001"}
 ```
 
-Imzo yuklamasi:
+İmza yükü:
 
 ```
 timestamp=1772710377808{"symbol":"BTCUSDT","type":"LIMIT","side":"BUY","price":"85000","quantity":"0.1","timeInForce":"GTC","makerOnly":true,"clientOrderId":"ext-1772710377808-001"}
 ```
 
-<h2 id="python-signing-example">Python imzolash misoli</h2>
+<h2 id="python-signing-example">Python İmza Örneği</h2>
 
 ```python
 import hashlib
@@ -145,9 +145,9 @@ sync_time_offset()
 print(signed_request("GET", "/v1/private/order/current", {"symbol": "BTCUSDT"}))
 ```
 
-<h2 id="related-security-guides">Tegishli xavfsizlik qo'llanmalari</h2>
+<h2 id="related-security-guides">İlgili güvenlik rehberleri</h2>
 
-- [Autentifikatsiya](/tr/developer-api/authentication)
-- [API Key boshqaruvi](/tr/developer-api/api-key-management)
-- [Sirlar va imzo](/tr/sdk/security/secrets-signing)
-- [Xatolik kodlari va muammolarni hal qilish](/tr/developer-api/error-codes-and-troubleshooting)
+- [Doğrulama](/tr/developer-api/authentication)
+- [API Key Yönetimi](/tr/developer-api/api-key-management)
+- [Sırlar ve İmza Alma](/tr/sdk/security/secrets-signing)
+- [Hata Kodları ve Sorun Giderme](/tr/developer-api/error-codes-and-troubleshooting)

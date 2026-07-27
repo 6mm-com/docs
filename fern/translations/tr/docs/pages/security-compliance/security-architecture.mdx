@@ -1,48 +1,48 @@
 ---
-title: "Platforma xavfsizligi arxitekturasi"
-subtitle: "6MM savdo infratuzilmasi, APIs, SDKs, webhooklar va hamkor integratsiyalarida qo'llaniladigan xavfsizlik qatlamlarini tushuning."
+title: "Platform Güvenlik Mimarisi"
+subtitle: "6MM ticaret altyapısında kullanılan güvenlik katmanlarını, APIs, SDKs, webhooksve ortak entegrasyonlarını anlayın."
 slug: security-compliance/security-architecture
 canonical-url: https://docs.6mm.com/tr/security-compliance/security-architecture
 ---
 
-6MM xavfsizlik hujjatlari hamkor ishlab chiqarishga tayyorgarlikka e'tibor qaratadi. Maqsad savdo infratuzilmasini barqaror saqlash va mas'uliyat chegaralarini aniq ko'rsatishdir.
+6MM güvenlik dokümantasyonu, ortak üretim hazırlığına odaklanır. Amaç, ticaret altyapısını istikrarlı tutmak ve sorumluluk sınırlarını netleştirmek.
 
-<h2 id="security-layers">Xavfsizlik qatlamlari</h2>
+<h2 id="security-layers">Güvenlik katmanları</h2>
 
-| Qatlam | Diqqat markazi |
+| Katman | Odak |
 | --- | --- |
-| Infratuzilma | Tarmoq izolyatsiyasi, shifrlangan xizmat aloqasi, monitoring va faollashtirish. |
-| Savdo tizimlari | Deterministik moslashtirish, marja tekshiruvlari, xavf nazorati va suiiste'mollikning oldini olish. |
-| Integratsiya xavfsizligi | API kalitlar, HMAC imzolash, webhook imzolari, qayta o'yin himoyasi va faqat backend sirlari. |
-| Hamkor operatsiyalar | Foydalanuvchi sessiyasini tasdiqlash, aktivlarni saqlash, mijozlarni qo'llab-quvvatlash va mahalliy muvofiqlik nazorati. |
+| Altyapı | Ağ izolasyonu, şifreli hizmet iletişimi, izleme ve yedekleme. |
+| Ticaret sistemleri | Deterministik eşleştirme, marj kontrolleri, risk kontrolleri ve kötüye kullanım önleme. |
+| Entegrasyon güvenliği | API anahtarlar, HMAC imzalama, webhook imzalar, tekrar koruması ve sadece arka uç sırlar. |
+| Ortak operasyonlar | Kullanıcı oturum doğrulama, varlık koruma, müşteri desteği ve yerel uyumluluk kontrolleri. |
 
-<h2 id="partner-responsibilities">Hamkorlik mas'uliyatlari</h2>
+<h2 id="partner-responsibilities">Ortak sorumlulukları</h2>
 
-- API sirlarni saqlab, brauzerlar va mobil ilovalardan kirish kalitlarini olib chiqish.
-- Hamkor foydalanuvchi sessiyalarini tasdiqlashdan oldin savdo kirish ma'lumotlarini berish.
-- Webhook idempotentsiyasi va terminal holatini tekshirishni amalga oshirish.
-- Hisob, buyurtma, uzatish va webhook oqimlari uchun operatsion loglarni yuritish.
+- Tarayıcılardan ve mobil uygulamalardan API sırları ve giriş anahtarlarını saklayın.
+- İşlem giriş kimlik bilgilerini vermeden önce ortak kullanıcı oturumlarını doğrulamak.
+- webhook idempotency ve terminal durum kontrolleri uygulanır.
+- Hesap, sipariş, transfer ve webhook akışları için operasyonel kayıtlar tutmak.
 
-<h2 id="integration-trust-boundaries">Integratsiya ishonch chegaralari</h2>
+<h2 id="integration-trust-boundaries">Entegrasyon güven sınırları</h2>
 
-| Chegara | Zarur boshqaruv |
+| Sınır | Gerekli kontrol |
 | --- | --- |
-| Brauzer yoki ilovadan hamkor backendga | Har qanday savdo guvohnomasini berishdan oldin hamkor sessiyasini tasdiqlang. |
-| Hamkor orqa tizimni 6MM API | Keng qamrovli ma'lumotlar, so'rovlarni imzolash, vaqt sinxronizatsiyasi va himoyalangan maxfiy xotiradan foydalaning. |
-| 6MM hamkor endpointga webhook | Imzoni xom so'rov tanasi bilan solishtiring, eskirgan yoki noto'g'ri xabarlarni rad eting, va takrorlanishlarni deduplicate qiling. |
-| Savdo shtatidan hamkor yozuvlarga | Buyruqlar, pozitsiyalar, balanslar va o'tkazmalarni barqaror identifikatorlar va terminal-holat tekshiruvlari yordamida muvofiqlashtirish. |
+| Tarayıcı veya uygulamadan partner backend'e | Herhangi bir işlem sertifikası vermeden önce ortak oturumunu doğrulayın. |
+| Partner backend'den 6MM API | Kapsamlı kimlik bilgileri, istek imzalama, zaman senkronizasyonu ve korunaklı gizli depolama kullanın. |
+| 6MM webhook partner uç noktasına | İmzayı ham istek gövdesine karşı doğrulayın, eski veya geçersiz mesajları reddedin ve denemeleri deduplicate edin. |
+| Ticaret durumundan ortak kayıtlara geçiş | Emirleri, pozisyonları, bakiyeleri ve transferleri dayanıklı tanımlayıcılar ve terminal durum kontrolleri kullanarak uzlaştırın. |
 
-<h2 id="production-verification">Ishlab chiqarishni tekshirish</h2>
+<h2 id="production-verification">Üretim doğrulaması</h2>
 
-- Test muddati o'tgan, bekor qilingan va noto'g'ri ko'rsatilgan ma'lumotlar.
-- O'zgartirilgan webhook tanalarini, takroriy callbacklarni, kechiktirilgan callbacklarni va endpoint timeoutlarni sinash.
-- Jurnallar sirlarni, kirish tokenlarini va maxfiy so'rov yuklarini yashirishini tasdiqlash.
-- Takroriy imzo nosozliklari, g'ayrioddiy tartib faolligi, muvofiqlashtirish farqlari va ulanish beqarorligi haqida ogohlantirish.
-- Egasi va javob yo'lini hujjatlashtirish, veb-xek nosozligi va savdo hodisalari uchun hujjatlashtiring.
+- Test süresi dolmayan, iptal edilmiş ve yanlış kapsama alanına sahip kimlik bilgileri.
+- Değiştirilmiş webhook gövdelerini test etmek, tekrar geri çağrıları, gecikmeli geri çağrıları ve uç nokta zaman aşımlarını test etmek.
+- Kayıtların sırları, erişim tokenlarını ve hassas istek yüklerini suçladığını doğrulayın.
+- Tekrarlayan imza arızaları, anormal emir aktivitesi, uzlaşma farklılıkları ve bağlantı kararsızlığı konusunda uyarı.
+- Kimlik bilgisi açığa, webhook arızası ve ticaret olaylarına ilişkin sahip ve yanıt yolunu belgeleyin.
 
-<h2 id="related-security-guides">Tegishli xavfsizlik qo'llanmalari</h2>
+<h2 id="related-security-guides">İlgili güvenlik rehberleri</h2>
 
-- [Sirlar va imzo](/tr/sdk/security/secrets-signing)
-- [Webhooks va Idempotency](/tr/sdk/security/webhooks-idempotency)
-- [Hodisaga javob](/tr/security-compliance/incident-response)
-- [Hamkorlik Mas'uliyati Matritsasi](/tr/security-compliance/partner-responsibilities)
+- [Sırlar ve İmza Alma](/tr/sdk/security/secrets-signing)
+- [Webhooks ve İdempotensi](/tr/sdk/security/webhooks-idempotency)
+- [Olay Müdahalesi](/tr/security-compliance/incident-response)
+- [Ortak Sorumluluk Matrisi](/tr/security-compliance/partner-responsibilities)

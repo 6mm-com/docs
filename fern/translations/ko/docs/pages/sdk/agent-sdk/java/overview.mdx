@@ -1,0 +1,48 @@
+---
+title: "Agent Java SDK"
+subtitle: "6MM Agent Java SDK를 설치하고 사용자 바인딩, 전송, 진입 자격 증명, webhook 검증을 위해 서명된 백엔드 APIs을 사용하세요."
+slug: sdk/agent-sdk/java/overview
+canonical-url: https://docs.6mm.com/ko/sdk/agent-sdk/java/overview
+---
+
+<h2 id="official-repository">공식 저장소</h2>
+
+Java SDK 저장소는 SDK 소스 코드, 릴리스 노트, 사용 사례 및 구현 세부사항의 진실의 출처입니다:
+
+[6mm-com/agent-java-sdk](https://github.com/6mm-com/agent-java-sdk)
+
+<h2 id="runtime">런타임</h2>
+
+| 항목 | 가치 |
+| --- | --- |
+| 최소 Java 버전 | Java 8+ |
+| 추천 빌드 도구 | 메이븐 3.9+ |
+| 메이븐 군 | `com.sixmm.exchange.sdk` |
+| 메이븐 유물 | `agent` |
+| 문서화된 소스 태그 | `v0.1.1` |
+
+공개 GitHub 저장소는 Maven 의존성 저장소가 아니라 소스 호스팅입니다. 태그가 붙은 소스를 로컬에서 빌드 및 설치하거나, 승인된 산출물을 조직의 개인 Maven 저장소에 게시한 후 팀 빌드에 사용하세요.
+
+<h2 id="typical-backend-responsibilities">일반적인 백엔드 업무</h2>
+
+- 파트너 사용자 세션 검증.
+- 파트너 사용자를 agentUserId에 매핑합니다.
+- 첫 거래 또는 이전 흐름 전에 콜 바인드.
+- createEntryUrl 에게 전화하여 일회성 전면 SSO.
+- 파트너 토큰 모드Trading Widget createEmbedToken를 호출하세요.
+- 전이 webhooks 을 검증하고 멩등성 처리.
+
+<h2 id="security-and-operational-rules">보안 및 운영 규칙</h2>
+
+- 백엔드 비밀 관리자나 보호 환경 변수에만 `apiSecret` 저장.
+- 서명된 요청이 타임스탬프를 포함하므로 서버 시간 동기화 유지.
+- `agentOrderNo` 를 내구성 있는 멎등성 키로 취급하고 전역적으로 유일하게 유지한다.
+- `platformUserId` 를 문자열로 저장하고 `agentUserId`와의 관계를 유지한다.
+- 타임아웃이나 불확실한 네트워크 결과 후 재시도하기 전에 원본 전송을 쿼리합니다.
+
+<h2 id="next-steps">다음 단계</h2>
+
+- [Java 퀵 스타트](/ko/sdk/agent-sdk/java/quick-start): 태그된 소스를 설치하고 `AgentClient`초기화합니다.
+- [임베드 토큰 생성](/ko/sdk/agent-sdk/java/embed-token): Trading Widget에 대한 단명한 자격 증명을 발급했습니다.
+- [비밀과 서명](/ko/sdk/security/secrets-signing): 자동 HMAC 서명과 비밀 처리를 이해하세요.
+- [Webhooks 및 등등성](/ko/sdk/security/webhooks-idempotency): 콜백을 검증하고 중복 처리를 방지합니다.

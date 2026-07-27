@@ -1,13 +1,13 @@
 ---
-title: "Embed tokenini yaratish"
-subtitle: "Hamkor-token rejimi uchun qisqa muddatli embed tokenlarni Trading Widget ."
+title: "Embed Token Oluştur"
+subtitle: "Partner-token modu için kısa ömürlü gömülü tokenlar Trading Widget çıkar."
 slug: sdk/agent-sdk/java/embed-token
 canonical-url: https://docs.6mm.com/tr/sdk/agent-sdk/java/embed-token
 ---
 
-<h2 id="sdk-call">SDK qo'ng'iroq</h2>
+<h2 id="sdk-call">SDK çağrısı</h2>
 
-Hamkor foydalanuvchi sessiyasini tasdiqlagandan so'ng backenddan embed tokenlarini yarating. Brauzer sizning endpointingizni chaqirishi kerak, endpointingiz esa 6MM orqali Agent SDK.
+Ortak kullanıcı oturumunu doğruladıktan sonra arka uçunuzdan gömülü tokenlar oluşturun. Tarayıcı uç noktanızı çağırmalı ve uç noktanız 6MM üzerinden Agent SDKaramalıdır.
 
 ```java
 CreateEmbedTokenResponse resp = client.createEmbedToken(
@@ -18,11 +18,11 @@ System.out.println(resp.embedToken);
 System.out.println(resp.expireAt);
 ```
 
-> **Bir martalik sertifikat**
+> **Tek seferlik sertifika**
 >
-> embedToken qisqa muddatli va bir martalik foydalanish. Uni URL so'rov qatoriga joylashtirmang.
+> embedToken kısa ömürlü ve tek kullanımdır. Bunu URL sorgu dizisine koymayın.
 
-<h2 id="backend-endpoint-example">Backend endpoint misoli</h2>
+<h2 id="backend-endpoint-example">Arka uç uç noktası örneği</h2>
 
 ```java
 @PostMapping("/api/trading/embed-token")
@@ -37,20 +37,20 @@ public EmbedTokenView createEmbedToken(@RequestBody EmbedTokenRequest request,
 }
 ```
 
-Faqat Trading Widget token provayderi uchun kerak bo'lgan maydonlarni qaytaring. apiSecret, xom imzo maydonlari yoki ichki xizmat konfiguratsiyasini qaytarmang.
+Yalnızca Trading Widget token sağlayıcısının ihtiyaç duyduğu alanları geri gönderin. apiSecret, ham imza alanlarını veya dahili hizmet yapılandırmasını geri göndermeyin.
 
-<h2 id="failure-handling">Nosozliklarni boshqarish</h2>
+<h2 id="failure-handling">Arıza yönetimi</h2>
 
-| Holati | Tavsiya etilgan boshqaruv |
+| Durum | Önerilen kullanım |
 | --- | --- |
-| Foydalanuvchi sessiyasi yo'q yoki muddati tugagan | Hamkor nuqtadan 401 ni qaytaring va foydalanuvchidan yana tizimga kirishni so'rang. |
-| Agent foydalanuvchisi bog'lanmagan | Avval foydalanuvchini bog'lang, keyin token yaratishni qayta sinab ko'ring. |
-| 6MM vaqtinchalik xatoni qaytaradi | Qayta sinab ko'riladigan xatoni frontendga qaytaring va qo'llab requestId llab-quvvatlash uchun ro'yxatdan o'ting. |
-| channelId vidjet nusxasiga mos kelmaydi | So'rovni rad eting va vidjet sessiyasini qayta yarating. |
+| Kullanıcı oturumu eksik veya süresi dolmuş | Partner uç noktasından 401'i geri gönderin ve kullanıcıya tekrar giriş yapmasını isteyin. |
+| Ajan kullanıcısı bağlı değildir | Önce kullanıcıyı bağlayın, sonra token oluşturmayı tekrar deneyin. |
+| 6MM geçici bir hata döndürür | Ön yüze tekrar denenebilir bir hata gönderin ve destek için requestId kaydlayın. |
+| channelId widget örneğiyle eşleşmiyor | İsteği reddedin ve widget oturumunu yeniden oluşturun. |
 
-<h2 id="related-documentation">Tegishli hujjatlar</h2>
+<h2 id="related-documentation">İlgili belgeler</h2>
 
-- [Trading Widget autentifikatsiya](/tr/sdk/trading-widget/authentication): `tokenProvider` hamkor nuqtaga ulaning.
-- [Java Tez Boshlash](/tr/sdk/agent-sdk/java/quick-start): o'rnatish va ishga tushirish `AgentClient`.
-- [Sirlar va Imzolash](/tr/sdk/security/secrets-signing): Agentni API sirini himoya qilish.
-- [Webhooks & Idempotency](/tr/sdk/security/webhooks-idempotency): integratsiyaning callback tomonini himoya qiling.
+- [Trading Widget Doğrulama](/tr/sdk/trading-widget/authentication): `tokenProvider` partner uç noktasına bağlayın.
+- [Java Hızlı Başlangıç](/tr/sdk/agent-sdk/java/quick-start): kurulum ve başlatma `AgentClient`.
+- [Sırlar ve İmza Alma](/tr/sdk/security/secrets-signing): Ajanı API sırrını koruyun.
+- [Webhooks ve İdempotensi](/tr/sdk/security/webhooks-idempotency): entegrasyonun geri çağrı tarafını güvence altına almak.

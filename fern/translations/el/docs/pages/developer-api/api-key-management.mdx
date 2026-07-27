@@ -1,0 +1,128 @@
+---
+title: "API Key Διαχείριση"
+description: "Δημιουργήστε, επιθεωρήστε, ενημερώστε και ανακαλέστε τα κλειδιά 6MM API εφαρμόζοντας παράλληλα κατάλληλα δικαιώματα, περιορισμούς IP , μυστική αποθήκευση και πρακτικές εναλλαγής."
+slug: developer-api/api-key-management
+canonical-url: https://docs.6mm.com/el/developer-api/api-key-management
+---
+
+Τα τελικά σημεία διαχείρισης API Key δέχονται μόνο έλεγχο ταυτότητας JWT.
+
+<h2 id="create-api-key">Δημιουργήστε API Key</h2>
+
+```http
+POST /v1/private/user/api-key/create
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+Παράμετροι αιτήματος:
+
+| Παράμετρος     | Τύπος      | Απαιτείται | Περιγραφή                                                           |
+| ------------- | --------- | -------- | --------------------------------------------------------------------- |
+| `label`       | string    | Ναι      | API Key ετικέτα, μήκος 1 - 64                                          |
+| `permissions` | Διεθνές       | Όχι       | Μάσκα bit άδειας, προεπιλεγμένη `1`, εύρος `1` - `7`                      |
+| `ipWhitelist` | συμβολοσειρά\[] | Όχι       | IP λίστα επιτρεπόμενων, έως 20 καταχωρήσεις. Εάν παραλειφθεί, η IP πηγής είναι απεριόριστη |
+
+Παράδειγμα αιτήματος:
+
+```bash
+curl -X POST https://api.6mm.com/v1/private/user/api-key/create \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -d '{
+    "label": "external-service-prod",
+    "permissions": 3,
+    "ipWhitelist": ["203.0.113.10"]
+  }'
+```
+
+Παράδειγμα απάντησης:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "apiKey": "fx_xxxxxxxxxxxxxxxxxxxxxxxx",
+    "apiSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  },
+  "requestId": "req-api-key"
+}
+```
+
+`apiSecret` επιστρέφεται μόνο μία φορά κατά τη δημιουργία του API Key . Αποθηκεύστε το αμέσως σε ένα μυστικό σύστημα διαχείρισης. Μην το γράφετε σε αποθετήρια πηγαίου κώδικα ή αρχεία καταγραφής.
+
+Κάθε χρήστης μπορεί να δημιουργήσει έως και 30 API κλειδιά.
+
+<h2 id="list-api-keys">Λίστα API κλειδιών</h2>
+
+```http
+GET /v1/private/user/api-key/list
+Authorization: Bearer YOUR_ACCESS_TOKEN
+```
+
+Πεδία απόκρισης:
+
+| Πεδίο                | Τύπος      | Περιγραφή                       |
+| -------------------- | --------- | --------------------------------- |
+| `list[].id`          | string    | API Key ταυτότητα                        |
+| `list[].label`       | string    | Ετικέτα                             |
+| `list[].apiKey`      | string    | Αναγνωριστικό δημόσιου API Key         |
+| `list[].permissions` | Διεθνές       | Άδεια bitmask                |
+| `list[].ipWhitelist` | συμβολοσειρά\[] | IP λίστα επιτρεπόμενων                      |
+| `list[].status`      | Διεθνές       | Κατάσταση: `1` ενεργοποιημένο, `0` απενεργοποιημένο |
+| `list[].lastUsedAt`  | int64     | Χρόνος τελευταίας χρήσης                    |
+| `list[].createdAt`   | int64     | Χρόνος δημιουργίας                     |
+
+<h2 id="update-api-key">Ενημέρωση API Key</h2>
+
+```http
+PUT /v1/private/user/api-key/update
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+Παράμετροι αιτήματος:
+
+| Παράμετρος     | Τύπος      | Απαιτείται | Περιγραφή               |
+| ------------- | --------- | -------- | ------------------------- |
+| `id`          | string    | Ναι      | API Key ταυτότητα                |
+| `label`       | string    | Όχι       | Νέα ετικέτα                 |
+| `permissions` | Διεθνές       | Όχι       | Νέα άδεια bitmask    |
+| `ipWhitelist` | συμβολοσειρά\[] | Όχι       | Νέα λίστα επιτρεπόμενων IP          |
+| `status`      | Διεθνές       | Όχι       | `1` ενεργοποιημένο, `0` απενεργοποιημένο |
+
+<h2 id="delete-api-key">Διαγραφή API Key</h2>
+
+```http
+POST /v1/private/user/api-key/delete
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+Σώμα αιτήματος:
+
+```json
+{ "id": "1001" }
+```
+
+<h2 id="delete-all-api-keys">Διαγραφή όλων των πλήκτρων API</h2>
+
+```http
+POST /v1/private/user/api-key/delete-all
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+Πεδία απόκρισης:
+
+| Πεδίο     | Τύπος  | Περιγραφή                |
+| --------- | ----- | -------------------------- |
+| `deleted` | int64 | Αριθμός διαγραμμένων κλειδιών API |
+
+<h2 id="related-security-guides">Σχετικοί οδηγοί ασφαλείας</h2>
+
+- [Έλεγχος ταυτότητας](/el/developer-api/authentication)
+- [Αίτημα υπογραφής](/el/developer-api/request-signing)
+- [Μυστικά & Υπογραφή](/el/sdk/security/secrets-signing)
+- [Συστάσεις ενσωμάτωσης](/el/developer-api/integration-recommendations)

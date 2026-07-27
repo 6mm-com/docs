@@ -1,0 +1,223 @@
+---
+title: "Χρήστης και Λογαριασμός"
+description: "Χρησιμοποιήστε 6MM τελικά σημεία χρήστη και λογαριασμού για να ανακτήσετε προφίλ, υπόλοιπα, κατάσταση λογαριασμού, δικαιώματα και πληροφορίες λογαριασμού που συνδέονται με συνεργάτες."
+slug: developer-api/rest-api/user-and-account
+canonical-url: https://docs.6mm.com/el/developer-api/rest-api/user-and-account
+---
+
+Εκτός εάν ορίζεται διαφορετικά, τα ακόλουθα τελικά σημεία μπορούν να χρησιμοποιούν JWT ή API Key υπογραφή.
+
+<h2 id="user-info">Πληροφορίες χρήστη</h2>
+
+```http
+GET /v1/private/user/info
+```
+
+Πεδία απόκρισης:
+
+| Πεδίο                  | Τύπος   | Περιγραφή      |
+| ---------------------- | ------ | ---------------- |
+| `userInfo.userId`      | string | Αναγνωριστικό εξωτερικού χρήστη |
+| `userInfo.username`    | string | Όνομα χρήστη         |
+| `userInfo.agentId`     | int64  | Αναγνωριστικό πράκτορα         |
+| `userInfo.vipLevel`    | int64  | VIP επίπεδο        |
+| `userInfo.lastLoginAt` | int64  | Τελευταίος χρόνος σύνδεσης  |
+| `userInfo.lastLoginIp` | string | Τελευταία IP σύνδεσης    |
+
+<h2 id="user-assets">Στοιχεία χρήστη</h2>
+
+```http
+GET /v1/private/user/asset
+```
+
+Πεδία απόκρισης:
+
+| Πεδίο                     | Τύπος   | Περιγραφή                     |
+| ------------------------- | ------ | ------------------------------- |
+| `userAsset.userId`        | string | Αναγνωριστικό εξωτερικού χρήστη                |
+| `userAsset.assetType`     | string | Τύπος περιουσιακού στοιχείου                      |
+| `userAsset.walletBalance` | string | Υπόλοιπο πορτοφολιού                  |
+| `userAsset.frozenMargin`  | string | Πάγωμα περιθωρίου από εκκρεμείς εντολές |
+| `userAsset.usedMargin`    | string | Περιθώριο που χρησιμοποιείται από θέσεις        |
+
+<h2 id="create-listenkey">Δημιουργήστε listenKey</h2>
+
+```http
+POST /v1/private/user/listen-key
+```
+
+Δημιουργεί ένα κλειδί ελέγχου ταυτότητας για ιδιωτικές ροές WebSocket .
+
+<h2 id="renew-listenkey">Ανανέωση listenKey</h2>
+
+```http
+PUT /v1/private/user/listen-key
+```
+
+Επεκτείνει listenKey ισχύ.
+
+<h2 id="close-listenkey">Κλείσιμο listenKey</h2>
+
+```http
+DELETE /v1/private/user/listen-key
+```
+
+Κλείνει την καθορισμένη listenKey.
+
+<h2 id="account-change-logs">Αρχεία καταγραφής αλλαγών λογαριασμού</h2>
+
+```http
+GET /v1/private/user/account-change-log?assetType=USDT&page=1&pageSize=20
+```
+
+Παράμετροι αιτήματος:
+
+| Παράμετρος    | Τύπος   | Απαιτείται | Περιγραφή                  |
+| ------------ | ------ | -------- | ---------------------------- |
+| `assetType`  | string | Όχι       | Τύπος στοιχείου, όπως `USDT`   |
+| `changeType` | string | Όχι       | Τύπος αλλαγής                  |
+| `startTime`  | int64  | Όχι       | Ώρα έναρξης                   |
+| `endTime`    | int64  | Όχι       | Ώρα λήξης                     |
+| `page`       | int32  | Όχι       | Αριθμός σελίδας, προεπιλεγμένη `1`     |
+| `pageSize`   | int32  | Όχι       | Στοιχεία ανά σελίδα, προεπιλεγμένη `20` |
+
+Πεδία απόκρισης:
+
+| Πεδίο                        | Τύπος   | Περιγραφή                  |
+| ---------------------------- | ------ | ---------------------------- |
+| `list[].assetType`           | string | Τύπος περιουσιακού στοιχείου                   |
+| `list[].amount`              | string | Αλλαγμένο ποσό               |
+| `list[].walletBalanceBefore` | string | Υπόλοιπο πορτοφολιού πριν από την αλλαγή |
+| `list[].walletBalanceAfter`  | string | Υπόλοιπο πορτοφολιού μετά την αλλαγή  |
+| `list[].frozenBalanceBefore` | string | Παγωμένο υπόλοιπο πριν από την αλλαγή |
+| `list[].frozenBalanceAfter`  | string | Παγωμένο υπόλοιπο μετά την αλλαγή  |
+| `list[].changeType`          | string | Τύπος αλλαγής                  |
+| `list[].referenceId`         | string | Αναγνωριστικό σχετικής επιχείρησης          |
+| `list[].createdAt`           | int64  | Χρόνος δημιουργίας                |
+| `total`                      | int64  | Συνολικός αριθμός                  |
+
+<h2 id="30-day-volume-statistics">Στατιστικά όγκου 30 ημερών</h2>
+
+```http
+GET /v1/private/user/volume-stats
+```
+
+Πεδία απόκρισης:
+
+| Πεδίο         | Τύπος   | Περιγραφή                                     |
+| ------------- | ------ | ----------------------------------------------- |
+| `volume30d`   | string | Αθροιστικός όγκος συναλλαγών τις τελευταίες 30 ημέρες |
+| `feeTotal30d` | string | Σωρευτικές χρεώσεις τις τελευταίες 30 ημέρες           |
+
+<h2 id="balance-history">Ιστορικό υπολοίπου</h2>
+
+```http
+GET /v1/private/user/balance-history?period=1D&limit=30
+```
+
+Παράμετροι αιτήματος:
+
+| Παράμετρος | Τύπος   | Απαιτείται | Περιγραφή                            |
+| --------- | ------ | -------- | -------------------------------------- |
+| `period`  | string | Ναι      | `1D` / `1W` / `1M`                     |
+| `limit`   | Διεθνές    | Όχι       | Αριθμός στοιχείων που επιστράφηκαν, προεπιλεγμένη `30` |
+
+Πεδία απόκρισης:
+
+| Πεδίο             | Τύπος   | Περιγραφή                 |
+| ----------------- | ------ | --------------------------- |
+| `items[].date`    | string | Ημερομηνία συνάθροισης            |
+| `items[].balance` | string | Υπόλοιπο πορτοφολιού              |
+| `items[].pnl`     | string | Πραγματοποιηθέν PnL για την περίοδο |
+
+<h2 id="trade-overview">Επισκόπηση Εμπορίου</h2>
+
+```http
+GET /v1/private/user/trade-overview?type=1M
+```
+
+Παράμετροι αιτήματος:
+
+| Παράμετρος | Τύπος   | Απαιτείται | Περιγραφή                                     |
+| --------- | ------ | -------- | ----------------------------------------------- |
+| `type`    | string | Ναι      | Εύρος τάσεων: `1D`, `1W`, `1M`, `3M`, `6M`, `1Y` |
+
+Πεδία απόκρισης:
+
+| Πεδίο                | Τύπος   | Περιγραφή                                                          |
+| -------------------- | ------ | -------------------------------------------------------------------- |
+| `todayPnl`           | string | Το σημερινό υλοποιημένο PnL                                                 |
+| `todayVolume`        | string | Ο σημερινός όγκος συναλλαγών συμβολαίων                                      |
+| `totalVolume`        | string | Σωρευτικός όγκος συναλλαγών συμβολαίων                                   |
+| `totalPnl`           | string | Σωρευτικό πραγματοποιηθέν PnL                                              |
+| `maxDrawdown30d`     | string | Μέγιστο ποσό ανάληψης τις τελευταίες 30 ημέρες                        |
+| `maxDrawdown30dRate` | string | Μέγιστο ποσοστό ανάληψης τις τελευταίες 30 ημέρες, δεκαδικό από `0` έως `1` |
+| `transferIn`         | string | Σωρευτικά μεταφερόμενα κεφάλαια                                      |
+| `transferOut`        | string | Σωρευτικά μεταφερόμενα κεφάλαια                                     |
+| `items[]`            | array  | Δεδομένα τάσεων περιουσιακών στοιχείων                                                     |
+
+<h2 id="asset-overview-summary">Σύνοψη επισκόπησης περιουσιακών στοιχείων</h2>
+
+```http
+GET /v1/private/user/asset/overview/summary
+```
+
+Τα πεδία απόκρισης είναι τα ίδια με τα πεδία σύνοψης επισκόπησης συναλλαγών, εξαιρουμένων των `items[]`.
+
+<h2 id="asset-overview-trend">Τάση επισκόπησης περιουσιακών στοιχείων</h2>
+
+```http
+GET /v1/private/user/asset/overview/trend?type=1M
+```
+
+Παράμετροι αιτήματος:
+
+| Παράμετρος | Τύπος   | Απαιτείται | Περιγραφή                                     |
+| --------- | ------ | -------- | ----------------------------------------------- |
+| `type`    | string | Ναι      | Εύρος τάσεων: `1D`, `1W`, `1M`, `3M`, `6M`, `1Y` |
+
+Πεδία απόκρισης:
+
+| Πεδίο                  | Τύπος   | Περιγραφή                     |
+| ---------------------- | ------ | ------------------------------- |
+| `items[].snapshotTime` | int64  | Χρόνος στιγμιότυπου                   |
+| `items[].balance`      | string | Ισοζύγιο τρεχουσών συναλλαγών         |
+| `items[].pnl`          | string | PnL για την τρέχουσα περίοδο      |
+| `items[].pnlRate`      | string | Ποσοστό PnL για την τρέχουσα περίοδο |
+| `items[].totalPnl`     | string | Αθροιστικό PnL                  |
+
+<h2 id="favorite-symbols">Αγαπημένα σύμβολα</h2>
+
+<h2 id="save">Αποθήκευση</h2>
+
+```http
+POST /v1/private/user/favorite-symbols
+Content-Type: application/json
+```
+
+Σώμα αιτήματος:
+
+```json
+{
+  "symbols": ["BTCUSDT", "ETHUSDT"]
+}
+```
+
+<h2 id="query">Ερώτημα</h2>
+
+```http
+GET /v1/private/user/favorite-symbols
+```
+
+Πεδία απόκρισης:
+
+| Πεδίο     | Τύπος      | Περιγραφή          |
+| --------- | --------- | -------------------- |
+| `symbols` | συμβολοσειρά\[] | Λίστα αγαπημένων συμβόλων |
+
+<h2 id="related-documentation">Σχετική τεκμηρίωση</h2>
+
+- [Ιδιωτικό κανάλι χρήστη](/el/developer-api/websocket/private-user-channel)
+- [Έλεγχος ταυτότητας](/el/developer-api/authentication)
+- [Μεταβίβαση περιουσιακών στοιχείων](/el/trading/getting-started/asset-transfer)
+- [Κωδικοί σφαλμάτων & αντιμετώπιση προβλημάτων](/el/developer-api/error-codes-and-troubleshooting)

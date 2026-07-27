@@ -1,4 +1,4 @@
-export const generatorVersion = 3;
+export const generatorVersion = 4;
 
 export const locales = [
   { code: "en", label: "English", default: true },
@@ -17,14 +17,14 @@ export const locales = [
   { code: "uk", label: "Українська", sourceLanguage: "en", targetLanguage: "uk" },
   { code: "pt-PT", label: "Português (Internacional)", sourceLanguage: "en", targetLanguage: "pt-PT" },
   { code: "es-ES", label: "Español (Internacional)", sourceLanguage: "en", targetLanguage: "es-ES" },
-  { code: "tr", label: "O‘zbek", sourceLanguage: "en", targetLanguage: "uz" },
+  { code: "tr", label: "Türkçe", sourceLanguage: "en", targetLanguage: "tr" },
+  { code: "ko", label: "한국어", sourceLanguage: "en", targetLanguage: "ko" },
+  { code: "el", label: "Ελληνικά", sourceLanguage: "en", targetLanguage: "el" },
   { code: "ar", label: "العربية", sourceLanguage: "en", targetLanguage: "ar" },
-  { code: "ms", label: "Filipino", sourceLanguage: "en", targetLanguage: "fil" },
-  { code: "tr-TR", label: "Azərbaycan", sourceLanguage: "en", targetLanguage: "az" },
 ];
 
 export const expectedLocales = locales.map((locale) => locale.code);
-export const nativeLocaleCodes = expectedLocales;
+export const nativeLocaleCodes = locales.map((locale) => locale.code);
 export const generatedLocaleSpecs = locales.filter(
   (locale) => !locale.default && !locale.manual,
 );
@@ -35,7 +35,4 @@ export const widgetLocaleAliases = {
   "es-AR": "es-419",
   pt: "pt-PT",
   es: "es-ES",
-  uz: "tr",
-  fil: "ms",
-  az: "tr-TR",
 };

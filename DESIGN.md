@@ -15,7 +15,7 @@ Use a clean, technical, enterprise SaaS style aligned with the black/white theme
 
 - White default theme with black text, subtle gray borders, and low-noise navigation.
 - Dark theme with near-black backgrounds, white text, restrained borders, and code-first contrast.
-- 6MM blue as the accent color for links, active navigation, and important technical highlights.
+- 6MM teal as the accent color for links, active navigation, and important technical highlights.
 - Left navigation, center docs, right page outline.
 - Search-first top bar with compact external links and theme/language controls.
 - Neutral gray text, restrained borders, and compact spacing.
@@ -77,10 +77,11 @@ Use separate language routes:
 - `/` for English
 - `/<locale>/` for each localized version
 
-English is the source of truth. Every translation overlay lives under
-`fern/translations/` and uses Fern's native locale routing. Do not mix languages
-in one page. Translate by concept, not sentence-by-sentence, and keep API names,
-method names, event names, headers, and code identifiers unchanged.
+English is the source of truth. Every supported translation uses a Fern-native
+overlay under `fern/translations/`. Do not use surrogate locale codes or
+standalone locale page trees. Do not mix languages in one page. Translate by
+concept, not sentence-by-sentence, and keep API names, method names, event names,
+headers, and code identifiers unchanged.
 
 The Docs site intentionally consolidates two Widget-only regional codes:
 

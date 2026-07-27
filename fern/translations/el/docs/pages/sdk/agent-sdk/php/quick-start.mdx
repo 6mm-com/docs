@@ -1,0 +1,70 @@
+---
+title: "PHP Γρήγορη εκκίνηση"
+subtitle: "Εγκαταστήστε και αρχικοποιήστε το PHP SDK από μια υπηρεσία υποστήριξης."
+slug: sdk/agent-sdk/php/quick-start
+canonical-url: https://docs.6mm.com/el/sdk/agent-sdk/php/quick-start
+---
+
+<h2 id="install">Εγκαθιστώ</h2>
+
+```json
+{
+  "require": {
+    "sixmm/agent-sdk": "VERSION_PROVIDED_BY_6MM"
+  }
+}
+```
+
+> **Πρόσβαση σε πακέτο**
+>
+> 6MM παρέχει το εγκεκριμένο όνομα πακέτου, το αποθετήριο και την έκδοση του Composer κατά την ενσωμάτωση του συνεργάτη. Το πακέτο δεν πρέπει να θεωρηθεί ότι υπάρχει στο δημόσιο Packagist.
+
+<h2 id="before-you-start">Πριν ξεκινήσετε</h2>
+
+- Επιβεβαιώστε ότι ο πράκτορας API βάση URL με 6MM.
+- Φορτώστε apiSecret από μεταβλητές περιβάλλοντος ή μυστική διαχείριση.
+- Διατηρήστε τη χρήση SDK μόνο εντός των υπηρεσιών υποστήριξης.
+- Προετοιμάστε ανίκανους χειρισμούς για μεταφορά και webhook ροών.
+
+<h2 id="initialize-client">Προετοιμασία προγράμματος-πελάτη</h2>
+
+```php
+<?php
+
+use Sixmm\Agent\AgentClient;
+use Sixmm\Agent\AgentConfig;
+
+$client = new AgentClient(new AgentConfig(
+    'https://agent-api.6mm.com',
+    'AGENT001',
+    getenv('AGENT_API_SECRET') ?: '',
+    'USDT'
+));
+```
+
+> **Μόνο backend**
+>
+> Το PHP SDK υπογράφει αιτήματα API πράκτορα και δεν πρέπει να εκτίθεται μέσω δημόσιου πηγαίου κώδικα ή περιβάλλοντος χρόνου εκτέλεσης frontend.
+
+<h2 id="example-transfer-funds-in">Παράδειγμα: μεταφορά χρημάτων σε</h2>
+
+```php
+$response = $client->transfer([
+    'agentOrderNo' => 'AGT-ORDER-1001',
+    'agentUserId' => 'agent-user-001',
+    'direction' => 'IN',
+    'currency' => 'USDT',
+    'amount' => '10.00',
+]);
+```
+
+Χρησιμοποιήστε δεκαδικές συμβολοσειρές για ποσά και διατηρήστε την αρχική agentOrderNo κατά την επανάληψη ή την υποβολή ερωτήματος για την κατάσταση μεταφοράς.
+
+<h2 id="next-steps">Επόμενα βήματα</h2>
+
+| Ανάγκη | Επόμενη σελίδα |
+| --- | --- |
+| Κατανοήστε τις δυνατότητές Agent SDK | [Agent SDK Επισκόπηση](/el/sdk/agent-sdk/overview) |
+| Ελέγξτε τη συμπεριφορά υπογραφής | [Μυστικά & Υπογραφή](/el/sdk/security/secrets-signing) |
+| Επαληθεύστε την παράδοση επιστροφής κλήσης | [Webhooks & Idempotency](/el/sdk/security/webhooks-idempotency) |
+| Διάγνωση προβλήματος ενοποίησης | [SDK Αντιμετώπιση προβλημάτων](/el/sdk/security/troubleshooting) |

@@ -1,0 +1,153 @@
+---
+title: "요청 서명"
+description: "6MM API 요청에 HMAC서명하세요 -SHA256 페이로드, 타임스탬프, API 키, 서명 헤더, 검증 규칙을 사용하세요."
+slug: developer-api/request-signing
+canonical-url: https://docs.6mm.com/ko/developer-api/request-signing
+---
+
+<h2 id="request-format">요청 형식</h2>
+
+| 위치 | 필드       | 필수            | 설명                                   |
+| -------- | ----------- | ------------------- | --------------------------------------------- |
+| 헤더   | `X-API-KEY` | 네                 | API Key가 생성되면 `apiKey` 반환됩니다 |
+| 쿼리    | `timestamp` | 네                 | 유닉스 밀리초 타임스탬프                    |
+| 쿼리    | `signature` | 네                 | HMAC-SHA256 서명, 소문자 육진수 문자열   |
+| 본문     | JSON        | 종점에 따라 다릅니다 | POST / PUT / DELETE 요청 본문              |
+
+<h2 id="signature-payload">서명 탑재체</h2>
+
+```
+payload = queryStringWithoutSignature + requestBody
+signature = HMAC-SHA256(apiSecret, payload)
+```
+
+주요 규칙:
+
+* `timestamp` Unix 밀리초 타임스탬프임에 틀림없습니다. 서버 허용 빈도는 ±10초입니다.
+* `signature` 는 URL 쿼리 문자열에 배치되지만 서명 페이로드에는 포함되지 않습니다.
+* 서버는 `signature`제거 후 원본 쿼리 문자열을 검증합니다; 쿼리 매개변수를 재정렬하지 않습니다.
+* 서명에 사용되는 쿼리 매개변수 순서는 실제 요청 URL 와 일치해야 합니다.
+* 요청 본체가 존재하는 경우, 서명에 사용되는 JSON 문자열은 실제 전송된 본문과 정확히 일치해야 합니다.
+* 순서 관련 경로는 서명 재생 검사를 수행합니다. 같은 서명을 짧은 시간 내에 재사용하면 `Signature replay detected`반환됩니다.
+
+<h2 id="server-time">서버 타임</h2>
+
+```http
+GET /v1/time
+```
+
+응답 예시:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "timestamp": 1780473256,
+    "timestampMs": 1780473256708,
+    "iso": "2026-06-03T07:54:16Z",
+    "timezone": "UTC"
+  },
+  "requestId": "req-7cad3113"
+}
+```
+
+클라이언트는 `timeOffsetMs = serverTimestampMs - localTimestampMs`를 계산한 후 `timestamp = nowMs + timeOffsetMs` 사용하여 이후 서명된 요청을 받아야 합니다. 서버가 `Timestamp outside of tolerance window`반환하면 즉시 시간을 재동기화하고 서명을 다시 생성합니다.
+
+<h2 id="get-signing-example">GET 수화 예시</h2>
+
+실제 요청:
+
+```
+GET /v1/private/order/current?symbol=BTCUSDT&timestamp=1772710377808&signature=...
+```
+
+시그니처 탑재체:
+
+```
+symbol=BTCUSDT&timestamp=1772710377808
+```
+
+<h2 id="post-signing-example">POST 수화 예시</h2>
+
+실제 요청:
+
+```
+POST /v1/private/order/place?timestamp=1772710377808&signature=...
+```
+
+요청 본문:
+
+```json
+{"symbol":"BTCUSDT","type":"LIMIT","side":"BUY","price":"85000","quantity":"0.1","timeInForce":"GTC","makerOnly":true,"clientOrderId":"ext-1772710377808-001"}
+```
+
+시그니처 탑재체:
+
+```
+timestamp=1772710377808{"symbol":"BTCUSDT","type":"LIMIT","side":"BUY","price":"85000","quantity":"0.1","timeInForce":"GTC","makerOnly":true,"clientOrderId":"ext-1772710377808-001"}
+```
+
+<h2 id="python-signing-example">파이썬 서명 예시</h2>
+
+```python
+import hashlib
+import hmac
+import json
+import time
+from urllib.parse import urlencode
+
+import requests
+
+BASE_URL = "https://api.6mm.com"
+API_KEY = "YOUR_API_KEY"
+API_SECRET = "YOUR_API_SECRET"
+TIME_OFFSET_MS = 0
+
+def sign(payload: str) -> str:
+    return hmac.new(
+        API_SECRET.encode("utf-8"),
+        payload.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+
+def sync_time_offset():
+    global TIME_OFFSET_MS
+    before = int(time.time() * 1000)
+    resp = requests.get(f"{BASE_URL}/v1/time", timeout=5)
+    after = int(time.time() * 1000)
+    resp.raise_for_status()
+
+    server_ts = int(resp.json()["data"]["timestampMs"])
+    local_midpoint = (before + after) // 2
+    TIME_OFFSET_MS = server_ts - local_midpoint
+
+def signed_request(method: str, path: str, params=None, body=None):
+    params = dict(params or {})
+    params["timestamp"] = str(int(time.time() * 1000) + TIME_OFFSET_MS)
+
+    query_string = urlencode(params)
+    body_string = ""
+    if body is not None:
+        body_string = json.dumps(body, separators=(",", ":"), ensure_ascii=False)
+
+    signature = sign(query_string + body_string)
+    url = f"{BASE_URL}{path}?{query_string}&signature={signature}"
+    headers = {
+        "X-API-KEY": API_KEY,
+        "Content-Type": "application/json",
+    }
+    resp = requests.request(method, url, headers=headers, data=body_string if body is not None else None, timeout=10)
+    resp.raise_for_status()
+    return resp.json()
+
+sync_time_offset()
+print(signed_request("GET", "/v1/private/order/current", {"symbol": "BTCUSDT"}))
+```
+
+<h2 id="related-security-guides">관련 보안 가이드</h2>
+
+- [인증](/ko/developer-api/authentication)
+- [API Key 경영](/ko/developer-api/api-key-management)
+- [비밀과 서명](/ko/sdk/security/secrets-signing)
+- [오류 코드 및 문제 해결](/ko/developer-api/error-codes-and-troubleshooting)

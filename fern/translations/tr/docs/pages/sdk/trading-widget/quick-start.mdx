@@ -1,20 +1,20 @@
 ---
-title: "Embed the 6MM Trading Widget: Quick Start"
-subtitle: "Savdo terminalini konteyner, v1 skripti va TradingWidget.create() bilan veb-sahifaga qo'shing."
+title: "6MM Trading WidgetGöm: Hızlı Başlangıç"
+subtitle: "Ticaret terminalini bir web sayfasına bir konteyner, v1 betiği ve TradingWidget.create() ile ekleyin."
 slug: sdk/trading-widget/quick-start
 canonical-url: https://docs.6mm.com/tr/sdk/trading-widget/quick-start
 ---
 
-Trading Widget SDK 6MM savdo interfeysini hamkorga tegishli veb-sahifaga joylashtiradi. Eng tez integratsiya ko'rinadigan konteyner, ishlab chiqarish SDK skripti va `TradingWidget.create()`ga chaqiruvni talab qiladi.
+Trading Widget SDK, 6MM ticaret arayüzünü ortaklara ait bir web sayfasına gömüyor. En hızlı entegrasyon için görünür bir konteyner, üretim SDK betiği ve `TradingWidget.create()`çağrısı gerekir.
 
-<h2 id="before-you-start">Boshlashdan oldin</h2>
+<h2 id="before-you-start">Başlamadan önce</h2>
 
-- Misolni resurslarni yuklay oladigan veb-sahifadan ishga tushiring `https://app.6mm.com`.
-- Vidjet konteyneriga aniq kenglik va balandlik bering.
-- Qo'ng'iroq qilishdan oldin SDK yuklang `TradingWidget.create()`.
-- Hisob yoki savdo funksiyalarini ishlab chiqarishda yoqishdan oldin [autentifikatsiya oqimi](/tr/sdk/trading-widget/authentication) ni rejalashtiring.
+- Örneği, kaynakları yükleyebilen bir web sayfasından çalıştırmak `https://app.6mm.com`.
+- Widget konteynerine açık bir genişlik ve yükseklik verin.
+- Aramadan önce SDK yükleyin `TradingWidget.create()`.
+- Planlayın [Kimlik doğrulama akışı](/tr/sdk/trading-widget/authentication) Üretim sırasında hesap veya ticaret özelliklerini etkinleştirmeden önce.
 
-<h2 id="minimal-example">Minimal misol</h2>
+<h2 id="minimal-example">Minimal örnek</h2>
 
 ```html
 <div id="trading-widget" style="width: 100%; height: 720px"></div>
@@ -42,21 +42,21 @@ Trading Widget SDK 6MM savdo interfeysini hamkorga tegishli veb-sahifaga joylash
 </script>
 ```
 
-Integratsiya muvaffaqiyatli bo'lgach, SDK `#trading-widget` ichida iframe yaratadi va `onReady`chaqiradi. Ishlab chiqish davomida `onError` ni ushlaydi, shunda konfiguratsiya va yuklash xatolari ko'rinadi.
+Entegrasyon başarılı olduğunda, SDK `#trading-widget` içinde bir iframe oluşturur ve `onReady`çağırır. Geliştirme sırasında `onError` yakalayın, böylece yapılandırma ve yükleme hataları görünür olur.
 
-<h2 id="sdk-urls">SDK URLlar</h2>
+<h2 id="sdk-urls">SDK URL'ler</h2>
 
-| Atrof-muhit | Ssenariy URL |
+| Çevre | Senaryo URL |
 | --- | --- |
-| Ishlab chiqarish | https://app.6mm.com/sdk/trading-widget/v1/index.js |
+| Yapım | https://app.6mm.com/sdk/trading-widget/v1/index.js |
 
-> **Aniq baseUrl qo'ying**
+> ** baseUrl açıkça ayarla**
 >
-> Hamkorga tegishli sahifalardan test o'tkazishda baseUrl o'ting, shunda iframe har doim 6MM Web domeniga yo'naltiriladi.
+> Ortak sahipliğindeki sayfalardan test yaparken, iframe her zaman 6MM Web alan adına işaret etmesi için baseUrl iletin.
 
-<h2 id="display-controls">Displey boshqaruvlari</h2>
+<h2 id="display-controls">Ekran kontrolleri</h2>
 
-Hamkor embedlar PC sarlavhasi va pastki bozor tickerini standart holatda yashiradi. Shell hududlarini ko'rsatish yoki yuqori darajadagi konteynerlarni joylashtirilgan savdo sahifasida yashirish uchun `display` ishlating.
+Ortak gömülüler, varsayılan olarak PC başlığını ve alt piyasa ticker'ını gizler. Kabuk alanlarını göstermeniz veya gömülü ticaret sayfasında yüksek seviyeli konteynerleri gizlemeniz gerektiğinde `display` kullanın.
 
 ```js
 display: {
@@ -66,43 +66,43 @@ display: {
 }
 ```
 
-<h2 id="container-size">Konteyner o'lchami</h2>
+<h2 id="container-size">Konteyner boyutu</h2>
 
-| Yuzasi | Tavsiya etilgan minimal |
+| Yüzey | Önerilen minimum |
 | --- | --- |
-| Ish stoli | 1024 x 720 |
+| Masaüstü | 1024 x 720 |
 | Mobil | 390 x 700 |
 
-Javob beruvchi tartiblar uchun kenglikni silliq saqlang va har bir breakpoint uchun mos minimal balandlikni belgilang. Nol balandlikdagi konteyner SDK muvaffaqiyatli yuklashi mumkin, lekin savdo interfeysi ko'rinmas qoladi.
+Duyarlı düzenler için genişliği akıcı tutun ve her kırılma noktası için uygun minimum yükseklik belirleyin. Sıfır yüksekliğe sahip bir konteyner, SDK başarılı şekilde yükleyebilir ve işlem arayüzünü görünmez bırakabilir.
 
-<h2 id="verify-the-integration">Integratsiyani tekshiring</h2>
+<h2 id="verify-the-integration">Entegrasyonu doğrulayın</h2>
 
-1. Brauzer tarmoq panelida SDK skript muvaffaqiyatli qaytishini tasdiqlang.
-2. iframe ishga tushirilgandan so `onReady` o'q otishini tasdiqlang.
-3. Konfiguratsiyalangan `symbol`, `locale`, mavzu va yashirin bo'limlarni sinab ko'ring.
-4. Sahifani ish stoli va mobil to'xtash nuqtalari bo'ylab o'lchamini o'zgartiring.
-5. Ishga tushirishdan oldin ishlab chiqarilmagan foydalanuvchi bilan autentifikatsiyalangan testni yakunlang.
+1. SDK betiksinin tarayıcı ağ panelinde başarılı bir şekilde geri döndüğünü onaylayın.
+2. iframe başlatıldığında `onReady` ateşlendiğini onaylayın.
+3. Yapılandırılmış `symbol`, `locale`, tema ve gizli bölümleri test edin.
+4. Sayfayı masaüstü ve mobil ara noktaları arasında boyutlandırın.
+5. Lansmandan önce üretim dışı bir kullanıcıyla doğrulamalı bir testi tamamlamak.
 
-<h2 id="common-issues">Umumiy muammolar</h2>
+<h2 id="common-issues">Yaygın sorunlar</h2>
 
-| Simptom | Nimani tekshirish kerak |
+| Semptom | Neler kontrol edilmeli |
 | --- | --- |
-| Bo'sh vidjet maydoni | Konteynerning eni va balandligi ko'rinadigan ekanligini tasdiqlang. |
-| `TradingWidget` aniq emas | Yaratish chaqirig'idan oldin v1 skripti yuklanganini tasdiqlang. |
-| Noto'g'ri sahifa yoki muhit | `baseUrl` aniq sozlang va sozlangan muhitni tekshiring. |
-| Tayyor hodisa hech qachon ishlamaydi | Bloklangan iframe yoki skript so'rovlarini `onError` tutib, tekshiring. |
-| Hisob ma'lumotlari mavjud emas | Qo'llab-quvvatlanadigan vidjet autentifikatsiya jarayonini yakunlang. |
+| Boş widget alanı | Kabın görünür genişlik ve yüksekliğe sahip olduğunu doğrulayın. |
+| `TradingWidget` tanımlanmamıştır | Oluşturma çağrısından önce v1 bebesinin yüklendiğini onaylayın. |
+| Yanlış sayfa veya ortam | `baseUrl` açıkça ayarlayın ve yapılandırılmış ortamı doğrulayın. |
+| Hazır olay asla ateşlenmez | `onError` yakalayın ve bloklanan iframe veya script isteklerini inceleyin. |
+| Hesap verileri mevcut değil | Desteklenen widget kimlik doğrulama akışını tamamla. |
 
-<h2 id="next-steps">Keyingi qadamlar</h2>
+<h2 id="next-steps">Sonraki adımlar</h2>
 
 <CardGroup cols={3}>
-<Card title="Vidjetlarni autentifikatsiya qilish" icon="fa-duotone fa-user-shield" href="/tr/sdk/trading-widget/authentication">
-O'rnatilgan terminalni tasdiqlangan foydalanuvchi sessiyasiga ulaning.
+<Card title="Widget Doğrulama" icon="fa-duotone fa-user-shield" href="/tr/sdk/trading-widget/authentication">
+Gömülü terminali onaylı bir kullanıcı oturumuna bağlayın.
 </Card>
-<Card title="Variantlar va tadbirlar" icon="fa-duotone fa-sliders" href="/tr/sdk/trading-widget/options-events">
-Belgilar, joylashuv, ko'rsatish xatti-harakati va hayot aylanishi bo'yicha qayta chaqiriqlarni sozlang.
+<Card title="Seçenekler ve Etkinlikler" icon="fa-duotone fa-sliders" href="/tr/sdk/trading-widget/options-events">
+Sembolleri, konumu, gösterim davranışını ve yaşam döngüsü geri çağrılarını yapılandırın.
 </Card>
-<Card title="Instansiya usullari" icon="fa-duotone fa-code" href="/tr/sdk/trading-widget/instance-methods">
-Ishga tushirilgandan so'ng yaratilgan vidjet instansiyasini boshqaring.
+<Card title="Örnek Yöntemleri" icon="fa-duotone fa-code" href="/tr/sdk/trading-widget/instance-methods">
+Başlatmadan sonra oluşturulan widget örneğini kontrol edin.
 </Card>
 </CardGroup>

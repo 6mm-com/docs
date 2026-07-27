@@ -1,40 +1,40 @@
 ---
-title: "Tartib"
-description: "Doimiy buyurtmalarni yaratish, so'rov qilish, bekor qilish va boshqarish uchun 6MM order endpointlaridan foydalaning, shu bilan birga ruxsatlar, identifikatorlar va hayot sikl holatlarini boshqaring."
+title: "Düzen"
+description: "İzinleri, tanımlayıcıları ve yaşam döngüsü durumlarını işlerken sürekli siparişleri oluşturmak, sorgulamak, iptal etmek ve yönetmek için 6MM sıra uç noktalarını kullanın."
 slug: developer-api/rest-api/order
 canonical-url: https://docs.6mm.com/tr/developer-api/rest-api/order
 ---
 
-> **Izoh**
+> **Not**
 >
-> Order endpointlari savdo ruxsati talab qiladi.
+> Sipariş uç noktaları işlem izni gerektirir.
 
-<h2 id="place-order">Joy tartibi</h2>
+<h2 id="place-order">Yer Siparişi</h2>
 
 ```http
 POST /v1/private/order/place
 Content-Type: application/json
 ```
 
-**Parametrlarni so'rash:**
+**Talep parametreleri:**
 
-| Parametr       | Turi   | Majburiy               | Tavsif                                                                                                                   |
+| Parametre       | Tip   | Gerekli               | Tanım                                                                                                                   |
 | --------------- | ------ | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `symbol`        | string | Ha                    | Ramz                                                                                                                        |
-| `type`          | string | Ha                    | `LIMIT` / `MARKET`                                                                                                            |
-| `side`          | string | Ha                    | `BUY` / `SELL`                                                                                                                |
-| `positionSide`  | string | Yo'q                     | `BOTH` / `LONG` / `SHORT`, standart `BOTH`                                                                                     |
-| `price`         | string | Shartli talab qilinadi | Limit orderlar uchun talab qilinadi                                                                                                     |
-| `quantity`      | string | Shartli talab qilinadi | Miqdor. Agar o'sha paytda chiqarib tashlash mumkin `closePosition=true`                                                                            |
-| `timeInForce`   | string | Yo'q                     | `GTC` / `IOC` / `FOK`, standart `GTC`                                                                                          |
-| `reduceOnly`    | bool   | Yo'q                     | Faqat kamaytirish, standart `false`                                                                                                  |
-| `makerOnly`     | bool   | Yo'q                     | Faqat maker uchun, standart `false`                                                                                                   |
-| `closePosition` | bool   | Yo'q                     | Butun pozitsiyani yop, standart `false`                                                                                    |
-| `clientOrderId` | string | Yo'q                     | Mijoz tomonidan belgilangan buyurtma identifikatori                                                                                                       |
-| `placeType`     | string | Yo'q                     | Buyurtma joylashtirish turi belgisi                                                                                                   |
-| `priceType`     | int32  | Yo'q                     | BBO narx turi: `0` belgilangan narx, `1` raqib narxi 1, `2` raqib narxi 5, `3` bir tomon narxi 1, `4` bir tomon narxi 5 |
+| `symbol`        | string | Evet                    | Sembol                                                                                                                        |
+| `type`          | string | Evet                    | `LIMIT` / `MARKET`                                                                                                            |
+| `side`          | string | Evet                    | `BUY` / `SELL`                                                                                                                |
+| `positionSide`  | string | Hayır                     | `BOTH` / `LONG` / `SHORT`, varsayılan `BOTH`                                                                                     |
+| `price`         | string | Koşullu olarak gereklidir | Limit emirleri için gerekli                                                                                                     |
+| `quantity`      | string | Koşullu olarak gereklidir | Miktar. Atlandığında `closePosition=true`                                                                            |
+| `timeInForce`   | string | Hayır                     | `GTC` / `IOC` / `FOK`, varsayılan `GTC`                                                                                          |
+| `reduceOnly`    | bool   | Hayır                     | Sadece azalt, varsayılan `false`                                                                                                  |
+| `makerOnly`     | bool   | Hayır                     | Sadece üretici için, varsayılan `false`                                                                                                   |
+| `closePosition` | bool   | Hayır                     | Tüm pozisyonu kapat, varsayılan `false`                                                                                    |
+| `clientOrderId` | string | Hayır                     | İstemci tarafından tanımlanan sipariş kimliği                                                                                                       |
+| `placeType`     | string | Hayır                     | Sipariş yerleştirme tipi işaretleyici                                                                                                   |
+| `priceType`     | int32  | Hayır                     | BBO fiyat türü: `0` fiyat, `1` rakip fiyat 1, `2` rakip fiyat 5, `3` aynı taraf fiyatı 1 `4` aynı taraf fiyatı 5 |
 
-**Misol so'rash:**
+**Örnek iste:**
 
 ```json
 {
@@ -49,23 +49,23 @@ Content-Type: application/json
 }
 ```
 
-**Javob maydonlari:**
+**Yanıt alanları:**
 
-| Maydon           | Turi   | Tavsif             |
+| Saha           | Tip   | Tanım             |
 | --------------- | ------ | ----------------------- |
-| `orderId`       | string | Server buyurtmasi identifikatori         |
-| `clientOrderId` | string | Mijoz tomonidan belgilangan buyurtma identifikatori |
-| `status`        | string | Buyurtma holati            |
-| `timestamp`     | int64  | Vaqt tamg'asi               |
+| `orderId`       | string | Sunucu sipariş kimliği         |
+| `clientOrderId` | string | İstemci tarafından tanımlanan sipariş kimliği |
+| `status`        | string | Sipariş durumu            |
+| `timestamp`     | int64  | Zaman damgası               |
 
-<h2 id="batch-place-orders">Partiyaviy joylashuv buyurtmalari</h2>
+<h2 id="batch-place-orders">Toplu Siparişler</h2>
 
 ```http
 POST /v1/private/order/batch-place
 Content-Type: application/json
 ```
 
-**So'rov tanasi:**
+**Talep bedeni:**
 
 ```json
 {
@@ -82,215 +82,215 @@ Content-Type: application/json
 }
 ```
 
-**Javob maydonlari:**
+**Yanıt alanları:**
 
-| Maydon          | Turi  | Tavsif                 |
+| Saha          | Tip  | Tanım                 |
 | -------------- | ----- | --------------------------- |
-| `successCount` | int32 | Muvaffaqiyatli buyurtmalar soni |
-| `failedCount`  | int32 | Bajarilmagan buyurtmalar soni     |
-| `results[]`    | array | Har bir tartib uchun natija       |
+| `successCount` | int32 | Başarılı sipariş sayısı |
+| `failedCount`  | int32 | Başarısız emir sayısı     |
+| `results[]`    | array | Her sipariş için sonuç       |
 
-<h2 id="place-condition-order">Joy Sharoitlari Tartibi</h2>
+<h2 id="place-condition-order">Yer Koşulu Sırası</h2>
 
 ```http
 POST /v1/private/order/place-condition
 Content-Type: application/json
 ```
 
-**Parametrlarni so'rash:**
+**Talep parametreleri:**
 
-| Parametr       | Turi   | Majburiy               | Tavsif                                                                                 |
+| Parametre       | Tip   | Gerekli               | Tanım                                                                                 |
 | --------------- | ------ | ---------------------- | ------------------------------------------------------------------------------------------- |
-| `symbol`        | string | Ha                    | Ramz                                                                                      |
-| `type`          | string | Ha                    | `STOP_MARKET` / `TAKE_PROFIT_MARKET` / `STOP_LIMIT` / `TAKE_PROFIT_LIMIT` / `TRAILING_STOP` |
-| `side`          | string | Ha                    | `BUY` / `SELL`                                                                              |
-| `positionSide`  | string | Yo'q                     | `BOTH` / `LONG` / `SHORT`                                                                   |
-| `price`         | string | Shartli talab qilinadi | `STOP_LIMIT` / `TAKE_PROFIT_LIMIT` uchun talab qilinadi                                             |
-| `quantity`      | string | Shartli talab qilinadi | Miqdor. Agar o'sha paytda chiqarib tashlash mumkin `closePosition=true`                                          |
-| `timeInForce`   | string | Yo'q                     | `GTC` / `IOC` / `FOK` / `GTE_GTC`                                                           |
-| `reduceOnly`    | bool   | Yo'q                     | Faqat qisqartirish                                                                                 |
-| `clientOrderId` | string | Yo'q                     | Mijoz tomonidan belgilangan buyurtma identifikatori                                                                     |
-| `stopPrice`     | string | Shartli talab qilinadi | Trigger narxi                                                                               |
-| `workingType`   | string | Yo'q                     | `MARK_PRICE` / `CONTRACT_PRICE`, standart `CONTRACT_PRICE`                                   |
-| `priceProtect`  | bool   | Yo'q                     | Narxlarni himoya qilish yo'qmi                                                         |
-| `activatePrice` | string | Shartli talab qilinadi | Trailing order faollashtirish narxi                                                             |
-| `callbackRate`  | string | Shartli talab qilinadi | Trailing order callback rate                                                                |
-| `closePosition` | bool   | Yo'q                     | Butun pozitsiyani yoping                                                                   |
+| `symbol`        | string | Evet                    | Sembol                                                                                      |
+| `type`          | string | Evet                    | `STOP_MARKET` / `TAKE_PROFIT_MARKET` / `STOP_LIMIT` / `TAKE_PROFIT_LIMIT` / `TRAILING_STOP` |
+| `side`          | string | Evet                    | `BUY` / `SELL`                                                                              |
+| `positionSide`  | string | Hayır                     | `BOTH` / `LONG` / `SHORT`                                                                   |
+| `price`         | string | Koşullu olarak gereklidir | `STOP_LIMIT` / `TAKE_PROFIT_LIMIT` için zorunlu                                             |
+| `quantity`      | string | Koşullu olarak gereklidir | Miktar. Atlandığında `closePosition=true`                                          |
+| `timeInForce`   | string | Hayır                     | `GTC` / `IOC` / `FOK` / `GTE_GTC`                                                           |
+| `reduceOnly`    | bool   | Hayır                     | Sadece azalt                                                                                 |
+| `clientOrderId` | string | Hayır                     | İstemci tarafından tanımlanan sipariş kimliği                                                                     |
+| `stopPrice`     | string | Koşullu olarak gereklidir | Tetikleyici fiyat                                                                               |
+| `workingType`   | string | Hayır                     | `MARK_PRICE` / `CONTRACT_PRICE`, varsayılan `CONTRACT_PRICE`                                   |
+| `priceProtect`  | bool   | Hayır                     | Fiyat korumasının mümkün olup olmadığı                                                         |
+| `activatePrice` | string | Koşullu olarak gereklidir | Takip eden emir aktivasyon fiyatı                                                             |
+| `callbackRate`  | string | Koşullu olarak gereklidir | Takip eden sipariş geri çağrı oranı                                                                |
+| `closePosition` | bool   | Hayır                     | Tüm pozisyonu kapat                                                                   |
 
-**Javob maydonlari:**
+**Yanıt alanları:**
 
-| Maydon             | Turi   | Tavsif            |
+| Saha             | Tip   | Tanım            |
 | ----------------- | ------ | ---------------------- |
-| `conditionId`     | string | Shart tartibi identifikatori     |
-| `conditionStatus` | string | Shart tartibi holati |
-| `timestamp`       | int64  | Vaqt tamg'asi              |
+| `conditionId`     | string | Durum Sırası Kimliği     |
+| `conditionStatus` | string | Durum sırası durumu |
+| `timestamp`       | int64  | Zaman damgası              |
 
-<h2 id="place-strategy-order">Joylashtirish strategiyasi tartibi</h2>
+<h2 id="place-strategy-order">Yerleştirme Stratejisi Sırası</h2>
 
 ```http
 POST /v1/private/order/place-strategy
 Content-Type: application/json
 ```
 
-**Parametrlarni so'rash:**
+**Talep parametreleri:**
 
-| Parametr      | Turi   | Majburiy | Tavsif             |
+| Parametre      | Tip   | Gerekli | Tanım             |
 | -------------- | ------ | -------- | ----------------------- |
-| `strategyType` | string | Ha      | `OTOCO` / `OTO` / `OCO` |
-| `subOrderList` | array  | Ha      | Kichik tartiblar ro'yxati          |
+| `strategyType` | string | Evet      | `OTOCO` / `OTO` / `OCO` |
+| `subOrderList` | array  | Evet      | Alt sıralar listesi          |
 
-`subOrderList[]` dagi maydonlar asosan normal tartiblar va shart tartiblari bilan bir xil, qo'shimcha bog'liqlik maydonlari bilan:
+`subOrderList[]`'daki alanlar çoğunlukla normal mertebeler ve koşul sıralarıyla aynıdır, ek bağımlılık alanları içerir:
 
-| Parametr        | Turi   | Tavsif                                     |
+| Parametre        | Tip   | Tanım                                     |
 | ---------------- | ------ | ----------------------------------------------- |
-| `strategySubId`  | int64  | Sub-tartib identifikatori                                    |
-| `firstDrivenId`  | int64  | Birinchi haydovchilik tartibi ID. `0` bog'liqlik yo'qligini anglatadi |
-| `firstDrivenOn`  | string | Birinchi trigger sharti                         |
-| `firstTrigger`   | string | Birinchi trigger harakati                            |
-| `secondDrivenId` | int64  | Ikkinchi haydovchilik tartibi identifikatori                         |
-| `secondDrivenOn` | string | Ikkinchi trigger sharti                        |
-| `secondTrigger`  | string | Ikkinchi trigger harakati                           |
+| `strategySubId`  | int64  | Alt sıra ID'si                                    |
+| `firstDrivenId`  | int64  | İlk sürüş emri kimliği. `0` bağımlılık yok demektir |
+| `firstDrivenOn`  | string | İlk tetikleme durumu                         |
+| `firstTrigger`   | string | İlk tetikleme eylemi                            |
+| `secondDrivenId` | int64  | İkinci sürüş emri kimliği                         |
+| `secondDrivenOn` | string | İkinci tetikleyici koşulu                        |
+| `secondTrigger`  | string | İkinci tetikleme eylemi                           |
 
-**Javob maydonlari:**
+**Yanıt alanları:**
 
-| Maydon            | Turi   | Tavsif     |
+| Saha            | Tip   | Tanım     |
 | ---------------- | ------ | --------------- |
-| `strategyId`     | string | Strategiya identifikatori     |
-| `strategyStatus` | string | Strategiya holati |
-| `timestamp`      | int64  | Vaqt tamg'asi       |
+| `strategyId`     | string | Strateji Kimliği     |
+| `strategyStatus` | string | Strateji durumu |
+| `timestamp`      | int64  | Zaman damgası       |
 
-<h2 id="query-single-order">Yagona tartibni so'rash</h2>
+<h2 id="query-single-order">Tek Sıra Sorgu</h2>
 
 ```http
 GET /v1/private/order?symbol=BTCUSDT&orderId=2022543809547603968
 ```
 
-**Parametrlarni so'rash:**
+**Talep parametreleri:**
 
-| Parametr       | Turi   | Majburiy | Tavsif             |
+| Parametre       | Tip   | Gerekli | Tanım             |
 | --------------- | ------ | -------- | ----------------------- |
-| `symbol`        | string | Ha      | Ramz                  |
-| `orderId`       | string | Yo'q       | Server buyurtmasi identifikatori         |
-| `clientOrderId` | string | Yo'q       | Mijoz tomonidan belgilangan buyurtma identifikatori |
+| `symbol`        | string | Evet      | Sembol                  |
+| `orderId`       | string | Hayır       | Sunucu sipariş kimliği         |
+| `clientOrderId` | string | Hayır       | İstemci tarafından tanımlanan sipariş kimliği |
 
-Kamida `orderId` va `clientOrderId` bittasi taqdim etilishi shart. Agar ikkalasi ham mavjud bo'lsa, server har ikkala holatda aniq moslikni bajaradi.
+En az `orderId` ve `clientOrderId` biri sağlanmalıdır. Her ikisi de sağlanırsa, sunucu her iki koşulda da tam bir eşleşme gerçekleştirir.
 
-<h2 id="current-normal-orders">Hozirgi Normal Tartiblar</h2>
+<h2 id="current-normal-orders">Mevcut Normal Siparişler</h2>
 
 ```http
 GET /v1/private/order/current?symbol=BTCUSDT
 ```
 
-**Parametrlarni so'rash:**
+**Talep parametreleri:**
 
-| Parametr     | Turi   | Majburiy | Tavsif        |
+| Parametre     | Tip   | Gerekli | Tanım        |
 | ------------- | ------ | -------- | ------------------ |
-| `symbol`      | string | Yo'q       | Ramz             |
-| `limit`       | int32  | Yo'q       | Qaytish soni cheklovi |
-| `lastOrderId` | int64  | Yo'q       | Kursorlar maydoni       |
+| `symbol`      | string | Hayır       | Sembol             |
+| `limit`       | int32  | Hayır       | Dönüş sayısı sınırı |
+| `lastOrderId` | int64  | Hayır       | İmleç alanı       |
 
-**Javob maydonlari:**
+**Yanıt alanları:**
 
-| Maydon    | Turi  | Tavsif               |
+| Saha    | Tip  | Tanım               |
 | -------- | ----- | ------------------------- |
-| `list[]` | array | Joriy normal tartiblar ro'yxati |
-| `total`  | int32 | Graf                     |
+| `list[]` | array | Mevcut normal sıralar listesi |
+| `total`  | int32 | Kont                     |
 
-<h2 id="current-condition-orders">Hozirgi holat buyruqlari</h2>
+<h2 id="current-condition-orders">Mevcut Durum Emirleri</h2>
 
 ```http
 GET /v1/private/order/current-condition?symbol=BTCUSDT
 ```
 
-**Parametrlarni so'rash:**
+**Talep parametreleri:**
 
-| Parametr | Turi   | Majburiy | Tavsif |
+| Parametre | Tip   | Gerekli | Tanım |
 | --------- | ------ | -------- | ----------- |
-| `symbol`  | string | Yo'q       | Ramz      |
+| `symbol`  | string | Hayır       | Sembol      |
 
-<h2 id="historical-normal-orders">Tarixiy Normal Buyruqlar</h2>
+<h2 id="historical-normal-orders">Tarihsel Normal Emirler</h2>
 
 ```http
 GET /v1/private/order/history?symbol=BTCUSDT&page=1&pageSize=20
 ```
 
-**Parametrlarni so'rash:**
+**Talep parametreleri:**
 
-| Parametr       | Turi   | Majburiy | Tavsif                              |
+| Parametre       | Tip   | Gerekli | Tanım                              |
 | --------------- | ------ | -------- | ---------------------------------------- |
-| `symbol`        | string | Yo'q       | Ramz                                   |
-| `orderId`       | string | Yo'q       | Aniq tartib ID filtri                    |
-| `clientOrderId` | string | Yo'q       | Aniq mijoz tartibi ID filtri             |
-| `type`          | int32  | Yo'q       | Buyurtma turi filtri: `1` limit, `2` bozor |
-| `side`          | int32  | Yo'q       | Yon filtr: `1` sotib `2`           |
-| `status`        | int32  | Yo'q       | Holat filtri                            |
-| `startTime`     | int64  | Yo'q       | Boshlanish vaqti                               |
-| `endTime`       | int64  | Yo'q       | Yakun vaqti                                 |
-| `page`          | int64  | Yo'q       | Sahifa raqami, standart `1`                 |
-| `pageSize`      | int64  | Yo'q       | Sahifa boshidagi elementlar, standart `20`             |
+| `symbol`        | string | Hayır       | Sembol                                   |
+| `orderId`       | string | Hayır       | Tam sıra ID filtresi                    |
+| `clientOrderId` | string | Hayır       | Kesin müşteri siparişi ID filtresi             |
+| `type`          | int32  | Hayır       | Sipariş tipi filtre: `1` limiti, `2` piyasa |
+| `side`          | int32  | Hayır       | Yan filtre: `1` al, `2` sat           |
+| `status`        | int32  | Hayır       | Durum filtresi                            |
+| `startTime`     | int64  | Hayır       | Başlama zamanı                               |
+| `endTime`       | int64  | Hayır       | Son zaman                                 |
+| `page`          | int64  | Hayır       | Sayfa numarası, varsayılan `1`                 |
+| `pageSize`      | int64  | Hayır       | Sayfa başına öğeler, varsayılan `20`             |
 
-<h2 id="historical-condition-orders">Tarixiy holat tartiblari</h2>
+<h2 id="historical-condition-orders">Tarihi Durum Emirleri</h2>
 
 ```http
 GET /v1/private/order/history-condition?symbol=BTCUSDT&page=1&pageSize=20
 ```
 
-**Parametrlarni so'rash:**
+**Talep parametreleri:**
 
-| Parametr   | Turi   | Majburiy | Tavsif                    |
+| Parametre   | Tip   | Gerekli | Tanım                    |
 | ----------- | ------ | -------- | ------------------------------ |
-| `symbol`    | string | Yo'q       | Ramz                         |
-| `side`      | int32  | Yo'q       | Yon filtr: `1` sotib `2` |
-| `status`    | int32  | Yo'q       | Holat filtri                  |
-| `startTime` | int64  | Yo'q       | Boshlanish vaqti                     |
-| `endTime`   | int64  | Yo'q       | Yakun vaqti                       |
-| `page`      | int64  | Yo'q       | Sahifa raqami, standart `1`       |
-| `pageSize`  | int64  | Yo'q       | Sahifa boshidagi elementlar, standart `20`   |
+| `symbol`    | string | Hayır       | Sembol                         |
+| `side`      | int32  | Hayır       | Yan filtre: `1` al, `2` sat |
+| `status`    | int32  | Hayır       | Durum filtresi                  |
+| `startTime` | int64  | Hayır       | Başlama zamanı                     |
+| `endTime`   | int64  | Hayır       | Son zaman                       |
+| `page`      | int64  | Hayır       | Sayfa numarası, varsayılan `1`       |
+| `pageSize`  | int64  | Hayır       | Sayfa başına öğeler, varsayılan `20`   |
 
-<h2 id="trade-records">Savdo rekordlari</h2>
+<h2 id="trade-records">Ticaret Kayıtları</h2>
 
 ```http
 GET /v1/private/order/trades?symbol=BTCUSDT&page=1&pageSize=20
 ```
 
-**Parametrlarni so'rash:**
+**Talep parametreleri:**
 
-| Parametr   | Turi   | Majburiy | Tavsif                  |
+| Parametre   | Tip   | Gerekli | Tanım                  |
 | ----------- | ------ | -------- | ---------------------------- |
-| `symbol`    | string | Yo'q       | Ramz                       |
-| `orderId`   | string | Yo'q       | Buyurtma ID filtri              |
-| `startTime` | int64  | Yo'q       | Boshlanish vaqti                   |
-| `endTime`   | int64  | Yo'q       | Yakun vaqti                     |
-| `page`      | int64  | Yo'q       | Sahifa raqami, standart `1`     |
-| `pageSize`  | int64  | Yo'q       | Sahifa boshidagi elementlar, standart `20` |
+| `symbol`    | string | Hayır       | Sembol                       |
+| `orderId`   | string | Hayır       | Sipariş Kimliği filtresi              |
+| `startTime` | int64  | Hayır       | Başlama zamanı                   |
+| `endTime`   | int64  | Hayır       | Son zaman                     |
+| `page`      | int64  | Hayır       | Sayfa numarası, varsayılan `1`     |
+| `pageSize`  | int64  | Hayır       | Sayfa başına öğeler, varsayılan `20` |
 
-**Javob maydonlari:**
+**Yanıt alanları:**
 
-| Maydon                 | Turi   | Tavsif       |
+| Saha                 | Tip   | Tanım       |
 | --------------------- | ------ | ----------------- |
-| `list[].fillId`       | string | To'ldirish tafsilotlari ID    |
-| `list[].tradeId`      | string | Savdo rekordi identifikatori   |
-| `list[].orderId`      | string | Buyurtma identifikatori          |
-| `list[].symbol`       | string | Ramz            |
-| `list[].side`         | string | Yon tomon              |
+| `list[].fillId`       | string | Dolgu detayı kimliği    |
+| `list[].tradeId`      | string | Ticari kayıt kimliği   |
+| `list[].orderId`      | string | Sipariş Kimliği          |
+| `list[].symbol`       | string | Sembol            |
+| `list[].side`         | string | Yan Takım              |
 | `list[].roleType`     | string | `maker` / `taker` |
-| `list[].price`        | string | To'ldirilgan narx      |
-| `list[].quantity`     | string | To'ldirilgan miqdor   |
-| `list[].tradeValue`   | string | Savdo qiymati       |
-| `list[].handlingFee`  | string | Boshqaruv to'lovi      |
-| `list[].realizedPnl`  | string | PnLni amalga oshirish      |
-| `list[].positionSide` | string | Pozitsiya tomoni     |
-| `list[].createdAt`    | int64  | Savdo vaqti        |
-| `total`               | int64  | Umumiy hisob       |
+| `list[].price`        | string | Doldurulmuş fiyat      |
+| `list[].quantity`     | string | Doldurulan miktar   |
+| `list[].tradeValue`   | string | Ticaret değeri       |
+| `list[].handlingFee`  | string | Taşıma ücreti      |
+| `list[].realizedPnl`  | string | Gerçekleşen PnL      |
+| `list[].positionSide` | string | Pozisyon tarafı     |
+| `list[].createdAt`    | int64  | Takas süresi        |
+| `total`               | int64  | Toplam sayım       |
 
-<h2 id="cancel-order">Bekor qilish buyurtmasi</h2>
+<h2 id="cancel-order">İptal Siparişi</h2>
 
 ```http
 POST /v1/private/order/cancel
 Content-Type: application/json
 ```
 
-**So'rov tanasi:**
+**Talep bedeni:**
 
 ```json
 {
@@ -299,16 +299,16 @@ Content-Type: application/json
 }
 ```
 
-`clientOrderId` buyurtmani bekor qilish uchun ham ishlatilishi mumkin.
+`clientOrderId` ayrıca bir siparişi iptal etmek için de kullanılabilir.
 
-<h2 id="amend-order">O'zgartirish buyrug'i</h2>
+<h2 id="amend-order">Değişiklik Emri</h2>
 
 ```http
 POST /v1/private/order/move
 Content-Type: application/json
 ```
 
-**So'rov tanasi:**
+**Talep bedeni:**
 
 ```json
 {
@@ -319,16 +319,16 @@ Content-Type: application/json
 }
 ```
 
-`quantity` — bu o'zgartirishdan keyingi yakuniy buyurtma miqdori, qolgan miqdor emas.
+`quantity` , değişiklikten sonraki nihai toplam sipariş miktarıdır, kalan miktar değil.
 
-<h2 id="batch-amend-orders">Partiyani o'zgartirish buyruqlari</h2>
+<h2 id="batch-amend-orders">Parti Değişikliği Emirleri</h2>
 
 ```http
 POST /v1/private/order/batch-move
 Content-Type: application/json
 ```
 
-**So'rov tanasi:**
+**Talep bedeni:**
 
 ```json
 {
@@ -343,14 +343,14 @@ Content-Type: application/json
 }
 ```
 
-<h2 id="batch-cancel-orders">Partiyani bekor qilish buyurtmalari</h2>
+<h2 id="batch-cancel-orders">Parti İptal Emirleri</h2>
 
 ```http
 POST /v1/private/order/batch-cancel
 Content-Type: application/json
 ```
 
-**So'rov tanasi:**
+**Talep bedeni:**
 
 ```json
 {
@@ -363,30 +363,30 @@ Content-Type: application/json
 }
 ```
 
-<h2 id="cancel-all">Hammasini bekor qiling</h2>
+<h2 id="cancel-all">Her Şeyi İptal Et</h2>
 
 ```http
 POST /v1/private/order/batch-cancel-all
 Content-Type: application/json
 ```
 
-**Parametrlarni so'rash:**
+**Talep parametreleri:**
 
-| Parametr    | Turi   | Majburiy | Tavsif                                                                         |
+| Parametre    | Tip   | Gerekli | Tanım                                                                         |
 | ------------ | ------ | -------- | ----------------------------------------------------------------------------------- |
-| `symbol`     | string | Yo'q       | Ramz                                                                              |
-| `cancelType` | int32  | Yo'q       | `0` barcha normal tartiblar, faqat limit buyruqlari `1` barcha shart buyruqlari `2` . Standart `0` |
+| `symbol`     | string | Hayır       | Sembol                                                                              |
+| `cancelType` | int32  | Hayır       | `0` tüm normal emirler, `1` limit emirleri `2` tüm koşul emirleri. Varsayılan `0` |
 
-Oddiy buyurtmalar uchun cancel-all asinxron tarzda qabul qilinadi. Yakuniy holat WebSocket `ORDER_TRADE_UPDATE` yoki so'rov nuqtalari bo'yicha belgilanishi kerak.
+Normal siparişler için iptal etme asenkron olarak kabul edilir. Nihai durum WebSocket `ORDER_TRADE_UPDATE` veya sorgu uç noktalarına göre belirlenmelidir.
 
-<h2 id="cancel-condition-order">Shartni bekor qilish tartibi</h2>
+<h2 id="cancel-condition-order">Şart İptal Emiri</h2>
 
 ```http
 POST /v1/private/order/cancel-condition
 Content-Type: application/json
 ```
 
-**So'rov tanasi:**
+**Talep bedeni:**
 
 ```json
 {
@@ -395,26 +395,26 @@ Content-Type: application/json
 }
 ```
 
-<h2 id="strategy-order-detail">Strategiya tartibi tafsilotlari</h2>
+<h2 id="strategy-order-detail">Strateji Siparişi Detayı</h2>
 
 ```http
 GET /v1/private/order/strategy?strategyId=2022543809547603968
 ```
 
-**Javob maydonlari:**
+**Yanıt alanları:**
 
-| Maydon            | Turi   | Tavsif                          |
+| Saha            | Tip   | Tanım                          |
 | ---------------- | ------ | ------------------------------------ |
-| `strategyId`     | string | Strategiya identifikatori                          |
+| `strategyId`     | string | Strateji Kimliği                          |
 | `strategyType`   | string | `OTOCO` / `OTO` / `OCO`              |
 | `strategyStatus` | string | `WORKING` / `ALL_DONE` / `CANCELLED` |
-| `bookTime`       | int64  | Yaratilish vaqti                        |
-| `subOrders[]`    | array  | Sub-order tafsilotlari                    |
-| `updateTime`     | int64  | Yangilanish vaqti                          |
+| `bookTime`       | int64  | Yaratım zamanı                        |
+| `subOrders[]`    | array  | Alt sipariş detayları                    |
+| `updateTime`     | int64  | Güncelleme zamanı                          |
 
-<h2 id="related-documentation">Tegishli hujjatlar</h2>
+<h2 id="related-documentation">İlgili belgeler</h2>
 
-- [Tartib turlari](/tr/trading/order-types)
+- [Sipariş Türleri](/tr/trading/order-types)
 - [Common Enums](/tr/developer-api/common-enums)
-- [Shaxsiy Foydalanuvchi Kanali](/tr/developer-api/websocket/private-user-channel)
-- [Integratsiya tavsiyalari](/tr/developer-api/integration-recommendations)
+- [Özel Kullanıcı Kanalı](/tr/developer-api/websocket/private-user-channel)
+- [Entegrasyon Önerileri](/tr/developer-api/integration-recommendations)

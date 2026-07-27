@@ -1,0 +1,60 @@
+---
+title: "오류 코드 및 문제 해결"
+description: "응답 코드, 메시지, 요청 ID, 재시도 안내, 인증 검사, 통합 문제 해결 단계를 사용하여 6MM API 오류를 진단합니다."
+slug: developer-api/error-codes-and-troubleshooting
+canonical-url: https://docs.6mm.com/ko/developer-api/error-codes-and-troubleshooting
+---
+
+<h2 id="error-response-format">오류 응답 형식</h2>
+
+```json
+{
+  "code": 1003,
+  "message": "Invalid token",
+  "requestId": "req-12345678"
+}
+```
+
+비즈니스 오류는 보통 통합 JSON 구조를 반환합니다. 통합업체는 먼저 이 `code` 을 확인해야 합니다. 인증 실패는 HTTP `401`반환할 수 있습니다; 속도 제한이 HTTP `429`다시 돌아올 수 있습니다.
+
+<h2 id="common-error-codes">일반적인 오류 코드</h2>
+
+| 오류 코드      | 설명                                  |
+| --------------- | -------------------------------------------- |
+| `0`             | 성공                                      |
+| `1001`          | 유효한 인증 정보가 제공되지 않았습니다 |
+| `1002`          | 토큰 만료                                |
+| `1003`          | 유효하지 않은 토큰, API Key또는 서명         |
+| `1004`          | 토큰 취소                                |
+| `1006`          | 불일치 IP 원인                           |
+| `2001`          | 필요한 매개변수가 누락됨                   |
+| `2002`          | 유효하지 않은 매개변수 값                      |
+| `2003`          | 범위 밖의 매개변수                       |
+| `3001`          | 불충분한 잔액                         |
+| `3003`          | 주문을 찾지 못했습니다                              |
+| `3004`          | 중복 요청                            |
+| `3005`          | 주문은 취소할 수 없습니다                     |
+| `3006`          | 허가 거부됨                            |
+| `3100` - `3112` | 조건 순서 매개변수 검증 오류   |
+| `5001`          | 내부 서버 오류                        |
+| `5002`          | 서비스 일시 불가              |
+| `5003`          | 요금 한도 발동                         |
+
+<h2 id="troubleshooting">문제 해결</h2>
+
+| 문제                                     | 추천                                                                                   |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| 유효한 인증 정보가 없다`1001`  | `Authorization: Bearer <accessToken>` 또는 `X-API-KEY`가 포함되어 있는지 확인하세요.                  |
+| `1002` 토큰 만료                        | 다시 시도하기 전에 토큰을 새로고침하거나 다시 로그인하세요.                                                   |
+| `1003` 무효 토큰, API Key또는 서명 | API Key, 서명 페이로드, 요청 본JSON 문자열, 쿼리 매개변수 순서를 확인하세요.           |
+| `1006` 불일치 IP 출처                   | API Key IP 화이트리스트 구성을 확인해 보세요.                                                    |
+| `3004` 중복 요청                    | 순서 관련 경로에 동일한 서명을 재사용하지 마세요. 재생 `timestamp` `signature`. |
+| `5003` 요금 한도 발동됨                 | 요청 빈도를 줄이고 재시도할 때는 지수 백오프를 사용하세요.                                |
+| `Timestamp outside of tolerance window`     | `/v1/time`에 전화해서 시간 오프셋을 조정하고 다시 요청서에 서명하세요.                             |
+
+<h2 id="related-diagnostic-guides">관련 진단 가이드</h2>
+
+- [환경 및 일반적인 관습](/ko/developer-api/environments-and-common-conventions)
+- [인증](/ko/developer-api/authentication)
+- [통합 권고](/ko/developer-api/integration-recommendations)
+- [지원 요청 템플릿](/ko/resources/support-request-template)

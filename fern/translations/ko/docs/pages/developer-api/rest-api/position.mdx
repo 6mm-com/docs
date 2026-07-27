@@ -1,0 +1,141 @@
+---
+title: "위치"
+description: "6MM 포지션 엔드포인트를 사용하여 오픈 포지션, 마진 세부사항, 레버리지, 미실현 손익, 포지션 관련 거래를 조회합니다."
+slug: developer-api/rest-api/position
+canonical-url: https://docs.6mm.com/ko/developer-api/rest-api/position
+---
+
+> **주**
+>
+> 포지션 엔드포인트는 거래 허가가 필요합니다.
+
+<h2 id="set-leverage">레버리지 설정</h2>
+
+```http
+POST /v1/private/position/leverage
+Content-Type: application/json
+```
+
+요청 본문:
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "leverage": 20
+}
+```
+
+응답 필드:
+
+| 필드       | 유형   | 설명 |
+| ----------- | ------ | ----------- |
+| `symbol`    | string | 상징      |
+| `leverage`  | int32  | 레버리지    |
+| `timestamp` | int64  | 타임스탬프   |
+
+<h2 id="set-margin-mode">마진 모드 설정</h2>
+
+```http
+POST /v1/private/position/margin-mode
+Content-Type: application/json
+```
+
+요청 본문:
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "marginMode": 1
+}
+```
+
+`marginMode`: `1` 교차, `2` 고립됐어.
+
+<h2 id="position-settings">위치 설정</h2>
+
+```http
+GET /v1/private/position/settings?symbol=BTCUSDT
+```
+
+응답 필드:
+
+| 필드        | 유형   | 설명             |
+| ------------ | ------ | ----------------------- |
+| `symbol`     | string | 상징                  |
+| `marginMode` | int32  | `1` 십자가, `2` 고립 |
+| `leverage`   | int32  | 레버리지                |
+
+<h2 id="current-positions">현재 직책</h2>
+
+```http
+GET /v1/private/position/positions?symbol=BTCUSDT
+```
+
+요청 매개변수:
+
+| 매개변수 | 유형   | 필수 | 설명 |
+| --------- | ------ | -------- | ----------- |
+| `symbol`  | string | 아니       | 상징      |
+
+응답 필드:
+
+| 필드                         | 유형   | 설명                |
+| ----------------------------- | ------ | -------------------------- |
+| `positions[].symbol`          | string | 상징                     |
+| `positions[].marginMode`      | string | 마진 모드                |
+| `positions[].positionSide`    | string | 포지션 사이드              |
+| `positions[].leverage`        | int32  | 레버리지                   |
+| `positions[].quantity`        | string | 위치 수량          |
+| `positions[].entryPrice`      | string | 입장 가격                |
+| `positions[].breakEvenPrice`  | string | 손익분기점           |
+| `positions[].liqPrice`        | string | 청산 가격          |
+| `positions[].marginRatio`     | string | 마진 비율               |
+| `positions[].unrealizedPnl`   | string | 실현되지 않은 PnL             |
+| `positions[].roe`             | string | 자기자본수익률           |
+| `positions[].nextFundingFee`  | string | 예상 다음 자금 지원 수수료 |
+| `positions[].fundingFeeAccum` | string | 누적 자금 지원 수수료    |
+| `positions[].tpPrice`         | string | 이익 실현 가격          |
+| `positions[].slPrice`         | string | 스톱로스 가격            |
+
+<h2 id="position-history">직책 역사</h2>
+
+```http
+GET /v1/private/position/history?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+요청 매개변수:
+
+| 매개변수   | 유형   | 필수 | 설명                  |
+| ----------- | ------ | -------- | ---------------------------- |
+| `symbol`    | string | 아니       | 상징                       |
+| `side`      | string | 아니       | `long` / `short`             |
+| `startTime` | int64  | 아니       | 시작 시간                   |
+| `endTime`   | int64  | 아니       | 종말                     |
+| `page`      | int64  | 아니       | 페이지 번호, 기본 `1`     |
+| `pageSize`  | int64  | 아니       | 페이지당 항목 수, 기본 `20` |
+
+응답 필드:
+
+| 필드                    | 유형   | 설명               |
+| ------------------------ | ------ | ------------------------- |
+| `list[].symbol`          | string | 상징                    |
+| `list[].positionSide`    | string | 포지션 사이드             |
+| `list[].leverage`        | int32  | 레버리지                  |
+| `list[].maxQuantity`     | string | 최대 위치 양 |
+| `list[].entryPrice`      | string | 입장 가격               |
+| `list[].closePrice`      | string | 종가               |
+| `list[].pnl`             | string | 실현된 PnL              |
+| `list[].roe`             | string | 자기자본수익률          |
+| `list[].marginMode`      | string | 마진 모드               |
+| `list[].triggerMode`     | int32  | 클로즈 트리거 모드        |
+| `list[].fundingFeeAccum` | string | 누적 자금 지원 수수료   |
+| `list[].openedAt`        | int64  | 오픈 타임                 |
+| `list[].closedAt`        | int64  | 마감 시간                |
+| `total`                  | int64  | 총 집단               |
+
+<h2 id="related-documentation">관련 문서</h2>
+
+- [마진 규칙](/ko/trading/margin-rules)
+- [레버리지 메커니즘](/ko/trading/leverage-mechanics)
+- [위험 및 청산](/ko/trading/risk-and-liquidations)
+- [비공개 사용자 채널](/ko/developer-api/websocket/private-user-channel)

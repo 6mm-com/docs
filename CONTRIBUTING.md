@@ -16,12 +16,16 @@ Documentation source files live under:
 
 - `fern/docs/pages/` for English pages
 - `fern/docs.yml` for English navigation, tabs, redirects, and site configuration
-- `fern/translations/<locale>/` for every localized navigation and page overlay
+- `fern/translations/<locale>/` for locales handled by Fern's native localization
 
 English is the source of truth. If an English page changes, regenerate the affected
 locales with `npm run translations:generate -- --locales=<locale>`. For a deliberate
 manual translation, refresh its source hash with
 `npm run translations:refresh-manifest -- --locales=<locale>`.
+
+After translation generation, run `npm run translations:polish`. The repository
+checks verify all 20 public locales, canonical URLs, internal links, code
+samples, and locale configuration.
 
 ## Validation
 

@@ -1,0 +1,73 @@
+---
+title: "6MM API 인증: JWT 및 API 키"
+description: "JWT 액세스 토큰이나 API 키로 프라이빗 6MM API 요청을 인증하는 방법을 배우고, 각 통합에 맞는 적절한 방법을 선택하세요."
+slug: developer-api/authentication
+canonical-url: https://docs.6mm.com/ko/developer-api/authentication
+---
+
+6MM JWT 접근 토큰과 API 키( API 접근을 지원합니다). 요청을 인터랙티브 사용자 세션에 속하는지 장기 실행 백엔드 통합에 속하는지에 따라 방법을 선택하세요.
+
+<h2 id="choose-an-authentication-method">인증 방법 선택</h2>
+
+| 통합 필요성 | 권장 방법 | 왜 |
+| --- | --- | --- |
+| 사용자 세션 API 호출 | JWT | 로그인 후 반환되는 액세스 토큰을 사용합니다. |
+| 키의 생성, 업데이트 또는 취소 API | JWT | API Key 관리 엔드포인트는 API Key 자가 관리를 허용하지 않습니다. |
+| 서버 간 계정 또는 거래 통화 | API Key + HMAC 서명 | 범위가 부여된 권한과 서명된 백엔드 요청을 지원합니다. |
+
+<h2 id="jwt">JWT</h2>
+
+로그인 후 API 가 `accessToken`반환합니다. 개인 엔드포인트를 호출할 때 다음을 포함하세요:
+
+```http
+Authorization: Bearer YOUR_ACCESS_TOKEN
+```
+
+토큰은 URL 과 로그에 포함되지 않도록 하세요. 토큰이 만료되면, 승인된 로그인 또는 새로고침 흐름을 통해 유효한 토큰을 받아 프라이비시 요청을 재시도하세요.
+
+<h2 id="api-key">API Key</h2>
+
+`X-API-KEY` 요청 헤더가 있을 때, 서버는 API Key HMAC 인증을 사용합니다:
+
+```http
+X-API-KEY: YOUR_API_KEY
+```
+
+API Key 관리 엔드포인트는 JWT. API 키스는 스스로를 관리하지 못한다.
+
+API Key 요청은 또한 다음에 설명된 타임스탬프와 HMAC 서명을 필요로 합니다 [요청 서명](/ko/developer-api/request-signing). 해당 API 비밀은 백엔드 비밀 관리 시스템에만 저장하세요.
+
+<h2 id="api-key-permissions">API Key 허가</h2>
+
+| 가치 | 허가 | 설명                                                                                                                                                                                    |
+| ----- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `1`   | 읽기       | 사용자 정보, 자산, 계정 변경 로그, 통계, listenKey, 즐겨찾기 기호, 그리고 관련된 사용자/계정 엔드포인트가 포함됩니다. 주문 및 포지션 엔드포인트, 쿼리 포함은 거래 허가가 필요합니다 |
+| `2`   | 무역      | 질서 및 쓰기 연산을 포함한 순서 및 위치 종점                                                                                                                        |
+| `4`   | 철수   | 예약 기금 허가                                                                                                                                                                       |
+
+읽기 권한과 거래 권한을 모두 부여하려면 `permissions=3`를 사용하세요.
+
+통합에서 요구하는 가장 작은 권한 세트를 사용하세요. 시장 데이터 서비스는 거래 허가를 받지 않아야 하지만, 주문 서비스는 주문이나 포지션만 조회할 때도 거래 허가가 필요합니다.
+
+<h2 id="production-security-checklist">생산 보안 체크리스트</h2>
+
+- 개발, 스테이징, 프로덕션을 위한 별도의 API 키를 생성합니다.
+- 통합이 안정적인 아웃바운드 주소를 가진 IP 화이트리스트를 적용합니다.
+- 브라우저, 모바일, 데스크톱 애플리케이션 코드에서 API 비밀을 절대 노출하지 마십시오.
+- 서명된 요청을 생성하기 전에 서버 시간을 동기화합니다.
+- 편집 권한 헤더, API 키, 서명, 애플리케이션 로그의 비밀.
+- 노출이 의심되면 즉시 키를 취소하고 교체한다.
+
+<h2 id="next-steps">다음 단계</h2>
+
+<CardGroup cols={3}>
+<Card title="API Key 경영" icon="fa-duotone fa-key" href="/ko/developer-api/api-key-management">
+스코프 키를 생성하고, IP 제한을 설정하며, 키 회전을 계획하세요.
+</Card>
+<Card title="요청 서명" icon="fa-duotone fa-signature" href="/ko/developer-api/request-signing">
+HMAC를 구축하세요 - 페이로드를SHA256하고 개인 요청에 서명하세요.
+</Card>
+<Card title="오류 및 문제 해결" icon="fa-duotone fa-screwdriver-wrench" href="/ko/developer-api/error-codes-and-troubleshooting">
+거부된 자격 증명, 타임스탬프, 서명, 권한을 진단하세요.
+</Card>
+</CardGroup>

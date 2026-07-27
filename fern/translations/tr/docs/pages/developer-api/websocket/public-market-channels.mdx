@@ -1,43 +1,43 @@
 ---
-title: "WebSocket Ommaviy bozor ma'lumotlar kanallari"
-description: "Obuna va qayta ulanish bo'yicha ko'rsatmalar bilan ommaviy WebSocket kanallari orqali buyurtma daftarlari, savdolar, shamdonlar va ticker ma'lumotlarini 6MM oqimini tinglang."
+title: "WebSocket Kamu Piyasa Veri Kanalları"
+description: "Abonelik ve yeniden bağlantı rehberiyle 6MM sipariş defterleri, işlemler, şamdanlar ve ticker verilerini halka açık WebSocket kanalları üzerinden yayınlayın."
 slug: developer-api/websocket/public-market-channels
 canonical-url: https://docs.6mm.com/tr/developer-api/websocket/public-market-channels
 ---
 
-Ilova doimiy ravishda yangilanadigan narxlar, savdolar, shamdonlar yoki buyurtma daftari chuqurligi kerak bo'lganda, REST nuqtalarini takroran so'rov qilmasdan ommaviy bozor kanallaridan foydalaning. Ushbu oqimlar savdo ekranlari, narx ko'rsatkichlari, ogohlantirishlar va bozor monitoringini qo'llab-quvvatlashi mumkin.
+Bir uygulamanın sürekli güncellenen fiyatlar, işlemler, şamdanlar veya sipariş defteri derinliği gerektiğinde, REST uç noktalarını tekrar tekrar sormadan kamu piyasası kanallarını kullanın. Bu akışlar, işlem ekranlarını, fiyat gösterimlerini, uyarıları ve piyasa izlemeyi destekleyebilir.
 
-<h2 id="connection-url">Aloqa URL</h2>
+<h2 id="connection-url">Bağlantı URL</h2>
 
 ```
 wss://ws.6mm.com/ws
 ```
 
-Ommaviy WebSocket autentifikatsiya talab qilinmaydi.
+Kamu WebSocket kimlik doğrulama gerektirmez.
 
-Ulanish hayotiy aylanishi, obunani bekor qilish, ping va qayta ulanish xatti-harakatlari uchun [Connection, Subscription & Heartbeat](/tr/developer-api/websocket/connection-subscription-and-heartbeat) ga qarang.
+Bağlantı yaşam döngüsü, abonelikten çıkma, ping ve yeniden bağlanma davranışları için bkz. [Bağlantı, Abonelik ve Kalp Atışı](/tr/developer-api/websocket/connection-subscription-and-heartbeat).
 
-<h2 id="common-channels">Umumiy kanallar</h2>
+<h2 id="common-channels">Ortak Kanallar</h2>
 
-| Kanal                            | Tavsif                                                        |
+| Kanal                            | Tanım                                                        |
 | ---------------------------------- | ------------------------------------------------------------------ |
-| `market.depth.{symbol}`            | Kitob chuqurligini buyurtma qiling. Avval snapshot yuboradi, keyin bosqichma-bosqich yangilanishlar |
-| `market.trade.{symbol}`            | So'nggi savdolar                                                      |
-| `market.kline.{symbol}.{interval}` | Klines                                                             |
-| `market.ticker.{symbol}`           | Yagona belgili ticker sharhi                                       |
-| `market.tickers`                   | Barcha belgilar bilan bog'liq ticker qisqacha mazmuni                                          |
+| `market.depth.{symbol}`            | Kitap derinliği siparişi verin. Önce bir anlık görüntü gönderir, sonra kademeli güncellemeler |
+| `market.trade.{symbol}`            | Son takaslar                                                      |
+| `market.kline.{symbol}.{interval}` | Klines'lar                                                             |
+| `market.ticker.{symbol}`           | Tek sembollü ticker özeti                                       |
+| `market.tickers`                   | Tüm sembol ticker özeti                                          |
 
-<h2 id="choose-a-channel">Kanal tanlang</h2>
+<h2 id="choose-a-channel">Bir kanal seçin</h2>
 
-| Ilova zarurati | Kanal |
+| Uygulama ihtiyacı | Kanal |
 | --- | --- |
-| Buyurtmalar kitobini tuzish yoki saqlash | `market.depth.{symbol}` |
-| Jonli savdo oqimini ko'rsating | `market.trade.{symbol}` |
-| Shamdon jadvalini chizing | `market.kline.{symbol}.{interval}` |
-| Bir bozor qisqacha ma'lumotini ko'rsating | `market.ticker.{symbol}` |
-| Bozor ko'rinishini saqlash | `market.tickers` |
+| Sipariş defteri oluştur veya sürdür | `market.depth.{symbol}` |
+| Canlı bir takas akışı göster | `market.trade.{symbol}` |
+| Bir şamdan tablosu çiz | `market.kline.{symbol}.{interval}` |
+| Bir pazar özetini göster | `market.ticker.{symbol}` |
+| Piyasa genel bakışı tutun | `market.tickers` |
 
-<h2 id="subscription-example">Obuna misoli</h2>
+<h2 id="subscription-example">Abonelik Örneği</h2>
 
 ```json
 { "id": "1772007814666", "op": "subscribe", "args": ["market.depth.BTCUSDT"] }
@@ -54,31 +54,31 @@ Ulanish hayotiy aylanishi, obunani bekor qilish, ping va qayta ulanish xatti-har
 }
 ```
 
-Har bir xabarni to'g'ri handlerga yo'naltirish uchun `topic` va yetkazib berish vaqtini kuzatish uchun `ts` foydalaning. `data` obyekti obuna bo'lgan kanal uchun yukni o'z ichiga oladi.
+Her mesajı doğru işleyiciye yönlendirmek için `topic` kullanın ve teslimat zamanlamasını gözlemlemek için `ts` kullanın. `data` nesne, abone kanalın yükünü içerir.
 
-<h2 id="order-book-handling">Buyurtmalar daftarini boshqarish</h2>
+<h2 id="order-book-handling">Sipariş defteri yönetimi</h2>
 
-Chuqurlik kanali avval snapshot yuboradi, keyin esa bosqichma-bosqich yangilanishlarni yuboradi. Yangilanishlarni qo'llashdan oldin snapshotdan mahalliy kitobni ishga tushiring. Qayta ulanishdan so'ng, yangi sessiya yarating, yana obuna bo'ling va mahalliy kitobni keyingi snapshotdan qayta quring, eskirgan xotira holatidan davom ettirish o'rniga.
+Derinlik kanalı önce bir anlık görüntü gönderiyor, ardından kademeli güncellemeler gönderiyor. Güncellemeleri uygulamadan önce yerel kitabı anlık görüntüden başlatın. Yeniden bağlandıktan sonra yeni bir oturum oluşturun, tekrar abone olun ve yerel kitabı bir sonraki anlık görüntüden yeniden oluşturun, bayat hafıza durumundan devam etmek yerine.
 
-<h2 id="production-recommendations">Ishlab chiqarish tavsiyalari</h2>
+<h2 id="production-recommendations">Üretim önerileri</h2>
 
-- Har bir obuna bo'lish, obunani bekor qilish va ping so'rovi uchun noyob `id` yaratish.
-- Kanalni faol deb hisoblashdan oldin obuna tasdiqlarini tasdiqlang.
-- Qayta ulanishdan so'ng barcha kerakli mavzularga qayta obuna bo'ling.
-- Tarmoq o'qishlarini sekinroq ma'lumotlar bazasi yoki UI ishlov berishdan alohida saqlash.
-- Uzilish chastotasi, xabarlarni qayta ishlash kechikishi va noto'g'ri shakllangan yuklarni nazorat qilish.
-- [Private User Channel](/tr/developer-api/websocket/private-user-channel) orqali autentifikatsiyalangan hisob va buyurtma yangilanishlaridan foydalaning.
+- Her abonelik, abonelikten çıkma ve ping talebi için benzersiz bir `id` oluşturun.
+- Bir kanalı aktif olarak kabul etmeden önce abonelik onaylarını onaylayın.
+- Yeniden bağlandıktan sonra gerekli tüm konulara yeniden abone olun.
+- Ağ okumalarını daha yavaş veritabanı veya kullanıcı arayüzü işlemesinden ayrı tutun.
+- Bağlantı kesme sıklığı, mesaj işleme gecikmesi ve yanlış şekillendirilmiş yükleri izler.
+- Kullanım [Özel Kullanıcı Kanalı](/tr/developer-api/websocket/private-user-channel) Kimlik doğrulamalı hesap ve sipariş güncellemeleri için.
 
-<h2 id="related-api-docs">Tegishli API hujjatlari</h2>
+<h2 id="related-api-docs">İlgili API belgeleri</h2>
 
 <CardGroup cols={3}>
-<Card title="WebSocket Umumiy ma'lumot" icon="fa-duotone fa-wave-pulse" href="/tr/developer-api/websocket">
-Jamoat va xususiy striming ulanishlaridan birini tanlang.
+<Card title="WebSocket Genel Bakış" icon="fa-duotone fa-wave-pulse" href="/tr/developer-api/websocket">
+Açık ve özel yayın bağlantıları arasında seçim yapın.
 </Card>
-<Card title="Bog'lanish va Yurak urishi" icon="fa-duotone fa-heart-pulse" href="/tr/developer-api/websocket/connection-subscription-and-heartbeat">
-Obuna bo'lish, obunani bekor qilish, ping qilish va qayta ulanishni amalga oshiring.
+<Card title="Bağlantı ve Kalp Atışı" icon="fa-duotone fa-heart-pulse" href="/tr/developer-api/websocket/connection-subscription-and-heartbeat">
+Abone ol, abonelikten çıkarma, ping ve yeniden bağlantı işlemlerini uygulayın.
 </Card>
-<Card title="REST Bozor ma'lumotlari" icon="fa-duotone fa-chart-line" href="/tr/developer-api/rest-api/market-data">
-So'rovga asoslangan bozor ma'lumotlarini oqim kanallari bilan birga ishlating.
+<Card title="REST Piyasa Verileri" icon="fa-duotone fa-chart-line" href="/tr/developer-api/rest-api/market-data">
+Talep tabanlı piyasa verilerini yayın kanallarıyla birlikte kullanın.
 </Card>
 </CardGroup>

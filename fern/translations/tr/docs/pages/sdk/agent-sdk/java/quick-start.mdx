@@ -1,13 +1,13 @@
 ---
-title: "Java Tez Boshlash"
-subtitle: "Backend xizmatidan Java SDK o'rnatib, ishga tushiring."
+title: "Java Hızlı Başlangıç"
+subtitle: "Bir arka uç servisinden Java SDK kurup başlatın."
 slug: sdk/agent-sdk/java/quick-start
 canonical-url: https://docs.6mm.com/tr/sdk/agent-sdk/java/quick-start
 ---
 
-<h2 id="install">O'rnatish</h2>
+<h2 id="install">Kurulum</h2>
 
-Hozirda ommaviy SDK manba hujjatlari `v0.1.1` quyidagi Maven koordinatalari bilan belgilangan:
+Kamuya açık SDK kaynağı şu anda `v0.1.1` şu Maven koordinatlarıyla etiketlediğini belgeliyor:
 
 ```xml
 <dependency>
@@ -17,7 +17,7 @@ Hozirda ommaviy SDK manba hujjatlari `v0.1.1` quyidagi Maven koordinatalari bila
 </dependency>
 ```
 
-GitHub Maven bog'liqlik ombori sifatida ishlamaydi. Bog'liqlikni hal qilishdan oldin teglangan manbani mahalliy ravishda o'rnating:
+GitHub, Maven bağımlılık deposu olarak işlev görmez. Etiketlenmiş kaynağı yerel olarak yükleyin, sonra bağımlılığı çözebilirsiniz:
 
 ```bash
 git clone https://github.com/6mm-com/agent-java-sdk.git
@@ -26,22 +26,22 @@ git checkout v0.1.1
 mvn install
 ```
 
-> **Jamoa quriladi**
+> **Takım kurulumları**
 >
-> Tasdiqlangan artefaktni tashkilotingizning Maven omboriga CI, sinov va ishlab chiqarish qurilmalari uchun e'lon qiling. Tasdiqlangan versiyani ishlab chiqarishni joriy etishdan oldin 6MM bilan tasdiqlang.
+> Onaylanmış eseri kuruluşunuzun Maven deposuna CI, test ve üretim sürümleri için yayınlayın. Onaylanmış sürümü üretim dağıtımından önce 6MM ile onaylayın.
 
-Manba kodi va foydalanish misollari rasmiy Java SDK omborida mavjud:
+Kaynak kodu ve kullanım örnekleri resmi Java SDK deposunda mevcuttur:
 
-[6mm-com/agent-java-sdk] (https://github.com/6mm-com/agent-java-sdk)
+[6mm-com/agent-java-sdk](https://github.com/6mm-com/agent-java-sdk)
 
-<h2 id="before-you-start">Boshlashdan oldin</h2>
+<h2 id="before-you-start">Başlamadan önce</h2>
 
-- Ishlab chiqarish agenti API baza URL 6MM jamoasi bilan tasdiqlang.
-- Faqat orqa apiSecret maxfiy boshqaruvda saqlang.
-- platformUserId va o'rtada barqaror xaritalash agentUserId.
-- Bind, transfer, order va webhook oqimlari atrofida tuzilgan loglarni yoqish.
+- Üretim ajanı API üs URL 6MM ekibiyle onaylayın.
+- apiSecret sadece arka uç gizli yönetiminde depolayın.
+- platformUserId ile agentUserIdarasında kararlı bir eşleme hazırla.
+- Bağlama, transfer, sipariş ve webhook akışları etrafında yapılandırılmış logları etkinleştirin.
 
-<h2 id="initialize-client">Mijozni ishga tushirish</h2>
+<h2 id="initialize-client">İstemciyi başlat</h2>
 
 ```java
 import com.sixmm.agent.AgentClient;
@@ -55,11 +55,11 @@ AgentClient client = new AgentClient(AgentClientConfig.builder()
         .build());
 ```
 
-> **Faqat backend**
+> **Sadece arka uç**
 >
-> Brauzer, mobil yoki ish stoli mijoz kodidan Agent SDK ishga tushirmang. SDK imtiyozli Agent API so'rovlarini imzolaydi.
+> Agent SDK tarayıcı, mobil veya masaüstü istemci kodundan başlatmayın. SDK , ayrıcalıklı Ajan API taleplerini imzalar.
 
-<h2 id="example-transfer-funds-in">Misol: mablag'larni o'tkazish</h2>
+<h2 id="example-transfer-funds-in">Örnek: fon transferi</h2>
 
 ```java
 TransferResponse resp = client.transfer(TransferRequest.fixed(
@@ -70,21 +70,13 @@ TransferResponse resp = client.transfer(TransferRequest.fixed(
         "10.00"));
 ```
 
-Har bir transfer so'rovi uchun noyob hamkor tomonidagi buyurtma raqamidan foydalaning. Agar so'rov vaqt tugasa, yangi buyurtma yaratishdan oldin asl buyurtmani so'rang.
+Her transfer talebi için benzersiz bir partner tarafı sipariş numarası kullanın. Bir istek zaman doluyorsa, yeni bir sipariş oluşturmadan önce orijinal siparişi sorgulayın.
 
-<h2 id="next-steps">Keyingi qadamlar</h2>
+<h2 id="next-steps">Sonraki adımlar</h2>
 
-| Ehtiyoj | Keyingi sahifa |
+| İhtiyaç | Sonraki sayfa |
 | --- | --- |
-| Trading Widget guvohnomasini bering | [Embed tokenini yarating] (/sdk/agent-sdk/java/embed-token) |
-| Orqaga qo'ng'iroqlarni tekshir 6MM | [Webhooks va Idempotency] (/sdk/security/webhooks-idempotency) |
-| Imzolash xatti-harakatlarini ko'rib chiqish | [Sirlar va imzo] (/sdk/security/secrets-signing) |
-| Integratsiya muammosini aniqlash | [SDK Muammolarni hal qilish] (/sdk/security/troubleshooting) |
-{/* sixmm-localized-link-repair:start */}
-<h2 id="localized-page-links">Tegishli sahifalar</h2>
-
-- [embed token](/tr/sdk/agent-sdk/java/embed-token)
-- [webhooks idempotency](/tr/sdk/security/webhooks-idempotency)
-- [secrets signing](/tr/sdk/security/secrets-signing)
-- [troubleshooting](/tr/sdk/security/troubleshooting)
-{/* sixmm-localized-link-repair:end */}
+| Trading Widget kimlik belgesi verin | [Embed Token Oluştur](/tr/sdk/agent-sdk/java/embed-token) |
+| Geri dönüşleri doğrulayın 6MM | [Webhooks ve İdempotensi](/tr/sdk/security/webhooks-idempotency) |
+| İmza davranışını gözden geçir | [Sırlar ve İmza Alma](/tr/sdk/security/secrets-signing) |
+| Bir entegrasyon problemini teşhis et | [SDK Sorun Giderme](/tr/sdk/security/troubleshooting) |

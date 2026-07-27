@@ -7,6 +7,7 @@ import {
   generatedLocaleSpecs as localeSpecs,
   generatorVersion,
 } from "./locale-config.mjs";
+import { polishMachineTranslation } from "./polish-core-translations.mjs";
 
 const projectRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
 const fernRoot = path.join(projectRoot, "fern");
@@ -83,6 +84,10 @@ function localizedPath(value, locale) {
   return `/${locale}${value}`;
 }
 
+function localeOutputRoot(locale) {
+  return path.join(translationsRoot, locale.code);
+}
+
 function localizeInternalLinks(content, locale) {
   let result = content.replace(
     /(\b(?:href|src)=["'])(\/(?!\/)[^"'#?]*[^"']*)(["'])/g,
@@ -133,6 +138,7 @@ function protectText(value) {
 
   const protectedTerms = [
     "Embedded API / SDK",
+    "Developer API",
     "Trading Widget SDK",
     "Trading Widget",
     "6MM Docs",
@@ -144,6 +150,10 @@ function protectText(value) {
     "API Key",
     "REST API",
     "WebSocket",
+    "Webhooks",
+    "Webhook",
+    "webhooks",
+    "webhook",
     "Java",
     "PHP",
     "OAuth",
@@ -529,7 +539,7 @@ function regionalize(value, locale) {
   return output;
 }
 
-async function translateDocument(content, locale) {
+async function translateDocument(content, locale, relativePagePath) {
   const route = locale.route ?? locale.code;
   if (!locale.targetLanguage) {
     return canonicalForLocale(localizeInternalLinks(content, route), route);
@@ -559,12 +569,14 @@ async function translateDocument(content, locale) {
   if (locale.code === "vi" && /^slug:\s*legal\/privacy-policy\s*$/m.test(output)) {
     output = output.replace(/^title:.*$/m, 'title: "Chính sách quyền riêng tư"');
   }
-  return output;
+  return polishMachineTranslation(output, locale.code, relativePagePath);
 }
 
 function collectNavigationLabels(config) {
   const values = [];
-  Object.values(config.tabs ?? {}).forEach((tab) => values.push(tab["display-name"]));
+  Object.values(config.tabs ?? {}).forEach((tab) => {
+    values.push(tab["display-name"]);
+  });
   for (const navigationItem of config.navigation ?? []) {
     for (const section of navigationItem.layout ?? []) {
       values.push(section.section);
@@ -584,7 +596,14 @@ async function translatedLabelMap(config, locale) {
   const records = labels.map((label) => protectText(label));
   const translated = await translateRecords(records, locale.sourceLanguage, locale.targetLanguage);
   return new Map(
-    labels.map((label, index) => [label, regionalize(translated[index], locale.code)]),
+    labels.map((label, index) => [
+      label,
+      polishMachineTranslation(
+        regionalize(translated[index], locale.code),
+        locale.code,
+        "docs.yml",
+      ),
+    ]),
   );
 }
 
@@ -626,7 +645,9 @@ const activePages = [
   ...new Set(
     (config.navigation ?? []).flatMap((navigationItem) =>
       (navigationItem.layout ?? []).flatMap((section) =>
-        (section.contents ?? []).map((content) => content.path).filter(Boolean),
+        (section.contents ?? [])
+          .map((content) => content.path)
+          .filter((contentPath) => contentPath?.startsWith("docs/pages/")),
       ),
     ),
   ),
@@ -639,11 +660,17 @@ if (activePages.length !== 87) {
 const manifest = await loadManifest();
 manifest.version = generatorVersion;
 manifest.locales ??= {};
+const generatedLocaleCodes = new Set(localeSpecs.map((locale) => locale.code));
+Object.keys(manifest.locales).forEach((locale) => {
+  if (!generatedLocaleCodes.has(locale)) {
+    delete manifest.locales[locale];
+  }
+});
 
 console.log(`Generating ${activePages.length} active pages for ${selectedLocales.length} locale(s).`);
 
 for (const locale of selectedLocales) {
-  const localeRoot = path.join(translationsRoot, locale.code);
+  const localeRoot = localeOutputRoot(locale);
   const localeManifest = (manifest.locales[locale.code] ??= { pages: {} });
   await mkdir(localeRoot, { recursive: true });
 
@@ -687,7 +714,11 @@ for (const locale of selectedLocales) {
       skippedCount += 1;
       return;
     }
-    const translated = await translateDocument(source, locale);
+    const translated = await translateDocument(
+      source,
+      locale,
+      relativePagePath,
+    );
     await mkdir(path.dirname(outputPath), { recursive: true });
     await writeFile(outputPath, translated, "utf8");
     localeManifest.pages[relativePagePath] = sourceHash;

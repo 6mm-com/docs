@@ -1,27 +1,27 @@
 ---
-title: "Aloqa, Obuna va Yurak urishi"
-subtitle: "6MM WebSocket oqimga ulaning, mavzularga obuna bo'ling, aloqalarni jonli saqlang va xabar konvertlarini xavfsiz qayta ishlang."
+title: "Bağlantı, Abonelik ve Kalp Atışı"
+subtitle: "6MM WebSocket akışlarına bağlanın, konulara abone olun, bağlantıları canlı tutun ve mesaj zarflarını güvenli bir şekilde işleyin."
 slug: developer-api/websocket/connection-subscription-and-heartbeat
 canonical-url: https://docs.6mm.com/tr/developer-api/websocket/connection-subscription-and-heartbeat
 ---
 
-Bozor ma'lumotlari va shaxsiy foydalanuvchi holati yangilanishlari uchun WebSocket oqimlaridan foydalaning, ular so'rovlarsiz ham yangilanishi kerak.
+Piyasa verileri ve özel kullanıcı durumu güncellemeleri için WebSocket akışlarını kullanın; bu güncellemeler anket olmadan güncel kalmalıdır.
 
-<h2 id="connection-url">Aloqa URL</h2>
+<h2 id="connection-url">Bağlantı URL</h2>
 
 ```text
 wss://ws.6mm.com/ws
 ```
 
-Xususiy oqimlar uchun maxfiy kanal hujjatlarida tasvirlangan listenKey yoki kirish tokeni kabi autentifikatsiya konteksti talab qilinadi.
+Özel akışlar, özel kanal dokümantasyonunda tanımlandığı gibi listenKey veya erişim belirteci gibi kimlik doğrulama bağlamı gerektirir.
 
-<h2 id="subscribe">Obuna bo'ling</h2>
+<h2 id="subscribe">Abone Olun</h2>
 
 ```json
 { "id": "1772007814666", "op": "subscribe", "args": ["market.depth.BTCUSDT"] }
 ```
 
-Muvaffaqiyatli obuna tasdiqi:
+Başarılı abonelik onayı:
 
 ```json
 {
@@ -32,21 +32,21 @@ Muvaffaqiyatli obuna tasdiqi:
 }
 ```
 
-<h2 id="unsubscribe">Obunani bekor qilish</h2>
+<h2 id="unsubscribe">Abonelikten Çekilme</h2>
 
 ```json
 { "id": "1772007814667", "op": "unsubscribe", "args": ["market.depth.BTCUSDT"] }
 ```
 
-<h2 id="application-ping">Ilova ping</h2>
+<h2 id="application-ping">Uygulama pingi</h2>
 
 ```json
 { "id": "1772007814668", "op": "ping", "args": [] }
 ```
 
-<h2 id="message-envelope">Xabar konverti</h2>
+<h2 id="message-envelope">Mesaj zarfı</h2>
 
-Ommaviy pushlar bir xil chegaradan foydalanadi:
+Kamu baskıları tutarlı bir zafı kullanır:
 
 ```json
 {
@@ -57,33 +57,33 @@ Ommaviy pushlar bir xil chegaradan foydalanadi:
 }
 ```
 
-<h2 id="operational-recommendations">Operatsion tavsiyalar</h2>
+<h2 id="operational-recommendations">Operasyonel öneriler</h2>
 
-- Har bir obuna bo'lish, obunani bekor qilish va ping so'rovi uchun noyob mijoz tomonidagi `id` yaratish.
-- Qayta ulanishni yangi sessiya sifatida qabul qiling va kerakli mavzularga qayta obuna bo'ling.
-- Qaytarilgan `topic` xizmatingiz kutayotgan kanalga mos kelishini tasdiqlang.
-- Shaxsiy buyurtma yoki hisob voqealari bo'lgan joylarda xabarlarni qayta ishlashni idempotent holda saqlang.
-- Log ulanish holati o'zgarishlari, obuna tasdiqlari va g'ayrioddiy uzilishlar ko'rsatilishi.
+- Her abonelik, abonelikten çıkarma ve ping talebi için benzersiz bir istemci tarafı `id` oluşturun.
+- Yeniden bağlantı kurmayı yeni bir oturum olarak ele alın ve gerekli konulara yeniden abone olun.
+- Geri gönderilen `topic` hizmetinizin beklediği kanalla eşleşip eşleşmediğini doğrulayın.
+- Özel sipariş veya hesap olayları olduğunda mesaj işleme idempotent kalın.
+- Bağlantı durumu değişikliklerini, abonelik onaylarını ve anormal bağlantı kesilmelerini kaydet.
 
-<h2 id="reconnect-workflow">Qayta ulanish jarayoni</h2>
+<h2 id="reconnect-workflow">Yeniden Bağlantı İş Akışı</h2>
 
-1. Oldingi rozetkani yoping yoki tashlab, yangi ulanish yarating.
-2. Maxfiy oqimlarni haqiqiy listenKey yoki kirish tokeni bilan qayta autentifikatsiya qiling.
-3. Har bir kerakli mavzuga qayta obuna bo'ling va muvaffaqiyatli e'tiroflarni kuting.
-4. Mahalliy buyurtma kitobi holatini yangi snapshot bilan almashtiring, keyin bosqichma-bosqich yangilanishlar qo'llaning.
-5. Agar shaxsiy tadbirlar o'tkazib yuborilgan bo'lsa, ochiq buyruqlar, pozitsiyalar va balanslarni REST davomida muvofiqlashtiring.
+1. Önceki soketi kapatın veya atın ve yeni bir bağlantı oluşturun.
+2. Geçerli bir listenKey veya erişim tokenı ile özel akışları yeniden doğrulayın.
+3. Gerekli her konuya yeniden abone olun ve başarılı teşekkürleri bekleyin.
+4. Yerel sipariş defteri durumunu yeni, ardından kademeli güncellemeler uygulamadan önce yeni bir anlık görüntüyle değiştirin.
+5. Açık emirleri, pozisyonları ve bakiyeleri REST özel etkinliklerin kaçırıldığı durumlarda uzlaştırın.
 
-Qayta ulanish uchun jitter bilan cheklangan eksponensial orqaga chekinishdan foydalaning. Doimiy qayta ulanayotgan mijoz operatorlarni ogohlantirishi kerak, ko'rinmasdan cheksiz qayta urinish o'rniga.
+Yeniden bağlantı girişimleri için jitter ile sınırlı üstel geri çekilme kullanın. Sürekli yeniden bağlanan bir istemci, görünürlük olmadan süresiz tekrar denemek yerine operatörleri uyarmalıdır.
 
-<h2 id="heartbeat-and-stale-connections">Yurak urishi va eskirgan aloqalar</h2>
+<h2 id="heartbeat-and-stale-connections">Kalp atışı ve bayat bağlantılar</h2>
 
-- Eng so'nggi kiruvchi xabar va muvaffaqiyatli ping tasdiqlanishini kuzatish.
-- Ishlab chiqarish muhitida tasdiqlangan yurak urishi intervali va bo'sh ish chegarasidan foydalaning.
-- Konfiguratsiya qilingan chegaradan oshilganda, TCP soketi hali ochiq bo'lsa ham, ulanishni eskirgan deb hisoblash.
-- Eski soketdan obunalarni qayta ishlatmang; Har bir qayta ulanishdan so'ng aniq qayta obuna bo'ling.
+- En son gelen mesajı ve başarılı ping onayını takip edin.
+- Üretim ortamı için onaylanan kalp atış aralığı ve boşta eşik değerini kullanın.
+- Yapılandırma eşiği aşıldığında, TCP soketi hala açık görünse bile, bağlantıyı bayat olarak kabul edin.
+- Eski bir soketten abonelikleri tekrar kullanmayın; Her yeniden bağlantıdan sonra açıkça yeniden abone ol.
 
-<h2 id="related-documentation">Tegishli hujjatlar</h2>
+<h2 id="related-documentation">İlgili belgeler</h2>
 
-- [Ommaviy Bozor Kanallari](/tr/developer-api/websocket/public-market-channels): mavzular, buyurtmalar daftari uzluksizligi, savdolar, shamlar va tickerlar.
-- [Xususiy Foydalanuvchi Kanali](/tr/developer-api/websocket/private-user-channel): listenKey hayot sikli va autentifikatsiyalangan voqealar.
-- [Integratsiya tavsiyalari](/tr/developer-api/integration-recommendations): qayta urinishlar, idempotentsiya, monitoring va uchirish sinovlari.
+- [Kamu Pazarı Kanalları](/tr/developer-api/websocket/public-market-channels): konular, sipariş defteri sürekliliği, takaslar, mumlar ve tickerlar.
+- [Özel Kullanıcı Kanalı](/tr/developer-api/websocket/private-user-channel): listenKey yaşam döngüsü ve doğrulanmış olaylar.
+- [Entegrasyon Önerileri](/tr/developer-api/integration-recommendations): tekrarlar, kimlik potansiyeli, izleme ve fırlatma testleri.

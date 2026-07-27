@@ -1,25 +1,25 @@
 ---
-title: "Variantlar va tadbirlar"
-subtitle: "Ishga tushirish opsiyalari, ish vaqtidagi hodisalar va keng tarqalgan xato kodlari."
+title: "Seçenekler ve Etkinlikler"
+subtitle: "Başlatma seçenekleri, çalışma zamanı olayları ve yaygın hata kodları."
 slug: sdk/trading-widget/options-events
 canonical-url: https://docs.6mm.com/tr/sdk/trading-widget/options-events
 ---
 
-<h2 id="options">Variantlar</h2>
+<h2 id="options">Seçenekler</h2>
 
-| Maydon | Turi | Standart | Izohlar |
+| Saha | Tip | Varsayılan | Notlar |
 | --- | --- | --- | --- |
-| baseUrl | string | SDK yozuvi kelib chiqishi | iframe domeni. Hamkor sahifalarida aniq uzating. |
-| ramz | string | BTCUSDT | Katta harflar va chiziqlarga normallashtirilgan - / _. |
-| Mavzu | qorong'u \| Yorug'lik | qorong'u | Boshlang'ich mavzu parametri. |
-| Joy | en \| en-US \| zh-CN | Brauzer/standart | Ingliz va soddalashtirilgan xitoy tillari qo'llab-quvvatlanadi. |
-| Tuzilishi | standart \| Kompakt | Default | Rezerv qilingan joylashuv varianti. |
-| Displey | object | `showHeader: false`, `showTicker: false`, `hidden: []` | Embed shell hududlari va yuqori darajadagi savdo konteynerlarini boshqaradi. |
-| autentifikatsiya | object | yo'q | Yangi SSO integratsiyalari uchun partner-tokendan foydalaning. |
+| baseUrl | string | SDK yazı kökeni | iframe alanı. Partner sayfalarında açıkça paylaşın. |
+| sembol | string | BTCUSDT | Büyük harflere ve şeritlere normalize edildi - / _. |
+| Tema | karanlık \| ışık | karanlık | İlk tema parametresi. |
+| Bölge | en \| en-US \| zh-CN | Tarayıcı/varsayılan | İngilizce ve basitleştirilmiş Çince desteklenmektedir. |
+| Düzen | varsayılan \| kompakt | Varsayılan | Rezerve edilmiş düzen seçeneği. |
+| Gösteri | object | `showHeader: false`, `showTicker: false`, `hidden: []` | Kontrol kabuk alanları ve üst düzey ticaret konteynerleri. |
+| Doğrulama | object | Hiçbiri | Yeni SSO entegrasyonları için partner-token kullanın. |
 
-<h2 id="display-controls">Displey boshqaruvlari</h2>
+<h2 id="display-controls">Ekran kontrolleri</h2>
 
-`display` o'rnatilgan savdo sahifasi qobig'i va yuqori darajadagi konteynerlarni boshqaradi. Hamkor joylashtirishlarda PC sarlavhasi va pastki bozor tickeri standart tarzda yashirilgan bo'ladi.
+`display` , gömülü ticaret sayfası kabuğunu ve üst düzey konteynerleri kontrol eder. Ortak gömülerde, PC başlığı ve alt pazar ticker'ı varsayılan olarak gizlidir.
 
 ```js
 display: {
@@ -29,41 +29,41 @@ display: {
 }
 ```
 
-| Maydon | Turi | Standart | Izohlar |
+| Saha | Tip | Varsayılan | Notlar |
 | --- | --- | --- | --- |
-| showHeader | boolean | yolg'on | PC embed headerini iframe ichida ko'rsatish kerakmi, yoki yo'qmi. |
-| showTicker | boolean | yolg'on | Pastki bozor tickerini embed shellda ko'rsatish kerakmi, yoki yo'qmi. |
-| yashirin | String[] | [] | Savdo sahifasida yuqori darajadagi konteynerlarni yashiradi. |
+| showHeader | boolean | yanlış | PC gömülü başlığını iframe içinde gösterip göstermemediği. |
+| showTicker | boolean | yanlış | Gömülü kabuğunda alt piyasa ticker'ını gösterip göstermememe. |
+| gizli | String[] | [] | Yüksek seviyeli konteynerleri ticaret sayfasında saklar. |
 
-Qo'llab-quvvatlanadigan `display.hidden` qiymatlari:
+Desteklenen `display.hidden` değerleri:
 
-| Qiymat | Konteyner |
+| Değer | Konteyner |
 | --- | --- |
-| Chart | Chart konteyneri |
-| orderBook | Buyurtma kitobi konteyneri |
-| orderForm | Buyurtma shakli paneli |
-| Lavozimlar | Pastki pozitsiyalar va ochiq buyurtmalar paneli |
-| hisob | Hisob aktivlari konteyneri |
+| Harita | Harita konteyneri |
+| orderBook | Sipariş defteri konteyneri |
+| orderForm | Sipariş formu paneli |
+| Pozisyonlar | Alt pozisyonlar ve açık emirler paneli |
+| hesap | Hesap varlıkları konteyneri |
 
-`display.hidden` faqat butun konteynerlarni yashiradi. U konteyner ichidagi alohida tugmalar, maydonlar yoki vositalarni yashirmaydi. Joriy ko'rinish oynasiga mos kelmaydigan qiymatlar e'tiborga olinmaydi.
+`display.hidden` sadece tüm kapları saklar. Tek tek düğmeleri, alanları veya araçları bir konteyner içinde saklamaz. Mevcut görünüm penceresine eşlenmeyen değerler göz ardı edilir.
 
-<h2 id="events">Tadbirlar</h2>
+<h2 id="events">Etkinlikler</h2>
 
-| Tadbir | Trigger |
+| Etkinlik | Tetikleyici |
 | --- | --- |
-| Tayyor | iFrame ishga tushirilishi yakunlandi. |
-| xato | SDK, iframe yoki autentifikatsiya xatosi. |
-| state_changed | SDK hayot aylanishi holati o'zgardi. |
-| auth_state_changed | sherik-token autentifikatsiya holati o'zgartirildi. |
-| symbol_changed | Haqiqiy iframe belgisi o'zgardi. |
-| locale_changed | Haqiqiy iframe joyi o'zgardi. |
-| order_created | Foydalanuvchi iframe ichida buyurtma yaratdi. |
-| order_failed | Buyruq topshirilishi muvaffaqiyatsiz bo'ldi. |
-| Yo'q qilingan | SDK holat yo'q qilindi. |
+| Hazır | iframe başlatma tamamlandı. |
+| hata | SDK, iframe veya kimlik doğrulama hatası. |
+| state_changed | SDK yaşam döngüsü durumu değişti. |
+| auth_state_changed | partner-token doğrulama durumu değiştirildi. |
+| symbol_changed | Gerçek iframe sembolü değişti. |
+| locale_changed | Gerçek iframe konumu değişti. |
+| order_created | Kullanıcı iframe içinde bir sipariş oluşturdu. |
+| order_failed | Sipariş gönderimi başarısız oldu. |
+| yok edildi | SDK örnek yok edildi. |
 
-<h2 id="related-widget-guides">Tegishli Vidjet qo'llanmalari</h2>
+<h2 id="related-widget-guides">İlgili Widget rehberleri</h2>
 
-- [Trading Widget Tez boshlash](/tr/sdk/trading-widget/quick-start)
-- [Autentifikatsiya](/tr/sdk/trading-widget/authentication)
-- [Instansiya usullari](/tr/sdk/trading-widget/instance-methods)
-- [Muammolarni hal qilish](/tr/sdk/security/troubleshooting)
+- [Trading Widget Hızlı Başlangıç](/tr/sdk/trading-widget/quick-start)
+- [Doğrulama](/tr/sdk/trading-widget/authentication)
+- [Örnek Yöntemleri](/tr/sdk/trading-widget/instance-methods)
+- [Sorun Giderme](/tr/sdk/security/troubleshooting)

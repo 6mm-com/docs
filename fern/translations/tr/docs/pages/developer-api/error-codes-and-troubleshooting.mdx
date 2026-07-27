@@ -1,11 +1,11 @@
 ---
-title: "Xatolik kodlari va muammolarni hal qilish"
-description: "Xatolarni 6MM API kodlari, xabarlar, so'rov identifikatorlari, qayta urinish bo'yicha ko'rsatmalar, autentifikatsiya tekshiruvlari va integratsiyani aniqlash bosqichlari yordamida aniqlang."
+title: "Hata Kodları ve Sorun Giderme"
+description: "Yanıt kodları, mesajlar, istek kimlikleri, yeniden deneme rehberliği, kimlik doğrulama kontrolleri ve entegrasyon sorun giderme adımları kullanarak 6MM API hatalarını teşhis edin."
 slug: developer-api/error-codes-and-troubleshooting
 canonical-url: https://docs.6mm.com/tr/developer-api/error-codes-and-troubleshooting
 ---
 
-<h2 id="error-response-format">Xatolik Javob Formati</h2>
+<h2 id="error-response-format">Hata Yanıt Formatı</h2>
 
 ```json
 {
@@ -15,46 +15,46 @@ canonical-url: https://docs.6mm.com/tr/developer-api/error-codes-and-troubleshoo
 }
 ```
 
-Biznes xatolari odatda birlashtirilgan JSON tuzilmasini qaytaradi. Integratorlar avval `code` tekshirishi kerak. Autentifikatsiya xatoliklari HTTP `401`qaytishi mumkin; Tezlikni cheklash HTTP `429`qaytishi mumkin.
+İş hataları genellikle yine de birleşik JSON yapısını geri döndürür. Entegratörler önce `code` kontrol etmeli. Kimlik doğrulama hataları HTTP `401`döndürebilir; Hız sınırı HTTP `429`geri getirebilir.
 
-<h2 id="common-error-codes">Keng tarqalgan xato kodlari</h2>
+<h2 id="common-error-codes">Yaygın Hata Kodları</h2>
 
-| Xato kodi      | Tavsif                                  |
+| Hata kodu      | Tanım                                  |
 | --------------- | -------------------------------------------- |
-| `0`             | Muvaffaqiyat                                      |
-| `1001`          | Haqiqiy autentifikatsiya ma'lumotlari taqdim etilmagan |
-| `1002`          | Token muddati o'tgan                                |
-| `1003`          | Noto'g'ri token, API Keyyoki imzo         |
-| `1004`          | Token bekor qilindi                                |
-| `1006`          | Manba IP mosligi                           |
-| `2001`          | Kerakli parametrning yo'qligi                   |
-| `2002`          | Noto'g'ri parametr qiymati                      |
-| `2003`          | Parametr diapazondan tashqarida                       |
-| `3001`          | Yetarli muvozanat yetishmasligi                         |
-| `3003`          | Buyruq topilmadi                              |
-| `3004`          | Dublikat so'rovi                            |
-| `3005`          | Buyurtmani bekor qilib bo'lmaydi                     |
-| `3006`          | Ruxsat berilmadi                            |
-| `3100` - `3112` | Shart tartibi parametrlarini tasdiqlash xatosi   |
-| `5001`          | Ichki server xatosi                        |
-| `5002`          | Xizmat vaqtincha mavjud emas              |
-| `5003`          | Tezlik cheklovi ishga tushirildi                         |
+| `0`             | Başarı                                      |
+| `1001`          | Geçerli kimlik doğrulama bilgisi sağlanmadı |
+| `1002`          | Token süresi doldu                                |
+| `1003`          | Geçersiz Token, API Keyveya imza         |
+| `1004`          | Token iptal edildi                                |
+| `1006`          | Kaynak IP uyumsuzluğu                           |
+| `2001`          | Eksik gereken parametre                   |
+| `2002`          | Geçersiz parametre değeri                      |
+| `2003`          | Aralık dışı parametre                       |
+| `3001`          | Yetersiz denge                         |
+| `3003`          | Emir bulunamadı                              |
+| `3004`          | Tekrarlanan talep                            |
+| `3005`          | Sipariş iptal edilemez                     |
+| `3006`          | İzin reddedildi                            |
+| `3100` - `3112` | Şart sırası parametre doğrulama hatası   |
+| `5001`          | Dahili sunucu hatası                        |
+| `5002`          | Hizmet geçici olarak kullanılamaz              |
+| `5003`          | Hız sınırı tetiklendi                         |
 
-<h2 id="troubleshooting">Muammolarni hal qilish</h2>
+<h2 id="troubleshooting">Sorun Giderme</h2>
 
-| Muammo                                     | Tavsiya                                                                                   |
+| Sorun                                     | Tavsiye                                                                                   |
 | ------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| `1001` haqiqiy autentifikatsiya ma'lumotlari yo'q  | `Authorization: Bearer <accessToken>` yoki `X-API-KEY` kiritilganini tekshiring.                  |
-| `1002` Token muddati o'tgan                        | Tokenni yangilash yoki qayta kirishdan oldin qayta tiklang.                                                   |
-| `1003` noto'g'ri Token, API Keyyoki imzo | API Key, imzo yuklamasi, so'rov tanasi JSON satrini va so'rov parametr tartibini tekshiring.           |
-| `1006` manba IP mos kelmaydi                   | API Key IP oq ro'yxat konfiguratsiyasini tekshiring.                                                    |
-| `3004` nusxa so'rovi                    | Buyruq bilan bog'liq yo'llar uchun bir xil imzoni qayta ishlatmang. Regeneratsiya `timestamp` va `signature`. |
-| `5003` cheklovi ishga tushirildi                 | So'rovlar chastotasini kamaytiring va qayta urinishda eksponensial orqaga chekinishdan foydalaning.                                |
-| `Timestamp outside of tolerance window`     | Vaqt ofsetini kalibrlash `/v1/time` qo'ng'iroq qiling va so'rovni yana imzolang.                             |
+| `1001` geçerli kimlik doğrulama bilgisi yok  | `Authorization: Bearer <accessToken>` veya `X-API-KEY` dahil olup olmadığını kontrol edin.                  |
+| `1002` Token süresi doldu                        | Token'ı yenile veya tekrar giriş yapmadan önce tekrar giriş yapın.                                                   |
+| `1003` geçersiz Token, API Keyveya imza | API Key, imza yükü, istek gövdesi JSON dizisi ve sorgu parametre sırasını kontrol edin.           |
+| `1006` kaynağı IP uyumsuzluk                   | API Key IP beyaz listesi yapılandırmasını kontrol edin.                                                    |
+| `3004` tekrarlayıcı talebi                    | Aynı imzayı siparişle ilgili yollar için tekrar kullanmayın. `timestamp` yeniden yarat ve `signature`. |
+| `5003` hız sınırı tetiklendi                 | Tekrar denerken istek sıklığını azaltın ve üstel geri çekme kullanın.                                |
+| `Timestamp outside of tolerance window`     | Zaman ofsetini kalibre etmek ve talebi tekrar imzalamak için `/v1/time` 'yi arayın.                             |
 
-<h2 id="related-diagnostic-guides">Tegishli diagnostika qo'llanmalari</h2>
+<h2 id="related-diagnostic-guides">İlgili tanı rehberleri</h2>
 
-- [Muhitlar va umumiy konventsiyalar](/tr/developer-api/environments-and-common-conventions)
-- [Autentifikatsiya](/tr/developer-api/authentication)
-- [Integratsiya tavsiyalari](/tr/developer-api/integration-recommendations)
-- [Qo'llab-quvvatlash so'rovi shabloni](/tr/resources/support-request-template)
+- [Ortamlar ve Ortak Gelenekler](/tr/developer-api/environments-and-common-conventions)
+- [Doğrulama](/tr/developer-api/authentication)
+- [Entegrasyon Önerileri](/tr/developer-api/integration-recommendations)
+- [Destek Talebi Şablonu](/tr/resources/support-request-template)

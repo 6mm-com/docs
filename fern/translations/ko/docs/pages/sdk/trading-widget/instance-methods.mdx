@@ -1,0 +1,135 @@
+---
+title: "인스턴스 메서드"
+subtitle: "TradingWidget.create( 이후에 생성된 위젯 인스턴스를 제어합니다)."
+slug: sdk/trading-widget/instance-methods
+canonical-url: https://docs.6mm.com/ko/sdk/trading-widget/instance-methods
+---
+
+<h2 id="method-summary">방법 요약</h2>
+
+| 방법 | 목적 |
+| --- | --- |
+| 파괴() | iframe을 제거하고 이벤트 청취자를 해제하세요. |
+| getState() | 현재 SDK 라이프사이클 상태를 읽어보세요. |
+| whenReady() | iframe이 초기화를 마칠 때까지 기다리세요. |
+| setSymbol(상징) | iframe 내에서 거래 쌍을 바꿔보세요. |
+| setTheme(테마) | iframe 테마 파라미터를 업데이트하세요. |
+| setLocale(지역) | iframe 언어를 전환하세요. |
+| setSize(너비, 높이) | iframe 크기를 업데이트하세요. |
+| 재장전() | 현재 iframe을 다시 불러오세요. |
+| refreshAuth(이유) | 위젯 인증 새로고침 흐름을 트리거하세요. |
+| setTokenProvider(제공자) | 파트너 토큰 모드에서 사용하는 공급자를 교체하세요. |
+| 온(이벤트, 핸들러) | 런타임 이벤트에 구독하면 구독 취소 기능을 받아야 합니다. |
+
+<h2 id="destroy">파괴()</h2>
+
+iframe을 제거하고, 리스너를 정리한 뒤, 현재 인스턴스에 대해 한 번 파괴된 것을 방출하세요.
+
+```js
+widget.destroy()
+```
+
+<h2 id="getstate">getState()</h2>
+
+위젯 인스턴스의 현재 라이프사이클 상태를 읽으세요.
+
+```js
+const state = widget.getState()
+```
+
+반환 값에는 loading, authenticating, ready, error, destroyed 등이 포함됩니다.
+
+<h2 id="whenready">whenReady()</h2>
+
+iframe이 초기화를 마칠 때까지 기다린 후 의존형 UI 로직을 실행하세요.
+
+```js
+await widget.whenReady()
+```
+
+<h2 id="setsymbol-symbol">setSymbol(상징)</h2>
+
+iframe 내에서 거래 쌍을 바꿔보세요. iframe이 아직 초기화 중이라면, SDK 명령을 큐에 넣고 준비 후에 전송합니다.
+
+```js
+widget.setSymbol('ETHUSDT')
+```
+
+<h2 id="settheme-theme">setTheme(테마)</h2>
+
+임베디드 트레이딩 iframe에서 사용하는 테마 파라미터를 업데이트하세요.
+
+```js
+widget.setTheme('dark')
+widget.setTheme('light')
+```
+
+<h2 id="setlocale-locale">setLocale(지역)</h2>
+
+iframe 언어를 전환하세요. 지원되는 값은 en, en-US, zh-CN입니다.
+
+```js
+widget.setLocale('en')
+widget.setLocale('en-US')
+widget.setLocale('zh-CN')
+```
+
+<h2 id="setsize-width-height">setSize(너비, 높이)</h2>
+
+iframe DOM 크기를 업데이트하고 새로운 외부 크기를 iframe에 알리세요. 수치 값은 px로 변환됩니다.
+
+```js
+widget.setSize('100%', 720)
+```
+
+<h2 id="reload">재장전()</h2>
+
+현재 iframe을 다시 불러오고 다시 초기화될 때까지 기다리세요.
+
+```js
+widget.reload()
+```
+
+<h2 id="refreshauth-reason">refreshAuth(이유)</h2>
+
+iframe에 현재 인증 흐름을 새로고침해 달라고 요청하세요. 선택적 이유 값은 로깅과 흐름 제어를 위해 전달됩니다.
+
+```js
+widget.refreshAuth('manual')
+```
+
+<h2 id="settokenprovider-provider">setTokenProvider(제공자)</h2>
+
+파트너 토큰 모드에서 사용된 tokenProvider 를 대체합니다. iframe이 새 임베드 토큰을 요청하면 SDK 제공자에게 호출합니다.
+
+```js
+widget.setTokenProvider(async ({ channelId, symbol, reason }) => {
+  const resp = await fetch('/api/trading/embed-token', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ channelId, symbol, reason }),
+  })
+
+  return resp.json()
+})
+```
+
+<h2 id="on-event-handler">온(이벤트, 핸들러)</h2>
+
+런타임 이벤트에 구독하세요. 반환된 함수는 리스너를 제거합니다.
+
+```js
+const off = widget.on('order_created', (event) => {
+  console.log(event)
+})
+
+off()
+```
+
+<h2 id="related-widget-guides">관련 위젯 가이드</h2>
+
+- [Trading Widget 퀵 스타트](/ko/sdk/trading-widget/quick-start)
+- [옵션 및 이벤트](/ko/sdk/trading-widget/options-events)
+- [인증](/ko/sdk/trading-widget/authentication)
+- [문제 해결](/ko/sdk/security/troubleshooting)

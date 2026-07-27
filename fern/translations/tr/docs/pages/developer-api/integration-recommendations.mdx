@@ -1,42 +1,42 @@
 ---
-title: "Integratsiya tavsiyalari"
-description: "Autentifikatsiya, qayta urinishlar, idempotentsiya, yozuv, tezlikni boshqarish, monitoring, xavfsizlik va uchirishga tayyorgarlik uchun tavsiya etilgan 6MM amaliyotlarini qo'llash."
+title: "Entegrasyon Önerileri"
+description: "Kimlik doğrulama, denemeler, kimlik potansiyeli, kayıt tutma, oran yönetimi, izleme, güvenlik ve fırlatma hazırlığı için önerilen 6MM uygulamaları uygulayın."
 slug: developer-api/integration-recommendations
 canonical-url: https://docs.6mm.com/tr/developer-api/integration-recommendations
 ---
 
-Ushbu tavsiyalarni ishlab chiqarishga tayyorgarlik asosi sifatida ishlating. Ular endpoint referensiyasini to'ldiradi va integratsiyalarni vaqt tugatishlari, qayta ulanishlar, takrorlangan so'rovlar va credential hodisalaridan xavfsiz tiklanishga yordam beradi.
+Bu önerileri üretim hazırlığı için bir temel olarak kullanın. Uç nokta referansını tamamlar ve entegrasyonların zaman aşımları, yeniden bağlanmalar, tekrarlanan talepler ve kimlik bilgileri olaylarından güvenli şekilde geri dönmesine yardımcı olurlar.
 
-<h2 id="authentication-and-secrets">Autentifikatsiya va sirlar</h2>
+<h2 id="authentication-and-secrets">Kimlik doğrulama ve sırlar</h2>
 
-- Server tomonidagi savdo dasturlari uchun [API Key signing](/tr/developer-api/authentication) va foydalanuvchi boshqaruvidagi frontend harakatlari uchun JWT afzal ko'ring.
-- Orqa `apiSecret` maxfiy boshqaruvda saqlang. U faqat bir marta ko'rsatiladi va hech qachon brauzer yoki mobil mijozga yuborilmasligi kerak.
-- Integratsiya muhiti barqaror chiqish manzillarini qo API Key llab-quvvatlagan bo'lsa, minimal talab qilinadigan  ruxsatlarini qo'llash va manba IPlarni cheklash.
-- Sizib chiqqan kalitni darhol o'chirish yoki o'chirish, so'ngra almashtirish uchun so'rov jurnallarini ko'rib chiqish.
+- Tercihe [API Key imza](/tr/developer-api/authentication) sunucu tarafı işlem programları için ve kullanıcı odaklı ön uç işlemleri için JWT .
+- `apiSecret` arka uçta gizli yönetimde tut. Sadece bir kez gösterilir ve asla bir tarayıcıya veya mobil istemciye gönderilmemelidir.
+- Entegrasyon ortamı kararlı çıkış adreslerini desteklediğinde minimum gerekli API Key izinleri uygulayın ve kaynak IP'leri kısıtlayın.
+- Sızdırılmış bir anahtarı hemen devre dışı bırakın veya silinin, ardından istek kayıtlarını gözden geçirin ve ardından yenisini verebilirsiniz.
 
-<h2 id="request-validation-and-idempotency">Tasdiqlash va idempotentsiya so'rovi</h2>
+<h2 id="request-validation-and-idempotency">Doğrulama ve idempotency talebi</h2>
 
-- Buyurtma berishdan oldin `/v1/public/market/symbols` so'rov qiling va `tickSize`, `stepSize`, minimal nominal qiymat va maksimal miqdorni mahalliy darajada tasdiqlang.
-- Har bir buyurtma yozish uchun yagona `clientOrderId` hosil qiling, shunda uzilishdan so'ng so'rovlar uyg'unlashtirilishi mumkin.
-- Agar HTTP natija aniq bo'lmasa, asl identifikatorni saqlang. Almashtirish so'rovini yaratishdan oldin mavjud tartibni so'rang.
-- O'nlik miqdorlar va narxlarni ikkilik suzuvchi nuqta qiymatlari emas, satr yoki o'nlik turlar sifatida qabul qilish.
+- Sipariş vermeden önce `/v1/public/market/symbols` sorgulayın ve `tickSize`, `stepSize`, minimum kavramsal değer ve maksimum miktarı yerel olarak doğrulayın.
+- Her emir yazısı için benzersiz bir `clientOrderId` oluşturun ki istekler bağlantı kesildikten sonra uzlaştırılabilir.
+- HTTP bir sonuç belirsiz olduğunda orijinal tanımlayıcıyı koruyun. Bir değişim talebi oluşturmadan önce mevcut siparişi sorgulayın.
+- Ondalık miktarları ve fiyatları ikili kayan nokta değerleri değil, dizim veya ondalık tipler olarak ele alın.
 
-<h2 id="order-and-websocket-state">Tartib va WebSocket holati</h2>
+<h2 id="order-and-websocket-state">Düzen ve WebSocket durumu</h2>
 
-- [shaxsiy WebSocket voqealari](/tr/developer-api/websocket/private-user-channel) yoki REST so'rovidan keyin bekor qilish, bekor qilish yoki o'zgartirish operatsiyalaridan keyingi yakuniy holatni aniqlash.
-- Har bir qayta ulanishni yangi WebSocket sessiyasi sifatida qabul qiling va barcha kerakli obunalarni tiklang.
-- Buyurtma kitobi uzluksizligini `endVersion`bilan tekshiring. Agar versiya bo'shlig'i paydo bo'lsa, mahalliy kitobni tashlab, yangi snapshot uchun qayta obuna bo'ling.
-- Shaxsiy buyurtma va hisob voqealarini balanslar, pozitsiyalar yoki hamkor yozuvlariga qo'llashdan oldin duplikatsiyadan chiqaring.
+- İptal, hepsini iptal etme veya değişiklikler sonrası nihai durumu belirlemek [Özel WebSocket etkinlikleri](/tr/developer-api/websocket/private-user-channel) ya da REST bir soru.
+- Her yeniden bağlantıyı yeni bir WebSocket oturumu olarak kabul edin ve gerekli tüm abonelikleri geri getirin.
+- Sipariş defteri sürekliliğini `endVersion`ile kontrol edin. Bir versiyon boşluğu oluşursa, yerel kitabı bırakın ve taze bir anlık için yeniden abone olun.
+- Özel sipariş ve hesap olaylarını bakiyelere, pozisyonlara veya ortak kayıtlarına uygulamadan önce deduplicate etmek.
 
-<h2 id="logging-monitoring-and-retries">Loglar, monitoring va qayta urinishlar</h2>
+<h2 id="logging-monitoring-and-retries">Kayıt tutma, izleme ve tekrar denemeler</h2>
 
-- Yozuv so'rovi IDsi, mijoz buyurtmasi IDAPIHTTP,  holati, biznes kodi, kechikish va qayta urinish soni, sirlar yoki to'liq tokenlarni ro'yxatdan o'tkazmasdan.
-- Faqat xavfsiz deb hujjatlashtirilgan operatsiyalarni qayta sinab ko'rish, cheklangan eksponensial orqaga qaytish va jitter yordamida.
-- Autentifikatsiya xatolari, imzo xatolari, tezlik cheklovi javoblari, WebSocket qayta ulanish sikllari, ketma-ketlik bo'shliqlari va tartiblarni muvofiqlashtirish farqlari haqida ogohlantirish.
-- Server soatlarini sinxronlashtiring, chunki autentifikatsiya va imzolash vaqt belgilariga bog'liq.
+- Kayıt isteği kimliği, müşteri sipariş kimliği, HTTP durumu, API iş kodu, gecikme ve tekrar deneme sayısı, sırlar veya tam tokenlar kaydedilmeden.
+- Sadece güvenli olarak belgelenmiş işlemleri tekrar deneme, sınırlı üstel geri çekilme ve jitter kullanılarak.
+- Kimlik doğrulama hataları, imza hataları, hız sınırı yanıtları, WebSocket yeniden bağlantı döngüleri, dizi boşlukları ve sipariş uyum farkları hakkında uyarı.
+- Sunucu saatlerini senkronize tutun çünkü kimlik doğrulama ve imzalama zaman damgalarına bağlıdır.
 
-<h2 id="before-production">Ishlab chiqarishdan oldin</h2>
+<h2 id="before-production">Üretim öncesi</h2>
 
-- Ishlab chiqarish bo'lmagan muhitda vaqt tugashi, so'rovni takrorlash, qayta ulanish, kalitni aylantirish va webhook qayta urinish ssenariylarini amalga oshirish.
-- Egalarni credential aylanishi, savdo hodisalari, webhook xatolari va muvofiqlashtirish uchun tayinlang.
-- [ishlab chiqarishni boshlash nazorat ro'yxati](/tr/resources/production-launch-checklist) ni to'ldiring va eskalatsiya zarur bo'lganda [support request template](/tr/resources/support-request-template) dan foydalaning.
+- Üretim dışı bir ortamda zaman aşımı, tekrarlayan isteği, yeniden bağlanma, anahtar döndürme ve webhook tekrar deneme senaryolarını uygulamak.
+- Kimlik doğrulama rotasyonu, ticaret olayları, webhook hataları ve uzlaştırma için sahipleri atamak.
+- Tamamla [Üretim başlatma kontrol listesi](/tr/resources/production-launch-checklist) ve [Destek Talebi Şablonu](/tr/resources/support-request-template) Tırmanma gerektiğinde ise.

@@ -1,0 +1,74 @@
+---
+title: "6MM Agent SDK"
+headline: "Java 및 백엔드 통합PHP 6MM Agent SDK"
+description: "Java에서 6MM Agent SDK를 사용하는 방법을 배우고, 백엔드 서비스를 PHP하여 서명된 요청을 보내고, 사용자를 묶고, 자산을 이전하며, 항목 URL 생성, webhooks검증을 할 수 있습니다."
+slug: sdk/agent-sdk/overview
+canonical-url: https://docs.6mm.com/ko/sdk/agent-sdk/overview
+---
+
+6MM Agent SDK은 서명 및 요청 처리를 처음부터 구현하지 않고 특권 에이전트 APIs을 호출해야 하는 파트너 백엔드 서비스입니다. 이 통합은 파트너 API 시크릿을 사용하기 때문에 브라우저, 모바일, 공개 데스크톱 코드에서 실행되어서는 안 됩니다.
+
+<h2 id="when-to-use-the-agent-sdk">언제 Agent SDK를 사용해야 할까요</h2>
+
+백엔드에서 파트너 사용자를 바인딩하거나, 승인된 워크플로우로 자산을 이동하거나, 거래 기록을 조회하거나, 내장된 거래 입력 URL 을 만들거나, webhook 알림을 검증해야 할 때 Agent SDK을 사용하세요. 다음 기능을 사용하세요 [Trading Widget SDK](/ko/sdk/trading-widget/overview) 파트너 프론트엔드가 거래 인터페이스를 표시해야 할 때는 별도로 처리해야 합니다.
+
+<h2 id="capabilities">기능</h2>
+
+| 시나리오 | Java SDK | PHP SDK |
+| --- | --- | --- |
+| 사용자 결속 | 지원 | 지원 |
+| 고정 금액 이체 | 지원 | 지원 |
+| 전부 전부 전해 | 지원 | 지원 |
+| 역전송 | 지원 | 지원 |
+| 쿼리 순서 | 지원 | 지원 |
+| 진입 URL | 지원 | 지원 |
+| Webhook 검증 | 지원 | 지원 |
+
+<h2 id="common-configuration">공통 구성</h2>
+
+| 키 | 예시 | 설명 |
+| --- | --- | --- |
+| baseUrl | `https://agent-api.6mm.com` | 6MM 에이전트는 트레일링 슬래시 없이 서비스 URL API. |
+| agentCode | AGENT001 | 파트너 요원 코드. |
+| apiSecret | your-api-secret | API 서명 비밀은 백엔드에만 저장됩니다. |
+| defaultCurrency | USDT | 송금 및 계좌 APIs기본 통화 |
+| webhookUrl | https://partner.example.com/6mm/webhook | 6MM webhook 알림을 위한 파트너 엔드포인트. |
+
+<h2 id="typical-integration-flow">일반적인 적분 흐름</h2>
+
+1. 파트너 프론트엔드는 파트너의 자체 계정 시스템을 통해 사용자를 인증합니다.
+2. 파트너 백엔드는 사용자를 안정적인 파트너 측 식별자로 매핑합니다.
+3. 백엔드는 `agentCode`와 보호된 API 비밀로 된 Agent SDK을 호출합니다.
+4. SDK 가 서명하고 에이전트에게 요청 API 보냅니다.
+5. 백엔드는 반환된 비즈니스 식별자와 프로세스를 나중에 멮등 webhooks 저장합니다.
+6. 프론트엔드는 필요한 단기간의 결과나 진입 자격증만 받습니다.
+
+<h2 id="choose-an-sdk">SDK를 선택하세요</h2>
+
+| 백엔드 스택 | 여기서 시작해 |
+| --- | --- |
+| Java | [Java SDK 개요](/ko/sdk/agent-sdk/java/overview) 그리고 [Java 퀵 스타트](/ko/sdk/agent-sdk/java/quick-start) |
+| PHP | [PHP SDK 개요](/ko/sdk/agent-sdk/php/overview) 그리고 [PHP 퀵 스타트](/ko/sdk/agent-sdk/php/quick-start) |
+
+<h2 id="production-checklist">생산 체크리스트</h2>
+
+- 소스 코드가 아닌 백엔드 시크릿 매니저에서 `apiSecret` 로드합니다.
+- 개발, 스테이징, 제작 자격을 분리하세요.
+- 안정적인 파트너 사용자 매핑과 고유 비즈니스 주문 식별자를 사용합니다.
+- 시간 초과 요청 상태를 확인할 때 원본 식별자를 보존합니다.
+- webhook 서명 검증 및 처리된 이벤트 ID를 저장합니다.
+- 로그에서 비밀 및 서명을 편집하면서 요청을 지원용 ID를 유지함.
+
+<h2 id="next-steps">다음 단계</h2>
+
+<CardGroup cols={3}>
+<Card title="Java 퀵 스타트" icon="fa-brands fa-java" href="/ko/sdk/agent-sdk/java/quick-start">
+Java 백엔드에서 Agent SDK를 설치하고 초기화하세요.
+</Card>
+<Card title="PHP 퀵 스타트" icon="fa-brands fa-php" href="/ko/sdk/agent-sdk/php/quick-start">
+PHP 백엔드에서 Agent SDK를 설치하고 초기화하세요.
+</Card>
+<Card title="Webhooks 및 등등성" icon="fa-duotone fa-webhook" href="/ko/sdk/security/webhooks-idempotency">
+콜백 확인을 하고 중복된 비즈니스 처리를 방지하세요.
+</Card>
+</CardGroup>

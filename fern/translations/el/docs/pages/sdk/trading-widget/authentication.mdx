@@ -1,0 +1,95 @@
+---
+title: "Trading Widget Έλεγχος ταυτότητας"
+subtitle: "Χρησιμοποιήστε το partner-token για νέες ενσωματωμένες ενσωματώσεις SSO συναλλαγών."
+slug: sdk/trading-widget/authentication
+canonical-url: https://docs.6mm.com/el/sdk/trading-widget/authentication
+---
+
+<h2 id="recommended-mode-partner-token">Προτεινόμενη λειτουργία: partner-token</h2>
+
+Το partner-token αποφεύγει την τοποθέτηση σύντομων διακριτικών σε διευθύνσεις URL και διατηρεί apiSecret στο backend του συνεργάτη.
+
+```js
+const widget = TradingWidget.create('#trading-widget', {
+  baseUrl: 'https://app.6mm.com',
+  auth: {
+    mode: 'partner-token',
+    tokenProvider: async ({ channelId, symbol, reason }) => {
+      const resp = await fetch('/api/trading/embed-token', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ channelId, symbol, reason }),
+      })
+
+      if (!resp.ok) {
+        throw new Error('Failed to request embed token')
+      }
+
+      return resp.json()
+    },
+  },
+})
+```
+
+<h2 id="related-documentation">Σχετική τεκμηρίωση</h2>
+
+- [Δημιουργία διακριτικού ενσωμάτωσης](/el/sdk/agent-sdk/java/embed-token): Παράδειγμα έκδοσης διακριτικού υποστήριξης.
+- [Trading Widget Γρήγορη εκκίνηση](/el/sdk/trading-widget/quick-start): Πλήρης ροή προετοιμασίας.
+- [Μυστικά & Υπογραφή](/el/sdk/security/secrets-signing): Διατηρήστε τα προνομιακά διαπιστευτήρια παράγοντα στο παρασκήνιο.
+- [Αντιμετώπιση προβλημάτων](/el/sdk/security/troubleshooting): Διάγνωση αποτυχιών περιόδου λειτουργίας, διακριτικού, προέλευσης και προετοιμασίας.
+
+<h2 id="backend-flow">Ροή backend</h2>
+
+```text
+1. Partner frontend receives auth_request from the iframe.
+2. SDK calls tokenProvider.
+3. Partner frontend calls its own backend.
+4. Partner backend validates the partner session.
+5. Partner backend calls 6MM Agent API or Java SDK createEmbedToken.
+6. SDK sends embedToken to the iframe through postMessage.
+7. iframe exchanges embedToken for a 6MM access token.
+8. iframe continues initialization and emits ready.
+```
+
+<h2 id="tokenprovider-contract">tokenProvider σύμβαση</h2>
+
+| Πεδίο | Κατεύθυνση | Περιγραφή |
+| --- | --- | --- |
+| channelId | SDK -> Υποστήριξη συνεργάτη | Μοναδικό αναγνωριστικό περιόδου λειτουργίας widget. Το backend πρέπει να το περάσει στο createEmbedToken. |
+| σύμβολο | SDK -> Υποστήριξη συνεργάτη | Τρέχον ζητούμενο σύμβολο συναλλαγών. Χρησιμοποιήστε το για να περιορίσετε το διακριτικό όταν χρειάζεται. |
+| Αιτιολογία | SDK -> Υποστήριξη συνεργάτη | Γιατί το SDK ζητά ένα διακριτικό, όπως αρχική φόρτωση ή ανανέωση. |
+| embedToken | Υποστήριξη συνεργάτη -> SDK | Βραχύβιο διακριτικό που δημιουργήθηκε από το Agent SDK ή το Agent API. |
+| expireAt | Υποστήριξη συνεργάτη -> SDK | Η χρονική σήμανση λήξης του διακριτικού επιστράφηκε από 6MM. |
+
+<h2 id="failure-handling">Χειρισμός βλαβών</h2>
+
+| Κατάσταση | Συνιστώμενος χειρισμός |
+| --- | --- |
+| Η περίοδος λειτουργίας συνεργάτη έληξε | Επιστρέψτε το 401 από το τελικό σημείο συνεργάτη και ζητήστε από το χρήστη να εισέλθει ξανά. |
+| Η δημιουργία διακριτικού απέτυχε προσωρινά | Ρίξτε ένα σφάλμα στο tokenProvider και αφήστε το γραφικό στοιχείο να εμφανίσει ένα σφάλμα ελέγχου ταυτότητας. |
+| channelId αναντιστοιχία | Απορρίψτε το αίτημα και δημιουργήστε ξανά την παρουσία του γραφικού στοιχείου. |
+| Ο χρήστης δεν επιτρέπεται να συναλλάσσεται | Επιστρέψτε ένα σφάλμα που ελέγχεται από τον συνεργάτη και μην δημιουργήσετε ένα διακριτικό ενσωμάτωσης. |
+
+<h2 id="compatibility-mode-agent-sso">Λειτουργία συμβατότητας: agent-sso</h2>
+
+Το Agent-SSO διατηρεί τη ροή παλαιότερων εισιτηρίων /Agent-Entry. Προτιμήστε το partner-token για νέες ενσωματώσεις.
+
+```js
+const widget = TradingWidget.create('#trading-widget', {
+  baseUrl: 'https://app.6mm.com',
+  auth: {
+    mode: 'agent-sso',
+    entryUrlProvider: async ({ redirectPath }) => {
+      const resp = await fetch('/api/trading-entry', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ redirectPath }),
+      })
+      const data = await resp.json()
+      return data.webUrl
+    },
+  },
+})
+```

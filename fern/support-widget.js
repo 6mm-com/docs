@@ -20,10 +20,18 @@
     });
   });
   var lastPathname = window.location.pathname;
+  var lastWidgetLanguage = null;
   var lastTheme = null;
   var pendingWidgetDocsLocale = null;
+  var pendingWidgetDocsResolved = false;
   var pendingWidgetTheme = null;
   var widgetDocsRequestId = 0;
+
+  function normalizeLanguage(lang) {
+    return typeof lang === 'string'
+      ? lang.trim().replace(/_/g, '-').toLowerCase()
+      : '';
+  }
 
   function currentDocsLocale() {
     var firstSegment = window.location.pathname.split('/').filter(Boolean)[0] || '';
@@ -60,11 +68,16 @@
     return true;
   }
 
-  function syncWidgetLanguageFromHost(retries) {
-    if (callWidget('setLang', currentLang())) return;
+  function syncWidgetLanguageFromHost(retries, force) {
+    var language = currentLang();
+    if (!force && language === lastWidgetLanguage) return;
+    if (callWidget('setLang', language)) {
+      lastWidgetLanguage = language;
+      return;
+    }
     if (retries > 0) {
       window.setTimeout(function () {
-        syncWidgetLanguageFromHost(retries - 1);
+        syncWidgetLanguageFromHost(retries - 1, force);
       }, 100);
     }
   }
@@ -89,31 +102,77 @@
   }
 
   function routeForWidgetLanguage(lang) {
-    var normalized = typeof lang === 'string' ? lang.trim().replace(/_/g, '-').toLowerCase() : '';
+    var normalized = normalizeLanguage(lang);
     return Object.prototype.hasOwnProperty.call(widgetLanguageRoutes, normalized)
       ? widgetLanguageRoutes[normalized]
-      : null;
+      : '';
+  }
+
+  function clearPendingWidgetDocsNavigation() {
+    pendingWidgetDocsLocale = null;
+    pendingWidgetDocsResolved = false;
+    lastPathname = window.location.pathname;
+  }
+
+  function confirmPendingWidgetDocsNavigation() {
+    if (
+      pendingWidgetDocsLocale !== null &&
+      pendingWidgetDocsResolved &&
+      pendingWidgetDocsLocale === currentDocsLocale()
+    ) {
+      clearPendingWidgetDocsNavigation();
+      return true;
+    }
+    return false;
   }
 
   function switchHostLanguage(lang) {
     var route = routeForWidgetLanguage(lang);
-    if (route === null) return;
     var requestId = ++widgetDocsRequestId;
+    var locale = localeRoutes.find(function (item) {
+      return item.route === route;
+    });
 
+    if (locale) lastWidgetLanguage = locale.widget;
     pendingWidgetDocsLocale = route;
+    pendingWidgetDocsResolved = false;
 
     if (typeof window.__sixmmNavigateDocsLocale === 'function') {
-      Promise.resolve(window.__sixmmNavigateDocsLocale(route)).then(function (success) {
-        if (
-          !success &&
-          requestId === widgetDocsRequestId &&
-          pendingWidgetDocsLocale === route
-        ) {
-          pendingWidgetDocsLocale = null;
+      var navigation;
+      try {
+        navigation = window.__sixmmNavigateDocsLocale(route);
+      } catch (error) {
+        if (requestId === widgetDocsRequestId && pendingWidgetDocsLocale === route) {
+          clearPendingWidgetDocsNavigation();
         }
-      });
+        return;
+      }
+      Promise.resolve(navigation).then(
+        function (success) {
+          if (
+            requestId !== widgetDocsRequestId ||
+            pendingWidgetDocsLocale !== route
+          ) {
+            return;
+          }
+          if (!success) {
+            clearPendingWidgetDocsNavigation();
+            return;
+          }
+          pendingWidgetDocsResolved = true;
+          confirmPendingWidgetDocsNavigation();
+        },
+        function () {
+          if (
+            requestId === widgetDocsRequestId &&
+            pendingWidgetDocsLocale === route
+          ) {
+            clearPendingWidgetDocsNavigation();
+          }
+        }
+      );
     } else {
-      pendingWidgetDocsLocale = null;
+      clearPendingWidgetDocsNavigation();
     }
   }
 
@@ -133,7 +192,8 @@
   }
 
   function onWidgetLanguageChange(event) {
-    switchHostLanguage(event && event.detail ? event.detail.lang : '');
+    var language = event && event.detail ? event.detail.lang : '';
+    switchHostLanguage(language);
   }
 
   function onWidgetThemeChange(event) {
@@ -162,7 +222,7 @@
     script.onload = function () {
       document.documentElement.classList.remove('sixmm-support-widget-loading');
       // The host may have changed while widget.js was loading.
-      syncWidgetLanguageFromHost(20);
+      syncWidgetLanguageFromHost(20, true);
       syncWidgetThemeFromHost(20, true);
     };
     script.onerror = function () {
@@ -189,15 +249,11 @@
     window.setInterval(function () {
       if (window.location.pathname !== lastPathname) {
         lastPathname = window.location.pathname;
-        if (
-          pendingWidgetDocsLocale !== null &&
-          pendingWidgetDocsLocale === currentDocsLocale()
-        ) {
-          pendingWidgetDocsLocale = null;
+        if (pendingWidgetDocsLocale !== null) {
+          confirmPendingWidgetDocsNavigation();
           return;
         }
-        pendingWidgetDocsLocale = null;
-        syncWidgetLanguageFromHost(20);
+        syncWidgetLanguageFromHost(20, false);
       }
     }, 600);
   }

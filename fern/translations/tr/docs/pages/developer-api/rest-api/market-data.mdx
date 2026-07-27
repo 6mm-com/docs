@@ -1,111 +1,111 @@
 ---
-title: "Bozor ma'lumotlari"
-description: "Tasdiqlanmagan 6MM bozor ma'lumotlari REST endpointlardan foydalanib, belgilar, tickerlar, buyurtma daftarlari, savdolar va boshqa ommaviy savdo ma'lumotlarini oling."
+title: "Piyasa Verileri"
+description: "Sembolleri, ticker'ları, emir defterlerini, işlemleri ve diğer halka açık işlem bilgilerini almak için doğrulanmamış 6MM piyasa verilerini REST uç noktalarını kullanın."
 slug: developer-api/rest-api/market-data
 canonical-url: https://docs.6mm.com/tr/developer-api/rest-api/market-data
 ---
 
-Bozor ma'lumotlari REST endpointlar autentifikatsiyani talab qilmaydi.
+Piyasa verileri REST uç noktaları kimlik doğrulama gerektirmez.
 
-<h2 id="symbol-configuration">Belgilar konfiguratsiyasi</h2>
+<h2 id="symbol-configuration">Sembol Konfigürasyonu</h2>
 
 ```http
 GET /v1/public/market/symbols
 ```
 
-Umumiy javob maydonlari:
+Yaygın yanıt alanları:
 
-| Maydon                      | Turi   | Tavsif                   |
+| Saha                      | Tip   | Tanım                   |
 | -------------------------- | ------ | ----------------------------- |
-| `list[].symbol`            | string | Ramz                        |
-| `list[].baseAsset`         | string | Asosiy aktiv                    |
-| `list[].quoteAsset`        | string | Iqtibos aktiv                   |
-| `list[].minQuantity`       | string | Minimal buyurtma miqdori        |
-| `list[].minNotional`       | string | Minimal notologik qiymat        |
-| `list[].tickSize`          | string | Narx belgisi o'lchami               |
-| `list[].stepSize`          | string | Quantity step o'lchami            |
-| `list[].pricePrecision`    | int64  | Narx aniqligi               |
-| `list[].maxLimitOrderQty`  | string | Maksimal limit buyurtma miqdori  |
-| `list[].maxMarketOrderQty` | string | Maksimal bozor buyurtma miqdori |
-| `list[].maxOpenOrders`     | int64  | Har bir foydalanuvchi uchun maksimal ochiq buyurtmalar  |
-| `list[].defaultLeverage`   | int64  | Default leverage              |
-| `list[].defaultMarginMode` | int64  | Standart margin rejimi           |
-| `list[].leverageTiers[]`   | array  | Leverage margin darajalari         |
-| `handlingFeeLevelConfig[]` | array  | Fee tier konfiguratsiyasi        |
+| `list[].symbol`            | string | Sembol                        |
+| `list[].baseAsset`         | string | Temel varlık                    |
+| `list[].quoteAsset`        | string | Kota varlığı                   |
+| `list[].minQuantity`       | string | Minimum sipariş miktarı        |
+| `list[].minNotional`       | string | Minimum niteli değer        |
+| `list[].tickSize`          | string | Fiyat tick boyutu               |
+| `list[].stepSize`          | string | Miktar adım boyutu            |
+| `list[].pricePrecision`    | int64  | Fiyat hassasiyeti               |
+| `list[].maxLimitOrderQty`  | string | Maksimum limit emir miktarı  |
+| `list[].maxMarketOrderQty` | string | Maksimum piyasa sipariş miktarı |
+| `list[].maxOpenOrders`     | int64  | Kullanıcı başına maksimum açık emirler  |
+| `list[].defaultLeverage`   | int64  | Varsayılan kaldıraç              |
+| `list[].defaultMarginMode` | int64  | Varsayılan marjır modu           |
+| `list[].leverageTiers[]`   | array  | Kaldıraç marja katmanları         |
+| `handlingFeeLevelConfig[]` | array  | Fee tier configuration        |
 
-<h2 id="funding-rate-configuration">Moliyalashtirish stavkasi konfiguratsiyasi</h2>
+<h2 id="funding-rate-configuration">Fonlama Oranı Konfigürasyonu</h2>
 
 ```http
 GET /v1/public/market/funding-rate?symbol=BTCUSDT
 ```
 
-So'rov parametrlari:
+İstek parametreleri:
 
-| Parametr | Turi   | Majburiy | Tavsif                     |
+| Parametre | Tip   | Gerekli | Tanım                     |
 | --------- | ------ | -------- | ------------------------------- |
-| `symbol`  | string | Yo'q       | Agar chiqarib tashlansa, barcha belgilar qaytariladi |
+| `symbol`  | string | Hayır       | Eğer atlanırsa, tüm sembolleri döndürür |
 
-<h2 id="current-funding-rate">Hozirgi moliyalashtirish darajasi</h2>
+<h2 id="current-funding-rate">Mevcut Fonlama Oranı</h2>
 
 ```http
 GET /v1/public/market/funding-rate/current?symbol=BTCUSDT&page=1&pageSize=20
 ```
 
-So'rov parametrlari:
+İstek parametreleri:
 
-| Parametr  | Turi   | Majburiy | Tavsif                  |
+| Parametre  | Tip   | Gerekli | Tanım                  |
 | ---------- | ------ | -------- | ---------------------------- |
-| `symbol`   | string | Yo'q       | Ramz                       |
-| `page`     | int32  | Yo'q       | Sahifa raqami, standart `1`     |
-| `pageSize` | int32  | Yo'q       | Sahifa boshidagi elementlar, standart `20` |
+| `symbol`   | string | Hayır       | Sembol                       |
+| `page`     | int32  | Hayır       | Sayfa numarası, varsayılan `1`     |
+| `pageSize` | int32  | Hayır       | Sayfa başına öğeler, varsayılan `20` |
 
-<h2 id="funding-rate-history">Moliyalashtirish darajasi tarixi</h2>
+<h2 id="funding-rate-history">Yatırım Oranı Geçmişi</h2>
 
 ```http
 GET /v1/public/market/funding-rate/history?symbol=BTCUSDT&page=1&pageSize=20
 ```
 
-So'rov parametrlari:
+İstek parametreleri:
 
-| Parametr   | Turi   | Majburiy | Tavsif                  |
+| Parametre   | Tip   | Gerekli | Tanım                  |
 | ----------- | ------ | -------- | ---------------------------- |
-| `symbol`    | string | Ha      | Ramz                       |
-| `startTime` | int64  | Yo'q       | Boshlanish vaqti                   |
-| `endTime`   | int64  | Yo'q       | Yakun vaqti                     |
-| `page`      | int32  | Yo'q       | Sahifa raqami, standart `1`     |
-| `pageSize`  | int32  | Yo'q       | Sahifa boshidagi elementlar, standart `20` |
+| `symbol`    | string | Evet      | Sembol                       |
+| `startTime` | int64  | Hayır       | Başlama zamanı                   |
+| `endTime`   | int64  | Hayır       | Son zaman                     |
+| `page`      | int32  | Hayır       | Sayfa numarası, varsayılan `1`     |
+| `pageSize`  | int32  | Hayır       | Sayfa başına öğeler, varsayılan `20` |
 
-<h2 id="klines">Klines</h2>
+<h2 id="klines">Klines'lar</h2>
 
 ```http
 GET /v1/public/market/klines?symbol=BTCUSDT&interval=1m&limit=500
 ```
 
-So'rov parametrlari:
+İstek parametreleri:
 
-| Parametr   | Turi   | Majburiy | Tavsif                                                              |
+| Parametre   | Tip   | Gerekli | Tanım                                                              |
 | ----------- | ------ | -------- | ------------------------------------------------------------------------ |
-| `symbol`    | string | Ha      | Ramz                                                                   |
-| `interval`  | string | Ha      | Interval, masalan, `1m`, `5m`, `15m`, `30m`, `1h`, `4h`, `1d`, `1w`, `1M` |
-| `priceType` | string | Yo'q       | `indexPrice` / `markPrice`. Agar chiqarib tashlansa, Klines savdo narxini qaytaradi       |
-| `startTime` | int64  | Yo'q       | Boshlanish vaqti                                                               |
-| `endTime`   | int64  | Yo'q       | Yakun vaqti                                                                 |
-| `limit`     | int32  | Yo'q       | Qaytarilgan elementlar soni, standart `500`, maksimal `1000`                  |
+| `symbol`    | string | Evet      | Sembol                                                                   |
+| `interval`  | string | Evet      | Aralıklar, örneğin `1m`, `5m`, `15m`, `30m`, `1h`, `4h`, `1d`, `1w`, `1M` |
+| `priceType` | string | Hayır       | `indexPrice` / `markPrice`. Eğer hariç tutulursa, Klines ticaret fiyatını geri getirir       |
+| `startTime` | int64  | Hayır       | Başlama zamanı                                                               |
+| `endTime`   | int64  | Hayır       | Son zaman                                                                 |
+| `limit`     | int32  | Hayır       | Iade edilen eşya sayısı, varsayılan `500`, maksimum `1000`                  |
 
-Javob maydonlari:
+Yanıt alanları:
 
-| Maydon              | Turi   | Tavsif |
+| Saha              | Tip   | Tanım |
 | ------------------ | ------ | ----------- |
-| `list[].openTime`  | int64  | Ochiq vaqt   |
-| `list[].open`      | string | Ochilish narxi  |
-| `list[].high`      | string | Yuqori narx  |
-| `list[].low`       | string | Arzon narx   |
-| `list[].close`     | string | Yaqin narx |
-| `list[].volume`    | string | Hajm      |
-| `list[].closeTime` | int64  | Yaqin vaqt  |
+| `list[].openTime`  | int64  | Açık zaman   |
+| `list[].open`      | string | Açık fiyat  |
+| `list[].high`      | string | Yüksek fiyat  |
+| `list[].low`       | string | Düşük fiyat   |
+| `list[].close`     | string | Kapanış fiyatı |
+| `list[].volume`    | string | Hacim      |
+| `list[].closeTime` | int64  | Yakın zaman  |
 
-<h2 id="related-documentation">Tegishli hujjatlar</h2>
+<h2 id="related-documentation">İlgili belgeler</h2>
 
-- [Ommaviy Endpoints](/tr/developer-api/rest-api/public-endpoints)
-- [Jamoat WebSocket kanallari](/tr/developer-api/websocket/public-market-channels)
-- [Bozor chuqurligi va tarqalishi](/tr/solutions/market-depth-spread)
+- [Açık Uç Noktaları](/tr/developer-api/rest-api/public-endpoints)
+- [Kamu WebSocket Kanalları](/tr/developer-api/websocket/public-market-channels)
+- [Pazar Derinliği ve Yayılımı](/tr/solutions/market-depth-spread)

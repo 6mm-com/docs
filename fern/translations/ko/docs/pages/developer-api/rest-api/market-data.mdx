@@ -1,0 +1,111 @@
+---
+title: "시장 데이터"
+description: "인증되지 않은 6MM 시장 데이터를 엔드포인트 REST 사용하여 심볼, 티커, 주문서, 거래 및 기타 공개 거래 정보를 검색하세요."
+slug: developer-api/rest-api/market-data
+canonical-url: https://docs.6mm.com/ko/developer-api/rest-api/market-data
+---
+
+엔드포인트 REST 시장 데이터는 인증이 필요하지 않습니다.
+
+<h2 id="symbol-configuration">심볼 구성</h2>
+
+```http
+GET /v1/public/market/symbols
+```
+
+일반적인 응답 필드:
+
+| 필드                      | 유형   | 설명                   |
+| -------------------------- | ------ | ----------------------------- |
+| `list[].symbol`            | string | 상징                        |
+| `list[].baseAsset`         | string | 기본 자산                    |
+| `list[].quoteAsset`        | string | 호가 자산                   |
+| `list[].minQuantity`       | string | 최소 주문 수량        |
+| `list[].minNotional`       | string | 최소 명목 가치        |
+| `list[].tickSize`          | string | 가격 틱 크기               |
+| `list[].stepSize`          | string | 수량 단계 크기            |
+| `list[].pricePrecision`    | int64  | 가격 정밀도               |
+| `list[].maxLimitOrderQty`  | string | 최대 한가 주문 수량  |
+| `list[].maxMarketOrderQty` | string | 최대 시장가 주문 수량 |
+| `list[].maxOpenOrders`     | int64  | 사용자당 최대 미공개 주문  |
+| `list[].defaultLeverage`   | int64  | 기본 레버리지              |
+| `list[].defaultMarginMode` | int64  | 기본 마진 모드           |
+| `list[].leverageTiers[]`   | array  | 레버리지 마진 등급         |
+| `handlingFeeLevelConfig[]` | array  | 수수료 등급 구성        |
+
+<h2 id="funding-rate-configuration">자금 조달 요율 구성</h2>
+
+```http
+GET /v1/public/market/funding-rate?symbol=BTCUSDT
+```
+
+요청 매개변수:
+
+| 매개변수 | 유형   | 필수 | 설명                     |
+| --------- | ------ | -------- | ------------------------------- |
+| `symbol`  | string | 아니       | 생략 시 모든 기호를 반환합니다 |
+
+<h2 id="current-funding-rate">현재 자금 지원 비율</h2>
+
+```http
+GET /v1/public/market/funding-rate/current?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+요청 매개변수:
+
+| 매개변수  | 유형   | 필수 | 설명                  |
+| ---------- | ------ | -------- | ---------------------------- |
+| `symbol`   | string | 아니       | 상징                       |
+| `page`     | int32  | 아니       | 페이지 번호, 기본 `1`     |
+| `pageSize` | int32  | 아니       | 페이지당 항목 수, 기본 `20` |
+
+<h2 id="funding-rate-history">자금 지원 이력</h2>
+
+```http
+GET /v1/public/market/funding-rate/history?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+요청 매개변수:
+
+| 매개변수   | 유형   | 필수 | 설명                  |
+| ----------- | ------ | -------- | ---------------------------- |
+| `symbol`    | string | 네      | 상징                       |
+| `startTime` | int64  | 아니       | 시작 시간                   |
+| `endTime`   | int64  | 아니       | 종말                     |
+| `page`      | int32  | 아니       | 페이지 번호, 기본 `1`     |
+| `pageSize`  | int32  | 아니       | 페이지당 항목 수, 기본 `20` |
+
+<h2 id="klines">클라인스</h2>
+
+```http
+GET /v1/public/market/klines?symbol=BTCUSDT&interval=1m&limit=500
+```
+
+요청 매개변수:
+
+| 매개변수   | 유형   | 필수 | 설명                                                              |
+| ----------- | ------ | -------- | ------------------------------------------------------------------------ |
+| `symbol`    | string | 네      | 상징                                                                   |
+| `interval`  | string | 네      | 구간은 `1m`, `5m`, `15m`, `30m`, `1h`, `4h`, `1d`, `1w`, `1M` |
+| `priceType` | string | 아니       | `indexPrice` / `markPrice`. 만약 이를 생략하면 거래 가격 Klines를 반환합니다       |
+| `startTime` | int64  | 아니       | 시작 시간                                                               |
+| `endTime`   | int64  | 아니       | 종말                                                                 |
+| `limit`     | int32  | 아니       | 반품 수, 기본 `500`, 최대 `1000`                  |
+
+응답 필드:
+
+| 필드              | 유형   | 설명 |
+| ------------------ | ------ | ----------- |
+| `list[].openTime`  | int64  | 오픈 타임   |
+| `list[].open`      | string | 시가  |
+| `list[].high`      | string | 높은 가격  |
+| `list[].low`       | string | 저렴한 가격   |
+| `list[].close`     | string | 종가 |
+| `list[].volume`    | string | 볼륨      |
+| `list[].closeTime` | int64  | 마감 시간  |
+
+<h2 id="related-documentation">관련 문서</h2>
+
+- [공개 엔드포인트](/ko/developer-api/rest-api/public-endpoints)
+- [공영 WebSocket 채널](/ko/developer-api/websocket/public-market-channels)
+- [시장 깊이 및 스프레드](/ko/solutions/market-depth-spread)

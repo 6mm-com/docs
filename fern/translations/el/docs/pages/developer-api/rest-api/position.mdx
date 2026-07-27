@@ -1,0 +1,141 @@
+---
+title: "Θέση"
+description: "Χρησιμοποιήστε τα τελικά σημεία 6MM θέσης για να ρωτήσετε ανοιχτές θέσεις, λεπτομέρειες περιθωρίου, μόχλευση, μη πραγματοποιηθέντα κέρδη και ζημίες και λειτουργίες που σχετίζονται με τη θέση."
+slug: developer-api/rest-api/position
+canonical-url: https://docs.6mm.com/el/developer-api/rest-api/position
+---
+
+> **Σημείωση**
+>
+> Τα τελικά σημεία θέσης απαιτούν άδεια συναλλαγής.
+
+<h2 id="set-leverage">Ορισμός μόχλευσης</h2>
+
+```http
+POST /v1/private/position/leverage
+Content-Type: application/json
+```
+
+Σώμα αιτήματος:
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "leverage": 20
+}
+```
+
+Πεδία απόκρισης:
+
+| Πεδίο       | Τύπος   | Περιγραφή |
+| ----------- | ------ | ----------- |
+| `symbol`    | string | Σύμβολο      |
+| `leverage`  | int32  | Μόχλευση    |
+| `timestamp` | int64  | Χρονική σήμανση   |
+
+<h2 id="set-margin-mode">Ορισμός λειτουργίας περιθωρίου</h2>
+
+```http
+POST /v1/private/position/margin-mode
+Content-Type: application/json
+```
+
+Σώμα αιτήματος:
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "marginMode": 1
+}
+```
+
+`marginMode`: `1` σταυρός, `2` απομονωμένος.
+
+<h2 id="position-settings">Ρυθμίσεις θέσης</h2>
+
+```http
+GET /v1/private/position/settings?symbol=BTCUSDT
+```
+
+Πεδία απόκρισης:
+
+| Πεδίο        | Τύπος   | Περιγραφή             |
+| ------------ | ------ | ----------------------- |
+| `symbol`     | string | Σύμβολο                  |
+| `marginMode` | int32  | `1` σταυρός, `2` απομονωμένος |
+| `leverage`   | int32  | Μόχλευση                |
+
+<h2 id="current-positions">Τρέχουσες Θέσεις</h2>
+
+```http
+GET /v1/private/position/positions?symbol=BTCUSDT
+```
+
+Παράμετροι αιτήματος:
+
+| Παράμετρος | Τύπος   | Απαιτείται | Περιγραφή |
+| --------- | ------ | -------- | ----------- |
+| `symbol`  | string | Όχι       | Σύμβολο      |
+
+Πεδία απόκρισης:
+
+| Πεδίο                         | Τύπος   | Περιγραφή                |
+| ----------------------------- | ------ | -------------------------- |
+| `positions[].symbol`          | string | Σύμβολο                     |
+| `positions[].marginMode`      | string | Λειτουργία περιθωρίου                |
+| `positions[].positionSide`    | string | Πλευρική θέση              |
+| `positions[].leverage`        | int32  | Μόχλευση                   |
+| `positions[].quantity`        | string | Ποσότητα θέσης          |
+| `positions[].entryPrice`      | string | Τιμή εισόδου                |
+| `positions[].breakEvenPrice`  | string | Νεκρή τιμή           |
+| `positions[].liqPrice`        | string | Τιμή ρευστοποίησης          |
+| `positions[].marginRatio`     | string | Αναλογία περιθωρίου               |
+| `positions[].unrealizedPnl`   | string | Απραγματοποίητο PnL             |
+| `positions[].roe`             | string | Απόδοση ιδίων κεφαλαίων           |
+| `positions[].nextFundingFee`  | string | Εκτιμώμενη προμήθεια επόμενης χρηματοδότησης |
+| `positions[].fundingFeeAccum` | string | Συσσωρευμένη προμήθεια χρηματοδότησης    |
+| `positions[].tpPrice`         | string | Τιμή λήψης κέρδους          |
+| `positions[].slPrice`         | string | Τιμή Stop-loss            |
+
+<h2 id="position-history">Ιστορικό θέσης</h2>
+
+```http
+GET /v1/private/position/history?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+Παράμετροι αιτήματος:
+
+| Παράμετρος   | Τύπος   | Απαιτείται | Περιγραφή                  |
+| ----------- | ------ | -------- | ---------------------------- |
+| `symbol`    | string | Όχι       | Σύμβολο                       |
+| `side`      | string | Όχι       | `long` / `short`             |
+| `startTime` | int64  | Όχι       | Ώρα έναρξης                   |
+| `endTime`   | int64  | Όχι       | Ώρα λήξης                     |
+| `page`      | int64  | Όχι       | Αριθμός σελίδας, προεπιλεγμένη `1`     |
+| `pageSize`  | int64  | Όχι       | Στοιχεία ανά σελίδα, προεπιλεγμένη `20` |
+
+Πεδία απόκρισης:
+
+| Πεδίο                    | Τύπος   | Περιγραφή               |
+| ------------------------ | ------ | ------------------------- |
+| `list[].symbol`          | string | Σύμβολο                    |
+| `list[].positionSide`    | string | Πλευρική θέση             |
+| `list[].leverage`        | int32  | Μόχλευση                  |
+| `list[].maxQuantity`     | string | Μέγιστη ποσότητα θέσης |
+| `list[].entryPrice`      | string | Τιμή εισόδου               |
+| `list[].closePrice`      | string | Κλείσιμο τιμής               |
+| `list[].pnl`             | string | Πραγματοποιημένο PnL              |
+| `list[].roe`             | string | Απόδοση ιδίων κεφαλαίων          |
+| `list[].marginMode`      | string | Λειτουργία περιθωρίου               |
+| `list[].triggerMode`     | int32  | Κλείσιμο λειτουργίας σκανδάλης        |
+| `list[].fundingFeeAccum` | string | Συσσωρευμένη προμήθεια χρηματοδότησης   |
+| `list[].openedAt`        | int64  | Ανοιχτός χρόνος                 |
+| `list[].closedAt`        | int64  | Ώρα κλεισίματος                |
+| `total`                  | int64  | Συνολικός αριθμός               |
+
+<h2 id="related-documentation">Σχετική τεκμηρίωση</h2>
+
+- [Κανόνες περιθωρίου](/el/trading/margin-rules)
+- [Μηχανική μόχλευσης](/el/trading/leverage-mechanics)
+- [Κίνδυνος & Ρευστοποιήσεις](/el/trading/risk-and-liquidations)
+- [Ιδιωτικό κανάλι χρήστη](/el/developer-api/websocket/private-user-channel)

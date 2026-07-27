@@ -1,0 +1,223 @@
+---
+title: "사용자 및 계정"
+description: "사용자 및 계정 엔드포인트 6MM 사용해 프로필, 잔액, 계정 상태, 권한, 파트너 연동 계정 정보를 조회하세요."
+slug: developer-api/rest-api/user-and-account
+canonical-url: https://docs.6mm.com/ko/developer-api/rest-api/user-and-account
+---
+
+별도 명시가 없는 한, 다음 엔드포인트들은 JWT 또는 API Key 서명을 사용할 수 있습니다.
+
+<h2 id="user-info">사용자 정보</h2>
+
+```http
+GET /v1/private/user/info
+```
+
+응답 필드:
+
+| 필드                  | 유형   | 설명      |
+| ---------------------- | ------ | ---------------- |
+| `userInfo.userId`      | string | 외부 사용자 ID |
+| `userInfo.username`    | string | 사용자 이름         |
+| `userInfo.agentId`     | int64  | 요원 ID         |
+| `userInfo.vipLevel`    | int64  | VIP 단계        |
+| `userInfo.lastLoginAt` | int64  | 마지막 로그인 시간  |
+| `userInfo.lastLoginIp` | string | 마지막 로그인 IP    |
+
+<h2 id="user-assets">사용자 자산</h2>
+
+```http
+GET /v1/private/user/asset
+```
+
+응답 필드:
+
+| 필드                     | 유형   | 설명                     |
+| ------------------------- | ------ | ------------------------------- |
+| `userAsset.userId`        | string | 외부 사용자 ID                |
+| `userAsset.assetType`     | string | 자산 유형                      |
+| `userAsset.walletBalance` | string | 지갑 잔액                  |
+| `userAsset.frozenMargin`  | string | 대기 명령으로 인한 마진이 동결되었습니다 |
+| `userAsset.usedMargin`    | string | 포지션별 마진(margin)        |
+
+<h2 id="create-listenkey">listenKey 만들기</h2>
+
+```http
+POST /v1/private/user/listen-key
+```
+
+프라이빗 WebSocket 스트림에 대한 인증 키를 생성합니다.
+
+<h2 id="renew-listenkey">갱신 listenKey</h2>
+
+```http
+PUT /v1/private/user/listen-key
+```
+
+listenKey 유효성을 확장합니다.
+
+<h2 id="close-listenkey">클로즈 listenKey</h2>
+
+```http
+DELETE /v1/private/user/listen-key
+```
+
+지정된 listenKey를 닫습니다.
+
+<h2 id="account-change-logs">계정 변경 기록</h2>
+
+```http
+GET /v1/private/user/account-change-log?assetType=USDT&page=1&pageSize=20
+```
+
+요청 매개변수:
+
+| 매개변수    | 유형   | 필수 | 설명                  |
+| ------------ | ------ | -------- | ---------------------------- |
+| `assetType`  | string | 아니       | 자산 유형, 예를 들어 `USDT`   |
+| `changeType` | string | 아니       | 유형 변경                  |
+| `startTime`  | int64  | 아니       | 시작 시간                   |
+| `endTime`    | int64  | 아니       | 종말                     |
+| `page`       | int32  | 아니       | 페이지 번호, 기본 `1`     |
+| `pageSize`   | int32  | 아니       | 페이지당 항목 수, 기본 `20` |
+
+응답 필드:
+
+| 필드                        | 유형   | 설명                  |
+| ---------------------------- | ------ | ---------------------------- |
+| `list[].assetType`           | string | 자산 유형                   |
+| `list[].amount`              | string | 변경된 금액               |
+| `list[].walletBalanceBefore` | string | 잔돈 전 지갑 잔액 |
+| `list[].walletBalanceAfter`  | string | 변경 후 지갑 잔액  |
+| `list[].frozenBalanceBefore` | string | 변화 전 동결 잔액 |
+| `list[].frozenBalanceAfter`  | string | 변동 후 동결 잔액  |
+| `list[].changeType`          | string | 유형 변경                  |
+| `list[].referenceId`         | string | 관련 사업자 ID          |
+| `list[].createdAt`           | int64  | 생성 시간                |
+| `total`                      | int64  | 총 집단                  |
+
+<h2 id="30-day-volume-statistics">30일 볼륨 통계</h2>
+
+```http
+GET /v1/private/user/volume-stats
+```
+
+응답 필드:
+
+| 필드         | 유형   | 설명                                     |
+| ------------- | ------ | ----------------------------------------------- |
+| `volume30d`   | string | 지난 30일간의 누적 거래량 |
+| `feeTotal30d` | string | 지난 30일간의 누적 수수료           |
+
+<h2 id="balance-history">밸런스 이력</h2>
+
+```http
+GET /v1/private/user/balance-history?period=1D&limit=30
+```
+
+요청 매개변수:
+
+| 매개변수 | 유형   | 필수 | 설명                            |
+| --------- | ------ | -------- | -------------------------------------- |
+| `period`  | string | 네      | `1D` / `1W` / `1M`                     |
+| `limit`   | 지능    | 아니       | 반품된 항목 수, 기본 `30` |
+
+응답 필드:
+
+| 필드             | 유형   | 설명                 |
+| ----------------- | ------ | --------------------------- |
+| `items[].date`    | string | 집계 날짜            |
+| `items[].balance` | string | 지갑 잔액              |
+| `items[].pnl`     | string | 당시 실현된 PnL |
+
+<h2 id="trade-overview">무역 개요</h2>
+
+```http
+GET /v1/private/user/trade-overview?type=1M
+```
+
+요청 매개변수:
+
+| 매개변수 | 유형   | 필수 | 설명                                     |
+| --------- | ------ | -------- | ----------------------------------------------- |
+| `type`    | string | 네      | 추세 범위: `1D`, `1W`, `1M`, `3M`, `6M`, `1Y` |
+
+응답 필드:
+
+| 필드                | 유형   | 설명                                                          |
+| -------------------- | ------ | -------------------------------------------------------------------- |
+| `todayPnl`           | string | 오늘 실현된 PnL                                                 |
+| `todayVolume`        | string | 오늘의 계약 거래량                                      |
+| `totalVolume`        | string | 누적 계약 거래량                                   |
+| `totalPnl`           | string | 누적 실현 PnL                                              |
+| `maxDrawdown30d`     | string | 지난 30일간의 최대 인출 금액                        |
+| `maxDrawdown30dRate` | string | 지난 30일간의 최대 인출 속도, 소수점 순서로 `0` 부터 `1` |
+| `transferIn`         | string | 누적 이체 자금                                      |
+| `transferOut`        | string | 누적 이체 자금                                     |
+| `items[]`            | array  | 자산 추세 데이터                                                     |
+
+<h2 id="asset-overview-summary">자산 개요 요약</h2>
+
+```http
+GET /v1/private/user/asset/overview/summary
+```
+
+응답 필드는 거래 개요 요약 필드와 동일하며, `items[]`제외됩니다.
+
+<h2 id="asset-overview-trend">자산 개요 추세</h2>
+
+```http
+GET /v1/private/user/asset/overview/trend?type=1M
+```
+
+요청 매개변수:
+
+| 매개변수 | 유형   | 필수 | 설명                                     |
+| --------- | ------ | -------- | ----------------------------------------------- |
+| `type`    | string | 네      | 추세 범위: `1D`, `1W`, `1M`, `3M`, `6M`, `1Y` |
+
+응답 필드:
+
+| 필드                  | 유형   | 설명                     |
+| ---------------------- | ------ | ------------------------------- |
+| `items[].snapshotTime` | int64  | 스냅샷 시간                   |
+| `items[].balance`      | string | 경상수지 잔액         |
+| `items[].pnl`          | string | 현재 시기의 PnL      |
+| `items[].pnlRate`      | string | 현재 기간의 PnL 율 |
+| `items[].totalPnl`     | string | 누적 PnL                  |
+
+<h2 id="favorite-symbols">좋아하는 상징</h2>
+
+<h2 id="save">저장</h2>
+
+```http
+POST /v1/private/user/favorite-symbols
+Content-Type: application/json
+```
+
+요청 본문:
+
+```json
+{
+  "symbols": ["BTCUSDT", "ETHUSDT"]
+}
+```
+
+<h2 id="query">쿼리</h2>
+
+```http
+GET /v1/private/user/favorite-symbols
+```
+
+응답 필드:
+
+| 필드     | 유형      | 설명          |
+| --------- | --------- | -------------------- |
+| `symbols` | 끈\[] | 좋아하는 심볼 목록 |
+
+<h2 id="related-documentation">관련 문서</h2>
+
+- [비공개 사용자 채널](/ko/developer-api/websocket/private-user-channel)
+- [인증](/ko/developer-api/authentication)
+- [자산 이전](/ko/trading/getting-started/asset-transfer)
+- [오류 코드 및 문제 해결](/ko/developer-api/error-codes-and-troubleshooting)

@@ -1,0 +1,107 @@
+---
+title: "Ιδιωτικό κανάλι χρήστη"
+description: "Εγγραφείτε σε συμβάντα 6MM WebSocket με έλεγχο ταυτότητας για παραγγελίες, θέσεις, υπόλοιπα και αλλαγές λογαριασμού δημιουργώντας και διατηρώντας ένα κλειδί ακρόασης."
+slug: developer-api/websocket/private-user-channel
+canonical-url: https://docs.6mm.com/el/developer-api/websocket/private-user-channel
+---
+
+Δημιουργήστε πρώτα ένα `listenKey` :
+
+```http
+POST /v1/private/user/listen-key
+```
+
+Παράδειγμα απάντησης:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "listenKey": "f57cb61ef604ce76be09e753a5dbdd8c",
+    "expireAt": 1777539918867
+  },
+  "requestId": "req-listen-key"
+}
+```
+
+`listenKey` ισχύει για 60 λεπτά από προεπιλογή. Συνιστάται ανανέωση κάθε 30 λεπτά.
+
+<h2 id="renew">Ανανέωση</h2>
+
+```http
+PUT /v1/private/user/listen-key
+Content-Type: application/json
+```
+
+```json
+{ "listenKey": "f57cb61ef604ce76be09e753a5dbdd8c" }
+```
+
+<h2 id="close">Κλείσιμο</h2>
+
+```http
+DELETE /v1/private/user/listen-key
+Content-Type: application/json
+```
+
+```json
+{ "listenKey": "f57cb61ef604ce76be09e753a5dbdd8c" }
+```
+
+<h2 id="connect-to-private-websocket">Σύνδεση σε ιδιωτικές WebSocket</h2>
+
+```
+wss://ws.6mm.com/ws?listenKey=YOUR_LISTEN_KEY
+```
+
+Συμβατή μέθοδος σύνδεσης JWT :
+
+```
+wss://ws.6mm.com/ws?token=YOUR_ACCESS_TOKEN
+```
+
+Μετά την επιτυχία του ελέγχου ταυτότητας, ο διακομιστής εγγράφει αυτόματα τη σύνδεση στο ιδιωτικό κανάλι του τρέχοντος χρήστη. Δεν απαιτείται μη αυτόματη συνδρομή.
+
+Επιτυχής επιβεβαίωση ελέγχου ταυτότητας:
+
+```json
+{ "event": "auth", "success": true, "data": "1188041528" }
+```
+
+<h2 id="common-private-events">Κοινές ιδιωτικές εκδηλώσεις</h2>
+
+| Εκδήλωση                | Περιγραφή                                                                   |
+| -------------------- | ----------------------------------------------------------------------------- |
+| `ORDER_TRADE_UPDATE` | Αλλαγές κατάστασης παραγγελίας, συμπεριλαμβανομένης της νέας παραγγελίας, της τροποποίησης, της συναλλαγής και της ακύρωσης |
+| `ACCOUNT_UPDATE`     | Αλλαγές υπολοίπου λογαριασμού και θέσης                                          |
+
+Περιτύλιγμα ιδιωτικών μηνυμάτων push:
+
+```json
+{
+  "topic": "user.5794",
+  "ts": 1771047000000,
+  "data": {
+    "eventType": "ORDER_TRADE_UPDATE"
+  }
+}
+```
+
+REST τα τελικά σημεία ερωτημάτων και οι ιδιωτικές ροές WebSocket χρησιμοποιούν ξεχωριστά σχήματα. Οι πελάτες θα πρέπει να αναλύουν κάθε σχήμα ανεξάρτητα και δεν θα πρέπει να υποθέτουν ότι τα ονόματα των πεδίων είναι πανομοιότυπα.
+
+<h2 id="common-differences">Κοινές διαφορές</h2>
+
+| Τομέας         | REST πεδίο     | WebSocket πεδίο                                             |
+| -------------- | -------------- | ----------------------------------------------------------- |
+| Κατάσταση παραγγελίας   | `status`       | `orderStatus`                                               |
+| Παγωμένο υπόλοιπο | `frozenMargin` | `frozenBalance`                                             |
+| Λειτουργία περιθωρίου    | `marginMode`   | `marginMode`, επιστράφηκε ως συμβολοσειρά σε θέσεις και ροές |
+
+<h2 id="recovery-and-reconciliation">Ανάκτηση και συμφιλίωση</h2>
+
+- Ανανεώστε το listenKey πριν από τη λήξη και δημιουργήστε ένα νέο εάν αποτύχει η ανανέωση.
+- Επανασυνδεθείτε, επαναλάβετε τον έλεγχο ταυτότητας και αντιμετωπίστε τη νέα υποδοχή ως νέα περίοδο λειτουργίας συμβάντος.
+- Καταργήστε τα διπλότυπα συμβάντα πριν αλλάξετε τα υπόλοιπα συνεργατών ή τα αρχεία παραγγελιών.
+- Εάν μπορεί να έχουν χαθεί συμβάντα, ρωτήστε [Παραγγελίες](/el/developer-api/rest-api/order), [Θέσεις](/el/developer-api/rest-api/position), και [κατάσταση λογαριασμού](/el/developer-api/rest-api/user-and-account) μέσω REST.
+- Ακολουθήστε το [Οδηγός σύνδεσης και καρδιακού παλμού](/el/developer-api/websocket/connection-subscription-and-heartbeat) για επανάληψη και χειρισμό μπαγιάτικης σύνδεσης.

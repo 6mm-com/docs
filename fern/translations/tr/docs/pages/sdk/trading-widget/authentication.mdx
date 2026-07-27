@@ -1,13 +1,13 @@
 ---
-title: "Trading Widget Autentifikatsiya"
-subtitle: "Yangi o'rnatilgan savdo SSO integratsiyalari uchun partner-tokendan foydalaning."
+title: "Trading Widget Doğrulama"
+subtitle: "Yeni gömülü ticaret SSO entegrasyonlar için partner-token kullanın."
 slug: sdk/trading-widget/authentication
 canonical-url: https://docs.6mm.com/tr/sdk/trading-widget/authentication
 ---
 
-<h2 id="recommended-mode-partner-token">Tavsiya etilgan rejim: partner-token</h2>
+<h2 id="recommended-mode-partner-token">Önerilen mod: partner-token</h2>
 
-partner-token qisqa tokenlarni URLlarga qo'ymaslik va apiSecret partner backendda ushlab turadi.
+partner-token, URL'lerde kısa tokenlar koymaktan kaçınır ve apiSecret partner backend'de tutar.
 
 ```js
 const widget = TradingWidget.create('#trading-widget', {
@@ -32,14 +32,14 @@ const widget = TradingWidget.create('#trading-widget', {
 })
 ```
 
-<h2 id="related-documentation">Tegishli hujjatlar</h2>
+<h2 id="related-documentation">İlgili belgeler</h2>
 
-- [Create Embed Token](/tr/sdk/agent-sdk/java/embed-token): backend token chiqarish misoli.
-- [Trading Widget Tez boshlash](/tr/sdk/trading-widget/quick-start): to'liq boshlang'ich jarayon.
-- [Secrets & Signing](/tr/sdk/security/secrets-signing): maxfiy agent ma'lumotlarini orqa fonda saqlang.
-- [Muammolarni hal qilish](/tr/sdk/security/troubleshooting): sessiya, token, boshlang'ich kelib chiqish va ishga tushirish xatolarini tashxislash.
+- [Embed Token Oluştur](/tr/sdk/agent-sdk/java/embed-token): arka uç token ihracı örneği.
+- [Trading Widget Hızlı Başlangıç](/tr/sdk/trading-widget/quick-start): başlatma akışını tamamladı.
+- [Sırlar ve İmza Alma](/tr/sdk/security/secrets-signing): ayrıcalıklı Ajan kimlik bilgilerini arka planda tutun.
+- [Sorun Giderme](/tr/sdk/security/troubleshooting): oturum, token, başlangıç ve başlatma hatalarını teşhis edin.
 
-<h2 id="backend-flow">Orqa tizim oqimi</h2>
+<h2 id="backend-flow">Arka uç akışı</h2>
 
 ```text
 1. Partner frontend receives auth_request from the iframe.
@@ -52,28 +52,28 @@ const widget = TradingWidget.create('#trading-widget', {
 8. iframe continues initialization and emits ready.
 ```
 
-<h2 id="tokenprovider-contract">tokenProvider shartnomasi</h2>
+<h2 id="tokenprovider-contract">tokenProvider sözleşmesi</h2>
 
-| Maydon | Rejissyorlik | Tavsif |
+| Saha | Yönetmen | Tanım |
 | --- | --- | --- |
-| channelId | SDK -> Hamkor backend | Noyob vidjet sessiya identifikatori. Orqa tomon uni createEmbedTokenga uzatishi kerak. |
-| ramz | SDK -> Hamkor backend | Joriy so'ralgan savdo belgisi. Kerak bo'lganda tokenni scope qilish uchun undan foydalaning. |
-| Sabab | SDK -> Hamkor backend | Nega SDK token so'rayapti, masalan, dastlabki yuklash yoki yangilanish. |
-| embedToken | Hamkor backend -> SDK | Agent SDK yoki Agent tomonidan yaratilgan qisqa muddatli token API. |
-| expireAt | Hamkor backend -> SDK | Token amal qilish muddati tamg'asi 6MMtomonidan qaytarildi. |
+| channelId | SDK -> Partner backend | Benzersiz widget oturum tanımlayıcısı. Arka uç bunu createEmbedTokenile paylaşmalıdır. |
+| sembol | SDK -> Partner backend | Mevcut talep edilen işlem sembolü. Gerekirse tokenı kapsam alanı için kullanın. |
+| Sebep | SDK -> Partner backend | Neden SDK token talep ediyor, örneğin ilk yükleme veya yenileme gibi. |
+| embedToken | Partner backend -> SDK | Agent SDK veya Ajan tarafından oluşturulan kısa ömürlü tokenAPI. |
+| expireAt | Partner backend -> SDK | Token son kullanma zaman damgası 6MMtarafından döndürüldü. |
 
-<h2 id="failure-handling">Nosozliklarni boshqarish</h2>
+<h2 id="failure-handling">Arıza yönetimi</h2>
 
-| Holati | Tavsiya etilgan boshqaruv |
+| Durum | Önerilen kullanım |
 | --- | --- |
-| Hamkorlik sessiyasi muddati tugadi | Hamkor nuqtadan 401 ni qaytaring va foydalanuvchidan yana tizimga kirishni so'rang. |
-| Token yaratish vaqtincha muvaffaqiyatsiz bo'ldi | tokenProvider ichiga xato kiriting va vidjetga autentifikatsiya xatosi paydo bo'lishiga ruxsat bering. |
-| channelId mos kelmaydi | So'rovni rad eting va vidjet nusxasini qayta yarating. |
-| Foydalanuvchiga savdo qilishga ruxsat berilmaydi | Hamkor boshqaruvidagi xatoni qaytaring va embed token yaratmang. |
+| Partner oturumu sona erdi | Partner uç noktasından 401'i geri gönderin ve kullanıcıya tekrar giriş yapmasını isteyin. |
+| Token oluşturma geçici olarak başarısız oldu | tokenProvider içine bir hata atıp widget'ın kimlik doğrulama hatası ortaya çıkarmasına izin verin. |
+| channelId uyumsuzluğu | İsteği reddedin ve widget örneğini yeniden oluşturun. |
+| Kullanıcının işlem yapmasına izin verilmez | Ortak kontrolündeki bir hata döndürün ve gömülü token oluşturmayın. |
 
-<h2 id="compatibility-mode-agent-sso">Moslik rejimi: agent-sso</h2>
+<h2 id="compatibility-mode-agent-sso">Uyumluluk modu: agent-sso</h2>
 
-Agent-SSO eski /agent-entry chipta oqimini saqlab qoladi. Yangi integratsiyalar uchun partner-tokenni afzal ko'ring.
+Agent-SSO eski /agent-entry bilet akışını korur. Yeni entegrasyonlar için partner-token tercih edin.
 
 ```js
 const widget = TradingWidget.create('#trading-widget', {

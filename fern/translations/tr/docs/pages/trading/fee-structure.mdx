@@ -1,127 +1,127 @@
 ---
-title: "Doimiy savdo to'lovlari tuzilmasi"
-description: "U-marginli doimiy shartnomalar uchun 6MM maker, taker, moliyalashtirish, likvidatsiya va hisob-kitob to'lovlari modeliga murojaat qiling."
+title: "Sürekli İşlem Ücreti Yapısı"
+description: "U-marjlı sürekli sözleşmeler için 6MM yapıcı, alıcı, finansman, tasfiye ve uzlaşma ücreti modeline referans verin."
 slug: trading/fee-structure
 canonical-url: https://docs.6mm.com/tr/trading/fee-structure
 ---
 
-6MM U-marginli doimiy shartnomalar uchun shaffof va ijroga asoslangan to'lov modelini qo'llaydi.
+6MM , U-marjlı sürekli sözleşmeler için şeffaf ve icra temelli bir ücret modeli uygular.
 
-To'lovlar faqat savdo amalga oshirilganda olinadi va ular bozor likvidligi hamda savdo xatti-harakatlariga moslashtirilgan.
+Ücretler yalnızca işlemler yürütüldüğünde alınır ve piyasa likiditesi ile işlem davranışıyla uyumlu şekilde tasarlanmıştır.
 
-Ushbu sahifa to'lov kategoriyalari va hisob-kitob uchun ma'lumotnoma hisoblanadi. Buyurtma daftari chuqurligi va bajarilish narxi umumiy savdo xarajatlariga qanday ta'sir qilishini tushunish uchun [Savdo xarajatlari: To'lovlar va slippage](/tr/trading/fees-and-slippage) ga qarang.
+Bu sayfa, ücret kategorileri ve uzlaşma için referans olarak nitelendirilmiştir. Sipariş defteri derinliği ve uygulama fiyatının toplam işlem maliyetini nasıl etkilediğini anlamak için bakınız. [Ticaret Maliyetleri: Ücretler ve Kayma](/tr/trading/fees-and-slippage).
 
 ***
 
-<h2 id="trading-fees-overview">Savdo to'lovlari haqida umumiy ma'lumot</h2>
+<h2 id="trading-fees-overview">İşlem Ücretleri Genel Bakış</h2>
 
-6MM bo'yicha savdo to'lovlari quyidagi asoslarda hisoblanadi:
+6MM üzerindeki işlem ücretleri şu temellere göre hesaplanır:
 
-* Bajarilgan savdo qiymati
-* Buyurtma turi (Maker yoki Taker)
-* Savdo juftligi va hamkor konfiguratsiyasi
+* Gerçekleştirilen ticaret değeri
+* Sipariş türü (Yapan veya Alan)
+* Ticaret çifti ve partner yapılandırması
 
-Bajarilmagan yoki bekor qilingan buyurtmalar uchun hech qanday to'lov olinmaydi.
+Doldurulmamış veya iptal edilen emirler herhangi bir ücret talep etmez.
 
-Bajarilgan miqdor uchun umumiy hisoblash quyidagicha:
+Uygulanan bir büyüklük için genel hesaplama şöyledir:
 
 ```text
 executed notional = execution price × executed quantity
 trading fee = executed notional × applicable maker or taker fee rate
 ```
 
-Qo'llaniladigan kurs savdo juftligi va hamkor konfiguratsiyasiga bog'liq. Buyurtma berishdan oldin ko'rsatilgan kursni tasdiqlang.
+Uygulanabilir oran, işlem çifti ve partner konfigürasyonuna bağlıdır. Sipariş vermeden önce gösterilen oranı onaylayın.
 
 ***
 
-<h2 id="maker-fees">Ishlab chiqaruvchi to'lovlari</h2>
+<h2 id="maker-fees">Maker Ücretleri</h2>
 
-Maker to'lovlari buyurtma kitobiga likvidlik qo'shganda qo'llaniladi.
+Bir emir sipariş defterine likidite eklediğinde maker ücretleri uygulanır.
 
-Oddiy ishlab chiqaruvchi buyurtmalari:
+Tipik üretici siparişleri:
 
-* Darhol bajarilmaydigan limit orderlari
-* Buyruqlar daftarida saqlanmoqda
+* Hemen uygulanmayan limit emirleri
+* Sipariş defterinde yer alan emirler
 
-Maker to'lovlari odatda pastroq bo'lib, bozor chuqurligini qo'llab-quvvatlash uchun rag'batlantirilishi mumkin.
-
-***
-
-<h2 id="taker-fees">Taker to'lovlari</h2>
-
-Taker to'lovlari buyurtma kitobidan likvidlikni olib tashlaganda qo'llaniladi.
-
-Oddiy taker buyruqlari:
-
-* Bozor buyurtmalari
-* Cheklov buyruqlari darhol bajariladi
-
-Taker to'lovlari odatda darhol bajarilishi sababli yuqori bo'ladi.
+Maker ücretleri genellikle daha düşüktür ve piyasa derinliğini desteklemek için teşvik edilebilir.
 
 ***
 
-<h2 id="funding-fees">Moliyalashtirish to'lovlari</h2>
+<h2 id="taker-fees">Alıcı Ücretleri</h2>
 
-Savdo to'lovlaridan tashqari, doimiy shartnomalar moliyalashtirish to'lovlarini ham o'z ichiga oladi.
+Bir emir likiditeyi emir defterinden kaldırdığında alıcı ücretleri uygulanır.
 
-* Moliyalashtirish to'lovlari uzoq va qisqa pozitsiyalar o'rtasida almashadi
-* 6MM moliyalashtirish to'lovlarini olmaydi
-* Moliyalashtirish stavkalari bozor sharoitlariga qarab farq qiladi
+Tipik alıcı emirleri:
 
-Moliyalashtirish to'lovlari shartnoma narxlarini spot bozor bilan moslashtirishga yordam beradi.
+* Piyasa emirleri
+* Limit emirleri hemen uygulanır
 
-***
-
-<h2 id="liquidation-related-fees">Likvidatsiya bilan bog'liq to'lovlar</h2>
-
-Likvidatsiya sodir bo'lganda:
-
-* Likvidatsiya to'lovi qo'llanilishi mumkin
-* To'lovlar tizim xavfi va bozor amalga oshirish xarajatlarini qoplash uchun ishlatiladi
-
-Maxsus likvidatsiya to'lovi qoidalari hamkor konfiguratsiyasiga bog'liq.
+Alıcı ücretleri genellikle anında uygulandığı için daha yüksektir.
 
 ***
 
-<h2 id="fee-settlement">To'lov to'lovi</h2>
+<h2 id="funding-fees">Fonlama Ücretleri</h2>
 
-* To'lovlar stabilcoinlarda (masalan USDThisoblanadi )
-* To'lovlar to'g'ridan-to'g'ri Perpetual hisobdan ushlab qolinadi
-* To'lovlarni hisoblash amalga oshirilganda real vaqt rejimida amalga oshiriladi
+İşlem ücretlerine ek olarak, sürekli sözleşmeler finansman ödemelerini de içerir.
 
-***
+* Fonlama ücretleri uzun ve kısa pozisyonlar arasında değiş tokuş edilir
+* 6MM fon ücreti toplamaz
+* Fonlama oranları piyasa koşullarına göre değişir
 
-<h2 id="fee-transparency">To'lov shaffofligi</h2>
-
-6MM quyidagilarni ta'minlaydi:
-
-* To'lov mantiqi deterministik va tekshiruvga loyiq
-* To'lov hisoblashlari buyurtma bajarilishida ko'rinadi
-* Hamkorlar yakuniy foydalanuvchiga to'lov taqdimotini nazorat qilishda davom etadi
+Fonlama ödemeleri, sözleşme fiyatlarının spot piyasa ile uyumlu tutulmasına yardımcı olur.
 
 ***
 
-<h2 id="beginner-tips">Boshlang'ich maslahatlar</h2>
+<h2 id="liquidation-related-fees">Tasfiye ile İlgili Ücretler</h2>
 
-* Cheklovchi to'lovlarini kamaytirish uchun limit orderlaridan foydalaning
-* Ortiqcha savdodan qoching
-* TP/SL darajalarini hisoblashda to'lovlarni hisobga oling
-* Katta pozitsiyalarni ochishdan oldin to'lov stavkalarini ko'rib chiqish
+Tasfiye gerçekleştiğinde:
+
+* Tasfiye ücreti uygulanabilir
+* Ücretler, sistem riski ve piyasa uygulama maliyetlerini karşılamak için kullanılır
+
+Özel tasfiye ücreti kuralları, ortak yapılandırmasına bağlıdır.
 
 ***
 
-<h2 id="summary">Xulosa</h2>
+<h2 id="fee-settlement">Ücret Tazminatı</h2>
 
-6MMhaqida:
+* Ücretler stablecoinlerde (örneğin USDT) tas edilir
+* Ücretler doğrudan Sürekli Hesaptan düşülür
+* Ücret hesaplamaları uygulamada gerçek zamanlı olarak gerçekleşir
 
-* To'lovlar ijroga asoslangan va shaffof
-* Maker va taker modellari sog'lom likvidlikni qo'llab-quvvatlaydi
-* Moliyalashtirish to'lovlari peer-to-peer hisoblanadi, platforma daromadi emas
+***
 
-To'lov tuzilmasini tushunish foydalanuvchilarga samaraliroq va barqaror savdo qilishga yordam beradi.
+<h2 id="fee-transparency">Ücret Şeffaflığı</h2>
 
-<h2 id="related-cost-guides">Tegishli xarajat qo'llanmalari</h2>
+6MM şunları sağlar:
 
-- [To'lovlar va Slippage](/tr/trading/fees-and-slippage): umumiy bajarilish xarajatini taxmin qilish.
-- [Abadiy shartnomalar](/tr/trading/perpetual-contracts): moliyalashtirish va hisob-kitobni tushunish.
-- [Institutsional likvidlik](/tr/solutions/institutional-liquidity): bozor chuqurligi va spreadlarning rolini ko'rib chiqish.
+* Ücret mantığı deterministik ve denetlenebilir
+* Ücret hesaplamaları emir yürütme sırasında görünür
+* Ortaklar, nihai kullanıcı karşısında ücret sunumu üzerinde kontrolü elinde tutar
+
+***
+
+<h2 id="beginner-tips">Başlangıç İpuçları</h2>
+
+* Alıcı ücretlerini azaltmak için limit emirleri kullanın
+* Aşırı aşırı ticaretten kaçının
+* TP/SL seviyelerini hesaplarken ücretleri göz önünde bulundurun
+* Büyük pozisyonlar açmadan önce ücret oranlarını gözden geçirin
+
+***
+
+<h2 id="summary">Özet</h2>
+
+6MMHakkında :
+
+* Ücretler yürütme temelli ve şeffaftır
+* Maker ve alıcı modelleri sağlıklı likiditeyi destekler
+* Fonlama ücretleri eşler arasıdır, platform geliri değildir
+
+Ücret yapısını anlamak, kullanıcıların daha verimli ve sürdürülebilir işlem yapmalarına yardımcı olur.
+
+<h2 id="related-cost-guides">İlgili maliyet rehberleri</h2>
+
+- [Ücretler ve Kayma](/tr/trading/fees-and-slippage): toplam uygulama maliyetini tahmin edin.
+- [Sürekli Sözleşmeler](/tr/trading/perpetual-contracts): finansman ve uzlaşmayı anlamak.
+- [Kurumsal Likidite](/tr/solutions/institutional-liquidity): Piyasa derinliği ve spreadlerin rolünü gözden geçirin.

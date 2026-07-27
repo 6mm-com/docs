@@ -1,58 +1,58 @@
 ---
 title: "WebSocket"
-description: "Ommaviy bozor efirlari va shaxsiy hisob tadbirlari uchun 6MM WebSocket xizmatiga ulaning, yurak urishi va obuna bo'yicha yo'riqnomalar bilan."
+description: "Kamu piyasası yayınları ve özel hesap etkinlikleri için 6MM WebSocket hizmetine bağlantı kurun, kalp atışı ve abonelik rehberliğiyle bağlantı kurun."
 slug: developer-api/websocket
 canonical-url: https://docs.6mm.com/tr/developer-api/websocket
 ---
 
-<h2 id="service-endpoint">Xizmat Oxirgi nuqtasi</h2>
+<h2 id="service-endpoint">Service Endpoint</h2>
 
 ```
 wss://ws.6mm.com/ws
 ```
 
-WebSocket kanallar jamoat va xususiy kanallarga bo'linadi:
+WebSocket kanallar genel kanallar ve özel kanallar olarak ayrılır:
 
-| Turi             | Autentifikatsiya              | Tavsif                                            |
+| Tip             | Doğrulama              | Tanım                                            |
 | ---------------- | --------------------------- | ------------------------------------------------------ |
-| Jamoat kanallari  | Majburiy emas                | Bozor ma'lumotlari, masalan, chuqurlik, savdolar, Klines va ticker |
-| Shaxsiy kanallar | `listenKey` yoki JWT kerak emas | Foydalanuvchi tartibi, hisob va pozitsiya oqimlari              |
+| Kamu kanalları  | Zorunlu değil                | Piyasa verileri, örneğin derinlik, işlemler, Kline'lar ve ticker |
+| Özel kanallar | `listenKey` veya JWT gerekli | Kullanıcı sırası, hesap ve pozisyon akışları              |
 
-<h2 id="public-channels">Jamoat kanallari</h2>
+<h2 id="public-channels">Kamu Kanalları</h2>
 
-Ommaviy WebSocket autentifikatsiyani talab qilmaydi. Ulangandan so'ng, bozor kanallariga obuna bo'lish uchun `subscribe` so'rov yuboring.
+Kamu WebSocket kimlik doğrulama gerektirmez. Bağlandıktan sonra, piyasa kanallarına abone olmak için `subscribe` talebi gönderin.
 
-Umumiy kanallar:
+Yaygın kanallar:
 
-| Kanal                            | Tavsif                                                        |
+| Kanal                            | Tanım                                                        |
 | ---------------------------------- | ------------------------------------------------------------------ |
-| `market.depth.{symbol}`            | Kitob chuqurligini buyurtma qiling. Avval snapshot yuboradi, keyin bosqichma-bosqich yangilanishlar |
-| `market.trade.{symbol}`            | So'nggi savdolar                                                      |
-| `market.kline.{symbol}.{interval}` | Klines                                                             |
-| `market.ticker.{symbol}`           | Yagona belgili ticker sharhi                                       |
-| `market.tickers`                   | Barcha belgilar bilan bog'liq ticker qisqacha mazmuni                                          |
+| `market.depth.{symbol}`            | Kitap derinliği siparişi verin. Önce bir anlık görüntü gönderir, sonra kademeli güncellemeler |
+| `market.trade.{symbol}`            | Son takaslar                                                      |
+| `market.kline.{symbol}.{interval}` | Klines'lar                                                             |
+| `market.ticker.{symbol}`           | Tek sembollü ticker özeti                                       |
+| `market.tickers`                   | Tüm sembol ticker özeti                                          |
 
-<h2 id="private-channels">Shaxsiy kanallar</h2>
+<h2 id="private-channels">Özel Kanallar</h2>
 
 <h2 id="listenkey">listenKey</h2>
-Xususiy WebSocket oqimlari uchun avval REST API orqali `listenKey` yarating, so'ngra quyidagilarga ulaning:
+Özel WebSocket akışları için önce REST API üzerinden bir `listenKey` oluşturun, ardından şu adreslere bağlanın:
 
 ```
 wss://ws.6mm.com/ws?listenKey=YOUR_LISTEN_KEY
 ```
 
 <h2 id="jwt">JWT</h2>
-Mos JWT ulanish usuli:
+Uyumlu JWT bağlantı yöntemi:
 
 ```
 wss://ws.6mm.com/ws?token=YOUR_ACCESS_TOKEN
 ```
 
-Autentifikatsiya muvaffaqiyatli bo'lgach, server avtomatik ravishda ulanishni joriy foydalanuvchining shaxsiy kanaliga obuna qiladi. Qo'lda obuna bo'lishi shart emas.
+Kimlik doğrulama başarılı olduktan sonra, sunucu bağlantıyı otomatik olarak mevcut kullanıcının özel kanalına abone eder. Manuel abonelik gerektirmez.
 
-<h2 id="choose-the-next-guide">Keyingi qo'llanmani tanlang</h2>
+<h2 id="choose-the-next-guide">Bir sonraki rehberi seçin</h2>
 
-- [Connection, Subscription & Heartbeat](/tr/developer-api/websocket/connection-subscription-and-heartbeat): ulanish hayotiy aylanishi, ping, qayta ulanish va qayta obuna bo'lish.
-- [Public Market Channels](/tr/developer-api/websocket/public-market-channels): chuqurlik, savdolar, Kline, tickerlar va ketma-ketlikni boshqarish.
-- [Xususiy Foydalanuvchi Kanali](/tr/developer-api/websocket/private-user-channel): listenKey hayotiy sikli va autentifikatsiyalangan hisob voqealari.
-- [Integratsiya tavsiyalari](/tr/developer-api/integration-recommendations): monitoring, idempotentsiya, qayta urinishlar va ishlab chiqarish sinovlari.
+- [Bağlantı, Abonelik ve Kalp Atışı](/tr/developer-api/websocket/connection-subscription-and-heartbeat): bağlantı yaşam döngüsü, ping, yeniden bağlantı ve yeniden abonelik.
+- [Kamu Pazarı Kanalları](/tr/developer-api/websocket/public-market-channels): derinlik, takaslar, Kline, tickerlar ve dizi yönetimi.
+- [Özel Kullanıcı Kanalı](/tr/developer-api/websocket/private-user-channel): listenKey yaşam döngüsü ve doğrulanmış hesap olayları.
+- [Entegrasyon Önerileri](/tr/developer-api/integration-recommendations): izleme, kimlik potansiyeli, tekrar denemeler ve üretim testleri.

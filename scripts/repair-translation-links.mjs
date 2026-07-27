@@ -22,10 +22,7 @@ const relatedPageLabels = {
   uk: "Пов’язані сторінки",
   pt: "Páginas relacionadas",
   es: "Páginas relacionadas",
-  uz: "Tegishli sahifalar",
   ar: "صفحات ذات صلة",
-  fil: "Mga kaugnay na pahina",
-  az: "Əlaqəli səhifələr",
 };
 const repairStart = "{/* sixmm-localized-link-repair:start */}";
 const repairEnd = "{/* sixmm-localized-link-repair:end */}";

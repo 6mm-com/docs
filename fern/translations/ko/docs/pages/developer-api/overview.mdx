@@ -1,0 +1,45 @@
+---
+title: "6MM Developer API"
+headline: "6MM Developer API 거래 플랫폼용 문서"
+description: "인증, 요청 서명, REST 엔드포인트, WebSocket 스트림, 오류, 운영 지침 등 6MM Developer API와 통합하는 방법을 배워보세요."
+slug: developer-api/overview
+canonical-url: https://docs.6mm.com/ko/developer-api/overview
+---
+
+개발자 섹션은 6MM APIs와 직접 통합하는 백엔드 엔지니어와 플랫폼 팀을 위한 공간입니다. 이 문서는 운영 사용 전에 필요한 관습, 보안 모델, REST 리소스, 스트리밍 채널, 운영 점검 등을 설명합니다.
+
+<h2 id="recommended-integration-path">추천 통합 경로</h2>
+
+<CardGroup cols={2}>
+<Card title="통합 개요" icon="fa-duotone fa-diagram-project" href="/ko/developer-api/integration-overview">
+API 접근 모델과 권장 연결 순서를 이해하세요.
+</Card>
+<Card title="환경 및 관습" icon="fa-duotone fa-server" href="/ko/developer-api/environments-and-common-conventions">
+기본 URL, 타임스탬프, 숫자 필드, 응답 형식을 검토하세요.
+</Card>
+<Card title="인증 및 서명" icon="fa-duotone fa-shield-keyhole" href="/ko/developer-api/request-signing">
+출입 JWT 준비, API 열쇠, HMAC 서명 준비하세요.
+</Card>
+<Card title="REST API" icon="fa-duotone fa-brackets-curly" href="/ko/developer-api/rest-api">
+계좌, 주문, 포지션, 시장 데이터 엔드포인트를 탐색하세요.
+</Card>
+</CardGroup>
+
+<h2 id="documentation-areas">문서 영역</h2>
+
+| 면적 | 다루는 내용 |
+| --- | --- |
+| 통합 설정 | 서비스 주소, 요청 관습, 응답 형태, 접근 모드. |
+| 인증 및 보안 | JWT, API Key 권한이 있고, HMAC 서명, 재생 보호, 시간 동기화가 포함됩니다. |
+| REST API | 공개 엔드포인트, 사용자/계정 데이터, 주문, 포지션, 시장 데이터. |
+| WebSocket | 연결 수명 주기, 공개 시장 스트림, 그리고 개인 사용자 스트림. |
+| 참고 및 문제 해결 | 열거, 오류 코드, 그리고 실용적인 통합 권고사항. |
+
+<h2 id="production-checklist">생산 체크리스트</h2>
+
+- 비밀 API 백엔드에만 저장합니다.
+- 서명 요청 전 서버 시간 동기화.
+- 페이지에 명시적으로 달리 명시하지 않는 한 모든 수치 정밀도 필드를 문자열로 취급합니다.
+- 멮등성, 요청 ID, 순서 흐름을 중심으로 구조화된 로그를 사용합니다.
+- 운영 시스템에서 최신 상태를 유지해야 하는 WebSocket 스트림에 구독합니다.
+- 실행 전에 오류 코드를 검토하고 동작을 재시도합니다.

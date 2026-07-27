@@ -1,66 +1,66 @@
 ---
-title: "Hamkorlar integratsiyasi xavfsizlik arxitekturasi"
-subtitle: "Ichki savdo, API, SDK, webhook, aktivlarni o'tkazish va operatsion integratsiyalar uchun ishonch chegaralari va ishlab chiqarish nazoratlarini loyihalash."
+title: "İş Ortağı Entegrasyonu Güvenlik Mimarisi"
+subtitle: "Gömülü ticaret, API, SDK, webhook, varlık transferi ve operasyonel entegrasyonlar için güven sınırları ve üretim kontrolleri tasarlayın."
 slug: solutions/security-architecture
 canonical-url: https://docs.6mm.com/tr/solutions/security-architecture
 ---
 
-Ushbu sahifa hamkorning xavfsiz 6MM integratsiyasini qanday loyihalashi kerakligi haqida e'lon qilinadi. Savdo platformasida ishlatiladigan kengroq xavfsizlik qatlamlari uchun [Platform Security Architecture](/tr/security-compliance/security-architecture) sahifasiga qarang.
+Bu sayfa, bir ortağın güvenli bir 6MM entegrasyonunu nasıl tasarlaması gerektiğine odaklanır. Ticaret platformunda kullanılan daha geniş güvenlik katmanları için bakınız [Platform Güvenlik Mimarisi](/tr/security-compliance/security-architecture).
 
-Xavfsizlik arxitekturasi ishlab chiqarish integratsiyasi boshlanishidan oldin kelishilishi kerak. Bu hamkor tizimlarning foydalanuvchilarni qanday tasdiqlashi, tokenlarni chiqarishi, sirlarni saqlashi, voqealarni qabul qilishi, operatsiyalarni kuzatishi va hodisalarga qanday javob berishini ta'sir qiladi.
+Üretim entegrasyonu başlamadan önce güvenlik mimarisi üzerinde anlaşma sağlanmalıdır. Bu, ortak sistemlerin kullanıcıları nasıl doğruladığını, token çıkardığını, sırları nasıl sakladığını, olayları nasıl aldığını, işlemleri nasıl izlediğini ve olaylara nasıl yanıt verdiğini etkiler.
 
-<h2 id="recommended-trust-boundary">Tavsiya etilgan ishonch chegarasi</h2>
+<h2 id="recommended-trust-boundary">Önerilen güven sınırı</h2>
 
-| Tarkibiy qism | Ichkarida bo'lishi mumkin | O'z ichiga olmasligi kerak |
+| Bileşen | Şunları içerebilir | İç içine almamalı |
 | --- | --- | --- |
-| Hamkor frontend | Ommaviy konfiguratsiya, qisqa muddatli kirish natijasi, sezgir bo'lmagan UI holati | Hamkor API maxfiy, imzo kaliti, imtiyozli backend ma'lumotlari |
-| Hamkor backend | Foydalanuvchi xaritalash, himoyalangan ma'lumotlar, imzo mantiqi, webhook ishlov berish | Mijoz javoblari yoki ommaviy loglar orqali ochilgan sirlar |
-| 6MM integratsiya nuqtalari | Tasdiqlangan imzolangan so'rovlar, tokenlar va webhook yetkazib berish | Tasdiqlanmagan hamkor tomonidagi foydalanuvchi taxminlari |
+| Partner ön uç | Genel yapılandırma, kısa ömürlü giriş sonucu, hassas olmayan arayüz durumu | Partner API gizli, imza anahtarı, ayrıcalıklı arka uç kimlik bilgileri |
+| Ortak backend | Kullanıcı eşleme, korunan kimlik bilgileri, imza mantığı webhook işleme | İstemci yanıtları veya kamuya açık kayıtlar aracılığıyla ortaya çıkan sırlar |
+| 6MM entegrasyon uç noktaları | Onaylanmış imzalı istekler, jetonlar ve webhook teslimatı | Doğrulanmamış ortak tarafı kullanıcı varsayımları |
 
-Hamkor frontend imtiyozli operatsiyalar uchun hamkor backendni chaqirishi kerak. Backend hamkor foydalanuvchini tasdiqlaydi, tasdiqlangan API yoki SDKorqali 6MM chaqiradi va faqat frontendga kerak bo'lgan qisqa muddatli natijani qaytaradi.
+Ortak ön uç, ayrıcalıklı işlemler için ortak arka uçunu çağırmalıdır. Backend, ortak kullanıcıyı doğrular, onaylanan API veya SDKüzerinden 6MM çağırır ve sadece ön tarafın ihtiyaç duyduğu kısa ömürlü sonucu döndürür.
 
-<h2 id="security-layers">Xavfsizlik qatlamlari</h2>
+<h2 id="security-layers">Güvenlik katmanları</h2>
 
-| Qatlam | Zarur e'tibor |
+| Katman | Gerekli odak noktası |
 | --- | --- |
-| API malaka | Faqat orqa tomonda saqlash, rotatsiya rejasi va kirish nazorati. |
-| So'rovlarni imzolash | Vaqt tamg'asi, imzo va qayta ko'rsatish himoyasi barqaror. |
-| Tokenlarni joylashtirish | Qisqa muddatli hujjatlarni chiqarish, muvofiqlik tekshiruvlari va aniq invalidatsiya xatti-harakatlari. |
-| Webhooks | Imzolarni tekshirish, idempotensiya, qayta urinishlar va tadbir audit jurnallari. |
-| Operatsiyalar | Kirish rollari, hodisalarni eskalatsiyalash, monitoring va dalillarni saqlash. |
+| API yetkinlikleri | Sadece arka uç depolama, rotasyon planı ve erişim kontrolü. |
+| İstek imzalama | Tutarlı zaman damgası, imza ve tekrar izleme koruması yönetimi. |
+| Tokenları gömülü | Kısa süreli tehriz, uygunluk kontrolleri ve açık geçersiz davranış. |
+| Webhooks | İmza doğrulama, kimlik potansiyeli, tekrar denemeler ve olay denetim günlükleri. |
+| İşletmeler | Erişim rolleri, olay tırmantı, izleme ve kanıt saklama. |
 
-<h2 id="production-control-plan">Ishlab chiqarishni nazorat qilish rejasi</h2>
+<h2 id="production-control-plan">Üretim kontrol planı</h2>
 
-| Nazorat hududi | Minimal amalga oshirish dalillari |
+| Kontrol alanı | Minimum uygulama kanıtı |
 | --- | --- |
-| Guvohnoma saqlash | Maxfiy menejer joylashuvi, kirish egasi, muhitni ajratish va aylantirish jarayoni. |
-| Foydalanuvchi yozuvi | Sessiya tasdiqlash, muvofiqlikni tekshirish, qisqa muddatli token oqimi va xatolarni boshqarish. |
-| Imzolangan so'rovlar | To'g'ri muhit, sinxronlashtirilgan vaqt, so'rovlarni yozish va imzo xatosi ogohlantirishlari. |
-| Aktiv operatsiyalari | Noyob biznes identifikatorlari, vaqt tugashi bilan muvofiqlashtirish, holat so'rovlari va operator ko'rib chiqish yo'li. |
-| Webhooks | Raw-body imzosini tekshirish, qayta ko'rish boshqaruvlari, idempotency saqlash va qayta urinish uchun xavfsiz ishlov berish. |
-| Monitoring | Autentifikatsiya xatolari, g'ayrioddiy qayta urinishlar, webhook lag'i va operatsion xatoliklar haqida ogohlantirishlar. |
-| Hodisalarga javob berish | Nomlangan egasi, eskalatsiya kanali, dalillarni saqlash va guvohnomani bekor qilish jarayoni. |
+| Kimlik bilgileri depolama | Gizli yönetici konumu, erişim sahibi, ortam ayrımı ve rotasyon süreci. |
+| Kullanıcı girişi | Oturum doğrulaması, uygunluk kontrolü, kısa ömürlü token akışı ve başarısızlık yönetimi. |
+| İmzalı talepler | Doğru ortam, senkronize zaman, istek kaydı ve imza hatası uyarıları. |
+| Varlık operasyonları | Benzersiz iş kimlikleri, zaman aşımına ulaşma, durum sorguları ve operatör inceleme yolu. |
+| Webhooks | Ham gövde imza doğrulaması, tekrar oynatma kontrolleri, idempotency deposu ve tekrar deneme güvenli işleme. |
+| İzleme | Kimlik doğrulama hataları, anormal denemeler, webhook gecikme ve operasyonel hatalar için uyarılar. |
+| Olay müdahalesi | Adı verilen sahip, yükseltme kanalı, kanıt saklama ve kimlik iptal prosedürü. |
 
-<h2 id="launch-review">Uchirish sharhi</h2>
+<h2 id="launch-review">Fırlatma incelemesi</h2>
 
-Ishlab chiqarishdan oldin:
+Üretim öncesi:
 
-1. Foydalanuvchi, token, so'rov, aktiv va webhook ma'lumot oqimlarini chizing.
-2. Har bir ma'lumot qayerda yaratilgan, saqlangan, ishlatilgan, qayerda yozilgan, aylantirilgan va bekor qilingan joylarni belgilang.
-3. Muddati o'tgan tokenlarni, noto'g'ri imzolarni, vaqt tugatishlarini, dublikat veb-hooklarni va qayta ulanish xatti-harakatlarini sinab ko'ring.
-4. Qo'llab-quvvatlash jamoalari operatsiyani uning so'rovi yoki biznes identifikatori orqali aniqlay olishini tasdiqlang.
-5. [Ishlab chiqarishni boshlash nazorat ro'yxati](/tr/solutions/production-launch-checklist) ni to'ldiring.
+1. Kullanıcı, token, taleb, varlık ve webhook veri akışlarını çizin.
+2. Her kimlik bilgilerinin nerede oluşturulduğunu, saklandığını, kullanıldığını, kaydedildiğini, döndürüldüğünü ve iptal edildiğini işaretleyin.
+3. Süresi dolmuş tokenları, geçersiz imzaları, zaman aşımlarını, yineleştirilen webhooksve yeniden bağlantı davranışını test edin.
+4. Destek ekiplerinin bir operasyonu isteği veya iş tanımlayıcısı üzerinden bulabildiğini doğrulayın.
+5. Tamamla [Üretim Başlatma Kontrol Listesi](/tr/solutions/production-launch-checklist).
 
-<h2 id="recommended-docs">Tavsiya etilgan hujjatlar</h2>
+<h2 id="recommended-docs">Önerilen doktorlar</h2>
 
 <CardGroup cols={3}>
-<Card title="Sirlar va imzolash" icon="fa-duotone fa-key" href="/tr/sdk/security/secrets-signing">
-Agent SDK ma'lumotlar va imzolangan so'rovlarni himoya qiling.
+<Card title="Sırlar ve İmza Alma" icon="fa-duotone fa-key" href="/tr/sdk/security/secrets-signing">
+Agent SDK kimlik bilgilerini ve imzalanmış talepleri koruyun.
 </Card>
-<Card title="So'rovlarni imzolash" icon="fa-duotone fa-signature" href="/tr/developer-api/request-signing">
-To'g'ridan-to'g'ri Dasturchi API so'rov imzolashni amalga oshiring.
+<Card title="İstek İmzaları" icon="fa-duotone fa-signature" href="/tr/developer-api/request-signing">
+Doğrudan Developer API istek imzalamayı uygulayın.
 </Card>
-<Card title="Webhook va Idempotency" icon="fa-duotone fa-webhook" href="/tr/sdk/security/webhooks-idempotency">
-Voqealarni xavfsiz ishlang.
+<Card title="Webhook ve İdempotensi" icon="fa-duotone fa-webhook" href="/tr/sdk/security/webhooks-idempotency">
+Olayları güvenli bir şekilde işleyin.
 </Card>
 </CardGroup>

@@ -1,100 +1,100 @@
 ---
 title: "REST API"
-description: "6MM REST API konventsiyalari, autentifikatsiya variantlari, so'rov formatlari, javob tuzilmalari, ruxsatlar va endpoint guruhlarini ko'rib chiqing."
+description: "6MM REST API kurallarını, kimlik doğrulama seçeneklerini, istek formatlarını, yanıt yapılarını, izinleri ve uç nokta gruplarını gözden geçirin."
 slug: developer-api/rest-api
 canonical-url: https://docs.6mm.com/tr/developer-api/rest-api
 ---
 
-<h2 id="public-endpoints">Ommaviy Endpointlar</h2>
+<h2 id="public-endpoints">Açık Uç Noktaları</h2>
 
-| Oxirgi nuqta                   | Usul | Yo'l                                        | Tavsif                                                    |
+| Uç nokta                   | Yöntem | Yol                                        | Tanım                                                    |
 | -------------------------- | ------ | ------------------------------------------- | -------------------------------------------------------------- |
-| Xizmat versiyasi            | GET    | `/v1/version`                               | Xizmat versiyasi haqida ma'lumot oling                                |
-| Server vaqti                | GET    | `/v1/time`                                  | Server vaqtini olish                                                |
-| Foydalanuvchi kirishi                 | POST   | `/v1/public/user/login`                     | Foydalanuvchi nomi va parolingizdan foydalanib `accessToken`              |
-| Yangilanish Tokeni              | POST   | `/v1/public/user/refresh-token`             | Cookie orqali login holatini yangilang.                                 |
-| Agent chiptalari almashinuvi      | POST   | `/v1/public/agent-sso/exchange-ticket`      | Agent kirish chiptasini kirish holatiga almashtirish              |
-| Agent Embed Token almashinuvi | POST   | `/v1/public/agent-sso/exchange-embed-token` | Kirish holatiga o'rnatilgan qisqa muddatli savdo tokenini almashtirish |
-| Belgi konfiguratsiyasi       | GET    | `/v1/public/market/symbols`                 | Belgilar, savdo qoidalari va to'lov darajasi konfiguratsiyasini oling         |
-| Moliyalashtirish stavkasi konfiguratsiyasi | GET    | `/v1/public/market/funding-rate`            | So'rov moliyalashtirish stavkasi konfiguratsiyasi                               |
-| Hozirgi moliyalashtirish darajasi       | GET    | `/v1/public/market/funding-rate/current`    | Joriy moliyalashtirish stavkalarini sahifalash                                 |
-| Moliyalashtirish stavkalari tarixi       | GET    | `/v1/public/market/funding-rate/history`    | So'rov moliyalashtirish stavkalari tarixi                                     |
-| Klines                     | GET    | `/v1/public/market/klines`                  | Savdo narxi, indeks narxi yoki mark narxi Klines so'rovi           |
-| PnL reytinglar jadvali            | GET    | `/v1/public/leaderboard/pnl`                | So'rov 7 / 30 / 90 kunlik PnL reyting jadvali                          |
+| Hizmet versiyonu            | GET    | `/v1/version`                               | Servis sürüm bilgisini alın                                |
+| Server zamanı                | GET    | `/v1/time`                                  | Sunucu zamanı alın                                                |
+| Kullanıcı girişi                 | POST   | `/v1/public/user/login`                     | Kullanıcı adı ve şifre ile `accessToken`              |
+| Yenileme Belirtonu              | POST   | `/v1/public/user/refresh-token`             | Giriş durumunu Cookie üzerinden yenile                                 |
+| Temsilci Bilet Değişimi      | POST   | `/v1/public/agent-sso/exchange-ticket`      | Bir temsilci giriş biletini giriş durumu ile değiştirin              |
+| Agent Embed Token değişimi | POST   | `/v1/public/agent-sso/exchange-embed-token` | Giriş durumu için gömülü kısa ömürlü bir işlem tokenı takas edin |
+| Sembol yapılandırması       | GET    | `/v1/public/market/symbols`                 | Sembolleri, işlem kurallarını ve ücret seviyesi yapılandırmasını alın         |
+| Fonlama oranı yapılandırması | GET    | `/v1/public/market/funding-rate`            | Sorgulama fonlama oranı yapılandırması                               |
+| Mevcut fon oranı       | GET    | `/v1/public/market/funding-rate/current`    | Mevcut fonlama oranlarını sayfa olarak belirleyin                                 |
+| Fonlama oranı geçmişi       | GET    | `/v1/public/market/funding-rate/history`    | Sorgulama fonlama oranı geçmişi                                     |
+| Klines'lar                     | GET    | `/v1/public/market/klines`                  | Ticaret fiyatı, endeks fiyatı veya mark fiyatı Klines sorgulayın           |
+| PnL liderlik tablosu            | GET    | `/v1/public/leaderboard/pnl`                | Soru 30 / 7 / 90 günlük PnL liderlik tablosu                          |
 
-<h2 id="private-user-endpoints">Xususiy Foydalanuvchi Endpointlari</h2>
+<h2 id="private-user-endpoints">Özel Kullanıcı Uç Noktaları</h2>
 
-Agar boshqacha ko'rsatilmagan bo'lsa, quyidagi endpointlar JWT yoki API Key signingdan foydalanishi mumkin.
+Aksi belirtilmedikçe, aşağıdaki uç noktalar JWT veya API Key işaretleme kullanabilir.
 
-| Oxirgi nuqta                 | Usul | Yo'l                                      | Ruxsat   | Tavsif                                 |
+| Uç nokta                 | Yöntem | Yol                                      | İzin   | Tanım                                 |
 | ------------------------ | ------ | ----------------------------------------- | ------------ | ------------------------------------------- |
-| Foydalanuvchi ma'lumotlari                | GET    | `/v1/private/user/info`                   | O'qish         | Joriy foydalanuvchi profilini so'rov qiling                  |
-| Foydalanuvchi aktivlari              | GET    | `/v1/private/user/asset`                  | O'qish         | So'rov hamyon balansi va marjadan foydalanish       |
-| Yarat listenKey         | POST   | `/v1/private/user/listen-key`             | O'qish         | Shaxsiy WebSocket autentifikatsiya kalitini yarating |
-| Yangilanish listenKey          | PUT    | `/v1/private/user/listen-key`             | O'qish         | Amal qilish listenKey                   |
-| Yaqin listenKey          | DELETE | `/v1/private/user/listen-key`             | O'qish         | Yaqin listenKey                             |
-| Hisob o'zgarishi jurnallari      | GET    | `/v1/private/user/account-change-log`     | O'qish         | Fond harakati yozuvlarini so'rash                 |
-| 30 kunlik hajm statistikasi | GET    | `/v1/private/user/volume-stats`           | O'qish         | So'nggi 30 kunlik savdo hajmi va to'lovlarni so'rov qiling |
-| Balans tarixi          | GET    | `/v1/private/user/balance-history`        | O'qish         | So'rov balansi tarixi                       |
-| Savdo haqida umumiy ma'lumot           | GET    | `/v1/private/user/trade-overview`         | O'qish         | PnL, hajm va aktivlar tendentsiyasini so'rov qiling          |
-| Aktivlar haqida umumiy ma'lumot   | GET    | `/v1/private/user/asset/overview/summary` | O'qish         | Aktivlar xulosasi metrikalarini so'rash                 |
-| Aktivlar haqida umumiy ko'rinish tendentsiyasi     | GET    | `/v1/private/user/asset/overview/trend`   | O'qish         | So'rov aktiv tendensiyasi                           |
-| Sevimli belgilarni saqlang    | POST   | `/v1/private/user/favorite-symbols`       | O'qish         | Sevimli belgilarni ustiga yozish                  |
-| Sevimli belgilarni tanlang     | GET    | `/v1/private/user/favorite-symbols`       | O'qish         | Sevimli belgilarni so'rash                      |
-| Chiqish                   | POST   | `/v1/private/user/logout`                 | JWT + Cookie | Kirish holatini tozalash                           |
+| Kullanıcı bilgileri                | GET    | `/v1/private/user/info`                   | Oku         | Güncel kullanıcı profilini sorgulama                  |
+| Kullanıcı varlıkları              | GET    | `/v1/private/user/asset`                  | Oku         | Cüzdan bakiyesi ve marj kullanımı sorgusu       |
+| Yarat listenKey         | POST   | `/v1/private/user/listen-key`             | Oku         | Özel WebSocket kimlik doğrulama anahtarı oluşturun |
+| Yenileme listenKey          | PUT    | `/v1/private/user/listen-key`             | Oku         | Geçerlilik uzatma listenKey                   |
+| Yakın listenKey          | DELETE | `/v1/private/user/listen-key`             | Oku         | Yakın listenKey                             |
+| Hesap değişiklik kayıtları      | GET    | `/v1/private/user/account-change-log`     | Oku         | Fon hareketi kayıtlarını sorgulayın                 |
+| 30 günlük hacim istatistikleri | GET    | `/v1/private/user/volume-stats`           | Oku         | Son 30 günlük işlem hacmi ve ücretleri sorgulayın |
+| Denge geçmişi          | GET    | `/v1/private/user/balance-history`        | Oku         | Sorgu bakaresi geçmişi                       |
+| Ticaret genel görünümü           | GET    | `/v1/private/user/trade-overview`         | Oku         | PnL, hacim ve varlık trendini sorgulayın          |
+| Varlık genel özeti   | GET    | `/v1/private/user/asset/overview/summary` | Oku         | Varlık özeti metriklerini sorgulayın                 |
+| Varlık genel görünümü trendi     | GET    | `/v1/private/user/asset/overview/trend`   | Oku         | Varlık trendini sorgulama                           |
+| Favori sembolleri kaydet    | POST   | `/v1/private/user/favorite-symbols`       | Oku         | Favori sembollerin üzerine yaz                  |
+| Favori sembolleri alın     | GET    | `/v1/private/user/favorite-symbols`       | Oku         | Favori sembolleri sorgulama                      |
+| Çıkış                   | POST   | `/v1/private/user/logout`                 | JWT + Kurabiye | Giriş durumunu temizleyin                           |
 
-<h2 id="api-key-management-endpoints">API Key Boshqaruv nuqtalari</h2>
+<h2 id="api-key-management-endpoints">API Key Yönetim Uç Noktaları</h2>
 
-API Key boshqaruv nuqtalari faqat JWTqabul qiladi.
+API Key yönetim uç noktaları yalnızca JWTkabul eder.
 
-| Oxirgi nuqta            | Usul | Yo'l                                  | Tavsif                                         |
+| Uç nokta            | Yöntem | Yol                                  | Tanım                                         |
 | ------------------- | ------ | ------------------------------------- | --------------------------------------------------- |
-| Yarat API Key      | POST   | `/v1/private/user/api-key/create`     | Create API Key; `apiSecret` faqat bir marta qaytariladi   |
-| API Key ro'yxati        | GET    | `/v1/private/user/api-key/list`       | Joriy foydalanuvchining API kalitlarini so'rov qiling                       |
-| Yangilanish API Key      | PUT    | `/v1/private/user/api-key/update`     | Yangilanish yorlig'i, ruxsatlar, IP oq ro'yxati va holati |
-| O'chirish API Key      | POST   | `/v1/private/user/api-key/delete`     | Ko'rsatilgan ma'lumotni o' API Key                          |
-| Barcha API kalitlarini o'chir | POST   | `/v1/private/user/api-key/delete-all` | Joriy foydalanuvchining barcha API kalitlarini o'chirish             |
+| Yarat API Key      | POST   | `/v1/private/user/api-key/create`     | Yarat API Key; `apiSecret` sadece bir kez geri verilir   |
+| API Key listesi        | GET    | `/v1/private/user/api-key/list`       | Mevcut kullanıcının API Anahtarlarını sorgulayın                       |
+| Güncelleme API Key      | PUT    | `/v1/private/user/api-key/update`     | Etiket, izinler, IP beyaz listesi ve durumu güncelleme |
+| Sil API Key      | POST   | `/v1/private/user/api-key/delete`     | Belirli bir API Key sil                          |
+| Tüm API Anahtarlarını Sil | POST   | `/v1/private/user/api-key/delete-all` | Mevcut kullanıcının tüm API anahtarlarını sil             |
 
-<h2 id="order-endpoints">Buyurtma nuqtalari</h2>
+<h2 id="order-endpoints">Sıra Uç Noktaları</h2>
 
-Buyurtma nuqtalari savdo ruxsatini talab qiladi.
+Sipariş uç noktaları için ticaret izni gereklidir.
 
-| Oxirgi nuqta                    | Usul | Yo'l                                  | Tavsif                                                       |
+| Uç nokta                    | Yöntem | Yol                                  | Tanım                                                       |
 | --------------------------- | ------ | ------------------------------------- | ----------------------------------------------------------------- |
-| Yagona tartibda so'rov          | GET    | `/v1/private/order`                   | Aniq so'rov `symbol + orderId/clientOrderId`                   |
-| Joy tartibi                 | POST   | `/v1/private/order/place`             | Limit yoki bozor tartibi                                             |
-| Joy sharti tartibi       | POST   | `/v1/private/order/place-condition`   | Stop loss, take profit, trailing stop va boshqa shart buyruqlari |
-| Joylashtirish strategiyasi tartibi        | POST   | `/v1/private/order/place-strategy`    | OTO / OCO / OTOCO strategiya tartibi                                  |
-| Partiyaviy joylashuv buyurtmalari          | POST   | `/v1/private/order/batch-place`       | Bir nechta normal buyurtmalarni topshiring                                     |
-| Buyurtmani bekor qilish                | POST   | `/v1/private/order/cancel`            | Belgilangan normal tartibni bekor qilish                                   |
-| O'zgartirish buyrug'i                 | POST   | `/v1/private/order/move`              | Normal kutayotgan buyurtma narxi va miqdorini o'zgartiring                    |
-| Partiyadan o'zgartirish buyruqlari          | POST   | `/v1/private/order/batch-move`        | Bir xil belgi uchun oddiy kutayotgan buyurtmalarni batch o'zgartirish            |
-| Partiyadan bekor qilish buyruqlari         | POST   | `/v1/private/order/batch-cancel`      | Partiyadan oddiy buyurtmalarni bekor qilish                                        |
-| Hammasini bekor qiling                  | POST   | `/v1/private/order/batch-cancel-all`  | Tur bo'yicha partiyaviy bekor qilish buyurtmalari                                       |
-| Shart tartibini bekor qilish      | POST   | `/v1/private/order/cancel-condition`  | Belgilangan shart tartibini bekor qilish                                |
-| Hozirgi normal tartiblar       | GET    | `/v1/private/order/current`           | Joriy normal kutayotgan buyruqlarni so'rov qilish                               |
-| Joriy holat tartiblari    | GET    | `/v1/private/order/current-condition` | Joriy ishga tushirilmagan holatlar buyruqlarini so'rash                        |
-| Tarixiy normal tartiblar    | GET    | `/v1/private/order/history`           | Tarixiy normal tartiblar paginat qiling                                 |
-| Tarixiy holat tartiblari | GET    | `/v1/private/order/history-condition` | Paginat tarixiy holat tartiblari                              |
-| Savdo rekordlari               | GET    | `/v1/private/order/trades`            | Paginate savdo rekordlari                                            |
-| Strategiya tartibi tafsilotlari       | GET    | `/v1/private/order/strategy`          | So'rov strategiyasi tartibi va kichik tartiblar                               |
+| Tek sıra sorgu          | GET    | `/v1/private/order`                   | Tam soru `symbol + orderId/clientOrderId`                   |
+| Yer siparişi                 | POST   | `/v1/private/order/place`             | Limit veya piyasa emri                                             |
+| Yerleştirme koşulu sırası       | POST   | `/v1/private/order/place-condition`   | Stop loss, take profit, trailing stop ve diğer koşul emirleri |
+| Yerleştirme stratejisi sırası        | POST   | `/v1/private/order/place-strategy`    | OTO / OCO / OTOCO strateji sırası                                  |
+| Parti siparişleri          | POST   | `/v1/private/order/batch-place`       | Birden fazla normal sipariş gönderin                                     |
+| İptal emri                | POST   | `/v1/private/order/cancel`            | Belirli bir normal emri iptal et                                   |
+| Değişiklik emri                 | POST   | `/v1/private/order/move`              | Normal bekleyen emir fiyatını ve miktarını değiştirin                    |
+| Parti emirlerini değiştir          | POST   | `/v1/private/order/batch-move`        | Aynı sembol için normal bekleyen emirleri toplu olarak değiştir            |
+| Parti iptal emirleri         | POST   | `/v1/private/order/batch-cancel`      | Parti siparişleri iptal et                                        |
+| Hepsini iptal et                  | POST   | `/v1/private/order/batch-cancel-all`  | Parti iptal emirleri türüne göre                                       |
+| Koşulları iptal etme emri      | POST   | `/v1/private/order/cancel-condition`  | Belirli bir koşul sırasını iptal et                                |
+| Mevcut normal siparişler       | GET    | `/v1/private/order/current`           | Mevcut normal bekleyen emirleri sorgula                               |
+| Mevcut durum siparişleri    | GET    | `/v1/private/order/current-condition` | Mevcut tetiklenmemiş koşul emirlerini sorgulama                        |
+| Tarihsel normal sıralar    | GET    | `/v1/private/order/history`           | Tarihsel normal sıralar sayfa şeklinde                                 |
+| Tarihsel durum düzenleri | GET    | `/v1/private/order/history-condition` | Paginat tarihsel durum sıraları                              |
+| Takas kayıtları               | GET    | `/v1/private/order/trades`            | Paginate ticaret kayıtları                                            |
+| Strateji siparişi detayı       | GET    | `/v1/private/order/strategy`          | Sorgu stratejisi sırası ve alt siparişler                               |
 
-<h2 id="position-endpoints">Pozitsiya nuqtalari</h2>
+<h2 id="position-endpoints">Pozisyon Uç Noktaları</h2>
 
-Pozitsiya nuqtalari uchun savdo ruxsati talab qilinadi.
+Pozisyon uç noktaları için ticaret izni gereklidir.
 
-| Oxirgi nuqta          | Usul | Yo'l                               | Tavsif                                  |
+| Uç nokta          | Yöntem | Yol                               | Tanım                                  |
 | ----------------- | ------ | ---------------------------------- | -------------------------------------------- |
-| Margin rejimini sozlash   | POST   | `/v1/private/position/margin-mode` | Kalit ajratilgan / kesishma margin               |
-| Leverage o'rnatish      | POST   | `/v1/private/position/leverage`    | Belgini o'rnatish leverage                          |
-| Pozitsiya sozlamalari | GET    | `/v1/private/position/settings`    | Belgi uchun so'rov leverage va margin rejimi  |
-| Hozirgi lavozimlar | GET    | `/v1/private/position/positions`   | Hozirgi lavozimlarni so'rov qiling                      |
-| Pozitsiya tarixi  | GET    | `/v1/private/position/history`     | Tarixiy pozitsiyalar va yaqin yozuvlarni so'rash |
+| Kenar modu ayarlanır   | POST   | `/v1/private/position/margin-mode` | Anahtar izole / çapraz kenar               |
+| Sabit kaldıraç      | POST   | `/v1/private/position/leverage`    | Sembol kaldıraçını belirleyin                          |
+| Pozisyon ayarları | GET    | `/v1/private/position/settings`    | Bir sembol için sorgu kaldıraç ve marj modu  |
+| Mevcut pozisyonlar | GET    | `/v1/private/position/positions`   | Mevcut pozisyonları sorgulayın                      |
+| Pozisyon geçmişi  | GET    | `/v1/private/position/history`     | Tarihi konumları ve yakın kayıtları sorgulayın |
 
-<h2 id="endpoint-groups">Endpoint guruhlari</h2>
+<h2 id="endpoint-groups">Uç nokta grupları</h2>
 
-- [Ommaviy Endpoints](/tr/developer-api/rest-api/public-endpoints)
-- [Foydalanuvchi va Hisob](/tr/developer-api/rest-api/user-and-account)
-- [Buyruqlar](/tr/developer-api/rest-api/order)
-- [Pozitsiyalar](/tr/developer-api/rest-api/position)
-- [Bozor ma'lumotlari](/tr/developer-api/rest-api/market-data)
+- [Açık Uç Noktaları](/tr/developer-api/rest-api/public-endpoints)
+- [Kullanıcı & Hesap](/tr/developer-api/rest-api/user-and-account)
+- [Siparişler](/tr/developer-api/rest-api/order)
+- [Pozisyonlar](/tr/developer-api/rest-api/position)
+- [Piyasa Verileri](/tr/developer-api/rest-api/market-data)

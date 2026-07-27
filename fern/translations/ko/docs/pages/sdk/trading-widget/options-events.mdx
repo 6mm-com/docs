@@ -1,0 +1,69 @@
+---
+title: "옵션 및 이벤트"
+subtitle: "초기화 옵션, 런타임 이벤트, 그리고 일반적인 오류 코드."
+slug: sdk/trading-widget/options-events
+canonical-url: https://docs.6mm.com/ko/sdk/trading-widget/options-events
+---
+
+<h2 id="options">옵션</h2>
+
+| 필드 | 유형 | 기본 설정 | 주석 |
+| --- | --- | --- | --- |
+| baseUrl | string | SDK 문자 기원 | iframe 도메인. 파트너 페이지에 명시적으로 패스하세요. |
+| 상징 | string | BTCUSDT | 대문자와 스트립으로 정규화됨 - / _. |
+| 주제 | 어둡고 \| 빛 | 어두운 | 초기 테마 파라미터. |
+| 위치 | 엔 \| 미국 \| Z-CN | 브라우저/기본 | 영어와 간체 중국어가 지원됩니다. |
+| 배치 | 기본 \| 컴팩트 | 기본 설정 | 예약된 레이아웃 옵션. |
+| 전시 | object | `showHeader: false`, `showTicker: false`, `hidden: []` | 컨트롤은 쉘 구역과 고급 거래 컨테이너를 내장합니다. |
+| 인증 | object | 전혀 없습니다 | 새로운 SSO 통합을 위해 파트너 토큰을 사용하세요. |
+
+<h2 id="display-controls">디스플레이 제어</h2>
+
+`display` 내장된 거래 페이지 셸과 고급 컨테이너를 제어합니다. 파트너 임베드에서는 PC 헤더와 하단 시장 티커가 기본적으로 숨겨져 있습니다.
+
+```js
+display: {
+  showHeader: false,
+  showTicker: false,
+  hidden: ['chart', 'orderBook'],
+}
+```
+
+| 필드 | 유형 | 기본 설정 | 주석 |
+| --- | --- | --- | --- |
+| showHeader | boolean | 거짓 | iframe 안에 PC 임베드 헤더를 보여줄지 여부에 대해서요. |
+| showTicker | boolean | 거짓 | 임베드 케이스에 하위 시장 티커를 보여줄지 여부. |
+| 숨겨진 | 스트링[] | [] | 거래 페이지에 고레벨 컨테이너를 숨깁니다. |
+
+지지 `display.hidden` 가치:
+
+| 가치 | 컨테이너 |
+| --- | --- |
+| 차트 | 차트 컨테이너 |
+| orderBook | 주문서장 컨테이너 |
+| orderForm | 주문서 패널 |
+| 직책 | 하위 위치와 오픈 오더 패널 |
+| 계정 | 계좌 자산 컨테이너 |
+
+`display.hidden` 전체 컨테이너만 숨깁니다. 컨테이너 안에 개별 버튼, 필드, 도구를 숨기지 않습니다. 현재 뷰포트에 매핑되지 않는 값은 무시됩니다.
+
+<h2 id="events">행사</h2>
+
+| 행사 | 트리거 |
+| --- | --- |
+| 준비됐어 | iFrame 초기화 완료. |
+| 오류 | SDK, iframe, 또는 인증 오류가 발생합니다. |
+| state_changed | SDK 생명주기 상태가 변했습니다. |
+| auth_state_changed | 파트너 토큰 인증 상태가 변경되었습니다. |
+| symbol_changed | 실제 iframe 심볼이 바뀌었습니다. |
+| locale_changed | 실제 iframe 위치가 변경되었습니다. |
+| order_created | 사용자가 iframe 내에서 주문을 생성했습니다. |
+| order_failed | 주문 제출 실패. |
+| 파괴됨 | SDK 인스턴스가 파괴되었습니다. |
+
+<h2 id="related-widget-guides">관련 위젯 가이드</h2>
+
+- [Trading Widget 퀵 스타트](/ko/sdk/trading-widget/quick-start)
+- [인증](/ko/sdk/trading-widget/authentication)
+- [인스턴스 메서드](/ko/sdk/trading-widget/instance-methods)
+- [문제 해결](/ko/sdk/security/troubleshooting)

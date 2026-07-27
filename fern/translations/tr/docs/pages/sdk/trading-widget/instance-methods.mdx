@@ -1,29 +1,29 @@
 ---
-title: "Instansiya usullari"
-subtitle: "TradingWidget.create() dan keyin yaratilgan vidjet instansiyasini boshqaring."
+title: "Örnek Yöntemleri"
+subtitle: "TradingWidget.create() girdikten sonra oluşturulan bir widget örneğini kontrol edin."
 slug: sdk/trading-widget/instance-methods
 canonical-url: https://docs.6mm.com/tr/sdk/trading-widget/instance-methods
 ---
 
-<h2 id="method-summary">Metod qisqacha mazmuni</h2>
+<h2 id="method-summary">Yöntem Özeti</h2>
 
-| Usul | Maqsad |
+| Yöntem | Amaç |
 | --- | --- |
-| destroy() | iframe'ni olib tashlang va event tinglovchilarini ozod qiling. |
-| getState() | Joriy SDK hayot sikl holatini o'qing. |
-| whenReady() | iframe ishga tushirishni tugatguncha kuting. |
-| setSymbol(ramz) | iframe ichidagi savdo juftligini almashtiring. |
-| setTheme(mavzu) | iframe mavzu parametrini yangilang. |
-| setLocale(joy) | iframe tilini o'zgartiring. |
-| setSize(kenglik, balandlik) | iframe o'lchamlarini yangilash. |
-| Reload() | Joriy iframeni qayta yuklang. |
-| refreshAuth(sabab) | Widget autentifikatsiyasini yangilash jarayonini ishga tushiring. |
-| setTokenProvider(provayder) | Partner-token rejimida ishlatiladigan provayderni almashtiring. |
-| on(tadbir, boshqaruvchi) | Runtime tadbirlariga obuna bo'ling va obunani bekor qilish funksiyasini oling. |
+| yok et() | iframe'i kaldır ve etkinlik dinleyicilerini serbest bırak. |
+| getState() | Mevcut SDK yaşam döngüsü durumunu okuyun. |
+| whenReady() | iframe başlatmayı tamamlayana kadar bekleyin. |
+| setSymbol(sembol) | Ticaret çiftini iframe içinde değiştirin. |
+| setTheme(tema) | iframe tema parametresini güncelleyin. |
+| setLocale(bölge) | iframe dilini değiştirin. |
+| setSize(genişlik, yükseklik) | iframe boyutlarını güncelleyin. |
+| reload() | Mevcut iframe'i yeniden yükleyin. |
+| refreshAuth(sebep) | Widget auth yenileme akışını tetikle. |
+| setTokenProvider(sağlayıcı) | Partner-token modunda kullanılan sağlayıcıyı değiştirin. |
+| On(etkinlik, yönetici) | Çalışma süresi etkinliklerine abone olun ve abonelikten çıkma fonksiyonu alın. |
 
-<h2 id="destroy">destroy()</h2>
+<h2 id="destroy">yok et()</h2>
 
-iframe'ni olib tashlang, tinglovchilarni tozalang va joriy instansiya uchun bir marta yo'q qilingan emissiyani chiqaring.
+iframe'i kaldırın, dinleyicileri temizleyin ve mevcut örnek için bir kez yok edilmiş yayımlayın.
 
 ```js
 widget.destroy()
@@ -31,42 +31,42 @@ widget.destroy()
 
 <h2 id="getstate">getState()</h2>
 
-Vidjet instansiyasining hozirgi hayot sikl holatini o'qing.
+Widget örneğinin mevcut yaşam döngüsü durumunu okuyun.
 
 ```js
 const state = widget.getState()
 ```
 
-Qaytish qiymatlari yuklash, autentifikatsiya, tayyor, xato va yo'q qilish kabi qiymatlarni o'z ichiga oladi.
+İade değerleri arasında yükleme, doğrulama, hazır, hata ve yok etme bulunur.
 
 <h2 id="whenready">whenReady()</h2>
 
-iframe ishga tushirish tugaguncha kuting, keyin bog'liq UI mantiqini ishga tushiring.
+Bağımlı UI mantığı çalıştırmadan önce iframe'in başlatmayı tamamlamasını bekleyin.
 
 ```js
 await widget.whenReady()
 ```
 
-<h2 id="setsymbol-symbol">setSymbol(ramz)</h2>
+<h2 id="setsymbol-symbol">setSymbol(sembol)</h2>
 
-iframe ichidagi savdo juftligini almashtiring. Agar iframe hali ham ishga tushirilayotgan bo'lsa, SDK buyruqni navbatga qo'yadi va tayyor bo'lgandan keyin yuboradi.
+Ticaret çiftini iframe içinde değiştirin. iframe hâlâ başlatılıyorsa, SDK komutu sıraya alır ve hazır olduğunuzda gönderir.
 
 ```js
 widget.setSymbol('ETHUSDT')
 ```
 
-<h2 id="settheme-theme">setTheme(mavzu)</h2>
+<h2 id="settheme-theme">setTheme(tema)</h2>
 
-O'rnatilgan savdo iframe uchun ishlatiladigan tema parametrini yangilang.
+Gömülü işlem iframe'i tarafından kullanılan tema parametresini güncelleyin.
 
 ```js
 widget.setTheme('dark')
 widget.setTheme('light')
 ```
 
-<h2 id="setlocale-locale">setLocale(joy)</h2>
+<h2 id="setlocale-locale">setLocale(bölge)</h2>
 
-iframe tilini o'zgartiring. Qo'llab-quvvatlanadigan qiymatlar: en, en-US va zh-CN.
+iframe dilini değiştirin. Desteklenen değerler en, en-US ve zh-CN'dir.
 
 ```js
 widget.setLocale('en')
@@ -74,33 +74,33 @@ widget.setLocale('en-US')
 widget.setLocale('zh-CN')
 ```
 
-<h2 id="setsize-width-height">setSize(kenglik, balandlik)</h2>
+<h2 id="setsize-width-height">setSize(genişlik, yükseklik)</h2>
 
-iframe o' DOM o'lchamini yangilab, iframe'ga yangi tashqi o'lcham haqida xabar bering. Raqamli qiymatlar px ga aylantiriladi.
+iframe'in DOM boyutunu güncelleyin ve iframe'e yeni dış boyut hakkında bilgi verin. Sayısal değerler px'e dönüştürülür.
 
 ```js
 widget.setSize('100%', 720)
 ```
 
-<h2 id="reload">Reload()</h2>
+<h2 id="reload">reload()</h2>
 
-Joriy iframeni qayta yuklab, yana ishga tushishini kuting.
+Mevcut iframe'i yeniden yükleyin ve tekrar başlatılmasını bekleyin.
 
 ```js
 widget.reload()
 ```
 
-<h2 id="refreshauth-reason">refreshAuth(sabab)</h2>
+<h2 id="refreshauth-reason">refreshAuth(sebep)</h2>
 
-iframe'dan joriy autentifikatsiya oqimini yangilashni so'rang. Ixtiyoriy sabab qiymati log qilish va oqim boshqaruvi uchun uzatiladi.
+iframe'den mevcut kimlik doğrulama akışını yenilemesini iste. Isteğe bağlı neden değeri ise logetme ve akış kontrolü için yönlendirilir.
 
 ```js
 widget.refreshAuth('manual')
 ```
 
-<h2 id="settokenprovider-provider">setTokenProvider(provayder)</h2>
+<h2 id="settokenprovider-provider">setTokenProvider(sağlayıcı)</h2>
 
-Hamkor-token rejimida ishlatiladigan tokenProvider almashtiring. SDK iframe yangi embed tokenini so'raganda provayderga murojaat qiladi.
+Partner-token modunda kullanılan tokenProvider değiştirilir. SDK , iframe yeni bir gömme belirteçeği talep ettiğinde sağlayıcıyı arar.
 
 ```js
 widget.setTokenProvider(async ({ channelId, symbol, reason }) => {
@@ -115,9 +115,9 @@ widget.setTokenProvider(async ({ channelId, symbol, reason }) => {
 })
 ```
 
-<h2 id="on-event-handler">on(tadbir, boshqaruvchi)</h2>
+<h2 id="on-event-handler">On(etkinlik, yönetici)</h2>
 
-Doimiy tadbirga obuna bo'ling. Qaytarilgan funksiya tinglovchini olib tashlaydi.
+Bir süreli etkinlik etkinliğine abone olun. Geri dönen fonksiyon dinleyiciyi çıkarır.
 
 ```js
 const off = widget.on('order_created', (event) => {
@@ -127,9 +127,9 @@ const off = widget.on('order_created', (event) => {
 off()
 ```
 
-<h2 id="related-widget-guides">Tegishli Vidjet qo'llanmalari</h2>
+<h2 id="related-widget-guides">İlgili Widget rehberleri</h2>
 
-- [Trading Widget Tez boshlash](/tr/sdk/trading-widget/quick-start)
-- [Variantlar va Tadbirlar](/tr/sdk/trading-widget/options-events)
-- [Autentifikatsiya](/tr/sdk/trading-widget/authentication)
-- [Muammolarni hal qilish](/tr/sdk/security/troubleshooting)
+- [Trading Widget Hızlı Başlangıç](/tr/sdk/trading-widget/quick-start)
+- [Seçenekler ve Etkinlikler](/tr/sdk/trading-widget/options-events)
+- [Doğrulama](/tr/sdk/trading-widget/authentication)
+- [Sorun Giderme](/tr/sdk/security/troubleshooting)

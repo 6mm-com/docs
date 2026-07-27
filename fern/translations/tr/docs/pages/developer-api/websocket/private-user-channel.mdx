@@ -1,17 +1,17 @@
 ---
-title: "Xususiy Foydalanuvchi Kanali"
-description: "Buyurtmalar, pozitsiyalar, balanslar va hisob o'zgarishlari uchun autentifikatsiyalangan 6MM WebSocket voqealariga tinglash kalitini yaratish va saqlash orqali obuna bo'ling."
+title: "Özel Kullanıcı Kanalı"
+description: "Emirler, pozisyonlar, bakiyeler ve hesap değişiklikleri için doğrulanmış 6MM WebSocket etkinliklerine abone olun, bir dinleme anahtarı oluşturup koruyun."
 slug: developer-api/websocket/private-user-channel
 canonical-url: https://docs.6mm.com/tr/developer-api/websocket/private-user-channel
 ---
 
-Avval `listenKey` yarating:
+Önce bir `listenKey` oluşturun:
 
 ```http
 POST /v1/private/user/listen-key
 ```
 
-Javob misoli:
+Yanıt örneği:
 
 ```json
 {
@@ -25,9 +25,9 @@ Javob misoli:
 }
 ```
 
-`listenKey` standart bo'yicha 60 daqiqa amal qiladi. Har 30 daqiqada yangilanish tavsiya etiladi.
+`listenKey` varsayılan olarak 60 dakika geçerlidir. Her 30 dakikada bir yenileme önerilir.
 
-<h2 id="renew">Yangilanish</h2>
+<h2 id="renew">Yenileme</h2>
 
 ```http
 PUT /v1/private/user/listen-key
@@ -38,7 +38,7 @@ Content-Type: application/json
 { "listenKey": "f57cb61ef604ce76be09e753a5dbdd8c" }
 ```
 
-<h2 id="close">Yaqin</h2>
+<h2 id="close">Kapat</h2>
 
 ```http
 DELETE /v1/private/user/listen-key
@@ -49,34 +49,34 @@ Content-Type: application/json
 { "listenKey": "f57cb61ef604ce76be09e753a5dbdd8c" }
 ```
 
-<h2 id="connect-to-private-websocket">Shaxsiy WebSocket ulaning</h2>
+<h2 id="connect-to-private-websocket">Özel WebSocket</h2>
 
 ```
 wss://ws.6mm.com/ws?listenKey=YOUR_LISTEN_KEY
 ```
 
-Mos JWT ulanish usuli:
+Uyumlu JWT bağlantı yöntemi:
 
 ```
 wss://ws.6mm.com/ws?token=YOUR_ACCESS_TOKEN
 ```
 
-Autentifikatsiya muvaffaqiyatli bo'lgach, server avtomatik ravishda ulanishni amaldagi foydalanuvchining shaxsiy kanaliga obuna qiladi. Qo'lda obuna talab qilinmaydi.
+Kimlik doğrulama başarılı olduktan sonra, sunucu bağlantıyı otomatik olarak mevcut kullanıcının özel kanalına abone eder. Manuel abonelik gerektirmez.
 
-Muvaffaqiyatli autentifikatsiya tasdiqlanishi:
+Başarılı kimlik doğrulama onayı:
 
 ```json
 { "event": "auth", "success": true, "data": "1188041528" }
 ```
 
-<h2 id="common-private-events">Keng tarqalgan shaxsiy tadbirlar</h2>
+<h2 id="common-private-events">Yaygın özel etkinlikler</h2>
 
-| Tadbir                | Tavsif                                                                   |
+| Etkinlik                | Tanım                                                                   |
 | -------------------- | ----------------------------------------------------------------------------- |
-| `ORDER_TRADE_UPDATE` | Buyurtma holati o'zgarishlari, jumladan yangi buyurtma, o'zgartirish, savdo va bekor qilish |
-| `ACCOUNT_UPDATE`     | Hisob balansi va pozitsiya o'zgarishlari                                          |
+| `ORDER_TRADE_UPDATE` | Sipariş durumu değişiklikleri, yeni emir, düzeltme, ticaret ve iptal dahil |
+| `ACCOUNT_UPDATE`     | Hesap bakiyesi ve pozisyon değişiklikleri                                          |
 
-Shaxsiy push xabar o'ram:
+Özel push mesaj wrapper:
 
 ```json
 {
@@ -88,20 +88,20 @@ Shaxsiy push xabar o'ram:
 }
 ```
 
-REST so'rov endpointlari va WebSocket xususiy oqimlar alohida sxemalardan foydalanadi. Mijozlar har bir sxemani mustaqil tahlil qilishi va maydon nomlari bir xil deb o'ylamasligi kerak.
+REST sorgu uç noktaları ve WebSocket özel akışlar ayrı şemalar kullanır. Müşteriler her şemayı bağımsız olarak ayrıştırmalı ve alan adlarının aynı olduğunu varsaymamalıdır.
 
-<h2 id="common-differences">Umumiy farqlar</h2>
+<h2 id="common-differences">Ortak farklar</h2>
 
-| Domen         | REST maydoni     | WebSocket maydoni                                             |
+| Alan         | REST alanı     | WebSocket alanı                                             |
 | -------------- | -------------- | ----------------------------------------------------------- |
-| Buyurtma holati   | `status`       | `orderStatus`                                               |
-| Muzlab qolgan muvozanat | `frozenMargin` | `frozenBalance`                                             |
-| Margin rejimi    | `marginMode`   | `marginMode`, pozitsiyalar va oqimlarda sim sifatida qaytdi |
+| Sipariş durumu   | `status`       | `orderStatus`                                               |
+| Donmuş denge | `frozenMargin` | `frozenBalance`                                             |
+| Marj modu    | `marginMode`   | `marginMode`, pozisyonlarda ve akışlarda bir ip olarak geri döndü |
 
-<h2 id="recovery-and-reconciliation">Tiklanish va yarashuv</h2>
+<h2 id="recovery-and-reconciliation">İyileşme ve uzlaşma</h2>
 
-- Muddati tugashidan oldin listenKey yangilash va yangilanish muvaffaqiyatsiz bo'lsa, yangi shartnoma yaratish.
-- Qayta ulanish, qayta autentifikatsiya qilish va yangi soketni yangi hodisa sessiyasi sifatida qabul qilish.
-- Hamkor balanslari yoki buyurtma yozuvlarini o'zgartirishdan oldin voqealarni deduplicate qilish.
-- Agar voqealar o'tkazib yuborilgan bo'lsa, [orders](/tr/developer-api/rest-api/order), [positions](/tr/developer-api/rest-api/position) va [account state](/tr/developer-api/rest-api/user-and-account) so'rov REST.
-- Qayta urinish va eskirgan ulanishni boshqarish uchun [ulanish va yurak urishi qo'llanmasi](/tr/developer-api/websocket/connection-subscription-and-heartbeat) ga amal qiling.
+- Süresi dolmadan önce listenKey yenilemek ve yenileme başarısız olursa yeni bir tane oluşturmak gerekir.
+- Yeniden bağlanın, yeniden kimlik doğrulama yapın ve yeni soketi yeni bir etkinlik oturumu olarak ele alın.
+- Ortak bakiyelerini veya sipariş kayıtlarını değiştirmeden önce olayları deduplicate edin.
+- Eğer etkinlikler kaçırılmış olabilirse, sorgulama [Emirler](/tr/developer-api/rest-api/order), [Pozisyonlar](/tr/developer-api/rest-api/position), ve [hesap durumu](/tr/developer-api/rest-api/user-and-account) RESTiçin.
+- Takip edin [Bağlantı ve Kalp Atışı Rehberi](/tr/developer-api/websocket/connection-subscription-and-heartbeat) Yeniden deneme ve eski bağlantı yönetimi için.

@@ -1,0 +1,128 @@
+---
+title: "API Key 경영"
+description: "적절한 권한, IP 제한, 비밀 저장, 회전 방식을 적용하면서 6MM API 키를 생성, 검사, 업데이트, 취소할 수 있습니다."
+slug: developer-api/api-key-management
+canonical-url: https://docs.6mm.com/ko/developer-api/api-key-management
+---
+
+API Key 관리 엔드포인트는 JWT 인증만 허용합니다.
+
+<h2 id="create-api-key">API Key 만들기</h2>
+
+```http
+POST /v1/private/user/api-key/create
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+요청 매개변수:
+
+| 매개변수     | 유형      | 필수 | 설명                                                           |
+| ------------- | --------- | -------- | --------------------------------------------------------------------- |
+| `label`       | string    | 네      | API Key 레이블, 길이 1 - 64                                          |
+| `permissions` | 지능       | 아니       | 권한 비트마스크, 기본 `1`, 범위 `1` - `7`                      |
+| `ipWhitelist` | 끈\[] | 아니       | 화이트리스트IP 최대 20개 항목까지 가능합니다. 생략할 경우 출처 IP은 제한이 없습니다 |
+
+요청 예시:
+
+```bash
+curl -X POST https://api.6mm.com/v1/private/user/api-key/create \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -d '{
+    "label": "external-service-prod",
+    "permissions": 3,
+    "ipWhitelist": ["203.0.113.10"]
+  }'
+```
+
+응답 예시:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "apiKey": "fx_xxxxxxxxxxxxxxxxxxxxxxxx",
+    "apiSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  },
+  "requestId": "req-api-key"
+}
+```
+
+`apiSecret` API Key 가 생성될 때 단 한 번만 반환됩니다. 즉시 비밀 관리 시스템에 저장하세요. 소스 코드 저장소나 로그에 기록하지 마세요.
+
+각 사용자는 최대 30개의 API 키를 만들 수 있습니다.
+
+<h2 id="list-api-keys">API 키 목록</h2>
+
+```http
+GET /v1/private/user/api-key/list
+Authorization: Bearer YOUR_ACCESS_TOKEN
+```
+
+응답 필드:
+
+| 필드                | 유형      | 설명                       |
+| -------------------- | --------- | --------------------------------- |
+| `list[].id`          | string    | API Key ID                        |
+| `list[].label`       | string    | 레이블                             |
+| `list[].apiKey`      | string    | 공 API Key 식별자         |
+| `list[].permissions` | 지능       | 비트마스크 허가                |
+| `list[].ipWhitelist` | 끈\[] | IP 화이트리스트                      |
+| `list[].status`      | 지능       | 상태: `1` 활성화됨, `0` 비활성화됨 |
+| `list[].lastUsedAt`  | int64     | 마지막 사용 시간                    |
+| `list[].createdAt`   | int64     | 생성 시간                     |
+
+<h2 id="update-api-key">업데이트 API Key</h2>
+
+```http
+PUT /v1/private/user/api-key/update
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+요청 매개변수:
+
+| 매개변수     | 유형      | 필수 | 설명               |
+| ------------- | --------- | -------- | ------------------------- |
+| `id`          | string    | 네      | API Key ID                |
+| `label`       | string    | 아니       | 새 레이블                 |
+| `permissions` | 지능       | 아니       | 새 허가 비트마스크    |
+| `ipWhitelist` | 끈\[] | 아니       | 새로운 IP 화이트리스트          |
+| `status`      | 지능       | 아니       | `1` 활성화, `0` 비활성화 |
+
+<h2 id="delete-api-key">삭제 API Key</h2>
+
+```http
+POST /v1/private/user/api-key/delete
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+요청 본문:
+
+```json
+{ "id": "1001" }
+```
+
+<h2 id="delete-all-api-keys">모든 API 키를 삭제하세요</h2>
+
+```http
+POST /v1/private/user/api-key/delete-all
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+응답 필드:
+
+| 필드     | 유형  | 설명                |
+| --------- | ----- | -------------------------- |
+| `deleted` | int64 | 삭제된 API 키 수 |
+
+<h2 id="related-security-guides">관련 보안 가이드</h2>
+
+- [인증](/ko/developer-api/authentication)
+- [요청 서명](/ko/developer-api/request-signing)
+- [비밀과 서명](/ko/sdk/security/secrets-signing)
+- [통합 권고](/ko/developer-api/integration-recommendations)
