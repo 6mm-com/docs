@@ -22,6 +22,88 @@
     { code: "ar", label: "العربية", widget: "ar", aliases: ["ar", "ar-sa"] },
   ];
   var localeLabels = {};
+  var interfaceLabels = {
+    "": {
+      chooseLanguage: "Choose language",
+      closeLanguage: "Close language selector",
+    },
+    ja: {
+      chooseLanguage: "言語を選択",
+      closeLanguage: "言語選択を閉じる",
+    },
+    ru: {
+      chooseLanguage: "Выберите язык",
+      closeLanguage: "Закрыть выбор языка",
+    },
+    "es-419": {
+      chooseLanguage: "Seleccionar idioma",
+      closeLanguage: "Cerrar selector de idioma",
+    },
+    it: {
+      chooseLanguage: "Scegli la lingua",
+      closeLanguage: "Chiudi selezione lingua",
+    },
+    fr: {
+      chooseLanguage: "Choisir la langue",
+      closeLanguage: "Fermer le sélecteur de langue",
+    },
+    de: {
+      chooseLanguage: "Sprache auswählen",
+      closeLanguage: "Sprachauswahl schließen",
+    },
+    "zh-CN": {
+      chooseLanguage: "选择语言",
+      closeLanguage: "关闭语言选择器",
+    },
+    "zh-TW": {
+      chooseLanguage: "選擇語言",
+      closeLanguage: "關閉語言選擇器",
+    },
+    "pt-BR": {
+      chooseLanguage: "Selecionar idioma",
+      closeLanguage: "Fechar seletor de idioma",
+    },
+    id: {
+      chooseLanguage: "Pilih bahasa",
+      closeLanguage: "Tutup pemilih bahasa",
+    },
+    pl: {
+      chooseLanguage: "Wybierz język",
+      closeLanguage: "Zamknij wybór języka",
+    },
+    vi: {
+      chooseLanguage: "Chọn ngôn ngữ",
+      closeLanguage: "Đóng trình chọn ngôn ngữ",
+    },
+    uk: {
+      chooseLanguage: "Виберіть мову",
+      closeLanguage: "Закрити вибір мови",
+    },
+    "pt-PT": {
+      chooseLanguage: "Selecionar idioma",
+      closeLanguage: "Fechar seletor de idioma",
+    },
+    "es-ES": {
+      chooseLanguage: "Seleccionar idioma",
+      closeLanguage: "Cerrar selector de idioma",
+    },
+    tr: {
+      chooseLanguage: "Dil seçin",
+      closeLanguage: "Dil seçiciyi kapat",
+    },
+    ko: {
+      chooseLanguage: "언어 선택",
+      closeLanguage: "언어 선택기 닫기",
+    },
+    el: {
+      chooseLanguage: "Επιλογή γλώσσας",
+      closeLanguage: "Κλείσιμο επιλογής γλώσσας",
+    },
+    ar: {
+      chooseLanguage: "اختيار اللغة",
+      closeLanguage: "إغلاق محدد اللغة",
+    },
+  };
   var localeOrder = locales.map(function (locale) {
     localeLabels[locale.code] = locale.label;
     return locale.code;
@@ -95,6 +177,10 @@
       locale: locale,
       pagePath: segments.length ? "/" + segments.join("/") : "/",
     };
+  }
+
+  function currentInterfaceLabels() {
+    return interfaceLabels[currentDocsLocale()] || interfaceLabels[""];
   }
 
   function localizedPath(locale, pagePath) {
@@ -221,14 +307,24 @@
     return typeof window.innerWidth === "number" && window.innerWidth <= 1023;
   }
 
-  function closeMobileLocaleDialog() {
+  function closeMobileLocaleDialog(restoreFocus) {
     if (!mobileLocaleDialog) return;
     var dialog = mobileLocaleDialog;
     var trigger = mobileLocaleTrigger;
     mobileLocaleDialog = null;
     mobileLocaleTrigger = null;
     dialog.remove();
-    if (trigger && trigger.isConnected) trigger.focus({ preventScroll: true });
+    document.documentElement.classList.remove(
+      "sixmm-mobile-language-dialog-open",
+    );
+    if (
+      restoreFocus !== false &&
+      trigger &&
+      trigger.isConnected &&
+      isMobileViewport()
+    ) {
+      trigger.focus({ preventScroll: true });
+    }
   }
 
   function openMobileLocaleDialog(trigger) {
@@ -237,11 +333,15 @@
     var route = currentRoute();
     var root = document.createElement("div");
     root.className = "sixmm-mobile-language-dialog";
+    root.dataset.sixmmLocale = route.locale;
 
     var backdrop = document.createElement("button");
     backdrop.type = "button";
     backdrop.className = "sixmm-mobile-language-dialog-backdrop";
-    backdrop.setAttribute("aria-label", "Close language selector");
+    backdrop.setAttribute(
+      "aria-label",
+      currentInterfaceLabels().closeLanguage,
+    );
     backdrop.addEventListener("click", closeMobileLocaleDialog);
 
     var panel = document.createElement("div");
@@ -255,12 +355,15 @@
 
     var heading = document.createElement("h2");
     heading.id = "sixmm-mobile-language-title";
-    heading.textContent = "Choose language";
+    heading.textContent = currentInterfaceLabels().chooseLanguage;
 
     var closeButton = document.createElement("button");
     closeButton.type = "button";
     closeButton.className = "sixmm-mobile-language-dialog-close";
-    closeButton.setAttribute("aria-label", "Close language selector");
+    closeButton.setAttribute(
+      "aria-label",
+      currentInterfaceLabels().closeLanguage,
+    );
     closeButton.textContent = "×";
     closeButton.addEventListener("click", closeMobileLocaleDialog);
 
@@ -278,7 +381,7 @@
         option.setAttribute("aria-current", "true");
       }
       option.addEventListener("click", function () {
-        closeMobileLocaleDialog();
+        closeMobileLocaleDialog(false);
         navigateDocsLocale(locale.code);
       });
       options.appendChild(option);
@@ -294,11 +397,30 @@
       if (event.key === "Escape") {
         event.preventDefault();
         closeMobileLocaleDialog();
+        return;
+      }
+      if (event.key === "Tab") {
+        var focusable = Array.from(
+          panel.querySelectorAll('button:not([disabled])'),
+        );
+        var first = focusable[0];
+        var last = focusable[focusable.length - 1];
+        if (!first || !last) return;
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
       }
     });
 
     mobileLocaleTrigger = trigger;
     mobileLocaleDialog = root;
+    document.documentElement.classList.add(
+      "sixmm-mobile-language-dialog-open",
+    );
     document.body.appendChild(root);
     closeButton.focus({ preventScroll: true });
   }
@@ -311,7 +433,7 @@
       "pointerdown",
       function (event) {
         if (!isMobileViewport()) return;
-        event.stopPropagation();
+        event.stopImmediatePropagation();
       },
       true,
     );
@@ -328,6 +450,7 @@
   }
 
   function enhanceLocaleMenus() {
+    var labels = currentInterfaceLabels();
     Array.from(
       document.querySelectorAll(".fern-language-dropdown-content"),
     ).forEach(function (menu) {
@@ -335,9 +458,13 @@
         menu.classList.add("sixmm-language-menu-enhanced");
         var heading = document.createElement("div");
         heading.className = "sixmm-native-language-heading";
-        heading.textContent = "Choose language";
         menu.insertBefore(heading, menu.firstChild);
       }
+      var heading = menu.querySelector(".sixmm-native-language-heading");
+      if (heading && heading.textContent !== labels.chooseLanguage) {
+        heading.textContent = labels.chooseLanguage;
+      }
+      menu.setAttribute("aria-label", labels.chooseLanguage);
       guardLocaleMenu(menu);
       syncLocaleMenu(menu);
     });
@@ -346,6 +473,7 @@
   function enhanceSettingsControls() {
     var route = currentRoute();
     var currentLabel = localeLabels[route.locale] || localeLabels[""];
+    var labels = currentInterfaceLabels();
 
     Array.from(
       document.querySelectorAll(
@@ -358,7 +486,7 @@
     Array.from(document.querySelectorAll(".fern-language-selector")).forEach(
       function (selector) {
         guardMobileLocaleTrigger(selector);
-        selector.setAttribute("aria-label", "Choose language");
+        selector.setAttribute("aria-label", labels.chooseLanguage);
         selector.removeAttribute("title");
         var visibleLabel = selector.querySelector(
           ".language-dropdown-trigger .truncate",
@@ -399,6 +527,13 @@
 
   function syncLocaleTabs() {
     var route = currentRoute();
+    if (
+      mobileLocaleDialog &&
+      (!isMobileViewport() ||
+        mobileLocaleDialog.dataset.sixmmLocale !== route.locale)
+    ) {
+      closeMobileLocaleDialog(false);
+    }
     document.documentElement.dataset.sixmmDocsLocale =
       route.locale || "en";
   }
@@ -562,8 +697,17 @@
   // locale immediately so standalone navigation tabs never flash on first paint.
   syncLocaleTabs();
   document.addEventListener("DOMContentLoaded", scheduleSync);
-  window.addEventListener("pageshow", scheduleSync);
-  window.addEventListener("popstate", scheduleSync);
+  window.addEventListener("pageshow", function () {
+    closeMobileLocaleDialog(false);
+    scheduleSync();
+  });
+  window.addEventListener("popstate", function () {
+    closeMobileLocaleDialog(false);
+    scheduleSync();
+  });
+  window.addEventListener("resize", function () {
+    if (!isMobileViewport()) closeMobileLocaleDialog(false);
+  });
   new MutationObserver(scheduleSync).observe(document.documentElement, {
     childList: true,
     subtree: true,

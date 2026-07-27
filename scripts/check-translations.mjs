@@ -559,10 +559,27 @@ for (const mobileDialogContract of [
   "sixmm-mobile-language-dialog",
   'window.matchMedia("(max-width: 1023px)")',
   "event.stopImmediatePropagation()",
+  "sixmm-mobile-language-dialog-open",
+  "document.activeElement === last",
+  'window.addEventListener("resize"',
 ]) {
   if (!languageScript.includes(mobileDialogContract)) {
     pushError(
       `The stable mobile language dialog is missing ${mobileDialogContract}`,
+    );
+  }
+}
+for (const localizedControlLabel of [
+  "选择语言",
+  "選擇語言",
+  "言語を選択",
+  "언어 선택",
+  "Επιλογή γλώσσας",
+  "اختيار اللغة",
+]) {
+  if (!languageScript.includes(localizedControlLabel)) {
+    pushError(
+      `The language dialog is missing localized control text: ${localizedControlLabel}`,
     );
   }
 }
@@ -576,6 +593,19 @@ if (
 ) {
   pushError(
     "The independent mobile language dialog must remain centered within the viewport",
+  );
+}
+if (
+  !/html\.sixmm-mobile-language-dialog-open,\s*html\.sixmm-mobile-language-dialog-open body\s*\{[^}]*overflow:\s*hidden\s*!important;[^}]*overscroll-behavior:\s*none;/s.test(
+    styles,
+  ) ||
+  !/\.sixmm-mobile-language-dialog-options\s*\{[^}]*direction:\s*ltr;[^}]*-webkit-overflow-scrolling:\s*touch;/s.test(
+    styles,
+  ) ||
+  /(?:^|\n)div:has\(>\s*\.fern-language-selector\s*\+\s*button\)/.test(styles)
+) {
+  pushError(
+    "The mobile language dialog must lock background scrolling and mobile settings styles must not leak into desktop containers",
   );
 }
 if (

@@ -314,6 +314,12 @@ body:has(.sixmm-language-menu-enhanced[data-state="open"])::before {
   padding: 1rem;
 }
 
+html.sixmm-mobile-language-dialog-open,
+html.sixmm-mobile-language-dialog-open body {
+  overflow: hidden !important;
+  overscroll-behavior: none;
+}
+
 .sixmm-mobile-language-dialog-backdrop {
   position: absolute;
   z-index: 0;
@@ -326,6 +332,7 @@ body:has(.sixmm-language-menu-enhanced[data-state="open"])::before {
   backdrop-filter: blur(5px);
   -webkit-backdrop-filter: blur(5px);
   cursor: default;
+  touch-action: none;
 }
 
 .sixmm-mobile-language-dialog-panel {
@@ -387,6 +394,8 @@ body:has(.sixmm-language-menu-enhanced[data-state="open"])::before {
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: 0.5rem 1rem calc(1.25rem + env(safe-area-inset-bottom));
+  direction: ltr;
+  -webkit-overflow-scrolling: touch;
 }
 
 .sixmm-mobile-language-dialog-option {
@@ -403,6 +412,12 @@ body:has(.sixmm-language-menu-enhanced[data-state="open"])::before {
   unicode-bidi: plaintext;
   cursor: pointer;
   touch-action: manipulation;
+  overflow-wrap: anywhere;
+}
+
+.sixmm-mobile-language-dialog-option[data-sixmm-locale="ar"] {
+  direction: rtl;
+  text-align: right;
 }
 
 .sixmm-mobile-language-dialog
@@ -958,7 +973,7 @@ article:has(.sixmm-home) > .fern-page-heading {
 }
 
 .sixmm-mobile-settings-bar,
-div:has(> .fern-language-selector + button) {
+div[class~="lg:hidden"]:has(> .fern-language-selector + button) {
   width: fit-content !important;
   max-width: 100% !important;
   flex-direction: row !important;
@@ -975,7 +990,8 @@ div:has(> .fern-language-selector + button) {
 }
 
 .sixmm-mobile-settings-bar > .fern-language-selector,
-div:has(> .fern-language-selector + button) > .fern-language-selector {
+div[class~="lg:hidden"]:has(> .fern-language-selector + button)
+  > .fern-language-selector {
   width: 2.75rem !important;
   height: 2.75rem !important;
   flex: 0 0 2.75rem !important;
@@ -986,7 +1002,7 @@ div:has(> .fern-language-selector + button) > .fern-language-selector {
 }
 
 .sixmm-mobile-theme-trigger,
-div
+div[class~="lg:hidden"]
   > .fern-language-selector
   + button:has(
     > svg.lucide-sun,
@@ -1058,7 +1074,7 @@ div
 }
 
 .sixmm-mobile-theme-trigger svg,
-div
+div[class~="lg:hidden"]
   > .fern-language-selector
   + button:has(
     > svg.lucide-sun,
@@ -1079,7 +1095,7 @@ div
     :focus-visible,
     [data-state="open"]
   ),
-div
+div[class~="lg:hidden"]
   > .fern-language-selector
   + button:has(
     > svg.lucide-sun,
