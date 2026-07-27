@@ -1,0 +1,66 @@
+---
+title: "파트너 통합 보안 아키텍처"
+subtitle: "임베디드 트레이딩, API, SDK, webhook, 자산 이전 및 운영 통합을 위한 신뢰 경계와 생산 통제를 설계합니다."
+slug: solutions/security-architecture
+canonical-url: https://docs.6mm.com/ko/solutions/security-architecture
+---
+
+이 페이지는 파트너가 어떻게 안전한 6MM 통합을 설계해야 하는지에 초점을 맞추고 있습니다. 거래 플랫폼 전반에 걸쳐 사용되는 광범위한 보안 계층에 대해서는 다음을 참조하세요 [플랫폼 보안 아키텍처](/ko/security-compliance/security-architecture).
+
+운영 통합 시작 전에 보안 아키텍처에 대해 합의해야 합니다. 이는 파트너 시스템이 사용자 검증, 토큰 발급, 비밀 저장, 이벤트 수신, 운영 모니터링, 사고 대응 방식에 영향을 미칩니다.
+
+<h2 id="recommended-trust-boundary">권장 신탁 경계</h2>
+
+| 구성 요소 | 포함될 수 있습니다 | 포함해서는 안 된다 |
+| --- | --- | --- |
+| 파트너 프론트엔드 | 공개 구성, 짧은 시간 입력 결과, 비민감 UI 상태 | 파트너 API 비밀, 서명 키, 특권 백엔드 자격 증명 |
+| 파트너 백엔드 | 사용자 매핑, 보호 자격 증명, 서명 논리, webhook 처리 | 클라이언트 응답이나 공개 로그를 통해 노출된 비밀 |
+| 6MM 통합 엔드포인트 | 승인된 서명 요청, 토큰, webhook 전달 | 검증되지 않은 파트너 측 사용자 가정 |
+
+파트너 프론트엔드는 파트너 백엔드에 특권 작업을 호출해야 합니다. 백엔드는 파트너 사용자를 검증하고, 승인된 API 또는 SDK를 통해 6MM 호출하며, 프론트엔드가 필요로 하는 단기간의 결과만 반환합니다.
+
+<h2 id="security-layers">보안 계층</h2>
+
+| 층 | 필수 집중 |
+| --- | --- |
+| API 자격증 | 백엔드 전용 저장소, 회전 계획, 접근 제어. |
+| 요청 서명 | 일관된 타임스탬프, 서명, 재생 보호 처리. |
+| 임베드 토큰 | 단기간 발급, 자격심사, 명확한 무효화 행동. |
+| Webhooks | 서명 검증, 멮등성, 재시도, 이벤트 감사 로그. |
+| 운영 | 접근 역할, 사건 상향 조정, 모니터링, 증거 보관. |
+
+<h2 id="production-control-plan">생산 통제 계획</h2>
+
+| 통제 구역 | 최소 실행 증거 |
+| --- | --- |
+| 자격 증명 저장 | 비밀 관리자 위치, 접근 소유자, 환경 분리, 회전 프로세스. |
+| 사용자 입력 | 세션 검증, 자격 확인, 단기간 토큰 흐름, 실패 처리. |
+| 서명된 요청 | 올바른 환경, 동기화된 시간, 요청 기록, 서명 오류 알림. |
+| 자산 운영 | 고유한 비즈니스 ID, 타임아웃 조정, 상태 조회, 운영자 검토 경로. |
+| Webhooks | 원시 신체 서명 검증, 재생 제어, 멮등성 저장, 재시도 안전 처리. |
+| 모니터링 | 인증 실패, 비정상적인 재시도, webhook 지연, 운영 오류에 대한 경고. |
+| 사건 대응 | 지정 소유자, 에스컬레이션 채널, 증거 보관, 자격 증명 취소 절차. |
+
+<h2 id="launch-review">발사 검토</h2>
+
+제작 전:
+
+1. 사용자, 토큰, 요청, 자산, webhook 데이터 흐름을 그립니다.
+2. 모든 자격 증명이 생성, 저장, 사용, 기록, 회전, 취소되는 장소를 표시하세요.
+3. 만료된 토큰, 유효하지 않은 서명, 타임아웃, 중복 webhooks, 재연결 동작 테스트.
+4. 지원팀이 요청 또는 사업자 식별 정보를 통해 운영을 찾을 수 있는지 확인.
+5. 완성 [생산 출시 체크리스트](/ko/solutions/production-launch-checklist).
+
+<h2 id="recommended-docs">추천 의사</h2>
+
+<CardGroup cols={3}>
+<Card title="비밀과 서명" icon="fa-duotone fa-key" href="/ko/sdk/security/secrets-signing">
+Agent SDK 자격 증명과 서명된 요청을 보호하세요.
+</Card>
+<Card title="요청 서명" icon="fa-duotone fa-signature" href="/ko/developer-api/request-signing">
+직접 Developer API 요청 서명을 구현하세요.
+</Card>
+<Card title="Webhook 및 등등성" icon="fa-duotone fa-webhook" href="/ko/sdk/security/webhooks-idempotency">
+사건을 안전하게 처리하세요.
+</Card>
+</CardGroup>

@@ -1,0 +1,127 @@
+---
+title: "Sürekli İşlem Ücreti Yapısı"
+description: "U-marjlı sürekli sözleşmeler için 6MM yapıcı, alıcı, finansman, tasfiye ve uzlaşma ücreti modeline referans verin."
+slug: trading/fee-structure
+canonical-url: https://docs.6mm.com/tr/trading/fee-structure
+---
+
+6MM , U-marjlı sürekli sözleşmeler için şeffaf ve icra temelli bir ücret modeli uygular.
+
+Ücretler yalnızca işlemler yürütüldüğünde alınır ve piyasa likiditesi ile işlem davranışıyla uyumlu şekilde tasarlanmıştır.
+
+Bu sayfa, ücret kategorileri ve uzlaşma için referans olarak nitelendirilmiştir. Sipariş defteri derinliği ve uygulama fiyatının toplam işlem maliyetini nasıl etkilediğini anlamak için bakınız. [Ticaret Maliyetleri: Ücretler ve Kayma](/tr/trading/fees-and-slippage).
+
+***
+
+<h2 id="trading-fees-overview">İşlem Ücretleri Genel Bakış</h2>
+
+6MM üzerindeki işlem ücretleri şu temellere göre hesaplanır:
+
+* Gerçekleştirilen ticaret değeri
+* Sipariş türü (Yapan veya Alan)
+* Ticaret çifti ve partner yapılandırması
+
+Doldurulmamış veya iptal edilen emirler herhangi bir ücret talep etmez.
+
+Uygulanan bir büyüklük için genel hesaplama şöyledir:
+
+```text
+executed notional = execution price × executed quantity
+trading fee = executed notional × applicable maker or taker fee rate
+```
+
+Uygulanabilir oran, işlem çifti ve partner konfigürasyonuna bağlıdır. Sipariş vermeden önce gösterilen oranı onaylayın.
+
+***
+
+<h2 id="maker-fees">Maker Ücretleri</h2>
+
+Bir emir sipariş defterine likidite eklediğinde maker ücretleri uygulanır.
+
+Tipik üretici siparişleri:
+
+* Hemen uygulanmayan limit emirleri
+* Sipariş defterinde yer alan emirler
+
+Maker ücretleri genellikle daha düşüktür ve piyasa derinliğini desteklemek için teşvik edilebilir.
+
+***
+
+<h2 id="taker-fees">Alıcı Ücretleri</h2>
+
+Bir emir likiditeyi emir defterinden kaldırdığında alıcı ücretleri uygulanır.
+
+Tipik alıcı emirleri:
+
+* Piyasa emirleri
+* Limit emirleri hemen uygulanır
+
+Alıcı ücretleri genellikle anında uygulandığı için daha yüksektir.
+
+***
+
+<h2 id="funding-fees">Fonlama Ücretleri</h2>
+
+İşlem ücretlerine ek olarak, sürekli sözleşmeler finansman ödemelerini de içerir.
+
+* Fonlama ücretleri uzun ve kısa pozisyonlar arasında değiş tokuş edilir
+* 6MM fon ücreti toplamaz
+* Fonlama oranları piyasa koşullarına göre değişir
+
+Fonlama ödemeleri, sözleşme fiyatlarının spot piyasa ile uyumlu tutulmasına yardımcı olur.
+
+***
+
+<h2 id="liquidation-related-fees">Tasfiye ile İlgili Ücretler</h2>
+
+Tasfiye gerçekleştiğinde:
+
+* Tasfiye ücreti uygulanabilir
+* Ücretler, sistem riski ve piyasa uygulama maliyetlerini karşılamak için kullanılır
+
+Özel tasfiye ücreti kuralları, ortak yapılandırmasına bağlıdır.
+
+***
+
+<h2 id="fee-settlement">Ücret Tazminatı</h2>
+
+* Ücretler stablecoinlerde (örneğin USDT) tas edilir
+* Ücretler doğrudan Sürekli Hesaptan düşülür
+* Ücret hesaplamaları uygulamada gerçek zamanlı olarak gerçekleşir
+
+***
+
+<h2 id="fee-transparency">Ücret Şeffaflığı</h2>
+
+6MM şunları sağlar:
+
+* Ücret mantığı deterministik ve denetlenebilir
+* Ücret hesaplamaları emir yürütme sırasında görünür
+* Ortaklar, nihai kullanıcı karşısında ücret sunumu üzerinde kontrolü elinde tutar
+
+***
+
+<h2 id="beginner-tips">Başlangıç İpuçları</h2>
+
+* Alıcı ücretlerini azaltmak için limit emirleri kullanın
+* Aşırı aşırı ticaretten kaçının
+* TP/SL seviyelerini hesaplarken ücretleri göz önünde bulundurun
+* Büyük pozisyonlar açmadan önce ücret oranlarını gözden geçirin
+
+***
+
+<h2 id="summary">Özet</h2>
+
+6MMHakkında :
+
+* Ücretler yürütme temelli ve şeffaftır
+* Maker ve alıcı modelleri sağlıklı likiditeyi destekler
+* Fonlama ücretleri eşler arasıdır, platform geliri değildir
+
+Ücret yapısını anlamak, kullanıcıların daha verimli ve sürdürülebilir işlem yapmalarına yardımcı olur.
+
+<h2 id="related-cost-guides">İlgili maliyet rehberleri</h2>
+
+- [Ücretler ve Kayma](/tr/trading/fees-and-slippage): toplam uygulama maliyetini tahmin edin.
+- [Sürekli Sözleşmeler](/tr/trading/perpetual-contracts): finansman ve uzlaşmayı anlamak.
+- [Kurumsal Likidite](/tr/solutions/institutional-liquidity): Piyasa derinliği ve spreadlerin rolünü gözden geçirin.

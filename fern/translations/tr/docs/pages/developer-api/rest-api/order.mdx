@@ -1,0 +1,420 @@
+---
+title: "Düzen"
+description: "İzinleri, tanımlayıcıları ve yaşam döngüsü durumlarını işlerken sürekli siparişleri oluşturmak, sorgulamak, iptal etmek ve yönetmek için 6MM sıra uç noktalarını kullanın."
+slug: developer-api/rest-api/order
+canonical-url: https://docs.6mm.com/tr/developer-api/rest-api/order
+---
+
+> **Not**
+>
+> Sipariş uç noktaları işlem izni gerektirir.
+
+<h2 id="place-order">Yer Siparişi</h2>
+
+```http
+POST /v1/private/order/place
+Content-Type: application/json
+```
+
+**Talep parametreleri:**
+
+| Parametre       | Tip   | Gerekli               | Tanım                                                                                                                   |
+| --------------- | ------ | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `symbol`        | string | Evet                    | Sembol                                                                                                                        |
+| `type`          | string | Evet                    | `LIMIT` / `MARKET`                                                                                                            |
+| `side`          | string | Evet                    | `BUY` / `SELL`                                                                                                                |
+| `positionSide`  | string | Hayır                     | `BOTH` / `LONG` / `SHORT`, varsayılan `BOTH`                                                                                     |
+| `price`         | string | Koşullu olarak gereklidir | Limit emirleri için gerekli                                                                                                     |
+| `quantity`      | string | Koşullu olarak gereklidir | Miktar. Atlandığında `closePosition=true`                                                                            |
+| `timeInForce`   | string | Hayır                     | `GTC` / `IOC` / `FOK`, varsayılan `GTC`                                                                                          |
+| `reduceOnly`    | bool   | Hayır                     | Sadece azalt, varsayılan `false`                                                                                                  |
+| `makerOnly`     | bool   | Hayır                     | Sadece üretici için, varsayılan `false`                                                                                                   |
+| `closePosition` | bool   | Hayır                     | Tüm pozisyonu kapat, varsayılan `false`                                                                                    |
+| `clientOrderId` | string | Hayır                     | İstemci tarafından tanımlanan sipariş kimliği                                                                                                       |
+| `placeType`     | string | Hayır                     | Sipariş yerleştirme tipi işaretleyici                                                                                                   |
+| `priceType`     | int32  | Hayır                     | BBO fiyat türü: `0` fiyat, `1` rakip fiyat 1, `2` rakip fiyat 5, `3` aynı taraf fiyatı 1 `4` aynı taraf fiyatı 5 |
+
+**Örnek iste:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "type": "LIMIT",
+  "side": "BUY",
+  "price": "85000",
+  "quantity": "0.1",
+  "timeInForce": "GTC",
+  "makerOnly": true,
+  "clientOrderId": "ext-1772710377808-001"
+}
+```
+
+**Yanıt alanları:**
+
+| Saha           | Tip   | Tanım             |
+| --------------- | ------ | ----------------------- |
+| `orderId`       | string | Sunucu sipariş kimliği         |
+| `clientOrderId` | string | İstemci tarafından tanımlanan sipariş kimliği |
+| `status`        | string | Sipariş durumu            |
+| `timestamp`     | int64  | Zaman damgası               |
+
+<h2 id="batch-place-orders">Toplu Siparişler</h2>
+
+```http
+POST /v1/private/order/batch-place
+Content-Type: application/json
+```
+
+**Talep bedeni:**
+
+```json
+{
+  "orders": [
+    {
+      "symbol": "BTCUSDT",
+      "type": "LIMIT",
+      "side": "BUY",
+      "price": "85000",
+      "quantity": "0.1",
+      "clientOrderId": "ext-buy-001"
+    }
+  ]
+}
+```
+
+**Yanıt alanları:**
+
+| Saha          | Tip  | Tanım                 |
+| -------------- | ----- | --------------------------- |
+| `successCount` | int32 | Başarılı sipariş sayısı |
+| `failedCount`  | int32 | Başarısız emir sayısı     |
+| `results[]`    | array | Her sipariş için sonuç       |
+
+<h2 id="place-condition-order">Yer Koşulu Sırası</h2>
+
+```http
+POST /v1/private/order/place-condition
+Content-Type: application/json
+```
+
+**Talep parametreleri:**
+
+| Parametre       | Tip   | Gerekli               | Tanım                                                                                 |
+| --------------- | ------ | ---------------------- | ------------------------------------------------------------------------------------------- |
+| `symbol`        | string | Evet                    | Sembol                                                                                      |
+| `type`          | string | Evet                    | `STOP_MARKET` / `TAKE_PROFIT_MARKET` / `STOP_LIMIT` / `TAKE_PROFIT_LIMIT` / `TRAILING_STOP` |
+| `side`          | string | Evet                    | `BUY` / `SELL`                                                                              |
+| `positionSide`  | string | Hayır                     | `BOTH` / `LONG` / `SHORT`                                                                   |
+| `price`         | string | Koşullu olarak gereklidir | `STOP_LIMIT` / `TAKE_PROFIT_LIMIT` için zorunlu                                             |
+| `quantity`      | string | Koşullu olarak gereklidir | Miktar. Atlandığında `closePosition=true`                                          |
+| `timeInForce`   | string | Hayır                     | `GTC` / `IOC` / `FOK` / `GTE_GTC`                                                           |
+| `reduceOnly`    | bool   | Hayır                     | Sadece azalt                                                                                 |
+| `clientOrderId` | string | Hayır                     | İstemci tarafından tanımlanan sipariş kimliği                                                                     |
+| `stopPrice`     | string | Koşullu olarak gereklidir | Tetikleyici fiyat                                                                               |
+| `workingType`   | string | Hayır                     | `MARK_PRICE` / `CONTRACT_PRICE`, varsayılan `CONTRACT_PRICE`                                   |
+| `priceProtect`  | bool   | Hayır                     | Fiyat korumasının mümkün olup olmadığı                                                         |
+| `activatePrice` | string | Koşullu olarak gereklidir | Takip eden emir aktivasyon fiyatı                                                             |
+| `callbackRate`  | string | Koşullu olarak gereklidir | Takip eden sipariş geri çağrı oranı                                                                |
+| `closePosition` | bool   | Hayır                     | Tüm pozisyonu kapat                                                                   |
+
+**Yanıt alanları:**
+
+| Saha             | Tip   | Tanım            |
+| ----------------- | ------ | ---------------------- |
+| `conditionId`     | string | Durum Sırası Kimliği     |
+| `conditionStatus` | string | Durum sırası durumu |
+| `timestamp`       | int64  | Zaman damgası              |
+
+<h2 id="place-strategy-order">Yerleştirme Stratejisi Sırası</h2>
+
+```http
+POST /v1/private/order/place-strategy
+Content-Type: application/json
+```
+
+**Talep parametreleri:**
+
+| Parametre      | Tip   | Gerekli | Tanım             |
+| -------------- | ------ | -------- | ----------------------- |
+| `strategyType` | string | Evet      | `OTOCO` / `OTO` / `OCO` |
+| `subOrderList` | array  | Evet      | Alt sıralar listesi          |
+
+`subOrderList[]`'daki alanlar çoğunlukla normal mertebeler ve koşul sıralarıyla aynıdır, ek bağımlılık alanları içerir:
+
+| Parametre        | Tip   | Tanım                                     |
+| ---------------- | ------ | ----------------------------------------------- |
+| `strategySubId`  | int64  | Alt sıra ID'si                                    |
+| `firstDrivenId`  | int64  | İlk sürüş emri kimliği. `0` bağımlılık yok demektir |
+| `firstDrivenOn`  | string | İlk tetikleme durumu                         |
+| `firstTrigger`   | string | İlk tetikleme eylemi                            |
+| `secondDrivenId` | int64  | İkinci sürüş emri kimliği                         |
+| `secondDrivenOn` | string | İkinci tetikleyici koşulu                        |
+| `secondTrigger`  | string | İkinci tetikleme eylemi                           |
+
+**Yanıt alanları:**
+
+| Saha            | Tip   | Tanım     |
+| ---------------- | ------ | --------------- |
+| `strategyId`     | string | Strateji Kimliği     |
+| `strategyStatus` | string | Strateji durumu |
+| `timestamp`      | int64  | Zaman damgası       |
+
+<h2 id="query-single-order">Tek Sıra Sorgu</h2>
+
+```http
+GET /v1/private/order?symbol=BTCUSDT&orderId=2022543809547603968
+```
+
+**Talep parametreleri:**
+
+| Parametre       | Tip   | Gerekli | Tanım             |
+| --------------- | ------ | -------- | ----------------------- |
+| `symbol`        | string | Evet      | Sembol                  |
+| `orderId`       | string | Hayır       | Sunucu sipariş kimliği         |
+| `clientOrderId` | string | Hayır       | İstemci tarafından tanımlanan sipariş kimliği |
+
+En az `orderId` ve `clientOrderId` biri sağlanmalıdır. Her ikisi de sağlanırsa, sunucu her iki koşulda da tam bir eşleşme gerçekleştirir.
+
+<h2 id="current-normal-orders">Mevcut Normal Siparişler</h2>
+
+```http
+GET /v1/private/order/current?symbol=BTCUSDT
+```
+
+**Talep parametreleri:**
+
+| Parametre     | Tip   | Gerekli | Tanım        |
+| ------------- | ------ | -------- | ------------------ |
+| `symbol`      | string | Hayır       | Sembol             |
+| `limit`       | int32  | Hayır       | Dönüş sayısı sınırı |
+| `lastOrderId` | int64  | Hayır       | İmleç alanı       |
+
+**Yanıt alanları:**
+
+| Saha    | Tip  | Tanım               |
+| -------- | ----- | ------------------------- |
+| `list[]` | array | Mevcut normal sıralar listesi |
+| `total`  | int32 | Kont                     |
+
+<h2 id="current-condition-orders">Mevcut Durum Emirleri</h2>
+
+```http
+GET /v1/private/order/current-condition?symbol=BTCUSDT
+```
+
+**Talep parametreleri:**
+
+| Parametre | Tip   | Gerekli | Tanım |
+| --------- | ------ | -------- | ----------- |
+| `symbol`  | string | Hayır       | Sembol      |
+
+<h2 id="historical-normal-orders">Tarihsel Normal Emirler</h2>
+
+```http
+GET /v1/private/order/history?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+**Talep parametreleri:**
+
+| Parametre       | Tip   | Gerekli | Tanım                              |
+| --------------- | ------ | -------- | ---------------------------------------- |
+| `symbol`        | string | Hayır       | Sembol                                   |
+| `orderId`       | string | Hayır       | Tam sıra ID filtresi                    |
+| `clientOrderId` | string | Hayır       | Kesin müşteri siparişi ID filtresi             |
+| `type`          | int32  | Hayır       | Sipariş tipi filtre: `1` limiti, `2` piyasa |
+| `side`          | int32  | Hayır       | Yan filtre: `1` al, `2` sat           |
+| `status`        | int32  | Hayır       | Durum filtresi                            |
+| `startTime`     | int64  | Hayır       | Başlama zamanı                               |
+| `endTime`       | int64  | Hayır       | Son zaman                                 |
+| `page`          | int64  | Hayır       | Sayfa numarası, varsayılan `1`                 |
+| `pageSize`      | int64  | Hayır       | Sayfa başına öğeler, varsayılan `20`             |
+
+<h2 id="historical-condition-orders">Tarihi Durum Emirleri</h2>
+
+```http
+GET /v1/private/order/history-condition?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+**Talep parametreleri:**
+
+| Parametre   | Tip   | Gerekli | Tanım                    |
+| ----------- | ------ | -------- | ------------------------------ |
+| `symbol`    | string | Hayır       | Sembol                         |
+| `side`      | int32  | Hayır       | Yan filtre: `1` al, `2` sat |
+| `status`    | int32  | Hayır       | Durum filtresi                  |
+| `startTime` | int64  | Hayır       | Başlama zamanı                     |
+| `endTime`   | int64  | Hayır       | Son zaman                       |
+| `page`      | int64  | Hayır       | Sayfa numarası, varsayılan `1`       |
+| `pageSize`  | int64  | Hayır       | Sayfa başına öğeler, varsayılan `20`   |
+
+<h2 id="trade-records">Ticaret Kayıtları</h2>
+
+```http
+GET /v1/private/order/trades?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+**Talep parametreleri:**
+
+| Parametre   | Tip   | Gerekli | Tanım                  |
+| ----------- | ------ | -------- | ---------------------------- |
+| `symbol`    | string | Hayır       | Sembol                       |
+| `orderId`   | string | Hayır       | Sipariş Kimliği filtresi              |
+| `startTime` | int64  | Hayır       | Başlama zamanı                   |
+| `endTime`   | int64  | Hayır       | Son zaman                     |
+| `page`      | int64  | Hayır       | Sayfa numarası, varsayılan `1`     |
+| `pageSize`  | int64  | Hayır       | Sayfa başına öğeler, varsayılan `20` |
+
+**Yanıt alanları:**
+
+| Saha                 | Tip   | Tanım       |
+| --------------------- | ------ | ----------------- |
+| `list[].fillId`       | string | Dolgu detayı kimliği    |
+| `list[].tradeId`      | string | Ticari kayıt kimliği   |
+| `list[].orderId`      | string | Sipariş Kimliği          |
+| `list[].symbol`       | string | Sembol            |
+| `list[].side`         | string | Yan Takım              |
+| `list[].roleType`     | string | `maker` / `taker` |
+| `list[].price`        | string | Doldurulmuş fiyat      |
+| `list[].quantity`     | string | Doldurulan miktar   |
+| `list[].tradeValue`   | string | Ticaret değeri       |
+| `list[].handlingFee`  | string | Taşıma ücreti      |
+| `list[].realizedPnl`  | string | Gerçekleşen PnL      |
+| `list[].positionSide` | string | Pozisyon tarafı     |
+| `list[].createdAt`    | int64  | Takas süresi        |
+| `total`               | int64  | Toplam sayım       |
+
+<h2 id="cancel-order">İptal Siparişi</h2>
+
+```http
+POST /v1/private/order/cancel
+Content-Type: application/json
+```
+
+**Talep bedeni:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "orderId": "2022543809547603968"
+}
+```
+
+`clientOrderId` ayrıca bir siparişi iptal etmek için de kullanılabilir.
+
+<h2 id="amend-order">Değişiklik Emri</h2>
+
+```http
+POST /v1/private/order/move
+Content-Type: application/json
+```
+
+**Talep bedeni:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "orderId": "2022543809547603968",
+  "price": "85100",
+  "quantity": "0.2"
+}
+```
+
+`quantity` , değişiklikten sonraki nihai toplam sipariş miktarıdır, kalan miktar değil.
+
+<h2 id="batch-amend-orders">Parti Değişikliği Emirleri</h2>
+
+```http
+POST /v1/private/order/batch-move
+Content-Type: application/json
+```
+
+**Talep bedeni:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "orders": [
+    {
+      "orderId": "2022543809547603968",
+      "price": "85100",
+      "quantity": "0.2"
+    }
+  ]
+}
+```
+
+<h2 id="batch-cancel-orders">Parti İptal Emirleri</h2>
+
+```http
+POST /v1/private/order/batch-cancel
+Content-Type: application/json
+```
+
+**Talep bedeni:**
+
+```json
+{
+  "orders": [
+    {
+      "symbol": "BTCUSDT",
+      "orderId": "2022543809547603968"
+    }
+  ]
+}
+```
+
+<h2 id="cancel-all">Her Şeyi İptal Et</h2>
+
+```http
+POST /v1/private/order/batch-cancel-all
+Content-Type: application/json
+```
+
+**Talep parametreleri:**
+
+| Parametre    | Tip   | Gerekli | Tanım                                                                         |
+| ------------ | ------ | -------- | ----------------------------------------------------------------------------------- |
+| `symbol`     | string | Hayır       | Sembol                                                                              |
+| `cancelType` | int32  | Hayır       | `0` tüm normal emirler, `1` limit emirleri `2` tüm koşul emirleri. Varsayılan `0` |
+
+Normal siparişler için iptal etme asenkron olarak kabul edilir. Nihai durum WebSocket `ORDER_TRADE_UPDATE` veya sorgu uç noktalarına göre belirlenmelidir.
+
+<h2 id="cancel-condition-order">Şart İptal Emiri</h2>
+
+```http
+POST /v1/private/order/cancel-condition
+Content-Type: application/json
+```
+
+**Talep bedeni:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "conditionId": "2022543809547603968"
+}
+```
+
+<h2 id="strategy-order-detail">Strateji Siparişi Detayı</h2>
+
+```http
+GET /v1/private/order/strategy?strategyId=2022543809547603968
+```
+
+**Yanıt alanları:**
+
+| Saha            | Tip   | Tanım                          |
+| ---------------- | ------ | ------------------------------------ |
+| `strategyId`     | string | Strateji Kimliği                          |
+| `strategyType`   | string | `OTOCO` / `OTO` / `OCO`              |
+| `strategyStatus` | string | `WORKING` / `ALL_DONE` / `CANCELLED` |
+| `bookTime`       | int64  | Yaratım zamanı                        |
+| `subOrders[]`    | array  | Alt sipariş detayları                    |
+| `updateTime`     | int64  | Güncelleme zamanı                          |
+
+<h2 id="related-documentation">İlgili belgeler</h2>
+
+- [Sipariş Türleri](/tr/trading/order-types)
+- [Common Enums](/tr/developer-api/common-enums)
+- [Özel Kullanıcı Kanalı](/tr/developer-api/websocket/private-user-channel)
+- [Entegrasyon Önerileri](/tr/developer-api/integration-recommendations)

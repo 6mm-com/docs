@@ -1,0 +1,223 @@
+---
+title: "Kullanıcı ve Hesap"
+description: "Profilleri, bakiyeleri, hesap durumunu, izinleri ve partnere bağlı hesap bilgilerini almak için 6MM kullanıcı ve hesap uç noktalarını kullanın."
+slug: developer-api/rest-api/user-and-account
+canonical-url: https://docs.6mm.com/tr/developer-api/rest-api/user-and-account
+---
+
+Aksi belirtilmedikçe, aşağıdaki uç noktalar JWT veya API Key işaretleme kullanabilir.
+
+<h2 id="user-info">Kullanıcı Bilgileri</h2>
+
+```http
+GET /v1/private/user/info
+```
+
+Yanıt alanları:
+
+| Saha                  | Tip   | Tanım      |
+| ---------------------- | ------ | ---------------- |
+| `userInfo.userId`      | string | Dış kullanıcı Kimliği |
+| `userInfo.username`    | string | Kullanıcı adı         |
+| `userInfo.agentId`     | int64  | Ajan Kimliği         |
+| `userInfo.vipLevel`    | int64  | VIP seviyesi        |
+| `userInfo.lastLoginAt` | int64  | Son giriş zamanı  |
+| `userInfo.lastLoginIp` | string | Son giriş IP    |
+
+<h2 id="user-assets">Kullanıcı Varlıkları</h2>
+
+```http
+GET /v1/private/user/asset
+```
+
+Yanıt alanları:
+
+| Saha                     | Tip   | Tanım                     |
+| ------------------------- | ------ | ------------------------------- |
+| `userAsset.userId`        | string | Dış kullanıcı Kimliği                |
+| `userAsset.assetType`     | string | Varlık türü                      |
+| `userAsset.walletBalance` | string | Cüzdan bakiyesi                  |
+| `userAsset.frozenMargin`  | string | Kayır, bekleyen emirler nedeniyle donduruldu |
+| `userAsset.usedMargin`    | string | Pozisyonlar tarafından kullanılan marj        |
+
+<h2 id="create-listenkey">Yarat listenKey</h2>
+
+```http
+POST /v1/private/user/listen-key
+```
+
+Özel WebSocket akışları için kimlik doğrulama anahtarı oluşturur.
+
+<h2 id="renew-listenkey">Yenileme listenKey</h2>
+
+```http
+PUT /v1/private/user/listen-key
+```
+
+Geçerliliğini listenKey genişletiyor.
+
+<h2 id="close-listenkey">Yakın listenKey</h2>
+
+```http
+DELETE /v1/private/user/listen-key
+```
+
+Belirtilen listenKeykapatır.
+
+<h2 id="account-change-logs">Hesap Değişiklik Kayıtları</h2>
+
+```http
+GET /v1/private/user/account-change-log?assetType=USDT&page=1&pageSize=20
+```
+
+İstek parametreleri:
+
+| Parametre    | Tip   | Gerekli | Tanım                  |
+| ------------ | ------ | -------- | ---------------------------- |
+| `assetType`  | string | Hayır       | Varlık türü, örneğin `USDT`   |
+| `changeType` | string | Hayır       | Türü değiştir                  |
+| `startTime`  | int64  | Hayır       | Başlama zamanı                   |
+| `endTime`    | int64  | Hayır       | Son zaman                     |
+| `page`       | int32  | Hayır       | Sayfa numarası, varsayılan `1`     |
+| `pageSize`   | int32  | Hayır       | Sayfa başına öğeler, varsayılan `20` |
+
+Yanıt alanları:
+
+| Saha                        | Tip   | Tanım                  |
+| ---------------------------- | ------ | ---------------------------- |
+| `list[].assetType`           | string | Varlık türü                   |
+| `list[].amount`              | string | Değişen miktar               |
+| `list[].walletBalanceBefore` | string | Değişimden önceki cüzdan bakiyesi |
+| `list[].walletBalanceAfter`  | string | Para değişikliğinden sonra cüzdan bakiyesi  |
+| `list[].frozenBalanceBefore` | string | Değişimden önce donmuş denge |
+| `list[].frozenBalanceAfter`  | string | Değişim sonrası donmuş denge  |
+| `list[].changeType`          | string | Türü değiştir                  |
+| `list[].referenceId`         | string | İlgili İşletme Kimliği          |
+| `list[].createdAt`           | int64  | Yaratım zamanı                |
+| `total`                      | int64  | Toplam sayım                  |
+
+<h2 id="30-day-volume-statistics">30 Günlük Hacim İstatistikleri</h2>
+
+```http
+GET /v1/private/user/volume-stats
+```
+
+Yanıt alanları:
+
+| Saha         | Tip   | Tanım                                     |
+| ------------- | ------ | ----------------------------------------------- |
+| `volume30d`   | string | Son 30 günün kümülatif işlem hacmi |
+| `feeTotal30d` | string | Son 30 gündeki birikimli ücretler           |
+
+<h2 id="balance-history">Denge Tarihi</h2>
+
+```http
+GET /v1/private/user/balance-history?period=1D&limit=30
+```
+
+İstek parametreleri:
+
+| Parametre | Tip   | Gerekli | Tanım                            |
+| --------- | ------ | -------- | -------------------------------------- |
+| `period`  | string | Evet      | `1D` / `1W` / `1M`                     |
+| `limit`   | int    | Hayır       | Iade edilen eşya sayısı, varsayılan `30` |
+
+Yanıt alanları:
+
+| Saha             | Tip   | Tanım                 |
+| ----------------- | ------ | --------------------------- |
+| `items[].date`    | string | Toplanma tarihi            |
+| `items[].balance` | string | Cüzdan bakiyesi              |
+| `items[].pnl`     | string | Dönem için gerçekleşen PnL |
+
+<h2 id="trade-overview">Ticaret Genel Özeti</h2>
+
+```http
+GET /v1/private/user/trade-overview?type=1M
+```
+
+İstek parametreleri:
+
+| Parametre | Tip   | Gerekli | Tanım                                     |
+| --------- | ------ | -------- | ----------------------------------------------- |
+| `type`    | string | Evet      | Trend aralığı: `1D`, `1W`, `1M`, `3M`, `6M`, `1Y` |
+
+Yanıt alanları:
+
+| Saha                | Tip   | Tanım                                                          |
+| -------------------- | ------ | -------------------------------------------------------------------- |
+| `todayPnl`           | string | Bugünün gerçekleşen PnL                                                 |
+| `todayVolume`        | string | Bugünün sözleşme işlem hacmi                                      |
+| `totalVolume`        | string | Kümülatif sözleşme işlem hacmi                                   |
+| `totalPnl`           | string | Kümülatif gerçekleşen PnL                                              |
+| `maxDrawdown30d`     | string | Son 30 gündeki maksimum çekim miktarı                        |
+| `maxDrawdown30dRate` | string | Son 30 gündeki maksimum azalma oranı, ondalık olarak `0` 'den `1` |
+| `transferIn`         | string | Kümülatif transfer edilen fonlar                                      |
+| `transferOut`        | string | Kümülatif aktarılan fonlar                                     |
+| `items[]`            | array  | Varlık eğilimi verileri                                                     |
+
+<h2 id="asset-overview-summary">Varlık Genel Özeti</h2>
+
+```http
+GET /v1/private/user/asset/overview/summary
+```
+
+Yanıt alanları, ticaret genel özet alanlarıyla aynıdır, `items[]`hariç.
+
+<h2 id="asset-overview-trend">Varlık Genel Görünümü Trendi</h2>
+
+```http
+GET /v1/private/user/asset/overview/trend?type=1M
+```
+
+İstek parametreleri:
+
+| Parametre | Tip   | Gerekli | Tanım                                     |
+| --------- | ------ | -------- | ----------------------------------------------- |
+| `type`    | string | Evet      | Trend aralığı: `1D`, `1W`, `1M`, `3M`, `6M`, `1Y` |
+
+Yanıt alanları:
+
+| Saha                  | Tip   | Tanım                     |
+| ---------------------- | ------ | ------------------------------- |
+| `items[].snapshotTime` | int64  | Anlık Görüntü Zamanı                   |
+| `items[].balance`      | string | Mevcut hesap bakiyesi         |
+| `items[].pnl`          | string | Mevcut dönem için PnL      |
+| `items[].pnlRate`      | string | Mevcut dönem için PnL oranı |
+| `items[].totalPnl`     | string | Kümülatif PnL                  |
+
+<h2 id="favorite-symbols">Favori Semboller</h2>
+
+<h2 id="save">Kayd et</h2>
+
+```http
+POST /v1/private/user/favorite-symbols
+Content-Type: application/json
+```
+
+Talep bedeni:
+
+```json
+{
+  "symbols": ["BTCUSDT", "ETHUSDT"]
+}
+```
+
+<h2 id="query">Sorgu</h2>
+
+```http
+GET /v1/private/user/favorite-symbols
+```
+
+Yanıt alanları:
+
+| Saha     | Tip      | Tanım          |
+| --------- | --------- | -------------------- |
+| `symbols` | String\[] | Favori sembol listesi |
+
+<h2 id="related-documentation">İlgili belgeler</h2>
+
+- [Özel Kullanıcı Kanalı](/tr/developer-api/websocket/private-user-channel)
+- [Doğrulama](/tr/developer-api/authentication)
+- [Varlık Transferi](/tr/trading/getting-started/asset-transfer)
+- [Hata Kodları ve Sorun Giderme](/tr/developer-api/error-codes-and-troubleshooting)

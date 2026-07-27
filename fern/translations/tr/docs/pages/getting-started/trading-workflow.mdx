@@ -1,0 +1,137 @@
+---
+title: "Ticaret İş Akışı"
+description: "6MM , U-marjlı sürekli sözleşmeleri destekler ve kullanıcıların stabilcoinlerde (örneğin USDT) hesaplanmış ve marjlandırılmış sürekli vadeli işlemleri takas etmesini sağlar."
+slug: trading/getting-started/trading-workflow
+canonical-url: https://docs.6mm.com/tr/trading/getting-started/trading-workflow
+---
+
+<h2 id="u-margined-perpetual-contracts">U-marjlı Sürekli Sözleşmeler</h2>
+
+6MM , U-marjlı sürekli sözleşmeleri destekler ve kullanıcıların stabilcoinlerde (örneğin USDT) hesaplanmış ve marjlandırılmış sürekli vadeli işlemleri takas etmesini sağlar.
+
+Bu bölüm, 6MMüzerinde sürekli sözleşme siparişlerinin yerleştirilmesi ve yönetilmesinde yer alan temel işlem akışını ve temel mekanizmaları açıklar.
+
+***
+
+<h2 id="contract-overview">Sözleşme Genel Bakış</h2>
+
+* Sözleşme Türü: U-Marginli Sürekli Sözleşmeler
+* Yerleşim Varlığı: Stabilcoin (örneğin USDT)
+* Son Kullanma Süresi Yok: Pozisyonlar süresi dolmaz ve süresiz tutulabilir
+* Mark Fiyatına Dayalı Risk Kontrolü: Marj hesaplaması ve tasfiye için kullanılır
+
+***
+
+<h2 id="order-types">Sipariş Türleri</h2>
+
+6MM , farklı ticaret stratejilerini karşılamak için yaygın kullanılan emir türlerini destekler:
+
+<h2 id="market-order">Piyasa Sıralaması</h2>
+
+* En iyi piyasa fiyatıyla hemen uygulanır
+* Fiyat hassasiyetinden çok uygulama hızını önceliklendirir
+* Hızlı giriş veya çıkış için uygundur
+
+<h2 id="limit-order">Limit Order</h2>
+
+* Sadece belirtilen fiyat veya daha iyi fiyatla yürütülür
+* Fiyat kontrolü sağlar
+* Doldurulana veya iptal edilene kadar açık kalabilir
+
+<h2 id="stop-order">Durdurma Emri</h2>
+
+* Tetikleme fiyatına ulaşıldığında piyasa veya limit emri tetiklenir
+* Stop-loss veya breakout stratejileri için yaygın olarak kullanılır
+
+> Sipariş erişilebilirliği, işlem çifti ve entegrasyon moduna göre değişebilir.
+
+***
+
+<h2 id="leverage-and-margin">Kaldıraç ve Marjlar</h2>
+
+* Kaldıraç, kullanıcıların daha az sermayeyle daha büyük pozisyonları kontrol etmesini sağlar
+* Marj, şu temellere göre hesaplanır:
+  * Pozisyon boyutu
+  * Kaldıraç seviyesi
+  * Mark fiyatı
+
+Daha yüksek kaldıraç potansiyel getirileri artırır ancak aynı zamanda tasfiye riskini de artırır.
+
+***
+
+<h2 id="funding-rate-mechanism">Fonlama Oranı Mekanizması</h2>
+
+Sürekli sözleşmeler, sözleşme fiyatlarını spot piyasa ile uyumlu tutmak için bir fonlama oranı mekanizması kullanır.
+
+* Fonlama ödemeleri planlanmış aralıklarla gerçekleşir
+* Eğer fon oranı pozitifse:
+  * Uzun pozisyonlar pay shorts
+* Eğer fonlama oranı negatif ise:
+  * Kısa pozisyonlar uzun pozisyonlara ödeme yapar
+
+Yatırım ücretleri doğrudan yatırımcılar arasında değiş tokuş edilir.
+
+6MM , gelir olarak fon ödemelerini toplamaz.
+
+***
+
+<h2 id="fees-and-slippage">Ücretler ve Kayma</h2>
+
+<h2 id="trading-fees">İşlem Ücretleri</h2>
+
+* Siparişler yürütüldüğünde ücretler alınır
+* Ücret oranları aşağıdaki durumlarda farklılık gösterebilir:
+  * Yapımcı emir verir
+  * Alıcı emirleri
+
+Ücret takvimleri ortak platforma göre belirlenir ve değişiklik gösterebilir.
+
+<h2 id="slippage">Kayma</h2>
+
+* Kayma, piyasa likiditesinin bir siparişi beklenen fiyatla tamamlamak için yeterli olmadığı durumlarda gerçekleşir
+* Yüksek volatilite sırasında veya piyasa emirleri kullanılırken daha yaygın
+
+Kullanıcılar, limit emirleri kullanarak ve sipariş boyutunu yöneterek kaymayı azaltabilirler.
+
+***
+
+<h2 id="position-lifecycle">Pozisyon Yaşam Döngüsü</h2>
+
+1. Sürekli Hesap'a fonlar tahsis edilir
+2. Bir sipariş verilir ve 6MM eşleştirme motoru tarafından eşleştirilir
+3. Bir pozisyon icrayla açılır
+4. Kenar ve PnL gerçek zamanlı güncelleme
+5. Fonlama ücretleri planlanan aralıklarla uygulanır
+6. Pozisyon manuel olarak veya TP/SL ile kapatılır
+7. Son PnL Sürekli Hesap'a yatırılır
+
+***
+
+<h2 id="risk-management-and-liquidation">Risk Yönetimi ve Tasfiye</h2>
+
+* 6MM marj oranlarını gerçek zamanlı olarak izler
+* Marj, bakım eşiğinin altına düştüğünde:
+  * Pozisyonlar kısmen veya tamamen tasfiye edilebilir
+* Tasfiye fiyatları, son işlem edilen fiyat değil, marka fiyatı kullanılarak hesaplanır
+
+Bu mekanizma, kısa vadeli piyasa dalgalanmasının neden olduğu gereksiz likidiyeleri azaltmaya yardımcı olur.
+
+***
+
+<h2 id="summary">Özet</h2>
+
+6MM üzerindeki U-marjlı sürekli işlem akışı şu şekilde tasarlanmıştır:
+
+* Tanıdık ve esnek sipariş türleri sunmak
+* Fiyat uyumunu fonlama oranlarıyla korumak
+* Şeffaf ücret ve ödeme mekanizmaları sunmak
+* Kurumsal düzeyde risk kontrolü sağlamak
+
+Bu yapı, ortakların profesyonel sürekli işlem sunmasını sağlarken sorunsuz bir kullanıcı deneyimi sağlar.
+
+<h2 id="related-trading-guides">İlgili ticaret rehberleri</h2>
+
+- [Sürekli Sözleşmeler](/tr/trading/perpetual-contracts): sözleşme, finansman, marj ve uzlaşma temelleri.
+- [Sipariş Türleri](/tr/trading/order-types): sınır, piyasa, koşullu ve zaman içinde olan davranış.
+- [Ücretler ve Kayma](/tr/trading/fees-and-slippage): yürütme maliyeti ve likidite etkisi.
+- [Risk ve Tasfiye Etme](/tr/trading/risk-and-liquidations): marja riski ve zorunlu yakın davranış.

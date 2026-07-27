@@ -1,0 +1,153 @@
+---
+title: "Αίτημα υπογραφής"
+description: "Υπογράψτε 6MM API αιτήματα με HMAC-SHA256 χρησιμοποιώντας το απαιτούμενο φορτίο, τη χρονική σήμανση, το κλειδί API , τις κεφαλίδες υπογραφής και τους κανόνες επαλήθευσης."
+slug: developer-api/request-signing
+canonical-url: https://docs.6mm.com/el/developer-api/request-signing
+---
+
+<h2 id="request-format">Μορφή αιτήματος</h2>
+
+| Τοποθεσία | Πεδίο       | Απαιτείται            | Περιγραφή                                   |
+| -------- | ----------- | ------------------- | --------------------------------------------- |
+| Κεφαλίδα   | `X-API-KEY` | Ναι                 | `apiKey` επιστρέφεται κατά τη δημιουργία του API Key |
+| Ερώτημα    | `timestamp` | Ναι                 | Χρονική σήμανση χιλιοστών του δευτερολέπτου Unix                    |
+| Ερώτημα    | `signature` | Ναι                 | HMAC-SHA256 υπογραφή, πεζή δεκαεξαδική συμβολοσειρά   |
+| Σώμα     | JSON        | Εξαρτάται από το τελικό σημείο | POST / PUT / DELETE φορέα αιτήματος              |
+
+<h2 id="signature-payload">Φορτίο υπογραφής</h2>
+
+```
+payload = queryStringWithoutSignature + requestBody
+signature = HMAC-SHA256(apiSecret, payload)
+```
+
+Βασικοί κανόνες:
+
+* `timestamp` πρέπει να είναι μια χρονική σήμανση χιλιοστών του δευτερολέπτου του Unix. Το παράθυρο ανοχής διακομιστή είναι ±10 δευτερόλεπτα.
+* `signature` τοποθετείται στη συμβολοσειρά ερωτήματος URL , αλλά δεν περιλαμβάνεται στο φορτίο υπογραφής.
+* Ο διακομιστής επαληθεύει την αρχική συμβολοσειρά ερωτήματος μετά την αφαίρεση `signature`; Δεν αναδιατάσσει τις παραμέτρους ερωτήματος.
+* Η σειρά παραμέτρων ερωτήματος που χρησιμοποιείται για την υπογραφή πρέπει να ταιριάζει με το πραγματικό αίτημα URL.
+* Εάν υπάρχει σώμα αίτησης, η συμβολοσειρά JSON που χρησιμοποιείται για την υπογραφή πρέπει να ταιριάζει ακριβώς με το πραγματικό σώμα που μεταδίδεται.
+* Οι διαδρομές που σχετίζονται με παραγγελίες εκτελούν ελέγχους επανάληψης υπογραφής. Η επαναχρησιμοποίηση της ίδιας υπογραφής σε σύντομο χρονικό διάστημα επιστρέφει `Signature replay detected`.
+
+<h2 id="server-time">Ώρα διακομιστή</h2>
+
+```http
+GET /v1/time
+```
+
+Παράδειγμα απάντησης:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "timestamp": 1780473256,
+    "timestampMs": 1780473256708,
+    "iso": "2026-06-03T07:54:16Z",
+    "timezone": "UTC"
+  },
+  "requestId": "req-7cad3113"
+}
+```
+
+Οι υπολογιστές-πελάτες θα πρέπει να υπολογίσουν `timeOffsetMs = serverTimestampMs - localTimestampMs`και, στη συνέχεια, να χρησιμοποιήσουν `timestamp = nowMs + timeOffsetMs` για επόμενες υπογεγραμμένες αιτήσεις. Εάν ο διακομιστής επιστρέψει `Timestamp outside of tolerance window`, συγχρονίστε αμέσως ξανά την ώρα και δημιουργήστε ξανά την υπογραφή.
+
+<h2 id="get-signing-example">GET Παράδειγμα υπογραφής</h2>
+
+Πραγματικό αίτημα:
+
+```
+GET /v1/private/order/current?symbol=BTCUSDT&timestamp=1772710377808&signature=...
+```
+
+Φορτίο υπογραφής:
+
+```
+symbol=BTCUSDT&timestamp=1772710377808
+```
+
+<h2 id="post-signing-example">POST Παράδειγμα υπογραφής</h2>
+
+Πραγματικό αίτημα:
+
+```
+POST /v1/private/order/place?timestamp=1772710377808&signature=...
+```
+
+Σώμα αιτήματος:
+
+```json
+{"symbol":"BTCUSDT","type":"LIMIT","side":"BUY","price":"85000","quantity":"0.1","timeInForce":"GTC","makerOnly":true,"clientOrderId":"ext-1772710377808-001"}
+```
+
+Φορτίο υπογραφής:
+
+```
+timestamp=1772710377808{"symbol":"BTCUSDT","type":"LIMIT","side":"BUY","price":"85000","quantity":"0.1","timeInForce":"GTC","makerOnly":true,"clientOrderId":"ext-1772710377808-001"}
+```
+
+<h2 id="python-signing-example">Παράδειγμα υπογραφής Python</h2>
+
+```python
+import hashlib
+import hmac
+import json
+import time
+from urllib.parse import urlencode
+
+import requests
+
+BASE_URL = "https://api.6mm.com"
+API_KEY = "YOUR_API_KEY"
+API_SECRET = "YOUR_API_SECRET"
+TIME_OFFSET_MS = 0
+
+def sign(payload: str) -> str:
+    return hmac.new(
+        API_SECRET.encode("utf-8"),
+        payload.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+
+def sync_time_offset():
+    global TIME_OFFSET_MS
+    before = int(time.time() * 1000)
+    resp = requests.get(f"{BASE_URL}/v1/time", timeout=5)
+    after = int(time.time() * 1000)
+    resp.raise_for_status()
+
+    server_ts = int(resp.json()["data"]["timestampMs"])
+    local_midpoint = (before + after) // 2
+    TIME_OFFSET_MS = server_ts - local_midpoint
+
+def signed_request(method: str, path: str, params=None, body=None):
+    params = dict(params or {})
+    params["timestamp"] = str(int(time.time() * 1000) + TIME_OFFSET_MS)
+
+    query_string = urlencode(params)
+    body_string = ""
+    if body is not None:
+        body_string = json.dumps(body, separators=(",", ":"), ensure_ascii=False)
+
+    signature = sign(query_string + body_string)
+    url = f"{BASE_URL}{path}?{query_string}&signature={signature}"
+    headers = {
+        "X-API-KEY": API_KEY,
+        "Content-Type": "application/json",
+    }
+    resp = requests.request(method, url, headers=headers, data=body_string if body is not None else None, timeout=10)
+    resp.raise_for_status()
+    return resp.json()
+
+sync_time_offset()
+print(signed_request("GET", "/v1/private/order/current", {"symbol": "BTCUSDT"}))
+```
+
+<h2 id="related-security-guides">Σχετικοί οδηγοί ασφαλείας</h2>
+
+- [Έλεγχος ταυτότητας](/el/developer-api/authentication)
+- [API Key Διαχείριση](/el/developer-api/api-key-management)
+- [Μυστικά & Υπογραφή](/el/sdk/security/secrets-signing)
+- [Κωδικοί σφαλμάτων & αντιμετώπιση προβλημάτων](/el/developer-api/error-codes-and-troubleshooting)

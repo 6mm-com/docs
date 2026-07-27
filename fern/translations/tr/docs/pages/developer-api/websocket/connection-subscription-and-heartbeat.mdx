@@ -1,0 +1,89 @@
+---
+title: "Bağlantı, Abonelik ve Kalp Atışı"
+subtitle: "6MM WebSocket akışlarına bağlanın, konulara abone olun, bağlantıları canlı tutun ve mesaj zarflarını güvenli bir şekilde işleyin."
+slug: developer-api/websocket/connection-subscription-and-heartbeat
+canonical-url: https://docs.6mm.com/tr/developer-api/websocket/connection-subscription-and-heartbeat
+---
+
+Piyasa verileri ve özel kullanıcı durumu güncellemeleri için WebSocket akışlarını kullanın; bu güncellemeler anket olmadan güncel kalmalıdır.
+
+<h2 id="connection-url">Bağlantı URL</h2>
+
+```text
+wss://ws.6mm.com/ws
+```
+
+Özel akışlar, özel kanal dokümantasyonunda tanımlandığı gibi listenKey veya erişim belirteci gibi kimlik doğrulama bağlamı gerektirir.
+
+<h2 id="subscribe">Abone Olun</h2>
+
+```json
+{ "id": "1772007814666", "op": "subscribe", "args": ["market.depth.BTCUSDT"] }
+```
+
+Başarılı abonelik onayı:
+
+```json
+{
+  "id": "1772007814666",
+  "event": "subscribe",
+  "success": true,
+  "data": ["market.depth.BTCUSDT"]
+}
+```
+
+<h2 id="unsubscribe">Abonelikten Çekilme</h2>
+
+```json
+{ "id": "1772007814667", "op": "unsubscribe", "args": ["market.depth.BTCUSDT"] }
+```
+
+<h2 id="application-ping">Uygulama pingi</h2>
+
+```json
+{ "id": "1772007814668", "op": "ping", "args": [] }
+```
+
+<h2 id="message-envelope">Mesaj zarfı</h2>
+
+Kamu baskıları tutarlı bir zafı kullanır:
+
+```json
+{
+  "topic": "market.depth.BTCUSDT",
+  "event": "data",
+  "ts": 1772007815000,
+  "data": {}
+}
+```
+
+<h2 id="operational-recommendations">Operasyonel öneriler</h2>
+
+- Her abonelik, abonelikten çıkarma ve ping talebi için benzersiz bir istemci tarafı `id` oluşturun.
+- Yeniden bağlantı kurmayı yeni bir oturum olarak ele alın ve gerekli konulara yeniden abone olun.
+- Geri gönderilen `topic` hizmetinizin beklediği kanalla eşleşip eşleşmediğini doğrulayın.
+- Özel sipariş veya hesap olayları olduğunda mesaj işleme idempotent kalın.
+- Bağlantı durumu değişikliklerini, abonelik onaylarını ve anormal bağlantı kesilmelerini kaydet.
+
+<h2 id="reconnect-workflow">Yeniden Bağlantı İş Akışı</h2>
+
+1. Önceki soketi kapatın veya atın ve yeni bir bağlantı oluşturun.
+2. Geçerli bir listenKey veya erişim tokenı ile özel akışları yeniden doğrulayın.
+3. Gerekli her konuya yeniden abone olun ve başarılı teşekkürleri bekleyin.
+4. Yerel sipariş defteri durumunu yeni, ardından kademeli güncellemeler uygulamadan önce yeni bir anlık görüntüyle değiştirin.
+5. Açık emirleri, pozisyonları ve bakiyeleri REST özel etkinliklerin kaçırıldığı durumlarda uzlaştırın.
+
+Yeniden bağlantı girişimleri için jitter ile sınırlı üstel geri çekilme kullanın. Sürekli yeniden bağlanan bir istemci, görünürlük olmadan süresiz tekrar denemek yerine operatörleri uyarmalıdır.
+
+<h2 id="heartbeat-and-stale-connections">Kalp atışı ve bayat bağlantılar</h2>
+
+- En son gelen mesajı ve başarılı ping onayını takip edin.
+- Üretim ortamı için onaylanan kalp atış aralığı ve boşta eşik değerini kullanın.
+- Yapılandırma eşiği aşıldığında, TCP soketi hala açık görünse bile, bağlantıyı bayat olarak kabul edin.
+- Eski bir soketten abonelikleri tekrar kullanmayın; Her yeniden bağlantıdan sonra açıkça yeniden abone ol.
+
+<h2 id="related-documentation">İlgili belgeler</h2>
+
+- [Kamu Pazarı Kanalları](/tr/developer-api/websocket/public-market-channels): konular, sipariş defteri sürekliliği, takaslar, mumlar ve tickerlar.
+- [Özel Kullanıcı Kanalı](/tr/developer-api/websocket/private-user-channel): listenKey yaşam döngüsü ve doğrulanmış olaylar.
+- [Entegrasyon Önerileri](/tr/developer-api/integration-recommendations): tekrarlar, kimlik potansiyeli, izleme ve fırlatma testleri.

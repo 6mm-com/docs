@@ -17,14 +17,13 @@
     { code: "uk" },
     { code: "pt-PT" },
     { code: "es-ES" },
-    { code: "uz" },
+    { code: "tr" },
+    { code: "ko" },
+    { code: "el" },
     { code: "ar" },
-    { code: "fil" },
-    { code: "az" },
   ];
   var hreflangOverrides = {
     "es-419": "es",
-    fil: "tl",
   };
   var configuredLocales =
     window.__sixmmDocsLocales && window.__sixmmDocsLocales.length
@@ -64,10 +63,10 @@
     uk: "Головна",
     "pt-PT": "Início",
     "es-ES": "Inicio",
-    uz: "Bosh sahifa",
+    ko: "홈",
+    tr: "Ana Sayfa",
+    el: "Αρχική",
     ar: "الرئيسية",
-    fil: "Pangunahing Pahina",
-    az: "Ana səhifə",
   };
   var productBreadcrumbLabels = {
     developerApi: "Developer API",
@@ -194,29 +193,29 @@
       "Seguridad y cumplimiento normativo",
       "Integración y asistencia",
     ),
-    uz: breadcrumbLabels(
-      "Yechimlar",
-      "Savdo",
-      "Xavfsizlik va muvofiqlik",
-      "Integratsiya va qo‘llab-quvvatlash",
+    ko: breadcrumbLabels(
+      "솔루션",
+      "거래",
+      "보안 및 준수",
+      "통합 및 지원",
+    ),
+    tr: breadcrumbLabels(
+      "Çözümler",
+      "Ticaret",
+      "Güvenlik ve Uyum",
+      "Entegrasyon ve Destek",
+    ),
+    el: breadcrumbLabels(
+      "Λύσεις",
+      "Συναλλαγές",
+      "Ασφάλεια & Συμμόρφωση",
+      "Ενσωμάτωση & Υποστήριξη",
     ),
     ar: breadcrumbLabels(
       "الحلول",
       "التداول",
       "الأمان والامتثال",
       "التكامل والدعم",
-    ),
-    fil: breadcrumbLabels(
-      "Mga Solusyon",
-      "Pangangalakal",
-      "Seguridad at Pagsunod",
-      "Integrasyon at Suporta",
-    ),
-    az: breadcrumbLabels(
-      "Həllər",
-      "Ticarət",
-      "Təhlükəsizlik və uyğunluq",
-      "İnteqrasiya və dəstək",
     ),
   };
 

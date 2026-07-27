@@ -1,0 +1,107 @@
+---
+title: "비공개 사용자 채널"
+description: "주문, 포지션, 잔액, 계좌 변경 등 수신 키를 생성하고 유지하여 인증된 6MM WebSocket 이벤트에 구독하세요."
+slug: developer-api/websocket/private-user-channel
+canonical-url: https://docs.6mm.com/ko/developer-api/websocket/private-user-channel
+---
+
+먼저 `listenKey` 만들기:
+
+```http
+POST /v1/private/user/listen-key
+```
+
+응답 예시:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "listenKey": "f57cb61ef604ce76be09e753a5dbdd8c",
+    "expireAt": 1777539918867
+  },
+  "requestId": "req-listen-key"
+}
+```
+
+`listenKey` 기본적으로 60분 동안 유효합니다. 30분마다 갱신하는 것이 권장됩니다.
+
+<h2 id="renew">갱신</h2>
+
+```http
+PUT /v1/private/user/listen-key
+Content-Type: application/json
+```
+
+```json
+{ "listenKey": "f57cb61ef604ce76be09e753a5dbdd8c" }
+```
+
+<h2 id="close">닫습니다</h2>
+
+```http
+DELETE /v1/private/user/listen-key
+Content-Type: application/json
+```
+
+```json
+{ "listenKey": "f57cb61ef604ce76be09e753a5dbdd8c" }
+```
+
+<h2 id="connect-to-private-websocket">개인 WebSocket에 연결해</h2>
+
+```
+wss://ws.6mm.com/ws?listenKey=YOUR_LISTEN_KEY
+```
+
+호환 가능한 JWT 연결 방식:
+
+```
+wss://ws.6mm.com/ws?token=YOUR_ACCESS_TOKEN
+```
+
+인증이 성공하면 서버는 현재 사용자의 개인 채널에 자동으로 연결을 구독합니다. 수동 구독은 필요하지 않습니다.
+
+성공적인 인증 확인:
+
+```json
+{ "event": "auth", "success": true, "data": "1188041528" }
+```
+
+<h2 id="common-private-events">일반적인 사적 행사</h2>
+
+| 행사                | 설명                                                                   |
+| -------------------- | ----------------------------------------------------------------------------- |
+| `ORDER_TRADE_UPDATE` | 주문 상태 변경, 신규 주문, 수정, 거래 및 취소 등이 포함됩니다 |
+| `ACCOUNT_UPDATE`     | 계좌 잔액 및 포지션 변동                                          |
+
+프라이빗 푸시 메시지 래퍼:
+
+```json
+{
+  "topic": "user.5794",
+  "ts": 1771047000000,
+  "data": {
+    "eventType": "ORDER_TRADE_UPDATE"
+  }
+}
+```
+
+REST 쿼리 엔드포인트와 WebSocket 프라이비시 스트림은 별도의 스키마를 사용합니다. 클라이언트는 각 스키마를 독립적으로 파싱해야 하며, 필드 이름이 동일하다고 가정해서는 안 됩니다.
+
+<h2 id="common-differences">공통 차이점</h2>
+
+| 도메인         | REST 필드     | WebSocket 필드                                             |
+| -------------- | -------------- | ----------------------------------------------------------- |
+| 명령 현황   | `status`       | `orderStatus`                                               |
+| 동결 잔액 | `frozenMargin` | `frozenBalance`                                             |
+| 마진 모드    | `marginMode`   | `marginMode`, 위치와 흐름에서 문자열로 돌아왔습니다 |
+
+<h2 id="recovery-and-reconciliation">회복과 화해</h2>
+
+- 만료 전에 listenKey 을 갱신하고, 갱신이 실패할 경우 새 를 생성합니다.
+- 재연결, 재인증, 그리고 새 소켓을 새로운 이벤트 세션으로 처리합니다.
+- 파트너 잔액이나 주문 기록을 변경하기 전에 이벤트를 중복 해제합니다.
+- 이벤트가 누락되었을 경우, 쿼리 [명령](/ko/developer-api/rest-api/order), [직책](/ko/developer-api/rest-api/position), 그리고 [계정 상태](/ko/developer-api/rest-api/user-and-account) REST.
+- 따라가세요 [연결과 심장박동 가이드](/ko/developer-api/websocket/connection-subscription-and-heartbeat) 재시도 및 오래된 연결 처리를 위해.

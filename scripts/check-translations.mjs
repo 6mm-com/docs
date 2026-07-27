@@ -475,7 +475,7 @@ if (!directionScript.includes("lastLocaleSignature")) {
 
 const styles = await readFile(path.join(fernRoot, "styles.css"), "utf8");
 if (
-  /data-sixmm-docs-locale[^}]*a\[role=["']tab["']\]|a\[role=["']tab["']\][^{]*href\^=["']\/(?:uz|fil|az)\//s.test(
+  /data-sixmm-docs-locale[^}]*a\[role=["']tab["']\]|a\[role=["']tab["']\][^{]*href\^=["']\/(?:ko|tr|el)\//s.test(
     styles,
   )
 ) {

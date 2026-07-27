@@ -1,0 +1,56 @@
+---
+title: "환경과 일반적인 관습"
+description: "기본 URL, 타임스탬프, 숫자 필드, 기호, 요청 ID, 페이지네이션, 응답에 대한 6MM API 환경과 공유 관례를 검토하세요."
+slug: developer-api/environments-and-common-conventions
+canonical-url: https://docs.6mm.com/ko/developer-api/environments-and-common-conventions
+---
+
+<h2 id="service-endpoints">서비스 엔드포인트</h2>
+
+| 유형      | 종착점              |
+| --------- | --------------------- |
+| REST API  | `https://api.6mm.com` |
+| WebSocket | `wss://ws.6mm.com/ws`    |
+
+<h2 id="time-and-numeric-values">시간 및 수치 값</h2>
+
+* 별도 명시가 없는 한, 시간 필드는 유닉스 밀리초 타임스탬프입니다.
+* 일일 통계, 잔액 스냅샷, 거래량 통계는 기본적으로 UTC 일 경계를 사용합니다.
+* 금액, 가격, 수량, 속도와 같은 정밀도에 민감한 필드는 문자열로 전송됩니다.
+* `orderId`, `conditionId`, `strategyId` 와 같은 큰 정수 ID는 JSON에서 문자열로 반환됩니다.
+
+<h2 id="response-format">응답 형식</h2>
+
+성공적인 대응:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {},
+  "requestId": "req-12345678"
+}
+```
+
+오류 응답:
+
+```json
+{
+  "code": 1003,
+  "message": "Invalid token",
+  "requestId": "req-12345678"
+}
+```
+
+노트:
+
+* 비즈니스 오류는 보통 통합 JSON 구조를 반환합니다. 통합업체는 먼저 이 `code` 을 확인해야 합니다.
+* 인증 실패는 HTTP `401`반환할 수 있습니다; 속도 제한이 HTTP `429`다시 돌아올 수 있습니다.
+* 요청 헤더에 `X-Request-ID` 보내실 수 있습니다. 서버는 답변에서 `requestId` 로 반환할 것입니다.
+
+<h2 id="related-documentation">관련 문서</h2>
+
+- [인증](/ko/developer-api/authentication): JWT 아니면 API Key 사인을 선택하세요.
+- [요청 서명](/ko/developer-api/request-signing): 서명된 요청을 구성하고 검증합니다.
+- [REST API](/ko/developer-api/rest-api): 이 관례들을 엔드포인트 그룹에 적용한다.
+- [오류 코드 및 문제 해결](/ko/developer-api/error-codes-and-troubleshooting): HTTP 및 비즈니스 오류를 진단합니다.

@@ -1,0 +1,68 @@
+---
+title: "SDK Entegrasyon Sorun Giderme"
+subtitle: "Destek talebini yükseltmeden önce Trading Widget, Agent SDK, imza, webhook, zaman aşımı ve çevre sorunlarını teşhis edin."
+slug: sdk/security/troubleshooting
+canonical-url: https://docs.6mm.com/tr/sdk/security/troubleshooting
+---
+
+Başarısız işlemin ortamı, zaman damgası ve iş tanımlayıcısı ile başlayın. Yapılandırılmış bir kontrol genellikle yapılandırma sorunlarını kimlik doğrulama, ağ ve asenkron işleme sorunlarından ayırır.
+
+<h2 id="diagnostic-order">Önerilen tanı sırası</h2>
+
+1. Etkilenen ortamı ve temel URL doğrulayın.
+2. UTC zaman aralığını ve ilk başarısız talebi kaydedin.
+3. Modülü tanımlayın: Trading Widget, Agent SDK, REST API, WebSocket, veya webhook.
+4. İstek ID'sini, ortak kullanıcı kimliğini, `agentOrderNo`, sipariş kimliğini veya webhook etkinlik kimliğini yakalayın.
+5. Son kodu, kimlik bilgilerini, IP beyaz listesini veya dağıtım değişikliklerini kontrol edin.
+6. En küçük güvenli test vakasıyla çoğaltın.
+
+<h2 id="trading-widget-issues">Trading Widget sorunlar</h2>
+
+| Semptom | Muhtemel neden | Düzeltme |
+| --- | --- | --- |
+| iframe partner yerel alan adresi talep ediyor | baseUrl eksik | Pas baseUrl: 'https://app.6mm.com'. |
+| iframe görünmez veya çok kısa | Ebeveyn kabın yüksekliği yoktur | Konteyner yüksekliği veya geçiş yüksekliği belirleyin. |
+| token_provider_missing | partner-token modunun sağlayıcısı yoktur | Onay ekleyin.tokenProvider. |
+| auth_exchange_failed | Geçersiz, süresi dolmuş veya uyumsuz gömülü belirteç | Arka uç token yanıtını kontrol edin ve channelId. |
+
+<h2 id="agent-sdk-issues">Agent SDK sorunlar</h2>
+
+| Semptom | Muhtemel neden | Düzeltme |
+| --- | --- | --- |
+| İmza reddedildi | Yanlış sır, saat kayması veya elle değiştirilmiş işaret alanları | İmza alanları oluştur SDK sunucu zamanını senkronize et. |
+| Tekrarlanan fon hareketi riski | Mola sonrası kullanılan yeni sipariş numarası | Orijinal agentOrderNo tarafından sorgu yapılıyor. |
+| PROCESSING başarısızlık olarak ele alındı | Bekleyen devlet yanlış anlaşılması | webhook bekle ya da queryOrderarayın. |
+| Webhook birden fazla kez işlendi | Idempotency olmadan davranışı tekrar deneme | İdempotency anahtarı ve nihai durum kontrolleri ekleyin. |
+
+<h2 id="evidence-to-capture">Yakalanması gereken kanıtlar</h2>
+
+| Entegrasyon | Faydalı kanıtlar |
+| --- | --- |
+| Trading Widget | Sayfa URL, SDK sürüm yolu, tarayıcı konsolu, başarısız ağ istekleri, `onError` yükü ve konteyner boyutları. |
+| Agent SDK | SDK dil/sürüm, temel URL, UTC zaman damgası, istek kimliği, `agentOrderNo`, yanıt kodu ve temizlenmiş kayıtlar. |
+| Webhook | Teslimat süresi, etkinlik veya iş anahtarı, imza doğrulama sonucu, işlem durumu ve dezenfekte edilmiş ham gövde hash. |
+| REST API | Yöntem, yol, ortam, istek kimliği, yanıt kodu ve temizlenmiş parametreler. |
+
+Tanı koymaya şifreleri, erişim tokenlarını, API sırları, tam imzaları, özel anahtarları veya sansürlenmemiş kişisel verileri asla dahil etmeyin.
+
+<h2 id="before-escalating">Tırmanmadan önce</h2>
+
+- İşlemin tekrar denemesi güvenli olduğu belgelendiğinde tekrar deneme.
+- Bir zaman aşımı sonrası, yeni bir tanım oluşturmak yerine orijinal iş tanımlayıcısını sorgulayın.
+- İmza hataları için sistem saati ve kimlik bilgileri ortamını onaylayın.
+- İlk başarısızlığı ve sonraki tekrar deneme sonuçlarını koruyun.
+- Kullan [Destek Talebi Şablonu](/tr/resources/support-request-template) tam, sansürlenmiş bir rapor göndermek için.
+
+<h2 id="related-docs">İlgili belgeler</h2>
+
+<CardGroup cols={3}>
+<Card title="Trading Widget Hızlı Başlangıç" icon="fa-duotone fa-chart-line" href="/tr/sdk/trading-widget/quick-start">
+Script yüklemesini, konteyner boyutunu, yapılandırmayı ve geri çağrıları doğrulayın.
+</Card>
+<Card title="Sırlar ve İmza Alma" icon="fa-duotone fa-shield-keyhole" href="/tr/sdk/security/secrets-signing">
+Agent SDK kimlik bilgilerini, saatleri ve imzalanmış alanları kontrol edin.
+</Card>
+<Card title="Webhooks ve İdempotensi" icon="fa-duotone fa-webhook" href="/tr/sdk/security/webhooks-idempotency">
+Geri dönüş doğrulamasını ve tekrarlanan etkinlik yönetimini gözden geçirin.
+</Card>
+</CardGroup>

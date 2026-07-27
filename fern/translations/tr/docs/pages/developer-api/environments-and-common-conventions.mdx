@@ -1,0 +1,56 @@
+---
+title: "Ortamlar ve Ortak Gelenekler"
+description: "Temel URL'ler, zaman damgaları, sayısal alanlar, semboller, istek kimlikleri, sayfa sıralaması ve yanıtlar için 6MM API ortamları ve paylaşılan sözleşmeleri gözden geçirin."
+slug: developer-api/environments-and-common-conventions
+canonical-url: https://docs.6mm.com/tr/developer-api/environments-and-common-conventions
+---
+
+<h2 id="service-endpoints">Hizmet Uç Noktaları</h2>
+
+| Tip      | Uç nokta              |
+| --------- | --------------------- |
+| REST API  | `https://api.6mm.com` |
+| WebSocket | `wss://ws.6mm.com/ws`    |
+
+<h2 id="time-and-numeric-values">Zaman ve sayısal değerler</h2>
+
+* Aksi belirtilmedikçe, zaman alanları Unix milisaniye zaman damgasıdır.
+* Günlük istatistikler, denge anlık görüntüleri ve işlem hacmi istatistikleri varsayılan olarak UTC gün sınırlarını kullanır.
+* Miktar, fiyat, miktar ve oran gibi hassasiyete duyarlı alanlar dizide iletilir.
+* `orderId`, `conditionId`ve `strategyId` gibi büyük tam sayı kimlikleri JSONiçinde dizi olarak döner.
+
+<h2 id="response-format">Yanıt Formatı</h2>
+
+Başarılı yanıt:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {},
+  "requestId": "req-12345678"
+}
+```
+
+Hata yanıtı:
+
+```json
+{
+  "code": 1003,
+  "message": "Invalid token",
+  "requestId": "req-12345678"
+}
+```
+
+Notlar:
+
+* İş hataları genellikle yine de birleşik JSON yapısını döndürür. Entegratörler önce `code` kontrol etmeli.
+* Kimlik doğrulama hataları HTTP `401`geri dönebilir ; Oran sınırı HTTP `429`geri getirebilir.
+* Talep başlığına `X-Request-ID` gönderebilirsiniz. Sunucu, yanıttaki `requestId` olarak geri gönderecek.
+
+<h2 id="related-documentation">İlgili belgeler</h2>
+
+- [Doğrulama](/tr/developer-api/authentication): JWT veya API Key imza seçeneğini seçin.
+- [İstek İmzaları](/tr/developer-api/request-signing): imzalı istekleri oluşturup doğrula.
+- [REST API](/tr/developer-api/rest-api): bu düzenlemeleri uç nokta gruplarına uygular.
+- [Hata Kodları ve Sorun Giderme](/tr/developer-api/error-codes-and-troubleshooting): HTTP ve iş hatalarını teşhis edin.

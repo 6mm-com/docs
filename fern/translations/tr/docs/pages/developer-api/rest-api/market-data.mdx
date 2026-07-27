@@ -1,0 +1,111 @@
+---
+title: "Piyasa Verileri"
+description: "Sembolleri, ticker'ları, emir defterlerini, işlemleri ve diğer halka açık işlem bilgilerini almak için doğrulanmamış 6MM piyasa verilerini REST uç noktalarını kullanın."
+slug: developer-api/rest-api/market-data
+canonical-url: https://docs.6mm.com/tr/developer-api/rest-api/market-data
+---
+
+Piyasa verileri REST uç noktaları kimlik doğrulama gerektirmez.
+
+<h2 id="symbol-configuration">Sembol Konfigürasyonu</h2>
+
+```http
+GET /v1/public/market/symbols
+```
+
+Yaygın yanıt alanları:
+
+| Saha                      | Tip   | Tanım                   |
+| -------------------------- | ------ | ----------------------------- |
+| `list[].symbol`            | string | Sembol                        |
+| `list[].baseAsset`         | string | Temel varlık                    |
+| `list[].quoteAsset`        | string | Kota varlığı                   |
+| `list[].minQuantity`       | string | Minimum sipariş miktarı        |
+| `list[].minNotional`       | string | Minimum niteli değer        |
+| `list[].tickSize`          | string | Fiyat tick boyutu               |
+| `list[].stepSize`          | string | Miktar adım boyutu            |
+| `list[].pricePrecision`    | int64  | Fiyat hassasiyeti               |
+| `list[].maxLimitOrderQty`  | string | Maksimum limit emir miktarı  |
+| `list[].maxMarketOrderQty` | string | Maksimum piyasa sipariş miktarı |
+| `list[].maxOpenOrders`     | int64  | Kullanıcı başına maksimum açık emirler  |
+| `list[].defaultLeverage`   | int64  | Varsayılan kaldıraç              |
+| `list[].defaultMarginMode` | int64  | Varsayılan marjır modu           |
+| `list[].leverageTiers[]`   | array  | Kaldıraç marja katmanları         |
+| `handlingFeeLevelConfig[]` | array  | Fee tier configuration        |
+
+<h2 id="funding-rate-configuration">Fonlama Oranı Konfigürasyonu</h2>
+
+```http
+GET /v1/public/market/funding-rate?symbol=BTCUSDT
+```
+
+İstek parametreleri:
+
+| Parametre | Tip   | Gerekli | Tanım                     |
+| --------- | ------ | -------- | ------------------------------- |
+| `symbol`  | string | Hayır       | Eğer atlanırsa, tüm sembolleri döndürür |
+
+<h2 id="current-funding-rate">Mevcut Fonlama Oranı</h2>
+
+```http
+GET /v1/public/market/funding-rate/current?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+İstek parametreleri:
+
+| Parametre  | Tip   | Gerekli | Tanım                  |
+| ---------- | ------ | -------- | ---------------------------- |
+| `symbol`   | string | Hayır       | Sembol                       |
+| `page`     | int32  | Hayır       | Sayfa numarası, varsayılan `1`     |
+| `pageSize` | int32  | Hayır       | Sayfa başına öğeler, varsayılan `20` |
+
+<h2 id="funding-rate-history">Yatırım Oranı Geçmişi</h2>
+
+```http
+GET /v1/public/market/funding-rate/history?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+İstek parametreleri:
+
+| Parametre   | Tip   | Gerekli | Tanım                  |
+| ----------- | ------ | -------- | ---------------------------- |
+| `symbol`    | string | Evet      | Sembol                       |
+| `startTime` | int64  | Hayır       | Başlama zamanı                   |
+| `endTime`   | int64  | Hayır       | Son zaman                     |
+| `page`      | int32  | Hayır       | Sayfa numarası, varsayılan `1`     |
+| `pageSize`  | int32  | Hayır       | Sayfa başına öğeler, varsayılan `20` |
+
+<h2 id="klines">Klines'lar</h2>
+
+```http
+GET /v1/public/market/klines?symbol=BTCUSDT&interval=1m&limit=500
+```
+
+İstek parametreleri:
+
+| Parametre   | Tip   | Gerekli | Tanım                                                              |
+| ----------- | ------ | -------- | ------------------------------------------------------------------------ |
+| `symbol`    | string | Evet      | Sembol                                                                   |
+| `interval`  | string | Evet      | Aralıklar, örneğin `1m`, `5m`, `15m`, `30m`, `1h`, `4h`, `1d`, `1w`, `1M` |
+| `priceType` | string | Hayır       | `indexPrice` / `markPrice`. Eğer hariç tutulursa, Klines ticaret fiyatını geri getirir       |
+| `startTime` | int64  | Hayır       | Başlama zamanı                                                               |
+| `endTime`   | int64  | Hayır       | Son zaman                                                                 |
+| `limit`     | int32  | Hayır       | Iade edilen eşya sayısı, varsayılan `500`, maksimum `1000`                  |
+
+Yanıt alanları:
+
+| Saha              | Tip   | Tanım |
+| ------------------ | ------ | ----------- |
+| `list[].openTime`  | int64  | Açık zaman   |
+| `list[].open`      | string | Açık fiyat  |
+| `list[].high`      | string | Yüksek fiyat  |
+| `list[].low`       | string | Düşük fiyat   |
+| `list[].close`     | string | Kapanış fiyatı |
+| `list[].volume`    | string | Hacim      |
+| `list[].closeTime` | int64  | Yakın zaman  |
+
+<h2 id="related-documentation">İlgili belgeler</h2>
+
+- [Açık Uç Noktaları](/tr/developer-api/rest-api/public-endpoints)
+- [Kamu WebSocket Kanalları](/tr/developer-api/websocket/public-market-channels)
+- [Pazar Derinliği ve Yayılımı](/tr/solutions/market-depth-spread)

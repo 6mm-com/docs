@@ -1,0 +1,159 @@
+---
+title: "공개 엔드포인트"
+description: "상품, 티커, 주문서, 거래 및 기타 인증되지 않은 시장 정보에 대한 공개 6MM API 엔드포인트에 접근할 수 있습니다."
+slug: developer-api/rest-api/public-endpoints
+canonical-url: https://docs.6mm.com/ko/developer-api/rest-api/public-endpoints
+---
+
+<h2 id="base-url">기지 URL</h2>
+
+```
+https://api.6mm.com
+```
+
+<h2 id="service-version">서비스 버전</h2>
+
+```http
+GET /v1/version
+```
+
+서비스 버전 정보를 확인하세요.
+
+<h2 id="server-time">서버 타임</h2>
+
+```http
+GET /v1/time
+```
+
+서버 시간을 쌓으세요. 이 엔드포인트는 서명 전에 클라이언트 시간을 보정하는 데 API Key 수 있습니다.
+
+<h2 id="user-login">사용자 로그인</h2>
+
+```http
+POST /v1/public/user/login
+```
+
+요청 매개변수:
+
+| 매개변수    | 유형   | 필수 | 설명                             |
+| ------------ | ------ | -------- | --------------------------------------- |
+| `username`   | string | 네      | 사용자 이름, 길이 3 - 32                 |
+| `password`   | string | 네      | 비밀번호, 길이 1 - 64                 |
+| `deviceId`   | string | 아니       | 장치 지문, 최대 64자 |
+| `deviceName` | string | 아니       | 장치 이름, 최대 128자       |
+
+요청 예시:
+
+```bash
+curl -X POST https://api.6mm.com/v1/public/user/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "alice",
+    "password": "yourPassword",
+    "deviceId": "device-001",
+    "deviceName": "server-001"
+  }'
+```
+
+응답 예시:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "accessToken": "YOUR_ACCESS_TOKEN",
+    "accessExpire": 1769676656
+  },
+  "requestId": "req-login"
+}
+```
+
+<h2 id="refresh-token">새로고침 토큰</h2>
+
+```http
+POST /v1/public/user/refresh-token
+```
+
+일반적인 통합 시나리오에서는 로그인 상태가 쿠키를 통해 새로고침됩니다. 로그인 응답으로 쿠키를 반환하세요.
+
+응답 필드:
+
+| 필드          | 유형   | 설명              |
+| -------------- | ------ | ------------------------ |
+| `accessToken`  | string | 새로운 접근 토큰         |
+| `accessExpire` | int64  | 액세스 토큰 만료 시간 |
+
+<h2 id="agent-sso">요원 SSO</h2>
+
+<h2 id="ticket-exchange">티켓 교환</h2>
+
+```http
+POST /v1/public/agent-sso/exchange-ticket
+```
+
+요청 매개변수:
+
+| 매개변수  | 유형   | 필수 | 설명                                 |
+| ---------- | ------ | -------- | ------------------------------------------- |
+| `ticket`   | string | 네      | 대리점 서비스에서 발급한 일회성 티켓 |
+| `deviceId` | string | 아니       | 장치 지문, 최대 64자     |
+
+응답 필드:
+
+| 필드          | 유형   | 설명              |
+| -------------- | ------ | ------------------------ |
+| `accessToken`  | string | 접근 토큰             |
+| `accessExpire` | int64  | 액세스 토큰 만료 시간 |
+| `redirectPath` | string | 제안된 리다이렉트 경로  |
+
+<h2 id="embed-token-exchange">임베드 토큰 교환</h2>
+
+```http
+POST /v1/public/agent-sso/exchange-embed-token
+```
+
+요청 매개변수:
+
+| 매개변수    | 유형   | 필수 | 설명                                                    |
+| ------------ | ------ | -------- | -------------------------------------------------------------- |
+| `embedToken` | string | 네      | 에이전트 서비스에서 발행한 단명한 임베디드 트레이딩 토큰 |
+| `channelId`  | string | 네      | 내장 iframe 채널 ID, 최대 128자               |
+| `deviceId`   | string | 아니       | 장치 지문, 최대 64자                        |
+
+응답 필드:
+
+| 필드          | 유형   | 설명              |
+| -------------- | ------ | ------------------------ |
+| `accessToken`  | string | 접근 토큰             |
+| `accessExpire` | int64  | 액세스 토큰 만료 시간 |
+
+<h2 id="pnl-leaderboard">PnL 리더보드</h2>
+
+```http
+GET /v1/public/leaderboard/pnl?period=30d
+```
+
+요청 매개변수:
+
+| 매개변수 | 유형   | 필수 | 설명          |
+| --------- | ------ | -------- | -------------------- |
+| `period`  | string | 네      | `7d` / `30d` / `90d` |
+
+응답 필드:
+
+| 필드              | 유형   | 설명                                                       |
+| ------------------ | ------ | ----------------------------------------------------------------- |
+| `list[].rank`      | int32  | 계급                                                              |
+| `list[].userId`    | string | 외부 사용자 ID                                                  |
+| `list[].trader`    | string | 가면 상인 이름                                                |
+| `list[].volume`    | string | 창 내 거래량                                      |
+| `list[].pnlAmount` | string | 창에서 실현된 PnL                                        |
+| `list[].pnlPct`    | string | PnL 비율, `0`에서 `1`까지의 소수점                                |
+| `myRank`           | int32  | 현재 사용자 등급. 인증되지 않았거나 순위가 매겨지지 않은 경우 반품이 `0` |
+
+<h2 id="related-documentation">관련 문서</h2>
+
+- [시장 데이터](/ko/developer-api/rest-api/market-data)
+- [공영 WebSocket 채널](/ko/developer-api/websocket/public-market-channels)
+- [환경 및 일반적인 관습](/ko/developer-api/environments-and-common-conventions)

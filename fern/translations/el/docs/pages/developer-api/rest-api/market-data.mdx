@@ -1,0 +1,111 @@
+---
+title: "Στοιχεία αγοράς"
+description: "Χρησιμοποιήστε μη επαληθευμένα δεδομένα αγοράς 6MM REST τελικά σημεία για να ανακτήσετε σύμβολα, tickers, βιβλία εντολών, συναλλαγές και άλλες δημόσιες πληροφορίες συναλλαγών."
+slug: developer-api/rest-api/market-data
+canonical-url: https://docs.6mm.com/el/developer-api/rest-api/market-data
+---
+
+Τα δεδομένα αγοράς REST τα τελικά σημεία δεν απαιτούν έλεγχο ταυτότητας.
+
+<h2 id="symbol-configuration">Διαμόρφωση συμβόλου</h2>
+
+```http
+GET /v1/public/market/symbols
+```
+
+Κοινά πεδία απόκρισης:
+
+| Πεδίο                      | Τύπος   | Περιγραφή                   |
+| -------------------------- | ------ | ----------------------------- |
+| `list[].symbol`            | string | Σύμβολο                        |
+| `list[].baseAsset`         | string | Βασικό περιουσιακό στοιχείο                    |
+| `list[].quoteAsset`        | string | Προσφορά στοιχείου                   |
+| `list[].minQuantity`       | string | Ελάχιστη ποσότητα παραγγελίας        |
+| `list[].minNotional`       | string | Ελάχιστη ονομαστική αξία        |
+| `list[].tickSize`          | string | Μέγεθος τσιμπήματος τιμής               |
+| `list[].stepSize`          | string | Μέγεθος βήματος ποσότητας            |
+| `list[].pricePrecision`    | int64  | Ακρίβεια τιμής               |
+| `list[].maxLimitOrderQty`  | string | Μέγιστο όριο ποσότητας εντολής  |
+| `list[].maxMarketOrderQty` | string | Μέγιστη ποσότητα παραγγελίας αγοράς |
+| `list[].maxOpenOrders`     | int64  | Μέγιστος αριθμός ανοικτών εντολών ανά χρήστη  |
+| `list[].defaultLeverage`   | int64  | Προεπιλεγμένη μόχλευση              |
+| `list[].defaultMarginMode` | int64  | Προεπιλεγμένη λειτουργία περιθωρίου           |
+| `list[].leverageTiers[]`   | array  | Επίπεδα περιθωρίου μόχλευσης         |
+| `handlingFeeLevelConfig[]` | array  | Διαμόρφωση βαθμίδας χρέωσης        |
+
+<h2 id="funding-rate-configuration">Διαμόρφωση ποσοστού χρηματοδότησης</h2>
+
+```http
+GET /v1/public/market/funding-rate?symbol=BTCUSDT
+```
+
+Παράμετροι αιτήματος:
+
+| Παράμετρος | Τύπος   | Απαιτείται | Περιγραφή                     |
+| --------- | ------ | -------- | ------------------------------- |
+| `symbol`  | string | Όχι       | Εάν παραλειφθεί, επιστρέφει όλα τα σύμβολα |
+
+<h2 id="current-funding-rate">Τρέχον ποσοστό χρηματοδότησης</h2>
+
+```http
+GET /v1/public/market/funding-rate/current?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+Παράμετροι αιτήματος:
+
+| Παράμετρος  | Τύπος   | Απαιτείται | Περιγραφή                  |
+| ---------- | ------ | -------- | ---------------------------- |
+| `symbol`   | string | Όχι       | Σύμβολο                       |
+| `page`     | int32  | Όχι       | Αριθμός σελίδας, προεπιλεγμένη `1`     |
+| `pageSize` | int32  | Όχι       | Στοιχεία ανά σελίδα, προεπιλεγμένη `20` |
+
+<h2 id="funding-rate-history">Ιστορικό ποσοστού χρηματοδότησης</h2>
+
+```http
+GET /v1/public/market/funding-rate/history?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+Παράμετροι αιτήματος:
+
+| Παράμετρος   | Τύπος   | Απαιτείται | Περιγραφή                  |
+| ----------- | ------ | -------- | ---------------------------- |
+| `symbol`    | string | Ναι      | Σύμβολο                       |
+| `startTime` | int64  | Όχι       | Ώρα έναρξης                   |
+| `endTime`   | int64  | Όχι       | Ώρα λήξης                     |
+| `page`      | int32  | Όχι       | Αριθμός σελίδας, προεπιλεγμένη `1`     |
+| `pageSize`  | int32  | Όχι       | Στοιχεία ανά σελίδα, προεπιλεγμένη `20` |
+
+<h2 id="klines">Κλάιν</h2>
+
+```http
+GET /v1/public/market/klines?symbol=BTCUSDT&interval=1m&limit=500
+```
+
+Παράμετροι αιτήματος:
+
+| Παράμετρος   | Τύπος   | Απαιτείται | Περιγραφή                                                              |
+| ----------- | ------ | -------- | ------------------------------------------------------------------------ |
+| `symbol`    | string | Ναι      | Σύμβολο                                                                   |
+| `interval`  | string | Ναι      | Διάστημα, όπως `1m`, `5m`, `15m`, `30m`, `1h`, `4h`, `1d`, `1w`, `1M` |
+| `priceType` | string | Όχι       | `indexPrice` / `markPrice`. Εάν παραλειφθεί, επιστρέφει την τιμή συναλλαγής Klines       |
+| `startTime` | int64  | Όχι       | Ώρα έναρξης                                                               |
+| `endTime`   | int64  | Όχι       | Ώρα λήξης                                                                 |
+| `limit`     | int32  | Όχι       | Αριθμός επιστρεφόμενων ειδών, προεπιλεγμένη `500`, μέγιστη `1000`                  |
+
+Πεδία απόκρισης:
+
+| Πεδίο              | Τύπος   | Περιγραφή |
+| ------------------ | ------ | ----------- |
+| `list[].openTime`  | int64  | Ανοιχτός χρόνος   |
+| `list[].open`      | string | Τιμή ανοίγματος  |
+| `list[].high`      | string | Υψηλή τιμή  |
+| `list[].low`       | string | Χαμηλή τιμή   |
+| `list[].close`     | string | Κλείσιμο τιμής |
+| `list[].volume`    | string | Ενταση ΗΧΟΥ      |
+| `list[].closeTime` | int64  | Ώρα κλεισίματος  |
+
+<h2 id="related-documentation">Σχετική τεκμηρίωση</h2>
+
+- [Δημόσια τελικά σημεία](/el/developer-api/rest-api/public-endpoints)
+- [Δημόσια κανάλια WebSocket](/el/developer-api/websocket/public-market-channels)
+- [Βάθος & Spread Αγοράς](/el/solutions/market-depth-spread)

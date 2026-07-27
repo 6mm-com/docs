@@ -1,0 +1,108 @@
+---
+title: "6MM Trading WidgetGöm: Hızlı Başlangıç"
+subtitle: "Ticaret terminalini bir web sayfasına bir konteyner, v1 betiği ve TradingWidget.create() ile ekleyin."
+slug: sdk/trading-widget/quick-start
+canonical-url: https://docs.6mm.com/tr/sdk/trading-widget/quick-start
+---
+
+Trading Widget SDK, 6MM ticaret arayüzünü ortaklara ait bir web sayfasına gömüyor. En hızlı entegrasyon için görünür bir konteyner, üretim SDK betiği ve `TradingWidget.create()`çağrısı gerekir.
+
+<h2 id="before-you-start">Başlamadan önce</h2>
+
+- Örneği, kaynakları yükleyebilen bir web sayfasından çalıştırmak `https://app.6mm.com`.
+- Widget konteynerine açık bir genişlik ve yükseklik verin.
+- Aramadan önce SDK yükleyin `TradingWidget.create()`.
+- Planlayın [Kimlik doğrulama akışı](/tr/sdk/trading-widget/authentication) Üretim sırasında hesap veya ticaret özelliklerini etkinleştirmeden önce.
+
+<h2 id="minimal-example">Minimal örnek</h2>
+
+```html
+<div id="trading-widget" style="width: 100%; height: 720px"></div>
+
+<script src="https://app.6mm.com/sdk/trading-widget/v1/index.js"></script>
+<script>
+  const widget = TradingWidget.create('#trading-widget', {
+    baseUrl: 'https://app.6mm.com',
+    symbol: 'BTCUSDT',
+    theme: 'dark',
+    locale: 'en',
+    layout: 'default',
+    display: {
+      showHeader: false,
+      showTicker: false,
+      hidden: [],
+    },
+    onReady(event) {
+      console.log('ready', event)
+    },
+    onError(error) {
+      console.error('error', error)
+    },
+  })
+</script>
+```
+
+Entegrasyon başarılı olduğunda, SDK `#trading-widget` içinde bir iframe oluşturur ve `onReady`çağırır. Geliştirme sırasında `onError` yakalayın, böylece yapılandırma ve yükleme hataları görünür olur.
+
+<h2 id="sdk-urls">SDK URL'ler</h2>
+
+| Çevre | Senaryo URL |
+| --- | --- |
+| Yapım | https://app.6mm.com/sdk/trading-widget/v1/index.js |
+
+> ** baseUrl açıkça ayarla**
+>
+> Ortak sahipliğindeki sayfalardan test yaparken, iframe her zaman 6MM Web alan adına işaret etmesi için baseUrl iletin.
+
+<h2 id="display-controls">Ekran kontrolleri</h2>
+
+Ortak gömülüler, varsayılan olarak PC başlığını ve alt piyasa ticker'ını gizler. Kabuk alanlarını göstermeniz veya gömülü ticaret sayfasında yüksek seviyeli konteynerleri gizlemeniz gerektiğinde `display` kullanın.
+
+```js
+display: {
+  showHeader: false,
+  showTicker: false,
+  hidden: ['account'],
+}
+```
+
+<h2 id="container-size">Konteyner boyutu</h2>
+
+| Yüzey | Önerilen minimum |
+| --- | --- |
+| Masaüstü | 1024 x 720 |
+| Mobil | 390 x 700 |
+
+Duyarlı düzenler için genişliği akıcı tutun ve her kırılma noktası için uygun minimum yükseklik belirleyin. Sıfır yüksekliğe sahip bir konteyner, SDK başarılı şekilde yükleyebilir ve işlem arayüzünü görünmez bırakabilir.
+
+<h2 id="verify-the-integration">Entegrasyonu doğrulayın</h2>
+
+1. SDK betiksinin tarayıcı ağ panelinde başarılı bir şekilde geri döndüğünü onaylayın.
+2. iframe başlatıldığında `onReady` ateşlendiğini onaylayın.
+3. Yapılandırılmış `symbol`, `locale`, tema ve gizli bölümleri test edin.
+4. Sayfayı masaüstü ve mobil ara noktaları arasında boyutlandırın.
+5. Lansmandan önce üretim dışı bir kullanıcıyla doğrulamalı bir testi tamamlamak.
+
+<h2 id="common-issues">Yaygın sorunlar</h2>
+
+| Semptom | Neler kontrol edilmeli |
+| --- | --- |
+| Boş widget alanı | Kabın görünür genişlik ve yüksekliğe sahip olduğunu doğrulayın. |
+| `TradingWidget` tanımlanmamıştır | Oluşturma çağrısından önce v1 bebesinin yüklendiğini onaylayın. |
+| Yanlış sayfa veya ortam | `baseUrl` açıkça ayarlayın ve yapılandırılmış ortamı doğrulayın. |
+| Hazır olay asla ateşlenmez | `onError` yakalayın ve bloklanan iframe veya script isteklerini inceleyin. |
+| Hesap verileri mevcut değil | Desteklenen widget kimlik doğrulama akışını tamamla. |
+
+<h2 id="next-steps">Sonraki adımlar</h2>
+
+<CardGroup cols={3}>
+<Card title="Widget Doğrulama" icon="fa-duotone fa-user-shield" href="/tr/sdk/trading-widget/authentication">
+Gömülü terminali onaylı bir kullanıcı oturumuna bağlayın.
+</Card>
+<Card title="Seçenekler ve Etkinlikler" icon="fa-duotone fa-sliders" href="/tr/sdk/trading-widget/options-events">
+Sembolleri, konumu, gösterim davranışını ve yaşam döngüsü geri çağrılarını yapılandırın.
+</Card>
+<Card title="Örnek Yöntemleri" icon="fa-duotone fa-code" href="/tr/sdk/trading-widget/instance-methods">
+Başlatmadan sonra oluşturulan widget örneğini kontrol edin.
+</Card>
+</CardGroup>

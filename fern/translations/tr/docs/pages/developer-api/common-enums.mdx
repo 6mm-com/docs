@@ -1,0 +1,50 @@
+---
+title: "Common Enums"
+description: "Sıralar durumları, taraflar, emir türleri, yürürlükteki zaman, konum modları, transferler ve entegrasyon yanıtları için ortak 6MM API enumlarına referans verin."
+slug: developer-api/common-enums
+canonical-url: https://docs.6mm.com/tr/developer-api/common-enums
+---
+
+<h2 id="orders">Siparişler</h2>
+
+| Enum                 | Değerler                                                                                                    |
+| -------------------- | --------------------------------------------------------------------------------------------------------- |
+| Düzen tarafı           | `BUY` / `SELL`                                                                                            |
+| Pozisyon tarafı        | `BOTH` / `LONG` / `SHORT`                                                                                 |
+| Normal sıra tipi    | `LIMIT` / `MARKET`                                                                                        |
+| Koşul sırası tipi | `STOP_MARKET` / `STOP_LIMIT` / `TAKE_PROFIT_MARKET` / `TAKE_PROFIT_LIMIT` / `TRAILING_STOP`               |
+| Sürenin yürürlüğü        | `GTC` / `IOC` / `FOK` / `GTE_GTC`                                                                         |
+| Tetikleyici fiyat türü   | `MARK_PRICE` / `CONTRACT_PRICE`                                                                           |
+| Sipariş durumu         | `NEW` / `PENDING` / `PARTIALLY_FILLED` / `FILLED` / `CANCELED` / `REJECTED` / `PARTIALLY_FILLED_CANCELED` |
+
+`NEW` , sipariş talebinin kabul edildiği ve geri gönderildiği anlamına gelir. `PENDING` emrin beklemede veya açık emir durumuna girdiği anlamına gelir.
+
+<h2 id="positions">Pozisyonlar</h2>
+
+| Enum                      | Değerler                                                      |
+| ------------------------- | ----------------------------------------------------------- |
+| Marj modu isteği değeri | `1` haç `2` izole                                     |
+| Kenar modu dizisi        | `ISOLATED` / `CROSS`                                        |
+| Kapanış tetik modu        | `1` manuel `2` kâr almak, stop loss `3` `4` tasfiye |
+
+<h2 id="integration-rules">Entegrasyon kuralları</h2>
+
+- Enum değerlerini büyük harf hassasiyetli tel değerleri olarak ele alın.
+- Kayıtlarda bilinmeyen değerleri koruyup güvenli bir şekilde başarısız olmayı sessizce bilinen bir duruma eşlemeyi tercih et.
+- Her nihai olmayan düzen durumun yeniden denemenin güvenli olduğunu çıkarmayın. Siparişi sorgulayın veya özel bir WebSocket etkinliğiyle uzlaştırın.
+- Hem orijinal API değerini hem de partnere dönük gösteri etiketini saklayarak yeni değerlerin geçmiş kayıtları değiştirmeden desteklenebilmesi sağlanır.
+
+<h2 id="order-state-handling">Sipariş durumu işlemesi</h2>
+
+| Eyalet grubu | Değerler | Önerilen kullanım |
+| --- | --- | --- |
+| Kabul edilmiş veya açık | `NEW`, `PENDING`, `PARTIALLY_FILLED` | Siparişi aktif tutun ve WebSocket veya REST güncellemelerle uzlaşın. |
+| Tamamlandı | `FILLED` | Son doldurulan miktar ve uygulama kayıtlarını uygulayın. |
+| Tam dolum olmadan kapalı | `CANCELED`, `REJECTED`, `PARTIALLY_FILLED_CANCELED` | Aktif işlemeyi durdurun ve sebep ile uygulanan miktarı koruyun. |
+
+<h2 id="related-documentation">İlgili belgeler</h2>
+
+- [Sipariş API](/tr/developer-api/rest-api/order): Alan talep edin ve yaşam döngüsü işlemlerini emrederler.
+- [Sipariş Türleri](/tr/trading/order-types): limit, piyasa ve koşullu emirler için ürün davranışı.
+- [Özel Kullanıcı Kanalı](/tr/developer-api/websocket/private-user-channel): gerçek zamanlı sipariş ve hesap durumu.
+- [Hata Kodları ve Sorun Giderme](/tr/developer-api/error-codes-and-troubleshooting): iş kodları ve tanı iş akışı.

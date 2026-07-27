@@ -1,0 +1,73 @@
+---
+title: "6MM API Doğrulama: JWT ve API Anahtarları"
+description: "Özel 6MM API isteklerini JWT erişim tokenları veya API anahtarlarıyla nasıl doğrulayacağınızı öğrenin ve her entegrasyon için uygun yöntemi seçin."
+slug: developer-api/authentication
+canonical-url: https://docs.6mm.com/tr/developer-api/authentication
+---
+
+6MM, özel API erişim için JWT erişim tokenları ve API Anahtarlarını destekliyor. Yöntemi, talebin etkileşimli bir kullanıcı oturumuna mı yoksa uzun süredir devam eden bir arka uç entegrasyonuna mı ait olduğuna göre seçin.
+
+<h2 id="choose-an-authentication-method">Bir kimlik doğrulama yöntemi seçin</h2>
+
+| Entegrasyon ihtiyacı | Önerilen yöntem | Neden |
+| --- | --- | --- |
+| Kullanıcı oturumu API çağrıları | JWT | Giriş sonrası geri dönen erişim tokenini kullanır. |
+| API Anahtarları oluştur, güncelle veya iptal et | JWT | API Key yönetim uç noktaları API Key kendi kendini yönetmeyi kabul etmez. |
+| Sunucudan sunucuya hesap veya ticaret çağrıları | API Key + HMAC imzası | Kapsamlı izinleri ve imzalı arka uç isteklerini destekler. |
+
+<h2 id="jwt">JWT</h2>
+
+Giriş yaptıktan sonra API bir `accessToken`döndürür. Özel uç noktaları çağırılırken, şunları ekleyin:
+
+```http
+Authorization: Bearer YOUR_ACCESS_TOKEN
+```
+
+Tokenı URL'lere ve loglara girme. Bir token süresi dolduğunda, onaylı giriş veya yenileme akışı üzerinden geçerli bir token alın ve ardından özel talebi yeniden denedin.
+
+<h2 id="api-key">API Key</h2>
+
+`X-API-KEY` istek başlığı bulunduğunda, sunucu API Key HMAC kimlik doğrulama kullanır:
+
+```http
+X-API-KEY: YOUR_API_KEY
+```
+
+API Key yönetim uç noktaları JWTkullanmalıdır. API Anahtarlar kendi başlarına idare edemez.
+
+API Key talepler ayrıca şu tarihte tanımlanan zaman damgası ve HMAC imzası gerektirir [İstek İmzaları](/tr/developer-api/request-signing). İlgili API sırrı yalnızca bir arka uç sır yönetim sisteminde saklayın.
+
+<h2 id="api-key-permissions">API Key İzinleri</h2>
+
+| Değer | İzin | Tanım                                                                                                                                                                                    |
+| ----- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `1`   | Oku       | Kullanıcı bilgileri, varlıklar, hesap değişim kayıtları, istatistikler, listenKey, favori semboller ve ilgili kullanıcı/hesap uç noktaları. Sipariş ve pozisyon uç noktaları, sorgular dahil, Ticaret izni gerektirir |
+| `2`   | Ticaret      | Hem sorgu hem de yazma işlemlerini içeren sıra ve konum uç noktaları                                                                                                                        |
+| `4`   | Çekilme   | Rezerv fon izni                                                                                                                                                                       |
+
+Hem okuma hem de ticaret izni vermek için `permissions=3`kullanın.
+
+Entegrasyon için gereken en küçük izin setini kullanın. Bir piyasa veri servisi işlem izni almamalıdır, oysa bir emir servisi sadece emirleri veya pozisyonları sorgulasa bile işlem iznine ihtiyaç duyar.
+
+<h2 id="production-security-checklist">Üretim güvenlik kontrol listesi</h2>
+
+- Geliştirme, aşamalama ve üretim için ayrı API Anahtarları oluşturmak.
+- Entegrasyonun kararlı çıkış adreslerine sahip olduğu IP beyaz listesi uygulanır.
+- Tarayıcı, mobil veya masaüstü uygulama kodlarında API sırları asla açığa çıkarmayın.
+- İmzalı istekler oluşturmadan önce sunucu zamanını senkronize edin.
+- Yetkilendirme başlıklarını, API Anahtarları, imzaları ve uygulama kayıtlarından sırları düzeltin.
+- Bir anahtarı hemen geri alın ve değiştirin.
+
+<h2 id="next-steps">Sonraki adımlar</h2>
+
+<CardGroup cols={3}>
+<Card title="API Key Yönetimi" icon="fa-duotone fa-key" href="/tr/developer-api/api-key-management">
+Dürbünlü anahtarlar oluşturun, IP kısıtlamaları yapılandırın ve anahtar döndürmeyi planlayın.
+</Card>
+<Card title="İstek İmzaları" icon="fa-duotone fa-signature" href="/tr/developer-api/request-signing">
+HMAColuşturun - yükSHA256 ve özel talepleri imzalayın.
+</Card>
+<Card title="Hatalar ve Sorun Giderme" icon="fa-duotone fa-screwdriver-wrench" href="/tr/developer-api/error-codes-and-troubleshooting">
+Reddedilen kimlik bilgilerini, zaman damgalarını, imzaları ve izinleri teşhis edin.
+</Card>
+</CardGroup>

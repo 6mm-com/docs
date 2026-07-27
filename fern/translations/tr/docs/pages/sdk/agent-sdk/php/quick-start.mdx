@@ -1,0 +1,70 @@
+---
+title: "PHP Hızlı Başlangıç"
+subtitle: "Bir arka uç servisinden PHP SDK kurup başlatın."
+slug: sdk/agent-sdk/php/quick-start
+canonical-url: https://docs.6mm.com/tr/sdk/agent-sdk/php/quick-start
+---
+
+<h2 id="install">Kurulum</h2>
+
+```json
+{
+  "require": {
+    "sixmm/agent-sdk": "VERSION_PROVIDED_BY_6MM"
+  }
+}
+```
+
+> **Paket erişimi**
+>
+> 6MM , partner onboarding sırasında onaylanmış Besteci paket adı, deposu ve versiyonunu sağlar. Paketin kamuya açık Packagist'te var olduğu varsayılmamalıdır.
+
+<h2 id="before-you-start">Başlamadan önce</h2>
+
+- Ajanı API üs URL 6MMile onaylayın.
+- Ortam değişkenlerinden veya gizli yönetimden apiSecret yükleme.
+- SDK kullanımını sadece arka uç servislerinde tutun.
+- Transfer ve webhook akışları için idempotent işleme hazırlamak.
+
+<h2 id="initialize-client">İstemciyi başlat</h2>
+
+```php
+<?php
+
+use Sixmm\Agent\AgentClient;
+use Sixmm\Agent\AgentConfig;
+
+$client = new AgentClient(new AgentConfig(
+    'https://agent-api.6mm.com',
+    'AGENT001',
+    getenv('AGENT_API_SECRET') ?: '',
+    'USDT'
+));
+```
+
+> **Sadece arka uç**
+>
+> PHP SDK , Agent API taleplerini işaretler ve kamu kaynak kodu veya ön yüz çalışma ortamları aracılığıyla açığa çıkarılmamalıdır.
+
+<h2 id="example-transfer-funds-in">Örnek: fon transferi</h2>
+
+```php
+$response = $client->transfer([
+    'agentOrderNo' => 'AGT-ORDER-1001',
+    'agentUserId' => 'agent-user-001',
+    'direction' => 'IN',
+    'currency' => 'USDT',
+    'amount' => '10.00',
+]);
+```
+
+Miktarlar için ondalık dizileri kullanın ve transfer durumunu tekrar denerken veya sorgularken orijinal agentOrderNo korun.
+
+<h2 id="next-steps">Sonraki adımlar</h2>
+
+| İhtiyaç | Sonraki sayfa |
+| --- | --- |
+| Agent SDK yeteneklerini anlayın | [Agent SDK Genel Bakış](/tr/sdk/agent-sdk/overview) |
+| İmza davranışını gözden geçir | [Sırlar ve İmza Alma](/tr/sdk/security/secrets-signing) |
+| Geri dönüş teslimatını doğrulayın | [Webhooks ve İdempotensi](/tr/sdk/security/webhooks-idempotency) |
+| Bir entegrasyon problemini teşhis et | [SDK Sorun Giderme](/tr/sdk/security/troubleshooting) |

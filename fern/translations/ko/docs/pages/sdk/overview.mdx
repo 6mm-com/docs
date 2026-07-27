@@ -1,0 +1,53 @@
+---
+title: "6MM SDKs"
+subtitle: "임베디드 트레이딩, 백엔드 토큰 발행, 계정 연동, webhooks, 생산 운영을 위한 올바른 6MM SDK 경로를 선택하세요."
+slug: sdk/overview
+canonical-url: https://docs.6mm.com/ko/sdk/overview
+---
+
+<h2 id="choose-an-sdk-path">SDK 경로를 선택하세요</h2>
+
+<CardGroup cols={3}>
+<Card title="Trading Widget SDK" icon="duotone chart-line" href="/ko/sdk/trading-widget/quick-start">
+6MM 거래 터미널을 기존 웹사이트, 지갑, 중개 포털 또는 파트너 제품 표면에 내장하세요.
+</Card>
+<Card title="Agent SDK" icon="duotone server" href="/ko/sdk/agent-sdk/overview">
+사용자 바인딩, 임베드 토큰, 입력 URL, 전송, 주문 조회 등 6MM에 파트너 백엔드를 연결webhooks
+</Card>
+<Card title="보안 및 작전" icon="duotone shield-check" href="/ko/sdk/security/secrets-signing">
+  비밀 저장소 준비, 요청 서명, 멩등성 webhook , 모니터링, 실행 문제 해결 등을 준비하세요.
+</Card>
+</CardGroup>
+
+<h2 id="recommended-combination">추천 조합</h2>
+
+| 파트너 목표 | 프론트엔드 | 백엔드 | 왜 중요한가 |
+| --- | --- | --- | --- |
+| 내장형 거래 단말기 추가하기 | Trading Widget SDK | Agent SDK | 위젯은 거래 UI를 처리하고, 파트너 백엔드는 토큰을 발행하며 비밀을 비공개로 유지합니다. |
+| 네이티브 앱 진입점 생성 | 네이티브 또는 H5 항목 | Agent SDK | 파트너가 사용자 세션을 검증한 후 앱은 6MM 항목 URL 을 엽니다. |
+| 맞춤형 거래 흐름을 구축하세요 | 파트너 UI | Developer API + 선택된 SDK 흐름 | 계좌, 주문, 포지션, 시장 데이터는 APIs 사용하면서 운영 통제는 서버 측에서 유지하세요. |
+
+<h2 id="reference-architecture">참조 아키텍처</h2>
+
+```text
+Partner Web App
+  -> TradingWidget.create()
+  -> tokenProvider()
+  -> Partner Backend
+  -> 6MM Agent SDK
+  -> 6MM Agent API
+  -> 6MM Trading iframe
+```
+
+> **서버 측에서 비밀을 유지하세요**
+>
+> 브라우저 코드는 파트너 소유 엔드포인트만 호출해야 합니다. 에이전트 API 비밀은 절대 프론트엔드 코드로 전송되어서는 안 됩니다.
+
+<h2 id="production-checklist">생산 체크리스트</h2>
+
+- apiSecret 오직 백엔드 인프라에만 저장합니다.
+- 에이전트 API 요청과 webhook URL 에 HTTPS 사용.
+- 매핑을 agentUserId platformUserId, agentOrderNo 지속적으로 보존합니다.
+- 금전적 금액을 부동소수점 값 대신 소수점 문자열로 표현합니다.
+- PROCESSING 를 성공이나 실패가 아닌 보류 중인 것으로 처리하세요.
+- 재시도가 예상되므로 멪등성 처리webhooks

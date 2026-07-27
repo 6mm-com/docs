@@ -1,0 +1,420 @@
+---
+title: "Παραγγελία"
+description: "Χρησιμοποιήστε τελικά σημεία παραγγελίας 6MM για να δημιουργήσετε, να υποβάλετε ερωτήματα, να ακυρώσετε και να διαχειριστείτε οριστικές παραγγελίες κατά το χειρισμό δικαιωμάτων, αναγνωριστικών και καταστάσεων κύκλου ζωής."
+slug: developer-api/rest-api/order
+canonical-url: https://docs.6mm.com/el/developer-api/rest-api/order
+---
+
+> **Σημείωση**
+>
+> Τα τελικά σημεία παραγγελίας απαιτούν άδεια συναλλαγής.
+
+<h2 id="place-order">Παραγγέλνω</h2>
+
+```http
+POST /v1/private/order/place
+Content-Type: application/json
+```
+
+**Παράμετροι αιτήματος:**
+
+| Παράμετρος       | Τύπος   | Απαιτείται               | Περιγραφή                                                                                                                   |
+| --------------- | ------ | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `symbol`        | string | Ναι                    | Σύμβολο                                                                                                                        |
+| `type`          | string | Ναι                    | `LIMIT` / `MARKET`                                                                                                            |
+| `side`          | string | Ναι                    | `BUY` / `SELL`                                                                                                                |
+| `positionSide`  | string | Όχι                     | `BOTH` / `LONG` / `SHORT`, προεπιλογή `BOTH`                                                                                     |
+| `price`         | string | Απαιτείται υπό όρους | Απαιτείται για οριακές εντολές                                                                                                     |
+| `quantity`      | string | Απαιτείται υπό όρους | Ποσότητα. Μπορεί να παραλειφθεί όταν `closePosition=true`                                                                            |
+| `timeInForce`   | string | Όχι                     | `GTC` / `IOC` / `FOK`, προεπιλογή `GTC`                                                                                          |
+| `reduceOnly`    | bool   | Όχι                     | Μόνο σμίκρυνση, προεπιλεγμένη `false`                                                                                                  |
+| `makerOnly`     | bool   | Όχι                     | Μόνο για δημιουργό, προεπιλεγμένη `false`                                                                                                   |
+| `closePosition` | bool   | Όχι                     | Κλείστε ολόκληρη τη θέση, προεπιλογή `false`                                                                                    |
+| `clientOrderId` | string | Όχι                     | Αναγνωριστικός κωδικός παραγγελίας που ορίζεται από τον πελάτη                                                                                                       |
+| `placeType`     | string | Όχι                     | Δείκτης τύπου τοποθέτησης παραγγελίας                                                                                                   |
+| `priceType`     | int32  | Όχι                     | BBO τύπος τιμής: `0` καθορισμένη τιμή, `1` τιμή αντιπάλου 1, `2` τιμή αντιπάλου 5, `3` τιμή ίδιας πλευράς 1 `4` τιμή ίδιας πλευράς 5 |
+
+**Παράδειγμα αιτήματος:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "type": "LIMIT",
+  "side": "BUY",
+  "price": "85000",
+  "quantity": "0.1",
+  "timeInForce": "GTC",
+  "makerOnly": true,
+  "clientOrderId": "ext-1772710377808-001"
+}
+```
+
+**Πεδία απόκρισης:**
+
+| Πεδίο           | Τύπος   | Περιγραφή             |
+| --------------- | ------ | ----------------------- |
+| `orderId`       | string | Αναγνωριστικό παραγγελίας διακομιστή         |
+| `clientOrderId` | string | Αναγνωριστικός κωδικός παραγγελίας που ορίζεται από τον πελάτη |
+| `status`        | string | Κατάσταση παραγγελίας            |
+| `timestamp`     | int64  | Χρονική σήμανση               |
+
+<h2 id="batch-place-orders">Παραγγελίες παρτίδας</h2>
+
+```http
+POST /v1/private/order/batch-place
+Content-Type: application/json
+```
+
+**Σώμα αιτήματος:**
+
+```json
+{
+  "orders": [
+    {
+      "symbol": "BTCUSDT",
+      "type": "LIMIT",
+      "side": "BUY",
+      "price": "85000",
+      "quantity": "0.1",
+      "clientOrderId": "ext-buy-001"
+    }
+  ]
+}
+```
+
+**Πεδία απόκρισης:**
+
+| Πεδίο          | Τύπος  | Περιγραφή                 |
+| -------------- | ----- | --------------------------- |
+| `successCount` | int32 | Αριθμός επιτυχημένων παραγγελιών |
+| `failedCount`  | int32 | Αριθμός παραγγελιών που απορρίφθηκαν     |
+| `results[]`    | array | Αποτέλεσμα για κάθε παραγγελία       |
+
+<h2 id="place-condition-order">Παραγγελία κατάστασης</h2>
+
+```http
+POST /v1/private/order/place-condition
+Content-Type: application/json
+```
+
+**Παράμετροι αιτήματος:**
+
+| Παράμετρος       | Τύπος   | Απαιτείται               | Περιγραφή                                                                                 |
+| --------------- | ------ | ---------------------- | ------------------------------------------------------------------------------------------- |
+| `symbol`        | string | Ναι                    | Σύμβολο                                                                                      |
+| `type`          | string | Ναι                    | `STOP_MARKET` / `TAKE_PROFIT_MARKET` / `STOP_LIMIT` / `TAKE_PROFIT_LIMIT` / `TRAILING_STOP` |
+| `side`          | string | Ναι                    | `BUY` / `SELL`                                                                              |
+| `positionSide`  | string | Όχι                     | `BOTH` / `LONG` / `SHORT`                                                                   |
+| `price`         | string | Απαιτείται υπό όρους | Απαιτείται για `STOP_LIMIT` / `TAKE_PROFIT_LIMIT`                                             |
+| `quantity`      | string | Απαιτείται υπό όρους | Ποσότητα. Μπορεί να παραλειφθεί όταν `closePosition=true`                                          |
+| `timeInForce`   | string | Όχι                     | `GTC` / `IOC` / `FOK` / `GTE_GTC`                                                           |
+| `reduceOnly`    | bool   | Όχι                     | Μόνο μείωση                                                                                 |
+| `clientOrderId` | string | Όχι                     | Αναγνωριστικός κωδικός παραγγελίας που ορίζεται από τον πελάτη                                                                     |
+| `stopPrice`     | string | Απαιτείται υπό όρους | Τιμή ενεργοποίησης                                                                               |
+| `workingType`   | string | Όχι                     | `MARK_PRICE` / `CONTRACT_PRICE`, προεπιλογή `CONTRACT_PRICE`                                   |
+| `priceProtect`  | bool   | Όχι                     | Εάν είναι ενεργοποιημένη η προστασία των τιμών                                                         |
+| `activatePrice` | string | Απαιτείται υπό όρους | Τιμή ενεργοποίησης κυλιόμενης εντολής                                                             |
+| `callbackRate`  | string | Απαιτείται υπό όρους | Ποσοστό επανάκλησης κυλιόμενης παραγγελίας                                                                |
+| `closePosition` | bool   | Όχι                     | Κλείστε ολόκληρη τη θέση                                                                   |
+
+**Πεδία απόκρισης:**
+
+| Πεδίο             | Τύπος   | Περιγραφή            |
+| ----------------- | ------ | ---------------------- |
+| `conditionId`     | string | Αναγνωριστικό παραγγελίας κατάστασης     |
+| `conditionStatus` | string | Κατάσταση παραγγελίας κατάστασης |
+| `timestamp`       | int64  | Χρονική σήμανση              |
+
+<h2 id="place-strategy-order">Παραγγελία στρατηγικής</h2>
+
+```http
+POST /v1/private/order/place-strategy
+Content-Type: application/json
+```
+
+**Παράμετροι αιτήματος:**
+
+| Παράμετρος      | Τύπος   | Απαιτείται | Περιγραφή             |
+| -------------- | ------ | -------- | ----------------------- |
+| `strategyType` | string | Ναι      | `OTOCO` / `OTO` / `OCO` |
+| `subOrderList` | array  | Ναι      | Λίστα υποπαραγγελιών          |
+
+Τα πεδία στο `subOrderList[]` είναι ως επί το πλείστον τα ίδια με τις κανονικές εντολές και τις εντολές συνθηκών, με πρόσθετα πεδία εξάρτησης:
+
+| Παράμετρος        | Τύπος   | Περιγραφή                                     |
+| ---------------- | ------ | ----------------------------------------------- |
+| `strategySubId`  | int64  | Αναγνωριστικό δευτερεύουσας παραγγελίας                                    |
+| `firstDrivenId`  | int64  | Αναγνωριστικό πρώτης εντολής οδήγησης. `0` σημαίνει ότι δεν υπάρχει εξάρτηση |
+| `firstDrivenOn`  | string | Συνθήκη πρώτης σκανδάλης                         |
+| `firstTrigger`   | string | Ενέργεια πρώτης σκανδάλης                            |
+| `secondDrivenId` | int64  | Δεύτερο αναγνωριστικό εντολής οδήγησης                         |
+| `secondDrivenOn` | string | Δεύτερη συνθήκη ενεργοποίησης                        |
+| `secondTrigger`  | string | Δεύτερη ενέργεια σκανδάλης                           |
+
+**Πεδία απόκρισης:**
+
+| Πεδίο            | Τύπος   | Περιγραφή     |
+| ---------------- | ------ | --------------- |
+| `strategyId`     | string | Αναγνωριστικό στρατηγικής     |
+| `strategyStatus` | string | Κατάσταση στρατηγικής |
+| `timestamp`      | int64  | Χρονική σήμανση       |
+
+<h2 id="query-single-order">Ερώτημα μεμονωμένης παραγγελίας</h2>
+
+```http
+GET /v1/private/order?symbol=BTCUSDT&orderId=2022543809547603968
+```
+
+**Παράμετροι αιτήματος:**
+
+| Παράμετρος       | Τύπος   | Απαιτείται | Περιγραφή             |
+| --------------- | ------ | -------- | ----------------------- |
+| `symbol`        | string | Ναι      | Σύμβολο                  |
+| `orderId`       | string | Όχι       | Αναγνωριστικό παραγγελίας διακομιστή         |
+| `clientOrderId` | string | Όχι       | Αναγνωριστικός κωδικός παραγγελίας που ορίζεται από τον πελάτη |
+
+Πρέπει να παρέχεται τουλάχιστον ένα από `orderId` και `clientOrderId` . Εάν παρέχονται και τα δύο, ο διακομιστής εκτελεί ακριβή αντιστοίχιση και στις δύο συνθήκες.
+
+<h2 id="current-normal-orders">Τρέχουσες κανονικές παραγγελίες</h2>
+
+```http
+GET /v1/private/order/current?symbol=BTCUSDT
+```
+
+**Παράμετροι αιτήματος:**
+
+| Παράμετρος     | Τύπος   | Απαιτείται | Περιγραφή        |
+| ------------- | ------ | -------- | ------------------ |
+| `symbol`      | string | Όχι       | Σύμβολο             |
+| `limit`       | int32  | Όχι       | Όριο αριθμού επιστροφών |
+| `lastOrderId` | int64  | Όχι       | Πεδίο δρομέα       |
+
+**Πεδία απόκρισης:**
+
+| Πεδίο    | Τύπος  | Περιγραφή               |
+| -------- | ----- | ------------------------- |
+| `list[]` | array | Τρέχουσα κανονική λίστα παραγγελιών |
+| `total`  | int32 | Καταμέτρηση                     |
+
+<h2 id="current-condition-orders">Παραγγελίες Τρέχουσας Κατάστασης</h2>
+
+```http
+GET /v1/private/order/current-condition?symbol=BTCUSDT
+```
+
+**Παράμετροι αιτήματος:**
+
+| Παράμετρος | Τύπος   | Απαιτείται | Περιγραφή |
+| --------- | ------ | -------- | ----------- |
+| `symbol`  | string | Όχι       | Σύμβολο      |
+
+<h2 id="historical-normal-orders">Ιστορικές Κανονικές Τάξεις</h2>
+
+```http
+GET /v1/private/order/history?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+**Παράμετροι αιτήματος:**
+
+| Παράμετρος       | Τύπος   | Απαιτείται | Περιγραφή                              |
+| --------------- | ------ | -------- | ---------------------------------------- |
+| `symbol`        | string | Όχι       | Σύμβολο                                   |
+| `orderId`       | string | Όχι       | Φίλτρο ακριβούς αναγνωριστικού παραγγελίας                    |
+| `clientOrderId` | string | Όχι       | Φίλτρο ακριβούς αναγνωριστικού παραγγελίας πελάτη             |
+| `type`          | int32  | Όχι       | Φίλτρο τύπου παραγγελίας: `1` όριο, `2` αγορά |
+| `side`          | int32  | Όχι       | Πλαϊνό φίλτρο: `1` αγορά, `2` πώληση           |
+| `status`        | int32  | Όχι       | Φίλτρο κατάστασης                            |
+| `startTime`     | int64  | Όχι       | Ώρα έναρξης                               |
+| `endTime`       | int64  | Όχι       | Ώρα λήξης                                 |
+| `page`          | int64  | Όχι       | Αριθμός σελίδας, προεπιλεγμένη `1`                 |
+| `pageSize`      | int64  | Όχι       | Στοιχεία ανά σελίδα, προεπιλεγμένη `20`             |
+
+<h2 id="historical-condition-orders">Εντολές ιστορικής κατάστασης</h2>
+
+```http
+GET /v1/private/order/history-condition?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+**Παράμετροι αιτήματος:**
+
+| Παράμετρος   | Τύπος   | Απαιτείται | Περιγραφή                    |
+| ----------- | ------ | -------- | ------------------------------ |
+| `symbol`    | string | Όχι       | Σύμβολο                         |
+| `side`      | int32  | Όχι       | Πλαϊνό φίλτρο: `1` αγορά, `2` πώληση |
+| `status`    | int32  | Όχι       | Φίλτρο κατάστασης                  |
+| `startTime` | int64  | Όχι       | Ώρα έναρξης                     |
+| `endTime`   | int64  | Όχι       | Ώρα λήξης                       |
+| `page`      | int64  | Όχι       | Αριθμός σελίδας, προεπιλεγμένη `1`       |
+| `pageSize`  | int64  | Όχι       | Στοιχεία ανά σελίδα, προεπιλεγμένη `20`   |
+
+<h2 id="trade-records">Εμπορικά αρχεία</h2>
+
+```http
+GET /v1/private/order/trades?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+**Παράμετροι αιτήματος:**
+
+| Παράμετρος   | Τύπος   | Απαιτείται | Περιγραφή                  |
+| ----------- | ------ | -------- | ---------------------------- |
+| `symbol`    | string | Όχι       | Σύμβολο                       |
+| `orderId`   | string | Όχι       | Φίλτρο αναγνωριστικού παραγγελίας              |
+| `startTime` | int64  | Όχι       | Ώρα έναρξης                   |
+| `endTime`   | int64  | Όχι       | Ώρα λήξης                     |
+| `page`      | int64  | Όχι       | Αριθμός σελίδας, προεπιλεγμένη `1`     |
+| `pageSize`  | int64  | Όχι       | Στοιχεία ανά σελίδα, προεπιλεγμένη `20` |
+
+**Πεδία απόκρισης:**
+
+| Πεδίο                 | Τύπος   | Περιγραφή       |
+| --------------------- | ------ | ----------------- |
+| `list[].fillId`       | string | Συμπληρώστε το αναγνωριστικό λεπτομερειών    |
+| `list[].tradeId`      | string | Αναγνωριστικός κωδικός εμπορικού μητρώου   |
+| `list[].orderId`      | string | Κωδικός παραγγελίας          |
+| `list[].symbol`       | string | Σύμβολο            |
+| `list[].side`         | string | Πλευρά              |
+| `list[].roleType`     | string | `maker` / `taker` |
+| `list[].price`        | string | Συμπληρωμένη τιμή      |
+| `list[].quantity`     | string | Γεμισμένη ποσότητα   |
+| `list[].tradeValue`   | string | Εμπορική αξία       |
+| `list[].handlingFee`  | string | Αμοιβή διεκπεραίωσης      |
+| `list[].realizedPnl`  | string | Πραγματοποιημένο PnL      |
+| `list[].positionSide` | string | Πλευρική θέση     |
+| `list[].createdAt`    | int64  | Χρόνος συναλλαγών        |
+| `total`               | int64  | Συνολικός αριθμός       |
+
+<h2 id="cancel-order">Ακύρωση παραγγελίας</h2>
+
+```http
+POST /v1/private/order/cancel
+Content-Type: application/json
+```
+
+**Σώμα αιτήματος:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "orderId": "2022543809547603968"
+}
+```
+
+`clientOrderId` μπορούν επίσης να χρησιμοποιηθούν για την ακύρωση μιας παραγγελίας.
+
+<h2 id="amend-order">Τροποποίηση Διατάγματος</h2>
+
+```http
+POST /v1/private/order/move
+Content-Type: application/json
+```
+
+**Σώμα αιτήματος:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "orderId": "2022543809547603968",
+  "price": "85100",
+  "quantity": "0.2"
+}
+```
+
+`quantity` είναι η τελική συνολική ποσότητα παραγγελίας μετά την τροποποίηση, όχι η υπόλοιπη ποσότητα.
+
+<h2 id="batch-amend-orders">Παραγγελίες Τροποποίησης Παρτίδας</h2>
+
+```http
+POST /v1/private/order/batch-move
+Content-Type: application/json
+```
+
+**Σώμα αιτήματος:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "orders": [
+    {
+      "orderId": "2022543809547603968",
+      "price": "85100",
+      "quantity": "0.2"
+    }
+  ]
+}
+```
+
+<h2 id="batch-cancel-orders">Μαζική ακύρωση παραγγελιών</h2>
+
+```http
+POST /v1/private/order/batch-cancel
+Content-Type: application/json
+```
+
+**Σώμα αιτήματος:**
+
+```json
+{
+  "orders": [
+    {
+      "symbol": "BTCUSDT",
+      "orderId": "2022543809547603968"
+    }
+  ]
+}
+```
+
+<h2 id="cancel-all">Ακύρωση όλων</h2>
+
+```http
+POST /v1/private/order/batch-cancel-all
+Content-Type: application/json
+```
+
+**Παράμετροι αιτήματος:**
+
+| Παράμετρος    | Τύπος   | Απαιτείται | Περιγραφή                                                                         |
+| ------------ | ------ | -------- | ----------------------------------------------------------------------------------- |
+| `symbol`     | string | Όχι       | Σύμβολο                                                                              |
+| `cancelType` | int32  | Όχι       | `0` όλες τις κανονικές εντολές, `1` μόνο τις οριακές εντολές `2` όλες τις εντολές κατάστασης. Προεπιλεγμένη `0` |
+
+Η ακύρωση όλων για κανονικές παραγγελίες γίνεται αποδεκτή ασύγχρονα. Η τελική κατάσταση θα πρέπει να καθορίζεται από τα τελικά σημεία WebSocket `ORDER_TRADE_UPDATE` ή ερωτήματος.
+
+<h2 id="cancel-condition-order">Ακύρωση παραγγελίας κατάστασης</h2>
+
+```http
+POST /v1/private/order/cancel-condition
+Content-Type: application/json
+```
+
+**Σώμα αιτήματος:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "conditionId": "2022543809547603968"
+}
+```
+
+<h2 id="strategy-order-detail">Λεπτομέρεια παραγγελίας στρατηγικής</h2>
+
+```http
+GET /v1/private/order/strategy?strategyId=2022543809547603968
+```
+
+**Πεδία απόκρισης:**
+
+| Πεδίο            | Τύπος   | Περιγραφή                          |
+| ---------------- | ------ | ------------------------------------ |
+| `strategyId`     | string | Αναγνωριστικό στρατηγικής                          |
+| `strategyType`   | string | `OTOCO` / `OTO` / `OCO`              |
+| `strategyStatus` | string | `WORKING` / `ALL_DONE` / `CANCELLED` |
+| `bookTime`       | int64  | Χρόνος δημιουργίας                        |
+| `subOrders[]`    | array  | Λεπτομέρειες δευτερεύουσας παραγγελίας                    |
+| `updateTime`     | int64  | Χρόνος ενημέρωσης                          |
+
+<h2 id="related-documentation">Σχετική τεκμηρίωση</h2>
+
+- [Τύποι Παραγγελιών](/el/trading/order-types)
+- [Κοινά Enums](/el/developer-api/common-enums)
+- [Ιδιωτικό κανάλι χρήστη](/el/developer-api/websocket/private-user-channel)
+- [Συστάσεις ενσωμάτωσης](/el/developer-api/integration-recommendations)

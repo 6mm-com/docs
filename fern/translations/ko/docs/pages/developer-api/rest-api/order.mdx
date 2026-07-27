@@ -1,0 +1,420 @@
+---
+title: "순서"
+description: "6MM 주문 엔드포인트를 사용하여 권한, 식별자, 라이프사이클 상태를 처리하면서 영구 주문을 생성, 쿼리, 취소 및 관리합니다."
+slug: developer-api/rest-api/order
+canonical-url: https://docs.6mm.com/ko/developer-api/rest-api/order
+---
+
+> **주**
+>
+> Order 엔드포인트는 거래 허가가 필요합니다.
+
+<h2 id="place-order">주문</h2>
+
+```http
+POST /v1/private/order/place
+Content-Type: application/json
+```
+
+**요청 매개변수:**
+
+| 매개변수       | 유형   | 필수               | 설명                                                                                                                   |
+| --------------- | ------ | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `symbol`        | string | 네                    | 상징                                                                                                                        |
+| `type`          | string | 네                    | `LIMIT` / `MARKET`                                                                                                            |
+| `side`          | string | 네                    | `BUY` / `SELL`                                                                                                                |
+| `positionSide`  | string | 아니                     | `BOTH` / `LONG` / `SHORT`, 기본 `BOTH`                                                                                     |
+| `price`         | string | 조건부 필수 | 지가가 주문에 필수                                                                                                     |
+| `quantity`      | string | 조건부 필수 | 양. 생략할 수 있습니다 `closePosition=true`                                                                            |
+| `timeInForce`   | string | 아니                     | `GTC` / `IOC` / `FOK`, 기본 `GTC`                                                                                          |
+| `reduceOnly`    | bool   | 아니                     | 리듀얼 전용, 기본 `false`                                                                                                  |
+| `makerOnly`     | bool   | 아니                     | 메이커 전용 기본 `false`                                                                                                   |
+| `closePosition` | bool   | 아니                     | 전체 포지션을 닫으세요, 기본값 `false`                                                                                    |
+| `clientOrderId` | string | 아니                     | 클라이언트 정의 주문 ID                                                                                                       |
+| `placeType`     | string | 아니                     | 주문 배치 유형 마커                                                                                                   |
+| `priceType`     | int32  | 아니                     | BBO 가격 유형: `0` 명시된 가격, `1` 상대방 가격 1, `2` 상대방 가격 5, `3` 동면 가격 1, `4` 동면 가격 5 |
+
+**요청 예시:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "type": "LIMIT",
+  "side": "BUY",
+  "price": "85000",
+  "quantity": "0.1",
+  "timeInForce": "GTC",
+  "makerOnly": true,
+  "clientOrderId": "ext-1772710377808-001"
+}
+```
+
+**응답 필드:**
+
+| 필드           | 유형   | 설명             |
+| --------------- | ------ | ----------------------- |
+| `orderId`       | string | 서버 주문 ID         |
+| `clientOrderId` | string | 클라이언트 정의 주문 ID |
+| `status`        | string | 명령 현황            |
+| `timestamp`     | int64  | 타임스탬프               |
+
+<h2 id="batch-place-orders">배치 주문</h2>
+
+```http
+POST /v1/private/order/batch-place
+Content-Type: application/json
+```
+
+**본문 요청:**
+
+```json
+{
+  "orders": [
+    {
+      "symbol": "BTCUSDT",
+      "type": "LIMIT",
+      "side": "BUY",
+      "price": "85000",
+      "quantity": "0.1",
+      "clientOrderId": "ext-buy-001"
+    }
+  ]
+}
+```
+
+**응답 필드:**
+
+| 필드          | 유형  | 설명                 |
+| -------------- | ----- | --------------------------- |
+| `successCount` | int32 | 성공 주문 수 |
+| `failedCount`  | int32 | 실패한 주문 수     |
+| `results[]`    | array | 각 순서별 결과       |
+
+<h2 id="place-condition-order">배치 조건 순서</h2>
+
+```http
+POST /v1/private/order/place-condition
+Content-Type: application/json
+```
+
+**요청 매개변수:**
+
+| 매개변수       | 유형   | 필수               | 설명                                                                                 |
+| --------------- | ------ | ---------------------- | ------------------------------------------------------------------------------------------- |
+| `symbol`        | string | 네                    | 상징                                                                                      |
+| `type`          | string | 네                    | `STOP_MARKET` / `TAKE_PROFIT_MARKET` / `STOP_LIMIT` / `TAKE_PROFIT_LIMIT` / `TRAILING_STOP` |
+| `side`          | string | 네                    | `BUY` / `SELL`                                                                              |
+| `positionSide`  | string | 아니                     | `BOTH` / `LONG` / `SHORT`                                                                   |
+| `price`         | string | 조건부 필수 | `STOP_LIMIT` / `TAKE_PROFIT_LIMIT`에 필수                                             |
+| `quantity`      | string | 조건부 필수 | 양. 생략할 수 있습니다 `closePosition=true`                                          |
+| `timeInForce`   | string | 아니                     | `GTC` / `IOC` / `FOK` / `GTE_GTC`                                                           |
+| `reduceOnly`    | bool   | 아니                     | 리듀얼 전용                                                                                 |
+| `clientOrderId` | string | 아니                     | 클라이언트 정의 주문 ID                                                                     |
+| `stopPrice`     | string | 조건부 필수 | 트리거 가격                                                                               |
+| `workingType`   | string | 아니                     | `MARK_PRICE` / `CONTRACT_PRICE`, 기본 `CONTRACT_PRICE`                                   |
+| `priceProtect`  | bool   | 아니                     | 가격 보호가 활성화되는지 여부                                                         |
+| `activatePrice` | string | 조건부 필수 | 트레일링 주문 활성화 가격                                                             |
+| `callbackRate`  | string | 조건부 필수 | 트레일링 오더 콜백 비율                                                                |
+| `closePosition` | bool   | 아니                     | 전체 위치를 닫아라                                                                   |
+
+**응답 필드:**
+
+| 필드             | 유형   | 설명            |
+| ----------------- | ------ | ---------------------- |
+| `conditionId`     | string | 조건 순서 ID     |
+| `conditionStatus` | string | 조건 순서 상태 |
+| `timestamp`       | int64  | 타임스탬프              |
+
+<h2 id="place-strategy-order">배치 전략 순서</h2>
+
+```http
+POST /v1/private/order/place-strategy
+Content-Type: application/json
+```
+
+**요청 매개변수:**
+
+| 매개변수      | 유형   | 필수 | 설명             |
+| -------------- | ------ | -------- | ----------------------- |
+| `strategyType` | string | 네      | `OTOCO` / `OTO` / `OCO` |
+| `subOrderList` | array  | 네      | 하위 목 목록          |
+
+`subOrderList[]`의 필드는 대부분 일반 순서와 조건 순서와 동일하며, 추가적인 종속 필드가 있습니다:
+
+| 매개변수        | 유형   | 설명                                     |
+| ---------------- | ------ | ----------------------------------------------- |
+| `strategySubId`  | int64  | 하위 명령 ID                                    |
+| `firstDrivenId`  | int64  | 첫 운전 명령 신분증은 `0` 의존 없음을 의미합니다 |
+| `firstDrivenOn`  | string | 첫 번째 트리거 조건                         |
+| `firstTrigger`   | string | 첫 번째 트리거 작용                            |
+| `secondDrivenId` | int64  | 두 번째 운전 명령 신분증                         |
+| `secondDrivenOn` | string | 두 번째 트리거 조건                        |
+| `secondTrigger`  | string | 두 번째 트리거 액션                           |
+
+**응답 필드:**
+
+| 필드            | 유형   | 설명     |
+| ---------------- | ------ | --------------- |
+| `strategyId`     | string | 전략 ID     |
+| `strategyStatus` | string | 전략 현황 |
+| `timestamp`      | int64  | 타임스탬프       |
+
+<h2 id="query-single-order">단일 순서 쿼리</h2>
+
+```http
+GET /v1/private/order?symbol=BTCUSDT&orderId=2022543809547603968
+```
+
+**요청 매개변수:**
+
+| 매개변수       | 유형   | 필수 | 설명             |
+| --------------- | ------ | -------- | ----------------------- |
+| `symbol`        | string | 네      | 상징                  |
+| `orderId`       | string | 아니       | 서버 주문 ID         |
+| `clientOrderId` | string | 아니       | 클라이언트 정의 주문 ID |
+
+`orderId`와 `clientOrderId` 중 적어도 하나는 제공되어야 합니다. 두 조건이 모두 제공되면 서버는 두 조건 모두에서 정확한 매칭을 수행합니다.
+
+<h2 id="current-normal-orders">현재 노멀 명령</h2>
+
+```http
+GET /v1/private/order/current?symbol=BTCUSDT
+```
+
+**요청 매개변수:**
+
+| 매개변수     | 유형   | 필수 | 설명        |
+| ------------- | ------ | -------- | ------------------ |
+| `symbol`      | string | 아니       | 상징             |
+| `limit`       | int32  | 아니       | 반품 횟수 제한 |
+| `lastOrderId` | int64  | 아니       | 커서 필드       |
+
+**응답 필드:**
+
+| 필드    | 유형  | 설명               |
+| -------- | ----- | ------------------------- |
+| `list[]` | array | 현재 정상 순서 목록 |
+| `total`  | int32 | 백작                     |
+
+<h2 id="current-condition-orders">현재 상태 명령</h2>
+
+```http
+GET /v1/private/order/current-condition?symbol=BTCUSDT
+```
+
+**요청 매개변수:**
+
+| 매개변수 | 유형   | 필수 | 설명 |
+| --------- | ------ | -------- | ----------- |
+| `symbol`  | string | 아니       | 상징      |
+
+<h2 id="historical-normal-orders">역사적 정상 기사단</h2>
+
+```http
+GET /v1/private/order/history?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+**요청 매개변수:**
+
+| 매개변수       | 유형   | 필수 | 설명                              |
+| --------------- | ------ | -------- | ---------------------------------------- |
+| `symbol`        | string | 아니       | 상징                                   |
+| `orderId`       | string | 아니       | 정확한 순서 ID 필터                    |
+| `clientOrderId` | string | 아니       | 정확한 고객 주문 ID 필터             |
+| `type`          | int32  | 아니       | 주문 유형 필터: `1` 한도, `2` 시장 |
+| `side`          | int32  | 아니       | 측면 필터: `1` 사고, `2` 팔 수 있습니다           |
+| `status`        | int32  | 아니       | 상태 필터                            |
+| `startTime`     | int64  | 아니       | 시작 시간                               |
+| `endTime`       | int64  | 아니       | 종말                                 |
+| `page`          | int64  | 아니       | 페이지 번호, 기본 `1`                 |
+| `pageSize`      | int64  | 아니       | 페이지당 항목 수, 기본 `20`             |
+
+<h2 id="historical-condition-orders">역사적 상태 명령</h2>
+
+```http
+GET /v1/private/order/history-condition?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+**요청 매개변수:**
+
+| 매개변수   | 유형   | 필수 | 설명                    |
+| ----------- | ------ | -------- | ------------------------------ |
+| `symbol`    | string | 아니       | 상징                         |
+| `side`      | int32  | 아니       | 측면 필터: `1` 사고, `2` 팔 수 있습니다 |
+| `status`    | int32  | 아니       | 상태 필터                  |
+| `startTime` | int64  | 아니       | 시작 시간                     |
+| `endTime`   | int64  | 아니       | 종말                       |
+| `page`      | int64  | 아니       | 페이지 번호, 기본 `1`       |
+| `pageSize`  | int64  | 아니       | 페이지당 항목 수, 기본 `20`   |
+
+<h2 id="trade-records">무역 기록</h2>
+
+```http
+GET /v1/private/order/trades?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+**요청 매개변수:**
+
+| 매개변수   | 유형   | 필수 | 설명                  |
+| ----------- | ------ | -------- | ---------------------------- |
+| `symbol`    | string | 아니       | 상징                       |
+| `orderId`   | string | 아니       | 주문 ID 필터              |
+| `startTime` | int64  | 아니       | 시작 시간                   |
+| `endTime`   | int64  | 아니       | 종말                     |
+| `page`      | int64  | 아니       | 페이지 번호, 기본 `1`     |
+| `pageSize`  | int64  | 아니       | 페이지당 항목 수, 기본 `20` |
+
+**응답 필드:**
+
+| 필드                 | 유형   | 설명       |
+| --------------------- | ------ | ----------------- |
+| `list[].fillId`       | string | 필 디테일 ID    |
+| `list[].tradeId`      | string | 거래 기록 ID   |
+| `list[].orderId`      | string | 주문 ID          |
+| `list[].symbol`       | string | 상징            |
+| `list[].side`         | string | 사이드              |
+| `list[].roleType`     | string | `maker` / `taker` |
+| `list[].price`        | string | 채워진 가격      |
+| `list[].quantity`     | string | 채워진 수량   |
+| `list[].tradeValue`   | string | 무역 가치       |
+| `list[].handlingFee`  | string | 처리 수수료      |
+| `list[].realizedPnl`  | string | 실현된 PnL      |
+| `list[].positionSide` | string | 포지션 사이드     |
+| `list[].createdAt`    | int64  | 거래 시간        |
+| `total`               | int64  | 총 집단       |
+
+<h2 id="cancel-order">주문 취소</h2>
+
+```http
+POST /v1/private/order/cancel
+Content-Type: application/json
+```
+
+**본문 요청:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "orderId": "2022543809547603968"
+}
+```
+
+`clientOrderId` 주문 취소에도 사용할 수 있습니다.
+
+<h2 id="amend-order">명령 개정</h2>
+
+```http
+POST /v1/private/order/move
+Content-Type: application/json
+```
+
+**본문 요청:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "orderId": "2022543809547603968",
+  "price": "85100",
+  "quantity": "0.2"
+}
+```
+
+`quantity` 는 수정 후 최종 총 주문 수량이지 남은 수량이 아닙니다.
+
+<h2 id="batch-amend-orders">배치 수정 명령</h2>
+
+```http
+POST /v1/private/order/batch-move
+Content-Type: application/json
+```
+
+**본문 요청:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "orders": [
+    {
+      "orderId": "2022543809547603968",
+      "price": "85100",
+      "quantity": "0.2"
+    }
+  ]
+}
+```
+
+<h2 id="batch-cancel-orders">주문 취소 배치</h2>
+
+```http
+POST /v1/private/order/batch-cancel
+Content-Type: application/json
+```
+
+**본문 요청:**
+
+```json
+{
+  "orders": [
+    {
+      "symbol": "BTCUSDT",
+      "orderId": "2022543809547603968"
+    }
+  ]
+}
+```
+
+<h2 id="cancel-all">모두 취소하기</h2>
+
+```http
+POST /v1/private/order/batch-cancel-all
+Content-Type: application/json
+```
+
+**요청 매개변수:**
+
+| 매개변수    | 유형   | 필수 | 설명                                                                         |
+| ------------ | ------ | -------- | ----------------------------------------------------------------------------------- |
+| `symbol`     | string | 아니       | 상징                                                                              |
+| `cancelType` | int32  | 아니       | `0` 모든 일반 주문, `1` 제한 주문만, `2` 모든 조건 주문입니다. 기본 `0` |
+
+일반 주문에 대한 취소 전부는 비동기식으로 허용됩니다. 최종 상태는 WebSocket `ORDER_TRADE_UPDATE` 또는 쿼리 엔드포인트에 의해 결정되어야 합니다.
+
+<h2 id="cancel-condition-order">조건 취소 명령</h2>
+
+```http
+POST /v1/private/order/cancel-condition
+Content-Type: application/json
+```
+
+**본문 요청:**
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "conditionId": "2022543809547603968"
+}
+```
+
+<h2 id="strategy-order-detail">전략 순서 세부사항</h2>
+
+```http
+GET /v1/private/order/strategy?strategyId=2022543809547603968
+```
+
+**응답 필드:**
+
+| 필드            | 유형   | 설명                          |
+| ---------------- | ------ | ------------------------------------ |
+| `strategyId`     | string | 전략 ID                          |
+| `strategyType`   | string | `OTOCO` / `OTO` / `OCO`              |
+| `strategyStatus` | string | `WORKING` / `ALL_DONE` / `CANCELLED` |
+| `bookTime`       | int64  | 생성 시간                        |
+| `subOrders[]`    | array  | 하위 주문 세부 정보                    |
+| `updateTime`     | int64  | 업데이트 시간                          |
+
+<h2 id="related-documentation">관련 문서</h2>
+
+- [주문 유형](/ko/trading/order-types)
+- [공통 열거](/ko/developer-api/common-enums)
+- [비공개 사용자 채널](/ko/developer-api/websocket/private-user-channel)
+- [통합 권고](/ko/developer-api/integration-recommendations)

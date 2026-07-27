@@ -1,0 +1,48 @@
+---
+title: "Agent Java SDK"
+subtitle: "6MM Agent Java SDK kurun ve kullanıcı bağlama, transferler, giriş kimlik bilgileri ve webhook doğrulama için imzalı backend APIs kullanın."
+slug: sdk/agent-sdk/java/overview
+canonical-url: https://docs.6mm.com/tr/sdk/agent-sdk/java/overview
+---
+
+<h2 id="official-repository">Resmi depo</h2>
+
+Java SDK deposu, SDK kaynak kodu, sürüm notları, kullanım örnekleri ve uygulama detayları için gerçeğin kaynağıdır:
+
+[6mm-com/agent-java-sdk](https://github.com/6mm-com/agent-java-sdk)
+
+<h2 id="runtime">Çalışma süresi</h2>
+
+| Madde | Değer |
+| --- | --- |
+| Minimum Java versiyonu | Java 8+ |
+| Önerilen derleme aracı | Maven 3.9+ |
+| Maven grubu | `com.sixmm.exchange.sdk` |
+| Maven eseri | `agent` |
+| Belgelenmiş kaynak etiketi | `v0.1.1` |
+
+Halka açık GitHub deposu kaynak barındırma yöntemidir, Maven bağımlılık deposu değil. Etiketlenmiş kaynağı yerel olarak oluşturup kurun veya onaylanmış eseri takım derlemelerinde kullanmadan önce kuruluşunuzun özel Maven deposunda yayınlayın.
+
+<h2 id="typical-backend-responsibilities">Tipik arka uç sorumlulukları</h2>
+
+- Ortak kullanıcı oturumunu doğrulayın.
+- Ortak kullanıcıyı agentUserIdile eşleyin.
+- İlk işlem veya transfer akışlarından önce call bind.
+- Tek seferlik tam saha SSOiçin createEntryUrl arayın.
+- createEmbedToken Trading Widget partner token modu için çağrılın.
+- Transfer webhooks doğrulayın ve onları aynı şekilde işleyin.
+
+<h2 id="security-and-operational-rules">Güvenlik ve operasyonel kurallar</h2>
+
+- `apiSecret` yalnızca bir arka uç gizli yöneticisinde veya korunan ortam değişkeninde depolayın.
+- Sunucu zamanını senkronize tutmak, çünkü imzalanan istekler zaman damgaları içerir.
+- `agentOrderNo` dayanıklı bir ikamet anahtarı olarak ele alın ve küresel olarak benzersiz tutulur.
+- `platformUserId` bir dizi olarak depolayıp `agentUserId`ile ilişkisini sürdürebilir.
+- Zaman aşımından veya ağ sonucundan sonra tekrar denemeden önce orijinal transferi sorgulamak.
+
+<h2 id="next-steps">Sonraki adımlar</h2>
+
+- [Java Hızlı Başlangıç](/tr/sdk/agent-sdk/java/quick-start): etiketlenmiş kaynağı yükleyin ve `AgentClient`başlatın .
+- [Embed Token Oluştur](/tr/sdk/agent-sdk/java/embed-token): kısa ömürlü kimlik belgeleri Trading Widget.
+- [Sırlar ve İmza Alma](/tr/sdk/security/secrets-signing): otomatik HMAC imzalama ve gizli muamele yöntemini anlayın.
+- [Webhooks ve İdempotensi](/tr/sdk/security/webhooks-idempotency): geri çağrıları doğrulayabilir ve tekrarlanan işlemleri önler.

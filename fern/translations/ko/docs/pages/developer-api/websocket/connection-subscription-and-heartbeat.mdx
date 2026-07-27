@@ -1,0 +1,89 @@
+---
+title: "연결, 구독 및 심장박동"
+subtitle: "6MM WebSocket 스트림에 연결하고, 주제를 구독하며, 연결을 유지하고, 메시지 봉투를 안전하게 처리하세요."
+slug: developer-api/websocket/connection-subscription-and-heartbeat
+canonical-url: https://docs.6mm.com/ko/developer-api/websocket/connection-subscription-and-heartbeat
+---
+
+시장 데이터와 민간 사용자 상태 업데이트를 위해 WebSocket 스트림을 활용하세요. 이는 폴링 없이도 최신 상태를 유지해야 합니다.
+
+<h2 id="connection-url">연결 URL</h2>
+
+```text
+wss://ws.6mm.com/ws
+```
+
+프라이빗 스트림은 프라이빗 채널 문서에 설명된 listenKey 또는 액세스 토큰과 같은 인증 컨텍스트가 필요합니다.
+
+<h2 id="subscribe">구독하세요</h2>
+
+```json
+{ "id": "1772007814666", "op": "subscribe", "args": ["market.depth.BTCUSDT"] }
+```
+
+성공적인 구독 확인:
+
+```json
+{
+  "id": "1772007814666",
+  "event": "subscribe",
+  "success": true,
+  "data": ["market.depth.BTCUSDT"]
+}
+```
+
+<h2 id="unsubscribe">구독 취소</h2>
+
+```json
+{ "id": "1772007814667", "op": "unsubscribe", "args": ["market.depth.BTCUSDT"] }
+```
+
+<h2 id="application-ping">애플리케이션 핑</h2>
+
+```json
+{ "id": "1772007814668", "op": "ping", "args": [] }
+```
+
+<h2 id="message-envelope">메시지 봉투</h2>
+
+공개 푸시는 일관된 엔벨로프를 사용합니다:
+
+```json
+{
+  "topic": "market.depth.BTCUSDT",
+  "event": "data",
+  "ts": 1772007815000,
+  "data": {}
+}
+```
+
+<h2 id="operational-recommendations">운영 권고</h2>
+
+- 모든 구독, 취소, 핑 요청에 대해 고유한 클라이언트 측 `id` 을 생성합니다.
+- reconnect를 새 세션으로 간주하고 필요한 주제를 재구독합니다.
+- 반환된 `topic` 이 귀하의 서비스가 기대하는 채널과 일치하는지 검증합니다.
+- 개인 주문이나 계정 이벤트가 관련된 경우 메시지 처리를 멎등성(dempotent) 유지.
+- 연결 상태 변경, 구독 확인 응답, 비정상적인 연결 끊김을 기록합니다.
+
+<h2 id="reconnect-workflow">Reconnect 워크플로우</h2>
+
+1. 이전 소켓을 닫거나 폐기하고 새 연결을 생성합니다.
+2. 유효한 listenKey 또는 접근 토큰으로 프라이빗 스트림을 재인증합니다.
+3. 필수 주제를 모두 재구독하고 성공적인 확인을 기다립니다.
+4. 점진적 업데이트를 적용하기 전에 로컬 주문 북 상태를 새로운 스냅샷으로 교체합니다.
+5. 사적인 사건이 놓쳤을 경우 REST 을 통해 미해결 명령, 입장, 균형을 조정한다.
+
+재연결 시도에는 지터가 있는 유한한 지수 백오프를 사용하세요. 지속적으로 재연결되는 클라이언트는 가시성 없이 무한히 재시도하는 대신 운영자에게 알림을 줘야 합니다.
+
+<h2 id="heartbeat-and-stale-connections">심장 박동과 오래된 연결고리</h2>
+
+- 가장 최근의 인바운드 메시지와 성공적인 핑 확인 기록을 추적합니다.
+- 생산 환경에 승인된 심장박동 간격과 유휴 임계값을 사용합니다.
+- 설정된 임계값을 초과하면 연결을 스테이클로 간주합니다. TCP 소켓이 여전히 열려 있더라도 말입니다.
+- 오래된 소켓에서 구독을 재사용하지 마십시오; 재연결 후에는 명시적으로 재구독하세요.
+
+<h2 id="related-documentation">관련 문서</h2>
+
+- [공공 시장 채널](/ko/developer-api/websocket/public-market-channels): 주제, 주문서의 연속성, 거래, 캔들, 그리고 티커.
+- [비공개 사용자 채널](/ko/developer-api/websocket/private-user-channel): listenKey 생애주기와 인증된 이벤트.
+- [통합 권고](/ko/developer-api/integration-recommendations): 재시도, 멩등성, 모니터링, 발사 테스트.

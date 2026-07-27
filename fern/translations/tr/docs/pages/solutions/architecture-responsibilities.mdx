@@ -1,0 +1,40 @@
+---
+title: "Mimari ve Sorumluluklar"
+subtitle: "Ortak sistemin neye sahip olduğunu ve 6MM altyapısının gömülü ticaret dağıtımlarında neler sağladığını netleştirin."
+slug: solutions/architecture-responsibilities
+canonical-url: https://docs.6mm.com/tr/solutions/architecture-responsibilities
+---
+
+Temiz bir gömülü ticaret başlatması, net sorumluluk sınırlarına bağlıdır. Ortak sistemler hassas iş sahipliğini korumalı, 6MM ise ticaret altyapısı ve yaşam döngüsü yeteneklerini sağlamalıdır.
+
+<h2 id="responsibility-model">Sorumluluk modeli</h2>
+
+| Alan | Partner sistemi | 6MM altyapısı |
+| --- | --- | --- |
+| Kullanıcı ilişkisi | Kullanıcı hesabına, giriş durumuna, müşteri destek kimliğine ve uygunluk kontrollerine sahiptir. | Doğrulanmış işlem girişi bağlamını alır ve işlem tarafı durumunu korur. |
+| Sırlar ve imzalama | Mağazalar arka uçta API anahtarları paylaşır ve sunucu tarafı talepleri imzalar. | İmzalanmış talepleri doğrular ve yetkili işlemleri işler. |
+| Ticaret deneyimi | Giriş noktaları, navigasyon ve ürün bağlamı sağlar. | İşlem arayüzü, emir yaşam döngüsü, piyasa verileri, pozisyonlar, risk ve uzlaşma davranışı sağlar. |
+| İşletmeler | Destek iş akışları, iş analizleri ve iç yükseltme işlemlerini yönetir. | Entegrasyon için gereken olay, webhooksve durum bilgisi yayımlar. |
+
+<h2 id="production-principles">Üretim prensipleri</h2>
+
+- Tüm ortak sırlarını arka planda tut.
+- Gömülü tokenları kısa ömürlü giriş kimlik bilgileri olarak ele alın.
+- webhooks aynı şekilde işleme ve etkinlik kimliklerini saklamak.
+- Token verme, transfer akışları ve sipariş durumu değişiklikleri etrafında izleme kullanın.
+- Müşteriye yönelik metinleri giriş, ticaret ve destek sayfalarında tutarlı tutmak.
+
+<h2 id="related-docs">İlgili belgeler</h2>
+
+<CardGroup cols={3}>
+<Card title="Doğrulama" icon="fa-duotone fa-user-shield" href="/tr/developer-api/authentication">
+Arka uç kimlik doğrulama beklentilerini gözden geçirin.
+</Card>
+<Card title="İstek İmzaları" icon="fa-duotone fa-signature" href="/tr/developer-api/request-signing">
+İmzalı API aramaları anlıyorum.
+</Card>
+<Card title="Webhook Güvenlik" icon="fa-duotone fa-webhook" href="/tr/sdk/security/webhooks-idempotency">
+Etkinlik teslimatını güvenli bir şekilde yönetin.
+</Card>
+</CardGroup>
+

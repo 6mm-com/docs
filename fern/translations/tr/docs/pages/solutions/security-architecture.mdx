@@ -1,0 +1,66 @@
+---
+title: "İş Ortağı Entegrasyonu Güvenlik Mimarisi"
+subtitle: "Gömülü ticaret, API, SDK, webhook, varlık transferi ve operasyonel entegrasyonlar için güven sınırları ve üretim kontrolleri tasarlayın."
+slug: solutions/security-architecture
+canonical-url: https://docs.6mm.com/tr/solutions/security-architecture
+---
+
+Bu sayfa, bir ortağın güvenli bir 6MM entegrasyonunu nasıl tasarlaması gerektiğine odaklanır. Ticaret platformunda kullanılan daha geniş güvenlik katmanları için bakınız [Platform Güvenlik Mimarisi](/tr/security-compliance/security-architecture).
+
+Üretim entegrasyonu başlamadan önce güvenlik mimarisi üzerinde anlaşma sağlanmalıdır. Bu, ortak sistemlerin kullanıcıları nasıl doğruladığını, token çıkardığını, sırları nasıl sakladığını, olayları nasıl aldığını, işlemleri nasıl izlediğini ve olaylara nasıl yanıt verdiğini etkiler.
+
+<h2 id="recommended-trust-boundary">Önerilen güven sınırı</h2>
+
+| Bileşen | Şunları içerebilir | İç içine almamalı |
+| --- | --- | --- |
+| Partner ön uç | Genel yapılandırma, kısa ömürlü giriş sonucu, hassas olmayan arayüz durumu | Partner API gizli, imza anahtarı, ayrıcalıklı arka uç kimlik bilgileri |
+| Ortak backend | Kullanıcı eşleme, korunan kimlik bilgileri, imza mantığı webhook işleme | İstemci yanıtları veya kamuya açık kayıtlar aracılığıyla ortaya çıkan sırlar |
+| 6MM entegrasyon uç noktaları | Onaylanmış imzalı istekler, jetonlar ve webhook teslimatı | Doğrulanmamış ortak tarafı kullanıcı varsayımları |
+
+Ortak ön uç, ayrıcalıklı işlemler için ortak arka uçunu çağırmalıdır. Backend, ortak kullanıcıyı doğrular, onaylanan API veya SDKüzerinden 6MM çağırır ve sadece ön tarafın ihtiyaç duyduğu kısa ömürlü sonucu döndürür.
+
+<h2 id="security-layers">Güvenlik katmanları</h2>
+
+| Katman | Gerekli odak noktası |
+| --- | --- |
+| API yetkinlikleri | Sadece arka uç depolama, rotasyon planı ve erişim kontrolü. |
+| İstek imzalama | Tutarlı zaman damgası, imza ve tekrar izleme koruması yönetimi. |
+| Tokenları gömülü | Kısa süreli tehriz, uygunluk kontrolleri ve açık geçersiz davranış. |
+| Webhooks | İmza doğrulama, kimlik potansiyeli, tekrar denemeler ve olay denetim günlükleri. |
+| İşletmeler | Erişim rolleri, olay tırmantı, izleme ve kanıt saklama. |
+
+<h2 id="production-control-plan">Üretim kontrol planı</h2>
+
+| Kontrol alanı | Minimum uygulama kanıtı |
+| --- | --- |
+| Kimlik bilgileri depolama | Gizli yönetici konumu, erişim sahibi, ortam ayrımı ve rotasyon süreci. |
+| Kullanıcı girişi | Oturum doğrulaması, uygunluk kontrolü, kısa ömürlü token akışı ve başarısızlık yönetimi. |
+| İmzalı talepler | Doğru ortam, senkronize zaman, istek kaydı ve imza hatası uyarıları. |
+| Varlık operasyonları | Benzersiz iş kimlikleri, zaman aşımına ulaşma, durum sorguları ve operatör inceleme yolu. |
+| Webhooks | Ham gövde imza doğrulaması, tekrar oynatma kontrolleri, idempotency deposu ve tekrar deneme güvenli işleme. |
+| İzleme | Kimlik doğrulama hataları, anormal denemeler, webhook gecikme ve operasyonel hatalar için uyarılar. |
+| Olay müdahalesi | Adı verilen sahip, yükseltme kanalı, kanıt saklama ve kimlik iptal prosedürü. |
+
+<h2 id="launch-review">Fırlatma incelemesi</h2>
+
+Üretim öncesi:
+
+1. Kullanıcı, token, taleb, varlık ve webhook veri akışlarını çizin.
+2. Her kimlik bilgilerinin nerede oluşturulduğunu, saklandığını, kullanıldığını, kaydedildiğini, döndürüldüğünü ve iptal edildiğini işaretleyin.
+3. Süresi dolmuş tokenları, geçersiz imzaları, zaman aşımlarını, yineleştirilen webhooksve yeniden bağlantı davranışını test edin.
+4. Destek ekiplerinin bir operasyonu isteği veya iş tanımlayıcısı üzerinden bulabildiğini doğrulayın.
+5. Tamamla [Üretim Başlatma Kontrol Listesi](/tr/solutions/production-launch-checklist).
+
+<h2 id="recommended-docs">Önerilen doktorlar</h2>
+
+<CardGroup cols={3}>
+<Card title="Sırlar ve İmza Alma" icon="fa-duotone fa-key" href="/tr/sdk/security/secrets-signing">
+Agent SDK kimlik bilgilerini ve imzalanmış talepleri koruyun.
+</Card>
+<Card title="İstek İmzaları" icon="fa-duotone fa-signature" href="/tr/developer-api/request-signing">
+Doğrudan Developer API istek imzalamayı uygulayın.
+</Card>
+<Card title="Webhook ve İdempotensi" icon="fa-duotone fa-webhook" href="/tr/sdk/security/webhooks-idempotency">
+Olayları güvenli bir şekilde işleyin.
+</Card>
+</CardGroup>

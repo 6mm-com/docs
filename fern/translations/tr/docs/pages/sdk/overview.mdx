@@ -1,0 +1,53 @@
+---
+title: "6MM SDKs"
+subtitle: "Gömülü ticaret, arka uç token ihrahi, hesap bağlantısı, webhooksve üretim operasyonları için doğru 6MM SDK yolunu seçin."
+slug: sdk/overview
+canonical-url: https://docs.6mm.com/tr/sdk/overview
+---
+
+<h2 id="choose-an-sdk-path">SDK bir yol seç</h2>
+
+<CardGroup cols={3}>
+<Card title="Trading Widget SDK" icon="duotone chart-line" href="/tr/sdk/trading-widget/quick-start">
+6MM işlem terminalini mevcut bir web sitesine, cüzdana, broker portalına veya ortak ürün yüzeyine gömül.
+</Card>
+<Card title="Agent SDK" icon="duotone server" href="/tr/sdk/agent-sdk/overview">
+  Kullanıcı bağlama, belirtetörler, giriş URL'leri, transferler, sipariş sorguları ve 6MM için bir partner backend bağlanın webhooks.
+</Card>
+<Card title="Güvenlik ve Operasyonlar" icon="duotone shield-check" href="/tr/sdk/security/secrets-signing">
+  Gizli depolama, istek imzalama webhook kimlik potensiyesi, izleme ve başlatma sorun giderme hazırla.
+</Card>
+</CardGroup>
+
+<h2 id="recommended-combination">Önerilen kombinasyon</h2>
+
+| Ortak hedefi | Ön uç | Arka plan | Neden önemli |
+| --- | --- | --- | --- |
+| Gömülü bir işlem terminali ekleyin | Trading Widget SDK | Agent SDK | Widget, işlem arayüzü ile ilgilenirken, ortak arka uç token çıkarır ve sırları gizli tutar. |
+| Yerel bir uygulama giriş noktası oluşturun | Native veya H5 girişi | Agent SDK | Uygulama, partner kullanıcı oturumunu doğruladıktan URL 6MM girişi açıyor. |
+| Özel bir ticaret akışı oluşturun | Partner UI | Developer API + seçilmiş SDK akışları | Hesap, emir, pozisyon ve piyasa verileri için APIs kullanın, ancak operasyonel kontroller sunucu tarafında tutulur. |
+
+<h2 id="reference-architecture">Referans mimarisi</h2>
+
+```text
+Partner Web App
+  -> TradingWidget.create()
+  -> tokenProvider()
+  -> Partner Backend
+  -> 6MM Agent SDK
+  -> 6MM Agent API
+  -> 6MM Trading iframe
+```
+
+> **Sunucu tarafında sırları sakla**
+>
+> Tarayıcı kodu sadece ortaklara ait uç noktaları çağırmalıdır. Ajan API sırrı asla ön uç koduna gönderilmemelidir.
+
+<h2 id="production-checklist">Üretim kontrol listesi</h2>
+
+- apiSecret yalnızca arka uç altyapısında depolayın.
+- Agent API talepleri ve webhook URL'leri için HTTPS kullanın.
+- Sürekli agentUserId, platformUserIdve agentOrderNo eşlemeleri.
+- Parasal miktarları ondalık dizim olarak göstermek, kayan nokta değerleri yerine.
+- PROCESSING başarı veya başarısızlık olarak değil, beklemede olarak ele alın.
+- Tekrar denemeler beklendiği için webhooks ikametsiz şekilde işlemek.

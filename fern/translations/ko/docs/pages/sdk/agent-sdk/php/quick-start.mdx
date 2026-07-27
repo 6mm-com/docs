@@ -1,0 +1,70 @@
+---
+title: "PHP 퀵 스타트"
+subtitle: "백엔드 서비스에서 PHP SDK 을 설치하고 초기화하세요."
+slug: sdk/agent-sdk/php/quick-start
+canonical-url: https://docs.6mm.com/ko/sdk/agent-sdk/php/quick-start
+---
+
+<h2 id="install">설치</h2>
+
+```json
+{
+  "require": {
+    "sixmm/agent-sdk": "VERSION_PROVIDED_BY_6MM"
+  }
+}
+```
+
+> **패키지 접근**
+>
+> 6MM 파트너 온보딩 시 승인된 Composer 패키지 이름, 저장소, 버전을 제공합니다. 이 패키지가 공개된 Packagist에 존재한다고 가정해서는 안 됩니다.
+
+<h2 id="before-you-start">시작하기 전에</h2>
+
+- 요원이 API 기지 URL 6MM와 확인해.
+- 환경 변수 또는 비밀 관리에서 apiSecret 로드.
+- SDK 사용은 백엔드 서비스 내에서만 유지하세요.
+- 전이 및 webhook 흐름을 위한 멩등원 처리를 준비합니다.
+
+<h2 id="initialize-client">클라이언트 초기화</h2>
+
+```php
+<?php
+
+use Sixmm\Agent\AgentClient;
+use Sixmm\Agent\AgentConfig;
+
+$client = new AgentClient(new AgentConfig(
+    'https://agent-api.6mm.com',
+    'AGENT001',
+    getenv('AGENT_API_SECRET') ?: '',
+    'USDT'
+));
+```
+
+> **백엔드만**
+>
+> PHP SDK 에이전트 API 요청에 서명하며, 공개 소스 코드나 프론트엔드 런타임 환경을 통해 노출되어서는 안 됩니다.
+
+<h2 id="example-transfer-funds-in">예시: 자금 이체</h2>
+
+```php
+$response = $client->transfer([
+    'agentOrderNo' => 'AGT-ORDER-1001',
+    'agentUserId' => 'agent-user-001',
+    'direction' => 'IN',
+    'currency' => 'USDT',
+    'amount' => '10.00',
+]);
+```
+
+금액은 소수점 문자열을 사용하고, 전송 상태를 다시 시도하거나 조회할 때 원래 agentOrderNo 을 보존하세요.
+
+<h2 id="next-steps">다음 단계</h2>
+
+| 필요 | 다음 페이지 |
+| --- | --- |
+| Agent SDK 기능을 이해하세요 | [Agent SDK 개요](/ko/sdk/agent-sdk/overview) |
+| 서명 행동 검토 | [비밀과 서명](/ko/sdk/security/secrets-signing) |
+| 콜백 전달 확인 | [Webhooks 및 등등성](/ko/sdk/security/webhooks-idempotency) |
+| 통합 문제 진단하기 | [SDK 문제 해결](/ko/sdk/security/troubleshooting) |

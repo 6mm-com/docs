@@ -1,0 +1,100 @@
+---
+title: "REST API"
+description: "6MM REST API kurallarını, kimlik doğrulama seçeneklerini, istek formatlarını, yanıt yapılarını, izinleri ve uç nokta gruplarını gözden geçirin."
+slug: developer-api/rest-api
+canonical-url: https://docs.6mm.com/tr/developer-api/rest-api
+---
+
+<h2 id="public-endpoints">Açık Uç Noktaları</h2>
+
+| Uç nokta                   | Yöntem | Yol                                        | Tanım                                                    |
+| -------------------------- | ------ | ------------------------------------------- | -------------------------------------------------------------- |
+| Hizmet versiyonu            | GET    | `/v1/version`                               | Servis sürüm bilgisini alın                                |
+| Server zamanı                | GET    | `/v1/time`                                  | Sunucu zamanı alın                                                |
+| Kullanıcı girişi                 | POST   | `/v1/public/user/login`                     | Kullanıcı adı ve şifre ile `accessToken`              |
+| Yenileme Belirtonu              | POST   | `/v1/public/user/refresh-token`             | Giriş durumunu Cookie üzerinden yenile                                 |
+| Temsilci Bilet Değişimi      | POST   | `/v1/public/agent-sso/exchange-ticket`      | Bir temsilci giriş biletini giriş durumu ile değiştirin              |
+| Agent Embed Token değişimi | POST   | `/v1/public/agent-sso/exchange-embed-token` | Giriş durumu için gömülü kısa ömürlü bir işlem tokenı takas edin |
+| Sembol yapılandırması       | GET    | `/v1/public/market/symbols`                 | Sembolleri, işlem kurallarını ve ücret seviyesi yapılandırmasını alın         |
+| Fonlama oranı yapılandırması | GET    | `/v1/public/market/funding-rate`            | Sorgulama fonlama oranı yapılandırması                               |
+| Mevcut fon oranı       | GET    | `/v1/public/market/funding-rate/current`    | Mevcut fonlama oranlarını sayfa olarak belirleyin                                 |
+| Fonlama oranı geçmişi       | GET    | `/v1/public/market/funding-rate/history`    | Sorgulama fonlama oranı geçmişi                                     |
+| Klines'lar                     | GET    | `/v1/public/market/klines`                  | Ticaret fiyatı, endeks fiyatı veya mark fiyatı Klines sorgulayın           |
+| PnL liderlik tablosu            | GET    | `/v1/public/leaderboard/pnl`                | Soru 30 / 7 / 90 günlük PnL liderlik tablosu                          |
+
+<h2 id="private-user-endpoints">Özel Kullanıcı Uç Noktaları</h2>
+
+Aksi belirtilmedikçe, aşağıdaki uç noktalar JWT veya API Key işaretleme kullanabilir.
+
+| Uç nokta                 | Yöntem | Yol                                      | İzin   | Tanım                                 |
+| ------------------------ | ------ | ----------------------------------------- | ------------ | ------------------------------------------- |
+| Kullanıcı bilgileri                | GET    | `/v1/private/user/info`                   | Oku         | Güncel kullanıcı profilini sorgulama                  |
+| Kullanıcı varlıkları              | GET    | `/v1/private/user/asset`                  | Oku         | Cüzdan bakiyesi ve marj kullanımı sorgusu       |
+| Yarat listenKey         | POST   | `/v1/private/user/listen-key`             | Oku         | Özel WebSocket kimlik doğrulama anahtarı oluşturun |
+| Yenileme listenKey          | PUT    | `/v1/private/user/listen-key`             | Oku         | Geçerlilik uzatma listenKey                   |
+| Yakın listenKey          | DELETE | `/v1/private/user/listen-key`             | Oku         | Yakın listenKey                             |
+| Hesap değişiklik kayıtları      | GET    | `/v1/private/user/account-change-log`     | Oku         | Fon hareketi kayıtlarını sorgulayın                 |
+| 30 günlük hacim istatistikleri | GET    | `/v1/private/user/volume-stats`           | Oku         | Son 30 günlük işlem hacmi ve ücretleri sorgulayın |
+| Denge geçmişi          | GET    | `/v1/private/user/balance-history`        | Oku         | Sorgu bakaresi geçmişi                       |
+| Ticaret genel görünümü           | GET    | `/v1/private/user/trade-overview`         | Oku         | PnL, hacim ve varlık trendini sorgulayın          |
+| Varlık genel özeti   | GET    | `/v1/private/user/asset/overview/summary` | Oku         | Varlık özeti metriklerini sorgulayın                 |
+| Varlık genel görünümü trendi     | GET    | `/v1/private/user/asset/overview/trend`   | Oku         | Varlık trendini sorgulama                           |
+| Favori sembolleri kaydet    | POST   | `/v1/private/user/favorite-symbols`       | Oku         | Favori sembollerin üzerine yaz                  |
+| Favori sembolleri alın     | GET    | `/v1/private/user/favorite-symbols`       | Oku         | Favori sembolleri sorgulama                      |
+| Çıkış                   | POST   | `/v1/private/user/logout`                 | JWT + Kurabiye | Giriş durumunu temizleyin                           |
+
+<h2 id="api-key-management-endpoints">API Key Yönetim Uç Noktaları</h2>
+
+API Key yönetim uç noktaları yalnızca JWTkabul eder.
+
+| Uç nokta            | Yöntem | Yol                                  | Tanım                                         |
+| ------------------- | ------ | ------------------------------------- | --------------------------------------------------- |
+| Yarat API Key      | POST   | `/v1/private/user/api-key/create`     | Yarat API Key; `apiSecret` sadece bir kez geri verilir   |
+| API Key listesi        | GET    | `/v1/private/user/api-key/list`       | Mevcut kullanıcının API Anahtarlarını sorgulayın                       |
+| Güncelleme API Key      | PUT    | `/v1/private/user/api-key/update`     | Etiket, izinler, IP beyaz listesi ve durumu güncelleme |
+| Sil API Key      | POST   | `/v1/private/user/api-key/delete`     | Belirli bir API Key sil                          |
+| Tüm API Anahtarlarını Sil | POST   | `/v1/private/user/api-key/delete-all` | Mevcut kullanıcının tüm API anahtarlarını sil             |
+
+<h2 id="order-endpoints">Sıra Uç Noktaları</h2>
+
+Sipariş uç noktaları için ticaret izni gereklidir.
+
+| Uç nokta                    | Yöntem | Yol                                  | Tanım                                                       |
+| --------------------------- | ------ | ------------------------------------- | ----------------------------------------------------------------- |
+| Tek sıra sorgu          | GET    | `/v1/private/order`                   | Tam soru `symbol + orderId/clientOrderId`                   |
+| Yer siparişi                 | POST   | `/v1/private/order/place`             | Limit veya piyasa emri                                             |
+| Yerleştirme koşulu sırası       | POST   | `/v1/private/order/place-condition`   | Stop loss, take profit, trailing stop ve diğer koşul emirleri |
+| Yerleştirme stratejisi sırası        | POST   | `/v1/private/order/place-strategy`    | OTO / OCO / OTOCO strateji sırası                                  |
+| Parti siparişleri          | POST   | `/v1/private/order/batch-place`       | Birden fazla normal sipariş gönderin                                     |
+| İptal emri                | POST   | `/v1/private/order/cancel`            | Belirli bir normal emri iptal et                                   |
+| Değişiklik emri                 | POST   | `/v1/private/order/move`              | Normal bekleyen emir fiyatını ve miktarını değiştirin                    |
+| Parti emirlerini değiştir          | POST   | `/v1/private/order/batch-move`        | Aynı sembol için normal bekleyen emirleri toplu olarak değiştir            |
+| Parti iptal emirleri         | POST   | `/v1/private/order/batch-cancel`      | Parti siparişleri iptal et                                        |
+| Hepsini iptal et                  | POST   | `/v1/private/order/batch-cancel-all`  | Parti iptal emirleri türüne göre                                       |
+| Koşulları iptal etme emri      | POST   | `/v1/private/order/cancel-condition`  | Belirli bir koşul sırasını iptal et                                |
+| Mevcut normal siparişler       | GET    | `/v1/private/order/current`           | Mevcut normal bekleyen emirleri sorgula                               |
+| Mevcut durum siparişleri    | GET    | `/v1/private/order/current-condition` | Mevcut tetiklenmemiş koşul emirlerini sorgulama                        |
+| Tarihsel normal sıralar    | GET    | `/v1/private/order/history`           | Tarihsel normal sıralar sayfa şeklinde                                 |
+| Tarihsel durum düzenleri | GET    | `/v1/private/order/history-condition` | Paginat tarihsel durum sıraları                              |
+| Takas kayıtları               | GET    | `/v1/private/order/trades`            | Paginate ticaret kayıtları                                            |
+| Strateji siparişi detayı       | GET    | `/v1/private/order/strategy`          | Sorgu stratejisi sırası ve alt siparişler                               |
+
+<h2 id="position-endpoints">Pozisyon Uç Noktaları</h2>
+
+Pozisyon uç noktaları için ticaret izni gereklidir.
+
+| Uç nokta          | Yöntem | Yol                               | Tanım                                  |
+| ----------------- | ------ | ---------------------------------- | -------------------------------------------- |
+| Kenar modu ayarlanır   | POST   | `/v1/private/position/margin-mode` | Anahtar izole / çapraz kenar               |
+| Sabit kaldıraç      | POST   | `/v1/private/position/leverage`    | Sembol kaldıraçını belirleyin                          |
+| Pozisyon ayarları | GET    | `/v1/private/position/settings`    | Bir sembol için sorgu kaldıraç ve marj modu  |
+| Mevcut pozisyonlar | GET    | `/v1/private/position/positions`   | Mevcut pozisyonları sorgulayın                      |
+| Pozisyon geçmişi  | GET    | `/v1/private/position/history`     | Tarihi konumları ve yakın kayıtları sorgulayın |
+
+<h2 id="endpoint-groups">Uç nokta grupları</h2>
+
+- [Açık Uç Noktaları](/tr/developer-api/rest-api/public-endpoints)
+- [Kullanıcı & Hesap](/tr/developer-api/rest-api/user-and-account)
+- [Siparişler](/tr/developer-api/rest-api/order)
+- [Pozisyonlar](/tr/developer-api/rest-api/position)
+- [Piyasa Verileri](/tr/developer-api/rest-api/market-data)

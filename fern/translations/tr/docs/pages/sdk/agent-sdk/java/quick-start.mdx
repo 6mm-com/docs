@@ -1,0 +1,82 @@
+---
+title: "Java Hızlı Başlangıç"
+subtitle: "Bir arka uç servisinden Java SDK kurup başlatın."
+slug: sdk/agent-sdk/java/quick-start
+canonical-url: https://docs.6mm.com/tr/sdk/agent-sdk/java/quick-start
+---
+
+<h2 id="install">Kurulum</h2>
+
+Kamuya açık SDK kaynağı şu anda `v0.1.1` şu Maven koordinatlarıyla etiketlediğini belgeliyor:
+
+```xml
+<dependency>
+    <groupId>com.sixmm.exchange.sdk</groupId>
+    <artifactId>agent</artifactId>
+    <version>0.1.1</version>
+</dependency>
+```
+
+GitHub, Maven bağımlılık deposu olarak işlev görmez. Etiketlenmiş kaynağı yerel olarak yükleyin, sonra bağımlılığı çözebilirsiniz:
+
+```bash
+git clone https://github.com/6mm-com/agent-java-sdk.git
+cd agent-java-sdk
+git checkout v0.1.1
+mvn install
+```
+
+> **Takım kurulumları**
+>
+> Onaylanmış eseri kuruluşunuzun Maven deposuna CI, test ve üretim sürümleri için yayınlayın. Onaylanmış sürümü üretim dağıtımından önce 6MM ile onaylayın.
+
+Kaynak kodu ve kullanım örnekleri resmi Java SDK deposunda mevcuttur:
+
+[6mm-com/agent-java-sdk](https://github.com/6mm-com/agent-java-sdk)
+
+<h2 id="before-you-start">Başlamadan önce</h2>
+
+- Üretim ajanı API üs URL 6MM ekibiyle onaylayın.
+- apiSecret sadece arka uç gizli yönetiminde depolayın.
+- platformUserId ile agentUserIdarasında kararlı bir eşleme hazırla.
+- Bağlama, transfer, sipariş ve webhook akışları etrafında yapılandırılmış logları etkinleştirin.
+
+<h2 id="initialize-client">İstemciyi başlat</h2>
+
+```java
+import com.sixmm.agent.AgentClient;
+import com.sixmm.agent.AgentClientConfig;
+
+AgentClient client = new AgentClient(AgentClientConfig.builder()
+        .baseUrl("https://agent-api.6mm.com")
+        .agentCode("AGENT001")
+        .apiSecret("your-api-secret")
+        .defaultCurrency("USDT")
+        .build());
+```
+
+> **Sadece arka uç**
+>
+> Agent SDK tarayıcı, mobil veya masaüstü istemci kodundan başlatmayın. SDK , ayrıcalıklı Ajan API taleplerini imzalar.
+
+<h2 id="example-transfer-funds-in">Örnek: fon transferi</h2>
+
+```java
+TransferResponse resp = client.transfer(TransferRequest.fixed(
+        "AGT-ORDER-1001",
+        "agent-user-001",
+        Direction.IN,
+        "USDT",
+        "10.00"));
+```
+
+Her transfer talebi için benzersiz bir partner tarafı sipariş numarası kullanın. Bir istek zaman doluyorsa, yeni bir sipariş oluşturmadan önce orijinal siparişi sorgulayın.
+
+<h2 id="next-steps">Sonraki adımlar</h2>
+
+| İhtiyaç | Sonraki sayfa |
+| --- | --- |
+| Trading Widget kimlik belgesi verin | [Embed Token Oluştur](/tr/sdk/agent-sdk/java/embed-token) |
+| Geri dönüşleri doğrulayın 6MM | [Webhooks ve İdempotensi](/tr/sdk/security/webhooks-idempotency) |
+| İmza davranışını gözden geçir | [Sırlar ve İmza Alma](/tr/sdk/security/secrets-signing) |
+| Bir entegrasyon problemini teşhis et | [SDK Sorun Giderme](/tr/sdk/security/troubleshooting) |

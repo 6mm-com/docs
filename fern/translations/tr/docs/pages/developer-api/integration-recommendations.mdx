@@ -1,0 +1,42 @@
+---
+title: "Entegrasyon Önerileri"
+description: "Kimlik doğrulama, denemeler, kimlik potansiyeli, kayıt tutma, oran yönetimi, izleme, güvenlik ve fırlatma hazırlığı için önerilen 6MM uygulamaları uygulayın."
+slug: developer-api/integration-recommendations
+canonical-url: https://docs.6mm.com/tr/developer-api/integration-recommendations
+---
+
+Bu önerileri üretim hazırlığı için bir temel olarak kullanın. Uç nokta referansını tamamlar ve entegrasyonların zaman aşımları, yeniden bağlanmalar, tekrarlanan talepler ve kimlik bilgileri olaylarından güvenli şekilde geri dönmesine yardımcı olurlar.
+
+<h2 id="authentication-and-secrets">Kimlik doğrulama ve sırlar</h2>
+
+- Tercihe [API Key imza](/tr/developer-api/authentication) sunucu tarafı işlem programları için ve kullanıcı odaklı ön uç işlemleri için JWT .
+- `apiSecret` arka uçta gizli yönetimde tut. Sadece bir kez gösterilir ve asla bir tarayıcıya veya mobil istemciye gönderilmemelidir.
+- Entegrasyon ortamı kararlı çıkış adreslerini desteklediğinde minimum gerekli API Key izinleri uygulayın ve kaynak IP'leri kısıtlayın.
+- Sızdırılmış bir anahtarı hemen devre dışı bırakın veya silinin, ardından istek kayıtlarını gözden geçirin ve ardından yenisini verebilirsiniz.
+
+<h2 id="request-validation-and-idempotency">Doğrulama ve idempotency talebi</h2>
+
+- Sipariş vermeden önce `/v1/public/market/symbols` sorgulayın ve `tickSize`, `stepSize`, minimum kavramsal değer ve maksimum miktarı yerel olarak doğrulayın.
+- Her emir yazısı için benzersiz bir `clientOrderId` oluşturun ki istekler bağlantı kesildikten sonra uzlaştırılabilir.
+- HTTP bir sonuç belirsiz olduğunda orijinal tanımlayıcıyı koruyun. Bir değişim talebi oluşturmadan önce mevcut siparişi sorgulayın.
+- Ondalık miktarları ve fiyatları ikili kayan nokta değerleri değil, dizim veya ondalık tipler olarak ele alın.
+
+<h2 id="order-and-websocket-state">Düzen ve WebSocket durumu</h2>
+
+- İptal, hepsini iptal etme veya değişiklikler sonrası nihai durumu belirlemek [Özel WebSocket etkinlikleri](/tr/developer-api/websocket/private-user-channel) ya da REST bir soru.
+- Her yeniden bağlantıyı yeni bir WebSocket oturumu olarak kabul edin ve gerekli tüm abonelikleri geri getirin.
+- Sipariş defteri sürekliliğini `endVersion`ile kontrol edin. Bir versiyon boşluğu oluşursa, yerel kitabı bırakın ve taze bir anlık için yeniden abone olun.
+- Özel sipariş ve hesap olaylarını bakiyelere, pozisyonlara veya ortak kayıtlarına uygulamadan önce deduplicate etmek.
+
+<h2 id="logging-monitoring-and-retries">Kayıt tutma, izleme ve tekrar denemeler</h2>
+
+- Kayıt isteği kimliği, müşteri sipariş kimliği, HTTP durumu, API iş kodu, gecikme ve tekrar deneme sayısı, sırlar veya tam tokenlar kaydedilmeden.
+- Sadece güvenli olarak belgelenmiş işlemleri tekrar deneme, sınırlı üstel geri çekilme ve jitter kullanılarak.
+- Kimlik doğrulama hataları, imza hataları, hız sınırı yanıtları, WebSocket yeniden bağlantı döngüleri, dizi boşlukları ve sipariş uyum farkları hakkında uyarı.
+- Sunucu saatlerini senkronize tutun çünkü kimlik doğrulama ve imzalama zaman damgalarına bağlıdır.
+
+<h2 id="before-production">Üretim öncesi</h2>
+
+- Üretim dışı bir ortamda zaman aşımı, tekrarlayan isteği, yeniden bağlanma, anahtar döndürme ve webhook tekrar deneme senaryolarını uygulamak.
+- Kimlik doğrulama rotasyonu, ticaret olayları, webhook hataları ve uzlaştırma için sahipleri atamak.
+- Tamamla [Üretim başlatma kontrol listesi](/tr/resources/production-launch-checklist) ve [Destek Talebi Şablonu](/tr/resources/support-request-template) Tırmanma gerektiğinde ise.

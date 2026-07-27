@@ -1,0 +1,153 @@
+---
+title: "İstek İmzaları"
+description: "6MM API istekleri gerekli yük, zaman damgası, API anahtarı, imza başlıkları ve doğrulama kuralları kullanarak HMACile -SHA256 ile imzalayın."
+slug: developer-api/request-signing
+canonical-url: https://docs.6mm.com/tr/developer-api/request-signing
+---
+
+<h2 id="request-format">İstek Formatı</h2>
+
+| Konum | Saha       | Gerekli            | Tanım                                   |
+| -------- | ----------- | ------------------- | --------------------------------------------- |
+| Başlık   | `X-API-KEY` | Evet                 | `apiKey` API Key oluşturulduğunda geri dönerdi |
+| Sorgu    | `timestamp` | Evet                 | Unix milisaniye zaman damgası                    |
+| Sorgu    | `signature` | Evet                 | HMAC-SHA256 imzası, küçük altıgen dizim   |
+| Gövde     | JSON        | Uç noktaya bağlı | POST / PUT / DELETE talep gövdesi              |
+
+<h2 id="signature-payload">İmza Yükü</h2>
+
+```
+payload = queryStringWithoutSignature + requestBody
+signature = HMAC-SHA256(apiSecret, payload)
+```
+
+Ana kurallar:
+
+* `timestamp` Unix milisaniyelik zaman damgası olmalı. Sunucu tolerans penceresi ±10 saniyedir.
+* `signature` URL sorgu dizisine yerleştirilir, ancak imza yüküne dahil edilmez.
+* Sunucu, orijinal sorgu dizisini kaldırdıktan sonra doğrular `signature`; sorgu parametrelerini yeniden sıralamaz.
+* İmza için kullanılan sorgu parametre sırası, gerçek istekle eşleşmelidir URL.
+* Bir talep gövdesi varsa, imzalamak için kullanılan JSON dizisi tam olarak iletilen gövdeyle eşleşmelidir.
+* Sırayla ilgili yollar imza tekrar kontrolleri yapar. Aynı imzayı kısa sürede tekrar kullanmak `Signature replay detected`getirir.
+
+<h2 id="server-time">Server Zamanı</h2>
+
+```http
+GET /v1/time
+```
+
+Yanıt örneği:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "timestamp": 1780473256,
+    "timestampMs": 1780473256708,
+    "iso": "2026-06-03T07:54:16Z",
+    "timezone": "UTC"
+  },
+  "requestId": "req-7cad3113"
+}
+```
+
+İstemciler `timeOffsetMs = serverTimestampMs - localTimestampMs`hesaplamalı, ardından sonraki imzalanan istekler için `timestamp = nowMs + timeOffsetMs` kullanmalı. Sunucu `Timestamp outside of tolerance window`dönerse, hemen zamanı yeniden senkronize et ve imzayı yeniden oluştur.
+
+<h2 id="get-signing-example">GET İmza Örneği</h2>
+
+Gerçek istek:
+
+```
+GET /v1/private/order/current?symbol=BTCUSDT&timestamp=1772710377808&signature=...
+```
+
+İmza yükü:
+
+```
+symbol=BTCUSDT&timestamp=1772710377808
+```
+
+<h2 id="post-signing-example">POST İmza Örneği</h2>
+
+Gerçek istek:
+
+```
+POST /v1/private/order/place?timestamp=1772710377808&signature=...
+```
+
+Talep bedeni:
+
+```json
+{"symbol":"BTCUSDT","type":"LIMIT","side":"BUY","price":"85000","quantity":"0.1","timeInForce":"GTC","makerOnly":true,"clientOrderId":"ext-1772710377808-001"}
+```
+
+İmza yükü:
+
+```
+timestamp=1772710377808{"symbol":"BTCUSDT","type":"LIMIT","side":"BUY","price":"85000","quantity":"0.1","timeInForce":"GTC","makerOnly":true,"clientOrderId":"ext-1772710377808-001"}
+```
+
+<h2 id="python-signing-example">Python İmza Örneği</h2>
+
+```python
+import hashlib
+import hmac
+import json
+import time
+from urllib.parse import urlencode
+
+import requests
+
+BASE_URL = "https://api.6mm.com"
+API_KEY = "YOUR_API_KEY"
+API_SECRET = "YOUR_API_SECRET"
+TIME_OFFSET_MS = 0
+
+def sign(payload: str) -> str:
+    return hmac.new(
+        API_SECRET.encode("utf-8"),
+        payload.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+
+def sync_time_offset():
+    global TIME_OFFSET_MS
+    before = int(time.time() * 1000)
+    resp = requests.get(f"{BASE_URL}/v1/time", timeout=5)
+    after = int(time.time() * 1000)
+    resp.raise_for_status()
+
+    server_ts = int(resp.json()["data"]["timestampMs"])
+    local_midpoint = (before + after) // 2
+    TIME_OFFSET_MS = server_ts - local_midpoint
+
+def signed_request(method: str, path: str, params=None, body=None):
+    params = dict(params or {})
+    params["timestamp"] = str(int(time.time() * 1000) + TIME_OFFSET_MS)
+
+    query_string = urlencode(params)
+    body_string = ""
+    if body is not None:
+        body_string = json.dumps(body, separators=(",", ":"), ensure_ascii=False)
+
+    signature = sign(query_string + body_string)
+    url = f"{BASE_URL}{path}?{query_string}&signature={signature}"
+    headers = {
+        "X-API-KEY": API_KEY,
+        "Content-Type": "application/json",
+    }
+    resp = requests.request(method, url, headers=headers, data=body_string if body is not None else None, timeout=10)
+    resp.raise_for_status()
+    return resp.json()
+
+sync_time_offset()
+print(signed_request("GET", "/v1/private/order/current", {"symbol": "BTCUSDT"}))
+```
+
+<h2 id="related-security-guides">İlgili güvenlik rehberleri</h2>
+
+- [Doğrulama](/tr/developer-api/authentication)
+- [API Key Yönetimi](/tr/developer-api/api-key-management)
+- [Sırlar ve İmza Alma](/tr/sdk/security/secrets-signing)
+- [Hata Kodları ve Sorun Giderme](/tr/developer-api/error-codes-and-troubleshooting)

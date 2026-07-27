@@ -1,0 +1,84 @@
+---
+title: "WebSocket 공개 시장 데이터 채널"
+description: "구독 및 재연결 안내와 함께 공개 WebSocket 채널을 통해 6MM 주문장, 거래, 캔들스틱, 티커 데이터를 스트리밍할 수 있습니다."
+slug: developer-api/websocket/public-market-channels
+canonical-url: https://docs.6mm.com/ko/developer-api/websocket/public-market-channels
+---
+
+애플리케이션이 지속적으로 가격, 거래, 캔들스틱, 주문 심도를 반복적으로 폴링하지 않고 공개 시장 채널 REST 활용하세요. 이 스트림들은 거래 화면, 가격 표시, 알림, 시장 모니터링을 지원할 수 있습니다.
+
+<h2 id="connection-url">연결 URL</h2>
+
+```
+wss://ws.6mm.com/ws
+```
+
+공 WebSocket 는 인증이 필요하지 않습니다.
+
+연결 수명 주기, 구독 취소, 핑, 재연결 동작에 대해서는 다음을 참조하세요 [연결, 구독 및 심장박동](/ko/developer-api/websocket/connection-subscription-and-heartbeat).
+
+<h2 id="common-channels">공통 채널</h2>
+
+| 채널                            | 설명                                                        |
+| ---------------------------------- | ------------------------------------------------------------------ |
+| `market.depth.{symbol}`            | 주문 책 깊이. 먼저 스냅샷을 보내고, 그 다음 증분 업데이트를 보냅니다 |
+| `market.trade.{symbol}`            | 최신 거래                                                      |
+| `market.kline.{symbol}.{interval}` | 클라인스                                                             |
+| `market.ticker.{symbol}`           | 단일 심볼 티커 요약                                       |
+| `market.tickers`                   | 모든 심볼 티커 요약                                          |
+
+<h2 id="choose-a-channel">채널 선택</h2>
+
+| 응용 필요성 | 채널 |
+| --- | --- |
+| 주문 장부를 구축하거나 유지하세요 | `market.depth.{symbol}` |
+| 실시간 거래 피드 표시하기 | `market.trade.{symbol}` |
+| 캔들스틱 차트를 그려보세요 | `market.kline.{symbol}.{interval}` |
+| 시장 요약 하나 표시 | `market.ticker.{symbol}` |
+| 시장 개요를 유지하세요 | `market.tickers` |
+
+<h2 id="subscription-example">구독 예시</h2>
+
+```json
+{ "id": "1772007814666", "op": "subscribe", "args": ["market.depth.BTCUSDT"] }
+```
+
+<h2 id="push-message-wrapper">푸시 메시지 래퍼</h2>
+
+```json
+{
+  "topic": "market.depth.BTCUSDT",
+  "event": "data",
+  "ts": 1772007815000,
+  "data": {}
+}
+```
+
+`topic` 사용해 각 메시지를 올바른 핸들러로 라우팅하고, `ts` 전달 시간을 관찰하세요. `data` 객체는 구독된 채널의 페이로드를 포함합니다.
+
+<h2 id="order-book-handling">주문장 처리</h2>
+
+깊이 채널은 먼저 스냅샷을 보내고 그 다음 점진적으로 업데이트를 보냅니다. 업데이트를 적용하기 전에 스냅샷에서 로컬 북을 초기화하세요. 재연결 후 새 세션을 만들고 다시 구독한 뒤, 오래된 메모리 상태에서 계속하지 않고 다음 스냅샷에서 로컬 북을 다시 구축하세요.
+
+<h2 id="production-recommendations">제작 권고사항</h2>
+
+- 모든 구독, 취소, 핑 요청마다 고유한 `id` 을 생성합니다.
+- 채널을 활성 상태로 간주하기 전에 구독 확인 사항을 확인하세요.
+- 재연결 후 모든 필수 주제를 재구독하세요.
+- 네트워크 읽기를 느린 데이터베이스나 UI 처리와 분리합니다.
+- 연결 끊김 빈도, 메시지 처리 지연, 그리고 변형된 페이로드를 모니터링합니다.
+- 사용 [비공개 사용자 채널](/ko/developer-api/websocket/private-user-channel) 인증된 계정 및 주문 업데이트를 위해서입니다.
+
+<h2 id="related-api-docs">관련 API 문서</h2>
+
+<CardGroup cols={3}>
+<Card title="WebSocket 개요" icon="fa-duotone fa-wave-pulse" href="/ko/developer-api/websocket">
+공용 스트리밍과 비공개 스트리밍 연결 중 하나를 선택하세요.
+</Card>
+<Card title="연결과 심장박동" icon="fa-duotone fa-heart-pulse" href="/ko/developer-api/websocket/connection-subscription-and-heartbeat">
+구독, 구독 취소, 핑, 재연결 처리 기능을 구현하세요.
+</Card>
+<Card title="REST 시장 데이터" icon="fa-duotone fa-chart-line" href="/ko/developer-api/rest-api/market-data">
+스트리밍 채널과 함께 요청 기반 시장 데이터를 활용하세요.
+</Card>
+</CardGroup>

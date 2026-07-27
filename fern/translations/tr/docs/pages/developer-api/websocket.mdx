@@ -1,0 +1,58 @@
+---
+title: "WebSocket"
+description: "Kamu piyasası yayınları ve özel hesap etkinlikleri için 6MM WebSocket hizmetine bağlantı kurun, kalp atışı ve abonelik rehberliğiyle bağlantı kurun."
+slug: developer-api/websocket
+canonical-url: https://docs.6mm.com/tr/developer-api/websocket
+---
+
+<h2 id="service-endpoint">Service Endpoint</h2>
+
+```
+wss://ws.6mm.com/ws
+```
+
+WebSocket kanallar genel kanallar ve özel kanallar olarak ayrılır:
+
+| Tip             | Doğrulama              | Tanım                                            |
+| ---------------- | --------------------------- | ------------------------------------------------------ |
+| Kamu kanalları  | Zorunlu değil                | Piyasa verileri, örneğin derinlik, işlemler, Kline'lar ve ticker |
+| Özel kanallar | `listenKey` veya JWT gerekli | Kullanıcı sırası, hesap ve pozisyon akışları              |
+
+<h2 id="public-channels">Kamu Kanalları</h2>
+
+Kamu WebSocket kimlik doğrulama gerektirmez. Bağlandıktan sonra, piyasa kanallarına abone olmak için `subscribe` talebi gönderin.
+
+Yaygın kanallar:
+
+| Kanal                            | Tanım                                                        |
+| ---------------------------------- | ------------------------------------------------------------------ |
+| `market.depth.{symbol}`            | Kitap derinliği siparişi verin. Önce bir anlık görüntü gönderir, sonra kademeli güncellemeler |
+| `market.trade.{symbol}`            | Son takaslar                                                      |
+| `market.kline.{symbol}.{interval}` | Klines'lar                                                             |
+| `market.ticker.{symbol}`           | Tek sembollü ticker özeti                                       |
+| `market.tickers`                   | Tüm sembol ticker özeti                                          |
+
+<h2 id="private-channels">Özel Kanallar</h2>
+
+<h2 id="listenkey">listenKey</h2>
+Özel WebSocket akışları için önce REST API üzerinden bir `listenKey` oluşturun, ardından şu adreslere bağlanın:
+
+```
+wss://ws.6mm.com/ws?listenKey=YOUR_LISTEN_KEY
+```
+
+<h2 id="jwt">JWT</h2>
+Uyumlu JWT bağlantı yöntemi:
+
+```
+wss://ws.6mm.com/ws?token=YOUR_ACCESS_TOKEN
+```
+
+Kimlik doğrulama başarılı olduktan sonra, sunucu bağlantıyı otomatik olarak mevcut kullanıcının özel kanalına abone eder. Manuel abonelik gerektirmez.
+
+<h2 id="choose-the-next-guide">Bir sonraki rehberi seçin</h2>
+
+- [Bağlantı, Abonelik ve Kalp Atışı](/tr/developer-api/websocket/connection-subscription-and-heartbeat): bağlantı yaşam döngüsü, ping, yeniden bağlantı ve yeniden abonelik.
+- [Kamu Pazarı Kanalları](/tr/developer-api/websocket/public-market-channels): derinlik, takaslar, Kline, tickerlar ve dizi yönetimi.
+- [Özel Kullanıcı Kanalı](/tr/developer-api/websocket/private-user-channel): listenKey yaşam döngüsü ve doğrulanmış hesap olayları.
+- [Entegrasyon Önerileri](/tr/developer-api/integration-recommendations): izleme, kimlik potansiyeli, tekrar denemeler ve üretim testleri.

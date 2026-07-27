@@ -1,0 +1,95 @@
+---
+title: "Trading Widget 인증"
+subtitle: "새로운 임베디드 트레이딩 SSO 통합을 위해 partner-token을 사용하세요."
+slug: sdk/trading-widget/authentication
+canonical-url: https://docs.6mm.com/ko/sdk/trading-widget/authentication
+---
+
+<h2 id="recommended-mode-partner-token">추천 모드: 파트너-토큰</h2>
+
+Partner-Token은 URL 에 짧은 토큰을 넣지 않고 파트너 백엔드에 apiSecret 을 유지합니다.
+
+```js
+const widget = TradingWidget.create('#trading-widget', {
+  baseUrl: 'https://app.6mm.com',
+  auth: {
+    mode: 'partner-token',
+    tokenProvider: async ({ channelId, symbol, reason }) => {
+      const resp = await fetch('/api/trading/embed-token', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ channelId, symbol, reason }),
+      })
+
+      if (!resp.ok) {
+        throw new Error('Failed to request embed token')
+      }
+
+      return resp.json()
+    },
+  },
+})
+```
+
+<h2 id="related-documentation">관련 문서</h2>
+
+- [임베드 토큰 생성](/ko/sdk/agent-sdk/java/embed-token): 백엔드 토큰 발행 예시.
+- [Trading Widget 퀵 스타트](/ko/sdk/trading-widget/quick-start): 완전한 초기화 흐름.
+- [비밀과 서명](/ko/sdk/security/secrets-signing): 비밀 에이전트 자격 증명은 백엔드에 유지하세요.
+- [문제 해결](/ko/sdk/security/troubleshooting): 세션, 토큰, 오리진, 초기화 실패 진단.
+
+<h2 id="backend-flow">백엔드 플로우</h2>
+
+```text
+1. Partner frontend receives auth_request from the iframe.
+2. SDK calls tokenProvider.
+3. Partner frontend calls its own backend.
+4. Partner backend validates the partner session.
+5. Partner backend calls 6MM Agent API or Java SDK createEmbedToken.
+6. SDK sends embedToken to the iframe through postMessage.
+7. iframe exchanges embedToken for a 6MM access token.
+8. iframe continues initialization and emits ready.
+```
+
+<h2 id="tokenprovider-contract">tokenProvider 계약</h2>
+
+| 필드 | 연출 | 설명 |
+| --- | --- | --- |
+| channelId | SDK -> 파트너 백엔드 | 고유 위젯 세션 식별자. 백엔드가 createEmbedToken에게 전달해야 합니다. |
+| 상징 | SDK -> 파트너 백엔드 | 현재 요청 거래 심볼입니다. 필요할 때 토큰 범위를 설정하는 데 사용하세요. |
+| 이유 | SDK -> 파트너 백엔드 | 왜 SDK 가 초기 로드나 새로고침 같은 토큰을 요청하는지 궁금합니다. |
+| embedToken | 파트너 백엔드 -> SDK | Agent SDK 또는 에이전트가 생성한 단명한 토큰API. |
+| expireAt | 파트너 백엔드 -> SDK | 토큰 만료 타임스탬프가 반환 6MM. |
+
+<h2 id="failure-handling">고장 처리</h2>
+
+| 상태 | 권장 취급 방법 |
+| --- | --- |
+| 파트너 세션 만료 | 파트너 엔드포인트에서 401을 반환하고 사용자에게 다시 로그인을 요청하세요. |
+| 토큰 생성이 일시적으로 실패했습니다 | tokenProvider에 오류를 입력하고 위젯이 인증 오류를 표시하도록 하세요. |
+| channelId 불일치 | 요청을 거부하고 위젯 인스턴스를 다시 생성하세요. |
+| 사용자는 거래가 허용되지 않습니다 | 파트너가 제어하는 오류를 반환하고 임베드 토큰을 생성하지 마세요. |
+
+<h2 id="compatibility-mode-agent-sso">호환성 모드: 에이전트-SSO</h2>
+
+agent-SSO는 이전의 /agent-entry 티켓 흐름을 유지합니다. 새로운 통합에는 파트너 토큰을 선호하세요.
+
+```js
+const widget = TradingWidget.create('#trading-widget', {
+  baseUrl: 'https://app.6mm.com',
+  auth: {
+    mode: 'agent-sso',
+    entryUrlProvider: async ({ redirectPath }) => {
+      const resp = await fetch('/api/trading-entry', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ redirectPath }),
+      })
+      const data = await resp.json()
+      return data.webUrl
+    },
+  },
+})
+```

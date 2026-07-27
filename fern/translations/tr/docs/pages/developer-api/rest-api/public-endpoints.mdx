@@ -1,0 +1,159 @@
+---
+title: "Açık Uç Noktaları"
+description: "Enstrümanlar, tickerlar, emir defterleri, işlemler ve diğer doğrulanmamış piyasa bilgileri için kamu 6MM API uç noktalarına erişin."
+slug: developer-api/rest-api/public-endpoints
+canonical-url: https://docs.6mm.com/tr/developer-api/rest-api/public-endpoints
+---
+
+<h2 id="base-url">Temel URL</h2>
+
+```
+https://api.6mm.com
+```
+
+<h2 id="service-version">Hizmet Versiyonu</h2>
+
+```http
+GET /v1/version
+```
+
+Servis versiyon bilgisini alın.
+
+<h2 id="server-time">Server Zamanı</h2>
+
+```http
+GET /v1/time
+```
+
+Server zamanı alın. Bu uç nokta, API Key imzalamadan önce istemci zamanını kalibre etmek için kullanılabilir.
+
+<h2 id="user-login">Kullanıcı Girişi</h2>
+
+```http
+POST /v1/public/user/login
+```
+
+İstek parametreleri:
+
+| Parametre    | Tip   | Gerekli | Tanım                             |
+| ------------ | ------ | -------- | --------------------------------------- |
+| `username`   | string | Evet      | Kullanıcı adı, uzunluk 3 - 32                 |
+| `password`   | string | Evet      | Şifre, uzunluk 1 - 64                 |
+| `deviceId`   | string | Hayır       | Cihaz parmak izi, 64 karaktere kadar |
+| `deviceName` | string | Hayır       | Cihaz adı, 128 karaktere kadar       |
+
+Örnek istemek:
+
+```bash
+curl -X POST https://api.6mm.com/v1/public/user/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "alice",
+    "password": "yourPassword",
+    "deviceId": "device-001",
+    "deviceName": "server-001"
+  }'
+```
+
+Yanıt örneği:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "accessToken": "YOUR_ACCESS_TOKEN",
+    "accessExpire": 1769676656
+  },
+  "requestId": "req-login"
+}
+```
+
+<h2 id="refresh-token">Yenileme Belirtonu</h2>
+
+```http
+POST /v1/public/user/refresh-token
+```
+
+Normal entegrasyon senaryolarında, giriş durumu Cookie ile yenilenir. Giriş yanıtında geri dönen çerezi tutun.
+
+Yanıt alanları:
+
+| Saha          | Tip   | Tanım              |
+| -------------- | ------ | ------------------------ |
+| `accessToken`  | string | Yeni erişim tokenı         |
+| `accessExpire` | int64  | Access Token son kullanma süresi |
+
+<h2 id="agent-sso">Ajan SSO</h2>
+
+<h2 id="ticket-exchange">Bilet Değişimi</h2>
+
+```http
+POST /v1/public/agent-sso/exchange-ticket
+```
+
+İstek parametreleri:
+
+| Parametre  | Tip   | Gerekli | Tanım                                 |
+| ---------- | ------ | -------- | ------------------------------------------- |
+| `ticket`   | string | Evet      | Temsilci servisi tarafından verilen tek seferlik bilet |
+| `deviceId` | string | Hayır       | Cihaz parmak izi, 64 karaktere kadar     |
+
+Yanıt alanları:
+
+| Saha          | Tip   | Tanım              |
+| -------------- | ------ | ------------------------ |
+| `accessToken`  | string | Erişim Tokenı             |
+| `accessExpire` | int64  | Access Token son kullanma süresi |
+| `redirectPath` | string | Önerilen yönlendirme yolu  |
+
+<h2 id="embed-token-exchange">Embed Token Exchange</h2>
+
+```http
+POST /v1/public/agent-sso/exchange-embed-token
+```
+
+İstek parametreleri:
+
+| Parametre    | Tip   | Gerekli | Tanım                                                    |
+| ------------ | ------ | -------- | -------------------------------------------------------------- |
+| `embedToken` | string | Evet      | Ajan hizmeti tarafından çıkarılan kısa ömürlü gömülü ticaret tokenı |
+| `channelId`  | string | Evet      | Gömülü iframe kanal kimliği, 128 karaktere kadar               |
+| `deviceId`   | string | Hayır       | Cihaz parmak izi, 64 karaktere kadar                        |
+
+Yanıt alanları:
+
+| Saha          | Tip   | Tanım              |
+| -------------- | ------ | ------------------------ |
+| `accessToken`  | string | Erişim Tokenı             |
+| `accessExpire` | int64  | Access Token son kullanma süresi |
+
+<h2 id="pnl-leaderboard">PnL Liderlik Tablosu</h2>
+
+```http
+GET /v1/public/leaderboard/pnl?period=30d
+```
+
+İstek parametreleri:
+
+| Parametre | Tip   | Gerekli | Tanım          |
+| --------- | ------ | -------- | -------------------- |
+| `period`  | string | Evet      | `7d` / `30d` / `90d` |
+
+Yanıt alanları:
+
+| Saha              | Tip   | Tanım                                                       |
+| ------------------ | ------ | ----------------------------------------------------------------- |
+| `list[].rank`      | int32  | Rütbe                                                              |
+| `list[].userId`    | string | Dış kullanıcı Kimliği                                                  |
+| `list[].trader`    | string | Maskeli tüccar adı                                                |
+| `list[].volume`    | string | Penceredeki işlem hacmi                                      |
+| `list[].pnlAmount` | string | Pencerede gerçekleşen PnL                                        |
+| `list[].pnlPct`    | string | PnL oranı, `0`'dan `1`'ye ondalık                                |
+| `myRank`           | int32  | Mevcut kullanıcının sıralaması. Doğrulanmamış veya sıralanmamışsa `0` döner. |
+
+<h2 id="related-documentation">İlgili belgeler</h2>
+
+- [Piyasa Verileri](/tr/developer-api/rest-api/market-data)
+- [Kamu WebSocket Kanalları](/tr/developer-api/websocket/public-market-channels)
+- [Ortamlar ve Ortak Gelenekler](/tr/developer-api/environments-and-common-conventions)

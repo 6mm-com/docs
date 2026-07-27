@@ -1,0 +1,132 @@
+---
+title: "Ticaret Maliyetleri: Ücretler ve Kayma"
+description: "İcra ücretlerini, emir defteri kaymalarını, likidite, sipariş büyüklüğünü ve emir türünü anlayarak sürekli işlem maliyetlerini tahmin edin."
+slug: trading/fees-and-slippage
+canonical-url: https://docs.6mm.com/tr/trading/fees-and-slippage
+---
+
+Sürekli bir işlemin nihai maliyeti, hem açık ücretlere hem de beklenen ve gerçek icra fiyatı arasındaki farka bağlıdır.
+
+Bu maliyetleri anlamak, kullanıcıların işlem sonuçlarını daha iyi tahmin etmelerine ve risk yönetmelerine yardımcı olur.
+
+Bu sayfa, uygulama kalitesi ve toplam işlem maliyetine odaklanmaktadır. Yapıcı, alıcı, finansman, tasfiye ve uzlaşma kuralları için bkz. [Sürekli İşlem Ücreti Yapısı](/tr/trading/fee-structure).
+
+***
+
+<h2 id="trading-fees">İşlem Ücretleri</h2>
+
+İşlem ücretleri yalnızca bir emir yürütüldüğünde alınır.
+
+<h2 id="maker-and-taker-fees">Yapıcı ve Alıcı Ücretleri</h2>
+
+6MM Maker / Taker ücret modeli kullanır:
+
+* Maker Fee
+  * Emriniz emir defterine likidite eklediğinde uygulanır
+  * Genellikle hemen doldurulmayan limit emirlerinden gelir
+* Alıcı Ücreti
+  * Emriniz likiditeyi emir defterinden kaldırdığında uygulanır
+  * Genellikle piyasa emirlerinden veya hemen doldurulan limit emirlerinden gelir
+
+Ücret oranları, ticaret çifti ve partner konfigürasyonuna göre değişebilir.
+
+***
+
+<h2 id="when-are-fees-charged">Ücretler Ne Zaman Alınır?</h2>
+
+* Ücretler emir icrasında alınır
+* Ücretler, gerçekleştirilen işlem değerine göre hesaplanır
+* Ücretler Sürekli Hesaptan düşülür
+
+Doldurulmamış veya iptal edilen emirler için ücret talep edilmez.
+
+***
+
+<h2 id="estimate-total-execution-cost">Toplam Uygulama Maliyetini Tahmin Et</h2>
+
+Büyük bir sipariş vermeden önce şunları göz önünde bulundurun:
+
+```text
+estimated trading cost = trading fee + estimated slippage cost
+slippage cost = |average execution price - expected price| × executed quantity
+```
+
+Fonlama ödemeleri, bir finansman etkinliği boyunca sürekli pozisyon tutma maliyetini de etkileyebilir. Tasfiye ile ilgili ücretler yalnızca tasfiye kuralları yürürlüğe girdiğinde geçerlidir.
+
+Tahmin, garantili bir uygulama sonucu değildir. Mevcut emir defteri derinliği ve piyasa volatilitesi, tahmin ile uygulama arasında değişebilir.
+
+***
+
+<h2 id="slippage">Kayma</h2>
+
+Kayma, beklenen fiyat ile gerçek uygulama fiyatı arasındaki farktır.
+
+<h2 id="why-slippage-happens">Kayma Neden Olur</h2>
+
+Kayma şu nedenlerle meydana gelebilir:
+
+* Düşük piyasa likiditesi
+* Büyük sipariş boyutu
+* Yüksek piyasa volatilitesi
+* Piyasa emirlerinin kullanımı
+
+Kayma hızlı hareket eden piyasalarda daha belirgindir.
+
+***
+
+<h2 id="how-to-reduce-slippage">Kaymayı Nasıl Azaltabilirim</h2>
+
+* Piyasa Emirleri yerine Limit Emirleri Kullanın
+* Yüksek likidite dönemlerinde ticaret
+* Büyük siparişleri birden vermekten kaçının
+* İşlemden önce emir defteri derinliğini izleyin
+
+***
+
+<h2 id="fees-vs-slippage">Ücretler ve Kayma</h2>
+
+| Maliyet Türü    | Ne zaman gerçekleşir   | Kontrol edilebilir |
+| ------------ | ---------------- | ----------------- |
+| İşlem Ücretleri | İdam sonrası   | Kısmen         |
+| Kayma     | İcrada | Evet               |
+
+Ücretler tahmin edilebilir olsa da, kayma piyasa koşullarına ve emir davranışına bağlıdır.
+
+***
+
+<h2 id="cost-scenarios">Ortak Maliyet Senaryoları</h2>
+
+| Senaryo | Ana maliyet dikkate alınması |
+| --- | --- |
+| Dinlenme limit sırası | Üretici ücreti ve siparişin yerine gelip gelmediği. |
+| Piyasa sırası | Alıcı ücreti ve mevcut sipariş defteri derinliği. |
+| Büyük emir | Birden fazla fiyat seviyesi arasında kayma. |
+| Hızlı hareket eden pazar | İcra fiyatı belirsizliği ve daha geniş etkili yayılım. |
+| Yatırım genelinde tuttuğu pozisyon | Ticaret maliyeti ve geçerli finansman ödemesi. |
+
+***
+
+<h2 id="beginner-tips">Başlangıç İpuçları</h2>
+
+* İşlemden önce ücret oranlarını kontrol edin
+* Sık sık küçük işlemlerden kaçınarak birikimli ücretleri azaltmak
+* Limit emirlerini kullanarak yürütme fiyatını yönetin
+* TP/SL seviyelerini belirlerken hem ücretleri hem de kaymayı göz önünde bulundurun
+
+***
+
+<h2 id="summary">Özet</h2>
+
+6MMHakkında :
+
+* Ücretler şeffaf ve yürütme temellidir
+* Kayma, likidite ve emir türüne bağlıdır
+* Maliyet farkındalığı, tutarlı işlem performansı için gereklidir
+
+Ücretleri ve kaymayı etkili şekilde yönetmek, başarılı sürekli ticaretin önemli bir parçasıdır.
+
+<h2 id="related-cost-guides">İlgili maliyet rehberleri</h2>
+
+- [Ücret Yapısı](/tr/trading/fee-structure): yapıcı, alıcı, finansman, tasfiye ve uzlaşma ücretleri.
+- [Pazar Derinliği ve Yayılımı](/tr/solutions/market-depth-spread): likidite fiyat etkisini nasıl etkilediği.
+- [Sipariş Türleri](/tr/trading/order-types): kaymayı değiştiren uygulama davranışı.

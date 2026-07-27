@@ -610,7 +610,6 @@ async function translatedLabelMap(config, locale) {
 function renderNavigationOverlay(config, translations) {
   const lines = ["tabs:"];
   for (const [key, tab] of Object.entries(config.tabs ?? {})) {
-    if (!isBaseTabKey(key)) continue;
     lines.push(`  ${key}:`);
     lines.push(`    display-name: ${yamlQuote(translations.get(tab["display-name"]))}`);
     if (tab.icon) lines.push(`    icon: ${tab.icon}`);
@@ -618,7 +617,6 @@ function renderNavigationOverlay(config, translations) {
   }
   lines.push("", "navigation:");
   for (const navigationItem of config.navigation ?? []) {
-    if (!isBaseTabKey(navigationItem.tab)) continue;
     lines.push(`  - tab: ${navigationItem.tab}`);
     lines.push("    layout:");
     for (const section of navigationItem.layout ?? []) {

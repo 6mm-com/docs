@@ -1,0 +1,42 @@
+---
+title: "통합 권고"
+description: "인증, 재시도, 멊등성, 기록, 속도 관리, 모니터링, 보안, 발사 준비 등 6MM 권장 실천법을 적용하세요."
+slug: developer-api/integration-recommendations
+canonical-url: https://docs.6mm.com/ko/developer-api/integration-recommendations
+---
+
+이 권고안들을 생산 준비 기준선으로 활용하세요. 엔드포인트 참조를 보완하며, 타임아웃, 재연결, 중복 요청, 자격 증명 사고로부터 통합이 안전하게 복구되도록 돕습니다.
+
+<h2 id="authentication-and-secrets">인증 및 비밀</h2>
+
+- 선호 [API Key 서명](/ko/developer-api/authentication) 서버 측 거래 프로그램과 사용자 주도 프론트엔드 작업을 위한 JWT 등이 있습니다.
+- 백엔드 비밀 관리에 `apiSecret` 유지해. 이 메시지는 한 번만 표시되며 절대 브라우저나 모바일 클라이언트로 전송되어서는 안 됩니다.
+- 통합 환경이 안정적인 이그레스 주소를 지원할 경우 최소 필요한 API Key 권한을 적용하고 소스 IP를 제한합니다.
+- 유출된 키를 즉시 비활성화하거나 삭제한 후, 교체 키를 발행하기 전에 요청 로그를 검토합니다.
+
+<h2 id="request-validation-and-idempotency">검증 및 멩등성 요청</h2>
+
+- 주문을 하기 전에 `/v1/public/market/symbols` 쿼리하고 `tickSize`, `stepSize`, 최소 명목값, 최대 수량을 국지적으로 검증합니다.
+- 모든 주문 쓰기에 대해 고유 `clientOrderId` 를 생성하여 연결 해제 후 요청을 조정할 수 있도록 합니다.
+- HTTP 결과가 불확실할 때 원본 식별자를 보존합니다. 교체 요청을 만들기 전에 기존 주문을 쿼리하세요.
+- 소수점과 가격을 이진 부동소수점 값이 아닌 문자열이나 십진수형 유형으로 취급합니다.
+
+<h2 id="order-and-websocket-state">순서와 WebSocket 상태</h2>
+
+- 취소, 모두 취소 또는 수정 연산 후 최종 상태를 결정합니다. [사설 WebSocket 행사](/ko/developer-api/websocket/private-user-channel) 또는 REST 문의.
+- 모든 재연결을 새로운 WebSocket 세션으로 간주하고 필요한 모든 구독을 복원합니다.
+- `endVersion`와의 주문 장부 연속성 확인. 버전 차이가 발생하면 로컬 책을 버리고 새 스냅샷을 위해 다시 구독하세요.
+- 잔액, 포지션 또는 파트너 기록에 적용하기 전에 비공개 주문 및 계좌 이벤트를 중복 제거합니다.
+
+<h2 id="logging-monitoring-and-retries">로그, 모니터링, 재시도</h2>
+
+- 요청 ID, 클라이언트 주문 ID, HTTP 상태, API 비즈니스 코드, 지연 시간, 재시도 횟수를 기록할 때 비밀이나 전체 토큰을 기록하지 않습니다.
+- 안전하다고 문서화된 연산만 재시도하며, 유한한 지수 백오프와 지터를 사용합니다.
+- 인증 실패, 서명 오류, 속도 제한 응답, WebSocket 재연결 루프, 시퀀스 갭, 주문 조정 차이에 대한 경고.
+- 인증 및 서명이 타임스탬프에 의존하므로 서버 시계를 동기화합니다.
+
+<h2 id="before-production">제작 전</h2>
+
+- 비운영 환경에서 타임아웃, 중복 요청, 재연결, 키 회전, webhook 재시도 시나리오를 실행합니다.
+- 자격 증명 순환, 거래 사건, webhook 실패, 조정을 위해 소유자를 할당합니다.
+- 완료 [생산 출시 체크리스트](/ko/resources/production-launch-checklist) 그리고 다음을 사용한다. [지원 요청 템플릿](/ko/resources/support-request-template) 언제 에스컬레이션이 필요한지 말이죠.

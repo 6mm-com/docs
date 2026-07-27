@@ -1,0 +1,56 @@
+---
+title: "Δημιουργία διακριτικού ενσωμάτωσης"
+subtitle: "Έκδοση βραχύβιων διακριτικών ενσωμάτωσης για Trading Widget λειτουργία διακριτικού συνεργάτη."
+slug: sdk/agent-sdk/java/embed-token
+canonical-url: https://docs.6mm.com/el/sdk/agent-sdk/java/embed-token
+---
+
+<h2 id="sdk-call">SDK κλήση</h2>
+
+Δημιουργήστε διακριτικά ενσωμάτωσης από το backend σας μετά την επικύρωση της περιόδου λειτουργίας χρήστη συνεργάτη. Το πρόγραμμα περιήγησης θα πρέπει να καλέσει το τελικό σημείο σας και το τελικό σημείο σας θα πρέπει να 6MM καλέσει μέσω του Agent SDK.
+
+```java
+CreateEmbedTokenResponse resp = client.createEmbedToken(
+        CreateEmbedTokenRequest.of("agent-user-001", "tw_abc123")
+                .withSymbol("ETHUSDT"));
+
+System.out.println(resp.embedToken);
+System.out.println(resp.expireAt);
+```
+
+> **Διαπιστευτήριο μίας χρήσης**
+>
+> embedToken είναι βραχύβια και εφάπαξ χρήση. Μην το τοποθετήσετε σε συμβολοσειρά ερωτήματος URL .
+
+<h2 id="backend-endpoint-example">Παράδειγμα τελικού σημείου υποστήριξης</h2>
+
+```java
+@PostMapping("/api/trading/embed-token")
+public EmbedTokenView createEmbedToken(@RequestBody EmbedTokenRequest request,
+                                       PartnerSession session) {
+    String agentUserId = session.getAgentUserId();
+    CreateEmbedTokenResponse resp = agentClient.createEmbedToken(
+            CreateEmbedTokenRequest.of(agentUserId, request.getChannelId())
+                    .withSymbol(request.getSymbol()));
+
+    return new EmbedTokenView(resp.embedToken, resp.expireAt, request.getChannelId());
+}
+```
+
+Επιστρέψτε μόνο τα πεδία που απαιτούνται από τον πάροχο διακριτικού Trading Widget . Μην επιστρέφετε apiSecret, ακατέργαστα πεδία υπογραφής ή εσωτερική ρύθμιση παραμέτρων υπηρεσίας.
+
+<h2 id="failure-handling">Χειρισμός βλαβών</h2>
+
+| Κατάσταση | Συνιστώμενος χειρισμός |
+| --- | --- |
+| Η περίοδος λειτουργίας χρήστη λείπει ή έχει λήξει | Επιστρέψτε το 401 από το τελικό σημείο συνεργάτη και ζητήστε από το χρήστη να εισέλθει ξανά. |
+| Ο χρήστης πράκτορα δεν δεσμεύεται | Δεσμεύστε πρώτα τον χρήστη και, στη συνέχεια, δοκιμάστε ξανά τη δημιουργία διακριτικού. |
+| 6MM επιστρέφει ένα προσωρινό σφάλμα | Επιστρέψτε ένα σφάλμα με δυνατότητα επανάληψης στο frontend και καταγράψτε requestId για υποστήριξη. |
+| channelId δεν ταιριάζει με την παρουσία του widget | Απορρίψτε το αίτημα και δημιουργήστε ξανά τη συνεδρία του γραφικού στοιχείου. |
+
+<h2 id="related-documentation">Σχετική τεκμηρίωση</h2>
+
+- [Trading Widget Έλεγχος ταυτότητας](/el/sdk/trading-widget/authentication): Συνδέστε `tokenProvider` στο τελικό σημείο συνεργάτη.
+- [Java Γρήγορη εκκίνηση](/el/sdk/agent-sdk/java/quick-start): εγκαταστήστε και αρχικοποιήστε `AgentClient`.
+- [Μυστικά & Υπογραφή](/el/sdk/security/secrets-signing): προστατεύστε τον πράκτορα API μυστικό.
+- [Webhooks & Idempotency](/el/sdk/security/webhooks-idempotency): Ασφαλίστε την πλευρά επανάκλησης της ενσωμάτωσης.

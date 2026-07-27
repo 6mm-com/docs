@@ -1,0 +1,95 @@
+---
+title: "Trading Widget Doğrulama"
+subtitle: "Yeni gömülü ticaret SSO entegrasyonlar için partner-token kullanın."
+slug: sdk/trading-widget/authentication
+canonical-url: https://docs.6mm.com/tr/sdk/trading-widget/authentication
+---
+
+<h2 id="recommended-mode-partner-token">Önerilen mod: partner-token</h2>
+
+partner-token, URL'lerde kısa tokenlar koymaktan kaçınır ve apiSecret partner backend'de tutar.
+
+```js
+const widget = TradingWidget.create('#trading-widget', {
+  baseUrl: 'https://app.6mm.com',
+  auth: {
+    mode: 'partner-token',
+    tokenProvider: async ({ channelId, symbol, reason }) => {
+      const resp = await fetch('/api/trading/embed-token', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ channelId, symbol, reason }),
+      })
+
+      if (!resp.ok) {
+        throw new Error('Failed to request embed token')
+      }
+
+      return resp.json()
+    },
+  },
+})
+```
+
+<h2 id="related-documentation">İlgili belgeler</h2>
+
+- [Embed Token Oluştur](/tr/sdk/agent-sdk/java/embed-token): arka uç token ihracı örneği.
+- [Trading Widget Hızlı Başlangıç](/tr/sdk/trading-widget/quick-start): başlatma akışını tamamladı.
+- [Sırlar ve İmza Alma](/tr/sdk/security/secrets-signing): ayrıcalıklı Ajan kimlik bilgilerini arka planda tutun.
+- [Sorun Giderme](/tr/sdk/security/troubleshooting): oturum, token, başlangıç ve başlatma hatalarını teşhis edin.
+
+<h2 id="backend-flow">Arka uç akışı</h2>
+
+```text
+1. Partner frontend receives auth_request from the iframe.
+2. SDK calls tokenProvider.
+3. Partner frontend calls its own backend.
+4. Partner backend validates the partner session.
+5. Partner backend calls 6MM Agent API or Java SDK createEmbedToken.
+6. SDK sends embedToken to the iframe through postMessage.
+7. iframe exchanges embedToken for a 6MM access token.
+8. iframe continues initialization and emits ready.
+```
+
+<h2 id="tokenprovider-contract">tokenProvider sözleşmesi</h2>
+
+| Saha | Yönetmen | Tanım |
+| --- | --- | --- |
+| channelId | SDK -> Partner backend | Benzersiz widget oturum tanımlayıcısı. Arka uç bunu createEmbedTokenile paylaşmalıdır. |
+| sembol | SDK -> Partner backend | Mevcut talep edilen işlem sembolü. Gerekirse tokenı kapsam alanı için kullanın. |
+| Sebep | SDK -> Partner backend | Neden SDK token talep ediyor, örneğin ilk yükleme veya yenileme gibi. |
+| embedToken | Partner backend -> SDK | Agent SDK veya Ajan tarafından oluşturulan kısa ömürlü tokenAPI. |
+| expireAt | Partner backend -> SDK | Token son kullanma zaman damgası 6MMtarafından döndürüldü. |
+
+<h2 id="failure-handling">Arıza yönetimi</h2>
+
+| Durum | Önerilen kullanım |
+| --- | --- |
+| Partner oturumu sona erdi | Partner uç noktasından 401'i geri gönderin ve kullanıcıya tekrar giriş yapmasını isteyin. |
+| Token oluşturma geçici olarak başarısız oldu | tokenProvider içine bir hata atıp widget'ın kimlik doğrulama hatası ortaya çıkarmasına izin verin. |
+| channelId uyumsuzluğu | İsteği reddedin ve widget örneğini yeniden oluşturun. |
+| Kullanıcının işlem yapmasına izin verilmez | Ortak kontrolündeki bir hata döndürün ve gömülü token oluşturmayın. |
+
+<h2 id="compatibility-mode-agent-sso">Uyumluluk modu: agent-sso</h2>
+
+Agent-SSO eski /agent-entry bilet akışını korur. Yeni entegrasyonlar için partner-token tercih edin.
+
+```js
+const widget = TradingWidget.create('#trading-widget', {
+  baseUrl: 'https://app.6mm.com',
+  auth: {
+    mode: 'agent-sso',
+    entryUrlProvider: async ({ redirectPath }) => {
+      const resp = await fetch('/api/trading-entry', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ redirectPath }),
+      })
+      const data = await resp.json()
+      return data.webUrl
+    },
+  },
+})
+```

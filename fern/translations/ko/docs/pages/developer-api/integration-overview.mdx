@@ -1,0 +1,51 @@
+---
+title: "통합 개요"
+description: "추천 환경, 인증, 서명, REST, WebSocket, 테스트, 운영 준비 순서와 6MM API 통합을 시작하세요."
+slug: developer-api/integration-overview
+canonical-url: https://docs.6mm.com/ko/developer-api/integration-overview
+---
+
+> REST 기본 URL: `https://api.6mm.com`\
+> WebSocket URL: `wss://ws.6mm.com/ws`
+
+이 문서는 6MM API 서비스와 통합되는 외부 시스템을 위한 것입니다. 로그인, JWT 인증, API Key 관리, API Key HMAC 서명, 계좌 조회, 주문, 포지션, 시장 데이터, WebSocket 스트림 등을 포함합니다.
+
+계정 설정과 자금 준비는 플랫폼 측 프로세스를 통해 처리됩니다. 이 문서는 외부에서 호출 가능한 API 서비스 엔드포인트만을 설명합니다.
+
+<h2 id="service-endpoints">서비스 엔드포인트</h2>
+
+| 유형      | 종착점              |
+| --------- | --------------------- |
+| REST API  | `https://api.6mm.com` |
+| WebSocket | `wss://ws.6mm.com/ws`    |
+
+<h2 id="integration-flow">통합 흐름</h2>
+
+권장 통합 순서:
+
+1. 플랫폼에서 제공한 계정으로 로그인하여 `accessToken`을 받으세요.
+2. 서버 측 프로그래밍 접근을 위해, 먼저 JWT API Key을 생성하고 일회성 반환된 `apiSecret`을 안전하게 저장합니다.
+3. 사설 쿼리, 순서 엔드포인트, 위치 엔드포인트는 `Authorization: Bearer <accessToken>` 또는 API Key 서명으로 호출될 수 있습니다.
+4. 개인 WebSocket 스트림의 경우, 먼저 `listenKey` 를 생성한 후 `wss://ws.6mm.com/ws?listenKey=...`연결하세요.
+5. 엔드포인트 및 공공 WebSocket 채널REST 시장 데이터는 인증이 필요하지 않습니다.
+
+<h2 id="authentication-choice">인증 선택</h2>
+
+| 시나리오                               | 권장 방법         |
+| -------------------------------------- | -------------------------- |
+| 프론트엔드 사용자 작업                  | JWT                        |
+| 서버 측 프로그래밍 호출         | API Key + HMAC 서명   |
+| API Key 생성, 업데이트 및 삭제 | JWT                        |
+| 공공 시장 REST / 공공 WebSocket  | 인증이 필요하지 않습니다 |
+
+<h2 id="documentation-scope">문서 범위</h2>
+
+이 문서들은 로그인, JWT 인증, API Key 관리, API Key HMAC 서명, 계좌 조회, 주문, 포지션, 시장 데이터, WebSocket 스트림을 포함합니다.
+
+<h2 id="recommended-reading-order">추천 읽기 순서</h2>
+
+1. [환경 및 일반적인 관습](/ko/developer-api/environments-and-common-conventions)
+2. [인증](/ko/developer-api/authentication) 그리고 [요청 서명](/ko/developer-api/request-signing)
+3. [REST API](/ko/developer-api/rest-api) 그리고 [WebSocket](/ko/developer-api/websocket)
+4. [통합 권고](/ko/developer-api/integration-recommendations)
+5. [생산 출시 체크리스트](/ko/resources/production-launch-checklist)

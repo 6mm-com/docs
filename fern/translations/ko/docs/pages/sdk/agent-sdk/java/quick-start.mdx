@@ -1,0 +1,82 @@
+---
+title: "Java 퀵 스타트"
+subtitle: "백엔드 서비스에서 Java SDK 을 설치하고 초기화하세요."
+slug: sdk/agent-sdk/java/quick-start
+canonical-url: https://docs.6mm.com/ko/sdk/agent-sdk/java/quick-start
+---
+
+<h2 id="install">설치</h2>
+
+공개 SDK 출처는 현재 태그 `v0.1.1` 에 다음과 같은 Maven 좌표를 문서화하고 있습니다:
+
+```xml
+<dependency>
+    <groupId>com.sixmm.exchange.sdk</groupId>
+    <artifactId>agent</artifactId>
+    <version>0.1.1</version>
+</dependency>
+```
+
+GitHub는 Maven 의존성 저장소 역할을 하지 않습니다. 의존성을 해결하기 전에 태그된 소스를 로컬에 설치하세요:
+
+```bash
+git clone https://github.com/6mm-com/agent-java-sdk.git
+cd agent-java-sdk
+git checkout v0.1.1
+mvn install
+```
+
+> **팀 빌드**
+>
+> 승인된 아티팩트를 조직의 Maven 저장소에 배포하여 CI, 테스트, 운영 빌드를 수행합니다. 운영 전에 6MM 와 승인된 버전을 확인하세요.
+
+소스 코드와 사용 사례는 공식 Java SDK 저장소에서 확인할 수 있습니다:
+
+[6mm-com/agent-java-sdk](https://github.com/6mm-com/agent-java-sdk)
+
+<h2 id="before-you-start">시작하기 전에</h2>
+
+- 6MM팀과 API 기지 URL 생산 요원을 확인해.
+- apiSecret 백엔드 비밀 관리에만 저장합니다.
+- platformUserId 와 agentUserId사이에 안정적인 매핑을 준비한다.
+- 제인, 전송, 순서, webhook 흐름에 관한 구조화된 로그를 활성화합니다.
+
+<h2 id="initialize-client">클라이언트 초기화</h2>
+
+```java
+import com.sixmm.agent.AgentClient;
+import com.sixmm.agent.AgentClientConfig;
+
+AgentClient client = new AgentClient(AgentClientConfig.builder()
+        .baseUrl("https://agent-api.6mm.com")
+        .agentCode("AGENT001")
+        .apiSecret("your-api-secret")
+        .defaultCurrency("USDT")
+        .build());
+```
+
+> **백엔드만**
+>
+> 브라우저, 모바일, 데스크톱 클라이언트 코드에서 Agent SDK 을 초기화하지 마십시오. SDK 특권 요원 API 요청에 서명합니다.
+
+<h2 id="example-transfer-funds-in">예시: 자금 이체</h2>
+
+```java
+TransferResponse resp = client.transfer(TransferRequest.fixed(
+        "AGT-ORDER-1001",
+        "agent-user-001",
+        Direction.IN,
+        "USDT",
+        "10.00"));
+```
+
+각 이전 요청마다 고유한 파트너 측 주문 번호를 사용하세요. 요청이 시간 초과되면 새 주문을 만들기 전에 원래 주문을 쿼리하세요.
+
+<h2 id="next-steps">다음 단계</h2>
+
+| 필요 | 다음 페이지 |
+| --- | --- |
+| Trading Widget 자격증명을 발급하세요 | [임베드 토큰 생성](/ko/sdk/agent-sdk/java/embed-token) |
+| 6MM에서 콜백 기록을 확인하세요 | [Webhooks 및 등등성](/ko/sdk/security/webhooks-idempotency) |
+| 서명 행동 검토 | [비밀과 서명](/ko/sdk/security/secrets-signing) |
+| 통합 문제 진단하기 | [SDK 문제 해결](/ko/sdk/security/troubleshooting) |

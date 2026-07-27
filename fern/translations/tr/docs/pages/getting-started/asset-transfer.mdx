@@ -1,0 +1,94 @@
+---
+title: "Varlık Transferi"
+description: "Varlıkların ortak sistemler ile 6MM ticaret hesapları arasında nasıl hareket ettiğini, transfer sorumlulukları, durum yönetimi ve operasyonel kontroller dahil olmak üzere öğrenin."
+slug: trading/getting-started/asset-transfer
+canonical-url: https://docs.6mm.com/tr/trading/getting-started/asset-transfer
+---
+
+6MM , ortak tarafından yönetilen varlık akışı modeli altında faaliyet göstermektedir.
+
+6MM , son kullanıcılardan doğrudan para yatırma veya para çekme kabul etmiyor.
+
+Tüm kullanıcı fonu giriş ve çıkışları yalnızca yetkili ajanlar veya ortak platformlar tarafından yönetilir.
+
+Bu tasarım, 6MM ile ortakları arasında finansal sorumluluk, düzenleyici kapsam ve kullanıcı mülkiyetinin net bir şekilde ayrılmasını sağlar.
+
+***
+
+<h2 id="partner-managed-deposits-and-withdrawals">Ortak Tarafından Yönetilen Depozito ve Çekimler</h2>
+
+* Kullanıcılar yalnızca ortak platform üzerinden para yatırır ve çeker
+* 6MM , son kullanıcılara zincir veya zincir dışı depozito adresleri sağlamaz
+* 6MM , işlem yürütme dışında kullanıcı fonlarını doğrudan tutmaz veya hesaplaşmaz
+
+Ortaklar şu konulardan tam sorumlu kalır:
+
+* Kullanıcı denge yönetimi
+* Yatırma ve çekme işlemleri
+* Fon korumasıyla ilgili uyum ve risk kontrolleri
+
+***
+
+<h2 id="automated-balance-transfer-to-6mm">Otomatik Bakiye Transferi 6MM</h2>
+
+İşlemi mümkün kılmak için kullanıcılar, ortak tarafından yönetilen bakiyelerinin bir kısmını otomatik bir iç transfer mekanizması aracılığıyla 6MM 'ye aktarabilirler.
+
+Bu transfer sürecinin temel özellikleri şunlardır:
+
+* Transferler ortak sistem tarafından başlatılır ve yetkilendirilir
+* Süreç altyapı düzeyinde otomatik olarak yürütülür
+* 6MM ile manuel kullanıcı etkileşimi gerekmez
+* Transferler gerçek zamanlı veya neredeyse gerçek zamanlı gerçekleşir
+
+Kullanıcı açısından bu süreç, geleneksel bir depozito yerine sorunsuz bir denge tahsisi olarak görülür.
+
+***
+
+<h2 id="account-structure-within-6mm">6MM İçindeki Hesap Yapısı</h2>
+
+6MMiçinde, transfer edilen varlıklar mantıksal olarak iki ayrı iç hesaba ayrılır:
+
+**Spot Hesap**
+
+* Transfer edilen fonlar için ilk alıcı hesap olarak hizmet verir
+* İç sermaye yönetimi için varlık havuzu olarak görev yapar
+* Doğrudan ticaret faaliyetlerini desteklemez
+
+**Sürekli Hesap**
+
+* Fonlar, Spot Hesaptan Sürekli Hesaba aktarılır
+* Sipariş verme için yalnızca Sürekli Hesaptaki varlıklar kullanılabilir
+* Marj, pozisyonlar ve gerçekleşmemiş PnL bu seviyede hesaplanır
+
+Bu iki katmanlı yapı, sürekli işlem için hassas sermaye izolasyonu, marj verimliliği ve risk kontrolünü sağlar.
+
+***
+
+<h2 id="internal-transfers-between-accounts">Hesaplar Arasında İç Transferler</h2>
+
+* Spot Hesabına aktarılan fonlar serbestçe ve anında Sürekli Hesaba tahsis edilebilir
+* İç transferler, blokzincir etkileşimi olmadan işlenir
+* Transferler düşük gecikmeli ve deterministik olacak şekilde tasarlanmıştır
+
+Bu mimari, sermaye hareketinin sorunsuz olmasını sağlarken, varlık koruması ile işlem uygulaması arasında sıkı ayrım korunur.
+
+***
+
+<h2 id="design-principles">Tasarım İlkeleri</h2>
+
+6MM varlık transfer sistemi aşağıdaki ilkeler etrafında inşa edilmiştir:
+
+* Doğrudan kullanıcı yatırımı veya çekim işlemi 6MM
+* Tüm varlık koruması ortak platformlarda kalır
+* Otomatik, ortak tarafından yetkilendirilmiş fon tahsisi
+* Spot ve Perpetual hesaplar arasında net ayrım
+* Ticaret verimliliği ve risk izolasyonu için optimize edilmiştir
+
+Bu model sayesinde, 6MM saf bir ticaret altyapısı katmanı olarak çalışırken, ortaklar kullanıcı fonları ve finansal ilişkiler üzerinde tam kontrolü elinde tutar.
+
+<h2 id="implementation-and-safety-guides">Uygulama ve güvenlik rehberleri</h2>
+
+- [Agent SDK Genel Bakış](/tr/sdk/agent-sdk/overview): kullanıcı bağlama, transferler, sipariş sorguları ve uzlaştırma.
+- [Webhooks ve İdempotensi](/tr/sdk/security/webhooks-idempotency): son durum geri çağrılarını doğrulayın ve tekrarları deduplicate yapın.
+- [Ortak Sorumluluk Matrisi](/tr/security-compliance/partner-responsibilities): velayet ve operasyonel mülkiyet.
+- [Risk ve Tasfiye Etme](/tr/trading/risk-and-liquidations): Ticaret hesabı tahsisisinin riski nasıl etkilediğini anlayın.

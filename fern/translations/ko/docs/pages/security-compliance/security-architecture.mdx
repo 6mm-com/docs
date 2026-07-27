@@ -1,0 +1,48 @@
+---
+title: "플랫폼 보안 아키텍처"
+subtitle: "6MM 거래 인프라, APIs, SDKs, webhooks, 파트너 통합 전반에 걸쳐 사용되는 보안 계층을 이해하세요."
+slug: security-compliance/security-architecture
+canonical-url: https://docs.6mm.com/ko/security-compliance/security-architecture
+---
+
+6MM 보안 문서는 파트너의 생산 준비 상태에 중점을 둡니다. 목표는 거래 인프라를 안정적으로 유지하면서 책임 경계를 명확히 하는 것입니다.
+
+<h2 id="security-layers">보안 계층</h2>
+
+| 층 | 초점 |
+| --- | --- |
+| 인프라 | 네트워크 격리, 암호화된 서비스 통신, 모니터링, 그리고 장애 조치 전환. |
+| 거래 시스템 | 결정론적 매칭, 마진 점검, 위험 통제, 남용 방지. |
+| 통합 보안 | API 키, HMAC 서명, webhook 서명, 재생 보호, 백엔드 전용 비밀 설정. |
+| 파트너 운영 | 사용자 세션 검증, 자산 관리, 고객 지원, 로컬 컴플라이언스 통제. |
+
+<h2 id="partner-responsibilities">파트너 책임</h2>
+
+- 브라우저와 모바일 앱에서 비밀과 로그인 키를 API 보관합니다.
+- 거래 진입 자격 증명을 발급하기 전에 파트너 사용자 세션을 검증합니다.
+- webhook 멩등성 및 말단 상태 검사를 구현합니다.
+- 회계, 주문, 이전 및 webhook 흐름에 대한 운영 로그를 유지합니다.
+
+<h2 id="integration-trust-boundaries">통합 신뢰 경계</h2>
+
+| 경계 | 필요한 제어 |
+| --- | --- |
+| 브라우저나 앱에서 파트너 백엔드로 | 거래 자격 증명을 발급하기 전에 파트너 세션을 검증하세요. |
+| 파트너 백엔드에서 6MM API | 범위가 설정된 자격 증명, 요청 서명, 시간 동기화, 보호된 비밀 저장소를 사용하세요. |
+| 6MM webhook to partner endpoint | 서명을 원시 요청 본문과 대조하고, 오래된 메시지나 유효하지 않은 메시지를 거부하며, 중복 응답을 제거하세요. |
+| 거래 상태에서 파트너로의 기록 | 내셔널 식별자와 터미널 상태 점검을 사용하여 주문, 포지션, 잔액 및 이체를 조정합니다. |
+
+<h2 id="production-verification">생산 검증</h2>
+
+- 테스트 만료, 취소, 범위 설정 오류.
+- 변경된 webhook 몸체, 중복 콜백, 지연된 콜백, 엔드포인트 타임아웃 테스트
+- 로그가 비밀 삭제, 접근 토큰, 민감한 요청 페이로드를 편집하는지 확인한다.
+- 반복되는 서명 실패, 비정상적인 주문 활동, 조정 차이, 연결 불안정성에 대한 경고
+- 자격증명 노출, webhook 실패, 거래 사고에 대한 소유자와 대응 경로를 문서화합니다.
+
+<h2 id="related-security-guides">관련 보안 가이드</h2>
+
+- [비밀과 서명](/ko/sdk/security/secrets-signing)
+- [Webhooks 및 등등성](/ko/sdk/security/webhooks-idempotency)
+- [사건 대응](/ko/security-compliance/incident-response)
+- [파트너 책임 매트릭스](/ko/security-compliance/partner-responsibilities)

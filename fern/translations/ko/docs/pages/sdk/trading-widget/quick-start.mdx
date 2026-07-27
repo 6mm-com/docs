@@ -1,0 +1,108 @@
+---
+title: "6MM Trading Widget임베드 : 퀵 스타트"
+subtitle: "컨테이너, v1 스크립트, 그리고 TradingWidget.create()와 함께 웹 페이지에 거래 터미널을 추가하세요."
+slug: sdk/trading-widget/quick-start
+canonical-url: https://docs.6mm.com/ko/sdk/trading-widget/quick-start
+---
+
+Trading Widget SDK는 파트너가 소유한 웹 페이지 내에 6MM 거래 인터페이스를 내장합니다. 가장 빠른 통합은 가시적인 컨테이너, 프로덕션 SDK 스크립트, 그리고 `TradingWidget.create()`호출이 필요합니다.
+
+<h2 id="before-you-start">시작하기 전에</h2>
+
+- `https://app.6mm.com`에서 자원을 로드할 수 있는 웹 페이지에서 예제를 실행합니다.
+- 위젯 컨테이너에 명시적인 너비와 높이를 부여합니다.
+- SDK 불러오기 전에 `TradingWidget.create()`.
+- 계획 [인증 흐름](/ko/sdk/trading-widget/authentication) 운영 환경에서 계정 또는 거래 기능을 활성화하기 전에.
+
+<h2 id="minimal-example">최소한의 예시</h2>
+
+```html
+<div id="trading-widget" style="width: 100%; height: 720px"></div>
+
+<script src="https://app.6mm.com/sdk/trading-widget/v1/index.js"></script>
+<script>
+  const widget = TradingWidget.create('#trading-widget', {
+    baseUrl: 'https://app.6mm.com',
+    symbol: 'BTCUSDT',
+    theme: 'dark',
+    locale: 'en',
+    layout: 'default',
+    display: {
+      showHeader: false,
+      showTicker: false,
+      hidden: [],
+    },
+    onReady(event) {
+      console.log('ready', event)
+    },
+    onError(error) {
+      console.error('error', error)
+    },
+  })
+</script>
+```
+
+통합이 성공하면 SDK 은 `#trading-widget` 안에 iframe을 생성하고 `onReady`를 호출합니다. 개발 중에 `onError` 을 캡처하여 구성 및 로딩 실패를 눈에 띄게 합니다.
+
+<h2 id="sdk-urls">SDK URL</h2>
+
+| 환경 | 대본 URL |
+| --- | --- |
+| 제작 | https://app.6mm.com/sdk/trading-widget/v1/index.js |
+
+> **명시적으로 baseUrl 설정**
+>
+> 파트너 소유 페이지에서 테스트할 때는 baseUrl 패스하여 iframe이 항상 6MM 웹 도메인을 가리키도록 합니다.
+
+<h2 id="display-controls">디스플레이 제어</h2>
+
+파트너 임베드는 기본적으로 PC 헤더와 하단 시장 티커를 숨깁니다. `display` 그 셸 영역을 보여주거나 내장된 거래 페이지에서 고레벨 컨테이너를 숨겨야 할 때 사용하세요.
+
+```js
+display: {
+  showHeader: false,
+  showTicker: false,
+  hidden: ['account'],
+}
+```
+
+<h2 id="container-size">컨테이너 크기</h2>
+
+| 표면 | 권장 최소 기준 |
+| --- | --- |
+| 데스크톱 | 1024 x 720 |
+| 모바일 | 390 x 700 |
+
+반응형 레이아웃의 경우, 폭을 유동적으로 유지하고 각 브레이크포인트마다 적절한 최소 높이를 설정하세요. 높이가 0인 컨테이너는 거래 인터페이스를 보이지 않게 하면서 SDK 을 성공적으로 적재할 수 있습니다.
+
+<h2 id="verify-the-integration">통합 확인</h2>
+
+1. 브라우저 네트워크 패널에서 SDK 스크립트가 성공적으로 반환되었는지 확인합니다.
+2. iframe이 초기화되면 `onReady` 발화되는지 확인.
+3. 구성 `symbol`, `locale`, 테마, 숨겨진 섹션을 테스트합니다.
+4. 데스크톱과 모바일 브레이크포인트에서 페이지 크기 조정.
+5. 출시 전에 비생산 사용자와 인증된 테스트를 완료하세요.
+
+<h2 id="common-issues">일반적인 문제</h2>
+
+| 증상 | 확인해야 할 사항 |
+| --- | --- |
+| 빈 위젯 영역 | 용기가 가로와 높이가 보이는지 확인하세요. |
+| `TradingWidget` 정의되지 않았습니다 | 생성 호출 전에 v1 스크립트가 로드되었는지 확인하세요. |
+| 잘못된 페이지나 환경 | `baseUrl` 명시적으로 설정하고 설정된 환경을 확인하세요. |
+| 준비 사건은 절대 발사되지 않습니다 | `onError` 캡처하고 차단된 iframe이나 스크립트 요청을 검사합니다. |
+| 계좌 정보는 이용할 수 없습니다 | 지원되는 위젯 인증 절차를 완료하세요. |
+
+<h2 id="next-steps">다음 단계</h2>
+
+<CardGroup cols={3}>
+<Card title="위젯 인증" icon="fa-duotone fa-user-shield" href="/ko/sdk/trading-widget/authentication">
+임베디드 터미널을 승인된 사용자 세션에 연결하세요.
+</Card>
+<Card title="옵션 및 이벤트" icon="fa-duotone fa-sliders" href="/ko/sdk/trading-widget/options-events">
+심볼, 로케이션, 디스플레이 동작, 라이프사이클 콜백을 구성하세요.
+</Card>
+<Card title="인스턴스 메서드" icon="fa-duotone fa-code" href="/ko/sdk/trading-widget/instance-methods">
+초기화 후 생성된 위젯 인스턴스를 제어합니다.
+</Card>
+</CardGroup>

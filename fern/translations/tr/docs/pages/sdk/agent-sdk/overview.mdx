@@ -1,0 +1,74 @@
+---
+title: "6MM Agent SDK"
+headline: "6MM Agent SDK Java ve PHP Backend Entegrasyonu"
+description: "Java ve PHP backend hizmetlerinde 6MM Agent SDK nasıl kullanılacağını öğrenin; imzalı talepler göndermek, kullanıcıları bağlamak, varlıkları aktarmak, giriş URL'leri oluşturmak ve webhooksdoğrulamak için nasıl kullanılacağını öğrenin."
+slug: sdk/agent-sdk/overview
+canonical-url: https://docs.6mm.com/tr/sdk/agent-sdk/overview
+---
+
+6MM Agent SDK, ayrıcalıklı Agent APIs'yi çağırmak zorunda olan ortak arka uç servisleri içindir; ancak sıfırdan imzalama ve talep işleme uygulamadan yapılır. Entegrasyon gizli bir partner API kullandığı için tarayıcı, mobil veya genel masaüstü kodunda çalışmamalıdır.
+
+<h2 id="when-to-use-the-agent-sdk">Ne zaman kullanılmalı Agent SDK</h2>
+
+Arka uçunuzda bir ortak kullanıcıyı bağlamak, varlıkları onaylı bir iş akışı üzerinden geçirmek, işlem kayıtlarını sorgulamak, gömülü bir işlem girişi oluşturmak URL veya bildirimleri doğrulamak webhook gerektiğinde bir Agent SDK kullanın. Kullan [Trading Widget SDK](/tr/sdk/trading-widget/overview) Ortak ön tarafın işlem arayüzünü göstermesi gerektiğinde ayrı ayrı bir şey var.
+
+<h2 id="capabilities">Yetenekler</h2>
+
+| Senaryo | Java SDK | PHP SDK |
+| --- | --- | --- |
+| Kullanıcıyı bağla | Destekleniyor | Destekleniyor |
+| Sabit miktar transferi | Destekleniyor | Destekleniyor |
+| Tamamını transfer et | Destekleniyor | Destekleniyor |
+| Ters aktarım | Destekleniyor | Destekleniyor |
+| Sorgulama emirleri | Destekleniyor | Destekleniyor |
+| Giriş URL oluşturun | Destekleniyor | Destekleniyor |
+| Webhook doğrulama | Destekleniyor | Destekleniyor |
+
+<h2 id="common-configuration">Yaygın yapılandırma</h2>
+
+| Anahtar | Örnek | Tanım |
+| --- | --- | --- |
+| baseUrl | `https://agent-api.6mm.com` | 6MM Agent API servis URL geride slash olmadan kullanılır. |
+| agentCode | AGENT001 | Ortak temsilci kodu. |
+| apiSecret | Senin-sırrının-sırrın | API imza sırrı sadece arka uçta saklanıyor. |
+| defaultCurrency | USDT | Transfer ve hesap için varsayılan para birimi APIs. |
+| webhookUrl | https://partner.example.com/6mm/webhook | 6MM webhook bildirimleri için partner uç noktası. |
+
+<h2 id="typical-integration-flow">Tipik entegrasyon akışı</h2>
+
+1. Ortak ön sendi, partnerin kendi hesap sistemi üzerinden kullanıcıyı doğrular.
+2. Partner backend, kullanıcıyı kararlı bir partner tarafı tanımlayıcıya eşlerler.
+3. Arka uç `agentCode` ile Agent SDK ve korunan API sırrını çağırır.
+4. SDK imzalar ve Ajana API talebini gönderir.
+5. Arka uç, iade edilen iş tanımlayıcısını saklar ve daha sonra webhooks aynı şekilde işlem yapar.
+6. Ön taraf yalnızca ihtiyaç duyduğu kısa ömürlü sonuç veya giriş kimliğini alır.
+
+<h2 id="choose-an-sdk">Bir SDK seçin</h2>
+
+| Backend yığını | Buradan başlayın |
+| --- | --- |
+| Java | [Java SDK Genel Bakış](/tr/sdk/agent-sdk/java/overview) ve [Java Hızlı Başlangıç](/tr/sdk/agent-sdk/java/quick-start) |
+| PHP | [PHP SDK Genel Bakış](/tr/sdk/agent-sdk/php/overview) ve [PHP Hızlı Başlangıç](/tr/sdk/agent-sdk/php/quick-start) |
+
+<h2 id="production-checklist">Üretim kontrol listesi</h2>
+
+- `apiSecret` bir arka uç gizli yöneticisinden yüklenir, kaynak kodundan değil.
+- Geliştirme, sahneleme ve üretim sertifikalarını ayrı tutmak.
+- Kararlı bir ortak kullanıcı eşlemesi ve benzersiz iş siparişi tanımlayıcıları kullanın.
+- Zamanlama talebinin durumunu kontrol ederken orijinal tanımlayıcıyı koruyun.
+- webhook imzalarını doğrulamak ve işlenen olay kimliklerini saklayın.
+- Destek için istek kimliklerini koruyarak loglardan sırları ve imzaları mansürle geçirmek.
+
+<h2 id="next-steps">Sonraki adımlar</h2>
+
+<CardGroup cols={3}>
+<Card title="Java Hızlı Başlangıç" icon="fa-brands fa-java" href="/tr/sdk/agent-sdk/java/quick-start">
+Agent SDK Java arka uçunda kurup başlatın.
+</Card>
+<Card title="PHP Hızlı Başlangıç" icon="fa-brands fa-php" href="/tr/sdk/agent-sdk/php/quick-start">
+Agent SDK PHP arka uçunda kurup başlatın.
+</Card>
+<Card title="Webhooks ve İdempotensi" icon="fa-duotone fa-webhook" href="/tr/sdk/security/webhooks-idempotency">
+Geri dönüşleri doğrulayın ve iş işlemlerinin tekrarlanmasını önleyin.
+</Card>
+</CardGroup>

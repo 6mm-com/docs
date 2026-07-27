@@ -1,0 +1,69 @@
+---
+title: "Seçenekler ve Etkinlikler"
+subtitle: "Başlatma seçenekleri, çalışma zamanı olayları ve yaygın hata kodları."
+slug: sdk/trading-widget/options-events
+canonical-url: https://docs.6mm.com/tr/sdk/trading-widget/options-events
+---
+
+<h2 id="options">Seçenekler</h2>
+
+| Saha | Tip | Varsayılan | Notlar |
+| --- | --- | --- | --- |
+| baseUrl | string | SDK yazı kökeni | iframe alanı. Partner sayfalarında açıkça paylaşın. |
+| sembol | string | BTCUSDT | Büyük harflere ve şeritlere normalize edildi - / _. |
+| Tema | karanlık \| ışık | karanlık | İlk tema parametresi. |
+| Bölge | en \| en-US \| zh-CN | Tarayıcı/varsayılan | İngilizce ve basitleştirilmiş Çince desteklenmektedir. |
+| Düzen | varsayılan \| kompakt | Varsayılan | Rezerve edilmiş düzen seçeneği. |
+| Gösteri | object | `showHeader: false`, `showTicker: false`, `hidden: []` | Kontrol kabuk alanları ve üst düzey ticaret konteynerleri. |
+| Doğrulama | object | Hiçbiri | Yeni SSO entegrasyonları için partner-token kullanın. |
+
+<h2 id="display-controls">Ekran kontrolleri</h2>
+
+`display` , gömülü ticaret sayfası kabuğunu ve üst düzey konteynerleri kontrol eder. Ortak gömülerde, PC başlığı ve alt pazar ticker'ı varsayılan olarak gizlidir.
+
+```js
+display: {
+  showHeader: false,
+  showTicker: false,
+  hidden: ['chart', 'orderBook'],
+}
+```
+
+| Saha | Tip | Varsayılan | Notlar |
+| --- | --- | --- | --- |
+| showHeader | boolean | yanlış | PC gömülü başlığını iframe içinde gösterip göstermemediği. |
+| showTicker | boolean | yanlış | Gömülü kabuğunda alt piyasa ticker'ını gösterip göstermememe. |
+| gizli | String[] | [] | Yüksek seviyeli konteynerleri ticaret sayfasında saklar. |
+
+Desteklenen `display.hidden` değerleri:
+
+| Değer | Konteyner |
+| --- | --- |
+| Harita | Harita konteyneri |
+| orderBook | Sipariş defteri konteyneri |
+| orderForm | Sipariş formu paneli |
+| Pozisyonlar | Alt pozisyonlar ve açık emirler paneli |
+| hesap | Hesap varlıkları konteyneri |
+
+`display.hidden` sadece tüm kapları saklar. Tek tek düğmeleri, alanları veya araçları bir konteyner içinde saklamaz. Mevcut görünüm penceresine eşlenmeyen değerler göz ardı edilir.
+
+<h2 id="events">Etkinlikler</h2>
+
+| Etkinlik | Tetikleyici |
+| --- | --- |
+| Hazır | iframe başlatma tamamlandı. |
+| hata | SDK, iframe veya kimlik doğrulama hatası. |
+| state_changed | SDK yaşam döngüsü durumu değişti. |
+| auth_state_changed | partner-token doğrulama durumu değiştirildi. |
+| symbol_changed | Gerçek iframe sembolü değişti. |
+| locale_changed | Gerçek iframe konumu değişti. |
+| order_created | Kullanıcı iframe içinde bir sipariş oluşturdu. |
+| order_failed | Sipariş gönderimi başarısız oldu. |
+| yok edildi | SDK örnek yok edildi. |
+
+<h2 id="related-widget-guides">İlgili Widget rehberleri</h2>
+
+- [Trading Widget Hızlı Başlangıç](/tr/sdk/trading-widget/quick-start)
+- [Doğrulama](/tr/sdk/trading-widget/authentication)
+- [Örnek Yöntemleri](/tr/sdk/trading-widget/instance-methods)
+- [Sorun Giderme](/tr/sdk/security/troubleshooting)

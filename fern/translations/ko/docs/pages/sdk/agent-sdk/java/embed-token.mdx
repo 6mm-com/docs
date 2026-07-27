@@ -1,0 +1,56 @@
+---
+title: "임베드 토큰 생성"
+subtitle: "파트너 토큰 모드에서 단기간 임베브드 토큰을 발행 Trading Widget ."
+slug: sdk/agent-sdk/java/embed-token
+canonical-url: https://docs.6mm.com/ko/sdk/agent-sdk/java/embed-token
+---
+
+<h2 id="sdk-call">SDK 전화</h2>
+
+파트너 사용자 세션을 검증한 후 백엔드에서 임베드 토큰을 생성하세요. 브라우저가 엔드포인트를 호출해야 하고, 엔드포인트는 Agent SDK를 통해 6MM를 호출해야 합니다.
+
+```java
+CreateEmbedTokenResponse resp = client.createEmbedToken(
+        CreateEmbedTokenRequest.of("agent-user-001", "tw_abc123")
+                .withSymbol("ETHUSDT"));
+
+System.out.println(resp.embedToken);
+System.out.println(resp.expireAt);
+```
+
+> **일회성 자격증**
+>
+> embedToken 수명이 짧고 일회성 사용이다. URL 쿼리 문자열에 넣지 마세요.
+
+<h2 id="backend-endpoint-example">백엔드 엔드포인트 예시</h2>
+
+```java
+@PostMapping("/api/trading/embed-token")
+public EmbedTokenView createEmbedToken(@RequestBody EmbedTokenRequest request,
+                                       PartnerSession session) {
+    String agentUserId = session.getAgentUserId();
+    CreateEmbedTokenResponse resp = agentClient.createEmbedToken(
+            CreateEmbedTokenRequest.of(agentUserId, request.getChannelId())
+                    .withSymbol(request.getSymbol()));
+
+    return new EmbedTokenView(resp.embedToken, resp.expireAt, request.getChannelId());
+}
+```
+
+Trading Widget 토큰 제공자가 필요로 하는 필드만 반환하세요. apiSecret, 원시 서명 필드, 내부 서비스 구성을 반환하지 마십시오.
+
+<h2 id="failure-handling">고장 처리</h2>
+
+| 상태 | 권장 취급 방법 |
+| --- | --- |
+| 사용자 세션이 누락되었거나 만료되었습니다 | 파트너 엔드포인트에서 401을 반환하고 사용자에게 다시 로그인을 요청하세요. |
+| 에이전트 사용자는 구속되지 않습니다 | 먼저 사용자를 바인딩한 후 토큰 생성을 다시 시도하세요. |
+| 6MM 임시 오류를 반환합니다 | 재시도 가능한 오류를 프론트엔드에 반환하고 requestId 로그에 제출하세요. |
+| channelId 위젯 인스턴스와 일치하지 않습니다 | 요청을 거부하고 위젯 세션을 다시 생성하세요. |
+
+<h2 id="related-documentation">관련 문서</h2>
+
+- [Trading Widget 인증](/ko/sdk/trading-widget/authentication): `tokenProvider` 파트너 엔드포인트에 연결하세요.
+- [Java 퀵 스타트](/ko/sdk/agent-sdk/java/quick-start): 설치 및 초기화 `AgentClient`.
+- [비밀과 서명](/ko/sdk/security/secrets-signing): 에이전트를 비밀로 지키 API .
+- [Webhooks 및 등등성](/ko/sdk/security/webhooks-idempotency): 통합 중 콜백 쪽을 확보하세요.

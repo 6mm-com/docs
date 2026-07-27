@@ -1,0 +1,141 @@
+---
+title: "Pozisyon"
+description: "6MM pozisyon uç noktalarını kullanarak açık pozisyonları, marj detaylarını, kaldıraç, gerçekleşmemiş kâr ve zararı ve pozisyonla ilgili işlemleri sorgulayın."
+slug: developer-api/rest-api/position
+canonical-url: https://docs.6mm.com/tr/developer-api/rest-api/position
+---
+
+> **Not**
+>
+> Pozisyon uç noktaları işlem izni gerektirir.
+
+<h2 id="set-leverage">Set Kaldıraç</h2>
+
+```http
+POST /v1/private/position/leverage
+Content-Type: application/json
+```
+
+Talep bedeni:
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "leverage": 20
+}
+```
+
+Yanıt alanları:
+
+| Saha       | Tip   | Tanım |
+| ----------- | ------ | ----------- |
+| `symbol`    | string | Sembol      |
+| `leverage`  | int32  | Kaldıraç    |
+| `timestamp` | int64  | Zaman damgası   |
+
+<h2 id="set-margin-mode">Kenar Modu Ayarlanır</h2>
+
+```http
+POST /v1/private/position/margin-mode
+Content-Type: application/json
+```
+
+Talep bedeni:
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "marginMode": 1
+}
+```
+
+`marginMode`: `1` haç `2` izole.
+
+<h2 id="position-settings">Pozisyon Ayarları</h2>
+
+```http
+GET /v1/private/position/settings?symbol=BTCUSDT
+```
+
+Yanıt alanları:
+
+| Saha        | Tip   | Tanım             |
+| ------------ | ------ | ----------------------- |
+| `symbol`     | string | Sembol                  |
+| `marginMode` | int32  | `1` haç `2` izole |
+| `leverage`   | int32  | Kaldıraç                |
+
+<h2 id="current-positions">Mevcut Pozisyonlar</h2>
+
+```http
+GET /v1/private/position/positions?symbol=BTCUSDT
+```
+
+İstek parametreleri:
+
+| Parametre | Tip   | Gerekli | Tanım |
+| --------- | ------ | -------- | ----------- |
+| `symbol`  | string | Hayır       | Sembol      |
+
+Yanıt alanları:
+
+| Saha                         | Tip   | Tanım                |
+| ----------------------------- | ------ | -------------------------- |
+| `positions[].symbol`          | string | Sembol                     |
+| `positions[].marginMode`      | string | Marj modu                |
+| `positions[].positionSide`    | string | Pozisyon tarafı              |
+| `positions[].leverage`        | int32  | Kaldıraç                   |
+| `positions[].quantity`        | string | Pozisyon miktarı          |
+| `positions[].entryPrice`      | string | Giriş fiyatı                |
+| `positions[].breakEvenPrice`  | string | Başa baş başa düşme fiyatı           |
+| `positions[].liqPrice`        | string | Tasfiye fiyatı          |
+| `positions[].marginRatio`     | string | Marj oranı               |
+| `positions[].unrealizedPnl`   | string | Gerçekleşmemiş PnL             |
+| `positions[].roe`             | string | Özkaynak getirisi           |
+| `positions[].nextFundingFee`  | string | Tahmini bir sonraki finansman ücreti |
+| `positions[].fundingFeeAccum` | string | Birikmiş fon ücreti    |
+| `positions[].tpPrice`         | string | Kâr fiyatı          |
+| `positions[].slPrice`         | string | Stop-loss fiyatı            |
+
+<h2 id="position-history">Pozisyon Geçmişi</h2>
+
+```http
+GET /v1/private/position/history?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+İstek parametreleri:
+
+| Parametre   | Tip   | Gerekli | Tanım                  |
+| ----------- | ------ | -------- | ---------------------------- |
+| `symbol`    | string | Hayır       | Sembol                       |
+| `side`      | string | Hayır       | `long` / `short`             |
+| `startTime` | int64  | Hayır       | Başlama zamanı                   |
+| `endTime`   | int64  | Hayır       | Son zaman                     |
+| `page`      | int64  | Hayır       | Sayfa numarası, varsayılan `1`     |
+| `pageSize`  | int64  | Hayır       | Sayfa başına öğeler, varsayılan `20` |
+
+Yanıt alanları:
+
+| Saha                    | Tip   | Tanım               |
+| ------------------------ | ------ | ------------------------- |
+| `list[].symbol`          | string | Sembol                    |
+| `list[].positionSide`    | string | Pozisyon tarafı             |
+| `list[].leverage`        | int32  | Kaldıraç                  |
+| `list[].maxQuantity`     | string | Maksimum pozisyon miktarı |
+| `list[].entryPrice`      | string | Giriş fiyatı               |
+| `list[].closePrice`      | string | Kapanış fiyatı               |
+| `list[].pnl`             | string | Gerçekleşen PnL              |
+| `list[].roe`             | string | Özkaynak getirisi          |
+| `list[].marginMode`      | string | Marj modu               |
+| `list[].triggerMode`     | int32  | Kapanış tetik modu        |
+| `list[].fundingFeeAccum` | string | Birikmiş fon ücreti   |
+| `list[].openedAt`        | int64  | Açık zaman                 |
+| `list[].closedAt`        | int64  | Yakın zaman                |
+| `total`                  | int64  | Toplam sayım               |
+
+<h2 id="related-documentation">İlgili belgeler</h2>
+
+- [Marj Kuralları](/tr/trading/margin-rules)
+- [Kaldıraç Mekanikleri](/tr/trading/leverage-mechanics)
+- [Risk ve Tasfiye Etme](/tr/trading/risk-and-liquidations)
+- [Özel Kullanıcı Kanalı](/tr/developer-api/websocket/private-user-channel)

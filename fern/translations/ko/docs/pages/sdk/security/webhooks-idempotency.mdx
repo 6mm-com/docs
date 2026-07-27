@@ -1,0 +1,85 @@
+---
+title: "Webhook 서명 검증 및 등대성(idempotency)"
+subtitle: "에이전트 webhooks6MM 원시 요청 본문과 프로세스 재전송, 타임아웃, 반복 이벤트 없이 중복 비즈니스 액션 없이 검증하세요."
+slug: sdk/security/webhooks-idempotency
+canonical-url: https://docs.6mm.com/ko/sdk/security/webhooks-idempotency
+---
+
+비동기식 비즈니스 상태 변경에 대해 파트너 백엔드에 알릴 Webhooks. 전달이 재시도될 수 있기 때문에, 모든 수신자는 신뢰받는 데이터를 파싱하기 전에 서명을 검증해야 하며, 사건을 멩등성적으로 처리해야 합니다.
+
+<h2 id="webhook-headers">Webhook 헤더</h2>
+
+| 헤더 | 설명 |
+| --- | --- |
+| X-에이전트-타임스탬프 | 유닉스 타임스탬프는 몇 초 만에 표시됩니다. |
+| 엑스-에이전트-논스 | 재생 보호 논스. |
+| X-에이전트-시그니처 | HMAC-SHA256 서명. |
+
+```text
+timestamp + nonce + rawBody
+```
+
+서명된 값을 재구성할 때는 HTTP 동안 받은 정확한 원시 요청 본문을 사용하세요. 먼저 구문 분석과 재직렬화를 JSON 공백이나 필드 순서를 변경하여 다른 서명을 생성할 수 있습니다.
+
+<h2 id="verification-flow">검증 흐름</h2>
+
+1. 타임스탬프, nonce, 서명 헤더를 읽습니다.
+2. 수정되지 않은 원시 요청 몸체를 캡처합니다.
+3. `timestamp + nonce + rawBody`건설.
+4. 파트너와 비밀 HMACSHA256 계산 API .
+5. 계산된 서명과 수신된 신호를 상수 시간 비교를 사용한다.
+6. 승인된 타임스탬프 신선성 및 nonce-재사용 검사를 적용합니다.
+7. 검증이 성공한 후에만 사건을 파싱하고 처리합니다.
+
+공식 Agent SDK 검증기가 있을 때는 독립적인 서명 코드를 유지하는 대신 그것을 사용하세요.
+
+<h2 id="order-idempotency">순서 멎등성</h2>
+
+| 사건 | 핸들링 |
+| --- | --- |
+| 초기 전이 요청 | 전 세계적으로 고유한 agentOrderNo를 만드세요. |
+| HTTP 타임아웃 | 새 agentOrderNo 을 만들기 전에 원본 을 쿼리하세요. |
+| PROCESSING 반응 | webhook 기다리거나 주문 상태를 문의하세요. |
+| 반복 webhook | 멮등성 키와 최종 상태에 따라 중복 제거. |
+
+<h2 id="recommended-idempotency-record">권장 멎등성 기록</h2>
+
+반복 배송을 인식하고 안전하게 복구할 수 있을 만큼 충분한 정보를 저장하세요:
+
+| 필드 | 목적 |
+| --- | --- |
+| 이벤트 또는 비즈니스 키 | 알림이나 작업을 고유하게 식별합니다. |
+| 파트너 주문 번호 | 이벤트를 원래 요청과 연결해줍니다. |
+| 페이로드 해시 | 상충하는 반복 페이로드를 식별하는 데 도움이 됩니다. |
+| 현재 처리 상태 | 수락, 처리, 성공, 실패한 업무를 구별합니다. |
+| 최종 사업 상태 | 종말 행동이 두 번 적용되는 것을 방지합니다. |
+| 처리된 타임스탬프 | 조사 및 유지 정책을 지원합니다. |
+
+가능한 경우 비즈니스 변경 및 멩등성 기록을 동일한 트랜잭션에 커밋하세요. 반복 이벤트는 잔액, 주문, 사용자 변경 사항을 다시 적용하는 대신 이미 알려진 결과를 반환해야 합니다.
+
+<h2 id="timeout-and-retry-rule">타임아웃 및 재도전 규칙</h2>
+
+HTTP 타임아웃은 원래 요청이 실패했다는 것을 증명하지 않습니다. 원래 `agentOrderNo`를 사용해 연산을 쿼리하거나, webhook를 기다린 후 또 다른 행동이 필요한지 결정합니다. 매번 타임아웃 후에 새로운 비즈니스 주문 번호를 생성하면 중복 자금 이동이 발생할 수 있습니다.
+
+<h2 id="production-checklist">생산 체크리스트</h2>
+
+- 파싱이나 비즈니스 처리를 JSON 하기 전에 서명을 검증합니다.
+- 파싱된 페이로드와 독립적으로 원시 본체를 보존합니다.
+- 승인된 통합 정책에 따라 오래된 요청이나 재생된 요청을 거부합니다.
+- 이벤트 처리를 반복적이고 순서가 뒤틀린 전송에 안전하게 만듭니다.
+- 이벤트 ID, 파트너 주문 번호, 처리 결과, 요청 시간 기록.
+- 로그 및 지원 첨부 파일의 비밀 및 서명 값을 삭제합니다.
+
+<h2 id="related-docs">관련 문서</h2>
+
+<CardGroup cols={3}>
+<Card title="비밀과 HMAC 서명" icon="fa-duotone fa-shield-keyhole" href="/ko/sdk/security/secrets-signing">
+요청 및 webhook 검증에 사용되는 API 비밀을 보호하세요.
+</Card>
+<Card title="Agent SDK 개요" icon="fa-duotone fa-server" href="/ko/sdk/agent-sdk/overview">
+전체 백엔드 통합 워크플로우를 검토하세요.
+</Card>
+<Card title="SDK 문제 해결" icon="fa-duotone fa-screwdriver-wrench" href="/ko/sdk/security/troubleshooting">
+거부된 서명, 반복된 사건, 대기 중인 작전을 조사하세요.
+</Card>
+</CardGroup>
