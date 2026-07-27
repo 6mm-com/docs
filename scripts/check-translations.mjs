@@ -152,8 +152,10 @@ if (
 ) {
   pushError("Open Graph logo must use the stable Docs favicon URL");
 }
+if (config.metadata?.["og:dynamic:show-logo"] !== false) {
+  pushError("Dynamic OG images must hide the unsupported font-backed wordmark");
+}
 for (const dynamicSetting of [
-  "og:dynamic:show-logo",
   "og:dynamic:show-section",
   "og:dynamic:show-description",
   "og:dynamic:show-url",
