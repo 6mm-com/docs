@@ -204,15 +204,32 @@ completeDocsNavigation("/pt-PT/loading");
 completeDocsNavigation("/pt-PT/home");
 assert.deepEqual(widgetCalls, [["lang", "pt"]]);
 
-// Docs -> Widget: every published Docs locale calls the exact Widget locale.
+// Docs -> Widget: every published Docs locale selects its mapped Widget locale.
+let expectedWidgetLanguage = "pt";
 for (const locale of [
   ...browserLocales.filter((item) => item.code),
   browserLocales.find((item) => !item.code),
 ]) {
   widgetCalls.length = 0;
   completeDocsNavigation(`${locale.code ? `/${locale.code}` : ""}/home`);
-  assert.deepEqual(widgetCalls, [["lang", locale.widget]]);
+  assert.deepEqual(
+    widgetCalls,
+    locale.widget === expectedWidgetLanguage ? [] : [["lang", locale.widget]],
+  );
+  expectedWidgetLanguage = locale.widget;
 }
+
+// Unsupported Support locales fall back to English. The programmatic English
+// event is consumed once and must not pull the Docs route back to English.
+widgetCalls.length = 0;
+completeDocsNavigation("/fr/home");
+completeDocsNavigation("/tr/home");
+assert.deepEqual(widgetCalls, [["lang", "fr"], ["lang", "en"]]);
+const navigationCountBeforeFallbackEcho = docsLanguageNavigations.length;
+emitWidgetLanguage("en");
+assert.equal(docsLanguageNavigations.length, navigationCountBeforeFallbackEcho);
+emitWidgetLanguage("de");
+assert.equal(docsLanguageNavigations.at(-1), "de");
 
 // Widget -> Docs theme: update the host without writing setTheme back.
 widgetCalls.length = 0;

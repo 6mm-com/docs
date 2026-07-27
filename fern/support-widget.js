@@ -26,6 +26,39 @@
   var pendingWidgetDocsResolved = false;
   var pendingWidgetTheme = null;
   var widgetDocsRequestId = 0;
+  var suppressedWidgetLanguages = {};
+
+  function normalizeLanguage(lang) {
+    return typeof lang === 'string'
+      ? lang.trim().replace(/_/g, '-').toLowerCase()
+      : '';
+  }
+
+  function suppressWidgetLanguageEcho(lang) {
+    var normalized = normalizeLanguage(lang);
+    if (normalized) suppressedWidgetLanguages[normalized] = Date.now() + 1500;
+  }
+
+  function consumeSuppressedWidgetLanguage(lang) {
+    var normalized = normalizeLanguage(lang);
+    var now = Date.now();
+    Object.keys(suppressedWidgetLanguages).forEach(function (language) {
+      if (suppressedWidgetLanguages[language] < now) {
+        delete suppressedWidgetLanguages[language];
+      }
+    });
+    if (
+      !normalized ||
+      !Object.prototype.hasOwnProperty.call(
+        suppressedWidgetLanguages,
+        normalized
+      )
+    ) {
+      return false;
+    }
+    delete suppressedWidgetLanguages[normalized];
+    return true;
+  }
 
   function currentDocsLocale() {
     var firstSegment = window.location.pathname.split('/').filter(Boolean)[0] || '';
@@ -41,6 +74,13 @@
       return item.route === docsLocale;
     });
     return locale ? locale.widget : 'en';
+  }
+
+  function currentDocsLocaleConfig() {
+    var docsLocale = currentDocsLocale();
+    return locales.find(function (locale) {
+      return locale.code === docsLocale;
+    });
   }
 
   function currentTheme() {
@@ -65,6 +105,10 @@
   function syncWidgetLanguageFromHost(retries, force) {
     var language = currentLang();
     if (!force && language === lastWidgetLanguage) return;
+    var locale = currentDocsLocaleConfig();
+    if (locale && locale.widgetFallback) {
+      suppressWidgetLanguageEcho(language);
+    }
     if (callWidget('setLang', language)) {
       lastWidgetLanguage = language;
       return;
@@ -96,7 +140,7 @@
   }
 
   function routeForWidgetLanguage(lang) {
-    var normalized = typeof lang === 'string' ? lang.trim().replace(/_/g, '-').toLowerCase() : '';
+    var normalized = normalizeLanguage(lang);
     return Object.prototype.hasOwnProperty.call(widgetLanguageRoutes, normalized)
       ? widgetLanguageRoutes[normalized]
       : null;
@@ -187,7 +231,9 @@
   }
 
   function onWidgetLanguageChange(event) {
-    switchHostLanguage(event && event.detail ? event.detail.lang : '');
+    var language = event && event.detail ? event.detail.lang : '';
+    if (consumeSuppressedWidgetLanguage(language)) return;
+    switchHostLanguage(language);
   }
 
   function onWidgetThemeChange(event) {
@@ -223,6 +269,13 @@
       document.documentElement.classList.remove('sixmm-support-widget-loading');
     };
     lastTheme = initialTheme;
+    var docsLocaleConfig = currentDocsLocaleConfig();
+    // When Docs uses a locale unsupported by Support, the widget starts in
+    // English. Ignore only the resulting initialization echo so it cannot
+    // navigate the host back to English.
+    if (docsLocaleConfig && docsLocaleConfig.widgetFallback) {
+      suppressWidgetLanguageEcho(initialLang);
+    }
     document.body.appendChild(script);
   }
 
