@@ -1,5 +1,5 @@
 ---
-title: "Webhook 簽名驗證與冪性"
+title: "Webhook 簽名驗證與冪等性"
 subtitle: "6MM agent webhook 與原始請求體驗證，並處理重試、逾時及重複事件，避免重複業務操作。"
 slug: sdk/security/webhooks-idempotency
 canonical-url: https://docs.6mm.com/zh-TW/sdk/security/webhooks-idempotency
@@ -33,14 +33,14 @@ timestamp + nonce + rawBody
 
 當官方 Agent SDK 驗證器可用時，請使用它，而非維護獨立的簽署碼。
 
-<h2 id="order-idempotency">階冪性</h2>
+<h2 id="order-idempotency">訂單冪等性</h2>
 
 | 案件 | 操控 |
 | --- | --- |
 | 初始轉移申請 | 創造一個全球獨一無二的 agentOrderNo。 |
 | HTTP 暫停 | 在建立新 agentOrderNo 之前，先查詢原始。 |
 | PROCESSING 回應 | 等待 webhook 或查詢訂單狀態。 |
-| 重複的網路鉤 | 依冪性鍵與最終狀態進行重複解碼。 |
+| 重複的Webhook | 依冪等性鍵與最終狀態進行重複解碼。 |
 
 <h2 id="recommended-idempotency-record">推薦的冪등 性紀錄</h2>
 
@@ -55,7 +55,7 @@ timestamp + nonce + rawBody
 | 最終業務狀況 | 防止終端動作重複應用。 |
 | 處理過的時間戳記 | 支援調查與保留政策。 |
 
-盡可能在同一筆交易中提交業務變更與冪性記錄。重複事件應回傳已知結果，而非重複套用餘額、訂單或使用者變更。
+盡可能在同一筆交易中提交業務變更與冪等性記錄。重複事件應回傳已知結果，而非重複套用餘額、訂單或使用者變更。
 
 <h2 id="timeout-and-retry-rule">暫停與重試規則</h2>
 

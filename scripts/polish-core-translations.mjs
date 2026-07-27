@@ -79,6 +79,15 @@ const qualityRulesByLocale = {
       replacement: "Webhook e idempotenza",
       paths: severeWebhookTerminologyPaths,
     },
+    { pattern: /Take Profitto/g, replacement: "Take Profit" },
+    {
+      pattern: /Moduli Motore e Core Abbinati/g,
+      replacement: "Motore di matching e moduli core",
+    },
+    {
+      pattern: /Sistema di scambio white-label/g,
+      replacement: "Piattaforma di trading white-label",
+    },
   ],
   de: [
     { pattern: /"Zuhause"/g, replacement: '"Startseite"', paths: /^docs\.yml$/ },
@@ -93,6 +102,21 @@ const qualityRulesByLocale = {
     { pattern: /bestellung/g, replacement: "Order", paths: orderFocusedPaths },
     { pattern: /Veranstaltungen/g, replacement: "Ereignisse", paths: tradingApiPaths },
     { pattern: /Veranstaltung/g, replacement: "Ereignis", paths: tradingApiPaths },
+    { pattern: /Randregeln/g, replacement: "Margin-Regeln" },
+    {
+      pattern: /Unterschrift der Anfrage/g,
+      replacement: "Request-Signierung",
+    },
+    {
+      pattern: /Abgleich von Engine und Kernmodulen/g,
+      replacement: "Matching Engine und Kernmodule",
+    },
+    { pattern: /Ewige Kontrakte/g, replacement: "Perpetual Contracts" },
+    { pattern: /ewige Kontrakte/g, replacement: "Perpetual Contracts" },
+    {
+      pattern: /Gewinn \/ Stop-Loss/g,
+      replacement: "Take Profit / Stop Loss",
+    },
   ],
   ru: [
     { pattern: /"Дом"/g, replacement: '"Главная"', paths: /^docs\.yml$/ },
@@ -124,6 +148,25 @@ const qualityRulesByLocale = {
     { pattern: /позвоните/g, replacement: "вызовите" },
     { pattern: /звонком/g, replacement: "вызовом" },
     { pattern: /звонок/g, replacement: "вызов" },
+    { pattern: /Вечные контракты/g, replacement: "Бессрочные контракты" },
+    { pattern: /вечные контракты/g, replacement: "бессрочные контракты" },
+    { pattern: /Вечного счёта/g, replacement: "счёта бессрочных контрактов" },
+    { pattern: /вечной торговли/g, replacement: "торговли бессрочными контрактами" },
+    { pattern: /вечную торговлю/g, replacement: "торговлю бессрочными контрактами" },
+    {
+      pattern: /Механика рычага/g,
+      replacement: "Механика кредитного плеча",
+    },
+    { pattern: /Правила маржины/g, replacement: "Правила маржи" },
+    {
+      pattern: /Система обмена с белой этикеткой/g,
+      replacement: "White-label биржа",
+    },
+    { pattern: /белой этикеткой/g, replacement: "собственной маркой" },
+    {
+      pattern: /производных производов/g,
+      replacement: "производных продуктов",
+    },
   ],
   uk: [
     { pattern: /"Дім"/g, replacement: '"Головна"', paths: /^docs\.yml$/ },
@@ -131,6 +174,14 @@ const qualityRulesByLocale = {
     { pattern: /порядок/g, replacement: "ордер", paths: orderFocusedPaths },
     { pattern: /Положення/g, replacement: "Позиції", paths: positionFocusedPaths },
     { pattern: /положення/g, replacement: "позиції", paths: positionFocusedPaths },
+    {
+      pattern: /Система обміну білими марками/g,
+      replacement: "White-label біржа",
+    },
+    {
+      pattern: /Механіка важеля/g,
+      replacement: "Механіка кредитного плеча",
+    },
   ],
   fr: [
     {
@@ -146,17 +197,39 @@ const qualityRulesByLocale = {
     { pattern: /\bpostes\b/g, replacement: "positions", paths: positionFocusedPaths },
     { pattern: /\bPoste\b/g, replacement: "Position", paths: positionFocusedPaths },
     { pattern: /\bposte\b/g, replacement: "position", paths: positionFocusedPaths },
+    {
+      pattern: /Modules de Moteur et Core Correspondants/g,
+      replacement: "Moteur de matching et modules principaux",
+    },
+    { pattern: /Système de Commerce/g, replacement: "Système de trading" },
+    { pattern: /frais et glissements/g, replacement: "frais et slippage" },
   ],
   "es-419": [
     {
       pattern: /Programa de (?:Recompensas?|Caza) por Insectos/g,
       replacement: "Programa de Recompensas por Vulnerabilidades",
     },
+    {
+      pattern: /Motor de Coincidencia y Módulos Básicos/g,
+      replacement: "Motor de matching y módulos principales",
+    },
+    {
+      pattern: /Sistema de Comercio API \/ SDK Embebido/g,
+      replacement: "Sistema de trading con API / SDK embebidos",
+    },
   ],
   "es-ES": [
     {
       pattern: /Programa de (?:Recompensas?|Caza) por Insectos/g,
       replacement: "Programa de Recompensas por Vulnerabilidades",
+    },
+    {
+      pattern: /Emparejamiento de Motores y Módulos Básicos/g,
+      replacement: "Motor de matching y módulos principales",
+    },
+    {
+      pattern: /Sistema de Comercio API \/ SDK Embedded/g,
+      replacement: "Sistema de trading con API / SDK integrados",
     },
   ],
   "pt-BR": [
@@ -165,12 +238,45 @@ const qualityRulesByLocale = {
       pattern: /Programa de (?:Recompensas?|Recompensa|Caça) por Insetos/g,
       replacement: "Programa de Recompensas por Vulnerabilidades",
     },
+    {
+      pattern: /Sistema de Troca de Marca Branca/g,
+      replacement: "Plataforma de negociação white-label",
+    },
+    {
+      pattern: /Motor Correspondente & Módulos Core/g,
+      replacement: "Motor de matching e módulos principais",
+    },
+    { pattern: /Lucro \/ Stop Loss/g, replacement: "Take Profit / Stop Loss" },
   ],
   "pt-PT": [
     { pattern: /"Casa"/g, replacement: '"Início"', paths: /^docs\.yml$/ },
     {
       pattern: /Programa de (?:Recompensas?|Recompensa|Caça) por Insetos/g,
       replacement: "Programa de Recompensas por Vulnerabilidades",
+    },
+    {
+      pattern: /Sistema de Troca de Marca Branca/g,
+      replacement: "Plataforma de negociação white-label",
+    },
+    {
+      pattern: /Motor Correspondente e Módulos Core/g,
+      replacement: "Motor de matching e módulos principais",
+    },
+    {
+      pattern: /Aceitar Lucro \/ Stop Loss/g,
+      replacement: "Take Profit / Stop Loss",
+    },
+  ],
+  id: [
+    {
+      pattern: /Sistem Pertukaran Label Putih/g,
+      replacement: "Platform trading white-label",
+    },
+    { pattern: /Kontrak abadi/g, replacement: "Kontrak perpetual" },
+    { pattern: /kontrak abadi/g, replacement: "kontrak perpetual" },
+    {
+      pattern: /Modul Mesin & Inti yang Cocok/g,
+      replacement: "Mesin pencocokan dan modul inti",
     },
   ],
   pl: [
@@ -184,6 +290,18 @@ const qualityRulesByLocale = {
       replacement: "Dowiedz się, ",
       paths: /^docs\/pages\/developer-api\/overview\.mdx$/,
     },
+    {
+      pattern: /System wymiany białej etykiety/g,
+      replacement: "Platforma transakcyjna white-label",
+    },
+    { pattern: /Kontrakty wieczyste/g, replacement: "Kontrakty perpetual" },
+    { pattern: /kontrakty wieczyste/g, replacement: "kontrakty perpetual" },
+    { pattern: /Typy zamówień/g, replacement: "Typy zleceń" },
+    { pattern: /typy zamówień/g, replacement: "typy zleceń" },
+    {
+      pattern: /Podpisywanie wniosków/g,
+      replacement: "Podpisywanie żądań",
+    },
   ],
   vi: [
     { pattern: /Thứ tự/g, replacement: "Lệnh", paths: orderFocusedPaths },
@@ -192,6 +310,38 @@ const qualityRulesByLocale = {
       pattern: /Idmpotency/g,
       replacement: "Idempotency",
       paths: agentSdkOverviewPath,
+    },
+    {
+      pattern: /Tính tương đồng/g,
+      replacement: "Tính lũy đẳng",
+    },
+    {
+      pattern: /tính tương đồng/g,
+      replacement: "tính lũy đẳng",
+    },
+    {
+      pattern: /Hệ thống Trao đổi nhãn trắng/g,
+      replacement: "Nền tảng giao dịch white-label",
+    },
+    {
+      pattern: /Trao đổi nhãn trắng/g,
+      replacement: "Sàn giao dịch white-label",
+    },
+    {
+      pattern: /trao đổi nhãn trắng/g,
+      replacement: "sàn giao dịch white-label",
+    },
+    {
+      pattern: /Hợp đồng vĩnh viễn/g,
+      replacement: "Hợp đồng vĩnh cửu",
+    },
+    {
+      pattern: /Hợp đồng Vĩnh viễn/g,
+      replacement: "Hợp đồng Vĩnh cửu",
+    },
+    {
+      pattern: /hợp đồng vĩnh viễn/g,
+      replacement: "hợp đồng vĩnh cửu",
     },
   ],
   "zh-TW": [
@@ -205,12 +355,36 @@ const qualityRulesByLocale = {
     { pattern: /秩序/g, replacement: "訂單", paths: orderFocusedPaths },
     { pattern: /職位/g, replacement: "倉位", paths: positionFocusedPaths },
     { pattern: /位置/g, replacement: "倉位", paths: positionFocusedPaths },
+    { pattern: /永久合約/g, replacement: "永續合約" },
+    { pattern: /白標交換/g, replacement: "白標交易所" },
+    { pattern: /階冪性/g, replacement: "訂單冪等性" },
+    { pattern: /冪性/g, replacement: "冪等性" },
+    { pattern: /網鉤/g, replacement: "Webhook" },
+    { pattern: /網路鉤/g, replacement: "Webhook" },
   ],
   ja: [
     { pattern: /階級と役職/g, replacement: "注文とポジション", paths: tradingApiPaths },
     { pattern: /秩序/g, replacement: "注文", paths: orderFocusedPaths },
     { pattern: /役職/g, replacement: "ポジション", paths: positionFocusedPaths },
     { pattern: /位置/g, replacement: "ポジション", paths: positionFocusedPaths },
+    { pattern: /永久契約/g, replacement: "無期限契約" },
+    { pattern: /ホワイトラベル交換/g, replacement: "ホワイトラベル取引所" },
+    { pattern: /空席/g, replacement: "オープンポジション" },
+    { pattern: /清算行動/g, replacement: "清算の仕組み" },
+    { pattern: /冪性/g, replacement: "冪等性" },
+  ],
+  ko: [
+    { pattern: /영구 계약/g, replacement: "무기한 계약" },
+    { pattern: /계급 및 직책/g, replacement: "주문 및 포지션" },
+    { pattern: /수업료 구조/g, replacement: "수수료 구조" },
+    { pattern: /API Key 경영/g, replacement: "API Key 관리" },
+    { pattern: /공석/g, replacement: "오픈 포지션" },
+    { pattern: /등대성/g, replacement: "멱등성" },
+    {
+      pattern: /화이트라벨 교환 시스템/g,
+      replacement: "화이트라벨 거래소 시스템",
+    },
+    { pattern: /건축 및 책임/g, replacement: "아키텍처 및 책임" },
   ],
   ar: [
     { pattern: /"المنزل"/g, replacement: '"الرئيسية"', paths: /^docs\.yml$/ },
@@ -222,6 +396,56 @@ const qualityRulesByLocale = {
     { pattern: /الترتيب/g, replacement: "الأمر", paths: orderFocusedPaths },
     { pattern: /المواقع/g, replacement: "المراكز", paths: positionFocusedPaths },
     { pattern: /الموقع/g, replacement: "المركز", paths: positionFocusedPaths },
+    {
+      pattern: /Idemopency/g,
+      replacement: "عدم تكرار المعالجة",
+    },
+    {
+      pattern: /توقيع طلبات التوقيع/g,
+      replacement: "توقيع الطلبات",
+    },
+    {
+      pattern: /نظام التبادل الأبيض/g,
+      replacement: "منصة تداول بعلامة بيضاء",
+    },
+  ],
+  tr: [
+    {
+      pattern: /Beyaz etiketli değişim sistemi/g,
+      replacement: "White-label borsa sistemi",
+    },
+    {
+      pattern: /Sürekli Sözleşmeler/g,
+      replacement: "Süresiz Vadeli İşlemler",
+    },
+    { pattern: /Sipariş [Tt]ür/g, replacement: "Emir tür" },
+    { pattern: /sipariş tür/g, replacement: "emir tür" },
+    {
+      pattern: /Risk ve Tasfiye Etme/g,
+      replacement: "Risk ve Likidasyon",
+    },
+  ],
+  el: [
+    {
+      pattern: /Σύστημα ανταλλαγής λευκής ετικέτας/g,
+      replacement: "Πλατφόρμα συναλλαγών white-label",
+    },
+    {
+      pattern: /Σύστημα Ανταλλαγής Λευκής Ετικέτας/g,
+      replacement: "Πλατφόρμα Συναλλαγών White-label",
+    },
+    {
+      pattern: /Τύποι Παραγγελιών/g,
+      replacement: "Τύποι Εντολών",
+    },
+    {
+      pattern: /τύποι παραγγελιών/g,
+      replacement: "τύποι εντολών",
+    },
+    {
+      pattern: /Αίτημα υπογραφής/g,
+      replacement: "Υπογραφή αιτήματος",
+    },
   ],
 };
 
@@ -679,21 +903,95 @@ export function polishMachineTranslation(content, locale, relativePath) {
 }
 
 const forbiddenChecksByLocale = {
-  de: [/Ordnungstypen/, /Optionen & Veranstaltungen/],
-  ru: [/API звонки/, /"Порядок"/, /"Положение"/],
-  fr: [/prime (?:sur les|d['’]?) insectes/i, /"Poste"/],
-  "es-419": [/Recompensas? por Insectos/i],
-  "es-ES": [/Recompensas? por Insectos/i],
-  "pt-BR": [/(?:Recompensa|Caça) por Insetos/i],
-  "pt-PT": [/(?:Recompensa|Caça) por Insetos/i],
-  pl: [/nagrod(?:y|ę) (?:za|na) robaki/i, /Dowiedz sięWebSocket/],
-  vi: [/"Thứ tự"/],
+  de: [
+    /Ordnungstypen/,
+    /Optionen & Veranstaltungen/,
+    /Randregeln/,
+    /Unterschrift der Anfrage/,
+  ],
+  ru: [
+    /API звонки/,
+    /"Порядок"/,
+    /"Положение"/,
+    /Вечные контракты/,
+    /Механика рычага/,
+    /Правила маржины/,
+  ],
+  fr: [
+    /prime (?:sur les|d['’]?) insectes/i,
+    /"Poste"/,
+    /Modules de Moteur et Core Correspondants/,
+  ],
+  it: [/Take Profitto/, /Moduli Motore e Core Abbinati/],
+  "es-419": [
+    /Recompensas? por Insectos/i,
+    /Motor de Coincidencia y Módulos Básicos/,
+  ],
+  "es-ES": [
+    /Recompensas? por Insectos/i,
+    /Emparejamiento de Motores y Módulos Básicos/,
+  ],
+  "pt-BR": [
+    /(?:Recompensa|Caça) por Insetos/i,
+    /Sistema de Troca de Marca Branca/,
+  ],
+  "pt-PT": [
+    /(?:Recompensa|Caça) por Insetos/i,
+    /Sistema de Troca de Marca Branca/,
+  ],
+  id: [/Sistem Pertukaran Label Putih/, /[Kk]ontrak abadi/],
+  pl: [
+    /nagrod(?:y|ę) (?:za|na) robaki/i,
+    /Dowiedz sięWebSocket/,
+    /System wymiany białej etykiety/,
+    /[Kk]ontrakty wieczyste/,
+    /[Tt]ypy zamówień/,
+  ],
+  vi: [
+    /"Thứ tự"/,
+    /[Tt]ính tương đồng/,
+    /Trao đổi nhãn trắng/,
+    /[Hh]ợp đồng [Vv]ĩnh viễn/,
+  ],
   "zh-TW": [
     /昆蟲(?:懸賞|賞金)計畫/,
     /"秩序"/,
     /"職位"/,
+    /永久合約/,
+    /白標交換/,
+    /階冪性/,
+    /冪性/,
+    /網(?:路)?鉤/,
   ],
-  ar: [/مكافآت الحشرات/, /"الترتيب"/, /"الموقع"/],
+  ja: [/永久契約/, /ホワイトラベル交換/, /空席/, /清算行動/, /冪性/],
+  ko: [
+    /영구 계약/,
+    /계급 및 직책/,
+    /수업료 구조/,
+    /API Key 경영/,
+    /공석/,
+    /등대성/,
+  ],
+  ar: [
+    /مكافآت الحشرات/,
+    /"الترتيب"/,
+    /"الموقع"/,
+    /Idemopency/,
+    /توقيع طلبات التوقيع/,
+    /نظام التبادل الأبيض/,
+  ],
+  uk: [/Система обміну білими марками/, /Механіка важеля/],
+  tr: [
+    /Beyaz etiketli değişim sistemi/,
+    /Sürekli Sözleşmeler/,
+    /[Ss]ipariş [Tt]ür/,
+    /Risk ve Tasfiye Etme/,
+  ],
+  el: [
+    /Σύστημα [Αα]νταλλαγής [Λλ]ευκής [Εε]τικέτας/,
+    /[Ττ]ύποι [Ππ]αραγγελιών/,
+    /Αίτημα υπογραφής/,
+  ],
 };
 const agentCardForbiddenChecksByLocale = {
   vi: [/Idmpotency/],
