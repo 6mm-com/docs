@@ -219,15 +219,17 @@ for (const locale of [
   expectedWidgetLanguage = locale.widget;
 }
 
-// Unsupported Support locales fall back to English. The programmatic English
-// event is consumed once and must not pull the Docs route back to English.
+// Docs locales unsupported by Support use English in the Widget.
 widgetCalls.length = 0;
 completeDocsNavigation("/fr/home");
 completeDocsNavigation("/tr/home");
 assert.deepEqual(widgetCalls, [["lang", "fr"], ["lang", "en"]]);
-const navigationCountBeforeFallbackEcho = docsLanguageNavigations.length;
-emitWidgetLanguage("en");
-assert.equal(docsLanguageNavigations.length, navigationCountBeforeFallbackEcho);
+
+// Widget locales unsupported by Docs navigate the host to English.
+emitWidgetLanguage("th");
+assert.equal(docsLanguageNavigations.at(-1), "");
+
+// A supported Widget locale still navigates to its matching Docs locale.
 emitWidgetLanguage("de");
 assert.equal(docsLanguageNavigations.at(-1), "de");
 
