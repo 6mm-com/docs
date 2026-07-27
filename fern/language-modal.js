@@ -353,19 +353,6 @@
     return navigationId === localeNavigationId && Boolean(changed);
   }
 
-  function controlledMenu(trigger) {
-    var menuId = trigger && trigger.getAttribute("aria-controls");
-    if (menuId) {
-      var controlled = document.getElementById(menuId);
-      if (controlled && isVisible(controlled)) return controlled;
-    }
-    return Array.from(
-      document.querySelectorAll(
-        '.fern-language-dropdown-content, [role="menu"][data-state="open"]',
-      ),
-    ).find(isVisible);
-  }
-
   async function navigateDocsLocale(locale) {
     if (
       !locales.some(function (item) {
@@ -399,55 +386,30 @@
     return root.dataset.theme === "dark" ? "dark" : "light";
   }
 
-  function visibleThemeTrigger() {
-    return Array.from(
-      document.querySelectorAll(".fern-language-selector + button"),
-    ).find(function (trigger) {
-      return (
-        isVisible(trigger) &&
-        Boolean(
-          trigger.querySelector(
-            "svg.lucide-sun, svg.lucide-moon, svg.lucide-monitor",
-          ),
-        )
-      );
-    });
-  }
-
-  function themeOption(menu, theme) {
-    var iconSelector =
-      theme === "dark" ? "svg.lucide-moon" : "svg.lucide-sun";
-    return Array.from(
-      menu.querySelectorAll('[role="menuitemradio"], [role="menuitem"], button'),
-    ).find(function (option) {
-      return (
-        (option.textContent || "").trim().toLowerCase() === theme ||
-        Boolean(option.querySelector(iconSelector))
-      );
-    });
-  }
-
   async function navigateDocsTheme(theme) {
     if (theme !== "light" && theme !== "dark") return false;
     if (currentTheme() === theme) return true;
 
     var navigationId = ++themeNavigationId;
-    var trigger = await waitFor(visibleThemeTrigger, 2500);
-    if (!trigger || navigationId !== themeNavigationId) return false;
-    if (
-      trigger.getAttribute("aria-expanded") !== "true" &&
-      trigger.dataset.state !== "open"
-    ) {
-      trigger.click();
+    var previousTheme;
+    try {
+      previousTheme = window.localStorage.getItem("theme");
+      window.localStorage.setItem("theme", theme);
+      // Fern uses next-themes with its default "theme" storage key. Its
+      // Provider listens for this cross-context event and applies the theme
+      // through React state, independent of responsive menus or DOM controls.
+      window.dispatchEvent(
+        new StorageEvent("storage", {
+          key: "theme",
+          oldValue: previousTheme,
+          newValue: theme,
+          url: window.location.href,
+        }),
+      );
+    } catch (error) {
+      return false;
     }
 
-    var option = await waitFor(function () {
-      var menu = controlledMenu(trigger);
-      return menu ? themeOption(menu, theme) : null;
-    }, 2500);
-    if (!option || navigationId !== themeNavigationId) return false;
-
-    option.click();
     var changed = await waitFor(function () {
       return currentTheme() === theme ? true : null;
     }, 2500);

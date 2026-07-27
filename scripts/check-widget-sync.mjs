@@ -237,6 +237,8 @@ let languageTriggerClicks = 0;
 const directRouterNavigations = [];
 const directRouterRefreshes = [];
 const adapterRootClasses = new Set(["light"]);
+const adapterStorage = new Map([["theme", "light"]]);
+const adapterStorageEvents = [];
 const adapterRoot = {
   dataset: { theme: "light" },
   classList: {
@@ -247,12 +249,29 @@ const adapterRoot = {
 };
 const adapterWindow = {
   location: {
+    href: "https://docs.6mm.com/home",
     origin: "https://docs.6mm.com",
     pathname: "/home",
     search: "",
     hash: "",
   },
   addEventListener() {},
+  dispatchEvent(event) {
+    if (event.type !== "storage" || event.key !== "theme") return true;
+    adapterStorageEvents.push(event);
+    adapterRoot.dataset.theme = event.newValue;
+    adapterRootClasses.clear();
+    adapterRootClasses.add(event.newValue);
+    return true;
+  },
+  localStorage: {
+    getItem(key) {
+      return adapterStorage.get(key) ?? null;
+    },
+    setItem(key, value) {
+      adapterStorage.set(key, value);
+    },
+  },
   requestAnimationFrame(listener) {
     listener();
   },
@@ -428,6 +447,12 @@ class AdapterMutationObserver {
 const adapterSandbox = {
   window: adapterWindow,
   document: adapterDocument,
+  StorageEvent: class {
+    constructor(type, init) {
+      this.type = type;
+      Object.assign(this, init);
+    }
+  },
   MutationObserver: AdapterMutationObserver,
   URL,
   Promise,
@@ -479,6 +504,15 @@ assert.equal(
   true,
 );
 assert.equal(adapterRoot.dataset.theme, "dark");
-assert.equal(activeThemeIcon, "dark");
+assert.equal(activeThemeIcon, "light");
+assert.equal(adapterStorage.get("theme"), "dark");
+assert.equal(adapterStorageEvents.length, 1);
+assert.equal(adapterStorageEvents[0].oldValue, "light");
+assert.equal(adapterStorageEvents[0].newValue, "dark");
+assert.equal(
+  activeMenu,
+  null,
+  "Widget theme navigation must update Fern state without opening a menu",
+);
 
 console.log("Widget sync checks passed: language and theme are bidirectional without echo.");
