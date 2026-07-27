@@ -29,6 +29,8 @@
   var localeNavigationId = 0;
   var themeNavigationId = 0;
   var syncScheduled = false;
+  var mobileLocaleDialog = null;
+  var mobileLocaleTrigger = null;
 
   window.__sixmmDocsLocales = locales;
 
@@ -212,6 +214,119 @@
     );
   }
 
+  function isMobileViewport() {
+    if (typeof window.matchMedia === "function") {
+      return window.matchMedia("(max-width: 1023px)").matches;
+    }
+    return typeof window.innerWidth === "number" && window.innerWidth <= 1023;
+  }
+
+  function closeMobileLocaleDialog() {
+    if (!mobileLocaleDialog) return;
+    var dialog = mobileLocaleDialog;
+    var trigger = mobileLocaleTrigger;
+    mobileLocaleDialog = null;
+    mobileLocaleTrigger = null;
+    dialog.remove();
+    if (trigger && trigger.isConnected) trigger.focus({ preventScroll: true });
+  }
+
+  function openMobileLocaleDialog(trigger) {
+    if (mobileLocaleDialog) return;
+
+    var route = currentRoute();
+    var root = document.createElement("div");
+    root.className = "sixmm-mobile-language-dialog";
+
+    var backdrop = document.createElement("button");
+    backdrop.type = "button";
+    backdrop.className = "sixmm-mobile-language-dialog-backdrop";
+    backdrop.setAttribute("aria-label", "Close language selector");
+    backdrop.addEventListener("click", closeMobileLocaleDialog);
+
+    var panel = document.createElement("div");
+    panel.className = "sixmm-mobile-language-dialog-panel";
+    panel.setAttribute("role", "dialog");
+    panel.setAttribute("aria-modal", "true");
+    panel.setAttribute("aria-labelledby", "sixmm-mobile-language-title");
+
+    var header = document.createElement("div");
+    header.className = "sixmm-mobile-language-dialog-header";
+
+    var heading = document.createElement("h2");
+    heading.id = "sixmm-mobile-language-title";
+    heading.textContent = "Choose language";
+
+    var closeButton = document.createElement("button");
+    closeButton.type = "button";
+    closeButton.className = "sixmm-mobile-language-dialog-close";
+    closeButton.setAttribute("aria-label", "Close language selector");
+    closeButton.textContent = "×";
+    closeButton.addEventListener("click", closeMobileLocaleDialog);
+
+    var options = document.createElement("div");
+    options.className = "sixmm-mobile-language-dialog-options";
+
+    locales.forEach(function (locale) {
+      var option = document.createElement("button");
+      option.type = "button";
+      option.className = "sixmm-mobile-language-dialog-option";
+      option.dataset.sixmmLocale = locale.code;
+      option.textContent = locale.label;
+      if (route.locale === locale.code) {
+        option.dataset.state = "checked";
+        option.setAttribute("aria-current", "true");
+      }
+      option.addEventListener("click", function () {
+        closeMobileLocaleDialog();
+        navigateDocsLocale(locale.code);
+      });
+      options.appendChild(option);
+    });
+
+    header.appendChild(heading);
+    header.appendChild(closeButton);
+    panel.appendChild(header);
+    panel.appendChild(options);
+    root.appendChild(backdrop);
+    root.appendChild(panel);
+    root.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closeMobileLocaleDialog();
+      }
+    });
+
+    mobileLocaleTrigger = trigger;
+    mobileLocaleDialog = root;
+    document.body.appendChild(root);
+    closeButton.focus({ preventScroll: true });
+  }
+
+  function guardMobileLocaleTrigger(selector) {
+    if (selector.dataset.sixmmMobileLocaleGuard === "true") return;
+    selector.dataset.sixmmMobileLocaleGuard = "true";
+
+    selector.addEventListener(
+      "pointerdown",
+      function (event) {
+        if (!isMobileViewport()) return;
+        event.stopPropagation();
+      },
+      true,
+    );
+    selector.addEventListener(
+      "click",
+      function (event) {
+        if (!isMobileViewport()) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        openMobileLocaleDialog(selector);
+      },
+      true,
+    );
+  }
+
   function enhanceLocaleMenus() {
     Array.from(
       document.querySelectorAll(".fern-language-dropdown-content"),
@@ -242,6 +357,7 @@
 
     Array.from(document.querySelectorAll(".fern-language-selector")).forEach(
       function (selector) {
+        guardMobileLocaleTrigger(selector);
         selector.setAttribute("aria-label", "Choose language");
         selector.removeAttribute("title");
         var visibleLabel = selector.querySelector(

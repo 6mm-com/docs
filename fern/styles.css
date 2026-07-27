@@ -305,6 +305,118 @@ body:has(.sixmm-language-menu-enhanced[data-state="open"])::before {
   color: var(--sixmm-accent-strong) !important;
 }
 
+.sixmm-mobile-language-dialog {
+  position: fixed;
+  z-index: 2147483100;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.sixmm-mobile-language-dialog-backdrop {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: rgba(0, 0, 0, 0.58);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  cursor: default;
+}
+
+.sixmm-mobile-language-dialog-panel {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: min(32rem, calc(100vw - 2rem));
+  max-height: min(80dvh, 40rem);
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--sixmm-home-border);
+  border-radius: 1rem;
+  background: var(--sixmm-home-surface);
+  color: var(--sixmm-home-text);
+  box-shadow: 0 1.25rem 4rem rgba(0, 0, 0, 0.3);
+}
+
+.sixmm-mobile-language-dialog-header {
+  display: flex;
+  min-height: 3.5rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 0.75rem 0.5rem 1rem;
+}
+
+.sixmm-mobile-language-dialog-header h2 {
+  margin: 0;
+  color: var(--sixmm-home-text);
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.sixmm-mobile-language-dialog-close {
+  display: inline-flex;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex: 0 0 2.75rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--sixmm-home-muted);
+  font-size: 1.75rem;
+  font-weight: 400;
+  line-height: 1;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.sixmm-mobile-language-dialog-options {
+  display: grid;
+  min-height: 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.3rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.5rem 1rem calc(1.25rem + env(safe-area-inset-bottom));
+}
+
+.sixmm-mobile-language-dialog-option {
+  min-height: 3rem;
+  padding: 0.6rem 0.65rem;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--sixmm-home-text);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.35;
+  text-align: start;
+  unicode-bidi: plaintext;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.sixmm-mobile-language-dialog
+  :is(
+    .sixmm-mobile-language-dialog-close,
+    .sixmm-mobile-language-dialog-option
+  ):is(:hover, :focus-visible),
+.sixmm-mobile-language-dialog-option[data-state="checked"] {
+  border-color: var(--sixmm-home-border);
+  background: var(--sixmm-accent-soft);
+  box-shadow: none;
+  color: var(--sixmm-accent-strong);
+}
+
 :is(nav, aside, header) a[aria-current="page"],
 :is(nav, aside, header) [aria-selected="true"],
 :is(nav, aside, header) [data-state="active"] {

@@ -553,6 +553,31 @@ if (
     "The native mobile navigation trigger must receive the stable mobile control class",
   );
 }
+for (const mobileDialogContract of [
+  "guardMobileLocaleTrigger",
+  "openMobileLocaleDialog",
+  "sixmm-mobile-language-dialog",
+  'window.matchMedia("(max-width: 1023px)")',
+  "event.stopImmediatePropagation()",
+]) {
+  if (!languageScript.includes(mobileDialogContract)) {
+    pushError(
+      `The stable mobile language dialog is missing ${mobileDialogContract}`,
+    );
+  }
+}
+if (
+  !/\.sixmm-mobile-language-dialog\s*\{[^}]*position:\s*fixed;[^}]*place-items:\s*center;/s.test(
+    styles,
+  ) ||
+  !/\.sixmm-mobile-language-dialog-panel\s*\{[^}]*width:\s*min\(32rem,\s*calc\(100vw\s*-\s*2rem\)\);[^}]*max-height:\s*min\(80dvh,\s*40rem\);/s.test(
+    styles,
+  )
+) {
+  pushError(
+    "The independent mobile language dialog must remain centered within the viewport",
+  );
+}
 if (
   !/\.sixmm-mobile-menu-trigger\s*\{[^}]*width:\s*2\.75rem\s*!important;[^}]*height:\s*2\.75rem\s*!important;[^}]*touch-action:\s*manipulation;/s.test(
     styles,
