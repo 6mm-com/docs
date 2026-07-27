@@ -469,6 +469,24 @@ const directionScript = await readFile(path.join(fernRoot, "locale-direction.js"
 if (!/locale === "ar" \? "rtl" : "ltr"/.test(directionScript)) {
   pushError("Arabic RTL direction rule is missing");
 }
+if (!directionScript.includes("lastLocaleSignature")) {
+  pushError("Locale direction sync must handle the browser locale map loading after the script");
+}
+
+const styles = await readFile(path.join(fernRoot, "styles.css"), "utf8");
+if (
+  /data-sixmm-docs-locale[^}]*a\[role=["']tab["']\]|a\[role=["']tab["']\][^{]*href\^=["']\/(?:uz|fil|az)\//s.test(
+    styles,
+  )
+) {
+  pushError("Native locale tabs must not be hidden with locale-specific CSS");
+}
+if (
+  !styles.includes(".fern-header-tabs [role=\"tablist\"]") ||
+  !styles.includes("margin-inline: auto")
+) {
+  pushError("Fern header tabs must remain centered for every locale");
+}
 
 const configuredScripts = (config.js ?? []).map((script) => script.path);
 if (configuredScripts[0] !== "./language-modal.js") {

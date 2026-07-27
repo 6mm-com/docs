@@ -130,6 +130,25 @@ button:focus-visible,
   color: var(--sixmm-accent) !important;
 }
 
+/* Fern's compatible scalar tabs theme leaves the tab-list wrapper shrink-wrapped
+ * at the start edge. Let the wrapper fill the header so short locale labels stay
+ * centered, while long translations remain horizontally scrollable. */
+.fern-header-tabs > div:has(> [role="tablist"]) {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.fern-header-tabs > div:has(> [role="tablist"])::-webkit-scrollbar {
+  display: none;
+}
+
+.fern-header-tabs [role="tablist"] {
+  width: max-content;
+  margin-inline: auto;
+}
+
 .fern-language-selector {
   display: inline-flex !important;
   width: 2.25rem;
@@ -174,27 +193,6 @@ button:focus-visible,
   background: var(--accent-a3, var(--sixmm-accent-soft)) !important;
   box-shadow: none !important;
   color: var(--accent-11, var(--sixmm-accent-strong)) !important;
-}
-
-/* Fern treats Uzbek, Filipino, and Azerbaijani as ordinary page trees.
- * Keep their generated tabs available to the router, but only render the
- * standard-locale set that belongs to the current pathname. */
-:root:not([data-sixmm-docs-locale="uz"])
-  a[role="tab"][href^="/uz/"],
-:root:not([data-sixmm-docs-locale="fil"])
-  a[role="tab"][href^="/fil/"],
-:root:not([data-sixmm-docs-locale="az"])
-  a[role="tab"][href^="/az/"] {
-  display: none !important;
-}
-
-:root[data-sixmm-docs-locale="uz"]
-  a[role="tab"]:not([href^="/uz/"]),
-:root[data-sixmm-docs-locale="fil"]
-  a[role="tab"]:not([href^="/fil/"]),
-:root[data-sixmm-docs-locale="az"]
-  a[role="tab"]:not([href^="/az/"]) {
-  display: none !important;
 }
 
 body:has(.sixmm-language-menu-enhanced[data-state="open"])::before {
