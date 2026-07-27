@@ -516,6 +516,18 @@ if (
     "The language modal backdrop must not intercept the opening mobile touch gesture",
   );
 }
+if (
+  !/\[data-radix-popper-content-wrapper\]:has\([\s\S]*?\.sixmm-language-menu-enhanced[\s\S]*?\)\s*\{[^}]*top:\s*50%\s*!important;[^}]*left:\s*50%\s*!important;[^}]*animation:\s*none\s*!important;/s.test(
+    styles,
+  ) ||
+  !/\.sixmm-language-menu-enhanced\s*\{[^}]*animation:\s*none\s*!important;[^}]*transition:\s*none\s*!important;/s.test(
+    styles,
+  )
+) {
+  pushError(
+    "The language selector must open directly as a centered modal without a mobile slide animation",
+  );
+}
 
 const configuredScripts = (config.js ?? []).map((script) => script.path);
 if (configuredScripts[0] !== "./language-modal.js") {
