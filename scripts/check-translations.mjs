@@ -507,6 +507,15 @@ if (
 ) {
   pushError("Fern header tabs must remain centered for every locale");
 }
+if (
+  !/body:has\(\.sixmm-language-menu-enhanced\[data-state="open"\]\)::before\s*\{[^}]*pointer-events:\s*none\s*;/s.test(
+    styles,
+  )
+) {
+  pushError(
+    "The language modal backdrop must not intercept the opening mobile touch gesture",
+  );
+}
 
 const configuredScripts = (config.js ?? []).map((script) => script.path);
 if (configuredScripts[0] !== "./language-modal.js") {
