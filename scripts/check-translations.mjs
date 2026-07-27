@@ -146,6 +146,22 @@ if (config.metadata?.["canonical-host"] !== "docs.6mm.com") {
 if (config.metadata?.["og:site_name"] !== "6MM Docs") {
   pushError(`Open Graph site name must remain "6MM Docs"`);
 }
+if (
+  config.metadata?.["og:logo"] !==
+  "https://docs.6mm.com/api/fern-docs/favicon.ico"
+) {
+  pushError("Open Graph logo must use the stable Docs favicon URL");
+}
+for (const dynamicSetting of [
+  "og:dynamic:show-logo",
+  "og:dynamic:show-section",
+  "og:dynamic:show-description",
+  "og:dynamic:show-url",
+]) {
+  if (config.metadata?.[dynamicSetting] !== true) {
+    pushError(`${dynamicSetting} must remain enabled`);
+  }
+}
 if (config.logo?.href !== "/home") {
   pushError("The Docs logo must link to the internal /home hierarchy");
 }
@@ -568,6 +584,17 @@ const seoScript = await readFile(
   path.join(fernRoot, "seo-structured-data.js"),
   "utf8",
 );
+for (const requiredSeoSignal of [
+  '"@type": "WebSite"',
+  '"@type": "WebPage"',
+  '"@type": "BreadcrumbList"',
+  'url: siteUrl + "/"',
+  '"docs.6mm.com"',
+]) {
+  if (!seoScript.includes(requiredSeoSignal)) {
+    pushError(`SEO script is missing required signal: ${requiredSeoSignal}`);
+  }
+}
 if (
   seoScript.includes("data-sixmm-seo") ||
   seoScript.includes("syncAlternates")

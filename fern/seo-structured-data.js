@@ -346,6 +346,7 @@
     var locale = localeForPathname(pathname);
     var isHome = pagePath === "/home";
     var canonicalUrl = localizedUrl(locale.route, pagePath);
+    var websiteId = siteUrl + "/#website";
 
     upsertStructuredData(
       "website",
@@ -353,13 +354,30 @@
         ? {
             "@context": "https://schema.org",
             "@type": "WebSite",
+            "@id": websiteId,
             name: "6MM Docs",
-            alternateName: ["6MM", "6MM Documentation"],
-            url: siteUrl + "/home",
+            alternateName: [
+              "6MM",
+              "6MM Documentation",
+              "docs.6mm.com",
+            ],
+            url: siteUrl + "/",
             inLanguage: "en",
           }
         : null,
     );
+
+    upsertStructuredData("webpage", {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      "@id": canonicalUrl + "#webpage",
+      name: pageTitle(),
+      url: canonicalUrl,
+      inLanguage: locale.code,
+      isPartOf: {
+        "@id": websiteId,
+      },
+    });
 
     if (isHome) {
       upsertStructuredData("breadcrumb", null);
