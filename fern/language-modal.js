@@ -231,6 +231,15 @@
   function enhanceSettingsControls() {
     var route = currentRoute();
     var currentLabel = localeLabels[route.locale] || localeLabels[""];
+
+    Array.from(
+      document.querySelectorAll(
+        'button[aria-label="Open menu"], button[aria-label="Close menu"]',
+      ),
+    ).forEach(function (menuButton) {
+      menuButton.classList.add("sixmm-mobile-menu-trigger");
+    });
+
     Array.from(document.querySelectorAll(".fern-language-selector")).forEach(
       function (selector) {
         selector.setAttribute("aria-label", "Choose language");

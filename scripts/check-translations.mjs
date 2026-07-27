@@ -545,6 +545,25 @@ if (configuredScripts[0] !== "./language-modal.js") {
 
 const languageScript = await readFile(path.join(fernRoot, "language-modal.js"), "utf8");
 if (
+  !languageScript.includes('button[aria-label="Open menu"]') ||
+  !languageScript.includes('button[aria-label="Close menu"]') ||
+  !languageScript.includes('classList.add("sixmm-mobile-menu-trigger")')
+) {
+  pushError(
+    "The native mobile navigation trigger must receive the stable mobile control class",
+  );
+}
+if (
+  !/\.sixmm-mobile-menu-trigger\s*\{[^}]*width:\s*2\.75rem\s*!important;[^}]*height:\s*2\.75rem\s*!important;[^}]*touch-action:\s*manipulation;/s.test(
+    styles,
+  ) ||
+  !styles.includes(":not(.sixmm-mobile-menu-trigger)")
+) {
+  pushError(
+    "The mobile navigation trigger must keep a 44px touch target and stay outside generic header hover rules",
+  );
+}
+if (
   /#fern-sidebar|\[role=["']tab|sixmm-(?:standalone|hidden-sidebar)|navigate(?:ToBasePage|StandaloneLocale)/.test(
     languageScript,
   )
