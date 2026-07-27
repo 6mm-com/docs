@@ -528,6 +528,15 @@ if (
     "The language selector must open directly as a centered modal without a mobile slide animation",
   );
 }
+if (
+  !/@media\s*\(max-width:\s*560px\)\s*\{[\s\S]*?\[data-radix-popper-content-wrapper\]:has\([\s\S]*?\.sixmm-language-menu-enhanced[\s\S]*?\)\s*\{[^}]*top:\s*50%\s*!important;[^}]*bottom:\s*auto\s*!important;[^}]*left:\s*50%\s*!important;[^}]*transform:\s*translate\(-50%,\s*-50%\)\s*!important;/s.test(
+    styles,
+  )
+) {
+  pushError(
+    "The phone language selector must remain centered instead of reverting to a bottom sheet",
+  );
+}
 
 const configuredScripts = (config.js ?? []).map((script) => script.path);
 if (configuredScripts[0] !== "./language-modal.js") {
