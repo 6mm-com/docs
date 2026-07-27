@@ -25,10 +25,11 @@ The documentation covers:
 fern/
   docs.yml                         # English docs configuration, navigation, theme, redirects
   docs/pages/                      # English documentation pages
-  translations/<locale>/           # Fern translation overlays for every locale
+  translations/<locale>/           # 19 non-English Fern-native overlays, including zh-CN
   docs/assets/                     # Logos, favicon, brand assets, and downloads
 scripts/
   generate-translations.mjs        # Translation generation and manifest refresh
+  polish-core-translations.mjs     # Deterministic terminology and quality fixes
   check-translations.mjs           # Locale, SEO, link, asset, and manifest validation
 ```
 
@@ -59,6 +60,9 @@ Preview routes:
 ```text
 English: http://127.0.0.1:3000/home
 Chinese: http://127.0.0.1:3000/zh-CN/home
+Uzbek: http://127.0.0.1:3000/uz/home
+Filipino: http://127.0.0.1:3000/fil/home
+Azerbaijani: http://127.0.0.1:3000/az/home
 ```
 
 ## Contributing

@@ -1,6 +1,6 @@
 ---
-title: "Bestellung"
-description: "Verwenden Sie 6MM Order-Endpunkte, um dauerhafte Bestellungen zu erstellen, abzufragen, zu stornieren und zu verwalten, während sie Berechtigungen, Identifikatoren und Lebenszykluszustände verwalten."
+title: "Order"
+description: "Verwenden Sie 6MM Order-Endpunkte, um dauerhafte Orders zu erstellen, abzufragen, zu stornieren und zu verwalten, während sie Berechtigungen, Identifikatoren und Lebenszykluszustände verwalten."
 slug: developer-api/rest-api/order
 canonical-url: https://docs.6mm.com/de/developer-api/rest-api/order
 ---
@@ -24,14 +24,14 @@ Content-Type: application/json
 | `type`          | string | Ja                    | `LIMIT` / `MARKET`                                                                                                            |
 | `side`          | string | Ja                    | `BUY` / `SELL`                                                                                                                |
 | `positionSide`  | string | Nein                     | `BOTH` / `LONG` / `SHORT`, Standard `BOTH`                                                                                     |
-| `price`         | string | Bedingt erforderlich | Erforderlich für Limit-Bestellungen                                                                                                     |
+| `price`         | string | Bedingt erforderlich | Erforderlich für Limit-Orders                                                                                                     |
 | `quantity`      | string | Bedingt erforderlich | Quantität. Kann ausgelassen werden, wenn `closePosition=true`                                                                            |
 | `timeInForce`   | string | Nein                     | `GTC` / `IOC` / `FOK`, Standard `GTC`                                                                                          |
 | `reduceOnly`    | bool   | Nein                     | Nur reduzieren, Standard- `false`                                                                                                  |
 | `makerOnly`     | bool   | Nein                     | Maker-only, Standard- `false`                                                                                                   |
 | `closePosition` | bool   | Nein                     | Schließen Sie die gesamte Position, Standard `false`                                                                                    |
 | `clientOrderId` | string | Nein                     | Client-definierte Order-ID                                                                                                       |
-| `placeType`     | string | Nein                     | Ordnungsplatzierungs-Typmarker                                                                                                   |
+| `placeType`     | string | Nein                     | Orderplatzierungs-Typmarker                                                                                                   |
 | `priceType`     | int32  | Nein                     | BBO Preistyp: `0` angegebener Preis, `1` Gegnerpreis 1, `2` Gegnerpreis 5, `3` gleichseitige Preis 1 `4` gleichseitige Preis 5 |
 
 **Beispiel anfordern:**
@@ -58,7 +58,7 @@ Content-Type: application/json
 | `status`        | string | Status des Ordens            |
 | `timestamp`     | int64  | Zeitstempel               |
 
-<h2 id="batch-place-orders">Chargenbestellungen</h2>
+<h2 id="batch-place-orders">ChargenOrders</h2>
 
 ```http
 POST /v1/private/order/batch-place
@@ -86,9 +86,9 @@ Content-Type: application/json
 
 | Spielfeld          | Typ  | Beschreibung                 |
 | -------------- | ----- | --------------------------- |
-| `successCount` | int32 | Anzahl erfolgreicher Bestellungen |
+| `successCount` | int32 | Anzahl erfolgreicher Orders |
 | `failedCount`  | int32 | Anzahl fehlgeschlagener Aufträge     |
-| `results[]`    | array | Ergebnis für jede Ordnung       |
+| `results[]`    | array | Ergebnis für jede Order       |
 
 <h2 id="place-condition-order">Platzzustandsreihenfolge</h2>
 
@@ -114,7 +114,7 @@ Content-Type: application/json
 | `workingType`   | string | Nein                     | `MARK_PRICE` / `CONTRACT_PRICE`, Standard `CONTRACT_PRICE`                                   |
 | `priceProtect`  | bool   | Nein                     | Ob Preisschutz aktiviert ist                                                         |
 | `activatePrice` | string | Bedingt erforderlich | Nachlaufender Order-Aktivierungspreis                                                             |
-| `callbackRate`  | string | Bedingt erforderlich | Rückruf-Rate für nachfolgende Bestellungen                                                                |
+| `callbackRate`  | string | Bedingt erforderlich | Rückruf-Rate für nachfolgende Orders                                                                |
 | `closePosition` | bool   | Nein                     | Schließen Sie die gesamte Position                                                                   |
 
 **Antwortfelder:**
@@ -221,7 +221,7 @@ GET /v1/private/order/history?symbol=BTCUSDT&page=1&pageSize=20
 | `symbol`        | string | Nein       | Symbol                                   |
 | `orderId`       | string | Nein       | Exakter Order-ID-Filter                    |
 | `clientOrderId` | string | Nein       | Exakter Client Order ID-Filter             |
-| `type`          | int32  | Nein       | Bestelltyp-Filter: `1` Grenze, `2` Markt |
+| `type`          | int32  | Nein       | Ordertyp-Filter: `1` Grenze, `2` Markt |
 | `side`          | int32  | Nein       | Seitenfilter: `1` kaufen, `2` verkaufen           |
 | `status`        | int32  | Nein       | Statusfilter                            |
 | `startTime`     | int64  | Nein       | Startzeit                               |
@@ -283,7 +283,7 @@ GET /v1/private/order/trades?symbol=BTCUSDT&page=1&pageSize=20
 | `list[].createdAt`    | int64  | Handelszeit        |
 | `total`               | int64  | Gesamtanzahl       |
 
-<h2 id="cancel-order">Bestellung stornieren</h2>
+<h2 id="cancel-order">Order stornieren</h2>
 
 ```http
 POST /v1/private/order/cancel
@@ -299,7 +299,7 @@ Content-Type: application/json
 }
 ```
 
-`clientOrderId` kann auch verwendet werden, um eine Bestellung zu stornieren.
+`clientOrderId` kann auch verwendet werden, um eine Order zu stornieren.
 
 <h2 id="amend-order">Änderungsanordnung</h2>
 
@@ -319,7 +319,7 @@ Content-Type: application/json
 }
 ```
 
-`quantity` ist die endgültige Gesamtbestellungsmenge nach der Änderung, nicht die verbleibende Menge.
+`quantity` ist die endgültige GesamtOrdersmenge nach der Änderung, nicht die verbleibende Menge.
 
 <h2 id="batch-amend-orders">Chargenänderungsanordnungen</h2>
 
@@ -343,7 +343,7 @@ Content-Type: application/json
 }
 ```
 
-<h2 id="batch-cancel-orders">Bestellungen in Chargen stornieren</h2>
+<h2 id="batch-cancel-orders">Orders in Chargen stornieren</h2>
 
 ```http
 POST /v1/private/order/batch-cancel
@@ -377,7 +377,7 @@ Content-Type: application/json
 | `symbol`     | string | Nein       | Symbol                                                                              |
 | `cancelType` | int32  | Nein       | `0` alle Normalbefehle, `1` nur Limitbefehle, `2` alle Bedingungsbefehle. Standard- `0` |
 
-Stornieren-alle für normale Bestellungen wird asynchron akzeptiert. Der Endstatus sollte durch WebSocket `ORDER_TRADE_UPDATE` - oder Abfrage-Endpunkte bestimmt werden.
+Stornieren-alle für normale Orders wird asynchron akzeptiert. Der Endstatus sollte durch WebSocket `ORDER_TRADE_UPDATE` - oder Abfrage-Endpunkte bestimmt werden.
 
 <h2 id="cancel-condition-order">Bedingungsbefehl abbrechen</h2>
 

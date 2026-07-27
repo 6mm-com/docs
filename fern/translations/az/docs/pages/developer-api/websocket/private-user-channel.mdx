@@ -1,0 +1,107 @@
+---
+title: "Özəl İstifadəçi Kanalı"
+description: "Dinləmə açarı yaradaraq və saxlayaraq sifarişlər, mövqelər, balanslar və hesab dəyişiklikləri üçün təsdiqlənmiş 6MM WebSocket hadisələrinə abunə olun."
+slug: developer-api/websocket/private-user-channel
+canonical-url: https://docs.6mm.com/az/developer-api/websocket/private-user-channel
+---
+
+Əvvəlcə `listenKey` yaradın:
+
+```http
+POST /v1/private/user/listen-key
+```
+
+Cavab nümunəsi:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "listenKey": "f57cb61ef604ce76be09e753a5dbdd8c",
+    "expireAt": 1777539918867
+  },
+  "requestId": "req-listen-key"
+}
+```
+
+`listenKey` standart olaraq 60 dəqiqə keçərlidir. Hər 30 dəqiqədən bir yenilənmə tövsiyə olunur.
+
+<h2 id="renew">Yeniləmə</h2>
+
+```http
+PUT /v1/private/user/listen-key
+Content-Type: application/json
+```
+
+```json
+{ "listenKey": "f57cb61ef604ce76be09e753a5dbdd8c" }
+```
+
+<h2 id="close">Bağlan</h2>
+
+```http
+DELETE /v1/private/user/listen-key
+Content-Type: application/json
+```
+
+```json
+{ "listenKey": "f57cb61ef604ce76be09e753a5dbdd8c" }
+```
+
+<h2 id="connect-to-private-websocket">Özəl WebSocket qoşulun</h2>
+
+```
+wss://ws.6mm.com/ws?listenKey=YOUR_LISTEN_KEY
+```
+
+Uyğun JWT qoşulma üsulu:
+
+```
+wss://ws.6mm.com/ws?token=YOUR_ACCESS_TOKEN
+```
+
+Autentifikasiya uğurlu olduqdan sonra server avtomatik olaraq bağlantını cari istifadəçinin şəxsi kanalına abunə edir. Əl ilə abunə tələb olunmur.
+
+Uğurlu autentifikasiya təsdiqlənişi:
+
+```json
+{ "event": "auth", "success": true, "data": "1188041528" }
+```
+
+<h2 id="common-private-events">Ümumi özəl tədbirlər</h2>
+
+| Tədbir                | Təsvir                                                                   |
+| -------------------- | ----------------------------------------------------------------------------- |
+| `ORDER_TRADE_UPDATE` | Sifariş statusu dəyişiklikləri, o cümlədən yeni sifariş, düzəliş, ticarət və ləğv. |
+| `ACCOUNT_UPDATE`     | Hesab balansı və mövqe dəyişiklikləri                                          |
+
+Özəl push mesaj qablaşdırıcısı:
+
+```json
+{
+  "topic": "user.5794",
+  "ts": 1771047000000,
+  "data": {
+    "eventType": "ORDER_TRADE_UPDATE"
+  }
+}
+```
+
+REST sorğu son nöqtələri və WebSocket özəl axınlar ayrı sxemlərdən istifadə edir. Müştərilər hər sxemi müstəqil şəkildə təhlil etməli və sahə adlarının eyni olduğunu düşünməməlidirlər.
+
+<h2 id="common-differences">Ümumi fərqlər</h2>
+
+| Domen         | REST sahəsi     | WebSocket sahəsi                                             |
+| -------------- | -------------- | ----------------------------------------------------------- |
+| Orden statusu   | `status`       | `orderStatus`                                               |
+| Donmuş tarazlıq | `frozenMargin` | `frozenBalance`                                             |
+| Kənar rejimi    | `marginMode`   | `marginMode`, mövqelərdə və axınlarda sim kimi geri qayıdır |
+
+<h2 id="recovery-and-reconciliation">Bərpa və barışıq</h2>
+
+- Müddəti bitməmiş listenKey yeniləmək və yeniləmə uğursuz olarsa yenisini yaratmaq.
+- Yenidən qoşulun, yenidən autentifikasiya edin və yeni soketi yeni hadisə sessiyası kimi qəbul edin.
+- Tərəfdaş balanslarını və ya sifariş qeydlərini dəyişməzdən əvvəl hadisələri deduplicate etmək.
+- Əgər hadisələr qaçırılmış ola bilərsə, [əmrlər](/az/developer-api/rest-api/order), [mövqelər](/az/developer-api/rest-api/position) və [hesab vəziyyəti](/az/developer-api/rest-api/user-and-account) ilə RESTvasitəsilə sorğu aparın.
+- Təkrar cəhd və köhnə bağlantıların idarə olunması üçün [bağlantı və ürək döyüntüsü bələdçisi](/az/developer-api/websocket/connection-subscription-and-heartbeat) izləyin.

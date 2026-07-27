@@ -1,0 +1,111 @@
+---
+title: "Datos ng Pamilihan"
+description: "Gamitin ang hindi na-authenticate na datos ng merkado 6MM REST endpoints upang kunin ang mga simbolo, ticker, order book, trades, at iba pang impormasyon sa pampublikong kalakalan."
+slug: developer-api/rest-api/market-data
+canonical-url: https://docs.6mm.com/fil/developer-api/rest-api/market-data
+---
+
+Hindi nangangailangan ng authentication ang market data REST endpoints.
+
+<h2 id="symbol-configuration">Konfigurasyon ng Simbolo</h2>
+
+```http
+GET /v1/public/market/symbols
+```
+
+Karaniwang mga field ng tugon:
+
+| Larangan                      | Uri   | Paglalarawan                   |
+| -------------------------- | ------ | ----------------------------- |
+| `list[].symbol`            | string | Simbolo                        |
+| `list[].baseAsset`         | string | Base asset                    |
+| `list[].quoteAsset`        | string | Quote asset                   |
+| `list[].minQuantity`       | string | Minimum na dami ng order        |
+| `list[].minNotional`       | string | Minimum na notional na halaga        |
+| `list[].tickSize`          | string | Sukat ng tick ng presyo               |
+| `list[].stepSize`          | string | Laki ng hakbang sa dami            |
+| `list[].pricePrecision`    | int64  | Tumpak sa presyo               |
+| `list[].maxLimitOrderQty`  | string | Pinakamataas na dami ng limit order  |
+| `list[].maxMarketOrderQty` | string | Pinakamataas na dami ng order sa merkado |
+| `list[].maxOpenOrders`     | int64  | Pinakamataas na bukas na order kada user  |
+| `list[].defaultLeverage`   | int64  | Default na leverage              |
+| `list[].defaultMarginMode` | int64  | Default na margin mode           |
+| `list[].leverageTiers[]`   | array  | Leverage margin tiers         |
+| `handlingFeeLevelConfig[]` | array  | Pagsasaayos ng fee tier        |
+
+<h2 id="funding-rate-configuration">Pagsasaayos ng Rate ng Pondo</h2>
+
+```http
+GET /v1/public/market/funding-rate?symbol=BTCUSDT
+```
+
+Mga parameter ng kahilingan:
+
+| Parameter | Uri   | Kinakailangan | Paglalarawan                     |
+| --------- | ------ | -------- | ------------------------------- |
+| `symbol`  | string | Hindi       | Kung inalis, ibinabalik ang lahat ng simbolo |
+
+<h2 id="current-funding-rate">Kasalukuyang Rate ng Pondo</h2>
+
+```http
+GET /v1/public/market/funding-rate/current?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+Mga parameter ng kahilingan:
+
+| Parameter  | Uri   | Kinakailangan | Paglalarawan                  |
+| ---------- | ------ | -------- | ---------------------------- |
+| `symbol`   | string | Hindi       | Simbolo                       |
+| `page`     | int32  | Hindi       | Numero ng pahina, default na `1`     |
+| `pageSize` | int32  | Hindi       | Mga item kada pahina, default na `20` |
+
+<h2 id="funding-rate-history">Kasaysayan ng Funding Rate</h2>
+
+```http
+GET /v1/public/market/funding-rate/history?symbol=BTCUSDT&page=1&pageSize=20
+```
+
+Mga parameter ng kahilingan:
+
+| Parameter   | Uri   | Kinakailangan | Paglalarawan                  |
+| ----------- | ------ | -------- | ---------------------------- |
+| `symbol`    | string | Oo      | Simbolo                       |
+| `startTime` | int64  | Hindi       | Oras ng pagsisimula                   |
+| `endTime`   | int64  | Hindi       | Oras ng Pagtatapos                     |
+| `page`      | int32  | Hindi       | Numero ng pahina, default na `1`     |
+| `pageSize`  | int32  | Hindi       | Mga item kada pahina, default na `20` |
+
+<h2 id="klines">Klines</h2>
+
+```http
+GET /v1/public/market/klines?symbol=BTCUSDT&interval=1m&limit=500
+```
+
+Mga parameter ng kahilingan:
+
+| Parameter   | Uri   | Kinakailangan | Paglalarawan                                                              |
+| ----------- | ------ | -------- | ------------------------------------------------------------------------ |
+| `symbol`    | string | Oo      | Simbolo                                                                   |
+| `interval`  | string | Oo      | Interval, tulad ng `1m`, `5m`, `15m`, `30m`, `1h`, `4h`, `1d`, `1w`, `1M` |
+| `priceType` | string | Hindi       | `indexPrice` / `markPrice`. Kung hindi isinama, nagbabalik ng trade price Klines       |
+| `startTime` | int64  | Hindi       | Oras ng pagsisimula                                                               |
+| `endTime`   | int64  | Hindi       | Oras ng Pagtatapos                                                                 |
+| `limit`     | int32  | Hindi       | Bilang ng mga item na ibinalik, default na `500`, maximum `1000`                  |
+
+Mga field ng tugon:
+
+| Larangan              | Uri   | Paglalarawan |
+| ------------------ | ------ | ----------- |
+| `list[].openTime`  | int64  | Oras ng bukas   |
+| `list[].open`      | string | Bukas na presyo  |
+| `list[].high`      | string | Mataas na presyo  |
+| `list[].low`       | string | Mababang presyo   |
+| `list[].close`     | string | Presyo ng pagsasara |
+| `list[].volume`    | string | Dami      |
+| `list[].closeTime` | int64  | Oras ng pagsasara  |
+
+<h2 id="related-documentation">Kaugnay na dokumentasyon</h2>
+
+- [Mga Pampublikong Endpoint](/fil/developer-api/rest-api/public-endpoints)
+- [Public WebSocket Channels](/fil/developer-api/websocket/public-market-channels)
+- [Lalim ng Pamilihan at Pagkakalat](/fil/solutions/market-depth-spread)

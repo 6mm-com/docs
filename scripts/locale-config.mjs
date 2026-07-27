@@ -17,14 +17,14 @@ export const locales = [
   { code: "uk", label: "Українська", sourceLanguage: "en", targetLanguage: "uk" },
   { code: "pt-PT", label: "Português (Internacional)", sourceLanguage: "en", targetLanguage: "pt-PT" },
   { code: "es-ES", label: "Español (Internacional)", sourceLanguage: "en", targetLanguage: "es-ES" },
-  { code: "tr", label: "O‘zbek", sourceLanguage: "en", targetLanguage: "uz" },
+  { code: "uz", label: "O‘zbek", sourceLanguage: "en", targetLanguage: "uz" },
   { code: "ar", label: "العربية", sourceLanguage: "en", targetLanguage: "ar" },
-  { code: "ms", label: "Filipino", sourceLanguage: "en", targetLanguage: "fil" },
-  { code: "tr-TR", label: "Azərbaycan", sourceLanguage: "en", targetLanguage: "az" },
+  { code: "fil", label: "Filipino", sourceLanguage: "en", targetLanguage: "fil" },
+  { code: "az", label: "Azərbaycan", sourceLanguage: "en", targetLanguage: "az" },
 ];
 
 export const expectedLocales = locales.map((locale) => locale.code);
-export const nativeLocaleCodes = expectedLocales;
+export const nativeLocaleCodes = locales.map((locale) => locale.code);
 export const generatedLocaleSpecs = locales.filter(
   (locale) => !locale.default && !locale.manual,
 );
@@ -35,7 +35,7 @@ export const widgetLocaleAliases = {
   "es-AR": "es-419",
   pt: "pt-PT",
   es: "es-ES",
-  uz: "tr",
-  fil: "ms",
-  az: "tr-TR",
+  uz: "uz",
+  fil: "fil",
+  az: "az",
 };

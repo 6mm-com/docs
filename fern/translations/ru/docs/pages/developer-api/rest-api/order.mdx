@@ -1,5 +1,5 @@
 ---
-title: "Порядок"
+title: "Ордер"
 description: "Используйте 6MM order endpoint-и для создания, запросов, отмены и управления вечными заказами, одновременно обрабатывая разрешения, идентификаторы и состояния жизненного цикла."
 slug: developer-api/rest-api/order
 canonical-url: https://docs.6mm.com/ru/developer-api/rest-api/order
@@ -53,7 +53,7 @@ Content-Type: application/json
 
 | Поле           | Тип   | Описание             |
 | --------------- | ------ | ----------------------- |
-| `orderId`       | string | ID серверного порядка         |
+| `orderId`       | string | ID серверного ордера         |
 | `clientOrderId` | string | Идентификатор заказа, определённый клиентом |
 | `status`        | string | Статус ордена            |
 | `timestamp`     | int64  | Временная метка               |
@@ -90,7 +90,7 @@ Content-Type: application/json
 | `failedCount`  | int32 | Количество неудачных заказов     |
 | `results[]`    | array | Результат для каждого заказа       |
 
-<h2 id="place-condition-order">Порядок условий размещения</h2>
+<h2 id="place-condition-order">Ордер условий размещения</h2>
 
 ```http
 POST /v1/private/order/place-condition
@@ -121,11 +121,11 @@ Content-Type: application/json
 
 | Поле             | Тип   | Описание            |
 | ----------------- | ------ | ---------------------- |
-| `conditionId`     | string | Идентификатор порядка состояния     |
-| `conditionStatus` | string | Статус порядка в состоянии |
+| `conditionId`     | string | Идентификатор ордера состояния     |
+| `conditionStatus` | string | Статус ордера в состоянии |
 | `timestamp`       | int64  | Временная метка              |
 
-<h2 id="place-strategy-order">Порядок размещения стратегии</h2>
+<h2 id="place-strategy-order">Ордер размещения стратегии</h2>
 
 ```http
 POST /v1/private/order/place-strategy
@@ -137,13 +137,13 @@ Content-Type: application/json
 | Параметр      | Тип   | Обязательно | Описание             |
 | -------------- | ------ | -------- | ----------------------- |
 | `strategyType` | string | Да      | `OTOCO` / `OTO` / `OCO` |
-| `subOrderList` | array  | Да      | Список подпорядков          |
+| `subOrderList` | array  | Да      | Список подордеров          |
 
-Поля в `subOrderList[]` в основном совпадают с обычными порядками и порядками условий, с дополнительными полями зависимостей:
+Поля в `subOrderList[]` в основном совпадают с обычными ордерами и ордерами условий, с дополнительными полями зависимостей:
 
 | Параметр        | Тип   | Описание                                     |
 | ---------------- | ------ | ----------------------------------------------- |
-| `strategySubId`  | int64  | Идентификатор подпорядка                                    |
+| `strategySubId`  | int64  | Идентификатор подордера                                    |
 | `firstDrivenId`  | int64  | Первое удостоверение указания на вождение. `0` означает отсутствие зависимости |
 | `firstDrivenOn`  | string | Первое состояние триггера                         |
 | `firstTrigger`   | string | Первый спусковой механизм                            |
@@ -159,7 +159,7 @@ Content-Type: application/json
 | `strategyStatus` | string | Статус стратегии |
 | `timestamp`      | int64  | Временная метка       |
 
-<h2 id="query-single-order">Запрос по одному порядку</h2>
+<h2 id="query-single-order">Запрос по одному ордеру</h2>
 
 ```http
 GET /v1/private/order?symbol=BTCUSDT&orderId=2022543809547603968
@@ -170,7 +170,7 @@ GET /v1/private/order?symbol=BTCUSDT&orderId=2022543809547603968
 | Параметр       | Тип   | Обязательно | Описание             |
 | --------------- | ------ | -------- | ----------------------- |
 | `symbol`        | string | Да      | Символ                  |
-| `orderId`       | string | Нет       | ID серверного порядка         |
+| `orderId`       | string | Нет       | ID серверного ордера         |
 | `clientOrderId` | string | Нет       | Идентификатор заказа, определённый клиентом |
 
 Должен быть предоставлен хотя бы один из `orderId` и `clientOrderId` . Если оба предоставлены, сервер выполняет точное совпадение при обоих условиях.
@@ -193,7 +193,7 @@ GET /v1/private/order/current?symbol=BTCUSDT
 
 | Поле    | Тип  | Описание               |
 | -------- | ----- | ------------------------- |
-| `list[]` | array | Текущий список нормальных порядков |
+| `list[]` | array | Текущий список нормальных ордеров |
 | `total`  | int32 | Граф                     |
 
 <h2 id="current-condition-orders">Приказы о текущем состоянии</h2>
@@ -208,7 +208,7 @@ GET /v1/private/order/current-condition?symbol=BTCUSDT
 | --------- | ------ | -------- | ----------- |
 | `symbol`  | string | Нет       | Символ      |
 
-<h2 id="historical-normal-orders">Исторические нормальные порядки</h2>
+<h2 id="historical-normal-orders">Исторические нормальные ордера</h2>
 
 ```http
 GET /v1/private/order/history?symbol=BTCUSDT&page=1&pageSize=20
@@ -219,7 +219,7 @@ GET /v1/private/order/history?symbol=BTCUSDT&page=1&pageSize=20
 | Параметр       | Тип   | Обязательно | Описание                              |
 | --------------- | ------ | -------- | ---------------------------------------- |
 | `symbol`        | string | Нет       | Символ                                   |
-| `orderId`       | string | Нет       | Фильтр точного идентификатора порядка                    |
+| `orderId`       | string | Нет       | Фильтр точного идентификатора ордера                    |
 | `clientOrderId` | string | Нет       | Точный фильтр ID заказа клиента             |
 | `type`          | int32  | Нет       | Фильтр типа ордеров: `1` лимит, `2` рынок |
 | `side`          | int32  | Нет       | Боковой фильтр: `1` покупать `2` продавать           |
@@ -379,7 +379,7 @@ Content-Type: application/json
 
 Отмена всех для обычных заказов принимается асинхронно. Окончательный статус должен определяться WebSocket `ORDER_TRADE_UPDATE` или конечными точками запроса.
 
-<h2 id="cancel-condition-order">Порядок отмены условий</h2>
+<h2 id="cancel-condition-order">Ордер отмены условий</h2>
 
 ```http
 POST /v1/private/order/cancel-condition
@@ -395,7 +395,7 @@ Content-Type: application/json
 }
 ```
 
-<h2 id="strategy-order-detail">Детали порядка стратегии</h2>
+<h2 id="strategy-order-detail">Детали ордера стратегии</h2>
 
 ```http
 GET /v1/private/order/strategy?strategyId=2022543809547603968
@@ -409,7 +409,7 @@ GET /v1/private/order/strategy?strategyId=2022543809547603968
 | `strategyType`   | string | `OTOCO` / `OTO` / `OCO`              |
 | `strategyStatus` | string | `WORKING` / `ALL_DONE` / `CANCELLED` |
 | `bookTime`       | int64  | Время создания                        |
-| `subOrders[]`    | array  | Детали подпорядков                    |
+| `subOrders[]`    | array  | Детали подордеров                    |
 | `updateTime`     | int64  | Время обновления                          |
 
 <h2 id="related-documentation">Связанная документация</h2>

@@ -1,0 +1,128 @@
+---
+title: "API Key boshqaruvi"
+description: "Kalitlarni yaratish, tekshirish, yangilash va bekor qilish 6MM API tegishli ruxsatlar, IP cheklovlari, maxfiy saqlash va aylantirish amaliyotlarini qo'llash."
+slug: developer-api/api-key-management
+canonical-url: https://docs.6mm.com/uz/developer-api/api-key-management
+---
+
+API Key boshqaruv nuqtalari faqat JWT autentifikatsiyani qabul qiladi.
+
+<h2 id="create-api-key">Yarat API Key</h2>
+
+```http
+POST /v1/private/user/api-key/create
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+So'rov parametrlari:
+
+| Parametr     | Turi      | Majburiy | Tavsif                                                           |
+| ------------- | --------- | -------- | --------------------------------------------------------------------- |
+| `label`       | string    | Ha      | API Key yorliq, uzunligi 1 - 64                                          |
+| `permissions` | int       | Yo'q       | Ruxsat bitmaskasi, standart `1`, masofa `1` - `7`                      |
+| `ipWhitelist` | String\[] | Yo'q       | IP oq ro'yxat, 20 tagacha yozuv. Agar kiritilmasa, manba IP cheklanmagan |
+
+Misol so'rovi:
+
+```bash
+curl -X POST https://api.6mm.com/v1/private/user/api-key/create \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -d '{
+    "label": "external-service-prod",
+    "permissions": 3,
+    "ipWhitelist": ["203.0.113.10"]
+  }'
+```
+
+Javob misoli:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "apiKey": "fx_xxxxxxxxxxxxxxxxxxxxxxxx",
+    "apiSecret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  },
+  "requestId": "req-api-key"
+}
+```
+
+`apiSecret` API Key yaratilganda faqat bir marta qaytariladi. Uni darhol maxfiy boshqaruv tizimida saqlang. Uni manba kod omborlariga yoki loglarga yozmang.
+
+Har bir foydalanuvchi 30 tagacha API Kalit yaratishi mumkin.
+
+<h2 id="list-api-keys">Kalitlar API ro'yxati</h2>
+
+```http
+GET /v1/private/user/api-key/list
+Authorization: Bearer YOUR_ACCESS_TOKEN
+```
+
+Javob maydonlari:
+
+| Maydon                | Turi      | Tavsif                       |
+| -------------------- | --------- | --------------------------------- |
+| `list[].id`          | string    | API Key ID                        |
+| `list[].label`       | string    | Yorliq                             |
+| `list[].apiKey`      | string    | Jamoat API Key identifikatori         |
+| `list[].permissions` | int       | Ruxsatnoma bitmaski                |
+| `list[].ipWhitelist` | String\[] | IP oq ro'yxati                      |
+| `list[].status`      | int       | Holati: `1` yoqilgan, `0` o'chirilgan |
+| `list[].lastUsedAt`  | int64     | Oxirgi ishlatilgan vaqt                    |
+| `list[].createdAt`   | int64     | Yaratilish vaqti                     |
+
+<h2 id="update-api-key">Yangilanish API Key</h2>
+
+```http
+PUT /v1/private/user/api-key/update
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+So'rov parametrlari:
+
+| Parametr     | Turi      | Majburiy | Tavsif               |
+| ------------- | --------- | -------- | ------------------------- |
+| `id`          | string    | Ha      | API Key ID                |
+| `label`       | string    | Yo'q       | Yangi yorliq                 |
+| `permissions` | int       | Yo'q       | Yangi ruxsat bitmaskasi    |
+| `ipWhitelist` | String\[] | Yo'q       | Yangi IP oq ro'yxati          |
+| `status`      | int       | Yo'q       | `1` yoqilgan, `0` o'chirilgan |
+
+<h2 id="delete-api-key">O'chirish API Key</h2>
+
+```http
+POST /v1/private/user/api-key/delete
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+So'rov tanasi:
+
+```json
+{ "id": "1001" }
+```
+
+<h2 id="delete-all-api-keys">Barcha API kalitlarini o'chir</h2>
+
+```http
+POST /v1/private/user/api-key/delete-all
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+Javob maydonlari:
+
+| Maydon     | Turi  | Tavsif                |
+| --------- | ----- | -------------------------- |
+| `deleted` | int64 | O'chirilgan API Kalitlar soni |
+
+<h2 id="related-security-guides">Tegishli xavfsizlik qo'llanmalari</h2>
+
+- [Autentifikatsiya](/uz/developer-api/authentication)
+- [So'rov imzolanishi](/uz/developer-api/request-signing)
+- [Sirlar va imzo](/uz/sdk/security/secrets-signing)
+- [Integratsiya tavsiyalari](/uz/developer-api/integration-recommendations)

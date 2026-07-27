@@ -10,6 +10,7 @@ import {
   nativeLocaleCodes,
   widgetLocaleAliases,
 } from "./locale-config.mjs";
+import { findTranslationQualityIssues } from "./polish-core-translations.mjs";
 
 const projectRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
 const fernRoot = path.join(projectRoot, "fern");
@@ -30,10 +31,6 @@ const errors = [];
 
 function localizedRoot(locale) {
   return path.join(translationsRoot, locale);
-}
-
-function localeRoute(locale) {
-  return locale;
 }
 
 function loadYamlAsJson(filePath) {
@@ -110,7 +107,7 @@ function localizedDestination(destination, locale) {
   if (destination.startsWith("/docs/") || destination.startsWith("/assets/")) {
     return destination;
   }
-  return `/${localeRoute(locale)}${destination}`;
+  return `/${locale}${destination}`;
 }
 
 function pushError(message) {
@@ -129,13 +126,142 @@ const activePages = [
   ...new Set(
     (config.navigation ?? []).flatMap((navigationItem) =>
       (navigationItem.layout ?? []).flatMap((section) =>
-        (section.contents ?? []).map((content) => content.path).filter(Boolean),
+        (section.contents ?? [])
+          .map((content) => content.path)
+          .filter((contentPath) => contentPath?.startsWith("docs/pages/")),
       ),
     ),
   ),
 ];
 if (activePages.length !== 87) {
   pushError(`Expected 87 active pages, found ${activePages.length}`);
+}
+
+if (config.title !== "6MM Docs") {
+  pushError(`Site title must remain "6MM Docs"; found ${config.title ?? "missing"}`);
+}
+if (config.metadata?.["canonical-host"] !== "docs.6mm.com") {
+  pushError("Canonical host must remain docs.6mm.com");
+}
+if (config.metadata?.["og:site_name"] !== "6MM Docs") {
+  pushError(`Open Graph site name must remain "6MM Docs"`);
+}
+if (config.logo?.href !== "/home") {
+  pushError("The Docs logo must link to the internal /home hierarchy");
+}
+
+const sourceTitles = new Map();
+const sourceDescriptions = new Map();
+const sourceSlugs = new Map();
+for (const relativePagePath of activePages) {
+  const source = await readFile(path.join(fernRoot, relativePagePath), "utf8");
+  const meta = frontmatter(source);
+  const description = meta.description || meta.subtitle;
+  if (!meta.title || !description || !meta.slug) {
+    pushError(`[en] incomplete SEO frontmatter in ${relativePagePath}`);
+    continue;
+  }
+  if (/(?:^|\n)(?:noindex|nofollow):\s*true\b/i.test(source)) {
+    pushError(`[en] indexing disabled in ${relativePagePath}`);
+  }
+  for (const [field, value, collection] of [
+    ["title", meta.title, sourceTitles],
+    ["description", description, sourceDescriptions],
+    ["slug", meta.slug, sourceSlugs],
+  ]) {
+    const existing = collection.get(value);
+    if (existing && existing !== relativePagePath) {
+      pushError(`[en] duplicate ${field} in ${existing} and ${relativePagePath}`);
+    } else {
+      collection.set(value, relativePagePath);
+    }
+  }
+}
+
+const sitelinkTargets = [
+  ["Trading Solutions", "docs/pages/solutions/overview.mdx", "/solutions/overview"],
+  ["Developer API", "docs/pages/developer-api/overview.mdx", "/developer-api/overview"],
+  ["Trading Widget SDK", "docs/pages/sdk/trading-widget/overview.mdx", "/sdk/trading-widget/overview"],
+  ["Agent SDK", "docs/pages/sdk/agent-sdk/overview.mdx", "/sdk/agent-sdk/overview"],
+  ["Security & Compliance", "docs/pages/security-compliance/overview.mdx", "/security-compliance/overview"],
+  ["Integration & Support", "docs/pages/resources/overview.mdx", "/resources/overview"],
+];
+const sourceHome = await readFile(
+  path.join(fernRoot, "docs/pages/home.mdx"),
+  "utf8",
+);
+for (const [label, relativePagePath, href] of sitelinkTargets) {
+  if (
+    !sourceHome.includes(`title="${label}"`) ||
+    !sourceHome.includes(`href="${href}"`)
+  ) {
+    pushError(`[en] homepage is missing the ${label} sitelink to ${href}`);
+  }
+  const source = await readFile(path.join(fernRoot, relativePagePath), "utf8");
+  const meta = frontmatter(source);
+  if (!meta.headline || meta.headline.length < 45 || meta.headline.length > 60) {
+    pushError(
+      `[en] ${relativePagePath} headline should be 45-60 characters; found ${meta.headline?.length ?? 0}`,
+    );
+  }
+  const description = meta.description || "";
+  if (description.length < 140 || description.length > 165) {
+    pushError(
+      `[en] ${relativePagePath} description should be 140-165 characters; found ${description.length}`,
+    );
+  }
+}
+const homeMeta = frontmatter(sourceHome);
+if (
+  !homeMeta.headline ||
+  homeMeta.headline.length < 45 ||
+  homeMeta.headline.length > 60
+) {
+  pushError("[en] homepage headline should be 45-60 characters");
+}
+if (
+  !homeMeta.description ||
+  homeMeta.description.length < 140 ||
+  homeMeta.description.length > 165
+) {
+  pushError("[en] homepage description should be 140-165 characters");
+}
+const robotsText = await readFile(path.join(fernRoot, "robots.txt"), "utf8");
+if (
+  !/User-Agent:\s*\*/i.test(robotsText) ||
+  !/Allow:\s*\/\s*$/im.test(robotsText) ||
+  !/Sitemap:\s*https:\/\/docs\.6mm\.com\/sitemap\.xml/i.test(robotsText)
+) {
+  pushError("robots.txt must allow public crawling and declare the canonical sitemap");
+}
+const simplifiedChineseHome = await readFile(
+  path.join(translationsRoot, "zh-CN/docs/pages/home.mdx"),
+  "utf8",
+);
+for (const [label, href] of [
+  ["交易解决方案", "/zh-CN/solutions/overview"],
+  ["开发者 API", "/zh-CN/developer-api/overview"],
+  ["Trading Widget SDK", "/zh-CN/sdk/trading-widget/overview"],
+  ["Agent SDK", "/zh-CN/sdk/agent-sdk/overview"],
+  ["安全与合规", "/zh-CN/security-compliance/overview"],
+  ["集成与支持", "/zh-CN/resources/overview"],
+]) {
+  if (
+    !simplifiedChineseHome.includes(`title="${label}"`) ||
+    !simplifiedChineseHome.includes(`href="${href}"`)
+  ) {
+    pushError(`[zh-CN] homepage is missing the ${label} core entry`);
+  }
+}
+for (const relativePagePath of sitelinkTargets.map((target) => target[1])) {
+  const content = await readFile(
+    path.join(translationsRoot, "zh-CN", relativePagePath),
+    "utf8",
+  );
+  const meta = frontmatter(content);
+  if (!meta.headline || !meta.description) {
+    pushError(`[zh-CN] approved SEO metadata missing in ${relativePagePath}`);
+  }
 }
 
 let manifest;
@@ -148,6 +274,13 @@ try {
 if (manifest.version !== generatorVersion) {
   pushError(
     `Translation manifest version is ${manifest.version ?? "missing"}; expected ${generatorVersion}`,
+  );
+}
+const manifestLocales = Object.keys(manifest.locales ?? {}).sort();
+const expectedManifestLocales = [...generatedLocales].sort();
+if (!sameArray(manifestLocales, expectedManifestLocales)) {
+  pushError(
+    `Translation manifest locales do not match generated locales.\nExpected: ${expectedManifestLocales.join(", ")}\nActual: ${manifestLocales.join(", ")}`,
   );
 }
 
@@ -179,21 +312,33 @@ const translationDirectories = (
 )
   .filter(Boolean)
   .sort();
-const expectedDirectories = expectedLocales.filter((locale) => locale !== "en").sort();
+const expectedDirectories = expectedLocales
+  .filter((locale) => locale !== "en")
+  .sort();
 if (!sameArray(translationDirectories, expectedDirectories)) {
   pushError(
     `Translation directories do not match configured locales.\nExpected: ${expectedDirectories.join(", ")}\nActual: ${translationDirectories.join(", ")}`,
   );
 }
 
-for (const locale of expectedDirectories) {
-  const overlayPath = path.join(translationsRoot, locale, "docs.yml");
+const baseTabCount = Object.keys(config.tabs ?? {}).length;
+const baseNavigationCount = (config.navigation ?? []).length;
+for (const locale of translatedLocales) {
+  const overlayPath = path.join(localizedRoot(locale), "docs.yml");
+  const overlayContent = await readFile(overlayPath, "utf8");
   const overlay = loadYamlAsJson(overlayPath);
-  if (Object.keys(overlay.tabs ?? {}).length !== Object.keys(config.tabs ?? {}).length) {
+  if (Object.keys(overlay.tabs ?? {}).length !== baseTabCount) {
     pushError(`[${locale}] navigation tab count does not match the English source`);
   }
-  if ((overlay.navigation ?? []).length !== (config.navigation ?? []).length) {
+  if ((overlay.navigation ?? []).length !== baseNavigationCount) {
     pushError(`[${locale}] navigation group count does not match the English source`);
+  }
+  for (const issue of findTranslationQualityIssues(
+    overlayContent,
+    locale,
+    "docs.yml",
+  )) {
+    pushError(`[${locale}] translation quality issue /${issue}/ in docs.yml`);
   }
 }
 
@@ -209,7 +354,6 @@ for (const relativePagePath of activePages) {
   await validateRepositoryAssetUrls(source, `en:${relativePagePath}`);
 
   for (const locale of translatedLocales) {
-    const route = localeRoute(locale);
     const translatedPath = path.join(localizedRoot(locale), relativePagePath);
     let translated;
     try {
@@ -224,11 +368,10 @@ for (const relativePagePath of activePages) {
     if (!meta.title || !(meta.description || meta.subtitle) || !meta.slug) {
       pushError(`[${locale}] incomplete SEO frontmatter in ${relativePagePath}`);
     }
-    const expectedSlug = sourceMeta.slug;
-    if (meta.slug !== expectedSlug) {
+    if (meta.slug !== sourceMeta.slug) {
       pushError(`[${locale}] slug mismatch in ${relativePagePath}: ${meta.slug ?? "missing"}`);
     }
-    const expectedCanonical = `https://docs.6mm.com/${route}/${sourceMeta.slug}`;
+    const expectedCanonical = `https://docs.6mm.com/${locale}/${sourceMeta.slug}`;
     if (meta["canonical-url"] !== expectedCanonical) {
       pushError(
         `[${locale}] canonical mismatch in ${relativePagePath}: ${meta["canonical-url"] ?? "missing"}`,
@@ -239,6 +382,15 @@ for (const relativePagePath of activePages) {
     }
     if (/<!--|-->/.test(translated)) {
       pushError(`[${locale}] unsupported HTML comment syntax in ${relativePagePath}`);
+    }
+    for (const issue of findTranslationQualityIssues(
+      translated,
+      locale,
+      relativePagePath,
+    )) {
+      pushError(
+        `[${locale}] translation quality issue /${issue}/ in ${relativePagePath}`,
+      );
     }
 
     if (generatedLocales.includes(locale)) {
@@ -275,7 +427,7 @@ for (const relativePagePath of activePages) {
 
     for (const destination of internalDestinations(translated)) {
       if (
-        !destination.startsWith(`/${route}/`) &&
+        !destination.startsWith(`/${locale}/`) &&
         !destination.startsWith("/docs/") &&
         !destination.startsWith("/assets/")
       ) {
@@ -335,11 +487,17 @@ const browserSandbox = {
   window: {
     addEventListener() {},
     requestAnimationFrame() {},
+    location: {
+      hash: "",
+      origin: "https://docs.6mm.com",
+      pathname: "/home",
+      search: "",
+    },
   },
   document: {
     readyState: "loading",
     addEventListener() {},
-    documentElement: {},
+    documentElement: { dataset: {} },
   },
   MutationObserver: class {
     observe() {}
@@ -396,5 +554,5 @@ if (errors.length > 0) {
 }
 
 console.log(
-  `Translation checks passed: ${expectedLocales.length} locales, ${activePages.length} active pages each, code and SEO preserved.`,
+  `Translation structure and terminology checks passed: ${expectedLocales.length} locales, ${activePages.length} active pages each, code and SEO preserved.`,
 );

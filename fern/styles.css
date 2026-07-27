@@ -176,6 +176,27 @@ button:focus-visible,
   color: var(--accent-11, var(--sixmm-accent-strong)) !important;
 }
 
+/* Fern treats Uzbek, Filipino, and Azerbaijani as ordinary page trees.
+ * Keep their generated tabs available to the router, but only render the
+ * standard-locale set that belongs to the current pathname. */
+:root:not([data-sixmm-docs-locale="uz"])
+  a[role="tab"][href^="/uz/"],
+:root:not([data-sixmm-docs-locale="fil"])
+  a[role="tab"][href^="/fil/"],
+:root:not([data-sixmm-docs-locale="az"])
+  a[role="tab"][href^="/az/"] {
+  display: none !important;
+}
+
+:root[data-sixmm-docs-locale="uz"]
+  a[role="tab"]:not([href^="/uz/"]),
+:root[data-sixmm-docs-locale="fil"]
+  a[role="tab"]:not([href^="/fil/"]),
+:root[data-sixmm-docs-locale="az"]
+  a[role="tab"]:not([href^="/az/"]) {
+  display: none !important;
+}
+
 body:has(.sixmm-language-menu-enhanced[data-state="open"])::before {
   position: fixed;
   z-index: 2147482999;
@@ -1026,6 +1047,7 @@ div
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
+  gap: 0 !important;
 }
 
 .sixmm-mobile-settings-bar > .sixmm-mobile-theme-trigger {

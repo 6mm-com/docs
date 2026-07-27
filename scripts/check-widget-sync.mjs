@@ -16,12 +16,13 @@ const languageScript = await readFile(
 const localeSandbox = {
   window: {
     addEventListener() {},
+    location: { pathname: "/home" },
     requestAnimationFrame() {},
   },
   document: {
     readyState: "loading",
     addEventListener() {},
-    documentElement: {},
+    documentElement: { dataset: {} },
   },
   MutationObserver: class {
     observe() {}
@@ -38,6 +39,7 @@ const widgetCalls = [];
 const docsLanguageNavigations = [];
 const docsThemeNavigations = [];
 const rootClasses = new Set(["light"]);
+let appendedWidgetScript = null;
 
 const documentElement = {
   dataset: { theme: "light" },
@@ -96,10 +98,14 @@ sandboxWindow.window = sandboxWindow;
 const sandboxDocument = {
   readyState: "complete",
   documentElement,
-  querySelector(selector) {
-    return selector.includes("data-sixmm-support-widget") ? {} : null;
+  querySelector() {
+    return null;
   },
-  body: { appendChild() {} },
+  body: {
+    appendChild(element) {
+      appendedWidgetScript = element;
+    },
+  },
   createElement() {
     return { dataset: {} };
   },
@@ -119,6 +125,14 @@ runInNewContext(supportScript, {
   MutationObserver: SandboxMutationObserver,
 });
 
+assert.ok(appendedWidgetScript, "The support Widget script must be appended");
+appendedWidgetScript.onload();
+assert.deepEqual(widgetCalls, [
+  ["lang", "en"],
+  ["theme", "light"],
+]);
+widgetCalls.length = 0;
+
 function emitWidgetLanguage(lang) {
   listeners["cs-widget-lang-change"]({ detail: { lang } });
 }
@@ -132,9 +146,6 @@ function completeDocsNavigation(pathname) {
 for (const [widgetLocale, docsLocale, pathname] of [
   ["pt", "pt-PT", "/pt-PT/home"],
   ["es", "es-ES", "/es-ES/home"],
-  ["uz", "tr", "/tr/home"],
-  ["fil", "ms", "/ms/home"],
-  ["az", "tr-TR", "/tr-TR/home"],
   ["es-AR", "es-419", "/es-419/home"],
   ["en-Asia", "", "/home"],
 ]) {
@@ -143,10 +154,30 @@ for (const [widgetLocale, docsLocale, pathname] of [
   assert.equal(docsLanguageNavigations.at(-1), docsLocale);
   completeDocsNavigation(pathname);
   assert.deepEqual(widgetCalls, []);
+  await Promise.resolve();
+  assert.deepEqual(widgetCalls, []);
 }
 
-// A stale A request cannot clear a newer A marker in a rapid A -> B -> A switch.
+// Every pathname observed while Widget -> Docs navigation is still pending is
+// internal. Neither an intermediate nor the final pathname may echo to Widget.
 const originalNavigateDocsLocale = sandboxWindow.__sixmmNavigateDocsLocale;
+let resolvePendingWidgetNavigation;
+sandboxWindow.__sixmmNavigateDocsLocale = (locale) => {
+  docsLanguageNavigations.push(locale);
+  return new Promise((resolve) => {
+    resolvePendingWidgetNavigation = resolve;
+  });
+};
+widgetCalls.length = 0;
+emitWidgetLanguage("fr");
+completeDocsNavigation("/fr/loading");
+completeDocsNavigation("/fr/home");
+assert.deepEqual(widgetCalls, []);
+resolvePendingWidgetNavigation(true);
+await Promise.resolve();
+assert.deepEqual(widgetCalls, []);
+
+// A stale A request cannot clear a newer A marker in a rapid A -> B -> A switch.
 const deferredNavigations = [];
 sandboxWindow.__sixmmNavigateDocsLocale = (locale) => {
   docsLanguageNavigations.push(locale);
@@ -155,15 +186,23 @@ sandboxWindow.__sixmmNavigateDocsLocale = (locale) => {
   });
 };
 widgetCalls.length = 0;
-emitWidgetLanguage("az");
-emitWidgetLanguage("fil");
-emitWidgetLanguage("az");
+emitWidgetLanguage("ja");
+emitWidgetLanguage("fr");
+emitWidgetLanguage("ja");
 deferredNavigations[0](false);
 await Promise.resolve();
-completeDocsNavigation("/tr-TR/home");
+completeDocsNavigation("/ja/home");
 assert.deepEqual(widgetCalls, []);
 deferredNavigations.slice(1).forEach((resolve) => resolve(false));
+await new Promise((resolve) => setImmediate(resolve));
 sandboxWindow.__sixmmNavigateDocsLocale = originalNavigateDocsLocale;
+
+// Docs -> Widget: intermediate and final paths for one locale write that
+// Widget language only once.
+widgetCalls.length = 0;
+completeDocsNavigation("/pt-PT/loading");
+completeDocsNavigation("/pt-PT/home");
+assert.deepEqual(widgetCalls, [["lang", "pt"]]);
 
 // Docs -> Widget: every published Docs locale calls the exact Widget locale.
 for (const locale of [
@@ -196,6 +235,7 @@ let activeMenu = null;
 let activeThemeIcon = "light";
 let languageTriggerClicks = 0;
 const directRouterNavigations = [];
+const directRouterRefreshes = [];
 const adapterRootClasses = new Set(["light"]);
 const adapterRoot = {
   dataset: { theme: "light" },
@@ -228,6 +268,9 @@ const directRouter = {
     adapterWindow.location.pathname = target.pathname;
     adapterWindow.location.search = target.search;
     adapterWindow.location.hash = target.hash;
+  },
+  refresh() {
+    directRouterRefreshes.push(adapterWindow.location.pathname);
   },
 };
 const mountedFernLink = {
@@ -391,12 +434,28 @@ const adapterSandbox = {
 };
 runInNewContext(languageScript, adapterSandbox);
 assert.equal(
-  await adapterWindow.__sixmmNavigateDocsLocale("tr"),
+  adapterRoot.dataset.sixmmDocsLocale,
+  "en",
+  "The pathname locale must be set before DOMContentLoaded to prevent tab flashes",
+);
+assert.match(
+  languageScript,
+  /next\.article !== previous\.article/,
+  "Locale navigation readiness must accept a replaced article with identical text",
+);
+assert.match(
+  languageScript,
+  /\.language-dropdown-trigger \.truncate/,
+  "Locale routes must synchronize the Fern trigger label",
+);
+assert.equal(
+  await adapterWindow.__sixmmNavigateDocsLocale("fr"),
   true,
 );
-assert.equal(adapterWindow.location.pathname, "/tr/home");
-assert.equal(directRouterNavigations.at(-1)[0], "/tr/home");
+assert.equal(adapterWindow.location.pathname, "/fr/home");
+assert.equal(directRouterNavigations.at(-1)[0], "/fr/home");
 assert.equal(directRouterNavigations.at(-1)[1].scroll, false);
+assert.deepEqual(directRouterRefreshes, []);
 assert.equal(
   languageTriggerClicks,
   0,
@@ -405,13 +464,15 @@ assert.equal(
 adapterWindow.location.search = "?from=widget";
 adapterWindow.location.hash = "#example";
 assert.equal(
-  await adapterWindow.__sixmmNavigateDocsLocale("ms"),
+  await adapterWindow.__sixmmNavigateDocsLocale("de"),
   true,
 );
-assert.equal(adapterWindow.location.pathname, "/ms/home");
+assert.equal(adapterWindow.location.pathname, "/de/home");
 assert.equal(adapterWindow.location.search, "?from=widget");
 assert.equal(adapterWindow.location.hash, "#example");
-assert.equal(directRouterNavigations.at(-1)[0], "/ms/home?from=widget#example");
+assert.equal(directRouterNavigations.at(-1)[0], "/de/home?from=widget#example");
+assert.deepEqual(directRouterRefreshes, []);
+
 activeMenu = null;
 assert.equal(
   await adapterWindow.__sixmmNavigateDocsTheme("dark"),

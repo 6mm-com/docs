@@ -1,0 +1,89 @@
+---
+title: "Koneksyon, Subscription at Tibok ng Puso"
+subtitle: "Kumonekta sa 6MM WebSocket streams, mag-subscribe sa mga paksa, panatilihing buhay ang koneksyon, at ligtas na iproseso ang mga sobre ng mensahe."
+slug: developer-api/websocket/connection-subscription-and-heartbeat
+canonical-url: https://docs.6mm.com/fil/developer-api/websocket/connection-subscription-and-heartbeat
+---
+
+Gamitin ang WebSocket streams para sa market data at pribadong user-state updates na kailangang manatiling napapanahon kahit walang polling.
+
+<h2 id="connection-url">Koneksyon URL</h2>
+
+```text
+wss://ws.6mm.com/ws
+```
+
+Ang mga private stream ay nangangailangan ng authentication context tulad ng listenKey o access token gaya ng nakasaad sa private channel documentation.
+
+<h2 id="subscribe">Mag-subscribe</h2>
+
+```json
+{ "id": "1772007814666", "op": "subscribe", "args": ["market.depth.BTCUSDT"] }
+```
+
+Matagumpay na pagkilala sa subscription:
+
+```json
+{
+  "id": "1772007814666",
+  "event": "subscribe",
+  "success": true,
+  "data": ["market.depth.BTCUSDT"]
+}
+```
+
+<h2 id="unsubscribe">Mag-unsubscribe</h2>
+
+```json
+{ "id": "1772007814667", "op": "unsubscribe", "args": ["market.depth.BTCUSDT"] }
+```
+
+<h2 id="application-ping">Application ping</h2>
+
+```json
+{ "id": "1772007814668", "op": "ping", "args": [] }
+```
+
+<h2 id="message-envelope">Sobre ng mensahe</h2>
+
+Ang mga pampublikong push ay gumagamit ng isang pare-parehong envelope:
+
+```json
+{
+  "topic": "market.depth.BTCUSDT",
+  "event": "data",
+  "ts": 1772007815000,
+  "data": {}
+}
+```
+
+<h2 id="operational-recommendations">Mga rekomendasyon sa operasyon</h2>
+
+- Gumawa ng natatanging client-side `id` para sa bawat subscribe, unsubscribe, at ping request.
+- Ituring ang reconnect bilang bagong session at mag-resubscribe sa mga kinakailangang paksa.
+- I-validate na ang ibinalik na `topic` ay tumutugma sa channel na inaasahan ng iyong serbisyo.
+- Panatilihing kapareho ang pagproseso ng mensahe kapag may kinalaman sa mga pribadong order o account events.
+- I-log ang mga pagbabago sa estado ng koneksyon, subscription acknowledgements, at mga abnormal na disconnect.
+
+<h2 id="reconnect-workflow">Muling ikonekta ang workflow</h2>
+
+1. Isara o itapon ang dating socket at gumawa ng bagong koneksyon.
+2. Muling i-authenticate ang mga pribadong stream gamit ang valid na listenKey o access token.
+3. Mag-subscribe muli sa lahat ng kinakailangang paksa at maghintay ng matagumpay na pagkilala.
+4. Palitan ang lokal na estado ng order-book ng bagong snapshot bago mag-apply ng incremental updates.
+5. Ayusin ang mga bukas na order, posisyon, at balanse sa pamamagitan ng REST kung maaaring may mga pribadong pangyayari na hindi napansin.
+
+Gamitin ang bounded exponential backoff na may jitter para sa reconnect attempts. Ang isang patuloy na nagre-reconnect na kliyente ay dapat mag-alerto sa mga operator sa halip na muling subukang walang hanggan nang walang nakikita.
+
+<h2 id="heartbeat-and-stale-connections">Tibok ng puso at mga lumang koneksyon</h2>
+
+- Subaybayan ang pinakabagong papasok na mensahe at matagumpay na ping acknowledgement.
+- Gamitin ang heartbeat interval at idle threshold na aprubado para sa production environment.
+- Ituring ang koneksyon bilang luma kapag lumampas ang naka-configure na threshold, kahit na bukas pa rin ang TCP socket.
+- Huwag muling gamitin ang mga subscription mula sa lumang socket; Mag-resubscribe nang malinaw pagkatapos ng bawat reconnect.
+
+<h2 id="related-documentation">Kaugnay na dokumentasyon</h2>
+
+- [Public Market Channels](/fil/developer-api/websocket/public-market-channels): mga paksa, order-book continuity, mga trade, kandila, at mga ticker.
+- [Private User Channel](/fil/developer-api/websocket/private-user-channel): listenKey lifecycle at authenticated events.
+- [Integration Recommendations](/fil/developer-api/integration-recommendations): retries, idempotency, monitoring, at launch testing.

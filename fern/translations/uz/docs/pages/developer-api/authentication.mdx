@@ -1,0 +1,73 @@
+---
+title: "6MM API Autentifikatsiya: JWT va API kalitlari"
+description: "Shaxsiy 6MM API so'rovlarini JWT kirish tokenlari yoki API kalitlari bilan autentifikatsiya qilishni o'rganing va har bir integratsiya uchun mos usulni tanlang."
+slug: developer-api/authentication
+canonical-url: https://docs.6mm.com/uz/developer-api/authentication
+---
+
+6MM JWT kirish tokenlari va shaxsiy API kirish uchun API kalitlarini qo'llab-quvvatlaydi. So'rov interaktiv foydalanuvchi sessiyasiga yoki uzoq yillik backend integratsiyasiga tegishli bo'lishiga qarab usulni tanlang.
+
+<h2 id="choose-an-authentication-method">Autentifikatsiya usulini tanlang</h2>
+
+| Integratsiya ehtiyoji | Tavsiya etilgan usul | Nima uchun |
+| --- | --- | --- |
+| Foydalanuvchi-sessiya API chaqiruvlari | JWT | Kirishdan keyin qaytarilgan kirish tokenidan foydalanadi. |
+| Kalitlarni yaratish, yangilash yoki API bekor qilish | JWT | API Key boshqaruv nuqtalari API Key o'z-o'zini boshqarishni qabul qilmaydi. |
+| Serverdan serverga hisob yoki savdo chaqiruvlari | API Key + HMAC imzosi | Kengaytirilgan ruxsatlar va imzolangan backend so'rovlarini qo'llab-quvvatlaydi. |
+
+<h2 id="jwt">JWT</h2>
+
+Tizimga kirganingizdan so'ng, API `accessToken`qaytaradi. Xususiy endpointlarni chaqirganda, quyidagilarni ko'rsating:
+
+```http
+Authorization: Bearer YOUR_ACCESS_TOKEN
+```
+
+Tokenni URL va loglardan chetda tuting. Token muddati tugagach, tasdiqlangan login yoki yangilanish jarayoni orqali haqiqiy tokenni oling va keyin shaxsiy so'rovni qayta sinab ko'ring.
+
+<h2 id="api-key">API Key</h2>
+
+Agar `X-API-KEY` so'rov sarlavhasi mavjud bo'lsa, server API Key HMAC autentifikatsiyadan foydalanadi:
+
+```http
+X-API-KEY: YOUR_API_KEY
+```
+
+API Key boshqaruv nuqtalari JWTishlatishi kerak. API Kalitlar o'z-o'zini boshqara olmaydi.
+
+API Key so'rovlar shuningdek [Request Signing](/developer-api/request-signingda tavsiflangan vaqt tamg'asi va HMAC imzosini talab qiladi. Tegishli API sirini faqat orqa tomondagi maxfiy boshqaruv tizimida saqlang.
+
+<h2 id="api-key-permissions">API Key Ruxsatnomalar</h2>
+
+| Qiymat | Ruxsat | Tavsif                                                                                                                                                                                    |
+| ----- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `1`   | O'qish       | Foydalanuvchi ma'lumotlari, aktivlar, hisob o'zgarishi jurnallari, statistika, listenKey, sevimli belgilar va tegishli foydalanuvchi/hisob nuqtalari. Buyurtma va pozitsiya nuqtalari, jumladan so'rovlar, savdo ruxsatini talab qiladi |
+| `2`   | Savdo      | Buyurtma va pozitsiya nuqtalari, so'rov va yozish operatsiyalarini o'z ichiga oladi                                                                                                                        |
+| `4`   | Orqaga chekinish   | Ajratilgan fond ruxsati                                                                                                                                                                       |
+
+O'qish va savdo ruxsatlarini berish uchun `permissions=3`foydalaning.
+
+Integratsiya talab qiladigan eng kichik ruxsatnoma to'plamidan foydalaning. Bozor ma'lumotlari xizmati savdo ruxsatlarini olmasligi kerak, buyurtma xizmati esa faqat buyurtmalar yoki pozitsiyalarni so'raganda ham savdo ruxsatiga muhtoj.
+
+<h2 id="production-security-checklist">Ishlab chiqarish xavfsizlik tekshiruv ro'yxati</h2>
+
+- Rivojlantirish, sahnalashtirish va ishlab chiqarish uchun alohida API kalitlarini yaratish.
+- Integratsiyada barqaror chiquvchi manzillar bo'lsa, IP oq ro'yxatini qo'llash.
+- Brauzer, mobil yoki ish stoli ilova kodidagi API sirlarni hech qachon oshkor qilmaslik.
+- Imzolangan so'rovlarni yaratishdan oldin server vaqtini sinxronlashtirish.
+- Avtorizatsiya sarlavhalarini, API Kalitlar, imzolar va ilova jurnallaridan sirlarni yashiring.
+- Ta'sirlanish shubhasi paydo bo'lganda kalitni darhol bekor qilib, almashtirish.
+
+<h2 id="next-steps">Keyingi qadamlar</h2>
+
+<CardGroup cols={3}>
+<Card title="API Key boshqaruvi" icon="fa-duotone fa-key" href="/uz/developer-api/api-key-management">
+Scoped tugmalarini yarating, IP cheklovlarini sozlang va kalitlarni aylantirishni rejalashtiring.
+</Card>
+<Card title="So'rovlarni imzolash" icon="fa-duotone fa-signature" href="/uz/developer-api/request-signing">
+HMACquring -SHA256 yuk va shaxsiy so'rovlarni imzolang.
+</Card>
+<Card title="Xatoliklar va muammolarni hal qilish" icon="fa-duotone fa-screwdriver-wrench" href="/uz/developer-api/error-codes-and-troubleshooting">
+Rad etilgan ma'lumotlar, vaqt tamg'alar, imzolar va ruxsatnomalarni aniqlang.
+</Card>
+</CardGroup>
