@@ -138,6 +138,7 @@ function protectText(value) {
   text = text.replace(/<[^>\n]+>/g, protect);
 
   const protectedTerms = [
+    "Orange Bit Technologies Limited",
     "Embedded API / SDK",
     "Developer API",
     "Trading Widget SDK",
