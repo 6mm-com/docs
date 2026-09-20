@@ -1,0 +1,83 @@
+---
+title: "Dihosting MCP"
+subtitle: "Hubungkan klien AI ke titik akhir 6MM yang dihosting MCP untuk data pasar publik dan konteks aturan perdagangan."
+slug: ai-hub/hosted-mcp
+canonical-url: https://docs.6mm.com/id/ai-hub/hosted-mcp
+---
+
+> **Direncanakan — belum diluncurkan**
+> AI Hub adalah fitur yang direncanakan. Kemampuan, titik akhir, perintah, dan konfigurasi klien di halaman ini menjelaskan desain yang diusulkan dan saat ini tidak tersedia. Ketersediaan akhir dan petunjuk pengaturan akan diumumkan saat peluncuran.
+
+
+MCP yang dihosting adalah cara paling sederhana untuk memulai dengan 6MM AI Hub.
+
+Hubungkan klien AI ke titik akhir 6MM yang dihosting MCP dan ajukan pertanyaan tentang data pasar publik. Tidak ada server lokal yang perlu dipasang, tidak ada penerapan cloud yang harus dipelihara, dan tidak diperlukan kunci API pengguna untuk data publik.
+
+<h2 id="what-you-can-do">Apa yang bisa Anda lakukan</h2>
+
+- Kueri data pasar langsung dan historis.
+- Telusuri pasar abadi yang tersedia.
+- Periksa kedalaman buku pesanan dan perdagangan terkini.
+- Bandingkan tingkat pendanaan.
+- Baca konteks biaya, kontrak, margin, dan aturan risiko.
+
+MCP yang dihosting adalah yang terbaik untuk penelitian, eksplorasi produk, dan analisis pasar publik. Ini bukan pengaturan pertama yang tepat untuk akses akun pribadi atau perdagangan.
+
+<h2 id="endpoint">Titik akhir</h2>
+
+```text
+https://mcp.6mm.com/mcp
+```
+
+Pemeriksaan kesehatan:
+
+```text
+https://mcp.6mm.com/health
+```
+
+<h2 id="recommended-first-release-scope">Cakupan rilis pertama yang direkomendasikan</h2>
+
+MCP yang dihosting harus hanya menampilkan informasi publik dan informasi baca-saja pada rilis pertama:
+
+- Pasar.
+- ticker.
+- Pesan buku.
+- Perdagangan baru-baru ini.
+- Kline.
+- Tingkat pendanaan.
+- Status sistem.
+- Biaya perdagangan.
+- Spesifikasi kontrak.
+- Sumber daya aturan risiko dan margin.
+
+<h2 id="not-supported-in-the-first-release">Tidak didukung pada rilis pertama</h2>
+
+MCP yang dihosting tidak boleh menjadi tempat pertama untuk mengekspos:
+
+- Saldo akun.
+- Posisi.
+- Buka pesanan.
+- Pembuatan pesanan.
+- Pembatalan pesanan.
+- Transfer atau penarikan.
+- Penyimpanan kunci pengguna API.
+
+<h2 id="why-public-data-first">Kenapa data publik dulu</h2>
+
+MCP yang dihosting dioperasikan oleh 6MM dan diakses melalui jaringan. Memang nyaman, tetapi tidak boleh menjadi tempat default di mana pengguna mengirimkan kunci API pribadi. Alur kerja akun dan perdagangan yang sensitif harus dimulai dengan Lokal MCP, CLI, atau Remote yang dikelola pengguna MCP.
+
+<h2 id="example-user-prompt">Contoh perintah pengguna</h2>
+
+```text
+Use 6MM to check BTC-USDT-PERP orderbook depth and summarize liquidity.
+```
+
+<h2 id="operational-requirements">Persyaratan operasional</h2>
+
+- TLS di semua titik akhir.
+- Batasan kecepatan permintaan.
+- Perlindungan penyalahgunaan.
+- Log dan metrik terstruktur.
+- Pemeriksaan kesehatan.
+- Hapus deskripsi dan skema alat.
+- Respons kesalahan yang stabil untuk klien AI.

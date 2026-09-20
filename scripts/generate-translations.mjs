@@ -1,4 +1,6 @@
-import { execFileSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
+import { readFileSync } from "node:fs";
+import { parse as parseYaml } from "yaml";
 import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -9,7 +11,7 @@ import {
 } from "./locale-config.mjs";
 import { polishMachineTranslation } from "./polish-core-translations.mjs";
 
-const projectRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
+const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const fernRoot = path.join(projectRoot, "fern");
 const sourceRoot = path.join(fernRoot, "docs");
 const translationsRoot = path.join(fernRoot, "translations");
@@ -39,17 +41,7 @@ if (refreshManifestOnly && (force || labelsOnly)) {
 }
 
 function loadYamlAsJson(filePath) {
-  const ruby = [
-    "require 'yaml'",
-    "require 'json'",
-    "puts JSON.generate(YAML.load_file(ARGV.fetch(0)))",
-  ].join("; ");
-  return JSON.parse(
-    execFileSync("ruby", ["-e", ruby, filePath], {
-      encoding: "utf8",
-      maxBuffer: 20 * 1024 * 1024,
-    }),
-  );
+  return parseYaml(readFileSync(filePath, "utf8"));
 }
 
 function yamlQuote(value) {
@@ -364,7 +356,8 @@ function extractDocumentRecords(content) {
       continue;
     }
 
-    const protectedRecord = protectText(lineWithAttributeTokens);
+    const blockPrefix = lineWithAttributeTokens.match(/^(\s*(?:#{1,6}\s+|>\s*|\d+\.\s+|[-*]\s+))/)?.[0] ?? "";
+    const protectedRecord = protectText(lineWithAttributeTokens.slice(blockPrefix.length));
     if (
       !/[A-Za-z]/.test(
         protectedRecord.text.replace(/\[\[\[ph\d+\]\]\]/g, ""),
@@ -372,7 +365,7 @@ function extractDocumentRecords(content) {
     ) {
       continue;
     }
-    records.push({ kind: "line", index, prefix: "", suffix: "", ...protectedRecord });
+    records.push({ kind: "line", index, prefix: blockPrefix, suffix: "", ...protectedRecord });
   }
 
   return { lines, records };
@@ -393,7 +386,7 @@ async function getEdgeToken(forceRefresh = false) {
   return edgeToken;
 }
 
-async function requestTranslations(texts, sourceLanguage, targetLanguage, attempt = 1) {
+async function requestEdgeTranslations(texts, sourceLanguage, targetLanguage, attempt = 1) {
   const url = new URL("https://api-edge.cognitive.microsofttranslator.com/translate");
   url.search = new URLSearchParams({
     "api-version": "3.0",
@@ -454,11 +447,47 @@ async function requestTranslations(texts, sourceLanguage, targetLanguage, attemp
       console.warn(`Translation service throttled; retrying in ${Math.round(delay / 1000)}s.`);
     }
     await sleep(delay);
+    return requestEdgeTranslations(texts, sourceLanguage, targetLanguage, attempt + 1);
+  }
+}
+
+// Public Google dictionary translation endpoint; keep Edge available for existing environments.
+// This is a machine-translation aid, not a guarantee of editorial review.
+const translationProvider = process.env.DOCS_TRANSLATION_PROVIDER ?? "google";
+if (!["google", "edge"].includes(translationProvider)) throw new Error("Unknown translation provider");
+async function requestTranslations(texts, sourceLanguage, targetLanguage, attempt = 1) {
+  if (translationProvider === "edge") return requestEdgeTranslations(texts, sourceLanguage, targetLanguage, attempt);
+  const url = new URL("https://clients5.google.com/translate_a/t");
+  const target = { "es-MX": "es", "es-ES": "es", "pt-BR": "pt", "pt-PT": "pt-PT" }[targetLanguage] ?? targetLanguage;
+  url.search = new URLSearchParams({ client: "dict-chrome-ex", sl: sourceLanguage, tl: target });
+  texts.forEach(text => url.searchParams.append("q", text));
+  try {
+    await sleep(Math.max(0, 650 - (Date.now() - lastTranslationRequestAt)));
+    lastTranslationRequestAt = Date.now();
+    const response = await fetch(url, { signal: AbortSignal.timeout(30_000) });
+    if (!response.ok) {
+      const error = new Error(`Translation service returned HTTP ${response.status}`);
+      error.status = response.status;
+      throw error;
+    }
+    const output = await response.json();
+    if (!Array.isArray(output) || output.length !== texts.length || output.some(x => typeof x !== "string")) {
+      throw new Error("Translation response shape mismatch");
+    }
+    return output.map((text, index) => {
+      const normalized = text.replace(/(?:\[\s*)+ph\s*(\d+)(?:\s*\])+/gi, "[[[ph$1]]]");
+      const tokens = texts[index].match(/\[\[\[ph\d+\]\]\]/g) ?? [];
+      if (tokens.some(token => !normalized.includes(token))) throw new Error(`Translation lost a protected token: ${JSON.stringify({ source: texts[index], translated: normalized })}`);
+      return normalized;
+    });
+  } catch (error) {
+    if (attempt >= 4 || (error.status && ![429, 500, 502, 503, 504].includes(error.status))) throw error;
+    await sleep(error.status === 429 ? 30_000 : 2_000 * attempt);
     return requestTranslations(texts, sourceLanguage, targetLanguage, attempt + 1);
   }
 }
 
-function createBatches(records, maximumCharacters = 40_000, maximumItems = 100) {
+function createBatches(records, maximumCharacters = 1_800, maximumItems = 30) {
   const batches = [];
   let current = [];
   let currentLength = 0;
@@ -547,6 +576,15 @@ async function translateDocument(content, locale, relativePagePath) {
     return canonicalForLocale(localizeInternalLinks(content, route), route);
   }
   const document = extractDocumentRecords(content);
+  if (relativePagePath.startsWith("docs/pages/prediction/")) {
+    for (const record of document.records) {
+      record.text = { Custom: "Custom Prediction", Grid: "Prediction Grid", "Up/Down": "Up/Down Prediction" }[record.text] ?? record.text;
+      record.text = record.text
+        .replace(/\bnet PnL\b/gi, "net profit and loss")
+        .replace(/\bquoted odds\b/gi, "offered payout multiplier")
+        .replace(/\brecorded odds\b/gi, "recorded payout multiplier");
+    }
+  }
   const translated = await translateRecords(
     document.records,
     locale.sourceLanguage,
@@ -655,8 +693,8 @@ const activePages = [
   ),
 ];
 
-if (activePages.length !== 87) {
-  throw new Error(`Expected 87 active pages, found ${activePages.length}`);
+if (activePages.length !== 125) {
+  throw new Error(`Expected 125 active pages, found ${activePages.length}`);
 }
 
 const manifest = await loadManifest();

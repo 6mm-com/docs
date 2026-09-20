@@ -1,102 +1,57 @@
 ---
 title: "Truy cập tài khoản giao dịch"
-description: "Hiểu mô hình đăng ký và truy cập tài khoản do đối tác quản lý được sử dụng để kết nối người dùng với giao dịch 6MM trong khi vẫn giữ được ranh giới trách nhiệm."
+description: "Hiểu quyền truy cập tài khoản để tích hợp đối tác và nền tảng nhãn trắng, bao gồm đăng nhập, quản lý tài khoản và chuẩn bị cho giao dịch vĩnh viễn."
 slug: trading/getting-started/authentication
 canonical-url: https://docs.6mm.com/vi/trading/getting-started/authentication
 ---
 
-6MM áp dụng mô hình đăng ký và truy cập do đối tác quản lý, được thiết kế để cân bằng trải nghiệm người dùng liền mạch với sự tách biệt rõ ràng giữa quyền sở hữu và trách nhiệm của nền tảng.
+6MM hỗ trợ hai mô hình truy cập tài khoản: tích hợp với hệ thống đối tác và nền tảng nhãn trắng. Sử dụng mục được cung cấp bởi nền tảng của bạn. Việc tạo tài khoản, xác thực và quản lý hồ sơ tùy thuộc vào mô hình đã chọn.
 
-* 6MM không cung cấp đăng ký công khai.
-* Tất cả quá trình tiếp nhận người dùng đều được khởi tạo và quản lý độc quyền bởi các đại lý được ủy quyền hoặc nền tảng đối tác.
+<h2 id="registration-model">Chọn mô hình tài khoản của bạn</h2>
 
-***
+| Khu vực | Tích hợp đối tác | Nền tảng nhãn trắng |
+| --- | --- | --- |
+| Nguồn tài khoản | Người dùng có tài khoản trong hệ thống đối tác, tài khoản này liên kết hoặc đồng bộ hóa người dùng giao dịch. | Người dùng thuộc hệ thống tài khoản của nền tảng nhãn trắng. |
+| Mục truy cập | Ứng dụng, trang web hoặc mục giao dịch nhúng của đối tác. | Trang đăng nhập và tên miền có thương hiệu của nền tảng nhãn trắng. |
+| Xác thực | Đối tác xác minh người dùng và chương trình phụ trợ của đối tác sẽ nhận được thông tin xác thực truy cập giao dịch cần thiết. | Đăng nhập, xác minh và bảo mật tài khoản tuân theo cấu hình được kích hoạt của nền tảng. |
+| Quản lý tài khoản | Đối tác quản lý hồ sơ người dùng của mình; hệ thống giao dịch duy trì hồ sơ giao dịch và bản đồ người dùng cần thiết. | Hệ thống tài khoản nhãn trắng và quản trị viên được ủy quyền quản lý hồ sơ người dùng, trạng thái tài khoản và cài đặt bảo mật. |
 
-<h2 id="registration-model">Mô hình đăng ký</h2>
+<h2 id="login-method-1-partner-embedded-access">Tích hợp đối tác</h2>
 
-<h2 id="partner-only-registration">Đăng ký chỉ dành cho đối tác</h2>
+1. Đăng nhập thông qua hệ thống tài khoản của đối tác.
+2. Phần phụ trợ của đối tác xác minh phiên và liên kết hoặc xác định người dùng giao dịch tương ứng.
+3. Phần phụ trợ có được thông tin xác thực truy cập giao dịch cần thiết hoặc mục nhập URL thông qua tích hợp được hỗ trợ.
+4. Mở giao diện giao dịch nhúng hoặc mục giao dịch được ủy quyền do đối tác cung cấp.
 
-6MM hỗ trợ một mô hình đăng ký duy nhất:
+Việc truy cập tài khoản không tự nó tạo ra tiền để giao dịch. Thực hiện theo quy trình cấp vốn của đối tác và xác nhận số dư tài khoản vĩnh viễn có sẵn trước khi đặt hàng.
 
-* Người dùng chỉ được đăng ký qua đại lý hoặc nền tảng đối tác
-* Không có đăng ký trực tiếp trên 6MM
-* Danh tính người dùng, tạo tài khoản và quản lý vòng đời được đối tác kiểm soát hoàn toàn
+<h2 id="login-method-2-6mm-account-login-partner-issued-credentials">Quyền truy cập nền tảng nhãn trắng</h2>
 
-Sau khi đăng ký, đối tác sẽ mở ra điểm vào 6MM trong ứng dụng của mình, cho phép người dùng truy cập các trải nghiệm giao dịch 6MM.
+Sử dụng mục nhập tài khoản và tên miền có thương hiệu do nền tảng nhãn trắng cung cấp. Việc tự đăng ký có khả dụng hay không, cách mở tài khoản và phương thức đăng nhập hoặc xác minh danh tính nào được bật tùy thuộc vào cấu hình của nền tảng đó.
 
-6MM không tự thu thập hoặc quản lý thông tin danh tính người dùng cuối.
+Hệ thống tài khoản của nền tảng và quản trị viên được ủy quyền xử lý việc quản lý hồ sơ, trạng thái tài khoản và các hoạt động bảo mật trong phạm vi quyền của họ. Thực hiện theo quy trình xác minh của nền tảng để khôi phục mật khẩu, thay đổi thông tin liên hệ hoặc hạn chế tài khoản.
 
-***
+Sau khi đăng nhập, hãy chuẩn bị tiền thông qua quy trình cấp vốn được hỗ trợ của nền tảng. Đối với giao dịch vĩnh viễn, chuyển tài sản thanh toán được yêu cầu từ tài khoản cấp vốn sang tài khoản vĩnh viễn và xác nhận kết quả chuyển khoản.
 
-<h2 id="login-methods">Phương thức đăng nhập</h2>
+<h2 id="user-ownership-and-data-responsibility">Trách nhiệm về tài khoản và dữ liệu</h2>
 
-Để đáp ứng các kiến trúc ứng dụng đối tác và yêu cầu trải nghiệm người dùng khác nhau, 6MM hỗ trợ hai phương thức đăng nhập, cả hai đều được khởi tạo qua các nền tảng đối tác.
+Hai mô hình có ranh giới trách nhiệm khác nhau. Tích hợp đối tác duy trì quyền quản lý tài khoản phía đối tác trong khi vẫn duy trì bản đồ người dùng và hồ sơ cần thiết cho giao dịch. Các nền tảng nhãn trắng sử dụng quy trình tài khoản và quyền quản trị của riêng họ để quản lý người dùng.
 
-***
+Thông tin được thu thập, lưu trữ hoặc hiển thị, các yêu cầu xác minh danh tính và trách nhiệm hỗ trợ phải được xác định cho việc triển khai thực tế. Không áp dụng các giả định quản lý tài khoản của một mô hình cho mọi nền tảng.
 
-<h2 id="login-method-1-partner-embedded-access">Phương thức đăng nhập 1: Truy cập nhúng đối tác</h2>
+<h2 id="design-principles">Trước khi tham gia giao dịch</h2>
 
-Trong mô hình tích hợp chính, người dùng truy cập 6MM trực tiếp từ ứng dụng của đối tác.
+- Xác nhận rằng bạn đang sử dụng đúng tên miền và tài khoản nền tảng.
+- Hoàn thành mọi kiểm tra danh tính hoặc bảo mật mà nền tảng đó yêu cầu.
+- Kiểm tra xem tài khoản có quyền truy cập giao dịch hay không và xem xét mọi hạn chế.
+- Xác nhận số dư khả dụng trong tài khoản vĩnh viễn; đăng nhập không tự động chuyển tiền.
+- Hãy liên hệ với nhóm hỗ trợ nền tảng của bạn nếu cần chú ý đến quyền truy cập tài khoản hoặc xác minh danh tính.
 
-* Người dùng nhập 6MM thông qua điểm vào nhúng do đại lý hoặc đối tác cung cấp
-* Việc xác thực hoàn toàn do đối tác đảm nhận
-* Token truy cập hoặc thông tin đăng nhập phiên được chuyển an toàn đến 6MM
-* Không yêu cầu đăng nhập riêng 6MM
+<h2 id="implementation-guides">Tiếp tục quá trình tích hợp của bạn</h2>
 
-Phương pháp này mang lại trải nghiệm liền mạch nhất và được khuyến nghị cho các ứng dụng đối tác tích hợp sâu.
-
-***
-
-<h2 id="login-method-2-6mm-account-login-partner-issued-credentials">Phương thức đăng nhập 2: Đăng nhập tài khoản 6MM (Thông tin đăng nhập do đối tác cấp)</h2>
-
-Do sự khác biệt về khả năng ứng dụng đối tác và môi trường thiết bị, 6MM cũng cung cấp các giao diện tối ưu hóa Web và di động độc lập, với các ứng dụng gốc dự kiến cho các phiên bản phát hành trong tương lai.
-
-Trong mô hình này:
-
-* Người dùng nhập 6MM đầu tiên qua ứng dụng của đối tác
-* Đối tác cấp tài khoản đăng nhập và mật khẩu 6MMriêng cho người dùng
-* Người dùng có thể đăng nhập trực tiếp qua:
-  * [https://app.6mm.com](https://app.6mm.com/)
-  * Giao diện web tối ưu cho thiết bị di động
-  * Ứng dụng 6MM chính thức trong tương lai
-
-Cách tiếp cận này giúp cải thiện hiệu suất tương tác và trải nghiệm người dùng trên các thiết bị.
-
-> Quan trọng:\
-> Tất cả thông tin đăng nhập 6MM đều được tạo, cấp và quản lý bởi đối tác.
-> 6MM không xác minh độc lập danh tính người dùng hoặc duy trì dữ liệu hồ sơ người dùng.
-
-***
-
-<h2 id="user-ownership-and-data-responsibility">Quyền sở hữu người dùng và Trách nhiệm Dữ liệu</h2>
-
-Bất kể phương thức đăng nhập được sử dụng:
-
-* Tất cả người dùng đều thuộc sở hữu và quản lý bởi đối tác
-* Dữ liệu danh tính người dùng vẫn nằm trong hệ thống của đối tác
-* 6MM chỉ duy trì các định danh kỹ thuật tối thiểu cần thiết cho:
-  * Thực hiện giao dịch
-  * Tính toán ký quỹ và rủi ro
-  * Cách ly vị trí và tài khoản
-
-6MM không truy cập, phân tích hoặc kiếm tiền từ thông tin danh tính người dùng.
-
-***
-
-<h2 id="design-principles">Nguyên tắc thiết kế</h2>
-
-Hệ thống xác thực và truy cập 6MM được xây dựng dựa trên các nguyên tắc sau:
-
-* Nguồn đăng ký duy nhất: chỉ đối tác
-* Nhiều phương thức truy cập giúp trải nghiệm người dùng tốt hơn
-* Phân tách rõ ràng quyền sở hữu người dùng và hạ tầng giao dịch
-* Không thu hút người dùng trực tiếp hoặc cạnh tranh với đối tác
-
-Mô hình này đảm bảo 6MM hoạt động như một hạ tầng giao dịch trung lập, ưu tiên đối tác, đồng thời vẫn mang lại trải nghiệm giao dịch nhất quán và chất lượng cao trên các nền tảng và thiết bị.
-
-<h2 id="implementation-guides">Hướng dẫn triển khai</h2>
-
-- [Xác thực API Nhà phát triển](/vi/developer-api/authentication): Xác thực JWT và API Key cho các tích hợp.
-- [Trading Widget Xác thực](/vi/sdk/trading-widget/authentication): các chế độ token đối tác và tương thích.
-- [Tổng quanAgent SDK ](/vi/sdk/agent-sdk/overview): ràng buộc người dùng backend và cấp thông tin xác thực.
-- [Kiến trúc & Trách nhiệm](/vi/solutions/architecture-responsibilities): ranh giới quyền sở hữu giữa đối tác và 6MM .
+- [Bắt đầu giao dịch](/vi/trading/getting-started/start-trading): chuẩn bị tiền và đặt lệnh vĩnh viễn đầu tiên.
+- [Chuyển nhượng tài sản](/vi/trading/getting-started/asset-transfer): tài trợ và tài khoản vĩnh viễn, trạng thái chuyển khoản và đối chiếu.
+- [Developer API Xác thực](/vi/developer-api/authentication): xác thực để truy cập trực tiếp API.
+- [Trading Widget Xác thực](/vi/sdk/trading-widget/authentication): thông tin đăng nhập cho giao diện giao dịch được nhúng.
+- [Agent SDK Tổng quan](/vi/sdk/agent-sdk/overview): thông tin xác thực ràng buộc và truy cập của người dùng phụ trợ đối tác.
+- [Ma trận trách nhiệm của đối tác](/vi/security-compliance/partner-responsibilities): trách nhiệm tích hợp và vận hành.

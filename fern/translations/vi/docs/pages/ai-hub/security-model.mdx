@@ -1,0 +1,47 @@
+---
+title: "Mô hình bảo mật"
+subtitle: "Hiểu mô hình cấp phép, trạng thái an toàn mặc định và các biện pháp bảo vệ giao dịch để có quyền truy cập được hỗ trợ AI-."
+slug: ai-hub/security-model
+canonical-url: https://docs.6mm.com/vi/ai-hub/security-model
+---
+
+> **Đã lên kế hoạch — chưa ra mắt**
+> AI Hub là một tính năng được lên kế hoạch. Các khả năng, điểm cuối, lệnh và cấu hình máy khách trên trang này mô tả thiết kế được đề xuất và hiện không có sẵn. Hướng dẫn thiết lập và tính khả dụng cuối cùng sẽ được công bố khi ra mắt.
+
+
+Quyền truy cập giao dịch được hỗ trợ bởi AI phải an toàn hơn so với tự động hóa thông thường vì ý định của người dùng được thể hiện bằng ngôn ngữ tự nhiên.
+
+<h2 id="required-permission-scopes">Phạm vi quyền cần thiết</h2>
+
+| Phạm vi | Cho phép |
+| --- | --- |
+| thị trường: đọc | Dữ liệu thị trường công cộng và tài nguyên quy tắc. |
+| tài khoản: đã đọc | Số dư, vị thế, lệnh mở, khớp lệnh và tóm tắt tài khoản. |
+| thứ tự:viết | Tạo, sửa, hủy đơn hàng. |
+
+<h2 id="default-safety-posture">Tư thế an toàn mặc định</h2>
+
+- Mặc định là chỉ đọc.
+- Mặc định là testnet.
+- Không tiết lộ việc rút tiền hoặc chuyển khoản thông qua các công cụ AI.
+- Yêu cầu xem trước trước khi tạo.
+- Yêu cầu xác nhận rõ ràng trước khi giao dịch trên mạng chính.
+- Sử dụng các phím bình thường cho các hoạt động giao dịch.
+- Áp dụng giới hạn danh nghĩa và đòn bẩy tối đa.
+- Giữ nhật ký kiểm tra đầy đủ.
+
+<h2 id="controlled-trading-flow">Luồng giao dịch được kiểm soát</h2>
+
+```text
+User natural language intent
+  -> AI maps intent to tool parameters
+  -> 6mm_preview_order validates the order
+  -> service returns risk checks and margin impact
+  -> user explicitly confirms
+  -> 6mm_create_order submits the order
+  -> audit log records the full flow
+```
+
+<h2 id="prompt-injection-protection">Bảo vệ tiêm kịp thời</h2>
+
+Máy khách AI và máy chủ MCP phải coi nội dung bên ngoài là không đáng tin cậy. Các trang thị trường, văn bản, tài liệu và nội dung web được sao chép không được ghi đè các quyền của công cụ, quy tắc xác nhận hoặc giới hạn giao dịch.

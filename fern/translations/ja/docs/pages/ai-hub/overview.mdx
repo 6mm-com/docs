@@ -1,0 +1,108 @@
+---
+title: "AIハブの概要"
+subtitle: "6MM、CLI、MCP、ホストされた市場データ、ワークフロー テンプレートを通じて、AI クライアントとエージェント ワークフローから 6MM を使用します。"
+slug: ai-hub/overview
+canonical-url: https://docs.6mm.com/ja/ai-hub/overview
+---
+
+> **計画中 – まだ開始されていません**
+> AI Hub は計画中の機能です。このページの機能、エンドポイント、コマンド、およびクライアント構成は、提案された設計について説明したものであり、現在は利用できません。最終的な可用性とセットアップ手順は発売時に発表されます。
+
+
+6MM Agentic AI Hub は、6MM 市場データ、アカウント ワークフロー、将来の管理された取引操作のための AI- ネイティブ インターフェイスです。
+
+ダッシュボード、API ドキュメント、スクリプトを切り替える代わりに、ユーザーは AI クライアントに 6MM のクエリ、市場状況の説明、アカウント リスクの確認、または注文プレビューの準備を依頼できます。 AI クライアントは、6MM API セキュリティ モデルを置き換えるものではありません。 CLI、MCP、またはワークフロー テンプレートを通じて、構造化された 6MM ツールを呼び出します。
+
+<h2 id="what-you-can-ask-an-ai-client">AI クライアントに質問できること</h2>
+
+次のような質問をする場合は、AI Hub を使用します。
+
+```text
+Show me the BTC-USDT-PERP order book and explain current liquidity.
+```
+
+```text
+Compare BTC and ETH funding rates over the last 24 hours.
+```
+
+```text
+Check my testnet positions and explain liquidation risk. Do not place orders.
+```
+
+```text
+Preview a small BTC long order and explain fees, margin impact, and risk checks.
+```
+
+<h2 id="why-ai-agents-need-a-dedicated-access-layer">AI エージェントに専用のアクセス層が必要な理由</h2>
+
+AI エージェントは、生の Web ページや構造化されていないコピーされたテキストではなく、構造化されたツールを使用する場合に最適に機能します。 AI Hub は以下を提供します。
+
+| 要件 | 6MM アプローチ |
+| --- | --- |
+| ライブ市場のコンテキスト | シンボル、オーダーブック、取引、資金調達、手数料、ルールのための公開市場データ ツールとリソース。 |
+| 権限のクリア | 公開データ、アカウント読み取り、プレビュー、および制御された取引範囲を分離します。 |
+| より安全な実行 | プレビューファーストオーダーフロー、明示的な確認、冪等性、制限、および監査ログ。 |
+| クライアントの柔軟性 | さまざまな AI 環境のホスト MCP、ローカル MCP、CLI、リモート MCP、およびエージェント スキル。 |
+
+<h2 id="what-ai-hub-includes">AI Hub の内容</h2>
+
+<CardGroup cols={2}>
+<Card title="6MM CLI" icon="fa-duotone fa-terminal" href="/ja/ai-hub/cli">
+シェル コマンドを実行できる端末、スクリプト、およびコーディング エージェントへのコマンド ライン アクセス。
+</Card>
+<Card title="ローカル MCP" icon="fa-duotone fa-computer" href="/ja/ai-hub/local-mcp">
+ローカル MCP サーバーを実行して、ユーザーの資格情報がローカル マシンに残っている間に AI クライアントが 6MM ツールを呼び出せるようにします。
+</Card>
+<Card title="ホスト MCP" icon="fa-duotone fa-cloud" href="/ja/ai-hub/hosted-mcp">
+6MM がホストする MCP エンドポイントに接続して、インストール不要のパブリック マーケット データとルール コンテキストを取得します。
+</Card>
+<Card title="エージェントスキル" icon="fa-duotone fa-layer-group" href="/ja/ai-hub/agentic-skills">
+市場分析、ポートフォリオのレビュー、清算保護、実行計画のための再利用可能なワークフロー テンプレート。
+</Card>
+</CardGroup>
+
+<h2 id="setup-paths">セットアップパス</h2>
+
+| パス | こんな方に最適 | ユーザーが知っておくべきこと |
+| --- | --- | --- |
+| ホスト MCP | 公開市場データへの迅速なアクセス | インストールも公開データのユーザー API キーもありません。トレーディングは最初のリリースの目標ではありません。 |
+| ローカル MCP | プライベート アカウント コンテキストが必要な AI クライアント | MCP サーバーはローカルで実行され、資格情報はユーザーのマシンに残ります。 |
+| CLI | コーディングエージェント、スクリプト、および端末ユーザー | エージェントフレンドリーなコマンド出力を生成し、MCP サーバーなしで使用できます。 |
+| リモート MCP | 独自のエンドポイントを必要とする機関やチーム | ユーザーまたは機関は、ホスティング、資格情報、ネットワーク アクセス、およびログを制御します。 |
+| エージェントスキル | 反復可能なワークフロー | スキルは、承認されたツールを使用した分析とリスクのステップを通じて AI をガイドします。 |
+
+<h2 id="what-is-available-first">最初に利用できるもの</h2>
+
+AI Hub は、公開市場データと取引ルールのリソースから始める必要があります。
+
+- 市場。
+- ティッカー。
+- 本を注文する。
+- 取引。
+- クラインズ。
+- 資金調達率。
+- システムのステータス。
+- 手数料、契約仕様、証拠金ルール、リスク ルールのリソース。
+
+プライベートアカウントへのアクセスと取引は段階的に行う必要があります。
+
+- アカウント読み取りツールには、明示的な読み取り専用資格情報が必要です。
+- 注文のプレビューは、実際の注文を作成する前に行う必要があります。
+- 制御された取引には、権限スコープ、サービス側のリスク チェック、ユーザー確認、冪等性、および監査ログが必要です。
+
+<h2 id="start-here">ここから始めましょう</h2>
+
+<CardGroup cols={2}>
+<Card title="セットアップを選択してください" icon="fa-duotone fa-route" href="/ja/ai-hub/choose-a-setup">
+AI クライアント、セキュリティのニーズ、導入モデルに基づいて適切なパスを選択してください。
+</Card>
+<Card title="AI クライアント ガイド" icon="fa-duotone fa-laptop-code" href="/ja/ai-hub/client-guides">
+ChatGPT デスクトップ、Claude デスクトップ、Claude Code、Codex CLI、Cursor、Gemini CLI、VS Code、または Windsurf から始めます。
+</Card>
+<Card title="ホスト MCP" icon="fa-duotone fa-cloud" href="/ja/ai-hub/hosted-mcp">
+ローカルサーバーをインストールせずに公開市場データから始めます。
+</Card>
+<Card title="ローカル MCP" icon="fa-duotone fa-computer" href="/ja/ai-hub/local-mcp">
+プライベートアカウントコンテキストや将来の取引ツールが必要な場合は、ローカルサーバーを使用してください。
+</Card>
+</CardGroup>

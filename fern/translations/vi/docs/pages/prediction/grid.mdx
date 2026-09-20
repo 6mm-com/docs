@@ -1,0 +1,55 @@
+---
+title: "Lưới dự đoán"
+headline: "Lưới dự đoán | 6MM Dự đoán"
+description: "Đọc các ô giá và thời gian, hiểu kết quả dựa trên cảm ứng và tuân theo các điều kiện đã khóa của lệnh Lưới dự đoán."
+slug: prediction/grid
+canonical-url: https://docs.6mm.com/vi/prediction/grid
+---
+
+Lưới dự đoán hiển thị các khoảng giá theo chiều dọc và các cửa sổ thời gian trong tương lai theo chiều ngang. Việc chọn một ô sẽ tạo ra một đơn hàng độc lập cho khoảng thời gian và khoảng giá đó.
+
+## Đọc một ô
+
+| Chi tiết ô lưới | Nghĩa |
+| --- | --- |
+| Khoảng giá | Giới hạn giá dưới và trên |
+| Thời gian bắt đầu và kết thúc | Khoảng thời gian mà một lần chạm có thể đủ điều kiện |
+| hệ số thanh toán được cung cấp | Hệ số trả về được cung cấp cho ô đó |
+| Số tiền đặt cược | Số tiền cam kết cho đơn hàng đó |
+
+Lưới 10 hàng, 10 cột với hai giây trên mỗi cột sẽ bao gồm 20 giây. Đây là một ví dụ về đọc; sử dụng kích thước và thời gian tuyệt đối được hiển thị trong sản phẩm đang hoạt động.
+
+## Những gì được coi là một hit?
+
+Trong khoảng thời gian hợp lệ của ô, giá nhãn hiệu nền tảng phải nhập hoặc vượt qua khoảng giá của nó. Một cú chạm đủ điều kiện là đủ; giá không nhất thiết phải ở đó cho đến cuối cùng.
+
+| Ví dụ: 65.010–65.020 trong thời gian 10:00:04–10:00:06 | Giải thích kết quả |
+| --- | --- |
+| Lúc 10:00:05 giá lên tới 65.015 | Nhập khoảng thời gian trong cửa sổ |
+| Trong cửa sổ, giá di chuyển từ 65.005 đến 65.025 | Vượt qua khoảng cách |
+| Giá vẫn ở bên ngoài mà không vượt qua cửa sổ | Không có cú đánh đủ điều kiện |
+| Lần chạm đầu tiên xảy ra sau khi cửa sổ kết thúc | Quá muộn cho đơn hàng này |
+
+Giá ranh giới chính xác và dấu thời gian tuân theo quy tắc được chấp nhận. Nguồn cấp dữ liệu giá bị thiếu không phải là bằng chứng cho thấy giá chưa bao giờ chạm vào ô.
+
+## Cách tham gia
+
+1. Chọn một biểu tượng và kiểm tra trục thời gian và giá được hiển thị.
+2. Chọn một ô có sẵn và số tiền trong giới hạn của nó.
+3. Xác nhận giới hạn ô, cửa sổ hợp lệ, tỷ lệ cược và khoản thanh toán dự kiến.
+4. Kiểm tra đơn hàng được chấp nhận. Khoảng giá, cửa sổ hợp lệ và tỷ lệ cược của nó vẫn bị khóa ngay cả khi lưới trực tiếp di chuyển.
+5. Theo dõi kết quả và quyết toán thực tế trong lịch sử đơn hàng.
+
+## Tỷ lệ cược và các ô không có sẵn
+
+Mô hình định giá ước tính xác suất chạm vào khoảng thời gian trong cửa sổ từ giá đánh dấu, độ biến động và ranh giới giá/thời gian. Báo giá mô hình dựa trên tỷ lệ lợi nhuận mục tiêu chia cho xác suất trúng ước tính, tuân theo các quy tắc đã định cấu hình.
+
+Ví dụ: 97% chia cho 20% được 4,85x. Đơn hàng 100 USDT chiến thắng được khóa ở mức 4,85 lần có tổng khoản thanh toán là 485 USDT. Nhãn tròn không biện minh cho việc thay đổi hệ số nhân được lưu trữ.
+
+Theo quy tắc lưới đã định cấu hình, báo giá được tính toán trên mức tối đa sẽ khiến ô không khả dụng thay vì giảm báo giá đó xuống mức tối đa. Những hạn chế khác cũng có thể ngăn cản sự chấp nhận.
+
+## Bằng chứng giá bị gián đoạn
+
+Nếu nguồn cấp dữ liệu bị gián đoạn trong khoảng thời gian hợp lệ và không thể thiết lập lượt truy cập, đơn hàng sẽ chuyển sang xử lý ngoại lệ hoặc xử lý hoàn tiền. Không suy ra thua lỗ từ một đoạn biểu đồ trống.
+
+Nhìn thấy [Nguồn giá](/vi/prediction/price-source), [Cơ chế tỷ lệ cược](/vi/prediction/odds), Và [Hoàn tiền và ngoại lệ](/vi/prediction/refunds-exceptions).

@@ -1,0 +1,47 @@
+---
+title: "Modelo de segurança"
+subtitle: "Compreender o modelo de permissões, a postura de segurança padrão e as proteções comerciais para o acesso assistido AI-."
+slug: ai-hub/security-model
+canonical-url: https://docs.6mm.com/pt-PT/ai-hub/security-model
+---
+
+> **Planeado – ainda não lançado**
+> O AI Hub é um recurso planeado. As características, terminais, comandos e definições do cliente nesta página descrevem o design proposto e não estão atualmente disponíveis. A disponibilidade final e as instruções de configuração serão anunciadas no lançamento.
+
+
+O acesso comercial assistido por IA deve ser mais seguro do que a automatização comum porque a intenção do utilizador é expressa em linguagem natural.
+
+<h2 id="required-permission-scopes">Escopos de permissão necessários</h2>
+
+| Âmbito | Permite |
+| --- | --- |
+| mercado: ler | Dados de mercado público e recursos de regras. |
+| conta: leia | Saldos, posições, pedidos em aberto, preenchimentos e resumos de contas. |
+| ordem:escrever | Criação, alteração e cancelamento de encomendas. |
+
+<h2 id="default-safety-posture">Postura de segurança padrão</h2>
+
+- Padrão para leitura apenas.
+- Padrão para testnet.
+- Não exponha levantamentos ou transferências através de ferramentas de IA.
+- Exigir visualização antes de criar.
+- Exija confirmação explícita antes da negociação na mainnet.
+- Utilize chaves de idempotência para ações comerciais.
+- Aplicar limites máximos nocionais e de alavancagem.
+- Mantenha registos de auditoria completos.
+
+<h2 id="controlled-trading-flow">Fluxo de negociação controlado</h2>
+
+```text
+User natural language intent
+  -> AI maps intent to tool parameters
+  -> 6mm_preview_order validates the order
+  -> service returns risk checks and margin impact
+  -> user explicitly confirms
+  -> 6mm_create_order submits the order
+  -> audit log records the full flow
+```
+
+<h2 id="prompt-injection-protection">Proteção imediata contra injeção</h2>
+
+Os clientes de IA e os servidores MCP devem tratar o conteúdo externo como não fiável. As páginas de mercado, textos copiados, documentos e conteúdos web não devem substituir as permissões das ferramentas, as regras de confirmação ou os limites de negociação.

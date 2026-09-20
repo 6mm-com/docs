@@ -1,13 +1,13 @@
 ---
 title: "Sürekli İşlem Ücreti Yapısı"
-description: "U-marjlı sürekli sözleşmeler için 6MM yapıcı, alıcı, finansman, tasfiye ve uzlaşma ücreti modeline referans verin."
+description: "Bu sayfada, ortak veya beyaz etiketli platformların kullanıcıları için geçerli olan alım satım, fonlama, tasfiye ve uzlaşma kuralları açıklanmaktadır."
 slug: trading/fee-structure
 canonical-url: https://docs.6mm.com/tr/trading/fee-structure
 ---
 
-6MM , U-marjlı sürekli sözleşmeler için şeffaf ve icra temelli bir ücret modeli uygular.
+6MM, ticari kullanıcılardan doğrudan ticaret ücretleri veya fonlama ücretleri talep etmez. Kullanıcı alım satım ücretleri, iş ortaklarının veya beyaz etiketli platformun kurallarına uygundur. 6MM, iş ortakları veya beyaz etiketli platformlarla üzerinde anlaşmaya varılan gelir paylaşımı düzenlemeleri yoluyla hizmet geliri elde ediyor.
 
-Ücretler yalnızca işlemler yürütüldüğünde alınır ve piyasa likiditesi ile işlem davranışıyla uyumlu şekilde tasarlanmıştır.
+İşlem ücretleri gerçekleştirilen işlemler üzerinden hesaplanır. Finansman ödemeleri, sözleşme fonlama oranına ve planlı uzlaşma kurallarına göre yapılır; tasfiyeyle ilgili masraflar geçerli tasfiye kurallarına uygundur.
 
 Bu sayfa, ücret kategorileri ve uzlaşma için referans olarak nitelendirilmiştir. Sipariş defteri derinliği ve uygulama fiyatının toplam işlem maliyetini nasıl etkilediğini anlamak için bakınız. [Ticaret Maliyetleri: Ücretler ve Kayma](/tr/trading/fees-and-slippage).
 
@@ -18,10 +18,10 @@ Bu sayfa, ücret kategorileri ve uzlaşma için referans olarak nitelendirilmiş
 6MM üzerindeki işlem ücretleri şu temellere göre hesaplanır:
 
 * Gerçekleştirilen ticaret değeri
-* Emir türü (Yapan veya Alan)
+* Yürütme rolü (Yapıcı veya Alıcı)
 * Ticaret çifti ve partner yapılandırması
 
-Doldurulmamış veya iptal edilen emirler herhangi bir ücret talep etmez.
+Bir emrin doldurulmayan kısmı için herhangi bir işlem ücreti alınmaz. Bir emrin kısmen yerine getirilmesi ve ardından iptal edilmesi durumunda, yerine getirilen kısmı geçerli işlem ücretine tabi olmaya devam eder; iptal bu ücreti geri almaz.
 
 Uygulanan bir büyüklük için genel hesaplama şöyledir:
 
@@ -33,6 +33,8 @@ trading fee = executed notional × applicable maker or taker fee rate
 Uygulanabilir oran, işlem çifti ve partner konfigürasyonuna bağlıdır. Sipariş vermeden önce gösterilen oranı onaylayın.
 
 ***
+
+Maker ve Taker, emir türünü değil, her bir işlemin rolünü tanımlar. Anında gerçekleştirilen bir limit emri Taker olarak ücretlendirilebilir; Emir defterinde bulunan ve daha sonra pasif olarak doldurulan kısım, geçerli Maker kurallarına uyar. Bir emrin farklı doldurmaları farklı yürütme rollerine sahip olabilir.
 
 <h2 id="maker-fees">Maker Ücretleri</h2>
 
@@ -65,7 +67,7 @@ Alıcı ücretleri genellikle anında uygulandığı için daha yüksektir.
 İşlem ücretlerine ek olarak, sürekli sözleşmeler finansman ödemelerini de içerir.
 
 * Fonlama ücretleri uzun ve kısa pozisyonlar arasında değiş tokuş edilir
-* 6MM fon ücreti toplamaz
+* 6MM finansman ücreti talep etmez. Finansman ödemeleri sözleşme kurallarına göre yapılır ve işlem ücretlerinden ayrı olarak kaydedilir. Hesap fonlama-ödeme kayıtlarına ve bağlantılı bakiye işlemlerine göre yönü, tutarı ve mutabakat sonucunu kontrol edin.
 * Fonlama oranları piyasa koşullarına göre değişir
 
 Fonlama ödemeleri, sözleşme fiyatlarının spot piyasa ile uyumlu tutulmasına yardımcı olur.
@@ -87,7 +89,7 @@ Tasfiye gerçekleştiğinde:
 
 * Ücretler stablecoinlerde (örneğin USDT) tas edilir
 * Ücretler doğrudan Sürekli Hesaptan düşülür
-* Ücret hesaplamaları uygulamada gerçek zamanlı olarak gerçekleşir
+* İşlem ücretleri gerçekleştirilen işlemler üzerinden hesaplanır; finansman ödemeleri ve tasfiyeyle ilgili masraflar, ilgili ödeme kurallarına tabidir.
 
 ***
 
@@ -103,7 +105,7 @@ Tasfiye gerçekleştiğinde:
 
 <h2 id="beginner-tips">Başlangıç İpuçları</h2>
 
-* Alıcı ücretlerini azaltmak için limit emirleri kullanın
+* Yürütme rolünü ve geçerli ücret oranını kontrol edin; Limit emri vermek Maker ücretlerini garanti etmez.
 * Aşırı aşırı ticaretten kaçının
 * TP/SL seviyelerini hesaplarken ücretleri göz önünde bulundurun
 * Büyük pozisyonlar açmadan önce ücret oranlarını gözden geçirin
@@ -116,7 +118,7 @@ Tasfiye gerçekleştiğinde:
 
 * Ücretler yürütme temelli ve şeffaftır
 * Maker ve alıcı modelleri sağlıklı likiditeyi destekler
-* Fonlama ücretleri eşler arasıdır, platform geliri değildir
+* 6MM finansman ücreti talep etmez. Finansman ödemeleri sözleşme kurallarına göre yapılır ve işlem ücretlerinden ayrı olarak kaydedilir. Hesap fonlama-ödeme kayıtlarına ve bağlantılı bakiye işlemlerine göre yönü, tutarı ve mutabakat sonucunu kontrol edin.
 
 Ücret yapısını anlamak, kullanıcıların daha verimli ve sürdürülebilir işlem yapmalarına yardımcı olur.
 

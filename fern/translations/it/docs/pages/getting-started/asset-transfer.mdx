@@ -1,94 +1,48 @@
 ---
 title: "Trasferimento di beni"
-description: "Scopri come gli asset si muovono tra i sistemi partner e i conti di trading 6MM , inclusi le responsabilità di trasferimento, la gestione dello stato e i controlli operativi."
+description: "Scopri come le risorse si spostano tra i sistemi partner e i conti di trading 6MM, comprese le responsabilità di trasferimento, la gestione dello stato e i controlli operativi."
 slug: trading/getting-started/asset-transfer
 canonical-url: https://docs.6mm.com/it/trading/getting-started/asset-transfer
 ---
 
-6MM opera secondo un modello di flusso di asset gestito dai partner.
+Questa guida spiega il percorso di finanziamento per la negoziazione di contratti perpetui. Il conto di finanziamento contiene i fondi disponibili per l'allocazione; il conto perpetuo contiene il margine contrattuale e i saldi di regolamento. Per questo percorso non è richiesto un conto spot.
 
-6MM non accetta depositi diretti o prelievi da parte degli utenti finali.
+<h2 id="partner-managed-deposits-and-withdrawals">Finanziamenti attraverso la tua piattaforma</h2>
 
-Tutti gli afflussi e uscite di fondi degli utenti sono gestiti esclusivamente da agenti autorizzati o piattaforme partner.
+Per le integrazioni dei partner API / SDK, seguire il processo di assegnazione del saldo e finanziamento della piattaforma partner. Per le distribuzioni white-label, depositi e prelievi seguono il processo del fornitore di portafoglio configurato sulla piattaforma; i depositi confermati vengono accreditati sul conto di finanziamento e i prelievi utilizzano quel conto.
 
-Questo design garantisce una chiara separazione tra responsabilità finanziaria, ambito normativo e proprietà degli utenti tra 6MM e i suoi partner.
+Controlla il metodo di finanziamento disponibile nella tua piattaforma. Un trasferimento di conto interno è separato da un deposito o prelievo.
 
-***
+<h2 id="account-structure-within-6mm">Conti utilizzati per il trading perpetuo</h2>
 
-<h2 id="partner-managed-deposits-and-withdrawals">Depositi e Prelievi gestiti dai Partner</h2>
+| Account | Scopo |
+| --- | --- |
+| <span style={{ whiteSpace: "nowrap" }}>Conto di finanziamento</span> | Detiene i fondi per l'allocazione e riceve i fondi ritrasferiti dal conto perpetuo. Utilizza il saldo disponibile quando prepari un trasferimento. |
+| <span style={{ whiteSpace: "nowrap" }}>Conto perpetuo</span> | Detiene i fondi utilizzati per il margine contrattuale e la liquidazione. Controlla il patrimonio del conto, l'utilizzo del margine e i profitti e le perdite non realizzati prima di negoziare o trasferire. |
 
-* Gli utenti depositano e prelevano fondi solo tramite la piattaforma partner
-* 6MM non fornisce indirizzi di deposito on-chain o off-chain agli utenti finali
-* 6MM non custodisce o liquida direttamente i fondi degli utenti al di fuori dell'esecuzione delle operazioni
+<h2 id="automated-balance-transfer-to-6mm">Preparare un trasferimento</h2>
 
-I partner rimangono pienamente responsabili di:
+1. Conferma l'utente, la risorsa e la direzione del trasferimento.
+2. Controlla il saldo disponibile del conto di origine ed eventuali restrizioni sul conto.
+3. Invia tramite la voce di trasferimento supportata dalla piattaforma o l'integrazione autorizzata.
+4. Conferma il risultato del trasferimento e il saldo di destinazione prima di effettuare un ordine.
 
-* Gestione dell'equilibrio utente
-* Elaborazione di depositi e prelievi
-* Conformità e controlli dei rischi relativi alla custodia dei fondi
+<h2 id="internal-transfers-between-accounts">Trasferimento tra finanziamenti e conti perpetui</h2>
 
-***
+- Prima della negoziazione: trasferire l'asset di liquidazione richiesto dal conto di deposito al conto perpetuo.
+- Dopo il regolamento: trasferire l'importo disponibile per il prelievo dal conto perpetuo al conto di deposito.
+- I trasferimenti di conto sono movimenti di saldo interno, non transazioni on-chain.
+- L'utilizzo del margine, gli ordini aperti, le posizioni e le restrizioni del conto possono influire sull'importo disponibile per il trasferimento. Utilizza l'importo e il risultato mostrati dalla piattaforma.
 
-<h2 id="automated-balance-transfer-to-6mm">Trasferimento automatico del saldo a 6MM</h2>
+<h2 id="design-principles">Controlla lo stato e riconcilia i saldi</h2>
 
-Per abilitare il trading, gli utenti possono trasferire una parte del saldo gestito dai partner nel 6MM tramite un meccanismo interno automatico di trasferimento.
+Una richiesta inviata non conferma di per sé il completamento. Controlla l'ID del trasferimento, lo stato, la risorsa, l'importo, il conto di origine e il conto di destinazione. Se l'elaborazione fallisce o rimane irrisolta, controlla i record del saldo e contatta il supporto della piattaforma prima di inviare un'altra richiesta.
 
-Le caratteristiche chiave di questo processo di trasferimento includono:
+Non dare per scontato che tutti i saldi possano essere trasferiti liberamente o che ogni trasferimento sia istantaneo o gratuito. Seguire le condizioni visualizzate sulla piattaforma e il risultato finale dell'elaborazione.
 
-* I trasferimenti vengono avviati e autorizzati dal sistema partner
-* Il processo viene eseguito automaticamente a livello infrastrutturale
-* Non è richiesta alcuna interazione manuale dell'utente con 6MM
-* I trasferimenti avvengono in tempo reale o quasi in tempo reale
+<h2 id="implementation-and-safety-guides">Guide all'implementazione e alla sicurezza</h2>
 
-Dal punto di vista dell'utente, questo processo appare come un'allocazione equilibrata senza soluzione di continuità, piuttosto che come un deposito tradizionale.
-
-***
-
-<h2 id="account-structure-within-6mm">Struttura del conto all'interno di 6MM</h2>
-
-All'interno di 6MM, i beni trasferiti sono logicamente assegnati in due conti interni distinti:
-
-**Account Spot**
-
-* Serve come conto di ricezione iniziale per i fondi trasferiti
-* Agisce come pool di asset per la gestione interna del capitale
-* Non supporta attività di trading diretto
-
-**Conto Perpetuo**
-
-* I fondi vengono trasferiti dal Conto Spot al Conto Perpetuo
-* Solo gli asset nel Conto Perpetuo possono essere utilizzati per il piazzamento degli ordini
-* Margine, posizioni e PnL non realizzati sono calcolati a questo livello
-
-Questa struttura a due livelli consente un isolamento preciso del capitale, efficienza dei margini e controllo del rischio per il trading perpetuo.
-
-***
-
-<h2 id="internal-transfers-between-accounts">Trasferimenti interni tra conti</h2>
-
-* I fondi trasferiti nel Conto Spot possono essere allocati liberamente e istantaneamente al Conto Perpetuo
-* I trasferimenti interni vengono elaborati senza interazione con la blockchain
-* I trasferimenti sono progettati per essere a bassa latenza e deterministici
-
-Questa architettura garantisce un movimento fluido del capitale mantenendo una rigida separazione tra la custodia degli asset ed esecuzione delle operazioni.
-
-***
-
-<h2 id="design-principles">Principi di progettazione</h2>
-
-Il sistema di trasferimento degli asset di 6MM si basa sui seguenti principi:
-
-* Nessun deposito diretto o prelievo da parte degli utenti al 6MM
-* Tutta la custodia dei beni rimane con le piattaforme partner
-* Allocazione automatizzata e autorizzata dai partner
-* Chiara separazione tra conti spot e perpetui
-* Ottimizzato per l'efficienza del trading e l'isolamento del rischio
-
-Attraverso questo modello, 6MM opera come uno strato puramente infrastrutturale di trading, mentre i partner mantengono il pieno controllo sui fondi degli utenti e sulle relazioni finanziarie.
-
-<h2 id="implementation-and-safety-guides">Implementazione e guide di sicurezza</h2>
-
-- [Agent SDK Panoramica](/it/sdk/agent-sdk/overview): binding utente, trasferimenti, query degli ordini e riconciliazione.
-- [Webhooks & Idempotency](/it/sdk/security/webhooks-idempotency): verifica i callback a stato finale e deduplica i tentativi di ripetizione.
-- [Matrice di Responsabilità del Partner](/it/security-compliance/partner-responsibilities): custodia e proprietà operativa.
-- [Rischio e Liquidazioni](/it/trading/risk-and-liquidations): comprendere come l'allocazione dei conti di trading influisce sul rischio.
+- [Agent SDK Panoramica](/it/sdk/agent-sdk/overview): associazione utenti, trasferimenti e riconciliazione.
+- [Webhooks e idempotenza](/it/sdk/security/webhooks-idempotency): verifica della richiamata e gestione delle richieste duplicate.
+- [Matrice della responsabilità del partner](/it/security-compliance/partner-responsibilities): integrazione e responsabilità operative.
+- [Rischio e liquidazioni](/it/trading/risk-and-liquidations): margine e rischio del conto.

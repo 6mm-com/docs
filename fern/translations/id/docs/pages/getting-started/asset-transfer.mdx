@@ -1,94 +1,48 @@
 ---
-title: "Transfer Aset"
-description: "Pelajari bagaimana aset berpindah antara sistem mitra dan akun trading 6MM , termasuk tanggung jawab transfer, penanganan status, dan pemeriksaan operasional."
+title: "Peralihan Aset"
+description: "Pelajari bagaimana aset berpindah antara sistem mitra dan 6MM akun perdagangan, termasuk tanggung jawab transfer, penanganan status, dan pemeriksaan operasional."
 slug: trading/getting-started/asset-transfer
 canonical-url: https://docs.6mm.com/id/trading/getting-started/asset-transfer
 ---
 
-6MM beroperasi di bawah model aliran aset yang dikelola mitra.
+Panduan ini menjelaskan jalur pendanaan untuk perdagangan kontrak perpetual. Rekening pendanaan menyimpan dana yang tersedia untuk dialokasikan; akun perpetual menyimpan margin kontrak dan saldo penyelesaian. Akun spot tidak diperlukan untuk rute ini.
 
-6MM tidak menerima setoran langsung atau penarikan dari pengguna akhir.
+<h2 id="partner-managed-deposits-and-withdrawals">Pendanaan melalui platform Anda</h2>
 
-Semua arus masuk dan keluar dana pengguna ditangani secara eksklusif oleh agen resmi atau platform mitra.
+Untuk integrasi mitra API / SDK, ikuti proses alokasi saldo dan pendanaan platform mitra. Untuk penerapan label putih, penyetoran dan penarikan mengikuti proses penyedia dompet yang dikonfigurasi pada platform; setoran yang dikonfirmasi dikreditkan ke akun pendanaan dan penarikan menggunakan akun itu.
 
-Desain ini memastikan pemisahan yang jelas antara tanggung jawab keuangan, cakupan regulasi, dan kepemilikan pengguna antara 6MM dan mitranya.
+Periksa metode pendanaan yang tersedia di platform Anda. Transfer rekening internal terpisah dari deposit atau penarikan.
 
-***
+<h2 id="account-structure-within-6mm">Akun yang digunakan untuk perdagangan abadi</h2>
 
-<h2 id="partner-managed-deposits-and-withdrawals">Setoran dan Penarikan yang Dikelola Mitra</h2>
+| Akun | Tujuan |
+| --- | --- |
+| <span style={{ whiteSpace: "nowrap" }}>Akun pendanaan</span> | Menyimpan dana untuk alokasi dan menerima dana yang ditransfer kembali dari rekening abadi. Gunakan saldo yang tersedia saat mempersiapkan transfer. |
+| <span style={{ whiteSpace: "nowrap" }}>Akun abadi</span> | Menyimpan dana yang digunakan untuk margin dan penyelesaian kontrak. Periksa ekuitas akun, penggunaan margin, dan keuntungan dan kerugian yang belum direalisasi sebelum diperdagangkan atau ditransfer keluar. |
 
-* Pengguna hanya menyetor dan menarik dana melalui platform mitra
-* 6MM tidak menyediakan alamat deposit on-chain atau off-chain kepada pengguna akhir
-* 6MM tidak secara langsung menyimpan atau menyelesaikan dana pengguna di luar eksekusi perdagangan
+<h2 id="automated-balance-transfer-to-6mm">Siapkan transfernya</h2>
 
-Mitra tetap bertanggung jawab penuh untuk:
+1. Konfirmasikan pengguna, aset, dan arah transfer.
+2. Periksa saldo akun sumber yang tersedia dan batasan akun apa pun.
+3. Kirim melalui entri transfer yang didukung platform atau integrasi resmi.
+4. Konfirmasikan hasil transfer dan saldo tujuan sebelum melakukan pemesanan.
 
-* Manajemen saldo pengguna
-* Pemrosesan deposit dan penarikan
-* Kepatuhan dan kontrol risiko terkait kustodi dana
+<h2 id="internal-transfers-between-accounts">Transfer antara pendanaan dan akun abadi</h2>
 
-***
+- Sebelum berdagang: transfer aset penyelesaian yang diperlukan dari akun pendanaan ke akun abadi.
+- Setelah penyelesaian: transfer jumlah yang tersedia untuk penarikan dari akun abadi kembali ke akun pendanaan.
+- Transfer akun adalah pergerakan saldo internal, bukan transaksi on-chain.
+- Penggunaan margin, order terbuka, posisi, dan batasan akun dapat memengaruhi jumlah yang tersedia untuk ditransfer. Gunakan jumlah dan hasil yang ditunjukkan oleh platform.
 
-<h2 id="automated-balance-transfer-to-6mm">Transfer Saldo Otomatis ke 6MM</h2>
+<h2 id="design-principles">Periksa status dan rekonsiliasi saldo</h2>
 
-Untuk memungkinkan perdagangan, pengguna dapat mentransfer sebagian saldo yang dikelola mitra ke 6MM melalui mekanisme transfer internal otomatis.
+Permintaan yang diajukan tidak dengan sendirinya mengonfirmasi penyelesaian. Periksa ID transfer, status, aset, jumlah, rekening sumber dan rekening tujuan. Jika pemrosesan gagal atau masih belum terselesaikan, periksa catatan saldo dan hubungi dukungan platform sebelum mengirimkan permintaan lain.
 
-Karakteristik utama dari proses transfer ini meliputi:
-
-* Transfer diinisiasi dan diotorisasi oleh sistem mitra
-* Proses dijalankan secara otomatis di tingkat infrastruktur
-* Tidak diperlukan interaksi manual pengguna dengan 6MM
-* Transfer terjadi secara real time atau hampir real time
-
-Dari sudut pandang pengguna, proses ini tampak sebagai alokasi saldo yang mulus, bukan setoran tradisional.
-
-***
-
-<h2 id="account-structure-within-6mm">Struktur Akun Dalam 6MM</h2>
-
-Dalam 6MM, aset yang dipindahkan secara logis dialokasikan ke dalam dua akun internal yang berbeda:
-
-**Akun Spot**
-
-* Berfungsi sebagai akun penerima awal untuk dana yang ditransfer
-* Berfungsi sebagai kumpulan aset untuk manajemen modal internal
-* Tidak mendukung aktivitas perdagangan langsung
-
-**Akun Abadi**
-
-* Dana dipindahkan dari Akun Spot ke Akun Perpetual
-* Hanya aset di Akun Perpetual yang dapat digunakan untuk penempatan pesanan
-* Margin, posisi, dan PnL yang belum direalisasikan dihitung pada tingkat ini
-
-Struktur dua lapis ini memungkinkan isolasi modal yang presisi, efisiensi margin, dan pengendalian risiko untuk perdagangan abadi.
-
-***
-
-<h2 id="internal-transfers-between-accounts">Transfer internal antar akun</h2>
-
-* Dana yang ditransfer ke Akun Spot dapat dialokasikan secara bebas dan instan ke Akun Perpetual
-* Transfer internal diproses tanpa interaksi blockchain
-* Transfer dirancang agar berlatensi rendah dan deterministik
-
-Arsitektur ini memastikan pergerakan modal yang lancar sambil mempertahankan pemisahan ketat antara penyimpanan aset dan eksekusi perdagangan.
-
-***
-
-<h2 id="design-principles">Prinsip Desain</h2>
-
-Sistem transfer aset 6MM dibangun berdasarkan prinsip-prinsip berikut:
-
-* Tidak ada setoran atau penarikan langsung pengguna pada 6MM
-* Semua kustodi aset tetap berada di platform mitra
-* Alokasi dana otomatis yang diotorisasi oleh mitra
-* Pemisahan yang jelas antara akun Spot dan Perpetual
-* Dioptimalkan untuk efisiensi trading dan isolasi risiko
-
-Melalui model ini, 6MM beroperasi sebagai lapisan infrastruktur perdagangan murni, sementara mitra tetap memegang kendali penuh atas dana pengguna dan hubungan keuangan.
+Jangan berasumsi bahwa semua saldo dapat ditransfer secara bebas, atau bahwa setiap transfer dilakukan secara instan atau bebas biaya. Ikuti kondisi yang ditampilkan platform dan hasil pemrosesan akhir.
 
 <h2 id="implementation-and-safety-guides">Panduan implementasi dan keselamatan</h2>
 
-- [Agent SDK Ikhtisar](/id/sdk/agent-sdk/overview): pengikatan pengguna, transfer, kueri pesanan, dan rekonsiliasi.
-- [Webhooks & Idempotensi](/id/sdk/security/webhooks-idempotency): verifikasi callback status akhir dan retries deduplikasi.
-- [Matriks Tanggung Jawab Mitra](/id/security-compliance/partner-responsibilities): hak asuh dan kepemilikan operasional.
-- [Risk & Liquidations](/id/trading/risk-and-liquidations): memahami bagaimana alokasi akun trading memengaruhi risiko.
+- [Agent SDK Ikhtisar](/id/sdk/agent-sdk/overview): pengikatan pengguna, transfer dan rekonsiliasi.
+- [Webhooks & Idempotensi](/id/sdk/security/webhooks-idempotency): verifikasi panggilan balik dan penanganan permintaan duplikat.
+- [Matriks Tanggung Jawab Mitra](/id/security-compliance/partner-responsibilities): integrasi dan tanggung jawab operasional.
+- [Risiko & Likuidasi](/id/trading/risk-and-liquidations): margin dan risiko akun.

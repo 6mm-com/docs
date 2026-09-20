@@ -28,9 +28,9 @@ Esta seção explica o fluxo de trabalho central de negociação e os principais
 
 <h2 id="market-order">Ordem de Mercado</h2>
 
-* Executa imediatamente pelo melhor preço disponível de mercado
-* Prioriza a velocidade de execução em detrimento da precisão do preço
-* Adequado para entrada ou saída rápida
+Uma ordem de mercado busca a execução contra a liquidez disponível aos melhores preços disponíveis. A execução depende da profundidade do livro de ordens e das restrições de negociação: a ordem pode ser executada com vários preços, ser preenchida parcialmente ou não ser concluída. Verifique o status real do pedido e os preenchimentos.
+
+***
 
 <h2 id="limit-order">Ordem Limitada</h2>
 
@@ -46,6 +46,8 @@ Esta seção explica o fluxo de trabalho central de negociação e os principais
 > disponibilidade de ordens pode variar conforme o par de negociação e o modo de integração.
 
 ***
+
+Envio significa que uma solicitação de pedido foi enviada; aceitação, acionamento e execução são estados separados. Uma ordem de mercado acionada depende da liquidez disponível. Uma ordem com limite acionada também deve satisfazer seu preço limite e pode permanecer não preenchida.
 
 <h2 id="leverage-and-margin">Alavancagem e Margem</h2>
 
@@ -69,9 +71,7 @@ Contratos perpétuos utilizam um mecanismo de taxa de financiamento para manter 
 * Se a taxa de financiamento for negativa:
   * Posições curtas pagam longos
 
-As taxas de financiamento são trocadas diretamente entre os traders.
-
-6MM não arrecada pagamentos de financiamento como receita.
+6MM não cobra taxas de financiamento. Os pagamentos de financiamento são liquidados de acordo com as regras contratuais e registrados separadamente das taxas de negociação. Verifique a direção, o valor e o resultado da liquidação em relação aos registros de pagamento de financiamento da conta e às transações de saldo vinculadas.
 
 ***
 
@@ -84,7 +84,7 @@ As taxas de financiamento são trocadas diretamente entre os traders.
   * Ordens do fabricante
   * Ordens de recebedor
 
-As tabelas de taxas são definidas pela plataforma parceira e podem variar.
+As taxas Maker/Taker aplicáveis ​​seguem as regras do parceiro ou plataforma de marca branca e podem variar de acordo com o par de negociação e a configuração.
 
 <h2 id="slippage">Deslizamento</h2>
 
@@ -109,12 +109,7 @@ Os usuários podem reduzir o slippage usando ordens limitadas e gerenciando o ta
 
 <h2 id="risk-management-and-liquidation">Gestão de Riscos e Liquidação</h2>
 
-* 6MM monitora as razões de margem em tempo real
-* Quando a margem cai abaixo do limiar de manutenção:
-  * As posições podem ser parcial ou totalmente liquidadas
-* Os preços de liquidação são calculados usando o preço de marca, e não o último preço negociado
-
-Esse mecanismo ajuda a reduzir liquidações desnecessárias causadas pela volatilidade do mercado de curto prazo.
+Monitore o patrimônio da conta ou posição, os requisitos de margem de manutenção e os indicadores de risco da plataforma. Se as condições de liquidação aplicáveis ​​forem cumpridas, as posições poderão ser reduzidas parcialmente ou totalmente encerradas. Verifique a posição restante real e os registros de saldo em vez de comparar uma porcentagem diretamente com um valor de margem.
 
 ***
 

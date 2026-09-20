@@ -1,0 +1,47 @@
+---
+title: "安全模型"
+subtitle: "瞭解 AI 輔助接入的權限模型、默認安全姿態和交易風控邊界。"
+slug: ai-hub/security-model
+canonical-url: https://docs.6mm.com/zh-TW/ai-hub/security-model
+---
+
+> **規劃中 · 尚未上線**
+> AI Hub 為規劃內容。本頁中的功能、服務地址、命令及客戶端配置用於說明擬定方案，目前尚未開放使用。實際開放範圍與接入方式以上線公告為準。
+
+
+AI 輔助交易接入必須比普通自動化更安全，因為用戶意圖通常通過自然語言表達。
+
+<h2 id="required-permission-scopes">必需權限範圍</h2>
+
+| Scope | 允許能力 |
+| --- | --- |
+| market:read | 公開行情和規則資源。 |
+| account:read | 餘額、倉位、當前委託、成交和賬戶摘要。 |
+| order:write | 創建、修改和撤銷訂單。 |
+
+<h2 id="default-safety-posture">默認安全姿態</h2>
+
+- 默認只讀。
+- 默認測試網。
+- 不通過 AI 工具暴露提現或劃轉。
+- create 前必須預覽。
+- Mainnet 交易前必須明確確認。
+- 交易動作使用冪等鍵。
+- 設置最大訂單金額和槓桿限制。
+- 保留完整審計日誌。
+
+<h2 id="controlled-trading-flow">受控交易流程</h2>
+
+```text
+User natural language intent
+  -> AI maps intent to tool parameters
+  -> 6mm_preview_order validates the order
+  -> service returns risk checks and margin impact
+  -> user explicitly confirms
+  -> 6mm_create_order submits the order
+  -> audit log records the full flow
+```
+
+<h2 id="prompt-injection-protection">提示詞注入防護</h2>
+
+AI 客戶端和 MCP 服務應將外部內容視為不可信。市場頁面、複製文本、文檔和網頁內容不能覆蓋工具權限、確認規則或交易限制。

@@ -1,107 +1,57 @@
 ---
-title: "Acceso a cuentas de trading"
-description: "Entiende el modelo de registro y acceso a cuentas gestionado por socios que se usa para conectar a los usuarios con 6MM trading, preservando los límites de responsabilidad."
+title: "Acceso a la cuenta comercial"
+description: "Comprenda el acceso a cuentas para integraciones de socios y plataformas de marca blanca, incluido el inicio de sesión, la administración de cuentas y la preparación para el comercio perpetuo."
 slug: trading/getting-started/authentication
 canonical-url: https://docs.6mm.com/es-419/trading/getting-started/authentication
 ---
 
-6MM adopta un modelo de registro y acceso gestionado por socios, diseñado para equilibrar una experiencia de usuario fluida con una clara separación entre la propiedad del usuario y la responsabilidad de la plataforma.
+6MM admite dos modelos de acceso a cuentas: integración con un sistema de socios y una plataforma de marca blanca. Utilice la entrada proporcionada por su plataforma. La creación de cuentas, la autenticación y la gestión de perfiles dependen del modelo seleccionado.
 
-* 6MM no proporciona auto-registro público.
-* Toda la incorporación de usuarios es iniciada y gestionada exclusivamente por agentes autorizados o plataformas asociadas.
+<h2 id="registration-model">Elige tu modelo de cuenta</h2>
 
-***
+| Área | Integración de socios | Plataforma de marca blanca |
+| --- | --- | --- |
+| Fuente de la cuenta | El usuario tiene una cuenta en el sistema de socios, que vincula o sincroniza al usuario comercial. | El usuario pertenece al sistema de cuentas de la plataforma de marca blanca. |
+| Entrada de acceso | La aplicación, el sitio web o la entrada comercial integrada del socio. | El dominio de marca y la página de inicio de sesión de la plataforma de marca blanca. |
+| Autenticación | El socio verifica al usuario y su backend obtiene la credencial de acceso comercial requerida. | El inicio de sesión, la verificación y la seguridad de la cuenta siguen la configuración habilitada de la plataforma. |
+| Gestión de cuentas | El socio gestiona su perfil de usuario; el sistema de comercio mantiene el mapeo de usuarios y los registros comerciales requeridos. | El sistema de cuentas de marca blanca y los administradores autorizados administran los perfiles de usuario, el estado de la cuenta y la configuración de seguridad. |
 
-<h2 id="registration-model">Modelo de Registro</h2>
+<h2 id="login-method-1-partner-embedded-access">Integración de socios</h2>
 
-<h2 id="partner-only-registration">Registro solo para socios</h2>
+1. Inicie sesión a través del sistema de cuenta del socio.
+2. El backend del socio verifica la sesión y vincula o identifica al usuario comercial correspondiente.
+3. El backend obtiene la credencial de acceso comercial o entrada URL requerida a través de la integración admitida.
+4. Abra la interfaz comercial integrada o la entrada comercial autorizada proporcionada por el socio.
 
-6MM soporta un solo modelo de registro:
+El acceso a la cuenta no hace que los fondos estén disponibles por sí solos para operar. Siga el proceso de financiación del socio y confirme el saldo disponible de la cuenta perpetua antes de realizar un pedido.
 
-* Los usuarios solo están registrados a través de agentes o plataformas asociadas
-* No hay inscripción directa de registro en 6MM
-* La identidad del usuario, la creación de cuentas y la gestión del ciclo de vida están completamente controladas por el socio
+<h2 id="login-method-2-6mm-account-login-partner-issued-credentials">Acceso a plataforma de marca blanca</h2>
 
-Después del registro, los socios exponen un punto de entrada 6MM dentro de su propia aplicación, permitiendo a los usuarios acceder a experiencias de trading impulsadas por 6MM.
+Utilice el dominio de marca y la entrada de cuenta proporcionada por la plataforma de marca blanca. Si el autorregistro está disponible, cómo se abren las cuentas y qué métodos de inicio de sesión o verificación de identidad están habilitados dependen de la configuración de esa plataforma.
 
-6MM no recopila ni gestiona de manera independiente la información de identidad de los usuarios finales.
+El sistema de cuentas de la plataforma y los administradores autorizados manejan la gestión de perfiles, el estado de la cuenta y las operaciones de seguridad dentro de sus permisos. Siga el proceso de verificación de la plataforma para recuperación de contraseña, cambios de información de contacto o restricciones de cuenta.
 
-***
+Después de iniciar sesión, prepare los fondos a través del proceso de financiación respaldado por la plataforma. Para operaciones perpetuas, transfiera el activo de liquidación requerido de la cuenta de financiación a la cuenta perpetua y confirme el resultado de la transferencia.
 
-<h2 id="login-methods">Métodos de inicio de sesión</h2>
+<h2 id="user-ownership-and-data-responsibility">Responsabilidades de cuentas y datos</h2>
 
-Para adaptarse a diferentes arquitecturas de aplicaciones asociadas y requerimientos de experiencia de usuario, 6MM soporta dos métodos de inicio de sesión, ambos iniciados a través de plataformas asociadas.
+Los dos modelos tienen límites de responsabilidad diferentes. Las integraciones de socios conservan la administración de cuentas del lado del socio y al mismo tiempo mantienen el mapeo de usuarios y los registros necesarios para el comercio. Las plataformas de marca blanca utilizan sus propios procesos de cuenta y permisos administrativos para gestionar usuarios.
 
-***
+La información recopilada, almacenada o mostrada, los requisitos de verificación de identidad y las responsabilidades de soporte deben definirse para la implementación real. No aplique los supuestos de gestión de cuentas de un modelo a cada plataforma.
 
-<h2 id="login-method-1-partner-embedded-access">Método de Inicio de Sesión 1: Acceso Integrado por Socios</h2>
+<h2 id="design-principles">Antes de entrar a operar</h2>
 
-En el modelo de integración primaria, los usuarios acceden a 6MM directamente desde la aplicación del socio.
+- Confirme que está utilizando la cuenta y el dominio de plataforma correctos.
+- Complete cualquier control de identidad o seguridad requerido por esa plataforma.
+- Verifique que la cuenta tenga acceso comercial y revise las restricciones.
+- Confirmar el saldo disponible en la cuenta perpetua; Iniciar sesión no transfiere fondos automáticamente.
+- Comuníquese con el equipo de soporte de su plataforma si necesita atención para acceder a la cuenta o verificar la identidad.
 
-* Los usuarios ingresan 6MM a través de un punto de entrada integrado proporcionado por el agente o socio
-* La autenticación es manejada completamente por el socio
-* Los tokens de acceso o credenciales de sesión se pasan de forma segura a 6MM
-* No se requiere inicio de sesión de 6MM separado
+<h2 id="implementation-guides">Continúa con tu integración</h2>
 
-Este método ofrece la experiencia más fluida y se recomienda para aplicaciones de socios profundamente integradas.
-
-***
-
-<h2 id="login-method-2-6mm-account-login-partner-issued-credentials">Método de inicio de sesión 2: 6MM Inicio de sesión de la cuenta (credenciales emitidas por el socio)</h2>
-
-Debido a las diferencias en las capacidades de las aplicaciones asociadas y en los entornos de los dispositivos, 6MM también ofrece interfaces independientes optimizadas para Web y móviles, con aplicaciones nativas planeadas para futuras versiones.
-
-En este modelo:
-
-* Los usuarios primero ingresan 6MM a través de la aplicación del socio
-* El socio otorga una cuenta de inicio de sesión y contraseña 6MMespecíficas al usuario
-* Los usuarios pueden iniciar sesión directamente a través de:
-  * [https://app.6mm.com](https://app.6mm.com/)
-  * Interfaz web optimizada para móviles
-* Futuras solicitudes oficiales de 6MM
-
-Este enfoque permite mejorar el rendimiento de interacción y la experiencia del usuario entre dispositivos.
-
-> Importante:\
-> Todas 6MM credenciales de inicio de sesión son generadas, emitidas y gestionadas por el socio.
-> 6MM no verifica de manera independiente la identidad del usuario ni mantiene los datos del perfil de usuario.
-
-***
-
-<h2 id="user-ownership-and-data-responsibility">Propiedad del Usuario y Responsabilidad de los Datos</h2>
-
-Independientemente del método de inicio de sesión usado:
-
-* Todos los usuarios son propiedad y están administrados por el socio
-* Los datos de identidad del usuario permanecen dentro del sistema del socio
-* 6MM solo mantiene los identificadores técnicos mínimos requeridos para:
-  * Ejecución de operaciones
-  * Cálculo de margen y riesgo
-  * Posición y aislamiento de cuentas
-
-6MM no accede, analiza ni monetiza la información de identidad del usuario.
-
-***
-
-<h2 id="design-principles">Principios de diseño</h2>
-
-El sistema de autenticación y acceso 6MM se basa en los siguientes principios:
-
-* Fuente de registro único: solo socios
-* Métodos de acceso múltiple para una mejor experiencia de usuario
-* Separación clara de la propiedad de los usuarios y la infraestructura de comercio
-* No hay adquisición directa de usuarios ni competencia con socios
-
-Este modelo asegura que 6MM funcione como una infraestructura de trading neutral centrada en el socio, mientras ofrece una experiencia de trading consistente y de alta calidad en todas las plataformas y dispositivos.
-
-<h2 id="implementation-guides">Guías de implementación</h2>
-
-- [Desarrollador API Autenticación](/es-419/developer-api/authentication): JWT y API Key autenticación para integraciones.
-- [Trading Widget Autenticación](/es-419/sdk/trading-widget/authentication): modos de token de socio y compatibilidad.
-- [Agent SDK Resumen] (/sdk/agent-sdk/overview): vinculación de usuarios backend y emisión de credenciales.
-- [Arquitectura y Responsabilidades](/es-419/solutions/architecture-responsibilities): socios y 6MM límites de propiedad.
-{/* sixmm-localized-link-repair:start */}
-<h2 id="localized-page-links">Páginas relacionadas</h2>
-
-- [6MM Agent SDK por Java y PHP](/es-419/sdk/agent-sdk/overview)
-{/* sixmm-localized-link-repair:end */}
+- [Comience a operar](/es-419/trading/getting-started/start-trading): preparar fondos y realizar un primer pedido perpetuo.
+- [Transferencia de activos](/es-419/trading/getting-started/asset-transfer): financiación y cuentas perpetuas, estado de transferencias y conciliación.
+- [Developer API Autenticación](/es-419/developer-api/authentication): autenticación para acceso directo API.
+- [Trading Widget Autenticación](/es-419/sdk/trading-widget/authentication): credenciales para la interfaz comercial integrada.
+- [Agent SDK Descripción general](/es-419/sdk/agent-sdk/overview): credenciales de acceso y vinculación del usuario backend del socio.
+- [Matriz de responsabilidad del socio](/es-419/security-compliance/partner-responsibilities): integración y responsabilidades operativas.

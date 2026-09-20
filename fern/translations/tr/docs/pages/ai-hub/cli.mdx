@@ -1,0 +1,64 @@
+---
+title: "6MM CLI"
+subtitle: "Terminallerden, komut dosyalarından ve AI kodlama aracılarından gelen 6MM komut satırı arayüzünü kullanın."
+slug: ai-hub/cli
+canonical-url: https://docs.6mm.com/tr/ai-hub/cli
+---
+
+> **Planlandı — henüz başlatılmadı**
+> AI Hub planlanmış bir özelliktir. Bu sayfadaki yetenekler, uç noktalar, komutlar ve istemci yapılandırmaları önerilen tasarımı açıklamaktadır ve şu anda mevcut değildir. Nihai kullanılabilirlik ve kurulum talimatları lansman sırasında duyurulacaktır.
+
+
+6MM CLI, kabuk komutlarını yürütebilen kullanıcılar, komut dosyaları ve AI Aracıları için komut satırı giriş noktasıdır.
+
+Yapay zeka ortamı terminal komutlarını doğrudan çalıştırabildiğinde CLI kullanın. Ayrı bir MCP sunucusu gerekmediğinden bu genellikle aracıları kodlamak için en basit yoldur. Aracıların terminal biçimlendirmesine bağlı kalmadan sonuçları ayrıştırabilmesi için CLI varsayılan olarak kararlı JSON döndürmelidir.
+
+<h2 id="what-the-cli-is-good-for">CLI ne işe yarar</h2>
+
+- Bir terminalden hızlı piyasa verileri sorguları.
+- Codex, Claude Code, Gemini CLI veya benzer araçlarda aracı odaklı analiz.
+- 6MM verisine ihtiyaç duyan CI veya zamanlanmış komut dosyaları.
+- Yerel kimlik bilgileri yapılandırıldığında hesap okuma kontrolleri.
+- Aracının parametreleri hazırladığı ancak sipariş vermediği sipariş önizleme akışları.
+
+<h2 id="example-commands">Örnek komutlar</h2>
+
+```bash
+6mm markets
+6mm ticker BTC-USDT-PERP
+6mm orderbook BTC-USDT-PERP --depth 20
+6mm klines BTC-USDT-PERP --interval 1h --limit 100
+6mm account summary
+6mm positions
+6mm orders open
+6mm order preview --symbol BTC-USDT-PERP --side buy --type limit --price 65000 --size 0.01
+6mm order create --symbol BTC-USDT-PERP --side buy --type limit --price 65000 --size 0.01
+6mm order cancel --order-id xxx
+```
+
+<h2 id="output-modes">Çıkış modları</h2>
+
+| Mod | Kullanım örneği |
+| --- | --- |
+| JSON | AI Aracıları, komut dosyaları ve otomasyon için varsayılan. |
+| Masa | İnsan tarafından okunabilen terminal incelemesi. |
+| Çiğ | Hata ayıklama ve entegrasyon testleri. |
+
+<h2 id="recommended-safety-defaults">Önerilen güvenlik varsayılanları</h2>
+
+- Varsayılan ortam testnet'tir.
+- Varsayılan çıkış JSON şeklindedir.
+- Ticaret komutları açık bir katılım gerektirir.
+- Ana ağ siparişinin oluşturulması onay gerektirir.
+- Önizleme modu oluşturmadan önce kullanılabilir.
+- Hatalar, kararlı kodları ve net mesajları içerir.
+
+<h2 id="agent-usage">Aracı kullanımı</h2>
+
+Kullanıcı açıkça önizleme veya alım satım eylemleri istemediği sürece AI Aracıları salt okunur komutları tercih etmelidir.
+
+Örnek istem:
+
+```text
+Use the 6MM CLI to fetch BTC-USDT-PERP orderbook depth and return a short liquidity summary.
+```

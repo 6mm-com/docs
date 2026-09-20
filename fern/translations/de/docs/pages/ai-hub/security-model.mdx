@@ -1,0 +1,47 @@
+---
+title: "Sicherheitsmodell"
+subtitle: "Machen Sie sich mit dem Berechtigungsmodell, dem standardmäßigen Sicherheitsstatus und den Handelsleitlinien für den unterstützten Zugriff durch AI- vertraut."
+slug: ai-hub/security-model
+canonical-url: https://docs.6mm.com/de/ai-hub/security-model
+---
+
+> **Geplant – noch nicht gestartet**
+> AI Hub ist eine geplante Funktion. Die Funktionen, Endpunkte, Befehle und Clientkonfigurationen auf dieser Seite beschreiben das vorgeschlagene Design und sind derzeit nicht verfügbar. Die endgültige Verfügbarkeit und Einrichtungsanweisungen werden beim Start bekannt gegeben.
+
+
+AI-Der unterstützte Handelszugriff muss sicherer sein als gewöhnliche Automatisierung, da die Benutzerabsicht in natürlicher Sprache ausgedrückt wird.
+
+<h2 id="required-permission-scopes">Erforderliche Berechtigungsbereiche</h2>
+
+| Umfang | Ermöglicht |
+| --- | --- |
+| Markt: lesen | Öffentliche Marktdaten und Regelressourcen. |
+| Konto:lesen | Salden, Positionen, offene Aufträge, Ausführungen und Kontoübersichten. |
+| Befehl:schreiben | Auftragserstellung, -änderung und -stornierung. |
+
+<h2 id="default-safety-posture">Standard-Sicherheitshaltung</h2>
+
+- Standardmäßig schreibgeschützt.
+- Standardmäßig testnet.
+- Machen Sie Abhebungen oder Überweisungen nicht über KI-Tools offen.
+- Vor dem Erstellen ist eine Vorschau erforderlich.
+- Erfordern Sie eine ausdrückliche Bestätigung vor dem Mainnet-Handel.
+- Verwenden Sie Idempotenzschlüssel für Handelsaktionen.
+- Wenden Sie maximale Nominal- und Hebelgrenzen an.
+- Führen Sie vollständige Audit-Protokolle.
+
+<h2 id="controlled-trading-flow">Kontrollierter Handelsfluss</h2>
+
+```text
+User natural language intent
+  -> AI maps intent to tool parameters
+  -> 6mm_preview_order validates the order
+  -> service returns risk checks and margin impact
+  -> user explicitly confirms
+  -> 6mm_create_order submits the order
+  -> audit log records the full flow
+```
+
+<h2 id="prompt-injection-protection">Sofortiger Injektionsschutz</h2>
+
+KI-Clients und MCP-Server sollten externe Inhalte als nicht vertrauenswürdig behandeln. Marktseiten, kopierte Texte, Dokumente und Webinhalte dürfen keine Tool-Berechtigungen, Bestätigungsregeln oder Handelslimits außer Kraft setzen.

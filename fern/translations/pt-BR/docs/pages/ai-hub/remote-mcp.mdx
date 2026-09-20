@@ -1,0 +1,50 @@
+---
+title: "Implantação remota MCP"
+subtitle: "Implante um endpoint 6MM MCP em uma infraestrutura gerenciada pelo usuário ou pela instituição."
+slug: ai-hub/remote-mcp
+canonical-url: https://docs.6mm.com/pt-BR/ai-hub/remote-mcp
+---
+
+> **Planejado – ainda não lançado**
+> AI Hub é um recurso planejado. Recursos, terminais, comandos e configurações do cliente nesta página descrevem o design proposto e não estão disponíveis no momento. A disponibilidade final e as instruções de configuração serão anunciadas no lançamento.
+
+
+MCP remoto é para usuários ou instituições que desejam um endpoint MCP de longa duração sob seu próprio controle.
+
+Ao contrário do MCP hospedado, o MCP remoto não é operado por 6MM para o usuário. 6MM fornece código, imagens, modelos e documentação; o usuário controla hospedagem e credenciais.
+
+<h2 id="architecture">Arquitetura</h2>
+
+```text
+AI client
+  -> user-managed MCP HTTP endpoint
+  -> 6MM REST / WebSocket API
+```
+
+<h2 id="deployment-targets">Metas de implantação</h2>
+
+- Docker ou Docker Compose.
+- VPS com um proxy reverso.
+- Ferrovia.
+- Renderizar.
+- Voe.io.
+- AWS ECS ou Lambda.
+- Kubernetes internos.
+
+<h2 id="required-files">Arquivos necessários</h2>
+
+- Dockerfile.
+- docker-compose.yml.
+- .env.modelo.
+- HTTP modo de transporte.
+- /mcp ponto de extremidade.
+- /ponto de extremidade de integridade.
+- Proxy reverso e notas TLS.
+
+<h2 id="credential-model">Modelo de credencial</h2>
+
+As credenciais devem ser armazenadas no ambiente gerenciado pelo usuário, não no prompt do cliente de IA. Para implantações gerenciadas pela instituição, restrinja o acesso a clientes e redes aprovados.
+
+<h2 id="recommended-first-release">Primeiro lançamento recomendado</h2>
+
+Comece com dados públicos de mercado. Adicione somente leitura da conta depois que autenticação, escopo de chave, logs e controles de acesso estiverem disponíveis. A negociação deve permanecer desativada até que os requisitos de negociação controlada sejam atendidos.

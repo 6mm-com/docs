@@ -28,9 +28,9 @@ Bagian ini menjelaskan alur kerja inti perdagangan dan mekanisme utama yang terl
 
 <h2 id="market-order">Urutan Pasar</h2>
 
-* Langsung dieksekusi dengan harga pasar terbaik yang tersedia
-* Mengutamakan kecepatan eksekusi daripada presisi harga
-* Cocok untuk masuk atau keluar dengan cepat
+Perintah pasar mencari eksekusi terhadap likuiditas yang tersedia dengan harga terbaik yang tersedia. Eksekusi bergantung pada kedalaman buku pesanan dan batasan perdagangan: pesanan dapat terisi pada beberapa harga, terisi sebagian, atau gagal diselesaikan. Periksa status pesanan sebenarnya dan isi.
+
+***
 
 <h2 id="limit-order">Perintah Batas</h2>
 
@@ -46,6 +46,8 @@ Bagian ini menjelaskan alur kerja inti perdagangan dan mekanisme utama yang terl
 Ketersediaan pesanan > dapat bervariasi tergantung pada pasangan perdagangan dan mode integrasi.
 
 ***
+
+Penyerahan berarti permintaan pesanan telah dikirimkan; penerimaan, pemicuan, dan eksekusi adalah keadaan yang terpisah. Perintah pasar yang dipicu bergantung pada likuiditas yang tersedia. Limit order yang dipicu juga harus memenuhi harga limitnya dan mungkin tetap tidak terisi.
 
 <h2 id="leverage-and-margin">Leverage dan Margin</h2>
 
@@ -69,9 +71,7 @@ Kontrak perpetual menggunakan mekanisme tingkat pendanaan untuk menjaga harga ko
 * Jika tingkat pendanaan negatif:
   * Posisi short membayar longs
 
-Biaya pendanaan dipertukarkan langsung antar trader.
-
-6MM tidak mengumpulkan pembayaran pendanaan sebagai pendapatan.
+6MM tidak membebankan biaya pendanaan. Pembayaran pendanaan diselesaikan berdasarkan aturan kontrak dan dicatat secara terpisah dari biaya perdagangan. Periksa arah, jumlah dan hasil penyelesaian terhadap catatan pembayaran pendanaan rekening dan transaksi saldo terkait.
 
 ***
 
@@ -84,7 +84,7 @@ Biaya pendanaan dipertukarkan langsung antar trader.
   * Pesanan pembuat
   * Pesanan pengambil
 
-Jadwal biaya ditentukan oleh platform mitra dan dapat bervariasi.
+Tarif Maker/Taker yang berlaku mengikuti aturan mitra atau platform label putih dan dapat bervariasi berdasarkan pasangan perdagangan dan konfigurasi.
 
 <h2 id="slippage">Slippage</h2>
 
@@ -109,12 +109,7 @@ Pengguna dapat mengurangi slippage dengan menggunakan pesanan batas dan mengelol
 
 <h2 id="risk-management-and-liquidation">Manajemen Risiko dan Likuidasi</h2>
 
-* 6MM memantau rasio margin secara real time
-* Ketika margin turun di bawah ambang batas pemeliharaan:
-  * Posisi dapat dilikuidasi sebagian atau sepenuhnya
-* Harga likuidasi dihitung menggunakan harga mark, bukan harga terakhir yang diperdagangkan
-
-Mekanisme ini membantu mengurangi likuidasi yang tidak perlu akibat volatilitas pasar jangka pendek.
+Pantau ekuitas akun atau posisi, persyaratan margin pemeliharaan, dan indikator risiko platform. Jika kondisi likuidasi yang berlaku terpenuhi, posisi dapat dikurangi sebagian atau ditutup seluruhnya. Periksa catatan posisi dan saldo aktual yang tersisa daripada membandingkan persentase secara langsung dengan jumlah margin.
 
 ***
 

@@ -1,94 +1,48 @@
 ---
 title: "Transfer aktywów"
-description: "Dowiedz się, jak aktywa przechodzą między systemami partnerów a kontami 6MM handlowymi, w tym odpowiedzialność za transfery, zarządzanie statusem oraz kontrole operacyjne."
+description: "Dowiedz się, w jaki sposób aktywa przemieszczają się między systemami partnerskimi a kontami handlowymi 6MM, w tym obowiązki związane z transferem, obsługę statusu i kontrole operacyjne."
 slug: trading/getting-started/asset-transfer
 canonical-url: https://docs.6mm.com/pl/trading/getting-started/asset-transfer
 ---
 
-6MM działa w oparciu o model przepływu aktywów zarządzanych przez partnerów.
+W tym przewodniku wyjaśniono ścieżkę finansowania w przypadku handlu kontraktami wieczystymi. Na rachunku finansowania znajdują się środki dostępne do alokacji; na rachunku wieczystym znajdują się marża kontraktowa i salda rozliczeniowe. Na tej trasie konto spot nie jest wymagane.
 
-6MM nie akceptuje bezpośrednich wpłat ani wypłat od użytkowników końcowych.
+<h2 id="partner-managed-deposits-and-withdrawals">Finansowanie za pośrednictwem Twojej platformy</h2>
 
-Wszystkie wpływy i odpływy środków użytkowników są obsługiwane wyłącznie przez upoważnionych agentów lub platformy partnerskie.
+W przypadku integracji partnerów API / SDK postępuj zgodnie z procesem alokacji salda i finansowania platformy partnerskiej. W przypadku wdrożeń typu white-label wpłaty i wypłaty przebiegają zgodnie ze skonfigurowanym na platformie procesem dostawcy portfela; potwierdzone wpłaty są zapisywane na rachunku finansowania, a wypłaty realizowane są na tym koncie.
 
-Ten projekt zapewnia wyraźne rozdzielenie odpowiedzialności finansowej, zakresu regulacyjnego oraz własności użytkowników między 6MM a jego partnerami.
+Sprawdź dostępną metodę finansowania na swojej platformie. Wewnętrzny transfer konta jest odrębny od wpłaty lub wypłaty.
 
-***
+<h2 id="account-structure-within-6mm">Konta używane do handlu wieczystego</h2>
 
-<h2 id="partner-managed-deposits-and-withdrawals">Depozyty i wypłaty zarządzane przez partnerów</h2>
+| Konto | Zamiar |
+| --- | --- |
+| <span style={{ whiteSpace: "nowrap" }}>Konto dofinansowania</span> | Przechowuje środki do rozdysponowania i otrzymuje środki przekazane z rachunku wieczystego. Przygotowując przelew, wykorzystaj dostępne saldo. |
+| <span style={{ whiteSpace: "nowrap" }}>Konto wieczne</span> | Przechowuje środki wykorzystywane do marży kontraktowej i rozliczenia. Sprawdź kapitał na koncie, wykorzystanie marży oraz niezrealizowane zyski i straty przed dokonaniem transakcji lub transferem. |
 
-* Użytkownicy wpłacają i wypłacają środki wyłącznie za pośrednictwem platformy partnerskiej
-* 6MM nie udostępnia użytkownikom końcowym adresów depozytowych zarówno on-chain, ani off-chain.
-* 6MM nie przechowuje ani nie rozlicza środków użytkowników poza realizacją transakcji
+<h2 id="automated-balance-transfer-to-6mm">Przygotuj przelew</h2>
 
-Partnerzy pozostają w pełni odpowiedzialni za:
+1. Potwierdź użytkownika, zasób i kierunek transferu.
+2. Sprawdź dostępne saldo konta źródłowego i wszelkie ograniczenia konta.
+3. Prześlij za pośrednictwem obsługiwanego przez platformę wpisu transferu lub autoryzowanej integracji.
+4. Przed złożeniem zamówienia potwierdź wynik przelewu i saldo docelowe.
 
-* Zarządzanie balansem użytkownika
-* Przetwarzanie wpłat i wypłat
-* Zgodność i kontrola ryzyka związana z przechowywaniem funduszy
+<h2 id="internal-transfers-between-accounts">Transfer pomiędzy rachunkami finansowymi i wieczystymi</h2>
 
-***
+- Przed przystąpieniem do handlu: przenieś wymagane aktywa rozliczeniowe z rachunku finansowania na rachunek wieczysty.
+- Po rozliczeniu: przelej kwotę dostępną do wypłaty z rachunku wieczystego z powrotem na rachunek finansowania.
+- Transfery kont to ruchy salda wewnętrznego, a nie transakcje w łańcuchu.
+- Wykorzystanie depozytu zabezpieczającego, otwarte zlecenia, pozycje i ograniczenia konta mogą mieć wpływ na kwotę dostępną do przelewu. Wykorzystaj kwotę i wynik pokazany przez platformę.
 
-<h2 id="automated-balance-transfer-to-6mm">Automatyczny transfer salda do 6MM</h2>
+<h2 id="design-principles">Sprawdź status i uzgodnij salda</h2>
 
-Aby umożliwić handel, użytkownicy mogą przenieść część swojego salda zarządzanego przez partnera na 6MM za pomocą zautomatyzowanego mechanizmu wewnętrznego transferu.
+Złożone żądanie samo w sobie nie stanowi potwierdzenia realizacji. Sprawdź identyfikator przelewu, status, aktywa, kwotę, konto źródłowe i konto docelowe. Jeśli przetwarzanie nie powiedzie się lub pozostanie nierozwiązane, przed przesłaniem kolejnej prośby sprawdź zapisy salda i skontaktuj się z obsługą platformy.
 
-Kluczowe cechy tego procesu transferu to:
+Nie zakładaj, że wszystkie salda można przenieść swobodnie lub że każdy przelew jest natychmiastowy lub bezpłatny. Postępuj zgodnie z wyświetlanymi warunkami platformy i końcowym wynikiem przetwarzania.
 
-* Transfery są inicjowane i autoryzowane przez system partnerski
-* Proces jest wykonywany automatycznie na poziomie infrastruktury
-* Nie wymagana jest ręczna interakcja użytkownika z 6MM
-* Transfery zachodzą w czasie rzeczywistym lub w czasie bliskim rzeczywistym
+<h2 id="implementation-and-safety-guides">Przewodniki dotyczące wdrażania i bezpieczeństwa</h2>
 
-Z perspektywy użytkownika proces ten wygląda na płynną alokację salda, a nie tradycyjną wpłatę.
-
-***
-
-<h2 id="account-structure-within-6mm">Struktura konta w 6MM</h2>
-
-W ciągu 6MM, przeniesione aktywa są logicznie rozdzielane na dwa odrębne konta wewnętrzne:
-
-**Konto Spot**
-
-* Służy jako początkowe konto odbiorcze dla przeniesionych środków
-* Pełni rolę puli aktywów do zarządzania kapitałem wewnętrznym
-* Nie wspiera działalności handlu bezpośredniego
-
-**Konto wieczyste**
-
-* Środki są przelewane z Spot Account na Perpetual Account
-* Do składania zamówień można używać tylko aktywa z Konta Wieczystego
-* Margines, pozycje i niezrealizowane PnL są obliczane na tym poziomie
-
-Ta dwuwarstwowa struktura umożliwia precyzyjną izolację kapitału, efektywność marży oraz kontrolę ryzyka dla nieustannego handlu.
-
-***
-
-<h2 id="internal-transfers-between-accounts">Wewnętrzne przelewy między kontami</h2>
-
-* Środki przelane na Konto Spot mogą być swobodnie i natychmiast przelane na Konto Wieczyste
-* Transfery wewnętrzne są przetwarzane bez interakcji z blockchainem
-* Transfery są zaprojektowane tak, aby były niskie opóźnienia i deterministyczne
-
-Ta architektura zapewnia płynny przepływ kapitału, jednocześnie zachowując ścisłą separację między przechowywaniem aktywów a realizacją transakcji.
-
-***
-
-<h2 id="design-principles">Zasady projektowania</h2>
-
-System transferu aktywów 6MM opiera się na następujących zasadach:
-
-* Brak bezpośrednich wpłat ani wypłat przez użytkowników 6MM
-* Cała opieka aktywów pozostaje przy platformach partnerskich
-* Zautomatyzowana, autoryzowana przez partnerów alokacja funduszy
-* Wyraźne rozdzielenie między kontami Spot a Perpetual
-* Optymalizacja pod kątem efektywności handlu i izolacji ryzyka
-
-Dzięki temu modelu 6MM działa jako czysta warstwa infrastruktury handlowej, podczas gdy partnerzy zachowują pełną kontrolę nad środkami użytkowników i relacjami finansowymi.
-
-<h2 id="implementation-and-safety-guides">Przewodniki wdrożenia i bezpieczeństwa</h2>
-
-- [ PrzeglądAgent SDK ](/pl/sdk/agent-sdk/overview): wiązanie użytkownika, transfery, zapytania o zamówienia i uzgadnianie.
-- [Webhooks & Idempotency](/pl/sdk/security/webhooks-idempotency): weryfikuj końcowe wywołania i próby deduplikacji.
-- [Matryca odpowiedzialności partnera](/pl/security-compliance/partner-responsibilities): opieka i własność operacyjna.
-- [Risk & Likwidacje](/pl/trading/risk-and-liquidations): zrozum, jak alokacja kont handlowych wpływa na ryzyko.
+- [Agent SDK Przegląd](/pl/sdk/agent-sdk/overview): wiązanie użytkownika, transfery i uzgadnianie.
+- [Webhooks i Idempotencja](/pl/sdk/security/webhooks-idempotency): weryfikacja wywołania zwrotnego i obsługa zduplikowanych żądań.
+- [Matryca odpowiedzialności partnera](/pl/security-compliance/partner-responsibilities): integracja i obowiązki operacyjne.
+- [Ryzyko i likwidacje](/pl/trading/risk-and-liquidations): ryzyko marży i konta.

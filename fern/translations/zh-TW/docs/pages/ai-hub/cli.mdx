@@ -1,0 +1,64 @@
+---
+title: "6MM CLI"
+subtitle: "在終端、腳本和 AI 編碼 Agent 中使用 6MM 命令行工具。"
+slug: ai-hub/cli
+canonical-url: https://docs.6mm.com/zh-TW/ai-hub/cli
+---
+
+> **規劃中 · 尚未上線**
+> AI Hub 為規劃內容。本頁中的功能、服務地址、命令及客戶端配置用於說明擬定方案，目前尚未開放使用。實際開放範圍與接入方式以上線公告為準。
+
+
+6MM CLI 是面向用戶、腳本和能夠執行 shell 命令的 AI Agent 的命令行入口。
+
+當 AI 環境可以直接運行終端命令時，CLI 通常是最簡單的接入方式，因為它不需要額外運行 MCP 服務。CLI 默認應返回穩定 JSON，方便 Agent 解析結果，而不是依賴終端展示格式。
+
+<h2 id="what-the-cli-is-good-for">CLI 適合做什麼</h2>
+
+- 在終端裡快速查詢市場數據。
+- 在 Codex、Claude Code、Gemini CLI 等工具中進行 Agent 驅動分析。
+- 在 CI 或定時腳本中讀取 6MM 數據。
+- 在本地配置憑證後執行賬戶只讀檢查。
+- 讓 Agent 準備訂單參數並執行訂單預覽，但不直接下單。
+
+<h2 id="example-commands">命令示例</h2>
+
+```bash
+6mm markets
+6mm ticker BTC-USDT-PERP
+6mm orderbook BTC-USDT-PERP --depth 20
+6mm klines BTC-USDT-PERP --interval 1h --limit 100
+6mm account summary
+6mm positions
+6mm orders open
+6mm order preview --symbol BTC-USDT-PERP --side buy --type limit --price 65000 --size 0.01
+6mm order create --symbol BTC-USDT-PERP --side buy --type limit --price 65000 --size 0.01
+6mm order cancel --order-id xxx
+```
+
+<h2 id="output-modes">輸出模式</h2>
+
+| 模式 | 使用場景 |
+| --- | --- |
+| JSON | AI Agent、腳本和自動化默認使用。 |
+| Table | 人類在終端中查看。 |
+| Raw | 調試和集成測試。 |
+
+<h2 id="recommended-safety-defaults">推薦安全默認值</h2>
+
+- 默認環境為測試網。
+- 默認輸出為 JSON。
+- 交易命令必須顯式開啟。
+- Mainnet 下單必須確認。
+- 創建訂單前提供預覽模式。
+- 錯誤返回包含穩定錯誤碼和清晰描述。
+
+<h2 id="agent-usage">Agent 使用方式</h2>
+
+除非用戶明確要求預覽或交易動作，AI Agent 應優先使用只讀命令。
+
+示例提示詞：
+
+```text
+Use the 6MM CLI to fetch BTC-USDT-PERP orderbook depth and return a short liquidity summary.
+```

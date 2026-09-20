@@ -1,0 +1,50 @@
+---
+title: "Implementación remota MCP"
+subtitle: "Implemente un punto final 6MM MCP en una infraestructura administrada por el usuario o por la institución."
+slug: ai-hub/remote-mcp
+canonical-url: https://docs.6mm.com/es-ES/ai-hub/remote-mcp
+---
+
+> **Planificado, aún no lanzado**
+> AI Hub es una característica planificada. Las capacidades, puntos finales, comandos y configuraciones de cliente en esta página describen el diseño propuesto y no están disponibles actualmente. La disponibilidad final y las instrucciones de configuración se anunciarán en el lanzamiento.
+
+
+MCP remoto es para usuarios o instituciones que desean un punto final MCP de larga duración bajo su propio control.
+
+A diferencia del MCP alojado, el MCP remoto no es operado por 6MM para el usuario. 6MM proporciona código, imágenes, plantillas y documentación; el usuario controla el hosting y las credenciales.
+
+<h2 id="architecture">Arquitectura</h2>
+
+```text
+AI client
+  -> user-managed MCP HTTP endpoint
+  -> 6MM REST / WebSocket API
+```
+
+<h2 id="deployment-targets">Objetivos de implementación</h2>
+
+- Docker o Docker Compose.
+- VPS con un proxy inverso.
+- Ferrocarril.
+- Prestar.
+- Volar.io.
+- AWS ECS o Lambda.
+- Kubernetes internos.
+
+<h2 id="required-files">Archivos requeridos</h2>
+
+- Archivo Docker.
+- docker-compose.yml.
+- .env.plantilla.
+- HTTP modo de transporte.
+- /mcp punto final.
+- /punto final de salud.
+- Proxy inverso y notas TLS.
+
+<h2 id="credential-model">Modelo de credencial</h2>
+
+Las credenciales deben almacenarse en el entorno administrado por el usuario, no en el indicador del cliente de IA. Para implementaciones administradas por la institución, restrinja el acceso a clientes y redes aprobados.
+
+<h2 id="recommended-first-release">Primera versión recomendada</h2>
+
+Comience con los datos del mercado público. Agregue cuenta de solo lectura después de que la autenticación, el alcance de las claves, los registros y los controles de acceso estén disponibles. El comercio debe permanecer inhabilitado hasta que se cumplan los requisitos comerciales controlados.

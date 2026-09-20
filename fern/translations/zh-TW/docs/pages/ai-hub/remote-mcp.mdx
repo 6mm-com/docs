@@ -1,0 +1,50 @@
+---
+title: "Remote MCP 部署"
+subtitle: "在用戶或機構自管基礎設施中部署 6MM MCP 端點。"
+slug: ai-hub/remote-mcp
+canonical-url: https://docs.6mm.com/zh-TW/ai-hub/remote-mcp
+---
+
+> **規劃中 · 尚未上線**
+> AI Hub 為規劃內容。本頁中的功能、服務地址、命令及客戶端配置用於說明擬定方案，目前尚未開放使用。實際開放範圍與接入方式以上線公告為準。
+
+
+Remote MCP 面向希望在自有基礎設施中運行長期在線 MCP 端點的用戶或機構。
+
+與 Hosted MCP 不同，Remote MCP 不是 6MM 幫用戶託管服務。6MM 提供代碼、鏡像、模板和文檔，用戶自己控制部署和憑證。
+
+<h2 id="architecture">架構</h2>
+
+```text
+AI client
+  -> user-managed MCP HTTP endpoint
+  -> 6MM REST / WebSocket API
+```
+
+<h2 id="deployment-targets">部署目標</h2>
+
+- Docker 或 Docker Compose。
+- VPS 加反向代理。
+- Railway。
+- Render。
+- Fly.io。
+- AWS ECS 或 Lambda。
+- 內部 Kubernetes。
+
+<h2 id="required-files">必需文件</h2>
+
+- Dockerfile。
+- docker-compose.yml。
+- .env.template。
+- HTTP transport 模式。
+- /mcp 端點。
+- /health 端點。
+- 反向代理和 TLS 說明。
+
+<h2 id="credential-model">憑證模型</h2>
+
+憑證應存儲在用戶自管環境中，不應寫入 AI 客戶端提示詞。機構自管部署應限制允許訪問的客戶端和網絡。
+
+<h2 id="recommended-first-release">第一階段建議</h2>
+
+先支持公開市場數據。賬戶只讀應在鑑權、key 權限範圍、日誌和訪問控制到位後再開放。真實交易應在受控交易要求滿足前保持關閉。

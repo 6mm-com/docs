@@ -1,11 +1,12 @@
+import { fileURLToPath } from "node:url";
 import { readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { locales } from "./locale-config.mjs";
 
-const projectRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
+const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const isMain =
   Boolean(process.argv[1]) &&
-  path.resolve(process.argv[1]) === new URL(import.meta.url).pathname;
+  path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 
 const tradingApiPaths =
   /^(?:docs\.yml|docs\/pages\/(?:trading|getting-started|developer-api|sdk|solutions\/(?:matching-engine|operations-console))\/?)/;
@@ -633,10 +634,6 @@ const coreTextReplacementsByLocale = {
   ru: {
     "docs/pages/home.mdx": [
       [
-        "Выбирайте встроенную торговлю, белую биржу, институциональную ликвидность или поддержку комплаенса и лицензирования.",
-        "Выберите встроенную торговлю, биржу под собственной маркой, институциональную ликвидность или поддержку по вопросам комплаенса и лицензирования.",
-      ],
-      [
         "Интегрируйте аутентификацию, подписывание запросов, REST конечных точек, WebSocket потоков и обработку ошибок в производстве.",
         "Интегрируйте аутентификацию, подписание запросов, конечные точки REST, потоки WebSocket и обработку ошибок в рабочей среде.",
       ],
@@ -672,7 +669,6 @@ const coreTextReplacementsByLocale = {
   },
   fr: {
     "docs/pages/home.mdx": [
-      ['title="Trading Solutions"', 'title="Solutions de trading"'],
       [
         "Intégrez l’authentification, la signature de requêtes, les terminaux REST , les flux WebSocket et la gestion des erreurs de production.",
         "Intégrez l’authentification, la signature des requêtes, les points de terminaison REST, les flux WebSocket et la gestion des erreurs en production.",
@@ -873,6 +869,51 @@ function applyApprovedCoreCopy(content, locale, relativePath) {
   return output;
 }
 
+function polishPredictionCopy(content, locale, relativePath) {
+  if (!relativePath.startsWith("docs/pages/prediction/")) return content;
+  let output = content.replace(/^(#{1,6})(?=[^#\s])/gm, "$1 ")
+    .replace(/^(\d+\.)(?=\S)/gm, "$1 ");
+  const glossary = {
+    ja: {
+      "精度と沈み込み": "精度と決済", "細胞成分": "セルの構成", "返品": "払戻金",
+      "永久アカウント": "無期限契約アカウント", "永久取引": "無期限契約取引",
+      "勝ちグリッドの順序": "予測グリッドの勝ち注文", "カスタムオーダーを獲得": "カスタム予測の勝ち注文",
+      "支払いなしで注文を失った場合": "負け注文（払戻額なし）", "実際に動作した例": "計算例",
+      "予選ヒットなし": "有効なタッチなし", "料金は窓口中は横切らずに外に留まります": "有効時間内に価格が区間外にとどまり、区間を横切らない",
+      "100 件の勝利注文 USDT": "賭け金 100 USDT の勝ち注文",
+    },
+    ru: { "Пользовательская сеть PnL": "Чистый результат пользователя", "Ничья и расчет": "Определение результата и расчёт" },
+    fr: { "Les chances sont un multiplicateur de rendement": "Les cotes sont un multiplicateur de paiement", "les guillemets au-dessus du maximum": "les cotes supérieures au maximum" },
+    de: { "Eine qualifizierende Note reicht aus": "Eine gültige Preisberührung reicht aus" },
+    ar: {
+      "دفعات التنبؤ والخسارة والخسارة": "مدفوعات التنبؤ والأرباح والخسائر",
+      "دفعات التنبؤ والخسارة والخسائر": "مدفوعات التنبؤ والأرباح والخسائر",
+      "آليات احتمالات التنبؤ": "آليات مضاعفات العائد في التنبؤ",
+      "الاحتمالات هي مضاعف العائد": "نسبة العائد هي مضاعف المبلغ المدفوع",
+      "احتمالات ثابتة": "مضاعفات عائد ثابتة", "الاحتمالات الثابتة": "مضاعفات العائد الثابتة",
+      "حمام السباحة": "مجمع السيولة", "المسبحين": "مجمعي السيولة",
+      "علامات الاقتباس": "عروض الأسعار", "اقتباس ديناميكي": "عرض أسعار متغير",
+      "الحصة الصحيحة": "مبلغ الرهان المؤهل للاحتساب",
+      "الفوز بترتيب الشبكة": "أمر شبكة رابح", "فقدان النظام مع عدم وجود دفع تعويضات": "أمر خاسر دون عائد",
+      "الفراغات": "الأوامر الملغاة", "الصعاب والخلايا غير المتاحة": "مضاعفات العائد والخلايا غير المتاحة",
+    },
+
+    ko: {
+      "확률 메커니즘": "배당률 체계", "확률은 수익 승수입니다": "배당률은 지급 배수입니다",
+      "고정 확률": "고정 배당률", "따옴표": "배당률", "목표 반품": "목표 환급률",
+      "승률 경계": "배당률 한도", "말뚝": "베팅 금액", "시장평균가": "마크 가격",
+      "구성에서는 Up 견적을 1에 목표 수익률 계수를 Down 풀에 곱하고 Up 풀에 제안된 스테이크로 나눈 값으로 설명합니다. Down의 경우 두 개의 풀을 교환합니다. 구성된 하한 및 상한은 결과를 제한합니다.": "상승(Up) 배당률은 1 + 목표 환급 계수 × 하락 풀 ÷ (상승 풀 + 신규 베팅 금액)으로 계산합니다. 하락(Down)은 두 풀을 서로 바꿉니다. 계산 결과에는 설정된 최솟값과 최댓값이 적용됩니다.",
+    },
+
+
+
+  }[locale] ?? {};
+  return mapOutsideProtectedMdx(output, text => {
+    for (const [from, to] of Object.entries(glossary)) text = text.split(from).join(to);
+    return text;
+  });
+}
+
 export function polishMachineTranslation(content, locale, relativePath) {
   let output = content;
   output = polishUnexpectedUrlJoins(output, locale, relativePath);
@@ -899,6 +940,7 @@ export function polishMachineTranslation(content, locale, relativePath) {
     );
   }
   output = applyApprovedCoreCopy(output, locale, relativePath);
+  output = polishPredictionCopy(output, locale, relativePath);
   return output;
 }
 

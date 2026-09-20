@@ -1,0 +1,108 @@
+---
+title: "AI Hub 總覽"
+subtitle: "通過 CLI、MCP、託管行情服務和工作流模板，在 AI 客戶端與 Agent 流程中使用 6MM。"
+slug: ai-hub/overview
+canonical-url: https://docs.6mm.com/zh-TW/ai-hub/overview
+---
+
+> **規劃中 · 尚未上線**
+> AI Hub 為規劃內容。本頁中的功能、服務地址、命令及客戶端配置用於說明擬定方案，目前尚未開放使用。實際開放範圍與接入方式以上線公告為準。
+
+
+6MM Agentic AI Hub 是面向 AI 客戶端和 AI Agent 的 6MM 接入層，用於讀取 6MM 市場數據、處理賬戶工作流，並在後續階段支持受控交易操作。
+
+用戶不需要在交易頁面、API 文檔和腳本之間來回切換，可以直接在 AI 客戶端裡詢問 6MM 行情、解釋市場狀態、檢查賬戶風險，或生成訂單預覽。AI 客戶端不會替代 6MM API 的安全模型；它通過 CLI、MCP 或工作流模板調用結構化的 6MM 工具。
+
+<h2 id="what-you-can-ask-an-ai-client">用戶可以怎麼問</h2>
+
+AI Hub 適合處理這類問題：
+
+```text
+Show me the BTC-USDT-PERP order book and explain current liquidity.
+```
+
+```text
+Compare BTC and ETH funding rates over the last 24 hours.
+```
+
+```text
+Check my testnet positions and explain liquidation risk. Do not place orders.
+```
+
+```text
+Preview a small BTC long order and explain fees, margin impact, and risk checks.
+```
+
+<h2 id="why-ai-agents-need-a-dedicated-access-layer">為什麼 AI Agent 需要專門的接入層</h2>
+
+AI Agent 更適合調用結構化工具，而不是讀取網頁或複製粘貼的長文本。AI Hub 提供：
+
+| 需求 | 6MM 方案 |
+| --- | --- |
+| 實時市場上下文 | 用於 symbols、盤口、成交、資金費、費用和規則的公開市場工具與資源。 |
+| 清晰權限 | 區分公開數據、賬戶只讀、訂單預覽和受控交易權限範圍。 |
+| 更安全執行 | 先預覽的訂單流程、明確確認、冪等鍵、限額和審計日誌。 |
+| 多客戶端適配 | Hosted MCP、Local MCP、CLI、Remote MCP 和 Agentic Skills 適配不同 AI 環境。 |
+
+<h2 id="what-ai-hub-includes">AI Hub 包含什麼</h2>
+
+<CardGroup cols={2}>
+<Card title="6MM CLI" icon="fa-duotone fa-terminal" href="/zh-TW/ai-hub/cli">
+面向終端、腳本和可以執行 shell 命令的 編碼 Agent。
+</Card>
+<Card title="Local MCP" icon="fa-duotone fa-computer" href="/zh-TW/ai-hub/local-mcp">
+在用戶本機運行 MCP 服務，讓 AI 客戶端調用 6MM 工具，同時用戶憑證留在本機。
+</Card>
+<Card title="Hosted MCP" icon="fa-duotone fa-cloud" href="/zh-TW/ai-hub/hosted-mcp">
+連接 6MM 官方託管 MCP 端點，零安裝讀取公開市場數據和規則上下文。
+</Card>
+<Card title="Agentic Skills" icon="fa-duotone fa-layer-group" href="/zh-TW/ai-hub/agentic-skills">
+用於市場分析、組合風險、清算保護和執行規劃的可複用工作流模板。
+</Card>
+</CardGroup>
+
+<h2 id="setup-paths">接入路徑</h2>
+
+| 路徑 | 適合場景 | 用戶需要知道 |
+| --- | --- | --- |
+| Hosted MCP | 快速讀取公開市場數據 | 公開數據無需安裝，也不需要用戶 API key。第一階段不以交易為目標。 |
+| Local MCP | AI 客戶端需要私有賬戶上下文 | MCP 服務在本機運行，憑證留在用戶本機。 |
+| CLI | 編碼 Agent、腳本和終端用戶 | 輸出適合 agent 解析，也可以不依賴 MCP 服務。 |
+| Remote MCP | 機構或團隊需要自有端點 | 用戶或機構控制託管、憑證、網絡訪問和日誌。 |
+| Agentic Skills | 可複用工作流 | Skill 引導 AI 使用已授權工具完成分析和風險步驟。 |
+
+<h2 id="what-is-available-first">第一階段先支持什麼</h2>
+
+AI Hub 應先從公開市場數據和交易規則資源開始：
+
+- 市場列表。
+- 行情 ticker。
+- 盤口。
+- 成交。
+- K 線。
+- 資金費率。
+- 系統狀態。
+- 費用、合約規格、保證金規則和風控規則資源。
+
+私有賬戶和交易能力應分階段開放：
+
+- 賬戶只讀工具 需要明確的只讀憑證。
+- 任何真實下單前都應先完成訂單預覽。
+- 受控交易需要權限範圍、服務端風險檢查、用戶確認、冪等鍵和審計日誌。
+
+<h2 id="start-here">從這裡開始</h2>
+
+<CardGroup cols={2}>
+<Card title="選擇接入方式" icon="fa-duotone fa-route" href="/zh-TW/ai-hub/choose-a-setup">
+根據 AI 客戶端、安全需求和部署方式選擇合適路徑。
+</Card>
+<Card title="AI 客戶端指南" icon="fa-duotone fa-laptop-code" href="/zh-TW/ai-hub/client-guides">
+從 ChatGPT Desktop、Claude Desktop、Claude Code、Codex CLI、Cursor、Gemini CLI、VS Code 或 Windsurf 開始。
+</Card>
+<Card title="Hosted MCP" icon="fa-duotone fa-cloud" href="/zh-TW/ai-hub/hosted-mcp">
+無需安裝本地服務，先從公開市場數據開始。
+</Card>
+<Card title="Local MCP" icon="fa-duotone fa-computer" href="/zh-TW/ai-hub/local-mcp">
+需要私有賬戶上下文或未來交易工具時，使用本地 MCP 服務。
+</Card>
+</CardGroup>

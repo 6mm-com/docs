@@ -1,0 +1,89 @@
+---
+title: "Địa phương MCP"
+subtitle: "Chạy cục bộ máy chủ 6MM MCP để khách hàng AI có thể truy cập thị trường, tài khoản và các công cụ giao dịch trong tương lai trong khi thông tin xác thực vẫn còn trên máy người dùng."
+slug: ai-hub/local-mcp
+canonical-url: https://docs.6mm.com/vi/ai-hub/local-mcp
+---
+
+> **Đã lên kế hoạch — chưa ra mắt**
+> AI Hub là một tính năng được lên kế hoạch. Các khả năng, điểm cuối, lệnh và cấu hình máy khách trên trang này mô tả thiết kế được đề xuất và hiện không có sẵn. Hướng dẫn thiết lập và tính khả dụng cuối cùng sẽ được công bố khi ra mắt.
+
+
+MCP cục bộ là thiết lập được đề xuất khi khách hàng AI cần bối cảnh tài khoản riêng tư hoặc các công cụ giao dịch được kiểm soát trong tương lai.
+
+Máy chủ MCP chạy trên máy của người dùng. Máy khách AI gọi các công cụ 6MM cục bộ và máy chủ cục bộ liên lạc với 6MM APIs bằng thông tin đăng nhập do người dùng định cấu hình.
+
+<h2 id="what-your-ai-client-can-do">Khách hàng AI của bạn có thể làm gì</h2>
+
+Với Local MCP, máy khách AI có thể sử dụng các công cụ 6MM theo cách được kiểm soát:
+
+- Lấy dữ liệu thị trường trực tiếp và lịch sử.
+- Đọc số dư tài khoản, vị thế, lệnh mở, điền và hồ sơ cấp vốn khi thông tin đăng nhập chỉ đọc được bật.
+- Giải thích rủi ro danh mục đầu tư, sử dụng ký quỹ và rủi ro thanh lý.
+- Xem trước các đơn đặt hàng trước khi đặt bất kỳ đơn hàng thực nào.
+- Trong các giai đoạn giao dịch được kiểm soát sau này, chỉ tạo hoặc hủy lệnh sau khi được phép rõ ràng và kiểm tra rủi ro.
+
+Sử dụng Local MCP khi thông tin xác thực vẫn còn trên máy của người dùng.
+
+<h2 id="architecture">Ngành kiến ​​​​trúc</h2>
+
+```text
+AI client
+  -> local 6mm-mcp process
+  -> 6MM REST / WebSocket API
+```
+
+<h2 id="example-configuration">Cấu hình ví dụ</h2>
+
+```json
+{
+  "mcpServers": {
+    "6mm": {
+      "command": "uvx",
+      "args": ["6mm-mcp"],
+      "env": {
+        "SIXMM_ENVIRONMENT": "testnet",
+        "SIXMM_API_KEY": "your_api_key",
+        "SIXMM_API_SECRET": "your_api_secret"
+      }
+    }
+  }
+}
+```
+
+<h2 id="recommended-permission-tiers">Cấp quyền được đề xuất</h2>
+
+| cấp | Công cụ | Ghi chú |
+| --- | --- | --- |
+| Dữ liệu công khai | Thị trường, mã cổ phiếu, sổ đặt hàng, klines, giao dịch, tài trợ | Không có quyền truy cập tài khoản cá nhân. |
+| Tài khoản đã đọc | Số dư, vị thế, lệnh mở, khớp lệnh | Yêu cầu phạm vi khóa API chỉ đọc. |
+| xem trước giao dịch | Lệnh xem trước, tác động ký quỹ, ước tính phí | Không đặt hàng. |
+| Giao dịch có kiểm soát | Tạo, hủy, sửa đơn hàng | Yêu cầu sự cho phép, xác nhận và kiểm soát rủi ro rõ ràng. |
+
+<h2 id="first-setup-checklist">Danh sách kiểm tra thiết lập đầu tiên</h2>
+
+1. Cài đặt gói MCP.
+2. Tạo hoặc định cấu hình khóa API chỉ đọc.
+3. Bắt đầu trong testnet.
+4. Thêm máy chủ MCP vào cấu hình máy khách AI.
+5. Yêu cầu khách hàng liệt kê các công cụ 6MM có sẵn.
+6. Chạy truy vấn dữ liệu thị trường công cộng.
+7. Chỉ sau đó thêm thông tin xác thực đọc tài khoản nếu cần.
+
+<h2 id="example-prompts">Lời nhắc ví dụ</h2>
+
+```text
+Use 6MM to list available perpetual markets.
+```
+
+```text
+Use 6MM testnet to check my open positions and explain liquidation risk.
+```
+
+```text
+Preview a small BTC long order on 6MM testnet and explain margin impact. Do not place the order.
+```
+
+<h2 id="security-notes">Ghi chú bảo mật</h2>
+
+MCP cục bộ nên mặc định là chỉ đọc và testnet. Các công cụ giao dịch phải yêu cầu xem trước, xác nhận của người dùng, khóa bình thường, giới hạn danh nghĩa và kiểm tra rủi ro phía dịch vụ.

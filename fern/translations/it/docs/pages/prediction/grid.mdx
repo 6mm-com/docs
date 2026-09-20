@@ -1,0 +1,55 @@
+---
+title: "Griglia di previsione"
+headline: "Griglia di previsione | 6MM Previsione"
+description: "Leggi le celle di prezzo e ora, comprendi i risultati basati sul tocco e segui le condizioni bloccate di un ordine della griglia di previsione."
+slug: prediction/grid
+canonical-url: https://docs.6mm.com/it/prediction/grid
+---
+
+La griglia di previsione visualizza gli intervalli di prezzo in verticale e le finestre temporali future in orizzontale. La selezione di una cella crea un ordine indipendente per quell'intervallo di prezzo e finestra temporale.
+
+## Leggi una cella
+
+| Dettagli delle celle della griglia | Senso |
+| --- | --- |
+| Intervallo di prezzo | I limiti di prezzo inferiore e superiore |
+| Ora di inizio e fine | La finestra durante la quale un tocco può qualificarsi |
+| moltiplicatore di pagamento offerto | Il moltiplicatore di rendimento offerto per quella cella |
+| Importo della puntata | L'importo impegnato per quell'ordine |
+
+Una griglia di 10 righe e 10 colonne con due secondi per colonna coprirebbe 20 secondi. Questo è un esempio di lettura; utilizzare le dimensioni e i tempi assoluti indicati nel prodotto attivo.
+
+## Cosa conta come successo?
+
+Durante la finestra temporale valida della cella, il prezzo del contrassegno della piattaforma deve entrare o superare il suo intervallo di prezzo. Basta un tocco qualificante; il prezzo non deve rimanere lì fino alla fine.
+
+| Esempio: 65.010–65.020 durante le 10:00:04–10:00:06 | Interpretazione dei risultati |
+| --- | --- |
+| Alle 10:00:05 il prezzo raggiunge 65.015 | Immette l'intervallo durante la finestra |
+| All'interno della finestra, il prezzo passa da 65.005 a 65.025 | Attraversa l'intervallo |
+| Il prezzo rimane fuori senza incrociarsi durante la finestra | Nessun successo qualificante |
+| Il primo tocco avviene al termine della finestra | Troppo tardi per quest'ordine |
+
+I prezzi limite e i timestamp esatti seguono la regola accettata. Un feed di prezzo mancante non è una prova che il prezzo non abbia mai toccato la cella.
+
+## Come partecipare
+
+1. Seleziona un simbolo e controlla gli assi del tempo e del prezzo visualizzati.
+2. Scegli una cella disponibile e un importo entro i suoi limiti.
+3. Conferma i limiti della cella, la finestra valida, le quote e il pagamento previsto.
+4. Controlla l'ordine accettato. L'intervallo di prezzo, la finestra valida e le quote rimangono bloccati anche quando la griglia live si sposta.
+5. Segui il risultato e la liquidazione effettiva nella cronologia degli ordini.
+
+## Quote e celle non disponibili
+
+Il modello di prezzo stima la probabilità di toccare l'intervallo all'interno della finestra dal prezzo mark, dalla volatilità e dai limiti prezzo/tempo. Il preventivo del modello si basa sul tasso di rendimento target diviso per la probabilità di successo stimata, soggetta alle regole configurate.
+
+Ad esempio, 97% diviso per 20% dà 4,85x. Un ordine vincente di 100 USDT bloccato a 4,85x ha una vincita lorda di 485 USDT. Un'etichetta arrotondata non giustifica la modifica del moltiplicatore memorizzato.
+
+In base alla regola della griglia configurata, una quota calcolata superiore al massimo rende la cella non disponibile invece di ridurre tale quota al massimo. Anche altre restrizioni possono impedire l'accettazione.
+
+## Prove di prezzo interrotte
+
+Se il feed viene interrotto durante il periodo di validità e non è possibile stabilire un riscontro, l'ordine entra nella gestione delle eccezioni o nell'elaborazione del rimborso. Non dedurre una perdita da un segmento del grafico vuoto.
+
+Vedere [Fonti dei prezzi](/it/prediction/price-source), [Meccanismi di probabilità](/it/prediction/odds), E [Rimborsi ed eccezioni](/it/prediction/refunds-exceptions).

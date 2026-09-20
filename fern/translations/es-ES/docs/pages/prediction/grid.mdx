@@ -1,0 +1,55 @@
+---
+title: "Cuadrícula de predicción"
+headline: "Cuadrícula de predicción | 6MM Predicción"
+description: "Lea las celdas de precio y tiempo, comprenda los resultados táctiles y siga las condiciones bloqueadas de una orden de Prediction Grid."
+slug: prediction/grid
+canonical-url: https://docs.6mm.com/es-ES/prediction/grid
+---
+
+Prediction Grid muestra intervalos de precios verticalmente y ventanas de tiempo futuras horizontalmente. Al seleccionar una celda se crea una orden independiente para ese intervalo de precios y ventana de tiempo.
+
+## leer una celda
+
+| Detalles de la celda de la cuadrícula | Significado |
+| --- | --- |
+| Intervalo de precios | Los límites de precios inferior y superior |
+| Hora de inicio y finalización | La ventana durante la cual un toque puede calificar |
+| multiplicador de pago ofrecido | El multiplicador de retorno ofrecido para esa celda. |
+| Importe apostado | La cantidad comprometida para ese pedido. |
+
+Una cuadrícula de 10 filas y 10 columnas con dos segundos por columna cubriría 20 segundos. Este es un ejemplo de lectura; Utilice las dimensiones y tiempos absolutos que se muestran en el producto activo.
+
+## ¿Qué cuenta como un acierto?
+
+Durante la ventana de tiempo válida de la celda, el precio de marca de la plataforma debe ingresar o cruzar su intervalo de precios. Un toque de calificación es suficiente; el precio no tiene por qué permanecer ahí hasta el final.
+
+| Ejemplo: 65.010–65.020 durante 10:00:04–10:00:06 | Interpretación de resultados |
+| --- | --- |
+| A las 10:00:05 el precio llega a 65.015 | Introduce el intervalo durante la ventana. |
+| Dentro de la ventana, el precio pasa de 65.005 a 65.025 | cruza el intervalo |
+| El precio se queda afuera sin cruzar durante la ventana. | Ningún golpe de calificación |
+| El primer toque ocurre después de que termina la ventana. | Demasiado tarde para este pedido |
+
+Los precios límite exactos y las marcas de tiempo siguen la regla aceptada. La falta de un feed de precios no es evidencia de que el precio nunca haya tocado la celda.
+
+## Como participar
+
+1. Seleccione un símbolo e inspeccione los ejes de tiempo y precio mostrados.
+2. Elija una celda disponible y una cantidad dentro de sus límites.
+3. Confirme los límites de la celda, la ventana válida, las probabilidades y el pago esperado.
+4. Consulta el pedido aceptado. Su intervalo de precios, ventana válida y probabilidades permanecen bloqueados incluso cuando la grilla en vivo se mueve.
+5. Siga el resultado y la liquidación real en el historial de pedidos.
+
+## Probabilidades y celdas no disponibles
+
+El modelo de precios estima la probabilidad de tocar el intervalo dentro de la ventana a partir del precio de marca, la volatilidad y los límites de precio/tiempo. La cotización del modelo se basa en la tasa de retorno objetivo dividida por la probabilidad de acierto estimada, sujeta a reglas configuradas.
+
+Por ejemplo, 97% dividido por 20% da 4,85x. Una orden ganadora de 100 USDT fijada a 4,85x tiene un pago bruto de 485 USDT. Una etiqueta redondeada no justifica cambiar el multiplicador almacenado.
+
+Según la regla de cuadrícula configurada, una cotización calculada por encima del máximo hace que la celda no esté disponible en lugar de reducir esa cotización al máximo. Otras restricciones también pueden impedir la aceptación.
+
+## Evidencia de precio interrumpido
+
+Si la transmisión se interrumpe durante el período válido y no se puede establecer un acierto, el pedido ingresa en el manejo de excepciones o en el procesamiento de reembolso. No infiera una pérdida a partir de un segmento de gráfico vacío.
+
+Ver [Fuentes de precios](/es-ES/prediction/price-source), [Mecanismos de probabilidades](/es-ES/prediction/odds), y [Reembolsos y Excepciones](/es-ES/prediction/refunds-exceptions).

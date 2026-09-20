@@ -1,0 +1,34 @@
+---
+title: "Prediction Odds Mechanisms"
+headline: "Prediction Odds Mechanisms | 6MM Prediction"
+description: "Compare pool-based Up/Down odds, fixed Custom odds, and probability-based Grid quotes without confusing target return with a guarantee."
+slug: prediction/odds
+---
+
+Odds are a return multiplier. The pricing mechanism depends on the game; the currently displayed quote is not evidence of an already accepted order's terms.
+
+## Three mechanisms
+
+| Game | Mechanism | Important distinction |
+| --- | --- | --- |
+| Up/Down | Dynamic quote from the two directional pools | Pool balance and the proposed stake affect the quote |
+| Custom | Fixed odds configured per symbol and period | Both directions use that period's fixed odds; acceptance stores a snapshot |
+| Grid | Target return rate divided by estimated hit probability | The quote varies by price interval and time window; acceptance locks it |
+
+## Up/Down pool pricing
+
+The configuration describes the Up quote as one plus the target-return factor multiplied by the Down pool, divided by the Up pool plus the proposed stake. For Down, exchange the two pools. Configured lower and upper bounds constrain the result.
+
+Liquidity supplied by platform market-making accounts can participate in these pools. Their orders are not counted as real user participation. A displayed participant count is therefore not a complete representation of pool funds.
+
+## Grid probability pricing
+
+Estimated hit probability considers the mark price, recent volatility, and the chosen price/time boundaries. It estimates touching during a window, not simply ending inside a range.
+
+For a 97% target return factor and an estimated 20% hit probability, the model quote is 4.85x. Grid configuration sets a minimum; quotes above the maximum make the cell unavailable rather than being capped down to that maximum.
+
+## Target return is not a promised result
+
+A target return parameter is an input to pricing. It is not a guaranteed individual return, an observed win rate, or a promise that a user's results will converge to that percentage. Model estimates, odds bounds, and actual outcomes are different quantities.
+
+For money examples and precision, see [Payouts and PnL](/prediction/returns-pnl).

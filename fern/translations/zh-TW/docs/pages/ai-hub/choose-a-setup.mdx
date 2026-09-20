@@ -1,0 +1,81 @@
+---
+title: "選擇接入方式"
+subtitle: "根據安全邊界和使用場景，在 Hosted MCP、Local MCP、CLI、Remote MCP 和 Agentic Skills 中選擇合適方式。"
+slug: ai-hub/choose-a-setup
+canonical-url: https://docs.6mm.com/zh-TW/ai-hub/choose-a-setup
+---
+
+> **規劃中 · 尚未上線**
+> AI Hub 為規劃內容。本頁中的功能、服務地址、命令及客戶端配置用於說明擬定方案，目前尚未開放使用。實際開放範圍與接入方式以上線公告為準。
+
+
+選擇接入方式時，先回答兩個問題：
+
+1. 你想在哪個 AI 客戶端裡使用？
+2. 你只需要公開數據，還是需要私有賬戶訪問或交易工作流？
+
+如果不確定，公開數據先從 Hosted MCP 開始；私有賬戶工作流先從 Local MCP 開始。
+
+<h2 id="pick-by-use-case">按使用場景選擇</h2>
+
+<CardGroup cols={2}>
+<Card title="只需要公開市場數據" icon="fa-duotone fa-cloud" href="/zh-TW/ai-hub/hosted-mcp">
+使用 Hosted MCP。無需本地安裝，不需要用戶 API key，也不訪問私有賬戶。
+</Card>
+<Card title="希望 AI 客戶端讀取我的賬戶" icon="fa-duotone fa-computer" href="/zh-TW/ai-hub/local-mcp">
+使用 Local MCP 和只讀憑證。建議從 測試網或只讀模式開始。
+</Card>
+<Card title="我的 agent 可以執行終端命令" icon="fa-duotone fa-terminal" href="/zh-TW/ai-hub/cli">
+使用 6MM CLI。適合 Codex、Claude Code、Gemini CLI、腳本和 CI 任務。
+</Card>
+<Card title="團隊需要自管端點" icon="fa-duotone fa-server" href="/zh-TW/ai-hub/remote-mcp">
+使用 Remote MCP。將 MCP 服務部署在團隊自己控制的基礎設施中。
+</Card>
+</CardGroup>
+
+<h2 id="quick-decision-table">快速選擇表</h2>
+
+| 目標 | 推薦方式 | 原因 |
+| --- | --- | --- |
+| 讓 AI 客戶端查詢公開市場數據 | Hosted MCP | 無需本地安裝，也不需要用戶 API key。 |
+| 讓 Claude Desktop、Cursor、ChatGPT Desktop 調用 6MM 工具 | Local MCP | AI 通過用戶本機 MCP 服務 調用工具。 |
+| 讓 Codex、Claude Code、Gemini CLI 或腳本調用 6MM | CLI | 命令輸出可使用 JSON，方便 Agent 解析。 |
+| 給公司內部提供統一 MCP 端點 | Remote MCP | 機構自己控制部署、憑證、訪問和日誌。 |
+| 標準化重複的分析或風控流程 | Agentic Skills | 模板定義工具使用、風控邊界和輸出格式。 |
+
+<h2 id="pick-by-ai-client">按 AI 客戶端選擇</h2>
+
+| AI 客戶端 | Hosted MCP | Local MCP | CLI | 說明 |
+| --- | --- | --- | --- | --- |
+| Claude Desktop | 可用 | 推薦 | 可用 | 需要賬戶上下文時使用 Local MCP。 |
+| Claude.ai Web | 支持時推薦 | 不適用 | 不適用 | 更適合公開市場數據。 |
+| ChatGPT Desktop | 可用 | 推薦 | 可用 | 私有賬戶工具優先 Local MCP。 |
+| Cursor | 可用 | 推薦 | 可用 | Local MCP 適合 編碼工作流。 |
+| Codex CLI | 可用 | 可用 | 推薦 | CLI 通常是最直接路徑。 |
+| Claude Code CLI | 可用 | 可用 | 推薦 | 根據工作流選擇 CLI 或 Local MCP。 |
+| VS Code / Copilot | 可用 | 推薦 | 可用 | 取決於 MCP 和終端支持。 |
+| Gemini CLI | 可用 | 可用 | 推薦 | CLI 是最簡單的第一步。 |
+| Windsurf | 可用 | 推薦 | 可用 | 優先 Local MCP。 |
+
+<h2 id="pick-by-setup-path">按接入路徑選擇</h2>
+
+| 方式 | 安裝方式 | API key 位置 | 第一階段範圍 | 賬戶與交易範圍 |
+| --- | --- | --- | --- | --- |
+| Hosted MCP | 無需安裝 | 公開數據不需要用戶 API key | 公開市場數據 | 第一階段不建議開放 |
+| Local MCP | 用戶安裝本地包 | 用戶本機 | 公開數據和賬戶只讀 | 未來交易能力的推薦路徑 |
+| CLI | 用戶安裝命令行包 | 用戶本機 | 公開數據和腳本 | 適合訂單預覽和自動化 |
+| Remote MCP | 用戶自己部署服務 | 用戶雲或機構雲 | 公開數據或賬戶只讀 | 用戶控制部署時可逐步開放 |
+| Skills | 文檔模板或可安裝模板 | 取決於底層工具 | 分析工作流 | 必須遵循工具權限 |
+
+<h2 id="security-rule-of-thumb">安全選擇原則</h2>
+
+使用能完成任務的最低風險方式：
+
+- 公開市場數據：Hosted MCP 足夠。
+- 私有賬戶數據：Local MCP 或用戶自管 Remote MCP。
+- 交易預覽：Local MCP 或 CLI，優先使用測試網。
+- 真實交易：必須有明確權限、訂單預覽、用戶確認、限額和審計日誌。
+
+<h2 id="next-step">下一步</h2>
+
+選擇路徑後，打開對應指南，並先完成一個驗證提示詞，再加入敏感憑證。

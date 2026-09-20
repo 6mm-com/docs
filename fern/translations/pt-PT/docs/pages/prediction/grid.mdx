@@ -1,0 +1,55 @@
+---
+title: "Grelha de previsão"
+headline: "Grelha de previsão | 6MM Previsão"
+description: "Leia as células de preço e tempo, compreenda os resultados baseados no toque e siga as condições bloqueadas de um pedido da Grelha de Previsão."
+slug: prediction/grid
+canonical-url: https://docs.6mm.com/pt-PT/prediction/grid
+---
+
+A Grelha de Previsão exibe intervalos de preços verticalmente e janelas de tempo futuro horizontalmente. A seleção de uma célula cria um pedido independente para esse intervalo de preços e janela de tempo.
+
+## Ler uma célula
+
+| Detalhes da célula da grelha | Significado |
+| --- | --- |
+| Intervalo de preço | Os limites de preço inferior e superior |
+| Horário de início e fim | A janela durante a qual um toque pode qualificar |
+| multiplicador de pagamento oferecido | O multiplicador de rendibilidade oferecido para essa célula |
+| Valor da aposta | O valor comprometido com este pedido |
+
+Uma grelha de 10 linhas e 10 colunas com dois segundos por coluna cobriria 20 segundos. Este é um exemplo de leitura; utilize as dimensões e os tempos absolutos indicados no produto ativo.
+
+## O que conta como um acerto?
+
+Durante a janela de tempo válida da célula, o preço de marca da plataforma deve entrar ou cruzar o seu intervalo de preços. Basta um toque de qualificação; o preço não tem de lá permanecer até ao fim.
+
+| Exemplo: 65.010–65.020 durante as 10h00:04–10h00:06 | Interpretação dos resultados |
+| --- | --- |
+| Às 10h00min05 o preço atinge os 65.015 | Entra no intervalo durante a janela |
+| Dentro da janela, o preço passa de 65.005 para 65.025 | Cruza o intervalo |
+| O preço fica fora sem cruzar durante a janela | Nenhum acerto de qualificação |
+| O primeiro toque ocorre após o término da janela | Tarde demais para este pedido |
+
+Os preços limite exatos e os carimbos de data e hora seguem a regra aceite. A falta de um feed de preços não é evidência de que o preço nunca tenha tocado na célula.
+
+## Como participar
+
+1. Selecione um símbolo e inspecione os eixos de tempo e preço apresentados.
+2. Escolha uma célula disponível e um valor dentro dos seus limites.
+3. Confirme os limites das células, janela válida, probabilidades e pagamento esperado.
+4. Verifique o pedido aceite. O seu intervalo de preços, janela válida e probabilidades permanecem bloqueados mesmo quando a grelha ao vivo se move.
+5. Acompanhe o resultado e a liquidação real no histórico de encomendas.
+
+## Probabilidades e células indisponíveis
+
+O modelo de pricing estima a probabilidade de atingir o intervalo dentro da janela do preço de referência, da volatilidade e dos limites de preço/tempo. A cotação do modelo é baseada na taxa de rendibilidade alvo dividida pela probabilidade de acerto estimada, sujeita às regras configuradas.
+
+Por exemplo, 97% a dividir por 20% dá 4,85x. Um pedido vencedor de 100 USDT bloqueado a 4,85x tem um pagamento bruto de 485 USDT. Um rótulo arredondado não justifica a alteração do multiplicador armazenado.
+
+Na regra de grelha configurada, uma cotação calculada acima do máximo torna a célula indisponível em vez de reduzir essa cotação ao máximo. Outras restrições também podem impedir a aceitação.
+
+## Evidência de preço interrompido
+
+Se o feed for interrompido durante a janela válida e não for possível estabelecer uma ocorrência, o pedido entrará no tratamento de exceções ou no processamento de reembolso. Não infira uma perda a partir de um segmento vazio do gráfico.
+
+Ver [Fontes de preços](/pt-PT/prediction/price-source), [Mecanismos de probabilidades](/pt-PT/prediction/odds), e [Reembolsos e Exceções](/pt-PT/prediction/refunds-exceptions).

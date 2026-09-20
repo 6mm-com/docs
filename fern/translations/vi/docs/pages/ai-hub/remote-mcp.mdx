@@ -1,0 +1,50 @@
+---
+title: "Triển khai từ xa MCP"
+subtitle: "Triển khai điểm cuối 6MM MCP trong cơ sở hạ tầng do tổ chức hoặc người dùng quản lý."
+slug: ai-hub/remote-mcp
+canonical-url: https://docs.6mm.com/vi/ai-hub/remote-mcp
+---
+
+> **Đã lên kế hoạch — chưa ra mắt**
+> AI Hub là một tính năng được lên kế hoạch. Các khả năng, điểm cuối, lệnh và cấu hình máy khách trên trang này mô tả thiết kế được đề xuất và hiện không có sẵn. Hướng dẫn thiết lập và tính khả dụng cuối cùng sẽ được công bố khi ra mắt.
+
+
+MCP từ xa dành cho người dùng hoặc tổ chức muốn có điểm cuối MCP dài hạn dưới sự kiểm soát của riêng họ.
+
+Không giống như Hosted MCP, Remote MCP không được vận hành bởi 6MM cho người dùng. 6MM cung cấp mã, hình ảnh, mẫu và tài liệu; người dùng kiểm soát việc lưu trữ và thông tin xác thực.
+
+<h2 id="architecture">Ngành kiến ​​​​trúc</h2>
+
+```text
+AI client
+  -> user-managed MCP HTTP endpoint
+  -> 6MM REST / WebSocket API
+```
+
+<h2 id="deployment-targets">Mục tiêu triển khai</h2>
+
+- Docker hoặc Docker Soạn.
+- VPS với proxy ngược.
+- Đường sắt.
+- Kết xuất.
+- Fly.io.
+- AWS ECS hoặc Lambda.
+- Kubernetes nội bộ.
+
+<h2 id="required-files">Các tập tin cần thiết</h2>
+
+- Dockerfile.
+- docker-compose.yml.
+- .env.template.
+- HTTP chế độ vận chuyển.
+- /mcp điểm cuối.
+- /điểm cuối sức khỏe.
+- Proxy ngược và ghi chú TLS.
+
+<h2 id="credential-model">Mô hình thông tin xác thực</h2>
+
+Thông tin xác thực phải được lưu trữ trong môi trường do người dùng quản lý, không phải trong lời nhắc của ứng dụng khách AI. Đối với các hoạt động triển khai do tổ chức quản lý, hãy hạn chế quyền truy cập vào các mạng và máy khách được phê duyệt.
+
+<h2 id="recommended-first-release">Bản phát hành đầu tiên được đề xuất</h2>
+
+Bắt đầu với dữ liệu thị trường công cộng. Thêm chỉ đọc tài khoản sau khi xác thực, phạm vi khóa, nhật ký và kiểm soát truy cập có sẵn. Giao dịch sẽ bị vô hiệu hóa cho đến khi đáp ứng được các yêu cầu giao dịch được kiểm soát.

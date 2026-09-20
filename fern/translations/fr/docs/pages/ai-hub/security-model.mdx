@@ -1,0 +1,47 @@
+---
+title: "Modèle de sécurité"
+subtitle: "Comprenez le modèle d'autorisation, la posture de sécurité par défaut et les garde-fous commerciaux pour l'accès assisté AI-."
+slug: ai-hub/security-model
+canonical-url: https://docs.6mm.com/fr/ai-hub/security-model
+---
+
+> **Prévu – pas encore lancé**
+> AI Hub est une fonctionnalité prévue. Les fonctionnalités, points de terminaison, commandes et configurations client sur cette page décrivent la conception proposée et ne sont actuellement pas disponibles. La disponibilité finale et les instructions de configuration seront annoncées au lancement.
+
+
+L’accès au trading assisté par l’IA doit être plus sûr que l’automatisation ordinaire, car l’intention de l’utilisateur est exprimée en langage naturel.
+
+<h2 id="required-permission-scopes">Portées des autorisations requises</h2>
+
+| Portée | Permet |
+| --- | --- |
+| marché : lire | Données du marché public et ressources en matière de règles. |
+| compte : lire | Soldes, positions, ordres ouverts, exécutions et résumés de comptes. |
+| commande : écrire | Création, modification et annulation de commande. |
+
+<h2 id="default-safety-posture">Posture de sécurité par défaut</h2>
+
+- Par défaut, lecture seule.
+- Par défaut, testnet.
+- N'exposez pas les retraits ou les transferts via des outils d'IA.
+- Exiger un aperçu avant de créer.
+- Exiger une confirmation explicite avant de négocier sur le réseau principal.
+- Utilisez les clés d'idempotence pour les actions commerciales.
+- Appliquez des limites maximales de notionnel et de levier.
+- Conservez des journaux d’audit complets.
+
+<h2 id="controlled-trading-flow">Flux de trading contrôlé</h2>
+
+```text
+User natural language intent
+  -> AI maps intent to tool parameters
+  -> 6mm_preview_order validates the order
+  -> service returns risk checks and margin impact
+  -> user explicitly confirms
+  -> 6mm_create_order submits the order
+  -> audit log records the full flow
+```
+
+<h2 id="prompt-injection-protection">Protection contre les injections rapides</h2>
+
+Les clients IA et les serveurs MCP doivent traiter le contenu externe comme non fiable. Les pages de marché, les textes copiés, les documents et le contenu Web ne doivent pas remplacer les autorisations des outils, les règles de confirmation ou les limites de négociation.

@@ -1,4 +1,6 @@
-import { execFileSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
+import { readFileSync } from "node:fs";
+import { parse as parseYaml } from "yaml";
 import { createHash } from "node:crypto";
 import { readFile, readdir, stat } from "node:fs/promises";
 import path from "node:path";
@@ -12,7 +14,7 @@ import {
 } from "./locale-config.mjs";
 import { findTranslationQualityIssues } from "./polish-core-translations.mjs";
 
-const projectRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
+const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const fernRoot = path.join(projectRoot, "fern");
 const configPath = path.join(fernRoot, "docs.yml");
 const sourceRoot = path.join(fernRoot, "docs");
@@ -25,7 +27,16 @@ const generatedLocaleTargetLanguages = Object.fromEntries(
   ]),
 );
 const nativeLocales = nativeLocaleCodes;
-const translatedLocales = expectedLocales.filter((locale) => locale !== "en");
+const requestedLocaleArg = process.argv.find((argument) => argument.startsWith("--locales="));
+const requestedLocales = requestedLocaleArg
+  ? new Set(requestedLocaleArg.slice("--locales=".length).split(",").filter(Boolean))
+  : null;
+if (requestedLocales && [...requestedLocales].some((locale) => !expectedLocales.includes(locale))) {
+  throw new Error("Unknown locale in --locales; use the configured Docs locale codes");
+}
+const translatedLocales = expectedLocales.filter(
+  (locale) => locale !== "en" && (!requestedLocales || requestedLocales.has(locale)),
+);
 const generatedLocales = generatedLocaleSpecs.map((locale) => locale.code);
 const errors = [];
 
@@ -34,12 +45,7 @@ function localizedRoot(locale) {
 }
 
 function loadYamlAsJson(filePath) {
-  const ruby = [
-    "require 'yaml'",
-    "require 'json'",
-    "puts JSON.generate(YAML.load_file(ARGV.fetch(0)))",
-  ].join("; ");
-  return JSON.parse(execFileSync("ruby", ["-e", ruby, filePath], { encoding: "utf8" }));
+  return parseYaml(readFileSync(filePath, "utf8"));
 }
 
 function frontmatter(content) {
@@ -133,8 +139,8 @@ const activePages = [
     ),
   ),
 ];
-if (activePages.length !== 87) {
-  pushError(`Expected 87 active pages, found ${activePages.length}`);
+if (activePages.length !== 125) {
+  pushError(`Expected 125 active pages, found ${activePages.length}`);
 }
 
 if (config.title !== "6MM Docs") {
@@ -200,7 +206,7 @@ const sitelinkTargets = [
   ["Trading Solutions", "docs/pages/solutions/overview.mdx", "/solutions/overview"],
   ["Developer API", "docs/pages/developer-api/overview.mdx", "/developer-api/overview"],
   ["Trading Widget SDK", "docs/pages/sdk/trading-widget/overview.mdx", "/sdk/trading-widget/overview"],
-  ["Agent SDK", "docs/pages/sdk/agent-sdk/overview.mdx", "/sdk/agent-sdk/overview"],
+  ["Partner Backend SDK", "docs/pages/sdk/agent-sdk/overview.mdx", "/sdk/agent-sdk/overview"],
   ["Security & Compliance", "docs/pages/security-compliance/overview.mdx", "/security-compliance/overview"],
   ["Integration & Support", "docs/pages/resources/overview.mdx", "/resources/overview"],
 ];
@@ -208,9 +214,23 @@ const sourceHome = await readFile(
   path.join(fernRoot, "docs/pages/home.mdx"),
   "utf8",
 );
+// Homepage architecture: product, solution, integration, and launch groups.
+for (const locale of ["en", ...translatedLocales]) {
+  const homePath = locale === "en" ? path.join(fernRoot, "docs/pages/home.mdx") : path.join(translationsRoot, locale, "docs/pages/home.mdx");
+  const home = await readFile(homePath, "utf8");
+  const groups = [...home.matchAll(/<CardGroup cols=\{(\d+)\}>([\s\S]*?)<\/CardGroup>/g)];
+  const counts = groups.map(group => (group[2].match(/<Card\s/g) ?? []).length);
+  if (counts.join(",") !== "2,4,6" || groups.map(group => group[1]).join(",") !== "2,2,3") pushError(`[${locale}] unexpected homepage group layout`);
+  const prefix = locale === "en" ? "" : `/${locale}`;
+  for (const route of ["/trading/overview", "/prediction/overview"]) {
+    if (!groups[0]?.[2].includes(`href="${prefix}${route}"`)) pushError(`[${locale}] trading products must appear together first`);
+  }
+  if (!home.includes("sixmm-stat-grid") || (home.match(/<div><strong>/g) ?? []).length !== 4) pushError(`[${locale}] homepage must include four guidance blocks`);
+}
+
 for (const [label, relativePagePath, href] of sitelinkTargets) {
   if (
-    !sourceHome.includes(`title="${label}"`) ||
+    (label !== "Trading Solutions" && !sourceHome.includes(`title="${label}"`)) ||
     !sourceHome.includes(`href="${href}"`)
   ) {
     pushError(`[en] homepage is missing the ${label} sitelink to ${href}`);
@@ -259,13 +279,13 @@ const simplifiedChineseHome = await readFile(
 for (const [label, href] of [
   ["交易解决方案", "/zh-CN/solutions/overview"],
   ["开发者 API", "/zh-CN/developer-api/overview"],
-  ["Trading Widget SDK", "/zh-CN/sdk/trading-widget/overview"],
-  ["Agent SDK", "/zh-CN/sdk/agent-sdk/overview"],
+  ["交易组件 SDK", "/zh-CN/sdk/trading-widget/overview"],
+  ["合作方后端 SDK", "/zh-CN/sdk/agent-sdk/overview"],
   ["安全与合规", "/zh-CN/security-compliance/overview"],
   ["集成与支持", "/zh-CN/resources/overview"],
 ]) {
   if (
-    !simplifiedChineseHome.includes(`title="${label}"`) ||
+    (label !== "交易解决方案" && !simplifiedChineseHome.includes(`title="${label}"`)) ||
     !simplifiedChineseHome.includes(`href="${href}"`)
   ) {
     pushError(`[zh-CN] homepage is missing the ${label} core entry`);
@@ -302,7 +322,7 @@ if (!sameArray(manifestLocales, expectedManifestLocales)) {
   );
 }
 
-for (const locale of generatedLocales) {
+for (const locale of generatedLocales.filter((locale) => !requestedLocales || requestedLocales.has(locale))) {
   const pages = manifest.locales?.[locale]?.pages ?? {};
   if (Object.keys(pages).length !== activePages.length) {
     pushError(
@@ -461,7 +481,12 @@ for (const locale of translatedLocales) {
   const titles = new Map();
   const descriptions = new Map();
   for (const relativePagePath of activePages) {
-    const content = await readFile(path.join(localizedRoot(locale), relativePagePath), "utf8");
+    let content;
+    try {
+      content = await readFile(path.join(localizedRoot(locale), relativePagePath), "utf8");
+    } catch {
+      continue; // The completeness pass above already reports a missing page.
+    }
     const meta = frontmatter(content);
     for (const [field, value, collection] of [
       ["title", meta.title, titles],
@@ -720,5 +745,5 @@ if (errors.length > 0) {
 }
 
 console.log(
-  `Translation structure and terminology checks passed: ${expectedLocales.length} locales, ${activePages.length} active pages each, code and SEO preserved.`,
+  `Translation structure and terminology checks passed: ${requestedLocales ? `English source + ${translatedLocales.join(", ")} (scoped preview; full release check still required)` : `${expectedLocales.length} locales`}, ${activePages.length} active pages each, code and SEO preserved.`,
 );

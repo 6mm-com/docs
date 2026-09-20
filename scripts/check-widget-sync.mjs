@@ -1,9 +1,10 @@
+import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { runInNewContext } from "node:vm";
 
-const projectRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
+const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const supportScript = await readFile(
   path.join(projectRoot, "fern", "support-widget.js"),
   "utf8",

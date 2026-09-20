@@ -1,102 +1,48 @@
 ---
-title: "資產轉移"
-description: "了解資產如何在合作夥伴系統與 6MM 交易帳戶間流動，包括轉移責任、狀態處理及營運檢查。"
+title: "資產劃轉"
+description: "瞭解合作方系統與 6MM 交易賬戶之間的資產劃轉模型、責任邊界、狀態處理和運營檢查要求。"
 slug: trading/getting-started/asset-transfer
 canonical-url: https://docs.6mm.com/zh-TW/trading/getting-started/asset-transfer
 ---
 
-6MM 採用合作夥伴管理的資產流動模式運作。
+本頁說明永續合約交易的資金路徑：**資金賬戶 → 合約賬戶 → 交易結算**。資金賬戶用於資金分配，合約賬戶用於保證金與合約結算，該路徑無需經過現貨賬戶。
 
-6MM 不接受終端用戶的直接存款或提款。
+<h2 id="partner-managed-deposits-and-withdrawals">通過所屬平臺準備資金</h2>
 
-所有用戶資金的進出均由授權代理人或合作平台專屬處理。
+合作方 API / SDK 接入場景，按合作方平臺的餘額分配與入金流程操作。白標平臺場景，充值與提現按平臺配置的錢包服務流程處理：充值確認後計入資金賬戶，提現從資金賬戶轉出。
 
-此設計確保 6MM 與合作夥伴間財務責任、監管範圍及使用者所有權的明確分離。
+具體入口以所屬平臺提供的功能為準。賬戶內部劃轉與充值、提現是不同操作。
 
-***
+<h2 id="account-structure-within-6mm">合約交易涉及的賬戶</h2>
 
-<h2 id="partner-managed-deposits-and-withdrawals">合作夥伴管理的存取款</h2>
+| 賬戶 | 用途 |
+| --- | --- |
+| <span style={{ whiteSpace: "nowrap" }}>資金賬戶</span> | 用於資金分配，並接收從合約賬戶劃回的資金。準備劃轉時應查看可用餘額。 |
+| <span style={{ whiteSpace: "nowrap" }}>合約賬戶</span> | 用於合約保證金與交易結算。下單或轉出前，應查看賬戶權益、保證金佔用及未實現盈虧。 |
 
-* 用戶僅透過合作夥伴平台進行資金存取
-* 6MM 不提供鏈上或鏈外的存款地址給終端用戶
-* 6MM 不會在交易執行之外直接保管或結算用戶資金
+<h2 id="automated-balance-transfer-to-6mm">劃轉前準備</h2>
 
-合夥人仍須對以下事項負全責：
+1. 確認用戶、幣種及劃轉方向。
+2. 檢查轉出賬戶的可用餘額與賬戶限制。
+3. 通過平臺支持的劃轉入口或經授權的接入方式提交。
+4. 確認劃轉結果及轉入賬戶餘額後，再提交交易訂單。
 
-* 使用者餘額管理
-* 存取款處理
-* 與資金託管相關的合規與風險控管
+<h2 id="internal-transfers-between-accounts">資金賬戶與合約賬戶之間劃轉</h2>
 
-***
+- 交易前：將所需結算資產從資金賬戶轉入合約賬戶。
+- 結算後：將合約賬戶內可轉出的金額劃回資金賬戶。
+- 賬戶劃轉屬於內部餘額變動，不是鏈上交易。
+- 保證金佔用、未成交委託、持倉及賬戶限制可能影響可轉出金額，請以平臺顯示的額度與處理結果為準。
 
-<h2 id="automated-balance-transfer-to-6mm">自動餘額轉帳至 6MM</h2>
+<h2 id="design-principles">狀態確認與對賬</h2>
 
-為了啟用交易，用戶可透過自動化內部轉帳機制將部分合作夥伴管理餘額轉入 6MM 。
+提交申請不代表劃轉已經完成。應核對劃轉單號、狀態、幣種、金額、轉出賬戶與轉入賬戶。若處理失敗或結果未明確，先核對資金流水並聯系平臺支持，再決定是否重新提交。
 
-此轉移流程的主要特徵包括：
-
-* 轉帳由合作夥伴系統發起並授權
-* 流程在基礎設施層級自動執行
-* 無需手動使用者與 6MM 互動
-* 傳輸可即時或近乎即時進行
-
-從使用者的角度來看，這個過程看起來像是無縫的餘額配置，而非傳統的存款。
-
-***
-
-<h2 id="account-structure-within-6mm">6MM內的帳戶結構</h2>
-
-在 6MM內，轉移資產會邏輯地分配到兩個不同的內部帳戶：
-
-**現貨帳戶**
-
-* 作為轉帳資金的初始接收帳戶
-* 作為內部資本管理的資產池
-* 不支援直接交易活動
-
-**永續帳戶**
-
-* 資金從現貨帳戶轉入永續帳戶
-* 只有永續帳戶中的資產可用於下單
-* 保證金、持倉及未實現PnL均在此層級計算
-
-這種雙層結構能精確控制資本、提升保證金效率及風險控制，實現永續交易。
-
-***
-
-<h2 id="internal-transfers-between-accounts">帳戶間的內部轉帳</h2>
-
-* 轉入現貨帳戶的資金可自由且即時分配至永續帳戶
-* 內部轉帳處理時不需區塊鏈互動
-* 傳輸設計為低延遲且具確定性
-
-此架構確保資金流動順暢，同時嚴格分開資產託管與交易執行。
-
-***
-
-<h2 id="design-principles">設計原則</h2>
-
-6MM的資產轉移系統圍繞以下原則建立：
-
-* 6MM 不允許直接用戶存款或提款
-* 所有資產託管權仍由合作夥伴平台持有
-* 自動化、合作夥伴授權資金配置
-* 現貨與永續帳戶的明確區分
-* 優化交易效率與風險隔離
-
-透過此模式， 6MM 純粹作為交易基礎設施層運作，而合作夥伴則完全掌控用戶資金與財務關係。
+不要將賬戶總餘額直接視為可自由劃轉的金額，也不要默認所有劃轉均即時完成或免手續費。以平臺展示的條件及最終處理結果為準。
 
 <h2 id="implementation-and-safety-guides">實施與安全指南</h2>
 
-- [Agent SDK 概述 ]（/sdk/agent-sdk/overview）：使用者綁定、傳輸、訂單查詢與對帳。
-- [Webhooks 與冪等性]（/sdk/security/webhooks-idempotency）：驗證最終狀態回撥及去重重試。
-- [夥伴責任矩陣]（/security-compliance/partner-responsibilities）：監護權與營運所有權。
-- [風險與清算]（/trading/risk-and-liquidations）：了解交易帳戶配置如何影響風險。
-{/* sixmm-localized-link-repair:start */}
-<h2 id="localized-page-links">相關頁面</h2>
-
-- [6MM Agent SDK Java 和 PHP](/zh-TW/sdk/agent-sdk/overview)
-- [Webhook 簽名驗證與冪等性](/zh-TW/sdk/security/webhooks-idempotency)
-- [6MM 與夥伴責任矩陣](/zh-TW/security-compliance/partner-responsibilities)
-- [風險與清算](/zh-TW/trading/risk-and-liquidations)
-{/* sixmm-localized-link-repair:end */}
+- [Agent SDK 概覽](/zh-TW/sdk/agent-sdk/overview)：用戶綁定、劃轉與對賬。
+- [Webhook 與冪等](/zh-TW/sdk/security/webhooks-idempotency)：回調驗證與重複請求處理。
+- [合作方責任矩陣](/zh-TW/security-compliance/partner-responsibilities)：接入與運營責任。
+- [風險與強制平倉](/zh-TW/trading/risk-and-liquidations)：保證金與賬戶風險。

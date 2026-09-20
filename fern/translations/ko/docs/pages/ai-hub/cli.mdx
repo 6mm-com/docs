@@ -1,0 +1,64 @@
+---
+title: "6MM CLI"
+subtitle: "터미널, 스크립트, AI 코딩 에이전트에서 6MM 명령줄 인터페이스를 사용하세요."
+slug: ai-hub/cli
+canonical-url: https://docs.6mm.com/ko/ai-hub/cli
+---
+
+> **계획됨 — 아직 출시되지 않음**
+> AI Hub는 계획된 기능입니다. 이 페이지의 기능, 엔드포인트, 명령 및 클라이언트 구성은 제안된 설계를 설명하지만 현재는 사용할 수 없습니다. 최종 가용성 및 설정 지침은 출시 시 발표됩니다.
+
+
+6MM CLI는 셸 명령을 실행할 수 있는 사용자, 스크립트 및 AI 에이전트에 대한 명령줄 진입점입니다.
+
+AI 환경에서 터미널 명령을 직접 실행할 수 있는 경우 CLI를 사용하세요. 이는 별도의 MCP 서버가 필요하지 않기 때문에 코딩 에이전트에 대한 가장 간단한 경로인 경우가 많습니다. CLI는 기본적으로 안정적인 JSON를 반환해야 에이전트가 터미널 형식에 의존하지 않고 결과를 구문 분석할 수 있습니다.
+
+<h2 id="what-the-cli-is-good-for">CLI의 용도</h2>
+
+- 터미널에서 빠른 시장 데이터 쿼리.
+- Codex, Claude Code, Gemini CLI 또는 유사한 도구를 사용한 에이전트 기반 분석.
+- 6MM 데이터가 필요한 CI 또는 예약된 스크립트.
+- 로컬 자격 증명이 구성되면 계정 읽기를 확인합니다.
+- 에이전트가 매개변수를 준비하지만 주문을 하지 않는 주문 미리보기 흐름입니다.
+
+<h2 id="example-commands">예제 명령</h2>
+
+```bash
+6mm markets
+6mm ticker BTC-USDT-PERP
+6mm orderbook BTC-USDT-PERP --depth 20
+6mm klines BTC-USDT-PERP --interval 1h --limit 100
+6mm account summary
+6mm positions
+6mm orders open
+6mm order preview --symbol BTC-USDT-PERP --side buy --type limit --price 65000 --size 0.01
+6mm order create --symbol BTC-USDT-PERP --side buy --type limit --price 65000 --size 0.01
+6mm order cancel --order-id xxx
+```
+
+<h2 id="output-modes">출력 모드</h2>
+
+| 방법 | 사용 사례 |
+| --- | --- |
+| JSON | AI 에이전트, 스크립트 및 자동화에 대한 기본값입니다. |
+| 테이블 | 사람이 읽을 수 있는 터미널 검토. |
+| 날것의 | 디버깅 및 통합 테스트. |
+
+<h2 id="recommended-safety-defaults">권장되는 안전 기본값</h2>
+
+- 기본 환경은 테스트넷입니다.
+- 기본 출력은 JSON입니다.
+- 거래 명령에는 명시적인 동의가 필요합니다.
+- 메인넷 주문 생성에는 확인이 필요합니다.
+- 생성하기 전에 미리보기 모드를 사용할 수 있습니다.
+- 오류에는 안정적인 코드와 명확한 메시지가 포함됩니다.
+
+<h2 id="agent-usage">에이전트 사용량</h2>
+
+AI 에이전트는 사용자가 미리보기 또는 거래 작업을 명시적으로 요청하지 않는 한 읽기 전용 명령을 선호해야 합니다.
+
+예시 프롬프트:
+
+```text
+Use the 6MM CLI to fetch BTC-USDT-PERP orderbook depth and return a short liquidity summary.
+```

@@ -1,0 +1,50 @@
+---
+title: "Zdalne MCP wdrożenie"
+subtitle: "Wdróż 6MM MCP punkt końcowy w infrastrukturze zarządzanej przez użytkownika lub instytucję."
+slug: ai-hub/remote-mcp
+canonical-url: https://docs.6mm.com/pl/ai-hub/remote-mcp
+---
+
+> **Planowane — jeszcze nie uruchomione**
+> AI Hub to planowana funkcja. Możliwości, punkty końcowe, polecenia i konfiguracje klienta na tej stronie opisują proponowany projekt i nie są obecnie dostępne. Ostateczna dostępność i instrukcje konfiguracji zostaną ogłoszone w momencie premiery.
+
+
+Zdalny MCP jest przeznaczony dla użytkowników lub instytucji, które chcą mieć długoterminowy punkt końcowy MCP pod własną kontrolą.
+
+W przeciwieństwie do Hosted MCP, Remote MCP nie jest obsługiwany przez 6MM dla użytkownika. 6MM udostępnia kod, obrazy, szablony i dokumentację; użytkownik kontroluje hosting i dane uwierzytelniające.
+
+<h2 id="architecture">Architektura</h2>
+
+```text
+AI client
+  -> user-managed MCP HTTP endpoint
+  -> 6MM REST / WebSocket API
+```
+
+<h2 id="deployment-targets">Cele wdrożenia</h2>
+
+- Docker lub Docker Compose.
+- VPS z odwrotnym proxy.
+- Kolej żelazna.
+- Oddać.
+- Fly.io.
+- AWS ECS lub Lambda.
+- Wewnętrzny Kubernetes.
+
+<h2 id="required-files">Wymagane pliki</h2>
+
+- Plik Dockera.
+- docker-compose.yml.
+- szablon.env.
+- HTTP tryb transportu.
+- /mcppunkt końcowy.
+- /punkt końcowy zdrowia.
+- Odwrotne proxy i notatki TLS.
+
+<h2 id="credential-model">Model poświadczeń</h2>
+
+Poświadczenia powinny być przechowywane w środowisku zarządzanym przez użytkownika, a nie w monicie klienta AI. W przypadku wdrożeń zarządzanych przez instytucję ogranicz dostęp do zatwierdzonych klientów i sieci.
+
+<h2 id="recommended-first-release">Zalecane pierwsze wydanie</h2>
+
+Zacznij od publicznych danych rynkowych. Dodaj konto z możliwością tylko do odczytu, gdy dostępne będzie uwierzytelnianie, zakres kluczy, dzienniki i kontrola dostępu. Handel powinien pozostać wyłączony do czasu spełnienia wymagań dotyczących handlu kontrolowanego.

@@ -1,0 +1,64 @@
+---
+title: "6MM CLI"
+subtitle: "Utilice la interfaz de línea de comandos 6MM desde terminales, scripts y agentes de codificación de IA."
+slug: ai-hub/cli
+canonical-url: https://docs.6mm.com/es-419/ai-hub/cli
+---
+
+> **Planificado, aún no lanzado**
+> AI Hub es una característica planificada. Las capacidades, puntos finales, comandos y configuraciones de cliente en esta página describen el diseño propuesto y no están disponibles actualmente. La disponibilidad final y las instrucciones de configuración se anunciarán en el lanzamiento.
+
+
+6MM CLI es el punto de entrada de la línea de comandos para usuarios, scripts y agentes de IA que pueden ejecutar comandos de shell.
+
+Utilice CLI cuando el entorno de IA pueda ejecutar comandos de terminal directamente. Esta suele ser la ruta más sencilla para los agentes de codificación porque no se requiere un servidor MCP independiente. El CLI debería devolver JSON estable de forma predeterminada para que los agentes puedan analizar los resultados sin depender del formato del terminal.
+
+<h2 id="what-the-cli-is-good-for">Para qué sirve el CLI</h2>
+
+- Consultas rápidas de datos de mercado desde un terminal.
+- Análisis basado en agentes en Codex, Claude Code, Gemini CLI o herramientas similares.
+- CI o scripts programados que necesitan 6MM datos.
+- Verificaciones de lectura de cuenta cuando se configuran las credenciales locales.
+- La vista previa del pedido fluye donde el agente prepara los parámetros pero no realiza un pedido.
+
+<h2 id="example-commands">Comandos de ejemplo</h2>
+
+```bash
+6mm markets
+6mm ticker BTC-USDT-PERP
+6mm orderbook BTC-USDT-PERP --depth 20
+6mm klines BTC-USDT-PERP --interval 1h --limit 100
+6mm account summary
+6mm positions
+6mm orders open
+6mm order preview --symbol BTC-USDT-PERP --side buy --type limit --price 65000 --size 0.01
+6mm order create --symbol BTC-USDT-PERP --side buy --type limit --price 65000 --size 0.01
+6mm order cancel --order-id xxx
+```
+
+<h2 id="output-modes">Modos de salida</h2>
+
+| Modo | Caso de uso |
+| --- | --- |
+| JSON | Valor predeterminado para agentes de IA, scripts y automatización. |
+| Mesa | Revisión de terminal legible por humanos. |
+| Crudo | Pruebas de depuración e integración. |
+
+<h2 id="recommended-safety-defaults">Valores predeterminados de seguridad recomendados</h2>
+
+- El entorno predeterminado es testnet.
+- La salida predeterminada es JSON.
+- Los comandos comerciales requieren una suscripción explícita.
+- La creación de pedidos en Mainnet requiere confirmación.
+- El modo de vista previa está disponible antes de crear.
+- Los errores incluyen códigos estables y mensajes claros.
+
+<h2 id="agent-usage">Uso del agente</h2>
+
+Los agentes de IA deberían preferir comandos de solo lectura a menos que el usuario solicite explícitamente una vista previa o acciones comerciales.
+
+Mensaje de ejemplo:
+
+```text
+Use the 6MM CLI to fetch BTC-USDT-PERP orderbook depth and return a short liquidity summary.
+```

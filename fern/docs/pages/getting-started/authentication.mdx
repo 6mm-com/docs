@@ -1,101 +1,56 @@
 ---
 title: "Trading Account Access"
-description: "Understand the partner-managed registration and account access model used to connect users to 6MM trading while preserving responsibility boundaries."
+description: "Understand account access for partner integrations and white-label platforms, including login, account management and preparation for perpetual trading."
 slug: trading/getting-started/authentication
 ---
 
-6MM adopts a partner-managed registration and access model, designed to balance seamless user experience with clear separation of user ownership and platform responsibility.
+6MM supports two account access models: integration with a partner system and a white-label platform. Use the entry provided by your platform. Account creation, authentication and profile management depend on the selected model.
 
-* 6MM does not provide public self-registration.
-* All user onboarding is initiated and managed exclusively by authorized agents or partner platforms.
+<h2 id="registration-model">Choose your account model</h2>
 
-***
+| Area | Partner integration | White-label platform |
+| --- | --- | --- |
+| Account source | The user has an account in the partner system, which binds or synchronizes the trading user. | The user belongs to the white-label platform's account system. |
+| Access entry | The partner's app, website or embedded trading entry. | The white-label platform's branded domain and login page. |
+| Authentication | The partner verifies the user and its backend obtains the required trading access credential. | Login, verification and account security follow the platform's enabled configuration. |
+| Account management | The partner manages its user profile; the trading system maintains the required user mapping and trading records. | The white-label account system and authorized administrators manage user profiles, account status and security settings. |
 
-<h2 id="registration-model">Registration Model</h2>
+<h2 id="login-method-1-partner-embedded-access">Partner integration</h2>
 
-<h2 id="partner-only-registration">Partner-Only Registration</h2>
+1. Sign in through the partner's account system.
+2. The partner backend verifies the session and binds or identifies the corresponding trading user.
+3. The backend obtains the required trading access credential or entry URL through the supported integration.
+4. Open the embedded trading interface or authorized trading entry supplied by the partner.
 
-6MM supports a single registration model:
+Account access does not by itself make funds available for trading. Follow the partner's funding process and confirm the available perpetual-account balance before placing an order.
 
-* Users are registered only through agents or partner platforms
-* There is no direct registration entry on 6MM
-* User identity, account creation, and lifecycle management are fully controlled by the partner
+<h2 id="login-method-2-6mm-account-login-partner-issued-credentials">White-label platform access</h2>
 
-After registration, partners expose a 6MM entry point within their own application, allowing users to access 6MM-powered trading experiences.
+Use the branded domain and account entry provided by the white-label platform. Whether self-registration is available, how accounts are opened, and which login or identity-verification methods are enabled depend on that platform's configuration.
 
-6MM does not independently collect or manage end-user identity information.
+The platform's account system and authorized administrators handle profile management, account status and security operations within their permissions. Follow the platform's verification process for password recovery, contact-information changes or account restrictions.
 
-***
+After signing in, prepare funds through the platform's supported funding process. For perpetual trading, transfer the required settlement asset from the funding account to the perpetual account and confirm the transfer result.
 
-<h2 id="login-methods">Login Methods</h2>
+<h2 id="user-ownership-and-data-responsibility">Account and data responsibilities</h2>
 
-To accommodate different partner application architectures and user experience requirements, 6MM supports two login methods, both initiated through partner platforms.
+The two models have different responsibility boundaries. Partner integrations retain partner-side account management while maintaining the user mapping and records required for trading. White-label platforms use their own account processes and administrative permissions to manage users.
 
-***
+The information collected, stored or displayed, identity-verification requirements and support responsibilities must be defined for the actual deployment. Do not apply the account-management assumptions of one model to every platform.
 
-<h2 id="login-method-1-partner-embedded-access">Login Method 1: Partner-Embedded Access</h2>
+<h2 id="design-principles">Before entering trading</h2>
 
-In the primary integration model, users access 6MM directly from the partner’s application.
+- Confirm that you are using the correct platform domain and account.
+- Complete any identity or security checks required by that platform.
+- Check that the account has trading access and review any restrictions.
+- Confirm the available balance in the perpetual account; signing in does not transfer funds automatically.
+- Contact your platform's support team if account access or identity verification needs attention.
 
-* Users enter 6MM through an embedded entry point provided by the agent or partner
-* Authentication is handled entirely by the partner
-* Access tokens or session credentials are securely passed to 6MM
-* No separate 6MM login is required
+<h2 id="implementation-guides">Continue with your integration</h2>
 
-This method provides the most seamless experience and is recommended for deeply integrated partner applications.
-
-***
-
-<h2 id="login-method-2-6mm-account-login-partner-issued-credentials">Login Method 2: 6MM Account Login (Partner-Issued Credentials)</h2>
-
-Due to differences in partner application capabilities and device environments, 6MM also provides independent Web and mobile-optimized interfaces, with native applications planned for future releases.
-
-In this model:
-
-* Users first enter 6MM through the partner’s application
-* The partner issues a 6MM-specific login account and password to the user
-* Users may then log in directly via:
-  * [https://app.6mm.com](https://app.6mm.com/)
-  * Mobile-optimized web interface
-  * Future official 6MM applications
-
-This approach enables improved interaction performance and user experience across devices.
-
-> Important:\
-> All 6MM login credentials are generated, issued, and managed by the partner.\
-> 6MM does not independently verify user identity or maintain user profile data.
-
-***
-
-<h2 id="user-ownership-and-data-responsibility">User Ownership and Data Responsibility</h2>
-
-Regardless of the login method used:
-
-* All users are owned and managed by the partner
-* User identity data remains within the partner’s system
-* 6MM only maintains the minimum technical identifiers required for:
-  * Trading execution
-  * Margin and risk calculation
-  * Position and account isolation
-
-6MM does not access, analyze, or monetize user identity information.
-
-***
-
-<h2 id="design-principles">Design Principles</h2>
-
-The 6MM authentication and access system is built on the following principles:
-
-* Single registration source: partners only
-* Multiple access methods for better user experience
-* Clear separation of user ownership and trading infrastructure
-* No direct user acquisition or competition with partners
-
-This model ensures that 6MM functions as a partner-first, neutral trading infrastructure, while still delivering a consistent and high-quality trading experience across platforms and devices.
-
-<h2 id="implementation-guides">Implementation guides</h2>
-
-- [Developer API Authentication](/developer-api/authentication): JWT and API Key authentication for integrations.
-- [Trading Widget Authentication](/sdk/trading-widget/authentication): partner-token and compatibility modes.
-- [Agent SDK Overview](/sdk/agent-sdk/overview): backend user binding and credential issuance.
-- [Architecture & Responsibilities](/solutions/architecture-responsibilities): partner and 6MM ownership boundaries.
+- [Start Trading](/trading/getting-started/start-trading): prepare funds and place a first perpetual order.
+- [Asset Transfer](/trading/getting-started/asset-transfer): funding and perpetual accounts, transfer status and reconciliation.
+- [Developer API Authentication](/developer-api/authentication): authentication for direct API access.
+- [Trading Widget Authentication](/sdk/trading-widget/authentication): credentials for the embedded trading interface.
+- [Agent SDK Overview](/sdk/agent-sdk/overview): partner-backend user binding and access credentials.
+- [Partner Responsibility Matrix](/security-compliance/partner-responsibilities): integration and operational responsibilities.

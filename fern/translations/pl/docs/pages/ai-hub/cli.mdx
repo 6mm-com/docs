@@ -1,0 +1,64 @@
+---
+title: "6MM CLI"
+subtitle: "Użyj interfejsu wiersza poleceń 6MM z poziomu terminali, skryptów i agentów kodujących AI."
+slug: ai-hub/cli
+canonical-url: https://docs.6mm.com/pl/ai-hub/cli
+---
+
+> **Planowane — jeszcze nie uruchomione**
+> AI Hub to planowana funkcja. Możliwości, punkty końcowe, polecenia i konfiguracje klienta na tej stronie opisują proponowany projekt i nie są obecnie dostępne. Ostateczna dostępność i instrukcje konfiguracji zostaną ogłoszone w momencie premiery.
+
+
+6MM CLI to punkt wejściowy wiersza poleceń dla użytkowników, skryptów i agentów AI, którzy mogą wykonywać polecenia powłoki.
+
+Użyj CLI, jeśli środowisko AI może bezpośrednio uruchamiać polecenia terminala. Jest to często najprostsza ścieżka dla agentów kodujących, ponieważ nie jest wymagany oddzielny serwer MCP. Wartość CLI powinna domyślnie zwracać stabilną wartość JSON, aby agenci mogli analizować wyniki bez polegania na formatowaniu terminala.
+
+<h2 id="what-the-cli-is-good-for">Do czego służy CLI</h2>
+
+- Szybkie zapytania o dane rynkowe z terminala.
+- Analiza oparta na agentach w Codex, Claude Code, Gemini CLI lub podobnych narzędziach.
+- CI lub zaplanowane skrypty wymagające danych 6MM.
+- Odczyt konta sprawdza, czy skonfigurowane są lokalne poświadczenia.
+- Przebieg podglądu zamówienia, w którym agent przygotowuje parametry, ale nie składa zamówienia.
+
+<h2 id="example-commands">Przykładowe polecenia</h2>
+
+```bash
+6mm markets
+6mm ticker BTC-USDT-PERP
+6mm orderbook BTC-USDT-PERP --depth 20
+6mm klines BTC-USDT-PERP --interval 1h --limit 100
+6mm account summary
+6mm positions
+6mm orders open
+6mm order preview --symbol BTC-USDT-PERP --side buy --type limit --price 65000 --size 0.01
+6mm order create --symbol BTC-USDT-PERP --side buy --type limit --price 65000 --size 0.01
+6mm order cancel --order-id xxx
+```
+
+<h2 id="output-modes">Tryby wyjściowe</h2>
+
+| Tryb | Użyj przypadku |
+| --- | --- |
+| JSON | Domyślne dla agentów AI, skryptów i automatyzacji. |
+| Tabela | Przegląd terminala czytelny dla człowieka. |
+| Surowy | Debugowanie i testy integracyjne. |
+
+<h2 id="recommended-safety-defaults">Zalecane domyślne ustawienia bezpieczeństwa</h2>
+
+- Domyślne środowisko to testnet.
+- Domyślne wyjście to JSON.
+- Polecenia handlowe wymagają wyraźnej zgody.
+- Utworzenie zamówienia w sieci głównej wymaga potwierdzenia.
+- Tryb podglądu jest dostępny przed utworzeniem.
+- Błędy obejmują stabilne kody i jasne komunikaty.
+
+<h2 id="agent-usage">Użycie agenta</h2>
+
+Agenci AI powinni preferować polecenia tylko do odczytu, chyba że użytkownik wyraźnie poprosi o podgląd lub działania handlowe.
+
+Przykładowy monit:
+
+```text
+Use the 6MM CLI to fetch BTC-USDT-PERP orderbook depth and return a short liquidity summary.
+```

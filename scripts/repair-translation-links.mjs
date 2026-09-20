@@ -1,9 +1,11 @@
-import { execFileSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
+import { readFileSync } from "node:fs";
+import { parse as parseYaml } from "yaml";
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { generatedLocaleSpecs } from "./locale-config.mjs";
 
-const projectRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
+const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const fernRoot = path.join(projectRoot, "fern");
 const translationsRoot = path.join(fernRoot, "translations");
 const generatedLocales = generatedLocaleSpecs.map((locale) => locale.code);
@@ -32,12 +34,7 @@ function localeRoot(locale) {
 }
 
 function loadYamlAsJson(filePath) {
-  const ruby = [
-    "require 'yaml'",
-    "require 'json'",
-    "puts JSON.generate(YAML.load_file(ARGV.fetch(0)))",
-  ].join("; ");
-  return JSON.parse(execFileSync("ruby", ["-e", ruby, filePath], { encoding: "utf8" }));
+  return parseYaml(readFileSync(filePath, "utf8"));
 }
 
 function metadata(content) {

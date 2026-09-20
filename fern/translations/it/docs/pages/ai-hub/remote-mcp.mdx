@@ -1,0 +1,50 @@
+---
+title: "Distribuzione MCP remota"
+subtitle: "Distribuisci un endpoint 6MM MCP in un'infrastruttura gestita dall'utente o dall'istituto."
+slug: ai-hub/remote-mcp
+canonical-url: https://docs.6mm.com/it/ai-hub/remote-mcp
+---
+
+> **Pianificato – non ancora lanciato**
+> AI Hub è una funzionalità pianificata. Funzionalità, endpoint, comandi e configurazioni client in questa pagina descrivono la progettazione proposta e non sono attualmente disponibili. La disponibilità finale e le istruzioni di configurazione saranno annunciate al momento del lancio.
+
+
+Il MCP remoto è destinato agli utenti o alle istituzioni che desiderano un endpoint MCP a lungo termine sotto il proprio controllo.
+
+A differenza di Hosted MCP, Remote MCP non è gestito da 6MM per l'utente. 6MM fornisce codice, immagini, modelli e documentazione; l'utente controlla l'hosting e le credenziali.
+
+<h2 id="architecture">Architettura</h2>
+
+```text
+AI client
+  -> user-managed MCP HTTP endpoint
+  -> 6MM REST / WebSocket API
+```
+
+<h2 id="deployment-targets">Obiettivi di distribuzione</h2>
+
+- Docker o Docker Componi.
+- VPS con un proxy inverso.
+- Ferrovia.
+- Render.
+- Fly.io.
+- AWS ECS o Lambda.
+- Kubernetes interni.
+
+<h2 id="required-files">File richiesti</h2>
+
+- Dockerfile.
+- docker-compose.yml.
+- .env.modello.
+- HTTP modalità di trasporto.
+- /mcp punto finale.
+- /endpoint salute.
+- Proxy inverso e note TLS.
+
+<h2 id="credential-model">Modello di credenziali</h2>
+
+Le credenziali devono essere archiviate nell'ambiente gestito dall'utente, non nel prompt del client AI. Per le distribuzioni gestite dall'istituto, limitare l'accesso ai client e alle reti approvati.
+
+<h2 id="recommended-first-release">Prima versione consigliata</h2>
+
+Iniziamo con i dati del mercato pubblico. Aggiungi la sola lettura dell'account dopo che sono disponibili l'autenticazione, l'ambito delle chiavi, i log e i controlli di accesso. Il trading dovrebbe rimanere disabilitato finché non saranno soddisfatti i requisiti di trading controllato.

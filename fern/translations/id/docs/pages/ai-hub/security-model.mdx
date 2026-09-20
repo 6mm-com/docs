@@ -1,0 +1,47 @@
+---
+title: "Model Keamanan"
+subtitle: "Pahami model izin, postur keselamatan default, dan pagar pembatas perdagangan untuk AI-akses yang dibantu."
+slug: ai-hub/security-model
+canonical-url: https://docs.6mm.com/id/ai-hub/security-model
+---
+
+> **Direncanakan — belum diluncurkan**
+> AI Hub adalah fitur yang direncanakan. Kemampuan, titik akhir, perintah, dan konfigurasi klien di halaman ini menjelaskan desain yang diusulkan dan saat ini tidak tersedia. Ketersediaan akhir dan petunjuk pengaturan akan diumumkan saat peluncuran.
+
+
+Akses perdagangan yang dibantu AI harus lebih aman dibandingkan otomatisasi biasa karena niat pengguna diungkapkan dalam bahasa alami.
+
+<h2 id="required-permission-scopes">Cakupan izin yang diperlukan</h2>
+
+| Cakupan | Memungkinkan |
+| --- | --- |
+| pasar:baca | Data pasar publik dan sumber daya peraturan. |
+| akun: baca | Saldo, posisi, pesanan terbuka, pengisian, dan ringkasan akun. |
+| pesanan: tulis | Pembuatan pesanan, amandemen, dan pembatalan. |
+
+<h2 id="default-safety-posture">Postur keselamatan default</h2>
+
+- Defaultnya adalah hanya-baca.
+- Bawaan ke testnet.
+- Jangan memaparkan penarikan atau transfer melalui alat AI.
+- Memerlukan pratinjau sebelum membuat.
+- Memerlukan konfirmasi eksplisit sebelum perdagangan mainnet.
+- Gunakan kunci idempotensi untuk tindakan perdagangan.
+- Terapkan batas nosional dan leverage maksimal.
+- Simpan log audit lengkap.
+
+<h2 id="controlled-trading-flow">Arus perdagangan terkendali</h2>
+
+```text
+User natural language intent
+  -> AI maps intent to tool parameters
+  -> 6mm_preview_order validates the order
+  -> service returns risk checks and margin impact
+  -> user explicitly confirms
+  -> 6mm_create_order submits the order
+  -> audit log records the full flow
+```
+
+<h2 id="prompt-injection-protection">Perlindungan injeksi yang cepat</h2>
+
+Klien AI dan server MCP harus memperlakukan konten eksternal sebagai tidak tepercaya. Halaman pasar, salinan teks, dokumen, dan konten web tidak boleh mengabaikan izin alat, aturan konfirmasi, atau batasan perdagangan.

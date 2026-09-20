@@ -28,9 +28,9 @@ Phần này giải thích quy trình giao dịch cốt lõi và các cơ chế c
 
 <h2 id="market-order">lệnh thị trường</h2>
 
-* Thực hiện ngay lập tức với mức giá thị trường tốt nhất hiện có
-* Ưu tiên tốc độ thực hiện hơn chính xác giá cả
-* Phù hợp cho việc ra vào nhanh chóng
+Lệnh thị trường tìm cách thực hiện dựa trên thanh khoản sẵn có ở mức giá tốt nhất hiện có. Việc thực hiện phụ thuộc vào độ sâu của sổ lệnh và các hạn chế giao dịch: lệnh có thể được thực hiện ở nhiều mức giá, được thực hiện một phần hoặc không hoàn thành. Kiểm tra trạng thái đơn hàng thực tế và điền.
+
+***
 
 <h2 id="limit-order">lệnh giới hạn</h2>
 
@@ -46,6 +46,8 @@ Phần này giải thích quy trình giao dịch cốt lõi và các cơ chế c
 > Khả năng có lệnh có thể thay đổi tùy theo cặp giao dịch và chế độ tích hợp.
 
 ***
+
+Đệ trình có nghĩa là một yêu cầu đặt hàng đã được gửi; chấp nhận, kích hoạt và thực thi là các trạng thái riêng biệt. Lệnh thị trường được kích hoạt phụ thuộc vào tính thanh khoản sẵn có. Lệnh giới hạn được kích hoạt cũng phải đáp ứng mức giá giới hạn của nó và có thể vẫn chưa được thực hiện.
 
 <h2 id="leverage-and-margin">đòn bẩy và ký quỹ</h2>
 
@@ -69,9 +71,7 @@ Hợp đồng vĩnh cửu sử dụng cơ chế tỷ lệ huy động vốn đ�
 * Nếu tỷ lệ tài trợ âm:
   * Vị thế bán sẽ trả tiền mua
 
-Phí huy động vốn được trao đổi trực tiếp giữa các nhà giao dịch.
-
-6MM không thu các khoản thanh toán tài trợ như nguồn thu.
+6MM không tính phí cấp vốn. Các khoản thanh toán tài trợ được giải quyết theo các quy tắc hợp đồng và được ghi nhận riêng biệt với phí giao dịch. Kiểm tra phương hướng, số tiền và kết quả quyết toán đối với hồ sơ thanh toán cấp vốn tài khoản và giao dịch số dư liên kết.
 
 ***
 
@@ -84,7 +84,7 @@ Phí huy động vốn được trao đổi trực tiếp giữa các nhà giao 
   * Đơn hàng nhà sản xuất
   * Đơn đặt hàng của người nhận
 
-Bảng phí được xác định bởi nền tảng đối tác và có thể thay đổi.
+Tỷ giá Maker/Taker hiện hành tuân theo các quy tắc của đối tác hoặc nền tảng nhãn trắng và có thể thay đổi tùy theo cặp giao dịch và cấu hình.
 
 <h2 id="slippage">trượt</h2>
 
@@ -109,12 +109,7 @@ Người dùng có thể giảm trượt lệnh bằng cách sử dụng lệnh 
 
 <h2 id="risk-management-and-liquidation">Quản lý rủi ro và thanh lý</h2>
 
-* 6MM giám sát tỷ lệ ký quỹ theo thời gian thực
-* Khi biên lợi nhuận giảm xuống dưới ngưỡng bảo trì:
-  * Vị thế có thể được thanh lý một phần hoặc toàn bộ
-* Giá thanh lý được tính dựa trên giá đánh dấu, không phải giá giao dịch cuối cùng
-
-Cơ chế này giúp giảm thiểu việc thanh lý không cần thiết do biến động thị trường ngắn hạn.
+Giám sát tài khoản hoặc vốn sở hữu vị thế, yêu cầu ký quỹ duy trì và các chỉ báo rủi ro của nền tảng. Nếu đáp ứng các điều kiện thanh lý hiện hành, các vị thế có thể bị giảm một phần hoặc đóng hoàn toàn. Kiểm tra vị trí còn lại thực tế và hồ sơ số dư thay vì so sánh tỷ lệ phần trăm trực tiếp với số tiền ký quỹ.
 
 ***
 

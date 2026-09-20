@@ -27,9 +27,9 @@ This section explains the core trading workflow and key mechanisms involved in p
 
 <h2 id="market-order">Market Order</h2>
 
-* Executes immediately at the best available market price
-* Prioritizes execution speed over price precision
-* Suitable for fast entry or exit
+A market order seeks execution against available liquidity at the best available prices. Execution depends on order-book depth and trading restrictions: the order may fill at multiple prices, fill partially, or fail to complete. Check the actual order status and fills.
+
+***
 
 <h2 id="limit-order">Limit Order</h2>
 
@@ -45,6 +45,8 @@ This section explains the core trading workflow and key mechanisms involved in p
 > Order availability may vary by trading pair and integration mode.
 
 ***
+
+Submission means an order request has been sent; acceptance, triggering and execution are separate states. A triggered market order depends on available liquidity. A triggered limit order must also satisfy its limit price and may remain unfilled.
 
 <h2 id="leverage-and-margin">Leverage and Margin</h2>
 
@@ -68,9 +70,7 @@ Perpetual contracts use a funding rate mechanism to keep contract prices aligned
 * If the funding rate is negative:
   * Short positions pay longs
 
-Funding fees are exchanged directly between traders.
-
-6MM does not collect funding payments as revenue.
+6MM does not charge funding fees. Funding payments are settled under the contract rules and recorded separately from trading fees. Check the direction, amount and settlement result against the account funding-payment records and linked balance transactions.
 
 ***
 
@@ -83,7 +83,7 @@ Funding fees are exchanged directly between traders.
   * Maker orders
   * Taker orders
 
-Fee schedules are defined by the partner platform and may vary.
+The applicable Maker / Taker rates follow the rules of the partner or white-label platform and may vary by trading pair and configuration.
 
 <h2 id="slippage">Slippage</h2>
 
@@ -108,12 +108,7 @@ Users can reduce slippage by using limit orders and managing order size.
 
 <h2 id="risk-management-and-liquidation">Risk Management and Liquidation</h2>
 
-* 6MM monitors margin ratios in real time
-* When margin falls below the maintenance threshold:
-  * Positions may be partially or fully liquidated
-* Liquidation prices are calculated using the mark price, not the last traded price
-
-This mechanism helps reduce unnecessary liquidations caused by short-term market volatility.
+Monitor account or position equity, maintenance margin requirements and the platform’s risk indicators. If the applicable liquidation conditions are met, positions may be reduced partially or closed entirely. Check the actual remaining position and balance records rather than comparing a percentage directly with a margin amount.
 
 ***
 

@@ -1,0 +1,50 @@
+---
+title: "Déploiement à distance MCP"
+subtitle: "Déployez un point de terminaison 6MM MCP dans une infrastructure gérée par l'utilisateur ou par l'institution."
+slug: ai-hub/remote-mcp
+canonical-url: https://docs.6mm.com/fr/ai-hub/remote-mcp
+---
+
+> **Prévu – pas encore lancé**
+> AI Hub est une fonctionnalité prévue. Les fonctionnalités, points de terminaison, commandes et configurations client sur cette page décrivent la conception proposée et ne sont actuellement pas disponibles. La disponibilité finale et les instructions de configuration seront annoncées au lancement.
+
+
+MCP distant est destiné aux utilisateurs ou aux institutions qui souhaitent un point de terminaison MCP à long terme sous leur propre contrôle.
+
+Contrairement aux MCP hébergés, les MCP distants ne sont pas gérés par 6MM pour l'utilisateur. 6MM fournit du code, des images, des modèles et de la documentation ; l'utilisateur contrôle l'hébergement et les informations d'identification.
+
+<h2 id="architecture">Architecture</h2>
+
+```text
+AI client
+  -> user-managed MCP HTTP endpoint
+  -> 6MM REST / WebSocket API
+```
+
+<h2 id="deployment-targets">Cibles de déploiement</h2>
+
+- Docker ou Docker Compose.
+- VPS avec un proxy inverse.
+- Chemin de fer.
+- Rendre.
+- Fly.io.
+- AWS ECS ou Lambda.
+- Kubernetes interne.
+
+<h2 id="required-files">Fichiers requis</h2>
+
+- Fichier Docker.
+- docker-compose.yml.
+- .env.modèle.
+- Mode de transport HTTP.
+- Point de terminaison /mcp.
+- /point final de santé.
+- Proxy inverse et notes TLS.
+
+<h2 id="credential-model">Modèle d'informations d'identification</h2>
+
+Les informations d'identification doivent être stockées dans l'environnement géré par l'utilisateur, et non dans l'invite du client AI. Pour les déploiements gérés par l’établissement, limitez l’accès aux clients et réseaux approuvés.
+
+<h2 id="recommended-first-release">Première version recommandée</h2>
+
+Commencez par les données du marché public. Ajoutez un compte en lecture seule une fois que l'authentification, la portée des clés, les journaux et les contrôles d'accès sont disponibles. Le trading doit rester désactivé jusqu'à ce que les exigences de trading contrôlé soient remplies.

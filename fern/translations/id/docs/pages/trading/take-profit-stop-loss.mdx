@@ -1,113 +1,58 @@
 ---
-title: "Ambil Laba / Stop Loss (TP/SL)"
-description: "Take Profit (TP) dan Stop Loss (SL) adalah pesanan otomatis yang dirancang untuk membantu trader mengunci keuntungan dan membatasi kerugian tanpa harus terus-menerus memantau pasar."
+title: "Ambil Untung / Hentikan Kerugian (TP/SL)"
+description: "Take Profit dan Stop Loss adalah instruksi keluar bersyarat. Mencapai harga pemicu akan mengaktifkan pesanan yang dikonfigurasi; itu tidak menjamin pengisian, harga eksekusi, keuntungan atau kerugian maksimum."
 slug: trading/take-profit-stop-loss
 canonical-url: https://docs.6mm.com/id/trading/take-profit-stop-loss
 ---
 
-Take Profit (TP) dan Stop Loss (SL) adalah pesanan otomatis yang dirancang untuk membantu trader mengunci keuntungan dan membatasi kerugian tanpa harus terus-menerus memantau pasar.
+Take Profit dan Stop Loss adalah instruksi keluar bersyarat. Mencapai harga pemicu akan mengaktifkan pesanan yang dikonfigurasi; itu tidak menjamin pengisian, harga eksekusi, keuntungan atau kerugian maksimum.
 
-Di 6MM, TP/SL adalah alat inti manajemen risiko untuk kontrak perpetual U-margined.
+<h2 id="what-is-take-profit">Apa itu Ambil Untung?</h2>
 
-***
+Take Profit memicu perintah keluar ketika harga referensi yang dikonfigurasi mencapai level pemicu yang menguntungkan.
 
-<h2 id="what-is-take-profit">Apa itu take profit?</h2>
+Misalnya, posisi buy yang dibuka pada 20.000 memiliki pemicu Take Profit pada 20.600. Mencapai pemicu itu akan mengaktifkan pesanan yang dikonfigurasi; 20.600 bukanlah harga eksekusi yang dijamin. Konfirmasikan kuantitas yang diisi, harga eksekusi dan biaya sebelum mengevaluasi hasilnya.
 
-Take Profit secara otomatis menutup posisi Anda ketika harga mencapai level yang menguntungkan yang telah ditentukan.
+<h2 id="what-is-stop-loss">Apa itu Hentikan Kerugian?</h2>
 
-Tujuan:
+Stop Loss memicu perintah keluar setelah pergerakan harga yang merugikan, dengan tujuan mengurangi eksposur.
 
-* Amankan keuntungan
-* Hindari pengambilan keputusan emosional
-* Eksekusi keluar bahkan saat Anda offline
+Misalnya, posisi buy yang dibuka pada 20.000 memiliki pemicu Stop Loss pada 19.600. Mencapai pemicu akan mengaktifkan pesanan yang dikonfigurasi. Pembatasan slippage, likuiditas dan order dapat mempengaruhi eksekusi; harga pemicu tidak menetapkan jaminan kerugian maksimum.
 
-Contoh:
+<h2 id="how-tp-sl-works">Penyerahan, pemicuan dan eksekusi</h2>
 
-* Anda membuka posisi long di 20.000
-* Anda mengatur TP pada 20.600
-* Ketika harga mencapai 20.600, posisi akan ditutup secara otomatis
+1. Kirimkan pesanan bersyarat dan konfirmasikan penerimaannya serta kondisi yang disimpan.
+2. Pantau harga referensi yang dikonfigurasi, seperti harga mark atau harga terakhir yang diperdagangkan, sesuai dengan aturan platform.
+3. Ketika kondisi terpenuhi, pasar yang dikonfigurasi atau limit order akan terpicu.
+4. Periksa status pesanan yang dihasilkan dan pengisian sebenarnya. Pesanan yang terisi sebagian membuat posisi sisanya terbuka.
 
-***
+Tatanan pasar bergantung pada likuiditas yang tersedia dan batasan perdagangan. Limit order harus memenuhi harga limitnya dan boleh tetap tidak terpenuhi. Memicu saja tidak berarti suatu posisi ditutup.
 
-<h2 id="what-is-stop-loss">Apa itu stop loss?</h2>
+<h2 id="setting-tp-sl">Menetapkan Take Profit dan Stop Loss</h2>
 
-Stop Loss secara otomatis menutup posisi Anda ketika harga bergerak melawan Anda.
+Jika didukung, konfigurasikan instruksi ini saat membuka posisi atau untuk posisi yang sudah ada. Periksa arah posisi, kuantitas, harga referensi, harga pemicu, dan metode eksekusi. Untuk limit order, periksa juga harga limitnya. Pengaturan yang tersedia bergantung pada pasangan perdagangan dan konfigurasi platform.
 
-Tujuan:
+<h2 id="tp-sl-vs-liquidation">Ambil Untung, Hentikan Kerugian dan likuidasi</h2>
 
-* Batasi kerugian maksimum
-* Lindungi saldo akun
-* Mencegah likuidasi di pasar yang volatil
+Take Profit dan Stop Loss adalah instruksi bersyarat yang dikonfigurasi pengguna. Likuidasi mengikuti aturan margin dan risiko platform. Menetapkan Stop Loss tidak menjamin bahwa Stop Loss akan terisi sebelum likuidasi; harga referensi yang berbeda, pergerakan pasar, dan kondisi eksekusi dapat memengaruhi urutannya.
 
-Contoh:
+<h2 id="common-beginner-mistakes">Kesalahpahaman umum</h2>
 
-* Anda membuka posisi long di 20.000
-* Anda mengatur SL di 19.600
-* Jika harga turun ke 19.600, posisi ditutup
+- Memperlakukan harga pemicu sebagai harga eksekusi yang terjamin.
+- Dengan asumsi bahwa pesanan yang dipicu telah menutup seluruh posisi.
+- Dengan asumsi bahwa limit order yang dipicu harus dipenuhi.
+- Mengabaikan biaya, slippage dan sisa posisi setelah pengisian sebagian.
 
-***
+<h2 id="best-practices">Periksa hasilnya</h2>
 
-<h2 id="how-tp-sl-works">Cara Kerja TP / SL</h2>
-
-* Pesanan TP/SL adalah pesanan bersyarat
-* Target dipicu ketika harga mark atau harga terakhir mencapai level trigger (tergantung konfigurasi)
-* Setelah diaktifkan, mereka dieksekusi sebagai order pasar atau order limit
-
-Perilaku eksekusi dapat bervariasi tergantung pada pengaturan mitra.
-
-***
-
-<h2 id="setting-tp-sl">Pengaturan TP / SL</h2>
-
-TP/SL biasanya dapat diatur:
-
-* Saat membuka posisi
-* Setelah posisi sudah terbuka
-
-Kedua metode tersebut membantu mengotomatisasi strategi keluar.
-
-***
-
-<h2 id="tp-sl-vs-liquidation">TP / SL vs. Likuidasi</h2>
-
-* TP/SL menutup posisi sebelum margin menjadi kritis
-* Likuidasi terjadi ketika margin tidak cukup
-* Menggunakan SL mengurangi risiko likuidasi
-
-TP/SL adalah alat pengendalian risiko yang proaktif, sedangkan likuidasi adalah mekanisme yang ditegakkan oleh sistem.
-
-***
-
-<h2 id="common-beginner-mistakes">Kesalahan Umum Pemula</h2>
-
-* Mengatur SL terlalu dekat dengan harga masuk
-* Mengabaikan volatilitas pasar
-* Tidak memperhitungkan biaya dan slip
-* Lupa mengatur TP atau SL
-
-***
-
-<h2 id="best-practices">Praktik Terbaik</h2>
-
-* Selalu atur Stop Loss sebelum atau segera setelah membuka posisi
-* Gunakan Take Profit untuk menghindari posisi overholding
-* Sesuaikan TP/SL seiring perkembangan pasar
-* Menggabungkan TP/SL dengan leverage rendah
-
-***
+Setelah pengiriman atau pemicuan, tinjau status pesanan, jumlah yang terisi, dan posisi yang tersisa. Jika hasilnya tidak jelas, periksa pesanan yang ada sebelum mengirimkan instruksi keluar lainnya. Hubungi dukungan platform ketika hasil eksekusi memerlukan penyelidikan.
 
 <h2 id="summary">Ringkasan</h2>
 
-Di 6MM, TP/SL membantu pengguna:
-
-* Otomatisasi keluar
-* Mengurangi perdagangan emosional
-* Kelola risiko secara efektif
-
-Menggunakan TP/SL sangat penting untuk perdagangan kontrak perpetual yang disiplin.
+Take Profit dan Stop Loss membantu mengotomatiskan instruksi keluar. Pengurangan risiko sebenarnya bergantung pada eksekusi, bukan hanya pada pengaturan atau pemicuan perintah.
 
 <h2 id="related-guides">Panduan terkait</h2>
 
-- [Tipe Urutan](/id/trading/order-types): perilaku urutan-kondisi yang didukung.
-- [Leverage Mechanics](/id/trading/leverage-mechanics): paparan posisi dan risiko.
-- [Risk & Liquidations](/id/trading/risk-and-liquidations): mengapa TP/SL tidak menghilangkan risiko likuidasi.
+- [Jenis Pesanan](/id/trading/order-types): pasar, batas dan pesanan bersyarat.
+- [Mekanisme Pengungkit](/id/trading/leverage-mechanics): eksposur posisi dan margin.
+- [Risiko & Likuidasi](/id/trading/risk-and-liquidations): risiko margin dan likuidasi.

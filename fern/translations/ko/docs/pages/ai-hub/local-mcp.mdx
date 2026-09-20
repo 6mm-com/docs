@@ -1,0 +1,89 @@
+---
+title: "지역 MCP"
+subtitle: "6MM MCP 서버를 로컬에서 실행하면 AI 클라이언트가 사용자 컴퓨터에 자격 증명을 유지하면서 시장, 계좌 및 향후 거래 도구에 액세스할 수 있습니다."
+slug: ai-hub/local-mcp
+canonical-url: https://docs.6mm.com/ko/ai-hub/local-mcp
+---
+
+> **계획됨 — 아직 출시되지 않음**
+> AI Hub는 계획된 기능입니다. 이 페이지의 기능, 엔드포인트, 명령 및 클라이언트 구성은 제안된 설계를 설명하지만 현재는 사용할 수 없습니다. 최종 가용성 및 설정 지침은 출시 시 발표됩니다.
+
+
+로컬 MCP은 AI 클라이언트에 개인 계정 컨텍스트 또는 향후 제어되는 거래 도구가 필요할 때 권장되는 설정입니다.
+
+MCP 서버는 사용자 컴퓨터에서 실행됩니다. AI 클라이언트는 로컬 6MM 도구를 호출하고 로컬 서버는 사용자가 구성한 자격 증명을 사용하여 6MM APIs와 통신합니다.
+
+<h2 id="what-your-ai-client-can-do">AI 클라이언트가 수행할 수 있는 작업</h2>
+
+로컬 MCP를 사용하면 AI 클라이언트가 6MM 도구를 제어된 방식으로 사용할 수 있습니다.
+
+- 실시간 및 과거 시장 데이터를 가져옵니다.
+- 읽기 전용 자격 증명이 활성화되면 계정 잔액, 포지션, 미결 주문, 채우기 및 자금 조달 기록을 읽습니다.
+- 포트폴리오 노출, 마진 사용 및 청산 위험에 대해 설명합니다.
+- 실제 주문이 이루어지기 전에 미리 주문하세요.
+- 이후의 통제된 거래 단계에서는 명시적인 허가 및 위험 확인 후에만 주문을 생성하거나 취소하십시오.
+
+자격 증명을 사용자 컴퓨터에 유지해야 하는 경우 로컬 MCP을 사용합니다.
+
+<h2 id="architecture">건축학</h2>
+
+```text
+AI client
+  -> local 6mm-mcp process
+  -> 6MM REST / WebSocket API
+```
+
+<h2 id="example-configuration">예시 구성</h2>
+
+```json
+{
+  "mcpServers": {
+    "6mm": {
+      "command": "uvx",
+      "args": ["6mm-mcp"],
+      "env": {
+        "SIXMM_ENVIRONMENT": "testnet",
+        "SIXMM_API_KEY": "your_api_key",
+        "SIXMM_API_SECRET": "your_api_secret"
+      }
+    }
+  }
+}
+```
+
+<h2 id="recommended-permission-tiers">권장 권한 계층</h2>
+
+| 층 | 도구 | 메모 |
+| --- | --- | --- |
+| 공공 데이터 | 시장, 티커, 주문장, 클라인, 거래, 펀딩 | 개인 계정에 접근할 수 없습니다. |
+| 계정 읽기 | 잔액, 포지션, 미결 주문, 체결 | 읽기 전용 API 키 범위가 필요합니다. |
+| 거래 미리보기 | 미리보기 주문, 마진 영향, 수수료 추정 | 주문을 하지 않습니다. |
+| 통제된 거래 | 주문 생성, 취소, 수정 | 명시적인 허가, 확인 및 위험 제어가 필요합니다. |
+
+<h2 id="first-setup-checklist">첫 번째 설정 체크리스트</h2>
+
+1. MCP 패키지를 설치합니다.
+2. 읽기 전용 API 키를 생성하거나 구성합니다.
+3. 테스트넷에서 시작하세요.
+4. AI 클라이언트 구성에 MCP 서버를 추가합니다.
+5. 고객에게 사용 가능한 6MM 도구 목록을 요청하세요.
+6. 공개 시장 데이터 쿼리를 실행합니다.
+7. 그런 다음 필요한 경우에만 계정 읽기 자격 증명을 추가하세요.
+
+<h2 id="example-prompts">예시 프롬프트</h2>
+
+```text
+Use 6MM to list available perpetual markets.
+```
+
+```text
+Use 6MM testnet to check my open positions and explain liquidation risk.
+```
+
+```text
+Preview a small BTC long order on 6MM testnet and explain margin impact. Do not place the order.
+```
+
+<h2 id="security-notes">보안 참고 사항</h2>
+
+로컬 MCP은 기본적으로 읽기 전용 및 테스트넷으로 설정되어야 합니다. 거래 도구에는 미리보기, 사용자 확인, 멱등성 키, 개념적 한도 및 서비스 측 위험 검사가 필요합니다.
