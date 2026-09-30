@@ -7,7 +7,9 @@ canonical-url: https://docs.6mm.com/zh-CN/developer-api/websocket/public-market-
 
 当应用需要持续更新价格、成交、K 线或订单簿深度，并希望避免频繁轮询 REST 接口时，可使用公共行情频道。这些数据流适用于交易界面、价格展示、行情提醒和市场监控。
 
-<h2 id="connection-url">连接地址</h2>
+<span id="connection-url" data-sixmm-canonical-anchor="connection-url" aria-hidden="true"></span>
+
+## 连接地址
 
 ```
 wss://ws.6mm.com/ws
@@ -17,7 +19,9 @@ wss://ws.6mm.com/ws
 
 连接生命周期、取消订阅、Ping 和重连方式请参阅[连接、订阅与心跳](/zh-CN/developer-api/websocket/connection-subscription-and-heartbeat)。
 
-<h2 id="common-channels">常用频道</h2>
+<span id="common-channels" data-sixmm-canonical-anchor="common-channels" aria-hidden="true"></span>
+
+## 常用频道
 
 | 频道                                 | 说明                 |
 | ---------------------------------- | ------------------ |
@@ -27,7 +31,9 @@ wss://ws.6mm.com/ws
 | `market.ticker.{symbol}`           | 单交易对行情摘要           |
 | `market.tickers`                   | 全交易对行情摘要           |
 
-<h2 id="choose-a-channel">选择频道</h2>
+<span id="choose-a-channel" data-sixmm-canonical-anchor="choose-a-channel" aria-hidden="true"></span>
+
+## 选择频道
 
 | 应用需求 | 频道 |
 | --- | --- |
@@ -37,13 +43,17 @@ wss://ws.6mm.com/ws
 | 展示单个市场摘要 | `market.ticker.{symbol}` |
 | 维护全市场行情列表 | `market.tickers` |
 
-<h2 id="subscription-example">订阅示例</h2>
+<span id="subscription-example" data-sixmm-canonical-anchor="subscription-example" aria-hidden="true"></span>
+
+## 订阅示例
 
 ```json
 { "id": "1772007814666", "op": "subscribe", "args": ["market.depth.BTCUSDT"] }
 ```
 
-<h2 id="push-message-wrapper">推送外层格式</h2>
+<span id="push-message-wrapper" data-sixmm-canonical-anchor="push-message-wrapper" aria-hidden="true"></span>
+
+## 推送外层格式
 
 ```json
 {
@@ -56,11 +66,15 @@ wss://ws.6mm.com/ws
 
 通过 `topic` 将消息分发给正确的处理程序，并使用 `ts` 观察传输延迟。`data` 对象包含所订阅频道的具体数据。
 
-<h2 id="order-book-handling">订单簿处理</h2>
+<span id="order-book-handling" data-sixmm-canonical-anchor="order-book-handling" aria-hidden="true"></span>
+
+## 订单簿处理
 
 深度频道会先发送快照，再发送增量更新。应用本地订单簿前应先用快照初始化。连接中断后应建立新会话、重新订阅，并使用下一份快照重建本地订单簿，不要继续使用已经过期的内存状态。
 
-<h2 id="production-recommendations">生产环境建议</h2>
+<span id="production-recommendations" data-sixmm-canonical-anchor="production-recommendations" aria-hidden="true"></span>
+
+## 生产环境建议
 
 - 为每次订阅、取消订阅和 Ping 请求生成唯一 `id`。
 - 收到订阅确认后，再将频道标记为可用。
@@ -69,7 +83,9 @@ wss://ws.6mm.com/ws
 - 监控断线频率、消息处理延迟和异常数据。
 - 需要账户和订单更新时，使用[私有用户频道](/zh-CN/developer-api/websocket/private-user-channel)。
 
-<h2 id="related-api-docs">相关 API 文档</h2>
+<span id="related-api-docs" data-sixmm-canonical-anchor="related-api-docs" aria-hidden="true"></span>
+
+## 相关 API 文档
 
 <CardGroup cols={3}>
 <Card title="WebSocket 总览" icon="fa-duotone fa-wave-pulse" href="/zh-CN/developer-api/websocket">

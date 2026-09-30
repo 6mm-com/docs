@@ -321,6 +321,12 @@ sandboxDocument.head.appendChild(widgetStyle);
 const originalFrame = container.iframe;
 
 for (let navigation = 0; navigation < 3; navigation++) {
+  if (navigation === 1) {
+    container.style.display = "block";
+    emitWidgetLanguage("fr");
+    completeDocsNavigation("/fr/home");
+    await Promise.resolve();
+  }
   const incomingBody = [];
   const incomingHead = [];
   const incoming = {
@@ -353,7 +359,9 @@ for (let navigation = 0; navigation < 3; navigation++) {
   assert.equal(container.iframe.draft, "unfinished");
   assert.equal(widgetScriptLoads, 1, "Page navigation must not reload the widget SDK");
   assert.equal(bubble.getAttribute("role"), "button");
-  assert.equal(bubble.getAttribute("tabindex"), "0");
+  assert.equal(bubble.getAttribute("tabindex"), navigation ? "-1" : "0");
+  assert.equal(container.style.display, navigation ? "block" : "none",
+    "A widget-initiated language change must retain the open conversation panel");
   assert.ok(bubble.getAttribute("aria-label"));
 }
 let prevented = 0;
@@ -549,8 +557,8 @@ const adapterDocument = {
         this[name] = value;
       },
       click() {
-        assert.equal(this["data-astro-reload"], "",
-          "Cross-locale links must initialize a new document instead of keeping stale React providers");
+        assert.equal(this["data-astro-reload"], undefined,
+          "Locale navigation must retain the open support iframe instead of reloading the document");
         nativeLinkNavigations.push(this.href);
         const target = new URL(this.href, adapterWindow.location.origin);
         adapterWindow.location.pathname = target.pathname;

@@ -7,7 +7,9 @@ canonical-url: https://docs.6mm.com/uk/sdk/security/webhooks-idempotency
 
 Вебхуки повідомляють партнерський бекенд про асинхронні зміни бізнес-стану. Оскільки доставка може бути повторною, кожен отримувач повинен перевірити підпис перед аналізом довірених даних і обробити подію ідемпотентно.
 
-<h2 id="webhook-headers">Заголовки Webhook</h2>
+<span id="webhook-headers" data-sixmm-canonical-anchor="webhook-headers" aria-hidden="true"></span>
+
+## Заголовки Webhook
 
 | Заголовок | Опис |
 | --- | --- |
@@ -21,7 +23,9 @@ timestamp + nonce + rawBody
 
 Використовуйте точне сире тіло запиту, отримане протягом HTTP , при відновленні підписаного значення. Спочатку парсинг і повторна серіалізація JSON можуть змінити пробіл або ордер полів і отримати інший підпис.
 
-<h2 id="verification-flow">Потік верифікації</h2>
+<span id="verification-flow" data-sixmm-canonical-anchor="verification-flow" aria-hidden="true"></span>
+
+## Потік верифікації
 
 1. Прочитайте часову мітку, нонс і підписні заголовки.
 2. Захопити незмінене сирий запит.
@@ -33,7 +37,9 @@ timestamp + nonce + rawBody
 
 Коли доступний офіційний Agent SDK -верифікатор, використовуйте його замість того, щоб підтримувати незалежний код підпису.
 
-<h2 id="order-idempotency">Ідемпотентність порядку</h2>
+<span id="order-idempotency" data-sixmm-canonical-anchor="order-idempotency" aria-hidden="true"></span>
+
+## Ідемпотентність порядку
 
 | Випадок | Керованість |
 | --- | --- |
@@ -42,7 +48,9 @@ timestamp + nonce + rawBody
 | PROCESSING відповідь | Зачекайте на статус замовлення вебхука або запиту. |
 | Повторюваний вебхук | Дедуплікація за ключем ідемпотентності та кінцевим статусом. |
 
-<h2 id="recommended-idempotency-record">Рекомендований запис ідемпотентності</h2>
+<span id="recommended-idempotency-record" data-sixmm-canonical-anchor="recommended-idempotency-record" aria-hidden="true"></span>
+
+## Рекомендований запис ідемпотентності
 
 Зберігайте достатньо інформації, щоб розпізнати повторну доставку і безпечно відновити її:
 
@@ -57,11 +65,15 @@ timestamp + nonce + rawBody
 
 Зафіксуйте запис зміни бізнесу та ідемпотентності в одній транзакції, де це можливо. Повторювана подія повинна повертати вже відомий результат замість повторного застосування балансу, порядку чи зміни користувача.
 
-<h2 id="timeout-and-retry-rule">Правило тайм-ауту та повторної спроби</h2>
+<span id="timeout-and-retry-rule" data-sixmm-canonical-anchor="timeout-and-retry-rule" aria-hidden="true"></span>
+
+## Правило тайм-ауту та повторної спроби
 
 Тайм-аут HTTP не доводить, що початковий запит не провалився. Запит до операції за допомогою оригінального `agentOrderNo`або зачекайте на її веб-гак, перш ніж вирішувати, чи потрібна ще одна дія. Створення нового номера бізнес-замовлення після кожного тайм-ауту може спричинити дублювання рухів фонду.
 
-<h2 id="production-checklist">Чек-лист виробництва</h2>
+<span id="production-checklist" data-sixmm-canonical-anchor="production-checklist" aria-hidden="true"></span>
+
+## Чек-лист виробництва
 
 - Перевірити підпис перед JSON парсінгом або бізнес-обробкою.
 - Зберігати сирий корпус незалежно від розборованого корисного навантаження.
@@ -70,7 +82,9 @@ timestamp + nonce + rawBody
 - Ідентифікатори подій журналу, номери замовлень партнера, результати обробки та час запиту.
 - Редагувати секрети та значення підписів із журналів і підтримуючих вкладень.
 
-<h2 id="related-docs">Пов'язані документи</h2>
+<span id="related-docs" data-sixmm-canonical-anchor="related-docs" aria-hidden="true"></span>
+
+## Пов'язані документи
 
 <CardGroup cols={3}>
 <Card title="Секрети та HMAC підписання" icon="fa-duotone fa-shield-keyhole" href="/uk/sdk/security/secrets-signing">

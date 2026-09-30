@@ -7,40 +7,52 @@ canonical-url: https://docs.6mm.com/zh-CN/trading/getting-started/asset-transfer
 
 本页说明永续合约交易的资金路径：**资金账户 → 合约账户 → 交易结算**。资金账户用于资金分配，合约账户用于保证金与合约结算，该路径无需经过现货账户。
 
-<h2 id="partner-managed-deposits-and-withdrawals">通过所属平台准备资金</h2>
+<span id="partner-managed-deposits-and-withdrawals" data-sixmm-canonical-anchor="partner-managed-deposits-and-withdrawals" aria-hidden="true"></span>
+
+## 通过所属平台准备资金
 
 合作方 API / SDK 接入场景，按合作方平台的余额分配与入金流程操作。白标平台场景，充值与提现按平台配置的钱包服务流程处理：充值确认后计入资金账户，提现从资金账户转出。
 
 具体入口以所属平台提供的功能为准。账户内部划转与充值、提现是不同操作。
 
-<h2 id="account-structure-within-6mm">合约交易涉及的账户</h2>
+<span id="account-structure-within-6mm" data-sixmm-canonical-anchor="account-structure-within-6mm" aria-hidden="true"></span>
+
+## 合约交易涉及的账户
 
 | 账户 | 用途 |
 | --- | --- |
 | <span style={{ whiteSpace: "nowrap" }}>资金账户</span> | 用于资金分配，并接收从合约账户划回的资金。准备划转时应查看可用余额。 |
 | <span style={{ whiteSpace: "nowrap" }}>合约账户</span> | 用于合约保证金与交易结算。下单或转出前，应查看账户权益、保证金占用及未实现盈亏。 |
 
-<h2 id="automated-balance-transfer-to-6mm">划转前准备</h2>
+<span id="automated-balance-transfer-to-6mm" data-sixmm-canonical-anchor="automated-balance-transfer-to-6mm" aria-hidden="true"></span>
+
+## 划转前准备
 
 1. 确认用户、币种及划转方向。
 2. 检查转出账户的可用余额与账户限制。
 3. 通过平台支持的划转入口或经授权的接入方式提交。
 4. 确认划转结果及转入账户余额后，再提交交易订单。
 
-<h2 id="internal-transfers-between-accounts">资金账户与合约账户之间划转</h2>
+<span id="internal-transfers-between-accounts" data-sixmm-canonical-anchor="internal-transfers-between-accounts" aria-hidden="true"></span>
+
+## 资金账户与合约账户之间划转
 
 - 交易前：将所需结算资产从资金账户转入合约账户。
 - 结算后：将合约账户内可转出的金额划回资金账户。
 - 账户划转属于内部余额变动，不是链上交易。
 - 保证金占用、未成交委托、持仓及账户限制可能影响可转出金额，请以平台显示的额度与处理结果为准。
 
-<h2 id="design-principles">状态确认与对账</h2>
+<span id="design-principles" data-sixmm-canonical-anchor="design-principles" aria-hidden="true"></span>
+
+## 状态确认与对账
 
 提交申请不代表划转已经完成。应核对划转单号、状态、币种、金额、转出账户与转入账户。若处理失败或结果未明确，先核对资金流水并联系平台支持，再决定是否重新提交。
 
 不要将账户总余额直接视为可自由划转的金额，也不要默认所有划转均即时完成或免手续费。以平台展示的条件及最终处理结果为准。
 
-<h2 id="implementation-and-safety-guides">实施与安全指南</h2>
+<span id="implementation-and-safety-guides" data-sixmm-canonical-anchor="implementation-and-safety-guides" aria-hidden="true"></span>
+
+## 实施与安全指南
 
 - [Agent SDK 概览](/zh-CN/sdk/agent-sdk/overview)：用户绑定、划转与对账。
 - [Webhook 与幂等](/zh-CN/sdk/security/webhooks-idempotency)：回调验证与重复请求处理。

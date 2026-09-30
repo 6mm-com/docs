@@ -5,7 +5,9 @@ slug: developer-api/request-signing
 canonical-url: https://docs.6mm.com/uk/developer-api/request-signing
 ---
 
-<h2 id="request-format">Формат запиту</h2>
+<span id="request-format" data-sixmm-canonical-anchor="request-format" aria-hidden="true"></span>
+
+## Формат запиту
 
 | Розташування | Поле       | Обов'язкове            | Опис                                   |
 | -------- | ----------- | ------------------- | --------------------------------------------- |
@@ -14,7 +16,9 @@ canonical-url: https://docs.6mm.com/uk/developer-api/request-signing
 | Запит    | `signature` | Так                 | HMAC-SHA256 підпис, малий шестилітник   |
 | Кузов     | JSON        | Залежить від кінцевої точки | POST / PUT / DELETE запит              |
 
-<h2 id="signature-payload">Сигнатурне корисне навантаження</h2>
+<span id="signature-payload" data-sixmm-canonical-anchor="signature-payload" aria-hidden="true"></span>
+
+## Сигнатурне корисне навантаження
 
 ```
 payload = queryStringWithoutSignature + requestBody
@@ -30,7 +34,9 @@ signature = HMAC-SHA256(apiSecret, payload)
 * Якщо існує тіло запиту, JSON рядок, що використовується для підписання, повинен точно збігатися з фактичним переданим тілом.
 * Шляхи, пов'язані з порядком, виконують перевірки повтору підпису. Повторне використання одного й того ж підпису протягом короткого періоду повертає `Signature replay detected`.
 
-<h2 id="server-time">Час сервера</h2>
+<span id="server-time" data-sixmm-canonical-anchor="server-time" aria-hidden="true"></span>
+
+## Час сервера
 
 ```http
 GET /v1/time
@@ -54,7 +60,9 @@ GET /v1/time
 
 Клієнти повинні розраховувати `timeOffsetMs = serverTimestampMs - localTimestampMs`, а потім використовувати `timestamp = nowMs + timeOffsetMs` для наступних підписаних запитів. Якщо сервер повертає `Timestamp outside of tolerance window`, негайно синхронізуйте час і генеруйте підпис.
 
-<h2 id="get-signing-example">GET Приклад підпису</h2>
+<span id="get-signing-example" data-sixmm-canonical-anchor="get-signing-example" aria-hidden="true"></span>
+
+## GET Приклад підпису
 
 Фактичний запит:
 
@@ -68,7 +76,9 @@ GET /v1/private/order/current?symbol=BTCUSDT&timestamp=1772710377808&signature=.
 symbol=BTCUSDT&timestamp=1772710377808
 ```
 
-<h2 id="post-signing-example">POST Приклад підпису</h2>
+<span id="post-signing-example" data-sixmm-canonical-anchor="post-signing-example" aria-hidden="true"></span>
+
+## POST Приклад підпису
 
 Фактичний запит:
 
@@ -88,7 +98,9 @@ POST /v1/private/order/place?timestamp=1772710377808&signature=...
 timestamp=1772710377808{"symbol":"BTCUSDT","type":"LIMIT","side":"BUY","price":"85000","quantity":"0.1","timeInForce":"GTC","makerOnly":true,"clientOrderId":"ext-1772710377808-001"}
 ```
 
-<h2 id="python-signing-example">Приклад підпису в Python</h2>
+<span id="python-signing-example" data-sixmm-canonical-anchor="python-signing-example" aria-hidden="true"></span>
+
+## Приклад підпису в Python
 
 ```python
 import hashlib
@@ -145,7 +157,9 @@ sync_time_offset()
 print(signed_request("GET", "/v1/private/order/current", {"symbol": "BTCUSDT"}))
 ```
 
-<h2 id="related-security-guides">Пов'язані посібники з безпеки</h2>
+<span id="related-security-guides" data-sixmm-canonical-anchor="related-security-guides" aria-hidden="true"></span>
+
+## Пов'язані посібники з безпеки
 
 - [Автентифікація](/uk/developer-api/authentication)
 - [API Key Менеджмент](/uk/developer-api/api-key-management)

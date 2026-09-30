@@ -5,7 +5,9 @@ slug: developer-api/request-signing
 canonical-url: https://docs.6mm.com/id/developer-api/request-signing
 ---
 
-<h2 id="request-format">Format Permintaan</h2>
+<span id="request-format" data-sixmm-canonical-anchor="request-format" aria-hidden="true"></span>
+
+## Format Permintaan
 
 | Lokasi | Lapangan       | Wajib            | Deskripsi                                   |
 | -------- | ----------- | ------------------- | --------------------------------------------- |
@@ -14,7 +16,9 @@ canonical-url: https://docs.6mm.com/id/developer-api/request-signing
 | Kueri    | `signature` | Ya                 | HMAC- tanda tanganSHA256 , string heksagon huruf kecil   |
 | Badan     | JSON        | Tergantung pada titik akhir | POST / PUT / DELETE badan permintaan              |
 
-<h2 id="signature-payload">Payload Tanda Tangan</h2>
+<span id="signature-payload" data-sixmm-canonical-anchor="signature-payload" aria-hidden="true"></span>
+
+## Payload Tanda Tangan
 
 ```
 payload = queryStringWithoutSignature + requestBody
@@ -30,7 +34,9 @@ Aturan utama:
 * Jika ada badan permintaan, string JSON yang digunakan untuk penandatanganan harus persis sama dengan badan yang sebenarnya dikirimkan.
 * Jalur terkait pesanan melakukan pemeriksaan ulang tanda tangan. Menggunakan kembali tanda tangan yang sama dalam waktu singkat menghasilkan `Signature replay detected`.
 
-<h2 id="server-time">Waktu Server</h2>
+<span id="server-time" data-sixmm-canonical-anchor="server-time" aria-hidden="true"></span>
+
+## Waktu Server
 
 ```http
 GET /v1/time
@@ -54,7 +60,9 @@ Contoh respons:
 
 Klien harus menghitung `timeOffsetMs = serverTimestampMs - localTimestampMs`, lalu menggunakan `timestamp = nowMs + timeOffsetMs` untuk permintaan yang ditandatangani berikutnya. Jika server mengembalikan `Timestamp outside of tolerance window`, segera melakukan sinkronisasi ulang dan membuat ulang tanda tangan.
 
-<h2 id="get-signing-example">Contoh Penandatanganan GET</h2>
+<span id="get-signing-example" data-sixmm-canonical-anchor="get-signing-example" aria-hidden="true"></span>
+
+## Contoh Penandatanganan GET
 
 Permintaan sebenarnya:
 
@@ -68,7 +76,9 @@ Payload tanda tangan:
 symbol=BTCUSDT&timestamp=1772710377808
 ```
 
-<h2 id="post-signing-example">Contoh Penandatanganan POST</h2>
+<span id="post-signing-example" data-sixmm-canonical-anchor="post-signing-example" aria-hidden="true"></span>
+
+## Contoh Penandatanganan POST
 
 Permintaan sebenarnya:
 
@@ -88,7 +98,9 @@ Payload tanda tangan:
 timestamp=1772710377808{"symbol":"BTCUSDT","type":"LIMIT","side":"BUY","price":"85000","quantity":"0.1","timeInForce":"GTC","makerOnly":true,"clientOrderId":"ext-1772710377808-001"}
 ```
 
-<h2 id="python-signing-example">Contoh Penandatanganan Python</h2>
+<span id="python-signing-example" data-sixmm-canonical-anchor="python-signing-example" aria-hidden="true"></span>
+
+## Contoh Penandatanganan Python
 
 ```python
 import hashlib
@@ -145,7 +157,9 @@ sync_time_offset()
 print(signed_request("GET", "/v1/private/order/current", {"symbol": "BTCUSDT"}))
 ```
 
-<h2 id="related-security-guides">Panduan keamanan terkait</h2>
+<span id="related-security-guides" data-sixmm-canonical-anchor="related-security-guides" aria-hidden="true"></span>
+
+## Panduan keamanan terkait
 
 - [Autentikasi](/id/developer-api/authentication)
 - [API Key Manajemen](/id/developer-api/api-key-management)

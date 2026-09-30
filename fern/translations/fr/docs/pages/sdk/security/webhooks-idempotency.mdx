@@ -7,7 +7,9 @@ canonical-url: https://docs.6mm.com/fr/sdk/security/webhooks-idempotency
 
 Les Webhooks notifient un partenaire en arrière-plan des changements asynchrones d’état métier. Comme la livraison peut être retentée, chaque récepteur doit vérifier la signature avant d’analyser les données de confiance et traiter l’événement de manière idempotente.
 
-<h2 id="webhook-headers">En-têtes Webhook</h2>
+<span id="webhook-headers" data-sixmm-canonical-anchor="webhook-headers" aria-hidden="true"></span>
+
+## En-têtes Webhook
 
 | En-tête | Description |
 | --- | --- |
@@ -21,7 +23,9 @@ timestamp + nonce + rawBody
 
 Utilisez le corps brut exact de la requête reçu sur HTTP lors de la reconstruction de la valeur signée. L’analyse et la résérialise JSON d’abord peuvent modifier l’ordre des espaces blancs ou des champs et produire une signature différente.
 
-<h2 id="verification-flow">Flux de vérification</h2>
+<span id="verification-flow" data-sixmm-canonical-anchor="verification-flow" aria-hidden="true"></span>
+
+## Flux de vérification
 
 1. Lire les en-têtes d’heure et de signature.
 2. Capturez le corps brut de la requête non modifié.
@@ -33,7 +37,9 @@ Utilisez le corps brut exact de la requête reçu sur HTTP lors de la reconstruc
 
 Lorsqu’un vérificateur officiel de Agent SDK est disponible, utilisez-le plutôt que de maintenir un code de signature indépendant.
 
-<h2 id="order-idempotency">Idempotence d’ordre</h2>
+<span id="order-idempotency" data-sixmm-canonical-anchor="order-idempotency" aria-hidden="true"></span>
+
+## Idempotence d’ordre
 
 | Affaire | Maniabilité |
 | --- | --- |
@@ -42,7 +48,9 @@ Lorsqu’un vérificateur officiel de Agent SDK est disponible, utilisez-le plut
 | PROCESSING réponse | Attendez le statut du webhook ou de la requête. |
 | Webhook répété | Dédupliquer par clé d’idempotence et statut final. |
 
-<h2 id="recommended-idempotency-record">Dossier d’idempotence recommandé</h2>
+<span id="recommended-idempotency-record" data-sixmm-canonical-anchor="recommended-idempotency-record" aria-hidden="true"></span>
+
+## Dossier d’idempotence recommandé
 
 Stockez suffisamment d’informations pour reconnaître une livraison répétée et récupérer en toute sécurité :
 
@@ -57,11 +65,15 @@ Stockez suffisamment d’informations pour reconnaître une livraison répétée
 
 Validez l’enregistrement de changement métier et d’idempotence dans la même transaction lorsque possible. Un événement répété devrait retourner le résultat déjà connu au lieu d’appliquer à nouveau le solde, l’ordre ou le changement utilisateur.
 
-<h2 id="timeout-and-retry-rule">Règle du temps mort et de la réévaluation</h2>
+<span id="timeout-and-retry-rule" data-sixmm-canonical-anchor="timeout-and-retry-rule" aria-hidden="true"></span>
+
+## Règle du temps mort et de la réévaluation
 
 Un délai d’attente HTTP ne prouve pas que la requête initiale a échoué. Interrogez l’opération en utilisant le `agentOrderNo`original, ou attendez son webhook, avant de décider si une autre action est nécessaire. Créer un nouveau numéro d’ordre commercial après chaque délai peut entraîner des mouvements de fonds en double.
 
-<h2 id="production-checklist">Liste de contrôle de la production</h2>
+<span id="production-checklist" data-sixmm-canonical-anchor="production-checklist" aria-hidden="true"></span>
+
+## Liste de contrôle de la production
 
 - Vérifier la signature avant JSON analyse syntaxique ou traitement professionnel.
 - Préserver le corps brut indépendamment de la charge utile analysée.
@@ -70,7 +82,9 @@ Un délai d’attente HTTP ne prouve pas que la requête initiale a échoué. In
 - Enregistrer les identifiants d’événements, les numéros de commande des partenaires, le résultat de traitement et le temps de la demande.
 - Expurger les secrets et les valeurs de signature des journaux et des pièces jointes de support.
 
-<h2 id="related-docs">Documents connexes</h2>
+<span id="related-docs" data-sixmm-canonical-anchor="related-docs" aria-hidden="true"></span>
+
+## Documents connexes
 
 <CardGroup cols={3}>
 <Card title="Secrets & HMAC Signature" icon="fa-duotone fa-shield-keyhole" href="/fr/sdk/security/secrets-signing">

@@ -7,7 +7,9 @@ canonical-url: https://docs.6mm.com/pt-PT/sdk/security/webhooks-idempotency
 
 Os Webhooks notificam o backend parceiro sobre alterações assíncronas no estado do negócio. Como a entrega pode ser tentada novamente, cada recetor deve verificar a assinatura antes de analisar dados confiáveis e deve processar o evento de forma idempotente.
 
-<h2 id="webhook-headers">Cabeçalhos Webhook</h2>
+<span id="webhook-headers" data-sixmm-canonical-anchor="webhook-headers" aria-hidden="true"></span>
+
+## Cabeçalhos Webhook
 
 | Cabeçalho | Descrição |
 | --- | --- |
@@ -21,7 +23,9 @@ timestamp + nonce + rawBody
 
 Use o corpo bruto do pedido recebido ao longo de HTTP ao reconstruir o valor assinado. Analisar e voltar a serializar JSON primeiro pode alterar a ordem dos espaços em branco ou dos campos e produzir uma assinatura diferente.
 
-<h2 id="verification-flow">Fluxo de verificação</h2>
+<span id="verification-flow" data-sixmm-canonical-anchor="verification-flow" aria-hidden="true"></span>
+
+## Fluxo de verificação
 
 1. Leia os cabeçalhos de carimbo temporal, nonce e assinatura.
 2. Capturar o corpo bruto do pedido não modificado.
@@ -33,7 +37,9 @@ Use o corpo bruto do pedido recebido ao longo de HTTP ao reconstruir o valor ass
 
 Quando estiver disponível um verificador oficial de Agent SDK , utilize-o em vez de manter um código de assinatura independente.
 
-<h2 id="order-idempotency">Idempotência da ordem</h2>
+<span id="order-idempotency" data-sixmm-canonical-anchor="order-idempotency" aria-hidden="true"></span>
+
+## Idempotência da ordem
 
 | Caso | Condução |
 | --- | --- |
@@ -42,7 +48,9 @@ Quando estiver disponível um verificador oficial de Agent SDK , utilize-o em ve
 | PROCESSING resposta | Aguarde pelo estado do webhook ou da encomenda de consulta. |
 | Webhook repetido | Desduplicar por chave de idempotência e estado final. |
 
-<h2 id="recommended-idempotency-record">Registo recomendado de idempotência</h2>
+<span id="recommended-idempotency-record" data-sixmm-canonical-anchor="recommended-idempotency-record" aria-hidden="true"></span>
+
+## Registo recomendado de idempotência
 
 Armazene informação suficiente para reconhecer uma entrega repetida e recuperar em segurança:
 
@@ -57,11 +65,15 @@ Armazene informação suficiente para reconhecer uma entrega repetida e recupera
 
 Comprometa o registo de alteração do negócio e de idempotência na mesma transação sempre que possível. Um evento repetido deve devolver o resultado já conhecido em vez de aplicar novamente o saldo, a ordem ou a alteração do utilizador.
 
-<h2 id="timeout-and-retry-rule">Regra do tempo limite e da retentativa</h2>
+<span id="timeout-and-retry-rule" data-sixmm-canonical-anchor="timeout-and-retry-rule" aria-hidden="true"></span>
+
+## Regra do tempo limite e da retentativa
 
 Um HTTP tempo não prova que o pedido original falhou. Consulte a operação usando o `agentOrderNo`original , ou espere pelo seu webhook, antes de decidir se é necessária outra ação. Criar um novo número de ordem de negócio após cada pausa pode causar movimentos duplicados de fundos.
 
-<h2 id="production-checklist">Lista de verificação de produção</h2>
+<span id="production-checklist" data-sixmm-canonical-anchor="production-checklist" aria-hidden="true"></span>
+
+## Lista de verificação de produção
 
 - Verificar a assinatura antes de JSON análise ou processamento empresarial.
 - Preservar o corpo bruto independentemente da carga útil analisada.
@@ -70,7 +82,9 @@ Um HTTP tempo não prova que o pedido original falhou. Consulte a operação usa
 - Registar IDs de eventos, números de encomenda dos parceiros, resultados de processamento e tempo de pedido.
 - Redigir segredos e valores de assinatura dos registos e anexos de suporte.
 
-<h2 id="related-docs">Documentação relacionada</h2>
+<span id="related-docs" data-sixmm-canonical-anchor="related-docs" aria-hidden="true"></span>
+
+## Documentação relacionada
 
 <CardGroup cols={3}>
 <Card title="Segredos e HMAC Assinaturas" icon="fa-duotone fa-shield-keyhole" href="/pt-PT/sdk/security/secrets-signing">

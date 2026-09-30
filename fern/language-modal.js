@@ -1,4 +1,6 @@
 (function () {
+  if (window.__sixmmLanguageModalInitialized) return;
+  window.__sixmmLanguageModalInitialized = true;
   var locales = [
     { code: "", label: "English", htmlLang: "en", widget: "en", aliases: ["en", "en-us", "en-gb", "en-asia", "en-sg"] },
     { code: "ja", label: "日本語", widget: "ja", aliases: ["ja", "ja-jp"] },
@@ -481,11 +483,13 @@
         'button[aria-label="Open menu"], button[aria-label="Close menu"]',
       ),
     ).forEach(function (menuButton) {
+      if (!isHydratedControl(menuButton)) return;
       menuButton.classList.add("sixmm-mobile-menu-trigger");
     });
 
     Array.from(document.querySelectorAll(".fern-language-selector")).forEach(
       function (selector) {
+        if (!isHydratedControl(selector)) return;
         guardMobileLocaleTrigger(selector);
         selector.setAttribute("aria-label", labels.chooseLanguage);
         selector.removeAttribute("title");
@@ -590,12 +594,11 @@
     var pathname = new URL(targetUrl, window.location.origin).pathname;
     var previousContent = pageContentState();
 
-    // A locale change must initialize a new document. Keeping the previous
-    // locale's React providers during an Astro swap causes hydration errors.
-    // Ordinary same-locale links can still use Fern's client navigation.
+    // Use Fern's Astro router so the retained support iframe and its current
+    // conversation survive a locale change. Hydration guards below keep our
+    // UI enhancements from altering incoming server markup before React mounts.
     var link = document.createElement("a");
     link.href = targetUrl;
-    link.setAttribute("data-astro-reload", "");
     link.hidden = true;
     document.body.appendChild(link);
     try {
@@ -656,6 +659,11 @@
     enhanceLocaleMenus();
     syncLocaleTabs();
   }
+  function isHydratedControl(element) {
+    if (typeof element.closest !== "function") return true;
+    var island = element.closest("astro-island");
+    return !island || island.hasAttribute("data-fern-hydrated");
+  }
 
   function scheduleSync() {
     if (syncScheduled) return;
@@ -667,6 +675,8 @@
   // locale immediately so standalone navigation tabs never flash on first paint.
   syncLocaleTabs();
   document.addEventListener("DOMContentLoaded", scheduleSync);
+  document.addEventListener("fern:island-hydrated", scheduleSync);
+  document.addEventListener("astro:page-load", scheduleSync);
   window.addEventListener("pageshow", function () {
     closeMobileLocaleDialog(false);
     scheduleSync();

@@ -7,35 +7,45 @@ canonical-url: https://docs.6mm.com/pt-PT/developer-api/integration-recommendati
 
 Use estas recomendações como base de prontidão para produção. Complementam a referência do endpoint e ajudam as integrações a recuperarem-se de forma segura de timeouts, reconexões, pedidos duplicados e incidentes de credenciais.
 
-<h2 id="authentication-and-secrets">Autenticação e segredos</h2>
+<span id="authentication-and-secrets" data-sixmm-canonical-anchor="authentication-and-secrets" aria-hidden="true"></span>
+
+## Autenticação e segredos
 
 - Preferir [API Key assinatura](/pt-PT/developer-api/authentication) para programas de negociação do lado do servidor e JWT para ações frontend orientadas pelo utilizador.
 - Manté `apiSecret` na gestão de segredos do backend. É mostrado apenas uma vez e nunca deve ser enviado para um navegador ou cliente móvel.
 - Aplicar as permissões mínimas de API Key exigidas e restringir IPs de origem quando o ambiente de integração suportar endereços de saída estáveis.
 - Desativar ou eliminar imediatamente uma chave vazada, depois rever os registos de pedidos antes de emitir uma substituição.
 
-<h2 id="request-validation-and-idempotency">Validação do pedido e idempotência</h2>
+<span id="request-validation-and-idempotency" data-sixmm-canonical-anchor="request-validation-and-idempotency" aria-hidden="true"></span>
+
+## Validação do pedido e idempotência
 
 - Antes de fazer ordens, consultar `/v1/public/market/symbols` e validar `tickSize`, `stepSize`, valor nocional mínimo e quantidade máxima localmente.
 - Gerar uma `clientOrderId` única para cada escrita de ordem para que os pedidos possam ser reconciliados após uma desconexão.
 - Preservar o identificador original quando um resultado HTTP é incerto. Consulte a encomenda existente antes de criar um pedido de substituição.
 - Tratar valores e preços decimais como cadeias ou tipos decimais, não como valores binários de ponto flutuante.
 
-<h2 id="order-and-websocket-state">Ordem e Estado WebSocket</h2>
+<span id="order-and-websocket-state" data-sixmm-canonical-anchor="order-and-websocket-state" aria-hidden="true"></span>
+
+## Ordem e Estado WebSocket
 
 - Determinar o estado final após cancelar, cancelar tudo ou alterar operações de [eventos de WebSocket privados](/pt-PT/developer-api/websocket/private-user-channel) ou de uma consulta REST .
 - Tratar cada reconexão como uma nova sessão WebSocket e restaurar todas as subscrições necessárias.
 - Verificar a continuidade do livro de encomendas com `endVersion`. Se surgir uma lacuna na versão, descarte o livro local e volte a subscrever para obter um novo instante.
 - Deduplicar eventos privados de ordens e contas antes de os aplicar a saldos, posições ou registos de parceiros.
 
-<h2 id="logging-monitoring-and-retries">Registo, monitorização e tentativas repetidas</h2>
+<span id="logging-monitoring-and-retries" data-sixmm-canonical-anchor="logging-monitoring-and-retries" aria-hidden="true"></span>
+
+## Registo, monitorização e tentativas repetidas
 
 - ID de pedido de registo, ID da ordem do cliente, estado HTTP , código API negócio, latência e contagem de retentativas sem registar segredos ou tokens completos.
 - Operações de retentativa apenas documentadas como seguras, usando recuo exponencial limitado e jitter.
 - Alerta sobre falhas de autenticação, erros de assinatura, respostas de limite de taxa, ciclos de reconexão WebSocket , lacunas de sequência e diferenças na reconciliação de ordens.
 - Manter os relógios dos servidores sincronizados porque a autenticação e a assinatura dependem de carimbos de data.
 
-<h2 id="before-production">Antes da produção</h2>
+<span id="before-production" data-sixmm-canonical-anchor="before-production" aria-hidden="true"></span>
+
+## Antes da produção
 
 - Exercer cenários de timeout, pedido duplicado, reconexão, rotação de chaves e retentativa de webhook num ambiente não de produção.
 - Atribuir os proprietários para rotação de credenciais, incidentes de comércio, falhas de webhooks e reconciliação.

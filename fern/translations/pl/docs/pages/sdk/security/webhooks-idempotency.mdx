@@ -7,7 +7,9 @@ canonical-url: https://docs.6mm.com/pl/sdk/security/webhooks-idempotency
 
 Webhooki powiadamiają backend partnera o asynchronicznych zmianach stanu biznesowego. Ponieważ dostarczenie może być powtarzane, każdy odbiorca musi zweryfikować podpis przed parsowaniem zaufanych danych i musi przetwarzać zdarzenie idempotentnie.
 
-<h2 id="webhook-headers">Nagłówki Webhooków</h2>
+<span id="webhook-headers" data-sixmm-canonical-anchor="webhook-headers" aria-hidden="true"></span>
+
+## Nagłówki Webhooków
 
 | Nagłówek | Opis |
 | --- | --- |
@@ -21,7 +23,9 @@ timestamp + nonce + rawBody
 
 Używaj dokładnego surowego ciała żądania otrzymanego przez HTTP podczas rekonstrukcji wartości podpisanej. Parsowanie i ponowne serializowanie JSON pierwsze może zmienić odstępy lub kolejność pola i uzyskać inny podpis.
 
-<h2 id="verification-flow">Przepływ weryfikacji</h2>
+<span id="verification-flow" data-sixmm-canonical-anchor="verification-flow" aria-hidden="true"></span>
+
+## Przepływ weryfikacji
 
 1. Przeczytaj nagłówki z znacznikiem czasu, nonce i podpisem.
 2. Zdobyć niezmodyfikowany surowy korpus żądania.
@@ -33,7 +37,9 @@ Używaj dokładnego surowego ciała żądania otrzymanego przez HTTP podczas rek
 
 Gdy dostępny jest oficjalny weryfikator Agent SDK , używaj go zamiast utrzymywać kod niezależnego podpisu.
 
-<h2 id="order-idempotency">Idempotencja rzędu</h2>
+<span id="order-idempotency" data-sixmm-canonical-anchor="order-idempotency" aria-hidden="true"></span>
+
+## Idempotencja rzędu
 
 | Sprawa | Prowadzenie |
 | --- | --- |
@@ -42,7 +48,9 @@ Gdy dostępny jest oficjalny weryfikator Agent SDK , używaj go zamiast utrzymyw
 | PROCESSING reakcja | Czekaj na status webhooka lub kolejności zapytania. |
 | Powtarzające się webhooki | Deduplikuj według klucza idempotencji i ostatecznego statusu. |
 
-<h2 id="recommended-idempotency-record">Zalecany rekord idempotencji</h2>
+<span id="recommended-idempotency-record" data-sixmm-canonical-anchor="recommended-idempotency-record" aria-hidden="true"></span>
+
+## Zalecany rekord idempotencji
 
 Przechowuj wystarczająco dużo informacji, aby rozpoznać powtarzającą się dostawę i bezpiecznie ją odzyskać:
 
@@ -57,11 +65,15 @@ Przechowuj wystarczająco dużo informacji, aby rozpoznać powtarzającą się d
 
 Jeśli to możliwe, zatwierdzaj zmianę biznesową i rekord idempotencji w tej samej transakcji. Powtarzające się zdarzenie powinno zwracać już znany wynik, zamiast ponownie stosować saldo, zamówienie lub zmianę użytkownika.
 
-<h2 id="timeout-and-retry-rule">Zasada timeoutu i ponownej próby</h2>
+<span id="timeout-and-retry-rule" data-sixmm-canonical-anchor="timeout-and-retry-rule" aria-hidden="true"></span>
+
+## Zasada timeoutu i ponownej próby
 
 Limit HTTP nie dowodzi, że pierwotne żądanie nie powiodło się. Zapytaj operację używając oryginalnego `agentOrderNo`lub poczekaj na jej webhook, zanim zdecydujesz, czy potrzebna jest kolejna akcja. Tworzenie nowego numeru zlecenia biznesowego po każdym przekroczeniu może powodować duplikacje ruchów funduszy.
 
-<h2 id="production-checklist">Lista kontrolna produkcji</h2>
+<span id="production-checklist" data-sixmm-canonical-anchor="production-checklist" aria-hidden="true"></span>
+
+## Lista kontrolna produkcji
 
 - Weryfikacja podpisu przed JSON parsowania lub przetwarzania biznesowego.
 - Zachowanie surowego ciała niezależnie od przeanalizowanego ładunku.
@@ -70,7 +82,9 @@ Limit HTTP nie dowodzi, że pierwotne żądanie nie powiodło się. Zapytaj oper
 - Rejestruj identyfikatory zdarzeń, numery zamówień partnerów, wyniki przetwarzania oraz czas żądań.
 - Redakcja sekretów i wartości sygnatur z logów i załączników wsparcia.
 
-<h2 id="related-docs">Powiązane dokumenty</h2>
+<span id="related-docs" data-sixmm-canonical-anchor="related-docs" aria-hidden="true"></span>
+
+## Powiązane dokumenty
 
 <CardGroup cols={3}>
 <Card title="Sekrety i podpisywanie HMAC" icon="fa-duotone fa-shield-keyhole" href="/pl/sdk/security/secrets-signing">

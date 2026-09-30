@@ -7,40 +7,52 @@ canonical-url: https://docs.6mm.com/pl/trading/getting-started/asset-transfer
 
 W tym przewodniku wyjaśniono ścieżkę finansowania w przypadku handlu kontraktami wieczystymi. Na rachunku finansowania znajdują się środki dostępne do alokacji; na rachunku wieczystym znajdują się marża kontraktowa i salda rozliczeniowe. Na tej trasie konto spot nie jest wymagane.
 
-<h2 id="partner-managed-deposits-and-withdrawals">Finansowanie za pośrednictwem Twojej platformy</h2>
+<span id="partner-managed-deposits-and-withdrawals" data-sixmm-canonical-anchor="partner-managed-deposits-and-withdrawals" aria-hidden="true"></span>
+
+## Finansowanie za pośrednictwem Twojej platformy
 
 W przypadku integracji partnerów API / SDK postępuj zgodnie z procesem alokacji salda i finansowania platformy partnerskiej. W przypadku wdrożeń typu white-label wpłaty i wypłaty przebiegają zgodnie ze skonfigurowanym na platformie procesem dostawcy portfela; potwierdzone wpłaty są zapisywane na rachunku finansowania, a wypłaty realizowane są na tym koncie.
 
 Sprawdź dostępną metodę finansowania na swojej platformie. Wewnętrzny transfer konta jest odrębny od wpłaty lub wypłaty.
 
-<h2 id="account-structure-within-6mm">Konta używane do handlu wieczystego</h2>
+<span id="account-structure-within-6mm" data-sixmm-canonical-anchor="account-structure-within-6mm" aria-hidden="true"></span>
+
+## Konta używane do handlu wieczystego
 
 | Konto | Zamiar |
 | --- | --- |
 | <span style={{ whiteSpace: "nowrap" }}>Konto dofinansowania</span> | Przechowuje środki do rozdysponowania i otrzymuje środki przekazane z rachunku wieczystego. Przygotowując przelew, wykorzystaj dostępne saldo. |
 | <span style={{ whiteSpace: "nowrap" }}>Konto wieczne</span> | Przechowuje środki wykorzystywane do marży kontraktowej i rozliczenia. Sprawdź kapitał na koncie, wykorzystanie marży oraz niezrealizowane zyski i straty przed dokonaniem transakcji lub transferem. |
 
-<h2 id="automated-balance-transfer-to-6mm">Przygotuj przelew</h2>
+<span id="automated-balance-transfer-to-6mm" data-sixmm-canonical-anchor="automated-balance-transfer-to-6mm" aria-hidden="true"></span>
+
+## Przygotuj przelew
 
 1. Potwierdź użytkownika, zasób i kierunek transferu.
 2. Sprawdź dostępne saldo konta źródłowego i wszelkie ograniczenia konta.
 3. Prześlij za pośrednictwem obsługiwanego przez platformę wpisu transferu lub autoryzowanej integracji.
 4. Przed złożeniem zamówienia potwierdź wynik przelewu i saldo docelowe.
 
-<h2 id="internal-transfers-between-accounts">Transfer pomiędzy rachunkami finansowymi i wieczystymi</h2>
+<span id="internal-transfers-between-accounts" data-sixmm-canonical-anchor="internal-transfers-between-accounts" aria-hidden="true"></span>
+
+## Transfer pomiędzy rachunkami finansowymi i wieczystymi
 
 - Przed przystąpieniem do handlu: przenieś wymagane aktywa rozliczeniowe z rachunku finansowania na rachunek wieczysty.
 - Po rozliczeniu: przelej kwotę dostępną do wypłaty z rachunku wieczystego z powrotem na rachunek finansowania.
 - Transfery kont to ruchy salda wewnętrznego, a nie transakcje w łańcuchu.
 - Wykorzystanie depozytu zabezpieczającego, otwarte zlecenia, pozycje i ograniczenia konta mogą mieć wpływ na kwotę dostępną do przelewu. Wykorzystaj kwotę i wynik pokazany przez platformę.
 
-<h2 id="design-principles">Sprawdź status i uzgodnij salda</h2>
+<span id="design-principles" data-sixmm-canonical-anchor="design-principles" aria-hidden="true"></span>
+
+## Sprawdź status i uzgodnij salda
 
 Złożone żądanie samo w sobie nie stanowi potwierdzenia realizacji. Sprawdź identyfikator przelewu, status, aktywa, kwotę, konto źródłowe i konto docelowe. Jeśli przetwarzanie nie powiedzie się lub pozostanie nierozwiązane, przed przesłaniem kolejnej prośby sprawdź zapisy salda i skontaktuj się z obsługą platformy.
 
 Nie zakładaj, że wszystkie salda można przenieść swobodnie lub że każdy przelew jest natychmiastowy lub bezpłatny. Postępuj zgodnie z wyświetlanymi warunkami platformy i końcowym wynikiem przetwarzania.
 
-<h2 id="implementation-and-safety-guides">Przewodniki dotyczące wdrażania i bezpieczeństwa</h2>
+<span id="implementation-and-safety-guides" data-sixmm-canonical-anchor="implementation-and-safety-guides" aria-hidden="true"></span>
+
+## Przewodniki dotyczące wdrażania i bezpieczeństwa
 
 - [Agent SDK Przegląd](/pl/sdk/agent-sdk/overview): wiązanie użytkownika, transfery i uzgadnianie.
 - [Webhooks i Idempotencja](/pl/sdk/security/webhooks-idempotency): weryfikacja wywołania zwrotnego i obsługa zduplikowanych żądań.

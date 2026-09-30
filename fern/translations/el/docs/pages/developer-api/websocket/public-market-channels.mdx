@@ -7,7 +7,9 @@ canonical-url: https://docs.6mm.com/el/developer-api/websocket/public-market-cha
 
 Χρησιμοποιήστε κανάλια δημόσιας αγοράς όταν μια εφαρμογή χρειάζεται συνεχώς ενημερωμένες τιμές, συναλλαγές, κηροπήγια ή βάθος βιβλίου παραγγελιών χωρίς επανειλημμένες δημοσκοπήσεις REST τελικά σημεία. Αυτές οι ροές μπορούν να υποστηρίξουν οθόνες συναλλαγών, εμφανίσεις τιμών, ειδοποιήσεις και παρακολούθηση της αγοράς.
 
-<h2 id="connection-url">Σύνδεση URL</h2>
+<span id="connection-url" data-sixmm-canonical-anchor="connection-url" aria-hidden="true"></span>
+
+## Σύνδεση URL
 
 ```
 wss://ws.6mm.com/ws
@@ -17,7 +19,9 @@ wss://ws.6mm.com/ws
 
 Για τον κύκλο ζωής της σύνδεσης, τη συμπεριφορά κατάργησης εγγραφής, ping και επανασύνδεσης, ανατρέξτε στο θέμα [Σύνδεση, Συνδρομή & Καρδιακός Παλμός](/el/developer-api/websocket/connection-subscription-and-heartbeat).
 
-<h2 id="common-channels">Κοινά κανάλια</h2>
+<span id="common-channels" data-sixmm-canonical-anchor="common-channels" aria-hidden="true"></span>
+
+## Κοινά κανάλια
 
 | Κανάλι                            | Περιγραφή                                                        |
 | ---------------------------------- | ------------------------------------------------------------------ |
@@ -27,7 +31,9 @@ wss://ws.6mm.com/ws
 | `market.ticker.{symbol}`           | Σύνοψη μετοχής ενός συμβόλου                                       |
 | `market.tickers`                   | Σύνοψη μετοχής όλων των συμβόλων                                          |
 
-<h2 id="choose-a-channel">Επιλέξτε ένα κανάλι</h2>
+<span id="choose-a-channel" data-sixmm-canonical-anchor="choose-a-channel" aria-hidden="true"></span>
+
+## Επιλέξτε ένα κανάλι
 
 | Ανάγκη εφαρμογής | Κανάλι |
 | --- | --- |
@@ -37,13 +43,17 @@ wss://ws.6mm.com/ws
 | Εμφάνιση μίας σύνοψης αγοράς | `market.ticker.{symbol}` |
 | Διατηρήστε μια επισκόπηση της αγοράς | `market.tickers` |
 
-<h2 id="subscription-example">Παράδειγμα συνδρομής</h2>
+<span id="subscription-example" data-sixmm-canonical-anchor="subscription-example" aria-hidden="true"></span>
+
+## Παράδειγμα συνδρομής
 
 ```json
 { "id": "1772007814666", "op": "subscribe", "args": ["market.depth.BTCUSDT"] }
 ```
 
-<h2 id="push-message-wrapper">Περιτύλιγμα μηνυμάτων Push</h2>
+<span id="push-message-wrapper" data-sixmm-canonical-anchor="push-message-wrapper" aria-hidden="true"></span>
+
+## Περιτύλιγμα μηνυμάτων Push
 
 ```json
 {
@@ -56,11 +66,15 @@ wss://ws.6mm.com/ws
 
 Χρησιμοποιήστε `topic` για να δρομολογήσετε κάθε μήνυμα στον σωστό δείκτη χειρισμού και `ts` για να παρατηρήσετε το χρονοδιάγραμμα παράδοσης. Το αντικείμενο `data` περιέχει το φορτίο για το συνδρομητικό κανάλι.
 
-<h2 id="order-book-handling">Χειρισμός βιβλίου παραγγελιών</h2>
+<span id="order-book-handling" data-sixmm-canonical-anchor="order-book-handling" aria-hidden="true"></span>
+
+## Χειρισμός βιβλίου παραγγελιών
 
 Το κανάλι βάθους στέλνει πρώτα ένα στιγμιότυπο και μετά σταδιακές ενημερώσεις. Αρχικοποιήστε το τοπικό βιβλίο από το στιγμιότυπο πριν εφαρμόσετε ενημερώσεις. Μετά την επανασύνδεση, δημιουργήστε μια νέα περίοδο λειτουργίας, εγγραφείτε ξανά και δημιουργήστε ξανά το τοπικό βιβλίο από το επόμενο στιγμιότυπο αντί να συνεχίσετε από την κατάσταση μη ενημερωμένης μνήμης.
 
-<h2 id="production-recommendations">Συστάσεις παραγωγής</h2>
+<span id="production-recommendations" data-sixmm-canonical-anchor="production-recommendations" aria-hidden="true"></span>
+
+## Συστάσεις παραγωγής
 
 - Δημιουργήστε μια μοναδική `id` για κάθε αίτημα εγγραφής, διαγραφής και ping.
 - Επιβεβαιώστε τις επιβεβαιώσεις συνδρομής πριν αντιμετωπίσετε ένα κανάλι ως ενεργό.
@@ -69,7 +83,9 @@ wss://ws.6mm.com/ws
 - Παρακολουθήστε τη συχνότητα αποσύνδεσης, την καθυστέρηση επεξεργασίας μηνυμάτων και τα κακοσχηματισμένα ωφέλιμα φορτία.
 - Χρήση [Ιδιωτικό κανάλι χρήστη](/el/developer-api/websocket/private-user-channel) για ενημερώσεις λογαριασμού και παραγγελιών με έλεγχο ταυτότητας.
 
-<h2 id="related-api-docs">Σχετικά API έγγραφα</h2>
+<span id="related-api-docs" data-sixmm-canonical-anchor="related-api-docs" aria-hidden="true"></span>
+
+## Σχετικά API έγγραφα
 
 <CardGroup cols={3}>
 <Card title="WebSocket Επισκόπηση" icon="fa-duotone fa-wave-pulse" href="/el/developer-api/websocket">

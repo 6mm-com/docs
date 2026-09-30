@@ -7,7 +7,9 @@ canonical-url: https://docs.6mm.com/pt-BR/developer-api/websocket/connection-sub
 
 Use WebSocket streams para dados de mercado e atualizações privadas do estado dos usuários que devem se manter atualizadas sem necessidade de pesquisas.
 
-<h2 id="connection-url">Conexão URL</h2>
+<span id="connection-url" data-sixmm-canonical-anchor="connection-url" aria-hidden="true"></span>
+
+## Conexão URL
 
 ```text
 wss://ws.6mm.com/ws
@@ -15,7 +17,9 @@ wss://ws.6mm.com/ws
 
 Fluxos privados requerem contexto de autenticação, como um token de listenKey ou acesso, conforme descrito na documentação do canal privado.
 
-<h2 id="subscribe">Assine</h2>
+<span id="subscribe" data-sixmm-canonical-anchor="subscribe" aria-hidden="true"></span>
+
+## Assine
 
 ```json
 { "id": "1772007814666", "op": "subscribe", "args": ["market.depth.BTCUSDT"] }
@@ -32,19 +36,25 @@ Reconhecimento de assinatura bem-sucedido:
 }
 ```
 
-<h2 id="unsubscribe">Desinscrição</h2>
+<span id="unsubscribe" data-sixmm-canonical-anchor="unsubscribe" aria-hidden="true"></span>
+
+## Desinscrição
 
 ```json
 { "id": "1772007814667", "op": "unsubscribe", "args": ["market.depth.BTCUSDT"] }
 ```
 
-<h2 id="application-ping">Ping da aplicativo</h2>
+<span id="application-ping" data-sixmm-canonical-anchor="application-ping" aria-hidden="true"></span>
+
+## Ping da aplicativo
 
 ```json
 { "id": "1772007814668", "op": "ping", "args": [] }
 ```
 
-<h2 id="message-envelope">Envelope de mensagens</h2>
+<span id="message-envelope" data-sixmm-canonical-anchor="message-envelope" aria-hidden="true"></span>
+
+## Envelope de mensagens
 
 Push públicos usam um envelope consistente:
 
@@ -57,7 +67,9 @@ Push públicos usam um envelope consistente:
 }
 ```
 
-<h2 id="operational-recommendations">Recomendações operacionais</h2>
+<span id="operational-recommendations" data-sixmm-canonical-anchor="operational-recommendations" aria-hidden="true"></span>
+
+## Recomendações operacionais
 
 - Gerar um `id` único do lado do cliente para cada assinatura, cancelamento e solicitação de ping.
 - Tratar a reconexão como uma nova sessão e se inscrever novamente nos tópicos exigidos.
@@ -65,7 +77,9 @@ Push públicos usam um envelope consistente:
 - Manter o processamento de mensagens idempotente quando eventos privados de ordem ou conta estão envolvidos.
 - Alterações no estado da conexão do log, confirmações de assinatura e desconexões anormais.
 
-<h2 id="reconnect-workflow">Fluxo de trabalho de reconexão</h2>
+<span id="reconnect-workflow" data-sixmm-canonical-anchor="reconnect-workflow" aria-hidden="true"></span>
+
+## Fluxo de trabalho de reconexão
 
 1. Feche ou descarte o soquete anterior e crie uma nova conexão.
 2. Re-autenticar fluxos privados com um listenKey ou token de acesso válido.
@@ -75,14 +89,18 @@ Push públicos usam um envelope consistente:
 
 Use backoff exponencial limitado com jitter para tentativas de reconexão. Um cliente que reconecta continuamente deve alertar os operadores em vez de tentar indefinidamente sem visibilidade.
 
-<h2 id="heartbeat-and-stale-connections">Batimentos cardíacos e conexões estagnadas</h2>
+<span id="heartbeat-and-stale-connections" data-sixmm-canonical-anchor="heartbeat-and-stale-connections" aria-hidden="true"></span>
+
+## Batimentos cardíacos e conexões estagnadas
 
 - Rastrear a mensagem de entrada mais recente e o reconhecimento de ping bem-sucedido.
 - Utilizar o intervalo de batimentos cardíacos e o limiar de ociosidade aprovados para o ambiente de produção.
 - Tratar uma conexão como obsoleta quando o limiar configurado é ultrapassado, mesmo que o soquete TCP ainda pareça aberto.
 - Não reutilizar assinaturas de um socket antigo; reassinar explicitamente após cada reconexão.
 
-<h2 id="related-documentation">Documentação relacionada</h2>
+<span id="related-documentation" data-sixmm-canonical-anchor="related-documentation" aria-hidden="true"></span>
+
+## Documentação relacionada
 
 - [Canais de Mercado Público](/pt-BR/developer-api/websocket/public-market-channels): tópicos, continuidade do livro de ordens, negociações, velas e tickers.
 - [Canal Privado de Usuário](/pt-BR/developer-api/websocket/private-user-channel): listenKey ciclo de vida e eventos autenticados.

@@ -7,7 +7,9 @@ canonical-url: https://docs.6mm.com/fr/developer-api/websocket/public-market-cha
 
 Utilisez les canaux publics de marché lorsqu’une application a besoin d’une mise à jour continue des prix, des transactions, des chandeliers ou de la profondeur du carnet d’ordres sans interroger à répétition REST points de terminaison. Ces flux peuvent supporter des écrans de trading, des affichages de prix, des alertes et une surveillance du marché.
 
-<h2 id="connection-url">Connexion URL</h2>
+<span id="connection-url" data-sixmm-canonical-anchor="connection-url" aria-hidden="true"></span>
+
+## Connexion URL
 
 ```
 wss://ws.6mm.com/ws
@@ -17,7 +19,9 @@ Le WebSocket public ne nécessite pas d’authentification.
 
 Pour le cycle de vie de la connexion, désabonnement, ping et reconnexion, voir [Connexion, Abonnement & Battement de cœur](/fr/developer-api/websocket/connection-subscription-and-heartbeat).
 
-<h2 id="common-channels">Canaux communs</h2>
+<span id="common-channels" data-sixmm-canonical-anchor="common-channels" aria-hidden="true"></span>
+
+## Canaux communs
 
 | Chaîne                            | Description                                                        |
 | ---------------------------------- | ------------------------------------------------------------------ |
@@ -27,7 +31,9 @@ Pour le cycle de vie de la connexion, désabonnement, ping et reconnexion, voir 
 | `market.ticker.{symbol}`           | Résumé du ticker à symbole unique                                       |
 | `market.tickers`                   | Résumé du ticker tous symboles                                          |
 
-<h2 id="choose-a-channel">Choisissez une chaîne</h2>
+<span id="choose-a-channel" data-sixmm-canonical-anchor="choose-a-channel" aria-hidden="true"></span>
+
+## Choisissez une chaîne
 
 | Besoin d’application | Chaîne |
 | --- | --- |
@@ -37,13 +43,17 @@ Pour le cycle de vie de la connexion, désabonnement, ping et reconnexion, voir 
 | Résumé du marché Display one | `market.ticker.{symbol}` |
 | Maintenir une vue d’ensemble du marché | `market.tickers` |
 
-<h2 id="subscription-example">Exemple d’abonnement</h2>
+<span id="subscription-example" data-sixmm-canonical-anchor="subscription-example" aria-hidden="true"></span>
+
+## Exemple d’abonnement
 
 ```json
 { "id": "1772007814666", "op": "subscribe", "args": ["market.depth.BTCUSDT"] }
 ```
 
-<h2 id="push-message-wrapper">Enveloppe de message push</h2>
+<span id="push-message-wrapper" data-sixmm-canonical-anchor="push-message-wrapper" aria-hidden="true"></span>
+
+## Enveloppe de message push
 
 ```json
 {
@@ -56,11 +66,15 @@ Pour le cycle de vie de la connexion, désabonnement, ping et reconnexion, voir 
 
 Utilisez `topic` pour acheminer chaque message vers le bon gestionnaire et `ts` pour observer le moment de livraison. L’objet `data` contient la charge utile du canal abonné.
 
-<h2 id="order-book-handling">Gestion du carnet de commandes</h2>
+<span id="order-book-handling" data-sixmm-canonical-anchor="order-book-handling" aria-hidden="true"></span>
+
+## Gestion du carnet de commandes
 
 Le canal de profondeur envoie d’abord un instantané puis des mises à jour incrémentales. Initialiser le livre local à partir de l’instantané avant d’appliquer les mises à jour. Après la reconnexion, créer une nouvelle session, s’abonner à nouveau, et reconstruire le livre local à partir du snapshot suivant au lieu de continuer depuis un état obsolète en mémoire.
 
-<h2 id="production-recommendations">Recommandations de production</h2>
+<span id="production-recommendations" data-sixmm-canonical-anchor="production-recommendations" aria-hidden="true"></span>
+
+## Recommandations de production
 
 - Générer un `id` unique pour chaque demande d’abonnement, de désabonnement et de ping.
 - Confirmer les accusés de réception avant de considérer un canal comme actif.
@@ -69,7 +83,9 @@ Le canal de profondeur envoie d’abord un instantané puis des mises à jour in
 - Fréquence de déconnexion du monitor, délai de traitement des messages et charges utiles mal formées.
 - Utiliser [Canal utilisateur privé](/fr/developer-api/websocket/private-user-channel) pour les mises à jour authentifiées des comptes et des commandes.
 
-<h2 id="related-api-docs">Documents API associés</h2>
+<span id="related-api-docs" data-sixmm-canonical-anchor="related-api-docs" aria-hidden="true"></span>
+
+## Documents API associés
 
 <CardGroup cols={3}>
 <Card title="WebSocket Aperçu" icon="fa-duotone fa-wave-pulse" href="/fr/developer-api/websocket">

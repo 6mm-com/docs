@@ -7,7 +7,9 @@ canonical-url: https://docs.6mm.com/it/sdk/security/webhooks-idempotency
 
 I Webhook notificano un backend partner riguardo ai cambiamenti asincroni dello stato aziendale. Poiché la consegna può essere riprovata, ogni ricevente deve verificare la firma prima di analizzare i dati affidabili e deve elaborare l'evento in modo idempotente.
 
-<h2 id="webhook-headers">Header Webhook</h2>
+<span id="webhook-headers" data-sixmm-canonical-anchor="webhook-headers" aria-hidden="true"></span>
+
+## Header Webhook
 
 | Intestazione | Descrizione |
 | --- | --- |
@@ -21,7 +23,9 @@ timestamp + nonce + rawBody
 
 Usa il corpo della richiesta grezzo esatto ricevuto su HTTP quando ricostruisci il valore firmato. Parsing e riserializzazione JSON prima può cambiare l'ordine degli spazi bianchi o dei campi e produrre una firma diversa.
 
-<h2 id="verification-flow">Flusso di verifica</h2>
+<span id="verification-flow" data-sixmm-canonical-anchor="verification-flow" aria-hidden="true"></span>
+
+## Flusso di verifica
 
 1. Leggere i timestamp, nonce e le intestazioni signature.
 2. Cattura il corpo grezzo della richiesta non modificato.
@@ -33,7 +37,9 @@ Usa il corpo della richiesta grezzo esatto ricevuto su HTTP quando ricostruisci 
 
 Quando è disponibile un verificatore ufficiale Agent SDK , usalo invece di mantenere un codice di firma indipendente.
 
-<h2 id="order-idempotency">Idempotenza dell'ordine</h2>
+<span id="order-idempotency" data-sixmm-canonical-anchor="order-idempotency" aria-hidden="true"></span>
+
+## Idempotenza dell'ordine
 
 | Caso | Comportamento |
 | --- | --- |
@@ -42,7 +48,9 @@ Quando è disponibile un verificatore ufficiale Agent SDK , usalo invece di mant
 | PROCESSING risposta | Aspetta lo stato del webhook o dell'ordine di interrogazione. |
 | Webhook ripetuto | Deduplica tramite chiave di idempotenza e stato finale. |
 
-<h2 id="recommended-idempotency-record">Record di idempotenza raccomandato</h2>
+<span id="recommended-idempotency-record" data-sixmm-canonical-anchor="recommended-idempotency-record" aria-hidden="true"></span>
+
+## Record di idempotenza raccomandato
 
 Memorizza abbastanza informazioni per riconoscere una consegna ripetuta e recuperare in sicurezza:
 
@@ -57,11 +65,15 @@ Memorizza abbastanza informazioni per riconoscere una consegna ripetuta e recupe
 
 Effettua commit del record di cambiamento aziendale e di idempotenza nella stessa transazione dove possibile. Un evento ripetuto dovrebbe restituire il risultato già noto invece di applicare nuovamente il saldo, l'ordine o la modifica dell'utente.
 
-<h2 id="timeout-and-retry-rule">Regola del timeout e del ritentativo</h2>
+<span id="timeout-and-retry-rule" data-sixmm-canonical-anchor="timeout-and-retry-rule" aria-hidden="true"></span>
+
+## Regola del timeout e del ritentativo
 
 Un timeout HTTP non dimostra che la richiesta originale è fallita. Interroga l'operazione usando il `agentOrderNo`originale, oppure attendi il suo webhook, prima di decidere se sia necessaria un'altra azione. Creare un nuovo numero di ordine aziendale dopo ogni timeout può causare movimenti duplicati del fondo.
 
-<h2 id="production-checklist">Elenco di controllo della produzione</h2>
+<span id="production-checklist" data-sixmm-canonical-anchor="production-checklist" aria-hidden="true"></span>
+
+## Elenco di controllo della produzione
 
 - Verificare la firma prima di JSON analisi o elaborazione aziendale.
 - Preservare il corpo grezzo indipendentemente dal carico utile analizzato.
@@ -70,7 +82,9 @@ Un timeout HTTP non dimostra che la richiesta originale è fallita. Interroga l'
 - Registra gli ID degli eventi, i numeri d'ordine dei partner, il risultato di elaborazione e il tempo della richiesta.
 - Oscurare segreti e valori di firma da log e allegati di supporto.
 
-<h2 id="related-docs">Documentazione correlata</h2>
+<span id="related-docs" data-sixmm-canonical-anchor="related-docs" aria-hidden="true"></span>
+
+## Documentazione correlata
 
 <CardGroup cols={3}>
 <Card title="Segreti e HMAC Firma" icon="fa-duotone fa-shield-keyhole" href="/it/sdk/security/secrets-signing">

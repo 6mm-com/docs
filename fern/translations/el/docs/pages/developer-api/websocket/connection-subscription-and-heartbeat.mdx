@@ -7,7 +7,9 @@ canonical-url: https://docs.6mm.com/el/developer-api/websocket/connection-subscr
 
 Χρησιμοποιήστε ροές WebSocket για δεδομένα αγοράς και ιδιωτικές ενημερώσεις κατάστασης χρήστη που πρέπει να παραμένουν ενημερωμένες χωρίς δημοσκόπηση.
 
-<h2 id="connection-url">Σύνδεση URL</h2>
+<span id="connection-url" data-sixmm-canonical-anchor="connection-url" aria-hidden="true"></span>
+
+## Σύνδεση URL
 
 ```text
 wss://ws.6mm.com/ws
@@ -15,7 +17,9 @@ wss://ws.6mm.com/ws
 
 Οι ιδιωτικές ροές απαιτούν περιβάλλον ελέγχου ταυτότητας, όπως listenKey ή διακριτικό πρόσβασης, όπως περιγράφεται στην τεκμηρίωση του ιδιωτικού καναλιού.
 
-<h2 id="subscribe">Εγγραφείτε</h2>
+<span id="subscribe" data-sixmm-canonical-anchor="subscribe" aria-hidden="true"></span>
+
+## Εγγραφείτε
 
 ```json
 { "id": "1772007814666", "op": "subscribe", "args": ["market.depth.BTCUSDT"] }
@@ -32,19 +36,25 @@ wss://ws.6mm.com/ws
 }
 ```
 
-<h2 id="unsubscribe">Κατάργηση εγγραφής</h2>
+<span id="unsubscribe" data-sixmm-canonical-anchor="unsubscribe" aria-hidden="true"></span>
+
+## Κατάργηση εγγραφής
 
 ```json
 { "id": "1772007814667", "op": "unsubscribe", "args": ["market.depth.BTCUSDT"] }
 ```
 
-<h2 id="application-ping">Εφαρμογή ping</h2>
+<span id="application-ping" data-sixmm-canonical-anchor="application-ping" aria-hidden="true"></span>
+
+## Εφαρμογή ping
 
 ```json
 { "id": "1772007814668", "op": "ping", "args": [] }
 ```
 
-<h2 id="message-envelope">Φάκελος μηνύματος</h2>
+<span id="message-envelope" data-sixmm-canonical-anchor="message-envelope" aria-hidden="true"></span>
+
+## Φάκελος μηνύματος
 
 Οι δημόσιες ωθήσεις χρησιμοποιούν έναν σταθερό φάκελο:
 
@@ -57,7 +67,9 @@ wss://ws.6mm.com/ws
 }
 ```
 
-<h2 id="operational-recommendations">Επιχειρησιακές συστάσεις</h2>
+<span id="operational-recommendations" data-sixmm-canonical-anchor="operational-recommendations" aria-hidden="true"></span>
+
+## Επιχειρησιακές συστάσεις
 
 - Δημιουργήστε ένα μοναδικό `id` από την πλευρά του πελάτη για κάθε αίτημα εγγραφής, διαγραφής και ping.
 - Αντιμετωπίστε την επανασύνδεση ως νέα συνεδρία και εγγραφείτε ξανά στα απαιτούμενα θέματα.
@@ -65,7 +77,9 @@ wss://ws.6mm.com/ws
 - Διατηρήστε την επεξεργασία μηνυμάτων ανίκανη όταν εμπλέκονται ιδιωτικές παραγγελίες ή συμβάντα λογαριασμού.
 - Καταγράψτε τις αλλαγές κατάστασης σύνδεσης, τις επιβεβαιώσεις συνδρομής και τις μη φυσιολογικές αποσυνδέσεις.
 
-<h2 id="reconnect-workflow">Επανασύνδεση ροής εργασιών</h2>
+<span id="reconnect-workflow" data-sixmm-canonical-anchor="reconnect-workflow" aria-hidden="true"></span>
+
+## Επανασύνδεση ροής εργασιών
 
 1. Κλείστε ή απορρίψτε την προηγούμενη πρίζα και δημιουργήστε μια νέα σύνδεση.
 2. Επαναλάβετε τον έλεγχο ταυτότητας ιδιωτικών ροών με έγκυρο listenKey ή διακριτικό πρόσβασης.
@@ -75,14 +89,18 @@ wss://ws.6mm.com/ws
 
 Χρησιμοποιήστε οριοθετημένη εκθετική οπισθοδρόμηση με διακύμανση καθυστέρησης για προσπάθειες επανασύνδεσης. Ένας πελάτης που επανασυνδέεται συνεχώς θα πρέπει να ειδοποιεί τους χειριστές αντί να προσπαθεί επ' αόριστον χωρίς ορατότητα.
 
-<h2 id="heartbeat-and-stale-connections">Καρδιακός παλμός και μπαγιάτικες συνδέσεις</h2>
+<span id="heartbeat-and-stale-connections" data-sixmm-canonical-anchor="heartbeat-and-stale-connections" aria-hidden="true"></span>
+
+## Καρδιακός παλμός και μπαγιάτικες συνδέσεις
 
 - Παρακολουθήστε το πιο πρόσφατο εισερχόμενο μήνυμα και την επιτυχή επιβεβαίωση ping.
 - Χρησιμοποιήστε το διάστημα παλμών και το όριο αδράνειας που έχουν εγκριθεί για το περιβάλλον παραγωγής.
 - Αντιμετωπίστε μια σύνδεση ως μπαγιάτικη όταν ξεπεραστεί το διαμορφωμένο όριο, ακόμα και αν η υποδοχή TCP εξακολουθεί να εμφανίζεται ανοιχτή.
 - Μην επαναχρησιμοποιείτε συνδρομές από παλιά πρίζα. Εγγραφείτε ξανά ρητά μετά από κάθε επανασύνδεση.
 
-<h2 id="related-documentation">Σχετική τεκμηρίωση</h2>
+<span id="related-documentation" data-sixmm-canonical-anchor="related-documentation" aria-hidden="true"></span>
+
+## Σχετική τεκμηρίωση
 
 - [Κανάλια Δημόσιας Αγοράς](/el/developer-api/websocket/public-market-channels): θέματα, συνέχεια βιβλίου παραγγελιών, συναλλαγές, κεριά και tickers.
 - [Ιδιωτικό κανάλι χρήστη](/el/developer-api/websocket/private-user-channel): Κύκλος ζωής listenKey και συμβάντα με έλεγχο ταυτότητας.

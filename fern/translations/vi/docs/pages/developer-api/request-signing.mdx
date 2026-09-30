@@ -5,7 +5,9 @@ slug: developer-api/request-signing
 canonical-url: https://docs.6mm.com/vi/developer-api/request-signing
 ---
 
-<h2 id="request-format">Định dạng yêu cầu</h2>
+<span id="request-format" data-sixmm-canonical-anchor="request-format" aria-hidden="true"></span>
+
+## Định dạng yêu cầu
 
 | Vị trí | Lĩnh vực       | Bắt buộc            | Mô tả                                   |
 | -------- | ----------- | ------------------- | --------------------------------------------- |
@@ -14,7 +16,9 @@ canonical-url: https://docs.6mm.com/vi/developer-api/request-signing
 | Truy vấn    | `signature` | Đúng vậy                 | HMAC- Chữ kýSHA256 , chuỗi lục giác chữ thường   |
 | Thân xe     | JSON        | Tùy thuộc vào endpoint | POST / PUT / DELETE cơ quan yêu cầu              |
 
-<h2 id="signature-payload">Tải trọng chữ ký</h2>
+<span id="signature-payload" data-sixmm-canonical-anchor="signature-payload" aria-hidden="true"></span>
+
+## Tải trọng chữ ký
 
 ```
 payload = queryStringWithoutSignature + requestBody
@@ -30,7 +34,9 @@ Các quy tắc chính:
 * Nếu có phần thân yêu cầu, chuỗi JSON dùng để ký phải khớp chính xác với phần thân được truyền thực tế.
 * Các đường dẫn liên quan đến thứ tự thực hiện kiểm tra lại chữ ký. Việc sử dụng lại cùng một chữ ký trong thời gian ngắn sẽ trả về `Signature replay detected`.
 
-<h2 id="server-time">Thời gian máy chủ</h2>
+<span id="server-time" data-sixmm-canonical-anchor="server-time" aria-hidden="true"></span>
+
+## Thời gian máy chủ
 
 ```http
 GET /v1/time
@@ -54,7 +60,9 @@ Ví dụ phản hồi:
 
 Khách hàng nên tính toán `timeOffsetMs = serverTimestampMs - localTimestampMs`, sau đó sử dụng `timestamp = nowMs + timeOffsetMs` cho các yêu cầu đã ký tiếp theo. Nếu máy chủ trả về `Timestamp outside of tolerance window`, hãy ngay lập tức đồng bộ lại thời gian và tạo lại chữ ký.
 
-<h2 id="get-signing-example">Ví dụ về ký hiệu GET</h2>
+<span id="get-signing-example" data-sixmm-canonical-anchor="get-signing-example" aria-hidden="true"></span>
+
+## Ví dụ về ký hiệu GET
 
 Yêu cầu thực tế:
 
@@ -68,7 +76,9 @@ Tải trọng chữ ký:
 symbol=BTCUSDT&timestamp=1772710377808
 ```
 
-<h2 id="post-signing-example">Ví dụ về ký hiệu POST</h2>
+<span id="post-signing-example" data-sixmm-canonical-anchor="post-signing-example" aria-hidden="true"></span>
+
+## Ví dụ về ký hiệu POST
 
 Yêu cầu thực tế:
 
@@ -88,7 +98,9 @@ Tải trọng chữ ký:
 timestamp=1772710377808{"symbol":"BTCUSDT","type":"LIMIT","side":"BUY","price":"85000","quantity":"0.1","timeInForce":"GTC","makerOnly":true,"clientOrderId":"ext-1772710377808-001"}
 ```
 
-<h2 id="python-signing-example">Ví dụ về ký Python</h2>
+<span id="python-signing-example" data-sixmm-canonical-anchor="python-signing-example" aria-hidden="true"></span>
+
+## Ví dụ về ký Python
 
 ```python
 import hashlib
@@ -145,7 +157,9 @@ sync_time_offset()
 print(signed_request("GET", "/v1/private/order/current", {"symbol": "BTCUSDT"}))
 ```
 
-<h2 id="related-security-guides">Hướng dẫn bảo mật liên quan</h2>
+<span id="related-security-guides" data-sixmm-canonical-anchor="related-security-guides" aria-hidden="true"></span>
+
+## Hướng dẫn bảo mật liên quan
 
 - [Xác thực](/vi/developer-api/authentication)
 - [API Key Quản lý](/vi/developer-api/api-key-management)

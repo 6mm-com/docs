@@ -6,7 +6,9 @@ slug: sdk/security/webhooks-idempotency
 
 Webhooks notify a partner backend about asynchronous business-state changes. Because delivery may be retried, every receiver must verify the signature before parsing trusted data and must process the event idempotently.
 
-<h2 id="webhook-headers">Webhook headers</h2>
+<span data-sixmm-canonical-anchor="webhook-headers" aria-hidden="true"></span>
+
+## Webhook headers
 
 | Header | Description |
 | --- | --- |
@@ -20,7 +22,9 @@ timestamp + nonce + rawBody
 
 Use the exact raw request body received over HTTP when reconstructing the signed value. Parsing and re-serializing JSON first can change whitespace or field order and produce a different signature.
 
-<h2 id="verification-flow">Verification flow</h2>
+<span data-sixmm-canonical-anchor="verification-flow" aria-hidden="true"></span>
+
+## Verification flow
 
 1. Read the timestamp, nonce, and signature headers.
 2. Capture the unmodified raw request body.
@@ -32,7 +36,9 @@ Use the exact raw request body received over HTTP when reconstructing the signed
 
 When an official Agent SDK verifier is available, use it instead of maintaining independent signing code.
 
-<h2 id="order-idempotency">Order idempotency</h2>
+<span data-sixmm-canonical-anchor="order-idempotency" aria-hidden="true"></span>
+
+## Order idempotency
 
 | Case | Handling |
 | --- | --- |
@@ -41,7 +47,9 @@ When an official Agent SDK verifier is available, use it instead of maintaining 
 | PROCESSING response | Wait for webhook or query order status. |
 | Repeated webhook | Deduplicate by idempotency key and final status. |
 
-<h2 id="recommended-idempotency-record">Recommended idempotency record</h2>
+<span data-sixmm-canonical-anchor="recommended-idempotency-record" aria-hidden="true"></span>
+
+## Recommended idempotency record
 
 Store enough information to recognize a repeated delivery and recover safely:
 
@@ -56,11 +64,15 @@ Store enough information to recognize a repeated delivery and recover safely:
 
 Commit the business change and idempotency record in the same transaction where possible. A repeated event should return the already-known result instead of applying the balance, order, or user change again.
 
-<h2 id="timeout-and-retry-rule">Timeout and retry rule</h2>
+<span data-sixmm-canonical-anchor="timeout-and-retry-rule" aria-hidden="true"></span>
+
+## Timeout and retry rule
 
 An HTTP timeout does not prove that the original request failed. Query the operation using the original `agentOrderNo`, or wait for its webhook, before deciding whether another action is required. Creating a new business order number after every timeout can cause duplicate fund movements.
 
-<h2 id="production-checklist">Production checklist</h2>
+<span data-sixmm-canonical-anchor="production-checklist" aria-hidden="true"></span>
+
+## Production checklist
 
 - Verify the signature before JSON parsing or business processing.
 - Preserve the raw body independently from the parsed payload.
@@ -69,7 +81,9 @@ An HTTP timeout does not prove that the original request failed. Query the opera
 - Log event IDs, partner order numbers, processing result, and request time.
 - Redact secrets and signature values from logs and support attachments.
 
-<h2 id="related-docs">Related docs</h2>
+<span data-sixmm-canonical-anchor="related-docs" aria-hidden="true"></span>
+
+## Related docs
 
 <CardGroup cols={3}>
 <Card title="Secrets & HMAC Signing" icon="fa-duotone fa-shield-keyhole" href="/sdk/security/secrets-signing">

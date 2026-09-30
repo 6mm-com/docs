@@ -7,40 +7,52 @@ canonical-url: https://docs.6mm.com/ko/trading/getting-started/asset-transfer
 
 이 가이드는 무기한 계약 거래를 위한 자금 조달 경로를 설명합니다. 자금 계정에는 할당 가능한 자금이 보관되어 있습니다. 영구 계정에는 계약 마진과 결제 잔액이 보관됩니다. 이 경로에는 스팟 계정이 필요하지 않습니다.
 
-<h2 id="partner-managed-deposits-and-withdrawals">귀하의 플랫폼을 통한 자금 조달</h2>
+<span id="partner-managed-deposits-and-withdrawals" data-sixmm-canonical-anchor="partner-managed-deposits-and-withdrawals" aria-hidden="true"></span>
+
+## 귀하의 플랫폼을 통한 자금 조달
 
 파트너 API / SDK 통합의 경우 파트너 플랫폼의 잔액 할당 및 자금 조달 프로세스를 따르세요. 화이트 라벨 배포의 경우 입금 및 출금은 플랫폼에 구성된 지갑 제공업체 프로세스를 따릅니다. 확인된 입금은 자금 계좌에 적립되고 출금은 해당 계좌를 사용합니다.
 
 귀하의 플랫폼에서 사용 가능한 자금 조달 방법을 확인하세요. 내부계좌이체는 입출금과 별개입니다.
 
-<h2 id="account-structure-within-6mm">무기한 거래에 사용되는 계좌</h2>
+<span id="account-structure-within-6mm" data-sixmm-canonical-anchor="account-structure-within-6mm" aria-hidden="true"></span>
+
+## 무기한 거래에 사용되는 계좌
 
 | 계정 | 목적 |
 | --- | --- |
 | <span style={{ whiteSpace: "nowrap" }}>자금 계좌</span> | 할당할 자금을 보유하고 영구 계정에서 다시 이체된 자금을 받습니다. 이체를 준비할 때 사용 가능한 잔액을 사용하세요. |
 | <span style={{ whiteSpace: "nowrap" }}>영구계좌</span> | 계약 마진 및 결제에 사용되는 자금을 보유합니다. 거래 또는 이체하기 전에 계좌 자산, 마진 사용 및 미실현 손익을 확인하십시오. |
 
-<h2 id="automated-balance-transfer-to-6mm">전송 준비</h2>
+<span id="automated-balance-transfer-to-6mm" data-sixmm-canonical-anchor="automated-balance-transfer-to-6mm" aria-hidden="true"></span>
+
+## 전송 준비
 
 1. 사용자, 자산, 전송 방향을 확인하세요.
 2. 원본 계정의 사용 가능한 잔액과 계정 제한 사항을 확인하세요.
 3. 플랫폼에서 지원되는 전송 항목 또는 승인된 통합을 통해 제출하세요.
 4. 주문하기 전에 이체 결과와 목적지 잔액을 확인하세요.
 
-<h2 id="internal-transfers-between-accounts">자금과 영구 계정 간 이체</h2>
+<span id="internal-transfers-between-accounts" data-sixmm-canonical-anchor="internal-transfers-between-accounts" aria-hidden="true"></span>
+
+## 자금과 영구 계정 간 이체
 
 - 거래 전: 필요한 결제 자산을 펀딩 계정에서 영구 계정으로 이체합니다.
 - 정산 후 : 영구계좌에서 출금 가능한 금액을 다시 펀딩계좌로 이체합니다.
 - 계좌 이체는 온체인 거래가 아닌 내부 잔액 이동입니다.
 - 마진 사용, 미결 주문, 포지션 및 계정 제한은 이체 가능한 금액에 영향을 미칠 수 있습니다. 플랫폼에 표시된 금액과 결과를 사용하세요.
 
-<h2 id="design-principles">상태 확인 및 잔액 조정</h2>
+<span id="design-principles" data-sixmm-canonical-anchor="design-principles" aria-hidden="true"></span>
+
+## 상태 확인 및 잔액 조정
 
 제출된 요청만으로는 완료가 확인되지 않습니다. 이체ID, 상태, 자산, 금액, 원본계좌, 대상계좌를 확인하세요. 처리가 실패하거나 해결되지 않은 경우 잔액 기록을 확인하고 다른 요청을 제출하기 전에 플랫폼 지원팀에 문의하세요.
 
 모든 잔액이 자유롭게 이체될 수 있다거나 모든 이체가 즉각적이거나 수수료가 무료라고 가정하지 마십시오. 플랫폼에 표시된 조건과 최종 처리 결과를 따르세요.
 
-<h2 id="implementation-and-safety-guides">구현 및 안전 가이드</h2>
+<span id="implementation-and-safety-guides" data-sixmm-canonical-anchor="implementation-and-safety-guides" aria-hidden="true"></span>
+
+## 구현 및 안전 가이드
 
 - [Agent SDK 개요](/ko/sdk/agent-sdk/overview): 사용자 바인딩, 전송 및 조정.
 - [Webhooks & 멱등성](/ko/sdk/security/webhooks-idempotency): 콜백 확인 및 중복 요청 처리.

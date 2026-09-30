@@ -5,7 +5,9 @@ slug: developer-api/request-signing
 canonical-url: https://docs.6mm.com/de/developer-api/request-signing
 ---
 
-<h2 id="request-format">Anfrageformat</h2>
+<span id="request-format" data-sixmm-canonical-anchor="request-format" aria-hidden="true"></span>
+
+## Anfrageformat
 
 | Lage | Spielfeld       | Erforderlich            | Beschreibung                                   |
 | -------- | ----------- | ------------------- | --------------------------------------------- |
@@ -14,7 +16,9 @@ canonical-url: https://docs.6mm.com/de/developer-api/request-signing
 | Abfrage    | `signature` | Ja                 | HMAC–SHA256 Signatur, kleines Hex-String   |
 | Karosserie     | JSON        | Hängt vom Endpunkt ab | POST / PUT / DELETE Anfrage              |
 
-<h2 id="signature-payload">Signaturnutzlast</h2>
+<span id="signature-payload" data-sixmm-canonical-anchor="signature-payload" aria-hidden="true"></span>
+
+## Signaturnutzlast
 
 ```
 payload = queryStringWithoutSignature + requestBody
@@ -30,7 +34,9 @@ Wichtige Regeln:
 * Wenn ein Anforderungskörper existiert, muss der JSON für das Signieren verwendete String exakt mit dem tatsächlich übertragenen Körper übereinstimmen.
 * Ordnungsbezogene Pfade führen Signatur-Wiederholungsprüfungen durch. Die Wiederverwendung derselben Signatur innerhalb kurzer Zeit ergibt `Signature replay detected`.
 
-<h2 id="server-time">Serverzeit</h2>
+<span id="server-time" data-sixmm-canonical-anchor="server-time" aria-hidden="true"></span>
+
+## Serverzeit
 
 ```http
 GET /v1/time
@@ -54,7 +60,9 @@ Antwortbeispiel:
 
 Clients sollten `timeOffsetMs = serverTimestampMs - localTimestampMs`berechnen und dann `timestamp = nowMs + timeOffsetMs` für nachfolgende signierte Anfragen verwenden. Wenn der Server `Timestamp outside of tolerance window`zurückgibt, wird sofort die Zeit neu synchronisiert und die Signatur neu generiert.
 
-<h2 id="get-signing-example">GET Zeichenbeispiel</h2>
+<span id="get-signing-example" data-sixmm-canonical-anchor="get-signing-example" aria-hidden="true"></span>
+
+## GET Zeichenbeispiel
 
 Tatsächliche Anfrage:
 
@@ -68,7 +76,9 @@ Signatur-Nutzlast:
 symbol=BTCUSDT&timestamp=1772710377808
 ```
 
-<h2 id="post-signing-example">POST Zeichenbeispiel</h2>
+<span id="post-signing-example" data-sixmm-canonical-anchor="post-signing-example" aria-hidden="true"></span>
+
+## POST Zeichenbeispiel
 
 Tatsächliche Anfrage:
 
@@ -88,7 +98,9 @@ Signatur-Nutzlast:
 timestamp=1772710377808{"symbol":"BTCUSDT","type":"LIMIT","side":"BUY","price":"85000","quantity":"0.1","timeInForce":"GTC","makerOnly":true,"clientOrderId":"ext-1772710377808-001"}
 ```
 
-<h2 id="python-signing-example">Beispiel für Python-Signierung</h2>
+<span id="python-signing-example" data-sixmm-canonical-anchor="python-signing-example" aria-hidden="true"></span>
+
+## Beispiel für Python-Signierung
 
 ```python
 import hashlib
@@ -145,7 +157,9 @@ sync_time_offset()
 print(signed_request("GET", "/v1/private/order/current", {"symbol": "BTCUSDT"}))
 ```
 
-<h2 id="related-security-guides">Verwandte Sicherheitsleitfäden</h2>
+<span id="related-security-guides" data-sixmm-canonical-anchor="related-security-guides" aria-hidden="true"></span>
+
+## Verwandte Sicherheitsleitfäden
 
 - [Authentifizierung](/de/developer-api/authentication)
 - [API Key Management](/de/developer-api/api-key-management)

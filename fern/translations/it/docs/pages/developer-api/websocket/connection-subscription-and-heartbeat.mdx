@@ -7,7 +7,9 @@ canonical-url: https://docs.6mm.com/it/developer-api/websocket/connection-subscr
 
 Usa WebSocket stream per i dati di mercato e gli aggiornamenti privati dello stato degli utenti che devono rimanere aggiornati senza consultazione.
 
-<h2 id="connection-url">Connessione URL</h2>
+<span id="connection-url" data-sixmm-canonical-anchor="connection-url" aria-hidden="true"></span>
+
+## Connessione URL
 
 ```text
 wss://ws.6mm.com/ws
@@ -15,7 +17,9 @@ wss://ws.6mm.com/ws
 
 I flussi privati richiedono un contesto di autenticazione come un listenKey o un token di accesso come descritto nella documentazione del canale privato.
 
-<h2 id="subscribe">Abbonati</h2>
+<span id="subscribe" data-sixmm-canonical-anchor="subscribe" aria-hidden="true"></span>
+
+## Abbonati
 
 ```json
 { "id": "1772007814666", "op": "subscribe", "args": ["market.depth.BTCUSDT"] }
@@ -32,19 +36,25 @@ Riconoscimento di abbonamento riuscito:
 }
 ```
 
-<h2 id="unsubscribe">Disiscriverti</h2>
+<span id="unsubscribe" data-sixmm-canonical-anchor="unsubscribe" aria-hidden="true"></span>
+
+## Disiscriverti
 
 ```json
 { "id": "1772007814667", "op": "unsubscribe", "args": ["market.depth.BTCUSDT"] }
 ```
 
-<h2 id="application-ping">Ping dell'applicazione</h2>
+<span id="application-ping" data-sixmm-canonical-anchor="application-ping" aria-hidden="true"></span>
+
+## Ping dell'applicazione
 
 ```json
 { "id": "1772007814668", "op": "ping", "args": [] }
 ```
 
-<h2 id="message-envelope">Inviluppo del messaggio</h2>
+<span id="message-envelope" data-sixmm-canonical-anchor="message-envelope" aria-hidden="true"></span>
+
+## Inviluppo del messaggio
 
 I push pubblici utilizzano un limite coerente:
 
@@ -57,7 +67,9 @@ I push pubblici utilizzano un limite coerente:
 }
 ```
 
-<h2 id="operational-recommendations">Raccomandazioni operative</h2>
+<span id="operational-recommendations" data-sixmm-canonical-anchor="operational-recommendations" aria-hidden="true"></span>
+
+## Raccomandazioni operative
 
 - Generare un `id` lato client unico per ogni iscrizione, disiscrizione e richiesta di ping.
 - Considerare la riconnessione come una nuova sessione e riiscriverti agli argomenti richiesti.
@@ -65,7 +77,9 @@ I push pubblici utilizzano un limite coerente:
 - Mantenere l'elaborazione dei messaggi idempotente quando sono coinvolti eventi di ordini privati o account.
 - Modifica dello stato della connessione nel registro, confermi di abbonamento e disconnessioni anomale.
 
-<h2 id="reconnect-workflow">Flusso di lavoro di riconnessione</h2>
+<span id="reconnect-workflow" data-sixmm-canonical-anchor="reconnect-workflow" aria-hidden="true"></span>
+
+## Flusso di lavoro di riconnessione
 
 1. Chiudi o scarta la presa precedente e crea una nuova connessione.
 2. Riautenticare i flussi privati con un listenKey valido o un token di accesso.
@@ -75,14 +89,18 @@ I push pubblici utilizzano un limite coerente:
 
 Usa un backoff esponenziale limitato con jitter per i tentativi di riconnessione. Un client che si riconnette continuamente dovrebbe avvisare gli operatori invece di riprovare indefinitamente senza visibilità.
 
-<h2 id="heartbeat-and-stale-connections">Battito cardiaco e connessioni stantie</h2>
+<span id="heartbeat-and-stale-connections" data-sixmm-canonical-anchor="heartbeat-and-stale-connections" aria-hidden="true"></span>
+
+## Battito cardiaco e connessioni stantie
 
 - Tracciare il messaggio in entrata più recente e il riconoscimento ping riuscito.
 - Utilizzare l'intervallo cardiaco e la soglia di inattività approvati per l'ambiente di produzione.
 - Considerare una connessione come obsoleta quando la soglia configurata è superata, anche se il socket TCP appare ancora aperto.
 - Non riutilizzare abbonamenti da un vecchio socket; riiscriversi esplicitamente dopo ogni riconnessione.
 
-<h2 id="related-documentation">Documentazione correlata</h2>
+<span id="related-documentation" data-sixmm-canonical-anchor="related-documentation" aria-hidden="true"></span>
+
+## Documentazione correlata
 
 - [Canali del Mercato Pubblico](/it/developer-api/websocket/public-market-channels): argomenti, continuità del libretto ordini, transazioni, candele e ticker.
 - [Canale Utente Privato](/it/developer-api/websocket/private-user-channel): listenKey ciclo di vita ed eventi autenticati.

@@ -7,7 +7,9 @@ canonical-url: https://docs.6mm.com/ko/sdk/security/webhooks-idempotency
 
 비동기식 비즈니스 상태 변경에 대해 파트너 백엔드에 알릴 Webhooks. 전달이 재시도될 수 있기 때문에, 모든 수신자는 신뢰받는 데이터를 파싱하기 전에 서명을 검증해야 하며, 사건을 멩등성적으로 처리해야 합니다.
 
-<h2 id="webhook-headers">Webhook 헤더</h2>
+<span id="webhook-headers" data-sixmm-canonical-anchor="webhook-headers" aria-hidden="true"></span>
+
+## Webhook 헤더
 
 | 헤더 | 설명 |
 | --- | --- |
@@ -21,7 +23,9 @@ timestamp + nonce + rawBody
 
 서명된 값을 재구성할 때는 HTTP 동안 받은 정확한 원시 요청 본문을 사용하세요. 먼저 구문 분석과 재직렬화를 JSON 공백이나 필드 순서를 변경하여 다른 서명을 생성할 수 있습니다.
 
-<h2 id="verification-flow">검증 흐름</h2>
+<span id="verification-flow" data-sixmm-canonical-anchor="verification-flow" aria-hidden="true"></span>
+
+## 검증 흐름
 
 1. 타임스탬프, nonce, 서명 헤더를 읽습니다.
 2. 수정되지 않은 원시 요청 몸체를 캡처합니다.
@@ -33,7 +37,9 @@ timestamp + nonce + rawBody
 
 공식 Agent SDK 검증기가 있을 때는 독립적인 서명 코드를 유지하는 대신 그것을 사용하세요.
 
-<h2 id="order-idempotency">순서 멎등성</h2>
+<span id="order-idempotency" data-sixmm-canonical-anchor="order-idempotency" aria-hidden="true"></span>
+
+## 순서 멎등성
 
 | 사건 | 핸들링 |
 | --- | --- |
@@ -42,7 +48,9 @@ timestamp + nonce + rawBody
 | PROCESSING 반응 | webhook 기다리거나 주문 상태를 문의하세요. |
 | 반복 webhook | 멮등성 키와 최종 상태에 따라 중복 제거. |
 
-<h2 id="recommended-idempotency-record">권장 멎등성 기록</h2>
+<span id="recommended-idempotency-record" data-sixmm-canonical-anchor="recommended-idempotency-record" aria-hidden="true"></span>
+
+## 권장 멎등성 기록
 
 반복 배송을 인식하고 안전하게 복구할 수 있을 만큼 충분한 정보를 저장하세요:
 
@@ -57,11 +65,15 @@ timestamp + nonce + rawBody
 
 가능한 경우 비즈니스 변경 및 멩등성 기록을 동일한 트랜잭션에 커밋하세요. 반복 이벤트는 잔액, 주문, 사용자 변경 사항을 다시 적용하는 대신 이미 알려진 결과를 반환해야 합니다.
 
-<h2 id="timeout-and-retry-rule">타임아웃 및 재도전 규칙</h2>
+<span id="timeout-and-retry-rule" data-sixmm-canonical-anchor="timeout-and-retry-rule" aria-hidden="true"></span>
+
+## 타임아웃 및 재도전 규칙
 
 HTTP 타임아웃은 원래 요청이 실패했다는 것을 증명하지 않습니다. 원래 `agentOrderNo`를 사용해 연산을 쿼리하거나, webhook를 기다린 후 또 다른 행동이 필요한지 결정합니다. 매번 타임아웃 후에 새로운 비즈니스 주문 번호를 생성하면 중복 자금 이동이 발생할 수 있습니다.
 
-<h2 id="production-checklist">생산 체크리스트</h2>
+<span id="production-checklist" data-sixmm-canonical-anchor="production-checklist" aria-hidden="true"></span>
+
+## 생산 체크리스트
 
 - 파싱이나 비즈니스 처리를 JSON 하기 전에 서명을 검증합니다.
 - 파싱된 페이로드와 독립적으로 원시 본체를 보존합니다.
@@ -70,7 +82,9 @@ HTTP 타임아웃은 원래 요청이 실패했다는 것을 증명하지 않습
 - 이벤트 ID, 파트너 주문 번호, 처리 결과, 요청 시간 기록.
 - 로그 및 지원 첨부 파일의 비밀 및 서명 값을 삭제합니다.
 
-<h2 id="related-docs">관련 문서</h2>
+<span id="related-docs" data-sixmm-canonical-anchor="related-docs" aria-hidden="true"></span>
+
+## 관련 문서
 
 <CardGroup cols={3}>
 <Card title="비밀과 HMAC 서명" icon="fa-duotone fa-shield-keyhole" href="/ko/sdk/security/secrets-signing">

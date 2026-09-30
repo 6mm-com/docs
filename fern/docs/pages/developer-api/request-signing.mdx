@@ -4,7 +4,9 @@ description: "Sign 6MM API requests with HMAC-SHA256 using the required payload,
 slug: developer-api/request-signing
 ---
 
-<h2 id="request-format">Request Format</h2>
+<span data-sixmm-canonical-anchor="request-format" aria-hidden="true"></span>
+
+## Request Format
 
 | Location | Field       | Required            | Description                                   |
 | -------- | ----------- | ------------------- | --------------------------------------------- |
@@ -13,7 +15,9 @@ slug: developer-api/request-signing
 | Query    | `signature` | Yes                 | HMAC-SHA256 signature, lowercase hex string   |
 | Body     | JSON        | Depends on endpoint | POST / PUT / DELETE request body              |
 
-<h2 id="signature-payload">Signature Payload</h2>
+<span data-sixmm-canonical-anchor="signature-payload" aria-hidden="true"></span>
+
+## Signature Payload
 
 ```
 payload = queryStringWithoutSignature + requestBody
@@ -29,7 +33,9 @@ Key rules:
 * If a request body exists, the JSON string used for signing must exactly match the actual transmitted body.
 * Order-related paths perform signature replay checks. Reusing the same signature within a short period returns `Signature replay detected`.
 
-<h2 id="server-time">Server Time</h2>
+<span data-sixmm-canonical-anchor="server-time" aria-hidden="true"></span>
+
+## Server Time
 
 ```http
 GET /v1/time
@@ -53,7 +59,9 @@ Response example:
 
 Clients should calculate `timeOffsetMs = serverTimestampMs - localTimestampMs`, then use `timestamp = nowMs + timeOffsetMs` for subsequent signed requests. If the server returns `Timestamp outside of tolerance window`, immediately resync time and regenerate the signature.
 
-<h2 id="get-signing-example">GET Signing Example</h2>
+<span data-sixmm-canonical-anchor="get-signing-example" aria-hidden="true"></span>
+
+## GET Signing Example
 
 Actual request:
 
@@ -67,7 +75,9 @@ Signature payload:
 symbol=BTCUSDT&timestamp=1772710377808
 ```
 
-<h2 id="post-signing-example">POST Signing Example</h2>
+<span data-sixmm-canonical-anchor="post-signing-example" aria-hidden="true"></span>
+
+## POST Signing Example
 
 Actual request:
 
@@ -87,7 +97,9 @@ Signature payload:
 timestamp=1772710377808{"symbol":"BTCUSDT","type":"LIMIT","side":"BUY","price":"85000","quantity":"0.1","timeInForce":"GTC","makerOnly":true,"clientOrderId":"ext-1772710377808-001"}
 ```
 
-<h2 id="python-signing-example">Python Signing Example</h2>
+<span data-sixmm-canonical-anchor="python-signing-example" aria-hidden="true"></span>
+
+## Python Signing Example
 
 ```python
 import hashlib
@@ -144,7 +156,9 @@ sync_time_offset()
 print(signed_request("GET", "/v1/private/order/current", {"symbol": "BTCUSDT"}))
 ```
 
-<h2 id="related-security-guides">Related security guides</h2>
+<span data-sixmm-canonical-anchor="related-security-guides" aria-hidden="true"></span>
+
+## Related security guides
 
 - [Authentication](/developer-api/authentication)
 - [API Key Management](/developer-api/api-key-management)

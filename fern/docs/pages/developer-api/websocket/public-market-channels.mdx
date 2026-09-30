@@ -6,7 +6,9 @@ slug: developer-api/websocket/public-market-channels
 
 Use public market channels when an application needs continuously updated prices, trades, candlesticks, or order-book depth without repeatedly polling REST endpoints. These streams can support trading screens, price displays, alerts, and market monitoring.
 
-<h2 id="connection-url">Connection URL</h2>
+<span data-sixmm-canonical-anchor="connection-url" aria-hidden="true"></span>
+
+## Connection URL
 
 ```
 wss://ws.6mm.com/ws
@@ -16,7 +18,9 @@ Public WebSocket does not require authentication.
 
 For connection lifecycle, unsubscribe, ping, and reconnect behavior, see [Connection, Subscription & Heartbeat](/developer-api/websocket/connection-subscription-and-heartbeat).
 
-<h2 id="common-channels">Common Channels</h2>
+<span data-sixmm-canonical-anchor="common-channels" aria-hidden="true"></span>
+
+## Common Channels
 
 | Channel                            | Description                                                        |
 | ---------------------------------- | ------------------------------------------------------------------ |
@@ -26,7 +30,9 @@ For connection lifecycle, unsubscribe, ping, and reconnect behavior, see [Connec
 | `market.ticker.{symbol}`           | Single-symbol ticker summary                                       |
 | `market.tickers`                   | All-symbol ticker summary                                          |
 
-<h2 id="choose-a-channel">Choose a channel</h2>
+<span data-sixmm-canonical-anchor="choose-a-channel" aria-hidden="true"></span>
+
+## Choose a channel
 
 | Application need | Channel |
 | --- | --- |
@@ -36,13 +42,17 @@ For connection lifecycle, unsubscribe, ping, and reconnect behavior, see [Connec
 | Display one market summary | `market.ticker.{symbol}` |
 | Maintain a market overview | `market.tickers` |
 
-<h2 id="subscription-example">Subscription Example</h2>
+<span data-sixmm-canonical-anchor="subscription-example" aria-hidden="true"></span>
+
+## Subscription Example
 
 ```json
 { "id": "1772007814666", "op": "subscribe", "args": ["market.depth.BTCUSDT"] }
 ```
 
-<h2 id="push-message-wrapper">Push Message Wrapper</h2>
+<span data-sixmm-canonical-anchor="push-message-wrapper" aria-hidden="true"></span>
+
+## Push Message Wrapper
 
 ```json
 {
@@ -55,11 +65,15 @@ For connection lifecycle, unsubscribe, ping, and reconnect behavior, see [Connec
 
 Use `topic` to route each message to the correct handler and `ts` to observe delivery timing. The `data` object contains the payload for the subscribed channel.
 
-<h2 id="order-book-handling">Order-book handling</h2>
+<span data-sixmm-canonical-anchor="order-book-handling" aria-hidden="true"></span>
+
+## Order-book handling
 
 The depth channel sends a snapshot first and then incremental updates. Initialize the local book from the snapshot before applying updates. After reconnecting, create a new session, subscribe again, and rebuild the local book from the next snapshot instead of continuing from stale in-memory state.
 
-<h2 id="production-recommendations">Production recommendations</h2>
+<span data-sixmm-canonical-anchor="production-recommendations" aria-hidden="true"></span>
+
+## Production recommendations
 
 - Generate a unique `id` for every subscribe, unsubscribe, and ping request.
 - Confirm subscription acknowledgements before treating a channel as active.
@@ -68,7 +82,9 @@ The depth channel sends a snapshot first and then incremental updates. Initializ
 - Monitor disconnect frequency, message-processing lag, and malformed payloads.
 - Use [Private User Channel](/developer-api/websocket/private-user-channel) for authenticated account and order updates.
 
-<h2 id="related-api-docs">Related API docs</h2>
+<span data-sixmm-canonical-anchor="related-api-docs" aria-hidden="true"></span>
+
+## Related API docs
 
 <CardGroup cols={3}>
 <Card title="WebSocket Overview" icon="fa-duotone fa-wave-pulse" href="/developer-api/websocket">

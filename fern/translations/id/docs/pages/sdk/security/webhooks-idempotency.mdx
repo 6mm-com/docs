@@ -7,7 +7,9 @@ canonical-url: https://docs.6mm.com/id/sdk/security/webhooks-idempotency
 
 Webhook memberi tahu backend mitra tentang perubahan status bisnis asinkron. Karena pengiriman dapat dicoba ulang, setiap penerima harus memverifikasi tanda tangan sebelum mem-parse data tepercaya dan harus memproses peristiwa secara idempotensial.
 
-<h2 id="webhook-headers">Header Webhook</h2>
+<span id="webhook-headers" data-sixmm-canonical-anchor="webhook-headers" aria-hidden="true"></span>
+
+## Header Webhook
 
 | Header | Deskripsi |
 | --- | --- |
@@ -21,7 +23,9 @@ timestamp + nonce + rawBody
 
 Gunakan body permintaan mentah yang diterima secara tepat selama HTTP saat merekonstruksi nilai yang ditandatangani. Mengurai dan menyeriakan ulang JSON terlebih dahulu dapat mengubah urutan ruang kosong atau field dan menghasilkan tanda tangan yang berbeda.
 
-<h2 id="verification-flow">Alur verifikasi</h2>
+<span id="verification-flow" data-sixmm-canonical-anchor="verification-flow" aria-hidden="true"></span>
+
+## Alur verifikasi
 
 1. Baca timestamp, nonce, dan header tanda tangan.
 2. Tangkap badan permintaan mentah yang tidak dimodifikasi.
@@ -33,7 +37,9 @@ Gunakan body permintaan mentah yang diterima secara tepat selama HTTP saat merek
 
 Ketika verifikator Agent SDK resmi tersedia, gunakan itu daripada mempertahankan kode penandatanganan independen.
 
-<h2 id="order-idempotency">Idempotensi urutan</h2>
+<span id="order-idempotency" data-sixmm-canonical-anchor="order-idempotency" aria-hidden="true"></span>
+
+## Idempotensi urutan
 
 | Kasus | Penanganan |
 | --- | --- |
@@ -42,7 +48,9 @@ Ketika verifikator Agent SDK resmi tersedia, gunakan itu daripada mempertahankan
 | Respons PROCESSING | Tunggu status webhook atau urutan kueri. |
 | Webhook berulang | Deduplikasi berdasarkan kunci idempotensi dan status akhir. |
 
-<h2 id="recommended-idempotency-record">Catatan idempotensi yang direkomendasikan</h2>
+<span id="recommended-idempotency-record" data-sixmm-canonical-anchor="recommended-idempotency-record" aria-hidden="true"></span>
+
+## Catatan idempotensi yang direkomendasikan
 
 Simpan cukup informasi untuk mengenali pengiriman berulang dan pulihkan dengan aman:
 
@@ -57,11 +65,15 @@ Simpan cukup informasi untuk mengenali pengiriman berulang dan pulihkan dengan a
 
 Commit catatan perubahan bisnis dan idempotensi dalam transaksi yang sama jika memungkinkan. Peristiwa berulang harus mengembalikan hasil yang sudah diketahui, bukan menerapkan saldo, pesanan, atau perubahan pengguna lagi.
 
-<h2 id="timeout-and-retry-rule">Aturan timeout dan percobaan ulang</h2>
+<span id="timeout-and-retry-rule" data-sixmm-canonical-anchor="timeout-and-retry-rule" aria-hidden="true"></span>
+
+## Aturan timeout dan percobaan ulang
 
 Timeout HTTP tidak membuktikan bahwa permintaan asli gagal. Query operasi menggunakan `agentOrderNo`asli, atau tunggu webhook-nya, sebelum memutuskan apakah tindakan lain diperlukan. Membuat nomor order bisnis baru setelah setiap timeout dapat menyebabkan pergerakan dana duplikat.
 
-<h2 id="production-checklist">Daftar periksa produksi</h2>
+<span id="production-checklist" data-sixmm-canonical-anchor="production-checklist" aria-hidden="true"></span>
+
+## Daftar periksa produksi
 
 - Verifikasi tanda tangan sebelum JSON parsing atau pemrosesan bisnis.
 - Menjaga badan mentah secara independen dari muatan yang telah diparse.
@@ -70,7 +82,9 @@ Timeout HTTP tidak membuktikan bahwa permintaan asli gagal. Query operasi menggu
 - Catat event ID, nomor pesanan mitra, hasil pemrosesan, dan waktu permintaan.
 - Menyusun rahasia dan nilai tanda tangan dari log dan lampiran dukungan.
 
-<h2 id="related-docs">Dokumen terkait</h2>
+<span id="related-docs" data-sixmm-canonical-anchor="related-docs" aria-hidden="true"></span>
+
+## Dokumen terkait
 
 <CardGroup cols={3}>
 <Card title="Rahasia & Penandatanganan HMAC" icon="fa-duotone fa-shield-keyhole" href="/id/sdk/security/secrets-signing">

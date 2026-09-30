@@ -7,7 +7,9 @@ canonical-url: https://docs.6mm.com/vi/sdk/security/webhooks-idempotency
 
 Webhook thông báo cho backend đối tác về các thay đổi trạng thái kinh doanh bất đồng bộ. Vì việc gửi có thể được thử lại, mỗi người nhận phải xác minh chữ ký trước khi phân tích dữ liệu đáng tin cậy và phải xử lý sự kiện một cách đồng nhất.
 
-<h2 id="webhook-headers">Tiêu đề Webhook</h2>
+<span id="webhook-headers" data-sixmm-canonical-anchor="webhook-headers" aria-hidden="true"></span>
+
+## Tiêu đề Webhook
 
 | Tiêu đề | Mô tả |
 | --- | --- |
@@ -21,7 +23,9 @@ timestamp + nonce + rawBody
 
 Sử dụng chính xác phần thân yêu cầu thô nhận được trên HTTP khi tái tạo giá trị đã ký. Phân tích cú pháp và tuần tự hóa lại JSON trước có thể thay đổi khoảng trắng hoặc lệnh trường và tạo ra một chữ ký khác.
 
-<h2 id="verification-flow">Quy trình xác minh</h2>
+<span id="verification-flow" data-sixmm-canonical-anchor="verification-flow" aria-hidden="true"></span>
+
+## Quy trình xác minh
 
 1. Đọc tiêu đề thời gian, nonce và chữ ký.
 2. Ghi lại nội dung yêu cầu thô chưa chỉnh sửa.
@@ -33,7 +37,9 @@ Sử dụng chính xác phần thân yêu cầu thô nhận được trên HTTP 
 
 Khi có trình xác minh Agent SDK chính thức, hãy sử dụng nó thay vì duy trì mã ký độc lập.
 
-<h2 id="order-idempotency">Tính đồng nhất của lệnh</h2>
+<span id="order-idempotency" data-sixmm-canonical-anchor="order-idempotency" aria-hidden="true"></span>
+
+## Tính đồng nhất của lệnh
 
 | Vụ án | Xử lý |
 | --- | --- |
@@ -42,7 +48,9 @@ Khi có trình xác minh Agent SDK chính thức, hãy sử dụng nó thay vì 
 | Phản hồi PROCESSING | Chờ trạng thái webhook hoặc lệnh truy vấn. |
 | Webhook lặp lại | Loại bỏ trùng lặp bằng khóa đồng tính và trạng thái cuối cùng. |
 
-<h2 id="recommended-idempotency-record">Bản ghi idempotency được khuyến nghị</h2>
+<span id="recommended-idempotency-record" data-sixmm-canonical-anchor="recommended-idempotency-record" aria-hidden="true"></span>
+
+## Bản ghi idempotency được khuyến nghị
 
 Lưu trữ đủ thông tin để nhận biết một lần giao hàng lặp lại và phục hồi an toàn:
 
@@ -57,11 +65,15 @@ Lưu trữ đủ thông tin để nhận biết một lần giao hàng lặp l�
 
 Cam kết bản ghi thay đổi kinh doanh và bản ghi idempotency trong cùng một giao dịch nếu có thể. Một sự kiện lặp lại nên trả về kết quả đã biết thay vì áp dụng lại số dư, lệnh hoặc thay đổi người dùng.
 
-<h2 id="timeout-and-retry-rule">Quy tắc timeout và thử lại</h2>
+<span id="timeout-and-retry-rule" data-sixmm-canonical-anchor="timeout-and-retry-rule" aria-hidden="true"></span>
+
+## Quy tắc timeout và thử lại
 
 Thời gian chờ HTTP không chứng minh rằng yêu cầu ban đầu đã thất bại. Truy vấn thao tác bằng `agentOrderNo`gốc, hoặc chờ webhook của nó, trước khi quyết định có cần hành động khác hay không. Tạo số lệnh doanh nghiệp mới sau mỗi lần timeout có thể gây ra các chuyển động quỹ trùng lặp.
 
-<h2 id="production-checklist">Danh sách kiểm tra sản xuất</h2>
+<span id="production-checklist" data-sixmm-canonical-anchor="production-checklist" aria-hidden="true"></span>
+
+## Danh sách kiểm tra sản xuất
 
 - Xác minh chữ ký trước khi JSON phân tích cú pháp hoặc xử lý kinh doanh.
 - Bảo toàn phần cơ thể thô độc lập với payload đã phân tích cú pháp.
@@ -70,7 +82,9 @@ Thời gian chờ HTTP không chứng minh rằng yêu cầu ban đầu đã th�
 - Ghi lại ID sự kiện, số đơn hàng đối tác, kết quả xử lý và thời gian yêu cầu.
 - Xóa các bí mật và giá trị chữ ký khỏi nhật ký và tệp đính kèm hỗ trợ.
 
-<h2 id="related-docs">Tài liệu liên quan</h2>
+<span id="related-docs" data-sixmm-canonical-anchor="related-docs" aria-hidden="true"></span>
+
+## Tài liệu liên quan
 
 <CardGroup cols={3}>
 <Card title="Bí mật & Ký HMAC" icon="fa-duotone fa-shield-keyhole" href="/vi/sdk/security/secrets-signing">

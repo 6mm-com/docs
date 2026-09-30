@@ -1282,7 +1282,12 @@ if (isMain) {
     const filePath = path.join(projectRoot, relativePath);
     let content = await readFile(filePath, "utf8");
     for (const [from, to] of Object.entries(dictionary)) {
-      const next = content.split(from).join(to);
+      const nativeHeading = (value) => value.replace(
+        /^<h([2-6]) id="[^"]+">([^<]+)<\/h[2-6]>$/,
+        (_, level, text) => "#".repeat(Number(level)) + " " + text,
+      );
+      const next = content.split(from).join(to)
+        .split(nativeHeading(from)).join(nativeHeading(to));
       if (next !== content) {
         replacements += content.split(from).length - 1;
         content = next;

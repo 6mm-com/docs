@@ -5,7 +5,9 @@ slug: developer-api/request-signing
 canonical-url: https://docs.6mm.com/zh-CN/developer-api/request-signing
 ---
 
-<h2 id="request-format">请求格式</h2>
+<span id="request-format" data-sixmm-canonical-anchor="request-format" aria-hidden="true"></span>
+
+## 请求格式
 
 | 位置     | 字段          | 必填    | 说明                         |
 | ------ | ----------- | ----- | -------------------------- |
@@ -14,7 +16,9 @@ canonical-url: https://docs.6mm.com/zh-CN/developer-api/request-signing
 | Query  | `signature` | 是     | HMAC-SHA256 签名结果，hex 小写字符串 |
 | Body   | JSON        | 按接口要求 | `POST / PUT / DELETE` 请求体  |
 
-<h2 id="signature-payload">签名载荷</h2>
+<span id="signature-payload" data-sixmm-canonical-anchor="signature-payload" aria-hidden="true"></span>
+
+## 签名载荷
 
 ```
 payload = queryStringWithoutSignature + requestBody
@@ -30,7 +34,9 @@ signature = HMAC-SHA256(apiSecret, payload)
 * 有请求体时，签名使用的 JSON 字符串必须和实际发送 body 完全一致。
 * 订单相关路径会做签名去重，同一个签名在短时间内重复使用会返回 `Signature replay detected`。
 
-<h2 id="server-time">服务端时间</h2>
+<span id="server-time" data-sixmm-canonical-anchor="server-time" aria-hidden="true"></span>
+
+## 服务端时间
 
 ```http
 GET /v1/time
@@ -54,7 +60,9 @@ GET /v1/time
 
 建议客户端计算 `timeOffsetMs = serverTimestampMs - localTimestampMs`，后续签名请求使用 `timestamp = nowMs + timeOffsetMs`。如果返回 `Timestamp outside of tolerance window`，应立即重新校时并重新签名。
 
-<h2 id="get-signing-example">GET 签名示例</h2>
+<span id="get-signing-example" data-sixmm-canonical-anchor="get-signing-example" aria-hidden="true"></span>
+
+## GET 签名示例
 
 实际请求：
 
@@ -68,7 +76,9 @@ GET /v1/private/order/current?symbol=BTCUSDT&timestamp=1772710377808&signature=.
 symbol=BTCUSDT&timestamp=1772710377808
 ```
 
-<h2 id="post-signing-example">POST 签名示例</h2>
+<span id="post-signing-example" data-sixmm-canonical-anchor="post-signing-example" aria-hidden="true"></span>
+
+## POST 签名示例
 
 实际请求：
 
@@ -88,7 +98,9 @@ POST /v1/private/order/place?timestamp=1772710377808&signature=...
 timestamp=1772710377808{"symbol":"BTCUSDT","type":"LIMIT","side":"BUY","price":"85000","quantity":"0.1","timeInForce":"GTC","makerOnly":true,"clientOrderId":"ext-1772710377808-001"}
 ```
 
-<h2 id="python-signing-example">Python 签名示例</h2>
+<span id="python-signing-example" data-sixmm-canonical-anchor="python-signing-example" aria-hidden="true"></span>
+
+## Python 签名示例
 
 ```python
 import hashlib
@@ -145,7 +157,9 @@ sync_time_offset()
 print(signed_request("GET", "/v1/private/order/current", {"symbol": "BTCUSDT"}))
 ```
 
-<h2 id="related-security-guides">相关安全指南</h2>
+<span id="related-security-guides" data-sixmm-canonical-anchor="related-security-guides" aria-hidden="true"></span>
+
+## 相关安全指南
 
 - [身份认证](/zh-CN/developer-api/authentication)
 - [API Key 管理](/zh-CN/developer-api/api-key-management)

@@ -7,7 +7,9 @@ canonical-url: https://docs.6mm.com/ja/sdk/security/webhooks-idempotency
 
 Webhookは非同期のビジネス状態変更をパートナーのバックエンドに通知します。配信が再試される可能性があるため、すべての受信者は信頼されたデータを解析する前に署名を検証し、イベントを冪等的に処理しなければなりません。
 
-<h2 id="webhook-headers">ウェブフックヘッダー</h2>
+<span id="webhook-headers" data-sixmm-canonical-anchor="webhook-headers" aria-hidden="true"></span>
+
+## ウェブフックヘッダー
 
 | ヘッダー | 概要 |
 | --- | --- |
@@ -21,7 +23,9 @@ timestamp + nonce + rawBody
 
 署名値を再構築する際は、 HTTP 上で受信した正確な生のリクエストボディを使用します。まず解析して再シリアライズ JSON 、空白やフィールドの順序を変え、異なる署名を生成できます。
 
-<h2 id="verification-flow">検証フロー</h2>
+<span id="verification-flow" data-sixmm-canonical-anchor="verification-flow" aria-hidden="true"></span>
+
+## 検証フロー
 
 1. タイムスタンプ、ノンス、署名ヘッダーを読み取る。
 2. 修正されていない生のリクエストボディを取得する。
@@ -33,7 +37,9 @@ timestamp + nonce + rawBody
 
 公式の Agent SDK 検証器が利用可能になった場合は、独立した署名コードを維持する代わりにそれを使いましょう。
 
-<h2 id="order-idempotency">位数冪起等</h2>
+<span id="order-idempotency" data-sixmm-canonical-anchor="order-idempotency" aria-hidden="true"></span>
+
+## 位数冪起等
 
 | 事件 | 取り扱い |
 | --- | --- |
@@ -42,7 +48,9 @@ timestamp + nonce + rawBody
 | PROCESSING | ウェブフックやクエリの注文状況を待ちましょう。 |
 | 繰り返しウェブフック | 冪等性キーと最終状態で重複を消す。 |
 
-<h2 id="recommended-idempotency-record">推奨冪等性記録</h2>
+<span id="recommended-idempotency-record" data-sixmm-canonical-anchor="recommended-idempotency-record" aria-hidden="true"></span>
+
+## 推奨冪等性記録
 
 繰り返し配達を認識し安全に回復できる十分な情報を保存する:
 
@@ -57,11 +65,15 @@ timestamp + nonce + rawBody
 
 可能な限り、ビジネス変更と冪등 記録を同じトランザクションにコミットしてください。繰り返しイベントを行うと、残高、注文、ユーザーの変更を再度適用する代わりに既知の結果を返すべきです。
 
-<h2 id="timeout-and-retry-rule">タイムアウトと再挑戦ルール</h2>
+<span id="timeout-and-retry-rule" data-sixmm-canonical-anchor="timeout-and-retry-rule" aria-hidden="true"></span>
+
+## タイムアウトと再挑戦ルール
 
 HTTPタイムアウトは元のリクエストが失敗したことを証明しません。元の`agentOrderNo`を使って操作を照会するか、ウェブフックを待ってから次の処理が必要かどうか判断してください。タイムアウト後に新しい受注番号を作成すると、重複した資金移動を引き起こす可能性があります。
 
-<h2 id="production-checklist">生産チェックリスト</h2>
+<span id="production-checklist" data-sixmm-canonical-anchor="production-checklist" aria-hidden="true"></span>
+
+## 生産チェックリスト
 
 - 解析やビジネス処理 JSON 署名を確認する。
 - 解析されたペイロードとは独立して生のボディを保存する。
@@ -70,7 +82,9 @@ HTTPタイムアウトは元のリクエストが失敗したことを証明し�
 - イベントID、パートナー注文番号、処理結果、リクエスト時間を記録する。
 - ログやサポート添付ファイルから秘密情報や署名値を黒塗りすること。
 
-<h2 id="related-docs">関連文書</h2>
+<span id="related-docs" data-sixmm-canonical-anchor="related-docs" aria-hidden="true"></span>
+
+## 関連文書
 
 <CardGroup cols={3}>
 <Card title="秘密と HMAC 署名" icon="fa-duotone fa-shield-keyhole" href="/ja/sdk/security/secrets-signing">

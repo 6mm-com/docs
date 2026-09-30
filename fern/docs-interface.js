@@ -45,8 +45,14 @@
     var text = value.trim();
     return arabic[text] ? value.replace(text, arabic[text]) : value;
   }
+  function isHydrated(element) {
+    if (typeof element.closest !== "function") return true;
+    var island = element.closest("astro-island");
+    return !island || island.hasAttribute("data-fern-hydrated");
+  }
   function syncEditLinks(lang) {
     document.querySelectorAll('a[href^="https://github.com/6mm-com/docs/blob/main/fern/"]').forEach(function (link) {
+      if (!isHydrated(link)) return;
       var url = new URL(link.href);
       url.pathname = url.pathname.replace(
         /\/fern\/(?:translations\/[^/]+\/)?docs\//,
@@ -60,11 +66,13 @@
     document.querySelectorAll("[data-sixmm-canonical-anchor]").forEach(function (marker) {
       var heading = marker.nextElementSibling;
       if (!heading || !/^H[2-6]$/.test(heading.tagName)) return;
+      if (!isHydrated(heading)) return;
       var canonical = marker.getAttribute("data-sixmm-canonical-anchor");
       heading.dataset.sixmmAnchorTarget = canonical;
       if (heading.id) aliases[heading.id] = canonical;
     });
     document.querySelectorAll('a[href^="#"]').forEach(function (link) {
+      if (!isHydrated(link)) return;
       try {
         var hash = link.getAttribute("href");
         var canonical = aliases[decodeURIComponent(hash.slice(1))];
@@ -79,12 +87,14 @@
     var node;
     while ((node = walker.nextNode())) {
       var parent = node.parentElement;
+      if (parent && !isHydrated(parent)) continue;
       if (!parent || parent.closest('pre, code, script, style, textarea, .fern-language-selector, .fern-language-dropdown-content, .sixmm-mobile-language-dialog, #cs-widget-container')) continue;
       if (parent.closest('main article') && !parent.closest('button, .fern-page-actions')) continue;
       var replacement = translate(node.nodeValue);
       if (replacement !== node.nodeValue) node.nodeValue = replacement;
     }
     document.querySelectorAll('[aria-label], [title], [placeholder]').forEach(function (element) {
+      if (!isHydrated(element)) return;
       if (element.closest('pre, code, #cs-widget-container')) return;
       if (element.closest('main article') && !element.closest('button, .fern-page-actions')) return;
       ["aria-label", "title", "placeholder"].forEach(function (name) {
@@ -125,5 +135,6 @@
   window.addEventListener("load", schedule);
   window.addEventListener("pageshow", schedule);
   document.addEventListener("astro:page-load", schedule);
+  document.addEventListener("fern:island-hydrated", schedule);
   schedule();
 })();

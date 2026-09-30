@@ -5,7 +5,9 @@ slug: developer-api/request-signing
 canonical-url: https://docs.6mm.com/el/developer-api/request-signing
 ---
 
-<h2 id="request-format">Μορφή αιτήματος</h2>
+<span id="request-format" data-sixmm-canonical-anchor="request-format" aria-hidden="true"></span>
+
+## Μορφή αιτήματος
 
 | Τοποθεσία | Πεδίο       | Απαιτείται            | Περιγραφή                                   |
 | -------- | ----------- | ------------------- | --------------------------------------------- |
@@ -14,7 +16,9 @@ canonical-url: https://docs.6mm.com/el/developer-api/request-signing
 | Ερώτημα    | `signature` | Ναι                 | HMAC-SHA256 υπογραφή, πεζή δεκαεξαδική συμβολοσειρά   |
 | Σώμα     | JSON        | Εξαρτάται από το τελικό σημείο | POST / PUT / DELETE φορέα αιτήματος              |
 
-<h2 id="signature-payload">Φορτίο υπογραφής</h2>
+<span id="signature-payload" data-sixmm-canonical-anchor="signature-payload" aria-hidden="true"></span>
+
+## Φορτίο υπογραφής
 
 ```
 payload = queryStringWithoutSignature + requestBody
@@ -30,7 +34,9 @@ signature = HMAC-SHA256(apiSecret, payload)
 * Εάν υπάρχει σώμα αίτησης, η συμβολοσειρά JSON που χρησιμοποιείται για την υπογραφή πρέπει να ταιριάζει ακριβώς με το πραγματικό σώμα που μεταδίδεται.
 * Οι διαδρομές που σχετίζονται με παραγγελίες εκτελούν ελέγχους επανάληψης υπογραφής. Η επαναχρησιμοποίηση της ίδιας υπογραφής σε σύντομο χρονικό διάστημα επιστρέφει `Signature replay detected`.
 
-<h2 id="server-time">Ώρα διακομιστή</h2>
+<span id="server-time" data-sixmm-canonical-anchor="server-time" aria-hidden="true"></span>
+
+## Ώρα διακομιστή
 
 ```http
 GET /v1/time
@@ -54,7 +60,9 @@ GET /v1/time
 
 Οι υπολογιστές-πελάτες θα πρέπει να υπολογίσουν `timeOffsetMs = serverTimestampMs - localTimestampMs`και, στη συνέχεια, να χρησιμοποιήσουν `timestamp = nowMs + timeOffsetMs` για επόμενες υπογεγραμμένες αιτήσεις. Εάν ο διακομιστής επιστρέψει `Timestamp outside of tolerance window`, συγχρονίστε αμέσως ξανά την ώρα και δημιουργήστε ξανά την υπογραφή.
 
-<h2 id="get-signing-example">GET Παράδειγμα υπογραφής</h2>
+<span id="get-signing-example" data-sixmm-canonical-anchor="get-signing-example" aria-hidden="true"></span>
+
+## GET Παράδειγμα υπογραφής
 
 Πραγματικό αίτημα:
 
@@ -68,7 +76,9 @@ GET /v1/private/order/current?symbol=BTCUSDT&timestamp=1772710377808&signature=.
 symbol=BTCUSDT&timestamp=1772710377808
 ```
 
-<h2 id="post-signing-example">POST Παράδειγμα υπογραφής</h2>
+<span id="post-signing-example" data-sixmm-canonical-anchor="post-signing-example" aria-hidden="true"></span>
+
+## POST Παράδειγμα υπογραφής
 
 Πραγματικό αίτημα:
 
@@ -88,7 +98,9 @@ POST /v1/private/order/place?timestamp=1772710377808&signature=...
 timestamp=1772710377808{"symbol":"BTCUSDT","type":"LIMIT","side":"BUY","price":"85000","quantity":"0.1","timeInForce":"GTC","makerOnly":true,"clientOrderId":"ext-1772710377808-001"}
 ```
 
-<h2 id="python-signing-example">Παράδειγμα υπογραφής Python</h2>
+<span id="python-signing-example" data-sixmm-canonical-anchor="python-signing-example" aria-hidden="true"></span>
+
+## Παράδειγμα υπογραφής Python
 
 ```python
 import hashlib
@@ -145,7 +157,9 @@ sync_time_offset()
 print(signed_request("GET", "/v1/private/order/current", {"symbol": "BTCUSDT"}))
 ```
 
-<h2 id="related-security-guides">Σχετικοί οδηγοί ασφαλείας</h2>
+<span id="related-security-guides" data-sixmm-canonical-anchor="related-security-guides" aria-hidden="true"></span>
+
+## Σχετικοί οδηγοί ασφαλείας
 
 - [Έλεγχος ταυτότητας](/el/developer-api/authentication)
 - [API Key Διαχείριση](/el/developer-api/api-key-management)

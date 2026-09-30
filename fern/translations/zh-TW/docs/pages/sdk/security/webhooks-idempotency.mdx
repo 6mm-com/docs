@@ -7,7 +7,9 @@ canonical-url: https://docs.6mm.com/zh-TW/sdk/security/webhooks-idempotency
 
 Webhook 會通知合作夥伴後端非同步的業務狀態變更。由於傳送可能會被重試，每個接收端必須在解析受信任資料前驗證簽名，且事件必須冪等處理。
 
-<h2 id="webhook-headers">Webhook 標頭</h2>
+<span id="webhook-headers" data-sixmm-canonical-anchor="webhook-headers" aria-hidden="true"></span>
+
+## Webhook 標頭
 
 | 標頭 | 描述 |
 | --- | --- |
@@ -21,7 +23,9 @@ timestamp + nonce + rawBody
 
 在重建有符號值時，請使用截 HTTP 收到的原始請求實體。先解析並重新序列化 JSON 可以改變空白或欄位順序，產生不同的簽章。
 
-<h2 id="verification-flow">驗證流程</h2>
+<span id="verification-flow" data-sixmm-canonical-anchor="verification-flow" aria-hidden="true"></span>
+
+## 驗證流程
 
 1. 讀取時間戳、nonce 和簽章標頭。
 2. 擷取未修改的原始請求實體。
@@ -33,7 +37,9 @@ timestamp + nonce + rawBody
 
 當官方 Agent SDK 驗證器可用時，請使用它，而非維護獨立的簽署碼。
 
-<h2 id="order-idempotency">訂單冪等性</h2>
+<span id="order-idempotency" data-sixmm-canonical-anchor="order-idempotency" aria-hidden="true"></span>
+
+## 訂單冪等性
 
 | 案件 | 操控 |
 | --- | --- |
@@ -42,7 +48,9 @@ timestamp + nonce + rawBody
 | PROCESSING 回應 | 等待 webhook 或查詢訂單狀態。 |
 | 重複的Webhook | 依冪等性鍵與最終狀態進行重複解碼。 |
 
-<h2 id="recommended-idempotency-record">推薦的冪등 性紀錄</h2>
+<span id="recommended-idempotency-record" data-sixmm-canonical-anchor="recommended-idempotency-record" aria-hidden="true"></span>
+
+## 推薦的冪등 性紀錄
 
 儲存足夠資訊以辨識重複送達並安全恢復：
 
@@ -57,11 +65,15 @@ timestamp + nonce + rawBody
 
 盡可能在同一筆交易中提交業務變更與冪等性記錄。重複事件應回傳已知結果，而非重複套用餘額、訂單或使用者變更。
 
-<h2 id="timeout-and-retry-rule">暫停與重試規則</h2>
+<span id="timeout-and-retry-rule" data-sixmm-canonical-anchor="timeout-and-retry-rule" aria-hidden="true"></span>
+
+## 暫停與重試規則
 
 HTTP逾時並不證明原始請求失敗。使用原始`agentOrderNo`查詢操作，或等待其 webhook 後，再決定是否需要其他行動。每次逾時後建立新的業務訂單號碼可能導致重複資金流動。
 
-<h2 id="production-checklist">製作檢查清單</h2>
+<span id="production-checklist" data-sixmm-canonical-anchor="production-checklist" aria-hidden="true"></span>
+
+## 製作檢查清單
 
 - 在 JSON 解析或業務處理前驗證簽名。
 - 獨立於解析後的有效載荷保存原始本體。
@@ -70,7 +82,9 @@ HTTP逾時並不證明原始請求失敗。使用原始`agentOrderNo`查詢操�
 - 記錄事件 ID、合作夥伴訂單號碼、處理結果及請求時間。
 - 從日誌和支援附件中刪除秘密與簽章值。
 
-<h2 id="related-docs">相關文件</h2>
+<span id="related-docs" data-sixmm-canonical-anchor="related-docs" aria-hidden="true"></span>
+
+## 相關文件
 
 <CardGroup cols={3}>
 <Card title="秘密與 HMAC 簽名" icon="fa-duotone fa-shield-keyhole" href="/zh-TW/sdk/security/secrets-signing">

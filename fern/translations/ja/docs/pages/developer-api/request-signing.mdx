@@ -5,7 +5,9 @@ slug: developer-api/request-signing
 canonical-url: https://docs.6mm.com/ja/developer-api/request-signing
 ---
 
-<h2 id="request-format">リクエストフォーマット</h2>
+<span id="request-format" data-sixmm-canonical-anchor="request-format" aria-hidden="true"></span>
+
+## リクエストフォーマット
 
 | 所在地 | フィールド       | 必須            | 概要                                   |
 | -------- | ----------- | ------------------- | --------------------------------------------- |
@@ -14,7 +16,9 @@ canonical-url: https://docs.6mm.com/ja/developer-api/request-signing
 | クエリ    | `signature` | はい                 | HMAC-SHA256 署名、小文字の十六進形文字列   |
 | 本文     | JSON        | エンドポイントによります | POST / PUT / DELETE 要求する身体              |
 
-<h2 id="signature-payload">シグネチャーペイロード</h2>
+<span id="signature-payload" data-sixmm-canonical-anchor="signature-payload" aria-hidden="true"></span>
+
+## シグネチャーペイロード
 
 ```
 payload = queryStringWithoutSignature + requestBody
@@ -30,7 +34,9 @@ signature = HMAC-SHA256(apiSecret, payload)
 * リクエスト本体が存在する場合、署名に使われる JSON 文字列は実際に送信された本体と正確に一致しなければなりません。
 * 順序関連パスは署名のリプレイチェックを行います。同じ署名を短時間内に再利用すると `Signature replay detected`返されます。
 
-<h2 id="server-time">サーバータイム</h2>
+<span id="server-time" data-sixmm-canonical-anchor="server-time" aria-hidden="true"></span>
+
+## サーバータイム
 
 ```http
 GET /v1/time
@@ -54,7 +60,9 @@ GET /v1/time
 
 クライアントは `timeOffsetMs = serverTimestampMs - localTimestampMs`を計算し、その後の署名要求に対して `timestamp = nowMs + timeOffsetMs` を使用すべきです。サーバーが `Timestamp outside of tolerance window`を返した場合は、直ちに時刻を再同期し、署名を再生成します。
 
-<h2 id="get-signing-example">GET 署名例</h2>
+<span id="get-signing-example" data-sixmm-canonical-anchor="get-signing-example" aria-hidden="true"></span>
+
+## GET 署名例
 
 実際の要望:
 
@@ -68,7 +76,9 @@ GET /v1/private/order/current?symbol=BTCUSDT&timestamp=1772710377808&signature=.
 symbol=BTCUSDT&timestamp=1772710377808
 ```
 
-<h2 id="post-signing-example">POST 署名例</h2>
+<span id="post-signing-example" data-sixmm-canonical-anchor="post-signing-example" aria-hidden="true"></span>
+
+## POST 署名例
 
 実際の要望:
 
@@ -88,7 +98,9 @@ POST /v1/private/order/place?timestamp=1772710377808&signature=...
 timestamp=1772710377808{"symbol":"BTCUSDT","type":"LIMIT","side":"BUY","price":"85000","quantity":"0.1","timeInForce":"GTC","makerOnly":true,"clientOrderId":"ext-1772710377808-001"}
 ```
 
-<h2 id="python-signing-example">Python署名の例</h2>
+<span id="python-signing-example" data-sixmm-canonical-anchor="python-signing-example" aria-hidden="true"></span>
+
+## Python署名の例
 
 ```python
 import hashlib
@@ -145,7 +157,9 @@ sync_time_offset()
 print(signed_request("GET", "/v1/private/order/current", {"symbol": "BTCUSDT"}))
 ```
 
-<h2 id="related-security-guides">関連するセキュリティガイド</h2>
+<span id="related-security-guides" data-sixmm-canonical-anchor="related-security-guides" aria-hidden="true"></span>
+
+## 関連するセキュリティガイド
 
 - [認証](/ja/developer-api/authentication)
 - [API Key 管理](/ja/developer-api/api-key-management)

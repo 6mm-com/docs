@@ -7,7 +7,9 @@ canonical-url: https://docs.6mm.com/de/sdk/security/webhooks-idempotency
 
 Webhooks benachrichtigen ein Partner-Backend über asynchrone Änderungen des Geschäftszustands. Da die Zustellung erneut versucht werden kann, muss jeder Empfänger die Signatur vor der Analyse vertrauenswürdiger Daten überprüfen und das Ereignis idempotent verarbeiten.
 
-<h2 id="webhook-headers">Webhook-Header</h2>
+<span id="webhook-headers" data-sixmm-canonical-anchor="webhook-headers" aria-hidden="true"></span>
+
+## Webhook-Header
 
 | Header | Beschreibung |
 | --- | --- |
@@ -21,7 +23,9 @@ timestamp + nonce + rawBody
 
 Verwenden Sie beim Rekonstruieren des signierten Werts genau den rohen Request-Body, der über HTTP erhalten wurde. Das Parsen und Neuserialisieren JSON zuerst kann den Leerraum oder die Feldreihenfolge verändern und eine andere Signatur erzeugen.
 
-<h2 id="verification-flow">Verifikationsfluss</h2>
+<span id="verification-flow" data-sixmm-canonical-anchor="verification-flow" aria-hidden="true"></span>
+
+## Verifikationsfluss
 
 1. Lesen Sie die Zeitstempel-, Nonce- und Signatur-Header.
 2. Erfassen Sie den unveränderten rohen Request-Körper.
@@ -33,7 +37,9 @@ Verwenden Sie beim Rekonstruieren des signierten Werts genau den rohen Request-B
 
 Wenn ein offizieller Agent SDK -Verifizierer verfügbar ist, verwenden Sie ihn, anstatt einen unabhängigen Unterzeichnungscode zu führen.
 
-<h2 id="order-idempotency">Orderidopotenz</h2>
+<span id="order-idempotency" data-sixmm-canonical-anchor="order-idempotency" aria-hidden="true"></span>
+
+## Orderidopotenz
 
 | Fall | Handhabung |
 | --- | --- |
@@ -42,7 +48,9 @@ Wenn ein offizieller Agent SDK -Verifizierer verfügbar ist, verwenden Sie ihn, 
 | PROCESSING Antwort | Warte auf den Status der Webhook- oder Abfragereihenfolge. |
 | Wiederholter Webhook | Deduplizieren Sie nach Idempotenzschlüssel und Endstatus. |
 
-<h2 id="recommended-idempotency-record">Empfohlene Idempotenzaufzeichnung</h2>
+<span id="recommended-idempotency-record" data-sixmm-canonical-anchor="recommended-idempotency-record" aria-hidden="true"></span>
+
+## Empfohlene Idempotenzaufzeichnung
 
 Speichern Sie genügend Informationen, um eine wiederholte Lieferung zu erkennen und sicher zurückzugewinnen:
 
@@ -57,11 +65,15 @@ Speichern Sie genügend Informationen, um eine wiederholte Lieferung zu erkennen
 
 Beziehen Sie die Geschäftsänderung und die Impotenzdatensatz, wo möglich, in derselben Transaktion ein. Ein wiederholtes Ereignis sollte das bereits bekannte Ergebnis zurückgeben, anstatt die Bilanz, Reihenfolge oder Benutzeränderung erneut anzuwenden.
 
-<h2 id="timeout-and-retry-rule">Auszeit- und Wiederholungsregel</h2>
+<span id="timeout-and-retry-rule" data-sixmm-canonical-anchor="timeout-and-retry-rule" aria-hidden="true"></span>
+
+## Auszeit- und Wiederholungsregel
 
 Ein HTTP Timeout beweist nicht, dass die ursprüngliche Anfrage fehlgeschlagen ist. Abfrage der Operation mit dem ursprünglichen `agentOrderNo`oder warten Sie auf den Webhook, bevor Sie entscheiden, ob eine weitere Aktion erforderlich ist. Das Erstellen einer neuen GeschäftsOrdersnummer nach jedem Timeout kann zu doppelten Kapitalbewegungen führen.
 
-<h2 id="production-checklist">Produktionscheckliste</h2>
+<span id="production-checklist" data-sixmm-canonical-anchor="production-checklist" aria-hidden="true"></span>
+
+## Produktionscheckliste
 
 - Verifizieren Sie die Signatur vor JSON Parsing oder Geschäftsverarbeitung.
 - Erhalte den rohen Körper unabhängig von der geanalysten Nutzlast.
@@ -70,7 +82,9 @@ Ein HTTP Timeout beweist nicht, dass die ursprüngliche Anfrage fehlgeschlagen i
 - Protokolliere Ereignis-IDs, Partnerbefehlsnummern, Verarbeitungsergebnis und Anforderungszeit.
 - Geheimnisse und Signaturwerte aus Protokollen und Support-Anhängen zu schwärzen.
 
-<h2 id="related-docs">Verwandte Dokumente</h2>
+<span id="related-docs" data-sixmm-canonical-anchor="related-docs" aria-hidden="true"></span>
+
+## Verwandte Dokumente
 
 <CardGroup cols={3}>
 <Card title="Geheimnisse & HMAC Signieren" icon="fa-duotone fa-shield-keyhole" href="/de/sdk/security/secrets-signing">

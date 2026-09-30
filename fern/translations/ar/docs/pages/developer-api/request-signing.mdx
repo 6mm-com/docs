@@ -5,7 +5,9 @@ slug: developer-api/request-signing
 canonical-url: https://docs.6mm.com/ar/developer-api/request-signing
 ---
 
-<h2 id="request-format">تنسيق الطلب</h2>
+<span id="request-format" data-sixmm-canonical-anchor="request-format" aria-hidden="true"></span>
+
+## تنسيق الطلب
 
 | الموقع | الميدان       | مطلوب            | الوصف                                   |
 | -------- | ----------- | ------------------- | --------------------------------------------- |
@@ -14,7 +16,9 @@ canonical-url: https://docs.6mm.com/ar/developer-api/request-signing
 | استعلام    | `signature` | نعم                 | HMAC- توقيعSHA256 ، وتر سداسي صغير   |
 | الجسم     | JSON        | يعتمد على نقطة النهاية | POST / PUT / DELETE هيئة الطلب              |
 
-<h2 id="signature-payload">الحمولة المميزة</h2>
+<span id="signature-payload" data-sixmm-canonical-anchor="signature-payload" aria-hidden="true"></span>
+
+## الحمولة المميزة
 
 ```
 payload = queryStringWithoutSignature + requestBody
@@ -30,7 +34,9 @@ signature = HMAC-SHA256(apiSecret, payload)
 * إذا كان هناك جسم طلب، يجب أن يتطابق السلسلة JSON المستخدمة للتوقيع تماما مع الجسم المرسل الفعلي.
 * المسارات المتعلقة بالترتيب تقوم بفحص إعادة تشغيل التوقيع. إعادة استخدام نفس التوقيع خلال فترة قصيرة تعود `Signature replay detected`.
 
-<h2 id="server-time">وقت الخادم</h2>
+<span id="server-time" data-sixmm-canonical-anchor="server-time" aria-hidden="true"></span>
+
+## وقت الخادم
 
 ```http
 GET /v1/time
@@ -54,7 +60,9 @@ GET /v1/time
 
 يجب على العملاء حساب `timeOffsetMs = serverTimestampMs - localTimestampMs`، ثم استخدام `timestamp = nowMs + timeOffsetMs` للطلبات الموقعة لاحقا. إذا أعاد الخادم `Timestamp outside of tolerance window`، يعيد المزامنة فورا ويعيد توليد التوقيع.
 
-<h2 id="get-signing-example">مثال GET على الإشارة</h2>
+<span id="get-signing-example" data-sixmm-canonical-anchor="get-signing-example" aria-hidden="true"></span>
+
+## مثال GET على الإشارة
 
 الطلب الفعلي:
 
@@ -68,7 +76,9 @@ GET /v1/private/order/current?symbol=BTCUSDT&timestamp=1772710377808&signature=.
 symbol=BTCUSDT&timestamp=1772710377808
 ```
 
-<h2 id="post-signing-example">مثال POST على الإشارة</h2>
+<span id="post-signing-example" data-sixmm-canonical-anchor="post-signing-example" aria-hidden="true"></span>
+
+## مثال POST على الإشارة
 
 الطلب الفعلي:
 
@@ -88,7 +98,9 @@ POST /v1/private/order/place?timestamp=1772710377808&signature=...
 timestamp=1772710377808{"symbol":"BTCUSDT","type":"LIMIT","side":"BUY","price":"85000","quantity":"0.1","timeInForce":"GTC","makerOnly":true,"clientOrderId":"ext-1772710377808-001"}
 ```
 
-<h2 id="python-signing-example">مثال على توقيع بايثون</h2>
+<span id="python-signing-example" data-sixmm-canonical-anchor="python-signing-example" aria-hidden="true"></span>
+
+## مثال على توقيع بايثون
 
 ```python
 import hashlib
@@ -145,14 +157,18 @@ sync_time_offset()
 print(signed_request("GET", "/v1/private/order/current", {"symbol": "BTCUSDT"}))
 ```
 
-<h2 id="related-security-guides">أدلة أمنية ذات صلة</h2>
+<span id="related-security-guides" data-sixmm-canonical-anchor="related-security-guides" aria-hidden="true"></span>
+
+## أدلة أمنية ذات صلة
 
 - [توثيق](/ar/developer-api/authentication)
 - [API Key الإدارة] (/developer-api/api-key-management)
 - [أسرار وإشارة] (/sdk/security/secrets-signing)
 - [رموز الخطأ واستكشاف الأخطاء] (/developer-api/error-codes-and-troubleshooting)
 {/* sixmm-localized-link-repair:start */}
-<h2 id="localized-page-links">صفحات ذات صلة</h2>
+<span id="localized-page-links" data-sixmm-canonical-anchor="localized-page-links" aria-hidden="true"></span>
+
+## صفحات ذات صلة
 
 - [إدارة API Key](/ar/developer-api/api-key-management)
 - [Agent SDK أسرار وتوقيع HMAC](/ar/sdk/security/secrets-signing)

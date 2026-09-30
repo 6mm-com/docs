@@ -5,7 +5,9 @@ slug: developer-api/request-signing
 canonical-url: https://docs.6mm.com/tr/developer-api/request-signing
 ---
 
-<h2 id="request-format">İstek Formatı</h2>
+<span id="request-format" data-sixmm-canonical-anchor="request-format" aria-hidden="true"></span>
+
+## İstek Formatı
 
 | Konum | Saha       | Gerekli            | Tanım                                   |
 | -------- | ----------- | ------------------- | --------------------------------------------- |
@@ -14,7 +16,9 @@ canonical-url: https://docs.6mm.com/tr/developer-api/request-signing
 | Sorgu    | `signature` | Evet                 | HMAC-SHA256 imzası, küçük altıgen dizim   |
 | Gövde     | JSON        | Uç noktaya bağlı | POST / PUT / DELETE talep gövdesi              |
 
-<h2 id="signature-payload">İmza Yükü</h2>
+<span id="signature-payload" data-sixmm-canonical-anchor="signature-payload" aria-hidden="true"></span>
+
+## İmza Yükü
 
 ```
 payload = queryStringWithoutSignature + requestBody
@@ -30,7 +34,9 @@ Ana kurallar:
 * Bir talep gövdesi varsa, imzalamak için kullanılan JSON dizisi tam olarak iletilen gövdeyle eşleşmelidir.
 * Sırayla ilgili yollar imza tekrar kontrolleri yapar. Aynı imzayı kısa sürede tekrar kullanmak `Signature replay detected`getirir.
 
-<h2 id="server-time">Server Zamanı</h2>
+<span id="server-time" data-sixmm-canonical-anchor="server-time" aria-hidden="true"></span>
+
+## Server Zamanı
 
 ```http
 GET /v1/time
@@ -54,7 +60,9 @@ Yanıt örneği:
 
 İstemciler `timeOffsetMs = serverTimestampMs - localTimestampMs`hesaplamalı, ardından sonraki imzalanan istekler için `timestamp = nowMs + timeOffsetMs` kullanmalı. Sunucu `Timestamp outside of tolerance window`dönerse, hemen zamanı yeniden senkronize et ve imzayı yeniden oluştur.
 
-<h2 id="get-signing-example">GET İmza Örneği</h2>
+<span id="get-signing-example" data-sixmm-canonical-anchor="get-signing-example" aria-hidden="true"></span>
+
+## GET İmza Örneği
 
 Gerçek istek:
 
@@ -68,7 +76,9 @@ GET /v1/private/order/current?symbol=BTCUSDT&timestamp=1772710377808&signature=.
 symbol=BTCUSDT&timestamp=1772710377808
 ```
 
-<h2 id="post-signing-example">POST İmza Örneği</h2>
+<span id="post-signing-example" data-sixmm-canonical-anchor="post-signing-example" aria-hidden="true"></span>
+
+## POST İmza Örneği
 
 Gerçek istek:
 
@@ -88,7 +98,9 @@ Talep bedeni:
 timestamp=1772710377808{"symbol":"BTCUSDT","type":"LIMIT","side":"BUY","price":"85000","quantity":"0.1","timeInForce":"GTC","makerOnly":true,"clientOrderId":"ext-1772710377808-001"}
 ```
 
-<h2 id="python-signing-example">Python İmza Örneği</h2>
+<span id="python-signing-example" data-sixmm-canonical-anchor="python-signing-example" aria-hidden="true"></span>
+
+## Python İmza Örneği
 
 ```python
 import hashlib
@@ -145,7 +157,9 @@ sync_time_offset()
 print(signed_request("GET", "/v1/private/order/current", {"symbol": "BTCUSDT"}))
 ```
 
-<h2 id="related-security-guides">İlgili güvenlik rehberleri</h2>
+<span id="related-security-guides" data-sixmm-canonical-anchor="related-security-guides" aria-hidden="true"></span>
+
+## İlgili güvenlik rehberleri
 
 - [Doğrulama](/tr/developer-api/authentication)
 - [API Key Yönetimi](/tr/developer-api/api-key-management)

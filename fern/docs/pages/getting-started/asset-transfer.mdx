@@ -6,40 +6,52 @@ slug: trading/getting-started/asset-transfer
 
 This guide explains the funding route for perpetual contract trading. The funding account holds funds available for allocation; the perpetual account holds contract margin and settlement balances. A spot account is not required for this route.
 
-<h2 id="partner-managed-deposits-and-withdrawals">Funding through your platform</h2>
+<span id="partner-managed-deposits-and-withdrawals" data-sixmm-canonical-anchor="partner-managed-deposits-and-withdrawals" aria-hidden="true"></span>
+
+## Funding through your platform
 
 For partner API / SDK integrations, follow the partner platform's balance allocation and funding process. For white-label deployments, deposits and withdrawals follow the platform's configured wallet-provider process; confirmed deposits are credited to the funding account and withdrawals use that account.
 
 Check the available funding method in your platform. An internal account transfer is separate from a deposit or withdrawal.
 
-<h2 id="account-structure-within-6mm">Accounts used for perpetual trading</h2>
+<span id="account-structure-within-6mm" data-sixmm-canonical-anchor="account-structure-within-6mm" aria-hidden="true"></span>
+
+## Accounts used for perpetual trading
 
 | Account | Purpose |
 | --- | --- |
 | <span style={{ whiteSpace: "nowrap" }}>Funding account</span> | Holds funds for allocation and receives funds transferred back from the perpetual account. Use the available balance when preparing a transfer. |
 | <span style={{ whiteSpace: "nowrap" }}>Perpetual account</span> | Holds funds used for contract margin and settlement. Check account equity, margin usage and unrealized profit and loss before trading or transferring out. |
 
-<h2 id="automated-balance-transfer-to-6mm">Prepare a transfer</h2>
+<span id="automated-balance-transfer-to-6mm" data-sixmm-canonical-anchor="automated-balance-transfer-to-6mm" aria-hidden="true"></span>
+
+## Prepare a transfer
 
 1. Confirm the user, asset and transfer direction.
 2. Check the source account's available balance and any account restrictions.
 3. Submit through the platform's supported transfer entry or authorized integration.
 4. Confirm the transfer result and destination balance before placing an order.
 
-<h2 id="internal-transfers-between-accounts">Transfer between funding and perpetual accounts</h2>
+<span id="internal-transfers-between-accounts" data-sixmm-canonical-anchor="internal-transfers-between-accounts" aria-hidden="true"></span>
+
+## Transfer between funding and perpetual accounts
 
 - Before trading: transfer the required settlement asset from the funding account to the perpetual account.
 - After settlement: transfer the amount available for withdrawal from the perpetual account back to the funding account.
 - Account transfers are internal balance movements, not on-chain transactions.
 - Margin usage, open orders, positions and account restrictions can affect the amount available to transfer. Use the amount and result shown by the platform.
 
-<h2 id="design-principles">Check status and reconcile balances</h2>
+<span id="design-principles" data-sixmm-canonical-anchor="design-principles" aria-hidden="true"></span>
+
+## Check status and reconcile balances
 
 A submitted request does not by itself confirm completion. Check the transfer ID, status, asset, amount, source account and destination account. If processing fails or remains unresolved, check the balance records and contact platform support before submitting another request.
 
 Do not assume that all balances can be transferred freely, or that every transfer is instantaneous or fee-free. Follow the platform's displayed conditions and final processing result.
 
-<h2 id="implementation-and-safety-guides">Implementation and safety guides</h2>
+<span data-sixmm-canonical-anchor="implementation-and-safety-guides" aria-hidden="true"></span>
+
+## Implementation and safety guides
 
 - [Agent SDK Overview](/sdk/agent-sdk/overview): user binding, transfers and reconciliation.
 - [Webhooks & Idempotency](/sdk/security/webhooks-idempotency): callback verification and duplicate-request handling.

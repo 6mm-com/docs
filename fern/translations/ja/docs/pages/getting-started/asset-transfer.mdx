@@ -7,40 +7,52 @@ canonical-url: https://docs.6mm.com/ja/trading/getting-started/asset-transfer
 
 このガイドでは、無期限契約取引の資金調達ルートについて説明します。資金調達アカウントには、割り当て可能な資金が保持されます。永久口座には契約証拠金と決済残高が保持されます。このルートではスポット アカウントは必要ありません。
 
-<h2 id="partner-managed-deposits-and-withdrawals">プラットフォームを通じて資金を調達する</h2>
+<span id="partner-managed-deposits-and-withdrawals" data-sixmm-canonical-anchor="partner-managed-deposits-and-withdrawals" aria-hidden="true"></span>
+
+## プラットフォームを通じて資金を調達する
 
 パートナー API / SDK の統合の場合は、パートナー プラットフォームの残高割り当てと資金調達プロセスに従います。ホワイトラベル展開の場合、入金と出金は、プラットフォームに設定されたウォレットプロバイダーのプロセスに従います。確認された入金は資金調達口座に入金され、出金にはその口座が使用されます。
 
 プラットフォームで利用可能な資金調達方法を確認してください。内部口座振替は、入金または出金とは別のものです。
 
-<h2 id="account-structure-within-6mm">永久取引に使用されるアカウント</h2>
+<span id="account-structure-within-6mm" data-sixmm-canonical-anchor="account-structure-within-6mm" aria-hidden="true"></span>
+
+## 永久取引に使用されるアカウント
 
 | アカウント | 目的 |
 | --- | --- |
 | <span style={{ whiteSpace: "nowrap" }}>資金口座</span> | 割り当てのために資金を保持し、永久口座から送金された資金を受け取ります。利用可能な残高は、送金の準備時に使用してください。 |
 | <span style={{ whiteSpace: "nowrap" }}>永久アカウント</span> | 約定証拠金および決済に使用する資金を保有します。取引や送金の前に、アカウントの資本、証拠金の使用状況、含み損益を確認してください。 |
 
-<h2 id="automated-balance-transfer-to-6mm">転送の準備をする</h2>
+<span id="automated-balance-transfer-to-6mm" data-sixmm-canonical-anchor="automated-balance-transfer-to-6mm" aria-hidden="true"></span>
+
+## 転送の準備をする
 
 1. ユーザー、資産、転送方向を確認します。
 2. 移行元アカウントの利用可能残高とアカウント制限を確認してください。
 3. プラットフォームでサポートされている転送エントリまたは承認された統合を通じて送信します。
 4. ご注文前に振込結果と送付先残高をご確認ください。
 
-<h2 id="internal-transfers-between-accounts">ファンディング口座と永久口座間の送金</h2>
+<span id="internal-transfers-between-accounts" data-sixmm-canonical-anchor="internal-transfers-between-accounts" aria-hidden="true"></span>
+
+## ファンディング口座と永久口座間の送金
 
 - 取引前: 必要な決済資産をファンディング口座から永久口座に移管します。
 - 決済後: 引き出し可能な金額を永久口座から資金口座に振り戻します。
 - 口座振替は内部残高の移動であり、オンチェーントランザクションではありません。
 - 証拠金の使用状況、オープン注文、ポジション、口座制限は、送金可能な金額に影響を与える可能性があります。プラットフォームによって表示される金額と結果を使用します。
 
-<h2 id="design-principles">ステータスを確認して残高を調整する</h2>
+<span id="design-principles" data-sixmm-canonical-anchor="design-principles" aria-hidden="true"></span>
+
+## ステータスを確認して残高を調整する
 
 送信されたリクエスト自体は完了を確認しません。送金ID、ステータス、資産、金額、送金元口座、送金先口座を確認します。処理が失敗するか未解決のままの場合は、残高記録を確認し、別のリクエストを送信する前にプラットフォーム サポートに連絡してください。
 
 すべての残高を自由に送金できる、またはすべての送金が即時または手数料無料であると想定しないでください。プラットフォームに表示される条件や最終的な処理結果に従ってください。
 
-<h2 id="implementation-and-safety-guides">実装および安全ガイド</h2>
+<span id="implementation-and-safety-guides" data-sixmm-canonical-anchor="implementation-and-safety-guides" aria-hidden="true"></span>
+
+## 実装および安全ガイド
 
 - [Agent SDK 概要](/ja/sdk/agent-sdk/overview): ユーザー バインディング、転送、調整。
 - [Webhooks & べき等性](/ja/sdk/security/webhooks-idempotency): コールバック検証と重複リクエストの処理。

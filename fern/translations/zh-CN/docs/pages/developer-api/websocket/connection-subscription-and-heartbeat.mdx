@@ -7,7 +7,9 @@ canonical-url: https://docs.6mm.com/zh-CN/developer-api/websocket/connection-sub
 
 WebSocket 适用于行情数据和需要保持实时更新的私有用户状态，避免通过轮询获取高频变化。
 
-<h2 id="connection-url">连接地址</h2>
+<span id="connection-url" data-sixmm-canonical-anchor="connection-url" aria-hidden="true"></span>
+
+## 连接地址
 
 ```text
 wss://ws.6mm.com/ws
@@ -15,7 +17,9 @@ wss://ws.6mm.com/ws
 
 私有推送需要携带 listenKey 或 access token 等鉴权上下文，具体见私有用户频道文档。
 
-<h2 id="subscribe">订阅</h2>
+<span id="subscribe" data-sixmm-canonical-anchor="subscribe" aria-hidden="true"></span>
+
+## 订阅
 
 ```json
 { "id": "1772007814666", "op": "subscribe", "args": ["market.depth.BTCUSDT"] }
@@ -32,19 +36,25 @@ wss://ws.6mm.com/ws
 }
 ```
 
-<h2 id="unsubscribe">取消订阅</h2>
+<span id="unsubscribe" data-sixmm-canonical-anchor="unsubscribe" aria-hidden="true"></span>
+
+## 取消订阅
 
 ```json
 { "id": "1772007814667", "op": "unsubscribe", "args": ["market.depth.BTCUSDT"] }
 ```
 
-<h2 id="application-ping">应用层 ping</h2>
+<span id="application-ping" data-sixmm-canonical-anchor="application-ping" aria-hidden="true"></span>
+
+## 应用层 ping
 
 ```json
 { "id": "1772007814668", "op": "ping", "args": [] }
 ```
 
-<h2 id="message-envelope">推送外层格式</h2>
+<span id="message-envelope" data-sixmm-canonical-anchor="message-envelope" aria-hidden="true"></span>
+
+## 推送外层格式
 
 公共推送使用统一外层结构：
 
@@ -57,7 +67,9 @@ wss://ws.6mm.com/ws
 }
 ```
 
-<h2 id="operational-recommendations">运营建议</h2>
+<span id="operational-recommendations" data-sixmm-canonical-anchor="operational-recommendations" aria-hidden="true"></span>
+
+## 运营建议
 
 - 每次 subscribe、unsubscribe 和 ping 都生成唯一客户端 `id`。
 - 重连后视为新会话，需要重新订阅必要主题。
@@ -65,7 +77,9 @@ wss://ws.6mm.com/ws
 - 私有订单或账户事件处理应保持幂等。
 - 记录连接状态变化、订阅回执和异常断开日志。
 
-<h2 id="reconnect-workflow">重连流程</h2>
+<span id="reconnect-workflow" data-sixmm-canonical-anchor="reconnect-workflow" aria-hidden="true"></span>
+
+## 重连流程
 
 1. 关闭或丢弃旧连接，并创建新的 WebSocket 连接。
 2. 私有推送使用仍然有效的 listenKey 或 access token 重新鉴权。
@@ -75,14 +89,18 @@ wss://ws.6mm.com/ws
 
 重连应使用有次数和时间上限的指数退避，并加入随机抖动。客户端持续重连时应触发运营告警，不能在无监控的情况下无限重试。
 
-<h2 id="heartbeat-and-stale-connections">心跳与失效连接</h2>
+<span id="heartbeat-and-stale-connections" data-sixmm-canonical-anchor="heartbeat-and-stale-connections" aria-hidden="true"></span>
+
+## 心跳与失效连接
 
 - 记录最近一次收到消息和收到成功 ping 回执的时间。
 - 使用生产环境确认的心跳间隔和空闲阈值。
 - 超过配置阈值时，即使 TCP 连接看似仍然存在，也应按失效连接处理。
 - 不要复用旧连接的订阅状态；每次重连后都要显式重新订阅。
 
-<h2 id="related-documentation">相关文档</h2>
+<span id="related-documentation" data-sixmm-canonical-anchor="related-documentation" aria-hidden="true"></span>
+
+## 相关文档
 
 - [公共行情频道](/zh-CN/developer-api/websocket/public-market-channels)：主题、订单簿连续性、成交、K 线和 Ticker。
 - [私有用户频道](/zh-CN/developer-api/websocket/private-user-channel)：listenKey 生命周期和鉴权事件。

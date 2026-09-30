@@ -7,7 +7,9 @@ canonical-url: https://docs.6mm.com/es-419/developer-api/websocket/connection-su
 
 Usa WebSocket flujos para datos de mercado y actualizaciones privadas del estado del usuario que deben mantenerse actualizadas sin necesidad de sondeos.
 
-<h2 id="connection-url">Conexión URL</h2>
+<span id="connection-url" data-sixmm-canonical-anchor="connection-url" aria-hidden="true"></span>
+
+## Conexión URL
 
 ```text
 wss://ws.6mm.com/ws
@@ -15,7 +17,9 @@ wss://ws.6mm.com/ws
 
 Los flujos privados requieren contexto de autenticación como un listenKey o token de acceso, como se describe en la documentación del canal privado.
 
-<h2 id="subscribe">Suscríbete</h2>
+<span id="subscribe" data-sixmm-canonical-anchor="subscribe" aria-hidden="true"></span>
+
+## Suscríbete
 
 ```json
 { "id": "1772007814666", "op": "subscribe", "args": ["market.depth.BTCUSDT"] }
@@ -32,19 +36,25 @@ Reconocimiento de suscripción exitoso:
 }
 ```
 
-<h2 id="unsubscribe">Darse de baja</h2>
+<span id="unsubscribe" data-sixmm-canonical-anchor="unsubscribe" aria-hidden="true"></span>
+
+## Darse de baja
 
 ```json
 { "id": "1772007814667", "op": "unsubscribe", "args": ["market.depth.BTCUSDT"] }
 ```
 
-<h2 id="application-ping">Ping de aplicación</h2>
+<span id="application-ping" data-sixmm-canonical-anchor="application-ping" aria-hidden="true"></span>
+
+## Ping de aplicación
 
 ```json
 { "id": "1772007814668", "op": "ping", "args": [] }
 ```
 
-<h2 id="message-envelope">Sobre de mensaje</h2>
+<span id="message-envelope" data-sixmm-canonical-anchor="message-envelope" aria-hidden="true"></span>
+
+## Sobre de mensaje
 
 Los impulsos públicos usan un sobre consistente:
 
@@ -57,7 +67,9 @@ Los impulsos públicos usan un sobre consistente:
 }
 ```
 
-<h2 id="operational-recommendations">Recomendaciones operativas</h2>
+<span id="operational-recommendations" data-sixmm-canonical-anchor="operational-recommendations" aria-hidden="true"></span>
+
+## Recomendaciones operativas
 
 - Generar un `id` único del lado del cliente para cada solicitud de suscripción, cancelación y ping.
 - Tratar la reconexión como una nueva sesión y volver a suscribirse a los temas requeridos.
@@ -65,7 +77,9 @@ Los impulsos públicos usan un sobre consistente:
 - Mantener el procesamiento de mensajes idempotente cuando se involucran eventos privados de orden o cuenta.
 - Cambios en el estado de la conexión, acuses de recibo de suscripción y desconexiones anormales.
 
-<h2 id="reconnect-workflow">Flujo de trabajo de reconexión</h2>
+<span id="reconnect-workflow" data-sixmm-canonical-anchor="reconnect-workflow" aria-hidden="true"></span>
+
+## Flujo de trabajo de reconexión
 
 1. Cierra o desecha el socket anterior y crea una nueva conexión.
 2. Re-autenticar flujos privados con un listenKey o token de acceso válido.
@@ -75,14 +89,18 @@ Los impulsos públicos usan un sobre consistente:
 
 Usa retroceso exponencial limitado con jitter para intentos de reconexión. Un cliente que se reconecta continuamente debería alertar a los operadores en lugar de intentar indefinidamente sin visibilidad.
 
-<h2 id="heartbeat-and-stale-connections">Latidos y conexiones ranciadas</h2>
+<span id="heartbeat-and-stale-connections" data-sixmm-canonical-anchor="heartbeat-and-stale-connections" aria-hidden="true"></span>
+
+## Latidos y conexiones ranciadas
 
 - Rastrear el mensaje entrante más reciente y el reconocimiento de ping exitoso.
 - Usar el intervalo de latidos cardíacos y el umbral de reposo aprobados para el entorno de producción.
 - Tratar una conexión como obsoleta cuando se supera el umbral configurado, incluso si el zócalo de TCP sigue apareciendo abierto.
 - No reutilizar suscripciones de un socket antiguo; Suscribe de nuevo explícitamente después de cada reconexión.
 
-<h2 id="related-documentation">Documentación relacionada</h2>
+<span id="related-documentation" data-sixmm-canonical-anchor="related-documentation" aria-hidden="true"></span>
+
+## Documentación relacionada
 
 - [Canales de Mercado Público](/es-419/developer-api/websocket/public-market-channels): temas, continuidad del libro de órdenes, operaciones, velas y tickers.
 - [Canal de Usuario Privado](/es-419/developer-api/websocket/private-user-channel): listenKey ciclo de vida y eventos autenticados.

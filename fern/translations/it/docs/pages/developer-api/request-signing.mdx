@@ -5,7 +5,9 @@ slug: developer-api/request-signing
 canonical-url: https://docs.6mm.com/it/developer-api/request-signing
 ---
 
-<h2 id="request-format">Formato della richiesta</h2>
+<span id="request-format" data-sixmm-canonical-anchor="request-format" aria-hidden="true"></span>
+
+## Formato della richiesta
 
 | Posizione | Campo       | Richiesto            | Descrizione                                   |
 | -------- | ----------- | ------------------- | --------------------------------------------- |
@@ -14,7 +16,9 @@ canonical-url: https://docs.6mm.com/it/developer-api/request-signing
 | Query    | `signature` | Sì                 | HMAC-SHA256 firma di corda esagonale minuscola   |
 | Carrozzeria     | JSON        | Dipende dall'endpoint | POST / PUT / DELETE corpo della richiesta              |
 
-<h2 id="signature-payload">Carico utile firmato</h2>
+<span id="signature-payload" data-sixmm-canonical-anchor="signature-payload" aria-hidden="true"></span>
+
+## Carico utile firmato
 
 ```
 payload = queryStringWithoutSignature + requestBody
@@ -30,7 +34,9 @@ Regole chiave:
 * Se esiste un corpo di richiesta, la stringa JSON usata per la firma deve corrispondere esattamente al corpo effettivamente trasmesso.
 * I percorsi legati all'ordine eseguono controlli di rigiocata della firma. Riutilizzare la stessa firma entro un breve periodo restituisce `Signature replay detected`.
 
-<h2 id="server-time">Tempo Server</h2>
+<span id="server-time" data-sixmm-canonical-anchor="server-time" aria-hidden="true"></span>
+
+## Tempo Server
 
 ```http
 GET /v1/time
@@ -54,7 +60,9 @@ Esempio di risposta:
 
 I client dovrebbero calcolare `timeOffsetMs = serverTimestampMs - localTimestampMs`, poi usare `timestamp = nowMs + timeOffsetMs` per le richieste firmate successive. Se il server restituisce `Timestamp outside of tolerance window`, risincronizza immediatamente il tempo e rigenera la firma.
 
-<h2 id="get-signing-example">GET Esempio di firma</h2>
+<span id="get-signing-example" data-sixmm-canonical-anchor="get-signing-example" aria-hidden="true"></span>
+
+## GET Esempio di firma
 
 Richiesta reale:
 
@@ -68,7 +76,9 @@ Carico utile firmato:
 symbol=BTCUSDT&timestamp=1772710377808
 ```
 
-<h2 id="post-signing-example">POST Esempio di firma</h2>
+<span id="post-signing-example" data-sixmm-canonical-anchor="post-signing-example" aria-hidden="true"></span>
+
+## POST Esempio di firma
 
 Richiesta reale:
 
@@ -88,7 +98,9 @@ Carico utile firmato:
 timestamp=1772710377808{"symbol":"BTCUSDT","type":"LIMIT","side":"BUY","price":"85000","quantity":"0.1","timeInForce":"GTC","makerOnly":true,"clientOrderId":"ext-1772710377808-001"}
 ```
 
-<h2 id="python-signing-example">Esempio di firma in Python</h2>
+<span id="python-signing-example" data-sixmm-canonical-anchor="python-signing-example" aria-hidden="true"></span>
+
+## Esempio di firma in Python
 
 ```python
 import hashlib
@@ -145,14 +157,18 @@ sync_time_offset()
 print(signed_request("GET", "/v1/private/order/current", {"symbol": "BTCUSDT"}))
 ```
 
-<h2 id="related-security-guides">Guide alla sicurezza correlate</h2>
+<span id="related-security-guides" data-sixmm-canonical-anchor="related-security-guides" aria-hidden="true"></span>
+
+## Guide alla sicurezza correlate
 
 - [Autenticazione](/it/developer-api/authentication)
 - [API Key Management] (/developer-api/api-key-management)
 - [Segreti e Firma](/it/sdk/security/secrets-signing)
 - [Codici di errore e risoluzione dei problemi](/it/developer-api/error-codes-and-troubleshooting)
 {/* sixmm-localized-link-repair:start */}
-<h2 id="localized-page-links">Pagine correlate</h2>
+<span id="localized-page-links" data-sixmm-canonical-anchor="localized-page-links" aria-hidden="true"></span>
+
+## Pagine correlate
 
 - [API Key Gestione](/it/developer-api/api-key-management)
 {/* sixmm-localized-link-repair:end */}

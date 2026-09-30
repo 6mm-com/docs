@@ -5,7 +5,9 @@ slug: developer-api/request-signing
 canonical-url: https://docs.6mm.com/zh-TW/developer-api/request-signing
 ---
 
-<h2 id="request-format">請求格式</h2>
+<span id="request-format" data-sixmm-canonical-anchor="request-format" aria-hidden="true"></span>
+
+## 請求格式
 
 | 地理位置 | 場地       | 必修            | 描述                                   |
 | -------- | ----------- | ------------------- | --------------------------------------------- |
@@ -14,7 +16,9 @@ canonical-url: https://docs.6mm.com/zh-TW/developer-api/request-signing
 | 查詢    | `signature` | 是的                 | HMAC-SHA256 簽名，小寫十六進制字串   |
 | 車身     | JSON        | 這取決於終點 | POST / PUT / DELETE 請求正體              |
 
-<h2 id="signature-payload">簽名有效載荷</h2>
+<span id="signature-payload" data-sixmm-canonical-anchor="signature-payload" aria-hidden="true"></span>
+
+## 簽名有效載荷
 
 ```
 payload = queryStringWithoutSignature + requestBody
@@ -30,7 +34,9 @@ signature = HMAC-SHA256(apiSecret, payload)
 * 若存在請求實體，用於簽署的 JSON 字串必須與實際傳送的實體完全一致。
 * 順序相關路徑會執行簽名重播檢查。在短時間內重複使用相同簽名會返回 `Signature replay detected`。
 
-<h2 id="server-time">伺服器時間</h2>
+<span id="server-time" data-sixmm-canonical-anchor="server-time" aria-hidden="true"></span>
+
+## 伺服器時間
 
 ```http
 GET /v1/time
@@ -54,7 +60,9 @@ GET /v1/time
 
 用戶端應計算 `timeOffsetMs = serverTimestampMs - localTimestampMs`，然後對後續的簽名請求使用 `timestamp = nowMs + timeOffsetMs` 。若伺服器回傳 `Timestamp outside of tolerance window`，立即重新同步時間並重新產生簽名。
 
-<h2 id="get-signing-example">GET 簽名範例</h2>
+<span id="get-signing-example" data-sixmm-canonical-anchor="get-signing-example" aria-hidden="true"></span>
+
+## GET 簽名範例
 
 實際請求：
 
@@ -68,7 +76,9 @@ GET /v1/private/order/current?symbol=BTCUSDT&timestamp=1772710377808&signature=.
 symbol=BTCUSDT&timestamp=1772710377808
 ```
 
-<h2 id="post-signing-example">POST 簽名範例</h2>
+<span id="post-signing-example" data-sixmm-canonical-anchor="post-signing-example" aria-hidden="true"></span>
+
+## POST 簽名範例
 
 實際請求：
 
@@ -88,7 +98,9 @@ POST /v1/private/order/place?timestamp=1772710377808&signature=...
 timestamp=1772710377808{"symbol":"BTCUSDT","type":"LIMIT","side":"BUY","price":"85000","quantity":"0.1","timeInForce":"GTC","makerOnly":true,"clientOrderId":"ext-1772710377808-001"}
 ```
 
-<h2 id="python-signing-example">Python 簽名範例</h2>
+<span id="python-signing-example" data-sixmm-canonical-anchor="python-signing-example" aria-hidden="true"></span>
+
+## Python 簽名範例
 
 ```python
 import hashlib
@@ -145,14 +157,18 @@ sync_time_offset()
 print(signed_request("GET", "/v1/private/order/current", {"symbol": "BTCUSDT"}))
 ```
 
-<h2 id="related-security-guides">相關安全指南</h2>
+<span id="related-security-guides" data-sixmm-canonical-anchor="related-security-guides" aria-hidden="true"></span>
+
+## 相關安全指南
 
 - [認證]（/developer-api/authentication）
 - [API Key 管理 ]（/developer-api/api-key-management）
 - 【秘密與簽名】（/sdk/security/secrets-signing）
 - [錯誤代碼與故障排除]（/developer-api/error-codes-and-troubleshooting）
 {/* sixmm-localized-link-repair:start */}
-<h2 id="localized-page-links">相關頁面</h2>
+<span id="localized-page-links" data-sixmm-canonical-anchor="localized-page-links" aria-hidden="true"></span>
+
+## 相關頁面
 
 - [6MM API 認證： JWT 與 API 金鑰](/zh-TW/developer-api/authentication)
 - [API Key 管理](/zh-TW/developer-api/api-key-management)

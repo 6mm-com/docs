@@ -6,20 +6,24 @@ const script = await readFile(new URL("../fern/docs-interface.js", import.meta.u
 const callbacks = [];
 const listeners = {};
 let observerCount = 0;
+let islandReady = false;
+const island = { hasAttribute: () => islandReady };
+const hydratedAncestor = (selector) => selector === "astro-island" ? island : null;
 const link = { href: "https://github.com/6mm-com/docs/blob/main/fern/docs/pages/prediction/overview.mdx?plain=1" };
 const heading = { tagName: "H2", id: "رحلة-المشاركة", dataset: {} };
 const marker = { nextElementSibling: heading, getAttribute: () => "the-participation-journey" };
 let sectionHref = "#" + encodeURIComponent(heading.id);
 const sectionLink = { getAttribute: () => sectionHref, setAttribute: (_, value) => { sectionHref = value; } };
+link.closest = heading.closest = sectionLink.closest = hydratedAncestor;
 const nodes = [
-  { nodeValue: "Search", parentElement: { closest: () => null } },
-  { nodeValue: "Copy page", parentElement: { closest: () => null } },
+  { nodeValue: "Search", parentElement: { closest: hydratedAncestor } },
+  { nodeValue: "Copy page", parentElement: { closest: hydratedAncestor } },
   { nodeValue: "Search", parentElement: { closest: (selector) => selector === "main article" ? {} : null } },
   { nodeValue: "Copy to clipboard", parentElement: { closest: (selector) => selector === "main article" || selector === "button, .fern-page-actions" ? {} : null } },
 ];
 const attributes = new Map([["aria-label", "Search"]]);
 const input = {
-  closest: () => null,
+  closest: hydratedAncestor,
   getAttribute: (name) => attributes.get(name) ?? null,
   setAttribute: (name, value) => attributes.set(name, value),
 };
@@ -54,6 +58,12 @@ flush();
 assert.equal(nodes[0].nodeValue, "Search", "Do not mutate text while React hydration is pending");
 disabled = "false";
 listeners.load();
+flush();
+assert.equal(nodes[0].nodeValue, "Search", "An incoming locale island must finish mounting before text changes");
+assert.equal(attributes.get("aria-label"), "Search");
+assert.equal(sectionHref, "#" + encodeURIComponent(heading.id), "TOC server markup must survive pending island hydration");
+islandReady = true;
+listeners["fern:island-hydrated"]();
 flush();
 assert.equal(nodes[0].nodeValue, "بحث");
 assert.equal(nodes[1].nodeValue, "نسخ الصفحة");

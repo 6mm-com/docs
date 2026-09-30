@@ -5,7 +5,9 @@ slug: developer-api/request-signing
 canonical-url: https://docs.6mm.com/pl/developer-api/request-signing
 ---
 
-<h2 id="request-format">Format żądania</h2>
+<span id="request-format" data-sixmm-canonical-anchor="request-format" aria-hidden="true"></span>
+
+## Format żądania
 
 | Lokalizacja | Pole       | Wymagane            | Opis                                   |
 | -------- | ----------- | ------------------- | --------------------------------------------- |
@@ -14,7 +16,9 @@ canonical-url: https://docs.6mm.com/pl/developer-api/request-signing
 | Zapytanie    | `signature` | Tak                 | HMAC-SHA256 podpis, mała litera sześciokątna   |
 | Nadwozie     | JSON        | To zależy od punktu końcowego | POST / PUT / DELETE prośby              |
 
-<h2 id="signature-payload">Ładunek sygnaturowy</h2>
+<span id="signature-payload" data-sixmm-canonical-anchor="signature-payload" aria-hidden="true"></span>
+
+## Ładunek sygnaturowy
 
 ```
 payload = queryStringWithoutSignature + requestBody
@@ -30,7 +34,9 @@ Kluczowe zasady:
 * Jeśli istnieje ciało żądania, ciąg JSON używany do podpisywania musi dokładnie odpowiadać rzeczywistemu ciału przesyłanemu.
 * Ścieżki związane z kolejnością wykonują sprawdzanie powtórek sygnatury. Ponowne użycie tego samego podpisu w krótkim czasie zwraca `Signature replay detected`.
 
-<h2 id="server-time">Czas na serwerze</h2>
+<span id="server-time" data-sixmm-canonical-anchor="server-time" aria-hidden="true"></span>
+
+## Czas na serwerze
 
 ```http
 GET /v1/time
@@ -54,7 +60,9 @@ Przykład odpowiedzi:
 
 Klienci powinni obliczyć `timeOffsetMs = serverTimestampMs - localTimestampMs`, a następnie użyć `timestamp = nowMs + timeOffsetMs` do kolejnych podpisanych żądań. Jeśli serwer zwróci `Timestamp outside of tolerance window`, natychmiast zsynchronizuje czas synchronizacji i wygeneruje podpis.
 
-<h2 id="get-signing-example">GET Przykład podpisywania</h2>
+<span id="get-signing-example" data-sixmm-canonical-anchor="get-signing-example" aria-hidden="true"></span>
+
+## GET Przykład podpisywania
 
 Rzeczywiste żądanie:
 
@@ -68,7 +76,9 @@ GET /v1/private/order/current?symbol=BTCUSDT&timestamp=1772710377808&signature=.
 symbol=BTCUSDT&timestamp=1772710377808
 ```
 
-<h2 id="post-signing-example">POST Przykład podpisywania</h2>
+<span id="post-signing-example" data-sixmm-canonical-anchor="post-signing-example" aria-hidden="true"></span>
+
+## POST Przykład podpisywania
 
 Rzeczywiste żądanie:
 
@@ -88,7 +98,9 @@ Główna część zgłoszenia:
 timestamp=1772710377808{"symbol":"BTCUSDT","type":"LIMIT","side":"BUY","price":"85000","quantity":"0.1","timeInForce":"GTC","makerOnly":true,"clientOrderId":"ext-1772710377808-001"}
 ```
 
-<h2 id="python-signing-example">Przykład podpisywania w Pythonie</h2>
+<span id="python-signing-example" data-sixmm-canonical-anchor="python-signing-example" aria-hidden="true"></span>
+
+## Przykład podpisywania w Pythonie
 
 ```python
 import hashlib
@@ -145,14 +157,18 @@ sync_time_offset()
 print(signed_request("GET", "/v1/private/order/current", {"symbol": "BTCUSDT"}))
 ```
 
-<h2 id="related-security-guides">Powiązane przewodniki po bezpieczeństwie</h2>
+<span id="related-security-guides" data-sixmm-canonical-anchor="related-security-guides" aria-hidden="true"></span>
+
+## Powiązane przewodniki po bezpieczeństwie
 
 - [Uwierzytelnianie](/pl/developer-api/authentication)
 - [API Key Zarząd (/developer-api/api-key-management)
 - [Sekrety i podpisywanie](/pl/sdk/security/secrets-signing)
 - [Kody błędów i rozwiązywanie problemów](/pl/developer-api/error-codes-and-troubleshooting)
 {/* sixmm-localized-link-repair:start */}
-<h2 id="localized-page-links">Powiązane strony</h2>
+<span id="localized-page-links" data-sixmm-canonical-anchor="localized-page-links" aria-hidden="true"></span>
+
+## Powiązane strony
 
 - [API Key Zarządzanie](/pl/developer-api/api-key-management)
 {/* sixmm-localized-link-repair:end */}

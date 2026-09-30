@@ -7,7 +7,9 @@ canonical-url: https://docs.6mm.com/fr/developer-api/websocket/connection-subscr
 
 Utilisez WebSocket flux pour les données de marché et les mises à jour privées de l’état des utilisateurs qui doivent rester à jour sans sondage.
 
-<h2 id="connection-url">Connexion URL</h2>
+<span id="connection-url" data-sixmm-canonical-anchor="connection-url" aria-hidden="true"></span>
+
+## Connexion URL
 
 ```text
 wss://ws.6mm.com/ws
@@ -15,7 +17,9 @@ wss://ws.6mm.com/ws
 
 Les flux privés nécessitent un contexte d’authentification tel qu’un listenKey ou un jeton d’accès tel que décrit dans la documentation du canal privé.
 
-<h2 id="subscribe">Abonnez-vous</h2>
+<span id="subscribe" data-sixmm-canonical-anchor="subscribe" aria-hidden="true"></span>
+
+## Abonnez-vous
 
 ```json
 { "id": "1772007814666", "op": "subscribe", "args": ["market.depth.BTCUSDT"] }
@@ -32,19 +36,25 @@ Accusé de réception d’abonnement réussi :
 }
 ```
 
-<h2 id="unsubscribe">Désabonnement</h2>
+<span id="unsubscribe" data-sixmm-canonical-anchor="unsubscribe" aria-hidden="true"></span>
+
+## Désabonnement
 
 ```json
 { "id": "1772007814667", "op": "unsubscribe", "args": ["market.depth.BTCUSDT"] }
 ```
 
-<h2 id="application-ping">Ping d’application</h2>
+<span id="application-ping" data-sixmm-canonical-anchor="application-ping" aria-hidden="true"></span>
+
+## Ping d’application
 
 ```json
 { "id": "1772007814668", "op": "ping", "args": [] }
 ```
 
-<h2 id="message-envelope">Enveloppe de messages</h2>
+<span id="message-envelope" data-sixmm-canonical-anchor="message-envelope" aria-hidden="true"></span>
+
+## Enveloppe de messages
 
 Les campagnes publiques utilisent une enveloppe cohérente :
 
@@ -57,7 +67,9 @@ Les campagnes publiques utilisent une enveloppe cohérente :
 }
 ```
 
-<h2 id="operational-recommendations">Recommandations opérationnelles</h2>
+<span id="operational-recommendations" data-sixmm-canonical-anchor="operational-recommendations" aria-hidden="true"></span>
+
+## Recommandations opérationnelles
 
 - Générer un `id` unique côté client pour chaque demande d’abonnement, de désabonnement et de ping.
 - Considérer la reconnexion comme une nouvelle session et s’abonner à nouveau aux sujets requis.
@@ -65,7 +77,9 @@ Les campagnes publiques utilisent une enveloppe cohérente :
 - Garder le traitement des messages idempotent lorsque des ordres privés ou des événements de compte sont impliqués.
 - Modifications de l’état de connexion du journal, accusés de réception d’abonnement et déconnexions anormales.
 
-<h2 id="reconnect-workflow">Flux de reconnexion</h2>
+<span id="reconnect-workflow" data-sixmm-canonical-anchor="reconnect-workflow" aria-hidden="true"></span>
+
+## Flux de reconnexion
 
 1. Fermer ou jeter la prise précédente et créer une nouvelle connexion.
 2. Réauthentifier les flux privés avec un listenKey ou un jeton d’accès valide.
@@ -75,14 +89,18 @@ Les campagnes publiques utilisent une enveloppe cohérente :
 
 Utilisez un backoff exponentiel borné avec gigue pour les tentatives de reconnexion. Un client qui se reconnecte continuellement devrait alerter les opérateurs au lieu de réessayer indéfiniment sans visibilité.
 
-<h2 id="heartbeat-and-stale-connections">Battement de cœur et connexions fades</h2>
+<span id="heartbeat-and-stale-connections" data-sixmm-canonical-anchor="heartbeat-and-stale-connections" aria-hidden="true"></span>
+
+## Battement de cœur et connexions fades
 
 - Suivre le dernier message entrant et la confirmation réussie du ping.
 - Utiliser l’intervalle des battements de cœur et le seuil d’inactivité approuvés pour l’environnement de production.
 - Considérer une connexion comme obsolète lorsque le seuil configuré est dépassé, même si le socket TCP semble toujours ouvert.
 - Ne pas réutiliser les abonnements d’un ancien socket ; Réabonnez-vous explicitement après chaque reconnexion.
 
-<h2 id="related-documentation">Documentation associée</h2>
+<span id="related-documentation" data-sixmm-canonical-anchor="related-documentation" aria-hidden="true"></span>
+
+## Documentation associée
 
 - [Canaux du marché public](/fr/developer-api/websocket/public-market-channels) : sujets, continuité du carnet d’ordres, transactions, bougies et tickers.
 - [Canal utilisateur privé](/fr/developer-api/websocket/private-user-channel) : listenKey cycle de vie et événements authentifiés.

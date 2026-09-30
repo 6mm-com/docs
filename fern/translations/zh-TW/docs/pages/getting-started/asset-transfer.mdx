@@ -7,40 +7,52 @@ canonical-url: https://docs.6mm.com/zh-TW/trading/getting-started/asset-transfer
 
 本頁說明永續合約交易的資金路徑：**資金賬戶 → 合約賬戶 → 交易結算**。資金賬戶用於資金分配，合約賬戶用於保證金與合約結算，該路徑無需經過現貨賬戶。
 
-<h2 id="partner-managed-deposits-and-withdrawals">通過所屬平臺準備資金</h2>
+<span id="partner-managed-deposits-and-withdrawals" data-sixmm-canonical-anchor="partner-managed-deposits-and-withdrawals" aria-hidden="true"></span>
+
+## 通過所屬平臺準備資金
 
 合作方 API / SDK 接入場景，按合作方平臺的餘額分配與入金流程操作。白標平臺場景，充值與提現按平臺配置的錢包服務流程處理：充值確認後計入資金賬戶，提現從資金賬戶轉出。
 
 具體入口以所屬平臺提供的功能為準。賬戶內部劃轉與充值、提現是不同操作。
 
-<h2 id="account-structure-within-6mm">合約交易涉及的賬戶</h2>
+<span id="account-structure-within-6mm" data-sixmm-canonical-anchor="account-structure-within-6mm" aria-hidden="true"></span>
+
+## 合約交易涉及的賬戶
 
 | 賬戶 | 用途 |
 | --- | --- |
 | <span style={{ whiteSpace: "nowrap" }}>資金賬戶</span> | 用於資金分配，並接收從合約賬戶劃回的資金。準備劃轉時應查看可用餘額。 |
 | <span style={{ whiteSpace: "nowrap" }}>合約賬戶</span> | 用於合約保證金與交易結算。下單或轉出前，應查看賬戶權益、保證金佔用及未實現盈虧。 |
 
-<h2 id="automated-balance-transfer-to-6mm">劃轉前準備</h2>
+<span id="automated-balance-transfer-to-6mm" data-sixmm-canonical-anchor="automated-balance-transfer-to-6mm" aria-hidden="true"></span>
+
+## 劃轉前準備
 
 1. 確認用戶、幣種及劃轉方向。
 2. 檢查轉出賬戶的可用餘額與賬戶限制。
 3. 通過平臺支持的劃轉入口或經授權的接入方式提交。
 4. 確認劃轉結果及轉入賬戶餘額後，再提交交易訂單。
 
-<h2 id="internal-transfers-between-accounts">資金賬戶與合約賬戶之間劃轉</h2>
+<span id="internal-transfers-between-accounts" data-sixmm-canonical-anchor="internal-transfers-between-accounts" aria-hidden="true"></span>
+
+## 資金賬戶與合約賬戶之間劃轉
 
 - 交易前：將所需結算資產從資金賬戶轉入合約賬戶。
 - 結算後：將合約賬戶內可轉出的金額劃回資金賬戶。
 - 賬戶劃轉屬於內部餘額變動，不是鏈上交易。
 - 保證金佔用、未成交委託、持倉及賬戶限制可能影響可轉出金額，請以平臺顯示的額度與處理結果為準。
 
-<h2 id="design-principles">狀態確認與對賬</h2>
+<span id="design-principles" data-sixmm-canonical-anchor="design-principles" aria-hidden="true"></span>
+
+## 狀態確認與對賬
 
 提交申請不代表劃轉已經完成。應核對劃轉單號、狀態、幣種、金額、轉出賬戶與轉入賬戶。若處理失敗或結果未明確，先核對資金流水並聯系平臺支持，再決定是否重新提交。
 
 不要將賬戶總餘額直接視為可自由劃轉的金額，也不要默認所有劃轉均即時完成或免手續費。以平臺展示的條件及最終處理結果為準。
 
-<h2 id="implementation-and-safety-guides">實施與安全指南</h2>
+<span id="implementation-and-safety-guides" data-sixmm-canonical-anchor="implementation-and-safety-guides" aria-hidden="true"></span>
+
+## 實施與安全指南
 
 - [Agent SDK 概覽](/zh-TW/sdk/agent-sdk/overview)：用戶綁定、劃轉與對賬。
 - [Webhook 與冪等](/zh-TW/sdk/security/webhooks-idempotency)：回調驗證與重複請求處理。
