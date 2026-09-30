@@ -1,99 +1,48 @@
 ---
 title: "Transferencia de activos"
-description: "Aprende cómo se mueven los activos entre sistemas socios y cuentas de 6MM trading, incluyendo responsabilidades de transferencia, gestión del estado y comprobaciones operativas."
+description: "Descubra cómo se mueven los activos entre los sistemas de socios y las cuentas comerciales 6MM, incluidas las responsabilidades de transferencia, el manejo del estado y las comprobaciones operativas."
 slug: trading/getting-started/asset-transfer
 canonical-url: https://docs.6mm.com/es-ES/trading/getting-started/asset-transfer
 ---
 
-6MM opera bajo un modelo de flujo de activos gestionado por socios.
+Esta guía explica la ruta de financiación para el comercio de contratos perpetuos. La cuenta de financiación contiene fondos disponibles para su asignación; la cuenta perpetua mantiene el margen del contrato y los saldos de liquidación. No se requiere una cuenta spot para esta ruta.
 
-6MM no acepta depósitos directos ni retiradas de usuarios finales.
+<h2 id="partner-managed-deposits-and-withdrawals">Financiación a través de tu plataforma</h2>
 
-Todas las entradas y salidas de fondos de los usuarios son gestionadas exclusivamente por agentes autorizados o plataformas asociadas.
+Para integraciones de socios API / SDK, siga el proceso de financiación y asignación de saldo de la plataforma de socios. Para implementaciones de marca blanca, los depósitos y retiros siguen el proceso configurado del proveedor de billetera de la plataforma; Los depósitos confirmados se acreditan en la cuenta de financiación y los retiros se utilizan en esa cuenta.
 
-Este diseño garantiza una clara separación de la responsabilidad financiera, el alcance regulatorio y la propiedad de los usuarios entre 6MM y sus socios.
+Consulta el método de financiación disponible en tu plataforma. Una transferencia de cuenta interna es independiente de un depósito o retiro.
 
-***
+<h2 id="account-structure-within-6mm">Cuentas utilizadas para operaciones perpetuas</h2>
 
-<h2 id="partner-managed-deposits-and-withdrawals">Depósitos y retiradas gestionados por socios</h2>
+| Cuenta | Objetivo |
+| --- | --- |
+| <span style={{ whiteSpace: "nowrap" }}>cuenta de fondos</span> | Retiene fondos para su asignación y recibe fondos transferidos desde la cuenta perpetua. Utilice el saldo disponible al preparar una transferencia. |
+| <span style={{ whiteSpace: "nowrap" }}>cuenta perpetua</span> | Mantiene los fondos utilizados para el margen y la liquidación del contrato. Verifique el capital de la cuenta, el uso del margen y las ganancias y pérdidas no realizadas antes de negociar o realizar transferencias. |
 
-* Los usuarios depositan y retiran fondos solo a través de la plataforma asociada
-* 6MM no proporciona direcciones de depósito on-chain ni off-chain a los usuarios finales
-* 6MM no custodia ni liquida directamente los fondos de los usuarios fuera de la ejecución de operaciones
+<h2 id="automated-balance-transfer-to-6mm">preparar una transferencia</h2>
 
-Los socios siguen siendo plenamente responsables de:
+1. Confirme el usuario, el activo y la dirección de la transferencia.
+2. Verifique el saldo disponible de la cuenta de origen y las restricciones de la cuenta.
+3. Envíe a través de la entrada de transferencia admitida o la integración autorizada de la plataforma.
+4. Confirme el resultado de la transferencia y el saldo de destino antes de realizar un pedido.
 
-* Gestión del saldo del usuario
-* Procesamiento de depósitos y retiradas
-* Cumplimiento y controles de riesgos relacionados con la custodia de fondos
+<h2 id="internal-transfers-between-accounts">Transferencia entre financiación y cuentas perpetuas</h2>
 
-***
+- Antes de negociar: transfiera el activo de liquidación requerido de la cuenta de financiación a la cuenta perpetua.
+- Después de la liquidación: transfiera el monto disponible para retiro de la cuenta perpetua a la cuenta de fondos.
+- Las transferencias de cuentas son movimientos de equilibrio interno, no transacciones en cadena.
+- El uso de márgenes, las órdenes abiertas, las posiciones y las restricciones de la cuenta pueden afectar la cantidad disponible para transferir. Utilice la cantidad y resultado que muestra la plataforma.
 
-<h2 id="automated-balance-transfer-to-6mm">Transferencia automática de saldo a 6MM</h2>
+<h2 id="design-principles">Consultar estado y conciliar saldos</h2>
 
-Para permitir el trading, los usuarios pueden transferir una parte del saldo gestionado por socios a 6MM mediante un mecanismo interno automatizado de transferencia.
+Una solicitud enviada no confirma por sí sola la finalización. Verifique el ID de la transferencia, el estado, el activo, el monto, la cuenta de origen y la cuenta de destino. Si el procesamiento falla o sigue sin resolverse, verifique los registros de saldo y comuníquese con el soporte de la plataforma antes de enviar otra solicitud.
 
-Las características clave de este proceso de transferencia incluyen:
+No asuma que todos los saldos se pueden transferir libremente, o que cada transferencia es instantánea o libre de cargos. Siga las condiciones mostradas en la plataforma y el resultado final del procesamiento.
 
-* Las transferencias son iniciadas y autorizadas por el sistema asociado
-* El proceso se ejecuta automáticamente a nivel de infraestructura
-* No se requiere interacción manual del usuario con 6MM
-* Las transferencias ocurren en tiempo real o casi en tiempo real
+<h2 id="implementation-and-safety-guides">Guías de implementación y seguridad.</h2>
 
-Desde la perspectiva del usuario, este proceso se presenta como una asignación equilibrada sin interrupciones, en lugar de un depósito tradicional.
-
-***
-
-<h2 id="account-structure-within-6mm">Estructura de cuentas dentro de 6MM</h2>
-
-Dentro de 6MM, los activos transferidos se asignan lógicamente a dos cuentas internas distintas:
-
-**Cuenta Spot**
-
-* Sirve como cuenta inicial de recepción para los fondos transferidos
-* Actúa como el fondo de activos para la gestión interna de capital
-* No soporta actividad de trading directo
-
-**Cuenta Perpetua**
-
-* Los fondos se transfieren de la Cuenta Spot a la Cuenta Perpetua
-* Solo los activos de la Cuenta Perpetua pueden usarse para la colocación de pedidos
-* El margen, las posiciones y el PnL no realizado se calculan en este nivel
-
-Esta estructura de dos capas permite un aislamiento preciso del capital, eficiencia de margen y control de riesgos para el trading perpetuo.
-
-***
-
-<h2 id="internal-transfers-between-accounts">Transferencias internas entre cuentas</h2>
-
-* Los fondos transferidos a la Cuenta Spot pueden asignarse libre e instantáneamente a la Cuenta Perpetua
-* Las transferencias internas se procesan sin interacción con blockchain
-* Las transferencias están diseñadas para ser de baja latencia y deterministas
-
-Esta arquitectura garantiza un movimiento fluido de capital manteniendo una estricta separación entre la custodia de activos y la ejecución de la negociación.
-
-***
-
-<h2 id="design-principles">Principios de diseño</h2>
-
-El sistema de transferencia de activos de 6MM se basa en los siguientes principios:
-
-* No se permiten depósitos ni retiradas directas de usuarios en 6MM
-* Toda la custodia de activos permanece con plataformas asociadas
-* Asignación automatizada de fondos autorizada por socios
-* Clara separación entre cuentas Spot y Perpetual
-* Optimizado para la eficiencia en el trading y el aislamiento de riesgos
-
-A través de este modelo, 6MM opera como una capa pura de infraestructura de trading, mientras que los socios mantienen el control total sobre los fondos de los usuarios y las relaciones financieras.
-
-<h2 id="implementation-and-safety-guides">Guías de implementación y seguridad</h2>
-
-- [Agent SDK Resumen] (/sdk/agent-sdk/overview): vinculación de usuarios, transferencias, consultas de pedidos y conciliación.
-- [Webhooks & Idempotency](/es-ES/sdk/security/webhooks-idempotency): verifica callbacks de estado final y deduplica intentos.
-- [Matriz de Responsabilidad del Socio](/es-ES/security-compliance/partner-responsibilities): custodia y propiedad operativa.
-- [Riesgo y Liquidaciones](/es-ES/trading/risk-and-liquidations): entiende cómo la asignación de cuentas de trading afecta al riesgo.
-{/* sixmm-localized-link-repair:start */}
-<h2 id="localized-page-links">Páginas relacionadas</h2>
-
-- [6MM Agent SDK por Java y PHP](/es-ES/sdk/agent-sdk/overview)
-{/* sixmm-localized-link-repair:end */}
+- [Agent SDK Descripción general](/es-ES/sdk/agent-sdk/overview): vinculación de usuarios, transferencias y conciliaciones.
+- [Webhooks & Idempotencia](/es-ES/sdk/security/webhooks-idempotency): verificación de devolución de llamada y manejo de solicitudes duplicadas.
+- [Matriz de responsabilidad del socio](/es-ES/security-compliance/partner-responsibilities): integración y responsabilidades operativas.
+- [Riesgos y Liquidaciones](/es-ES/trading/risk-and-liquidations): margen y riesgo de cuenta.

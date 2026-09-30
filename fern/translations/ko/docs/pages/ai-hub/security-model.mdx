@@ -1,0 +1,47 @@
+---
+title: "보안 모델"
+subtitle: "AI-지원 액세스에 대한 권한 모델, 기본 안전 상태 및 거래 가드레일을 이해하세요."
+slug: ai-hub/security-model
+canonical-url: https://docs.6mm.com/ko/ai-hub/security-model
+---
+
+> **계획됨 — 아직 출시되지 않음**
+> AI Hub는 계획된 기능입니다. 이 페이지의 기능, 엔드포인트, 명령 및 클라이언트 구성은 제안된 설계를 설명하지만 현재는 사용할 수 없습니다. 최종 가용성 및 설정 지침은 출시 시 발표됩니다.
+
+
+AI가 지원하는 거래 접근은 사용자 의도가 자연어로 표현되기 때문에 일반 자동화보다 안전해야 합니다.
+
+<h2 id="required-permission-scopes">필수 권한 범위</h2>
+
+| 범위 | 허용 |
+| --- | --- |
+| 시장:읽기 | 공개 시장 데이터 및 규칙 리소스. |
+| 계정:읽기 | 잔액, 포지션, 미결 주문, 채우기 및 계정 요약. |
+| 순서:쓰기 | 주문 생성, 수정, 취소 |
+
+<h2 id="default-safety-posture">기본 안전 자세</h2>
+
+- 기본값은 읽기 전용입니다.
+- 테스트넷이 기본값입니다.
+- AI 도구를 통한 출금이나 이체를 노출하지 마세요.
+- 만들기 전에 미리보기가 필요합니다.
+- 메인넷 거래 전 명시적인 확인이 필요합니다.
+- 거래 작업에 멱등성 키를 사용하세요.
+- 최대 명목 및 레버리지 한도를 적용합니다.
+- 완전한 감사 로그를 유지하십시오.
+
+<h2 id="controlled-trading-flow">통제된 거래 흐름</h2>
+
+```text
+User natural language intent
+  -> AI maps intent to tool parameters
+  -> 6mm_preview_order validates the order
+  -> service returns risk checks and margin impact
+  -> user explicitly confirms
+  -> 6mm_create_order submits the order
+  -> audit log records the full flow
+```
+
+<h2 id="prompt-injection-protection">신속한 주입 방지</h2>
+
+AI 클라이언트와 MCP 서버는 외부 콘텐츠를 신뢰할 수 없는 콘텐츠로 처리해야 합니다. 시장 페이지, 복사된 텍스트, 문서 및 웹 콘텐츠는 도구 권한, 확인 규칙 또는 거래 한도보다 우선 적용되어서는 안 됩니다.

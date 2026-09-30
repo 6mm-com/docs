@@ -28,9 +28,9 @@ Cette section explique le flux de travail principal du trading et les mécanisme
 
 <h2 id="market-order">Ordre du marché</h2>
 
-* Exécute immédiatement au meilleur prix disponible sur le marché
-* Privilégie la rapidité d’exécution plutôt que la précision des prix
-* Adapté à une entrée ou sortie rapide
+Un ordre au marché vise à être exécuté sur la liquidité disponible aux meilleurs prix disponibles. L'exécution dépend de la profondeur du carnet d'ordres et des restrictions de négociation : l'ordre peut être exécuté à plusieurs prix, exécuté partiellement ou ne pas être exécuté. Vérifiez l'état réel de la commande et les exécutions.
+
+***
 
 <h2 id="limit-order">Ordre Limite</h2>
 
@@ -46,6 +46,8 @@ Cette section explique le flux de travail principal du trading et les mécanisme
 > disponibilité des ordres peut varier selon la paire de trading et le mode d’intégration.
 
 ***
+
+Soumission signifie qu’une demande de commande a été envoyée ; l'acceptation, le déclenchement et l'exécution sont des états distincts. Un ordre de marché déclenché dépend de la liquidité disponible. Un ordre limité déclenché doit également satisfaire son prix limite et peut rester non exécuté.
 
 <h2 id="leverage-and-margin">Levier et marge</h2>
 
@@ -69,9 +71,7 @@ Les contrats perpétuels utilisent un mécanisme de taux de financement pour mai
 * Si le taux de financement est négatif :
   * Les positions courtes paient les positions longues
 
-Les frais de financement sont échangés directement entre les traders.
-
-6MM ne perçoit pas les paiements de financement comme revenus.
+6MM ne facture pas de frais de financement. Les paiements de financement sont réglés conformément aux règles contractuelles et enregistrés séparément des frais de négociation. Vérifiez la direction, le montant et le résultat du règlement par rapport aux enregistrements de financement-paiement du compte et aux transactions de solde liées.
 
 ***
 
@@ -84,7 +84,7 @@ Les frais de financement sont échangés directement entre les traders.
   * Ordres de fabricant
   * Ordres de preneur
 
-Les grilles tarifaires sont définies par la plateforme partenaire et peuvent varier.
+Les tarifs Maker/Taker applicables suivent les règles du partenaire ou de la plateforme en marque blanche et peuvent varier selon la paire de trading et la configuration.
 
 <h2 id="slippage">Glissement</h2>
 
@@ -109,12 +109,7 @@ Les utilisateurs peuvent réduire le glissement en utilisant des ordres à duré
 
 <h2 id="risk-management-and-liquidation">Gestion des risques et liquidation</h2>
 
-* 6MM surveille les rapports de marge en temps réel
-* Lorsque la marge tombe en dessous du seuil de maintenance :
-  * Les positions peuvent être partiellement ou totalement liquidées
-* Les prix de liquidation sont calculés en utilisant le prix de marque, et non le dernier prix négocié
-
-Ce mécanisme aide à réduire les liquidations inutiles causées par la volatilité du marché à court terme.
+Surveillez les capitaux propres du compte ou de la position, les exigences de marge de maintien et les indicateurs de risque de la plateforme. Si les conditions de liquidation applicables sont remplies, les positions peuvent être réduites partiellement ou entièrement fermées. Vérifiez la position restante réelle et les enregistrements de solde plutôt que de comparer directement un pourcentage avec un montant de marge.
 
 ***
 

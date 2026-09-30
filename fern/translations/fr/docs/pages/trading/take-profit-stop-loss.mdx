@@ -1,113 +1,58 @@
 ---
-title: "Take Profit / Stop Loss (TP/SL)"
-description: "Take Profit (TP) et Stop Loss (SL) sont des ordres automatisés conçus pour aider les traders à sécuriser leurs profits et limiter les pertes sans surveiller constamment le marché."
+title: "Prise de profit/Stop Loss (TP/SL)"
+description: "Take Profit et Stop Loss sont des instructions de sortie conditionnelles. Atteindre un prix de déclenchement active l'ordre configuré ; il ne garantit pas un remplissage, un prix d'exécution, un profit ou une perte maximale."
 slug: trading/take-profit-stop-loss
 canonical-url: https://docs.6mm.com/fr/trading/take-profit-stop-loss
 ---
 
-Take Profit (TP) et Stop Loss (SL) sont des ordres automatisés conçus pour aider les traders à sécuriser leurs profits et limiter les pertes sans surveiller constamment le marché.
-
-Sur 6MM, TP/SL est un outil clé de gestion des risques pour les contrats perpétuels à marge U.
-
-***
+Take Profit et Stop Loss sont des instructions de sortie conditionnelles. Atteindre un prix de déclenchement active l'ordre configuré ; il ne garantit pas un remplissage, un prix d'exécution, un profit ou une perte maximale.
 
 <h2 id="what-is-take-profit">Qu’est-ce que le Take Profit ?</h2>
 
-Take Profit ferme automatiquement votre position lorsque le prix atteint un niveau favorable prédéfini.
+Take Profit déclenche un ordre de sortie lorsque le prix de référence configuré atteint le niveau de déclenchement favorable.
 
-Objectif :
+Par exemple, une position longue ouverte à 20 000 a un déclencheur Take Profit à 20 600. Atteindre ce déclencheur active la commande configurée ; 20 600 n'est pas un prix d'exécution garanti. Confirmez la quantité remplie, le prix d'exécution et les frais avant d'évaluer le résultat.
 
-* Sécuriser les profits
-* Éviter la prise de décision émotionnelle
-* Exécutez les sorties même lorsque vous êtes hors ligne
+<h2 id="what-is-stop-loss">Qu’est-ce que le stop-loss ?</h2>
 
-Exemple :
+Le Stop Loss déclenche un ordre de sortie après une évolution défavorable des prix, dans le but de réduire l'exposition.
 
-* Tu ouvres une position longue à 20 000
-* Tu as réglé le TP à 20 600
-* Lorsque le prix atteint 20 600, la position est automatiquement fermée
+Par exemple, une position longue ouverte à 20 000 a un déclencheur Stop Loss à 19 600. Atteindre le déclencheur active la commande configurée. Les dérapages, la liquidité et les restrictions d’ordres peuvent affecter l’exécution ; le prix de déclenchement ne fixe pas de perte maximale garantie.
 
-***
+<h2 id="how-tp-sl-works">Soumission, déclenchement et exécution</h2>
 
-<h2 id="what-is-stop-loss">Qu’est-ce que l’arrêt de perte ?</h2>
+1. Soumettez la commande conditionnelle et confirmez son acceptation et les conditions enregistrées.
+2. Surveillez le prix de référence configuré, tel que le prix de référence ou le dernier prix négocié, conformément aux règles de la plateforme.
+3. Lorsque les conditions sont remplies, l’ordre au marché ou à cours limité configuré est déclenché.
+4. Vérifiez le statut de la commande résultante et les exécutions réelles. Un ordre partiellement exécuté laisse la position restante exposée.
 
-Le stop loss ferme automatiquement votre position lorsque le prix bouge contre vous.
+Un ordre au marché dépend de la liquidité disponible et des restrictions de négociation. Un ordre limité doit satisfaire son prix limite et peut rester non exécuté. Le déclenchement seul ne signifie pas qu'une position est fermée.
 
-Objectif :
+<h2 id="setting-tp-sl">Définition du Take Profit et du Stop Loss</h2>
 
-* Limite maximale de perte
-* Protéger le solde du compte
-* Prévenir la liquidation dans les marchés volatils
+Lorsque cela est pris en charge, configurez ces instructions lors de l’ouverture d’un position ou pour un position existant. Vérifiez la direction de la position, la quantité, le prix de référence, le prix de déclenchement et la méthode d'exécution. Pour un ordre limité, vérifiez également le prix limite. Les paramètres disponibles dépendent de la paire de trading et de la configuration de la plateforme.
 
-Exemple :
+<h2 id="tp-sl-vs-liquidation">Take Profit, Stop Loss et liquidation</h2>
 
-* Tu ouvres une position longue à 20 000
-* Tu as mis SL à 19 600
-* Si le prix descend à 19 600, la position est fermée
+Take Profit et Stop Loss sont des instructions conditionnelles configurées par l'utilisateur. La liquidation suit les règles de marge et de risque de la plateforme. La définition d'un Stop Loss ne garantit pas qu'il se remplira avant la liquidation ; différents prix de référence, mouvements de marché et conditions d'exécution peuvent affecter la séquence.
 
-***
+<h2 id="common-beginner-mistakes">Malentendus courants</h2>
 
-<h2 id="how-tp-sl-works">Comment fonctionne TP / SL</h2>
+- Traiter le prix de déclenchement comme un prix d'exécution garanti.
+- En supposant qu'un ordre déclenché a clôturé la totalité de la position.
+- En supposant qu'un ordre limité déclenché doit être exécuté.
+- Ignorer les frais, le glissement et la position restante après un remplissage partiel.
 
-* Les ordres TP/SL sont des ordres conditionnels
-* Ils sont déclenchés lorsque le prix de marque ou le dernier prix atteint le niveau de déclenchement (selon la configuration)
-* Une fois déclenchés, ils s’exécutent sous forme d’ordre à marché ou à cours limité
+<h2 id="best-practices">Vérifiez le résultat</h2>
 
-Le comportement d’exécution peut varier selon les paramètres du partenaire.
-
-***
-
-<h2 id="setting-tp-sl">Réglage TP / SL</h2>
-
-TP/SL peuvent généralement être réglés :
-
-* Lors de l’ouverture d’une position
-* Après qu’un position soit déjà ouvert
-
-Les deux méthodes aident à automatiser les stratégies de sortie.
-
-***
-
-<h2 id="tp-sl-vs-liquidation">TP / SL vs. Liquidation</h2>
-
-* TP/SL ferme des positions avant que la marge ne devienne critique
-* La liquidation se produit lorsque la marge est insuffisante
-* L’utilisation de SL réduit le risque de liquidation
-
-TP/SL est un outil proactif de contrôle des risques, tandis que la liquidation est un mécanisme imposé par le système.
-
-***
-
-<h2 id="common-beginner-mistakes">Erreurs courantes chez les débutants</h2>
-
-* Mise SL trop proche du prix d’entrée
-* Ignorer la volatilité du marché
-* Sans tenir compte des frais et du glissement
-* Oublier de définir TP ou SL
-
-***
-
-<h2 id="best-practices">Bonnes pratiques</h2>
-
-* Régler toujours le Stop Loss avant ou immédiatement après l’ouverture d’une position
-* Utiliser Take Profit pour éviter de détenir des positions supplémentaires
-* Ajuster TP/SL à mesure que le marché évolue
-* Combiner TP/SL avec faible levier
-
-***
+Après la soumission ou le déclenchement, examinez le statut de la commande, la quantité remplie et la position restante. Si le résultat n'est pas clair, vérifiez les ordres existants avant de soumettre une autre instruction de sortie. Contactez le support de la plateforme lorsqu’un résultat d’exécution nécessite une enquête.
 
 <h2 id="summary">Résumé</h2>
 
-Sur 6MM, TP/SL aide les utilisateurs à :
+Take Profit et Stop Loss aident à automatiser les instructions de sortie. La réduction réelle du risque dépend de l’exécution, et pas seulement de la définition ou du déclenchement d’un ordre.
 
-* Automatiser les sorties
-* Réduire le trading émotionnel
-* Gérer efficacement le risque
+<h2 id="related-guides">Guides associés</h2>
 
-L’utilisation de TP/SL est essentielle pour un trading perpétuel discipliné.
-
-<h2 id="related-guides">Guides connexes</h2>
-
-- [Types d’ordre](/fr/trading/order-types) : un comportement d’ordre conditionnel supporté.
-- [Mécanique de levier](/fr/trading/leverage-mechanics) : exposition et risque de position.
-- [Risque & Liquidations](/fr/trading/risk-and-liquidations) : pourquoi TP/SL n’élimine pas le risque de liquidation.
+- [Types de commandes](/fr/trading/order-types): ordres au marché, à cours limité et conditionnels.
+- [Tirer parti de la mécanique](/fr/trading/leverage-mechanics): exposition et marge de la position.
+- [Risques et liquidations](/fr/trading/risk-and-liquidations): risque de marge et liquidation.

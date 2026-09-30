@@ -1,0 +1,54 @@
+---
+title: "Prediction Grid"
+headline: "Prediction Grid | 6MM Prediction"
+description: "Read price-and-time cells, understand touch-based results, and follow the locked conditions of a Prediction Grid order."
+slug: prediction/grid
+---
+
+Prediction Grid displays price intervals vertically and future time windows horizontally. Selecting one cell creates one independent order for that price interval and time window.
+
+## Read a cell
+
+| Grid cell details | Meaning |
+| --- | --- |
+| Price interval | The lower and upper price bounds |
+| Start and end time | The window during which a touch can qualify |
+| Quoted odds | The return multiplier offered for that cell |
+| Stake | The amount committed to that order |
+
+A 10-row, 10-column grid with two seconds per column would cover 20 seconds. This is a reading example; use the dimensions and absolute times shown in the active product.
+
+## What counts as a hit?
+
+During the cell's valid time window, the platform mark price must enter or cross its price interval. A qualifying touch is enough; the price does not have to remain there until the end.
+
+| Example: 65,010–65,020 during 10:00:04–10:00:06 | Result interpretation |
+| --- | --- |
+| At 10:00:05 the price reaches 65,015 | Enters the interval during the window |
+| Within the window, the price moves from 65,005 to 65,025 | Crosses the interval |
+| The price stays outside without crossing during the window | No qualifying hit |
+| The first touch occurs after the window ends | Too late for this order |
+
+Exact boundary prices and timestamps follow the accepted rule. A missing price feed is not evidence that the price never touched the cell.
+
+## How to participate
+
+1. Select a symbol and inspect the displayed time and price axes.
+2. Choose an available cell and an amount within its limits.
+3. Confirm the cell bounds, valid window, odds, and expected payout.
+4. Check the accepted order. Its price interval, valid window, and odds remain locked even as the live grid moves.
+5. Follow the result and actual settlement in order history.
+
+## Odds and unavailable cells
+
+The pricing model estimates the probability of touching the interval within the window from mark price, volatility, and the price/time boundaries. The model quote is based on target return rate divided by estimated hit probability, subject to configured rules.
+
+For example, 97% divided by 20% gives 4.85x. A winning 100 USDT order locked at 4.85x has a gross payout of 485 USDT. A rounded label does not justify changing the stored multiplier.
+
+Under the configured grid rule, a calculated quote above the maximum makes the cell unavailable instead of reducing that quote to the maximum. Other restrictions can also prevent acceptance.
+
+## Interrupted price evidence
+
+If the feed is interrupted during the valid window and a hit cannot be established, the order enters exception handling or refund processing. Do not infer a loss from an empty chart segment.
+
+See [Price Sources](/prediction/price-source), [Odds Mechanisms](/prediction/odds), and [Refunds and Exceptions](/prediction/refunds-exceptions).

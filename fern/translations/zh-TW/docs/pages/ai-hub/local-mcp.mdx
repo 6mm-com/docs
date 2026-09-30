@@ -1,0 +1,89 @@
+---
+title: "Local MCP"
+subtitle: "在本機運行 6MM MCP 服務，讓 AI 客戶端訪問行情、賬戶和未來交易工具，同時憑證留在用戶本機。"
+slug: ai-hub/local-mcp
+canonical-url: https://docs.6mm.com/zh-TW/ai-hub/local-mcp
+---
+
+> **規劃中 · 尚未上線**
+> AI Hub 為規劃內容。本頁中的功能、服務地址、命令及客戶端配置用於說明擬定方案，目前尚未開放使用。實際開放範圍與接入方式以上線公告為準。
+
+
+Local MCP 是 AI 客戶端需要私有賬戶上下文或未來受控交易工具時的推薦方式。
+
+MCP 服務 運行在用戶本機。AI 客戶端調用本地 6MM 工具，本地服務 再使用用戶配置的憑證訪問 6MM API。
+
+<h2 id="what-your-ai-client-can-do">AI 客戶端可以做什麼</h2>
+
+通過 Local MCP，AI 客戶端可以在受控方式下使用 6MM 工具：
+
+- 查詢實時和歷史市場數據。
+- 在啟用只讀憑證後，讀取賬戶餘額、倉位、當前委託、成交和資金費記錄。
+- 解釋組合敞口、保證金使用和清算風險。
+- 在真實下單前預覽訂單。
+- 在後續受控交易階段，僅在明確授權和風險檢查後創建或撤銷訂單。
+
+當憑證應該留在用戶本機時，應優先使用 Local MCP。
+
+<h2 id="architecture">架構</h2>
+
+```text
+AI client
+  -> local 6mm-mcp process
+  -> 6MM REST / WebSocket API
+```
+
+<h2 id="example-configuration">配置示例</h2>
+
+```json
+{
+  "mcpServers": {
+    "6mm": {
+      "command": "uvx",
+      "args": ["6mm-mcp"],
+      "env": {
+        "SIXMM_ENVIRONMENT": "testnet",
+        "SIXMM_API_KEY": "your_api_key",
+        "SIXMM_API_SECRET": "your_api_secret"
+      }
+    }
+  }
+}
+```
+
+<h2 id="recommended-permission-tiers">推薦權限層級</h2>
+
+| 層級 | 工具 | 說明 |
+| --- | --- | --- |
+| 公開數據 | markets、ticker、orderbook、klines、trades、funding | 不訪問私有賬戶。 |
+| 賬戶只讀 | balances、positions、open orders、fills | 需要只讀 API key 權限範圍。 |
+| 交易預覽 | 訂單預覽、保證金影響、費用估算 | 不執行真實下單。 |
+| 受控交易 | 創建、撤銷、修改訂單 | 需要明確權限、用戶確認和風控限制。 |
+
+<h2 id="first-setup-checklist">首次配置檢查</h2>
+
+1. 安裝 MCP 包。
+2. 創建或配置只讀 API key。
+3. 從測試網開始。
+4. 在 AI 客戶端中添加 MCP 服務配置。
+5. 讓客戶端列出可用 6MM 工具。
+6. 先執行公開市場數據查詢。
+7. 確認需要後，再加入賬戶只讀憑證。
+
+<h2 id="example-prompts">示例提示詞</h2>
+
+```text
+Use 6MM to list available perpetual markets.
+```
+
+```text
+Use 6MM testnet to check my open positions and explain liquidation risk.
+```
+
+```text
+Preview a small BTC long order on 6MM testnet and explain margin impact. Do not place the order.
+```
+
+<h2 id="security-notes">安全說明</h2>
+
+Local MCP 默認應為只讀和測試網。交易工具應要求訂單預覽、用戶確認、冪等鍵、訂單金額限制和服務端風險檢查。

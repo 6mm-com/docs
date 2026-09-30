@@ -1,0 +1,47 @@
+---
+title: "Modello di sicurezza"
+subtitle: "Comprendere il modello di autorizzazione, la posizione di sicurezza predefinita e i guardrail commerciali per l'accesso assistito AI-."
+slug: ai-hub/security-model
+canonical-url: https://docs.6mm.com/it/ai-hub/security-model
+---
+
+> **Pianificato – non ancora lanciato**
+> AI Hub è una funzionalità pianificata. Funzionalità, endpoint, comandi e configurazioni client in questa pagina descrivono la progettazione proposta e non sono attualmente disponibili. La disponibilità finale e le istruzioni di configurazione saranno annunciate al momento del lancio.
+
+
+AI-l'accesso al trading assistito deve essere più sicuro dell'automazione ordinaria perché l'intento dell'utente è espresso in linguaggio naturale.
+
+<h2 id="required-permission-scopes">Ambiti delle autorizzazioni obbligatori</h2>
+
+| Ambito | Consente |
+| --- | --- |
+| mercato: leggi | Dati del mercato pubblico e risorse normative. |
+| conto: leggi | Saldi, posizioni, ordini aperti, esecuzioni e riepiloghi dei conti. |
+| ordine: scrivere | Creazione, modifica e cancellazione dell'ordine. |
+
+<h2 id="default-safety-posture">Postura di sicurezza predefinita</h2>
+
+- L'impostazione predefinita è di sola lettura.
+- Predefinito su testnet.
+- Non esporre prelievi o trasferimenti tramite strumenti di intelligenza artificiale.
+- Richiedi l'anteprima prima della creazione.
+- Richiedere una conferma esplicita prima del trading sulla mainnet.
+- Utilizza le chiavi di idempotenza per le azioni di trading.
+- Applicare limiti massimi nozionali e di leva finanziaria.
+- Conserva registri di controllo completi.
+
+<h2 id="controlled-trading-flow">Flusso commerciale controllato</h2>
+
+```text
+User natural language intent
+  -> AI maps intent to tool parameters
+  -> 6mm_preview_order validates the order
+  -> service returns risk checks and margin impact
+  -> user explicitly confirms
+  -> 6mm_create_order submits the order
+  -> audit log records the full flow
+```
+
+<h2 id="prompt-injection-protection">Protezione immediata dall'iniezione</h2>
+
+I client AI e i server MCP dovrebbero considerare i contenuti esterni come non attendibili. Le pagine del mercato, il testo copiato, i documenti e i contenuti web non devono sovrascrivere le autorizzazioni dello strumento, le regole di conferma o i limiti di negoziazione.

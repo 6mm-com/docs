@@ -1,102 +1,57 @@
 ---
-title: "Ticaret Hesabı Erişimi"
-description: "Kullanıcıları 6MM ticaretine bağlamak için kullanılan ortak tarafından yönetilen kayıt ve hesap erişim modelini anlayın ve sorumluluk sınırlarını koruyun."
+title: "Ticari Hesap Erişimi"
+description: "Oturum açma, hesap yönetimi ve sürekli ticarete hazırlık da dahil olmak üzere iş ortağı entegrasyonları ve beyaz etiketli platformlar için hesap erişimini anlayın."
 slug: trading/getting-started/authentication
 canonical-url: https://docs.6mm.com/tr/trading/getting-started/authentication
 ---
 
-6MM , sorunsuz kullanıcı deneyimi ile kullanıcı sahipliği ve platform sorumluluğunun net ayrımı arasında denge kurmak için tasarlanmış ortak yönetilen kayıt ve erişim modelini benimser.
+6MM iki hesap erişim modelini destekler: bir iş ortağı sistemiyle entegrasyon ve beyaz etiketli bir platform. Platformunuz tarafından sağlanan girişi kullanın. Hesap oluşturma, kimlik doğrulama ve profil yönetimi seçilen modele bağlıdır.
 
-* 6MM kamuya açık kendi kayıt imkanı sağlamaz.
-* Tüm kullanıcı işe alımları yalnızca yetkili ajanlar veya ortak platformlar tarafından başlatılır ve yönetilir.
+<h2 id="registration-model">Hesap modelinizi seçin</h2>
 
-***
+| Alan | İş ortağı entegrasyonu | Beyaz etiketli platform |
+| --- | --- | --- |
+| Hesap kaynağı | Kullanıcının, ortak sisteminde işlem kullanıcısını bağlayan veya senkronize eden bir hesabı vardır. | Kullanıcı beyaz etiketli platformun hesap sistemine aittir. |
+| Erişim girişi | İş ortağının uygulaması, web sitesi veya yerleşik ticaret girişi. | Beyaz etiketli platformun markalı alanı ve giriş sayfası. |
+| Kimlik doğrulama | İş ortağı kullanıcıyı doğrular ve arka ucu gerekli işlem erişim kimlik bilgilerini alır. | Oturum açma, doğrulama ve hesap güvenliği, platformun etkinleştirilen yapılandırmasını takip eder. |
+| Hesap yönetimi | İş ortağı, kullanıcı profilini yönetir; Ticaret sistemi gerekli kullanıcı haritalandırmasını ve ticaret kayıtlarını tutar. | Beyaz etiketli hesap sistemi ve yetkili yöneticiler kullanıcı profillerini, hesap durumunu ve güvenlik ayarlarını yönetir. |
 
-<h2 id="registration-model">Kayıt Modeli</h2>
+<h2 id="login-method-1-partner-embedded-access">İş ortağı entegrasyonu</h2>
 
-<h2 id="partner-only-registration">Sadece Partnere Kayıt</h2>
+1. İş ortağının hesap sistemi aracılığıyla oturum açın.
+2. İş ortağı arka ucu oturumu doğrular ve ilgili işlem kullanıcısını bağlar veya tanımlar.
+3. Arka uç, desteklenen entegrasyon aracılığıyla gerekli işlem erişim kimlik bilgilerini veya girişini URL alır.
+4. İş ortağı tarafından sağlanan yerleşik ticaret arayüzünü veya yetkili ticaret girişini açın.
 
-6MM tek bir kayıt modelini destekler:
+Hesaba erişim tek başına fonun ticaret için kullanılabilir olmasını sağlamaz. İş ortağının finansman sürecini takip edin ve sipariş vermeden önce mevcut kalıcı hesap bakiyesini onaylayın.
 
-* Kullanıcılar yalnızca acenteler veya ortak platformlar aracılığıyla kayıtlıdır
-* Doğrudan kayıt girişi yoktur 6MM
-* Kullanıcı kimliği, hesap oluşturma ve yaşam döngüsü yönetimi tamamen ortak tarafından kontrol edilir
+<h2 id="login-method-2-6mm-account-login-partner-issued-credentials">Beyaz etiketli platform erişimi</h2>
 
-Kayıt yaptıktan sonra, ortaklar kendi uygulamalarında 6MM bir giriş noktası sunar ve böylece kullanıcılar 6MMdestekli işlem deneyimlerine erişebilirler.
+Beyaz etiket platformunun sağladığı markalı alan adını ve hesap girişini kullanın. Kendi kendine kaydın mevcut olup olmadığı, hesapların nasıl açıldığı ve hangi oturum açma veya kimlik doğrulama yöntemlerinin etkinleştirildiği platformun yapılandırmasına bağlıdır.
 
-6MM , son kullanıcı kimlik bilgilerini bağımsız olarak toplamaz veya yönetmez.
+Platformun hesap sistemi ve yetkili yöneticileri, profil yönetimi, hesap durumu ve güvenlik işlemlerini kendi yetkileri dahilinde gerçekleştirir. Şifre kurtarma, iletişim bilgileri değişiklikleri veya hesap kısıtlamaları için platformun doğrulama sürecini izleyin.
 
-***
+Oturum açtıktan sonra platformun desteklenen finansman süreci aracılığıyla fon hazırlayın. Sürekli alım satım için gerekli kapatma varlığını fonlama hesabından kalıcı hesaba aktarın ve aktarım sonucunu onaylayın.
 
-<h2 id="login-methods">Giriş Yöntemleri</h2>
+<h2 id="user-ownership-and-data-responsibility">Hesap ve veri sorumlulukları</h2>
 
-Farklı ortak uygulama mimarileri ve kullanıcı deneyimi gereksinimlerini karşılamak için 6MM , her ikisi de ortak platformlar aracılığıyla başlatılan iki giriş yöntemini destekler.
+İki modelin farklı sorumluluk sınırları vardır. İş ortağı entegrasyonları, ticaret için gereken kullanıcı eşlemesini ve kayıtları korurken iş ortağı tarafındaki hesap yönetimini de korur. Beyaz etiketli platformlar, kullanıcıları yönetmek için kendi hesap süreçlerini ve yönetim izinlerini kullanır.
 
-***
+Gerçek dağıtım için toplanan, saklanan veya görüntülenen bilgiler, kimlik doğrulama gereksinimleri ve destek sorumlulukları tanımlanmalıdır. Tek bir modelin hesap yönetimi varsayımlarını her platforma uygulamayın.
 
-<h2 id="login-method-1-partner-embedded-access">Giriş Yöntemi 1: Partner-Gömülü Erişim</h2>
+<h2 id="design-principles">Ticarete girmeden önce</h2>
 
-Ana entegrasyon modelinde, kullanıcılar 6MM doğrudan ortakın uygulamasından erişir.
+- Doğru platform alan adını ve hesabını kullandığınızdan emin olun.
+- Söz konusu platformun gerektirdiği kimlik veya güvenlik kontrollerini tamamlayın.
+- Hesabın alım satım erişimine sahip olup olmadığını kontrol edin ve tüm kısıtlamaları inceleyin.
+- Kalıcı hesaptaki mevcut bakiyeyi onaylayın; Oturum açmak paranın otomatik olarak aktarılmasını sağlamaz.
+- Hesap erişimi veya kimlik doğrulamayla ilgilenilmesi gerekiyorsa platformunuzun destek ekibiyle iletişime geçin.
 
-* Kullanıcılar, 6MM ajan veya partner tarafından sağlanan gömülü giriş noktasından girer
-* Kimlik doğrulama tamamen partner tarafından yürütülür
-* Erişim tokenları veya oturum kimlik bilgileri güvenli bir şekilde 6MM
-* Ayrı bir 6MM girişi gerekmez
+<h2 id="implementation-guides">Entegrasyonunuza devam edin</h2>
 
-Bu yöntem en sorunsuz deneyimi sunar ve derin entegre ortak uygulamaları için önerilir.
-
-***
-
-<h2 id="login-method-2-6mm-account-login-partner-issued-credentials">Giriş Yöntemi 2: 6MM Hesap Girişi (Ortak tarafından verilen kimlik bilgileri)</h2>
-
-Ortak uygulama yetenekleri ve cihaz ortamlarındaki farklılıklar nedeniyle, 6MM bağımsız Web ve mobil için optimize edilmiş arayüzler de sunuyor ve gelecekteki sürümler için yerel uygulamalar planlanıyor.
-
-Bu modelde:
-
-* Kullanıcılar önce 6MM partnerin uygulaması üzerinden girer
-* Partner, kullanıcıya 6MMözel bir giriş hesabı ve şifre verir
-* Kullanıcılar daha sonra şu adreslerden doğrudan giriş yapabilirler:
-  * [https://app.6mm.com](https://app.6mm.com/)
-  * Mobil için optimize edilmiş web arayüzü
-  * Gelecekteki resmi 6MM başvuruları
-
-Bu yaklaşım, cihazlar arasında etkileşim performansının ve kullanıcı deneyiminin iyileştirilmesini sağlar.
-
-> Önemli:\
-> Tüm 6MM giriş bilgileri ortak tarafından oluşturuluyor, verilir ve yönetilir.\
-> 6MM , kullanıcı kimliğini bağımsız olarak doğrulamaz veya kullanıcı profil verilerini sürdürmez.
-
-***
-
-<h2 id="user-ownership-and-data-responsibility">Kullanıcı Sahipliği ve Veri Sorumluluğu</h2>
-
-Hangi giriş yöntemi kullanılırsa alınsın:
-
-* Tüm kullanıcılar ortak tarafından sahiplenilmekte ve yönetilmektedir
-* Kullanıcı kimlik verileri ortağın sisteminde kalır
-* 6MM yalnızca aşağıdaki için gerekli minimum teknik tanımlayıcıları korur:
-  * Ticaret uygulaması
-  * Marj ve risk hesaplaması
-  * Pozisyon ve hesap izolasyonu
-
-6MM , kullanıcı kimlik bilgilerine erişmez, analiz etmez veya para kazandırmaz.
-
-***
-
-<h2 id="design-principles">Tasarım İlkeleri</h2>
-
-6MM kimlik doğrulama ve erişim sistemi aşağıdaki ilkeler üzerine inşa edilmiştir:
-
-* Tek kayıt kaynağı: sadece ortaklar
-* Daha iyi kullanıcı deneyimi için çoklu erişim yöntemleri
-* Kullanıcı sahipliği ve ticaret altyapısının net ayrımı
-* Doğrudan kullanıcı kazanımı veya ortaklarla rekabet yok
-
-Bu model, 6MM 'nin ortaklara öncelikli, tarafsız bir ticaret altyapısı olarak işlev görmesini sağlarken, platformlar ve cihazlar arasında tutarlı ve yüksek kaliteli bir işlem deneyimi sunmaya devam eder.
-
-<h2 id="implementation-guides">Uygulama rehberleri</h2>
-
-- [Developer API Doğrulama](/tr/developer-api/authentication): JWT ve entegrasyonlar için API Key doğrulama.
-- [Trading Widget Doğrulama](/tr/sdk/trading-widget/authentication): partner-token ve uyumluluk modları arasında.
-- [Agent SDK Genel Bakış](/tr/sdk/agent-sdk/overview): arka uç kullanıcı bağlaması ve kimlik bilgileri verilişi.
-- [Mimari ve Sorumluluklar](/tr/solutions/architecture-responsibilities): ortak ve 6MM sahiplik sınırları.
+- [Ticarete Başla](/tr/trading/getting-started/start-trading): fonları hazırlayın ve ilk kalıcı siparişi verin.
+- [Varlık Transferi](/tr/trading/getting-started/asset-transfer): finansman ve kalıcı hesaplar, transfer durumu ve mutabakat.
+- [Developer API Kimlik Doğrulaması](/tr/developer-api/authentication): doğrudan API erişim için kimlik doğrulama.
+- [Trading Widget Kimlik Doğrulaması](/tr/sdk/trading-widget/authentication): gömülü ticaret arayüzü için kimlik bilgileri.
+- [Agent SDK Genel Bakış](/tr/sdk/agent-sdk/overview): iş ortağı-arka uç kullanıcı bağlama ve erişim kimlik bilgileri.
+- [Ortak Sorumluluk Matrisi](/tr/security-compliance/partner-responsibilities): entegrasyon ve operasyonel sorumluluklar.

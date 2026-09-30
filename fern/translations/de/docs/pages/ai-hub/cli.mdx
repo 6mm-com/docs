@@ -1,0 +1,64 @@
+---
+title: "6MM CLI"
+subtitle: "Verwenden Sie die 6MM-Befehlszeilenschnittstelle von Terminals, Skripten und KI-Coding-Agenten."
+slug: ai-hub/cli
+canonical-url: https://docs.6mm.com/de/ai-hub/cli
+---
+
+> **Geplant – noch nicht gestartet**
+> AI Hub ist eine geplante Funktion. Die Funktionen, Endpunkte, Befehle und Clientkonfigurationen auf dieser Seite beschreiben das vorgeschlagene Design und sind derzeit nicht verfügbar. Die endgültige Verfügbarkeit und Einrichtungsanweisungen werden beim Start bekannt gegeben.
+
+
+6MM CLI ist der Befehlszeilen-Einstiegspunkt für Benutzer, Skripte und KI-Agenten, die Shell-Befehle ausführen können.
+
+Verwenden Sie CLI, wenn die KI-Umgebung Terminalbefehle direkt ausführen kann. Dies ist oft der einfachste Weg für Codierungsagenten, da kein separater MCP-Server erforderlich ist. Das CLI sollte standardmäßig stabiles JSON zurückgeben, damit Agenten Ergebnisse analysieren können, ohne auf die Terminalformatierung angewiesen zu sein.
+
+<h2 id="what-the-cli-is-good-for">Wofür der CLI gut ist</h2>
+
+- Schnelle Abfrage von Marktdaten über ein Terminal.
+- Agentengesteuerte Analyse in Codex, Claude Code, Gemini CLI oder ähnlichen Tools.
+- CI oder geplante Skripte, die 6MM Daten benötigen.
+- Kontoleseprüfungen, wenn lokale Anmeldeinformationen konfiguriert sind.
+- Bestellvorschau-Abläufe, bei denen der Agent Parameter vorbereitet, aber keine Bestellung aufgibt.
+
+<h2 id="example-commands">Beispielbefehle</h2>
+
+```bash
+6mm markets
+6mm ticker BTC-USDT-PERP
+6mm orderbook BTC-USDT-PERP --depth 20
+6mm klines BTC-USDT-PERP --interval 1h --limit 100
+6mm account summary
+6mm positions
+6mm orders open
+6mm order preview --symbol BTC-USDT-PERP --side buy --type limit --price 65000 --size 0.01
+6mm order create --symbol BTC-USDT-PERP --side buy --type limit --price 65000 --size 0.01
+6mm order cancel --order-id xxx
+```
+
+<h2 id="output-modes">Ausgabemodi</h2>
+
+| Modus | Anwendungsfall |
+| --- | --- |
+| JSON | Standard für KI-Agenten, Skripte und Automatisierung. |
+| Tisch | Überprüfung des für Menschen lesbaren Terminals. |
+| Roh | Debugging- und Integrationstests. |
+
+<h2 id="recommended-safety-defaults">Empfohlene Sicherheitsvorgaben</h2>
+
+- Die Standardumgebung ist testnet.
+- Die Standardausgabe ist JSON.
+- Handelsbefehle erfordern eine ausdrückliche Einwilligung.
+- Die Erstellung einer Mainnet-Bestellung erfordert eine Bestätigung.
+- Vor dem Erstellen ist der Vorschaumodus verfügbar.
+- Zu den Fehlern gehören stabile Codes und klare Nachrichten.
+
+<h2 id="agent-usage">Agentennutzung</h2>
+
+KI-Agenten sollten schreibgeschützte Befehle bevorzugen, es sei denn, der Benutzer fordert ausdrücklich eine Vorschau oder Handelsaktionen an.
+
+Beispielaufforderung:
+
+```text
+Use the 6MM CLI to fetch BTC-USDT-PERP orderbook depth and return a short liquidity summary.
+```

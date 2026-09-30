@@ -1,0 +1,47 @@
+---
+title: "Güvenlik Modeli"
+subtitle: "AI-destekli erişim için izin modelini, varsayılan güvenlik duruşunu ve ticaret korkuluklarını anlayın."
+slug: ai-hub/security-model
+canonical-url: https://docs.6mm.com/tr/ai-hub/security-model
+---
+
+> **Planlandı — henüz başlatılmadı**
+> AI Hub planlanmış bir özelliktir. Bu sayfadaki yetenekler, uç noktalar, komutlar ve istemci yapılandırmaları önerilen tasarımı açıklamaktadır ve şu anda mevcut değildir. Nihai kullanılabilirlik ve kurulum talimatları lansman sırasında duyurulacaktır.
+
+
+Kullanıcı amacı doğal dilde ifade edildiğinden yapay zeka destekli alım satım erişimi sıradan otomasyondan daha güvenli olmalıdır.
+
+<h2 id="required-permission-scopes">Gerekli izin kapsamları</h2>
+
+| Kapsam | İzin verir |
+| --- | --- |
+| pazar:oku | Kamu piyasası verileri ve kural kaynakları. |
+| hesap:oku | Bakiyeler, pozisyonlar, açık emirler, tamamlamalar ve hesap özetleri. |
+| sipariş:yaz | Sipariş oluşturma, değiştirme ve iptal etme. |
+
+<h2 id="default-safety-posture">Varsayılan güvenlik duruşu</h2>
+
+- Varsayılan olarak salt okunurdur.
+- Varsayılan olarak testnet'tir.
+- AI araçları aracılığıyla yapılan para çekme veya transfer işlemlerini ifşa etmeyin.
+- Oluşturmadan önce önizlemeyi zorunlu kılın.
+- Ana ağda işlem yapmadan önce açık onay isteyin.
+- Ticaret işlemleri için idempotency anahtarlarını kullanın.
+- Maksimum kavramsal ve kaldıraç limitlerini uygulayın.
+- Eksiksiz denetim günlüklerini tutun.
+
+<h2 id="controlled-trading-flow">Kontrollü ticaret akışı</h2>
+
+```text
+User natural language intent
+  -> AI maps intent to tool parameters
+  -> 6mm_preview_order validates the order
+  -> service returns risk checks and margin impact
+  -> user explicitly confirms
+  -> 6mm_create_order submits the order
+  -> audit log records the full flow
+```
+
+<h2 id="prompt-injection-protection">Hızlı enjeksiyon koruması</h2>
+
+AI istemcileri ve MCP sunucuları, harici içeriği güvenilmez olarak ele almalıdır. Piyasa sayfaları, kopyalanan metinler, belgeler ve web içeriği, araç izinlerini, onay kurallarını veya işlem limitlerini geçersiz kılmamalıdır.

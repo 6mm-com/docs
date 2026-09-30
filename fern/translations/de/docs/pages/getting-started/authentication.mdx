@@ -1,102 +1,57 @@
 ---
 title: "Zugang zum Handelskonto"
-description: "Verstehen Sie das von Partnern verwaltete Registrierungs- und Kontozugriffsmodell, das verwendet wird, um Nutzer mit 6MM Trading zu verbinden und dabei Verantwortungsgrenzen zu bewahren."
+description: "Verstehen Sie den Kontozugriff für Partnerintegrationen und White-Label-Plattformen, einschließlich Anmeldung, Kontoverwaltung und Vorbereitung für Perpetual Trading."
 slug: trading/getting-started/authentication
 canonical-url: https://docs.6mm.com/de/trading/getting-started/authentication
 ---
 
-6MM verwendet ein von Partnern verwaltetes Registrierungs- und Zugriffsmodell, das darauf ausgelegt ist, eine nahtlose Benutzererfahrung mit einer klaren Trennung von Nutzereigentum und Plattformverantwortung in Einklang zu bringen.
+6MM unterstützt zwei Kontozugriffsmodelle: die Integration mit einem Partnersystem und eine White-Label-Plattform. Nutzen Sie den von Ihrer Plattform bereitgestellten Eintrag. Kontoerstellung, Authentifizierung und Profilverwaltung hängen vom gewählten Modell ab.
 
-* 6MM bietet keine öffentliche Selbstregistrierung an.
-* Alle Nutzer-Onboardings werden ausschließlich von autorisierten Agenten oder Partnerplattformen initiiert und verwaltet.
+<h2 id="registration-model">Wählen Sie Ihr Kontomodell</h2>
 
-***
+| Bereich | Partnerintegration | White-Label-Plattform |
+| --- | --- | --- |
+| Kontoquelle | Der Benutzer verfügt über ein Konto im Partnersystem, das den Handelsbenutzer bindet bzw. synchronisiert. | Der Benutzer gehört zum Kontosystem der White-Label-Plattform. |
+| Zugangseintrag | Die App, Website oder der eingebettete Handelseintrag des Partners. | Die Markendomain und Anmeldeseite der White-Label-Plattform. |
+| Authentifizierung | Der Partner verifiziert den Benutzer und sein Backend erhält die erforderlichen Handelszugangsdaten. | Anmeldung, Verifizierung und Kontosicherheit folgen der aktivierten Konfiguration der Plattform. |
+| Kontoverwaltung | Der Partner verwaltet sein Benutzerprofil; Das Handelssystem verwaltet die erforderlichen Benutzerzuordnungen und Handelsaufzeichnungen. | Das White-Label-Kontosystem und autorisierte Administratoren verwalten Benutzerprofile, Kontostatus und Sicherheitseinstellungen. |
 
-<h2 id="registration-model">Registrierungsmodell</h2>
+<h2 id="login-method-1-partner-embedded-access">Partnerintegration</h2>
 
-<h2 id="partner-only-registration">Nur Partnerregistrierung</h2>
+1. Melden Sie sich über das Kontosystem des Partners an.
+2. Das Partner-Backend verifiziert die Sitzung und bindet bzw. identifiziert den entsprechenden Handelsnutzer.
+3. Das Backend erhält über die unterstützte Integration die erforderlichen Handelszugangsdaten bzw. den erforderlichen Eintrag URL.
+4. Öffnen Sie die eingebettete Handelsschnittstelle oder den autorisierten Handelseintrag, der vom Partner bereitgestellt wird.
 
-6MM unterstützt ein einheitliches Registrierungsmodell:
+Durch den Kontozugriff allein stehen keine Geldmittel für den Handel zur Verfügung. Folgen Sie dem Finanzierungsprozess des Partners und bestätigen Sie das verfügbare Guthaben des Dauerkontos, bevor Sie eine Bestellung aufgeben.
 
-* Nutzer werden ausschließlich über Agenten oder Partnerplattformen registriert
-* Es gibt keine direkte Anmeldung für 6MM
-* Benutzeridentität, Kontoerstellung und Lebenszyklusverwaltung werden vollständig vom Partner kontrolliert
+<h2 id="login-method-2-6mm-account-login-partner-issued-credentials">White-Label-Plattformzugang</h2>
 
-Nach der Registrierung bieten die Partner einen 6MM Einstiegspunkt in ihrer eigenen Anwendung ein, der es den Nutzern ermöglicht, 6MMgestützten Handelserlebnisse zu nutzen.
+Nutzen Sie die von der White-Label-Plattform bereitgestellte Markendomain und den Kontoeintrag. Ob die Selbstregistrierung verfügbar ist, wie Konten eröffnet werden und welche Anmelde- oder Identitätsprüfungsmethoden aktiviert sind, hängt von der Konfiguration dieser Plattform ab.
 
-6MM sammelt oder verwaltet keine Identitätsinformationen des Endnutzers eigenständig.
+Das Kontosystem der Plattform und autorisierte Administratoren kümmern sich im Rahmen ihrer Berechtigungen um Profilverwaltung, Kontostatus und Sicherheitsvorgänge. Befolgen Sie den Verifizierungsprozess der Plattform für die Wiederherstellung von Passwörtern, Änderungen von Kontaktinformationen oder Kontoeinschränkungen.
 
-***
+Bereiten Sie nach der Anmeldung Mittel über den von der Plattform unterstützten Finanzierungsprozess vor. Übertragen Sie für den Perpetual-Handel das erforderliche Abwicklungsvermögen vom Finanzierungskonto auf das Perpetual-Konto und bestätigen Sie das Übertragungsergebnis.
 
-<h2 id="login-methods">Login-Methoden</h2>
+<h2 id="user-ownership-and-data-responsibility">Konto- und Datenverantwortung</h2>
 
-Um unterschiedliche Partnerapplikationsarchitekturen und Anforderungen an die Benutzererfahrung zu berücksichtigen, unterstützt 6MM zwei Anmeldemethoden, die beide über Partnerplattformen initiiert werden.
+Die beiden Modelle haben unterschiedliche Verantwortungsgrenzen. Partnerintegrationen behalten die partnerseitige Kontoverwaltung bei und behalten gleichzeitig die für den Handel erforderliche Benutzerzuordnung und Aufzeichnungen bei. White-Label-Plattformen verwenden ihre eigenen Kontoprozesse und Administratorberechtigungen, um Benutzer zu verwalten.
 
-***
+Die erfassten, gespeicherten oder angezeigten Informationen, Anforderungen an die Identitätsprüfung und Support-Verantwortlichkeiten müssen für den tatsächlichen Einsatz definiert werden. Wenden Sie nicht die Kontoverwaltungsannahmen eines Modells auf jede Plattform an.
 
-<h2 id="login-method-1-partner-embedded-access">Anmeldemethode 1: Partner-Embedded Zugriff</h2>
+<h2 id="design-principles">Vor dem Einstieg in den Handel</h2>
 
-Im primären Integrationsmodell greifen Nutzer direkt von der Anwendung des Partners auf 6MM zu.
+- Bestätigen Sie, dass Sie die richtige Plattformdomäne und das richtige Konto verwenden.
+- Führen Sie alle für diese Plattform erforderlichen Identitäts- oder Sicherheitsprüfungen durch.
+- Überprüfen Sie, ob das Konto über Handelszugriff verfügt, und überprüfen Sie etwaige Einschränkungen.
+- Bestätigen Sie das verfügbare Guthaben auf dem Dauerkonto. Durch die Anmeldung wird kein Geld automatisch überwiesen.
+- Wenden Sie sich an das Support-Team Ihrer Plattform, wenn der Kontozugriff oder die Identitätsüberprüfung Aufmerksamkeit erfordert.
 
-* Nutzer geben 6MM über einen vom Agenten oder Partner bereitgestellten eingebetteten Einstiegspunkt ein
-* Die Authentifizierung wird vollständig vom Partner übernommen
-* Zugriffstoken oder Sitzungszugangsdaten werden sicher an 6MM weitergegeben
-* Es ist kein separater 6MM -Login erforderlich.
+<h2 id="implementation-guides">Setzen Sie Ihre Integration fort</h2>
 
-Diese Methode bietet das nahtloseste Erlebnis und wird für tief integrierte Partneranwendungen empfohlen.
-
-***
-
-<h2 id="login-method-2-6mm-account-login-partner-issued-credentials">Login-Methode 2: 6MM Konto-Login (von Partnern ausgegebene Zugangsdaten)</h2>
-
-Aufgrund von Unterschieden in den Fähigkeiten der Partneranwendungen und Geräteumgebungen bietet 6MM auch unabhängige, web- und mobiloptimierte Schnittstellen, mit nativen Anwendungen für zukünftige Veröffentlichungen.
-
-In diesem Modell:
-
-* Die Nutzer geben 6MM zuerst über die Anwendung des Partners ein
-* Der Partner gibt dem Nutzer ein 6MM-spezifisches Login-Konto und Passwort aus
-* Benutzer können sich dann direkt über Folgendes anmelden:
-  * [https://app.6mm.com](https://app.6mm.com/)
-  * Mobiloptimierte Weboberfläche
-  * Zukünftige offizielle 6MM Bewerbungen
-
-Dieser Ansatz ermöglicht eine verbesserte Interaktionsleistung und das Nutzererlebnis über Geräte hinweg.
-
-> Wichtig:\
-> Alle 6MM Zugangsdaten werden vom Partner generiert, ausgegeben und verwaltet.
-> 6MM überprüft die Benutzeridentität nicht unabhängig und verwaltet keine Benutzerprofildaten.
-
-***
-
-<h2 id="user-ownership-and-data-responsibility">Benutzereigentum und Datenverantwortung</h2>
-
-Unabhängig von der verwendeten Login-Methode:
-
-* Alle Nutzer gehören dem Partner und werden vom Partner verwaltet
-* Die Benutzeridentitätsdaten bleiben im System des Partners
-* 6MM führt nur die erforderlichen technischen Mindestbezeichnungen für:
-  * Handelsausführung
-  * Margen- und Risikoberechnung
-  * Position- und Kontoisolation
-
-6MM greift nicht auf Benutzeridentitäten zu, analysiert sie nicht und monetarisiert sie nicht.
-
-***
-
-<h2 id="design-principles">Konstruktionsprinzipien</h2>
-
-Das 6MM Authentifizierungs- und Zugriffssystem basiert auf folgenden Prinzipien:
-
-* Einzige Registrierungsquelle: nur Partner
-* Mehrfachzugriffsmethoden für eine bessere Benutzererfahrung
-* Klare Trennung von Nutzereigentum und Handelsinfrastruktur
-* Keine direkte Nutzerakquise oder Konkurrenz mit Partnern
-
-Dieses Modell stellt sicher, dass 6MM als Partner-First, neutrale Handelsinfrastruktur funktioniert und gleichzeitig ein konsistentes und hochwertiges Handelserlebnis über Plattformen und Geräte hinweg bietet.
-
-<h2 id="implementation-guides">Implementierungsleitfäden</h2>
-
-- [Entwickler API Authentifizierung](/de/developer-api/authentication): JWT und API Key Authentifizierung für Integrationen.
-- [Trading Widget Authentifizierung](/de/sdk/trading-widget/authentication): Partner-Token- und Kompatibilitätsmodi.
-- [Agent SDK Übersicht](/de/sdk/agent-sdk/overview): Backend-Benutzerbindung und Berechtigungsausgabe.
-- [Architektur & Verantwortlichkeiten](/de/solutions/architecture-responsibilities): Partner- und 6MM Eigentumsgrenzen.
+- [Beginnen Sie mit dem Handel](/de/trading/getting-started/start-trading): Bereiten Sie Mittel vor und geben Sie eine erste Dauerbestellung auf.
+- [Vermögensübertragung](/de/trading/getting-started/asset-transfer): Finanzierung und Dauerkonten, Übertragungsstatus und Abgleich.
+- [Developer API Authentifizierung](/de/developer-api/authentication): Authentifizierung für direkten API-Zugriff.
+- [Trading Widget Authentifizierung](/de/sdk/trading-widget/authentication): Anmeldeinformationen für die eingebettete Handelsschnittstelle.
+- [Agent SDK Übersicht](/de/sdk/agent-sdk/overview): Partner-Backend-Benutzerbindung und Zugangsdaten.
+- [Partner-Verantwortungsmatrix](/de/security-compliance/partner-responsibilities): Integration und operative Verantwortung.

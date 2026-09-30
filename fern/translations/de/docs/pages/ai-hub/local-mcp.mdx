@@ -1,0 +1,89 @@
+---
+title: "Lokal MCP"
+subtitle: "Führen Sie den Server 6MM MCP lokal aus, damit KI-Clients auf Markt-, Konto- und zukünftige Handelstools zugreifen können, während die Anmeldeinformationen auf dem Benutzercomputer verbleiben."
+slug: ai-hub/local-mcp
+canonical-url: https://docs.6mm.com/de/ai-hub/local-mcp
+---
+
+> **Geplant – noch nicht gestartet**
+> AI Hub ist eine geplante Funktion. Die Funktionen, Endpunkte, Befehle und Clientkonfigurationen auf dieser Seite beschreiben das vorgeschlagene Design und sind derzeit nicht verfügbar. Die endgültige Verfügbarkeit und Einrichtungsanweisungen werden beim Start bekannt gegeben.
+
+
+Lokal MCP ist die empfohlene Einrichtung, wenn ein KI-Kunde einen privaten Kontokontext oder zukünftige kontrollierte Handelstools benötigt.
+
+Der MCP-Server läuft auf dem Computer des Benutzers. Der AI-Client ruft lokale 6MM-Tools auf und der lokale Server kommuniziert mit 6MM APIs unter Verwendung der vom Benutzer konfigurierten Anmeldeinformationen.
+
+<h2 id="what-your-ai-client-can-do">Was Ihr KI-Client kann</h2>
+
+Mit Local MCP kann ein KI-Client 6MM-Tools auf kontrollierte Weise verwenden:
+
+- Rufen Sie Live- und historische Marktdaten ab.
+- Lesen Sie Kontostände, Positionen, offene Aufträge, Ausführungen und Finanzierungsdatensätze, wenn schreibgeschützte Anmeldeinformationen aktiviert sind.
+- Erläutern Sie das Portfoliorisiko, die Margin-Nutzung und das Liquidationsrisiko.
+- Sehen Sie sich Bestellungen in der Vorschau an, bevor Sie eine echte Bestellung aufgeben.
+- Erstellen oder stornieren Sie in späteren Phasen des kontrollierten Handels Aufträge nur nach ausdrücklicher Genehmigung und Risikoprüfung.
+
+Verwenden Sie „Lokal“ MCP, wenn die Anmeldeinformationen auf dem Computer des Benutzers verbleiben sollen.
+
+<h2 id="architecture">Architektur</h2>
+
+```text
+AI client
+  -> local 6mm-mcp process
+  -> 6MM REST / WebSocket API
+```
+
+<h2 id="example-configuration">Beispielkonfiguration</h2>
+
+```json
+{
+  "mcpServers": {
+    "6mm": {
+      "command": "uvx",
+      "args": ["6mm-mcp"],
+      "env": {
+        "SIXMM_ENVIRONMENT": "testnet",
+        "SIXMM_API_KEY": "your_api_key",
+        "SIXMM_API_SECRET": "your_api_secret"
+      }
+    }
+  }
+}
+```
+
+<h2 id="recommended-permission-tiers">Empfohlene Berechtigungsstufen</h2>
+
+| Stufe | Werkzeuge | Notizen |
+| --- | --- | --- |
+| Öffentliche Daten | Märkte, Ticker, Orderbuch, Klines, Trades, Finanzierung | Kein privater Kontozugriff. |
+| Konto gelesen | Salden, Positionen, offene Aufträge, Ausführungen | Erfordert den schreibgeschützten Schlüsselbereich API. |
+| Handelsvorschau | Vorschau der Bestellung, Auswirkung auf die Marge, Kostenschätzung | Gibt keine Bestellungen auf. |
+| Kontrollierter Handel | Bestellungen erstellen, stornieren und ändern | Erfordert ausdrückliche Genehmigung, Bestätigung und Risikokontrollen. |
+
+<h2 id="first-setup-checklist">Checkliste für die erste Einrichtung</h2>
+
+1. Installieren Sie das Paket MCP.
+2. Erstellen oder konfigurieren Sie einen schreibgeschützten API-Schlüssel.
+3. Beginnen Sie im Testnetz.
+4. Fügen Sie den MCP-Server zur AI-Client-Konfiguration hinzu.
+5. Bitten Sie den Kunden, die verfügbaren 6MM-Tools aufzulisten.
+6. Führen Sie eine öffentliche Marktdatenabfrage durch.
+7. Fügen Sie dann bei Bedarf die Anmeldeinformationen zum Lesen des Kontos hinzu.
+
+<h2 id="example-prompts">Beispielaufforderungen</h2>
+
+```text
+Use 6MM to list available perpetual markets.
+```
+
+```text
+Use 6MM testnet to check my open positions and explain liquidation risk.
+```
+
+```text
+Preview a small BTC long order on 6MM testnet and explain margin impact. Do not place the order.
+```
+
+<h2 id="security-notes">Sicherheitshinweise</h2>
+
+Lokal MCP sollte standardmäßig schreibgeschützt und testnet sein. Handelstools sollten eine Vorschau, Benutzerbestätigung, Idempotenzschlüssel, fiktive Limits und dienstseitige Risikoprüfungen erfordern.

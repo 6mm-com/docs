@@ -28,9 +28,9 @@ Esta sección explica el flujo de trabajo principal de trading y los mecanismos 
 
 <h2 id="market-order">Orden de mercado</h2>
 
-* Ejecuta inmediatamente al mejor precio de mercado disponible
-* Prioriza la velocidad de ejecución sobre la precisión del precio
-* Adecuado para entrada o salida rápida
+Una orden de mercado busca ejecutarse contra la liquidez disponible a los mejores precios disponibles. La ejecución depende de la profundidad del libro de órdenes y de las restricciones comerciales: la orden puede ejecutarse a múltiples precios, ejecutarse parcialmente o no completarse. Verifique el estado real del pedido y los llenados.
+
+***
 
 <h2 id="limit-order">Orden límite</h2>
 
@@ -46,6 +46,8 @@ Esta sección explica el flujo de trabajo principal de trading y los mecanismos 
 > disponibilidad de órdenes puede variar según el par de negociación y el modo de integración.
 
 ***
+
+Envío significa que se ha enviado una solicitud de pedido; la aceptación, la activación y la ejecución son estados separados. Una orden de mercado activada depende de la liquidez disponible. Una orden límite activada también debe satisfacer su precio límite y puede permanecer sin ejecutar.
 
 <h2 id="leverage-and-margin">Apalancamiento y margen</h2>
 
@@ -69,9 +71,7 @@ Los contratos perpetuos utilizan un mecanismo de tipo de inversión para mantene
 * Si la tasa de financiación es negativa:
   * Las posiciones cortas pagan a largo plazo
 
-Las comisiones de financiación se intercambian directamente entre los inversores.
-
-6MM no cobra pagos de financiación como ingresos.
+6MM no cobra tarifas de financiación. Los pagos de financiación se liquidan según las reglas del contrato y se registran por separado de las tarifas comerciales. Verifique la dirección, el monto y el resultado de la liquidación con los registros de pago y financiación de la cuenta y las transacciones de saldo vinculadas.
 
 ***
 
@@ -84,7 +84,7 @@ Las comisiones de financiación se intercambian directamente entre los inversore
   * Órdenes de fabricante
   * Órdenes de receptor
 
-Las tablas de tarifas las define la plataforma asociada y pueden variar.
+Las tarifas Maker / Taker aplicables siguen las reglas del socio o plataforma de marca blanca y pueden variar según el par comercial y la configuración.
 
 <h2 id="slippage">Deslizamiento</h2>
 
@@ -109,12 +109,7 @@ Los usuarios pueden reducir el deslizamiento utilizando órdenes límite y gesti
 
 <h2 id="risk-management-and-liquidation">Gestión de riesgos y liquidación</h2>
 
-* 6MM monitoriza en tiempo real las relaciones de márgenes
-* Cuando el margen cae por debajo del umbral de mantenimiento:
-  * Las posiciones pueden liquidarse parcial o totalmente
-* Los precios de liquidación se calculan usando el precio de marca, no el último precio negociado
-
-Este mecanismo ayuda a reducir las liquidaciones innecesarias causadas por la volatilidad del mercado a corto plazo.
+Monitoree el patrimonio de la cuenta o posición, los requisitos de margen de mantenimiento y los indicadores de riesgo de la plataforma. Si se cumplen las condiciones de liquidación aplicables, las posiciones podrán reducirse parcialmente o cerrarse por completo. Verifique la posición restante real y los registros de saldo en lugar de comparar un porcentaje directamente con un monto de margen.
 
 ***
 

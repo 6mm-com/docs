@@ -110,3 +110,29 @@ Copyright (c) 2026 6MM. All rights reserved.
 This repository is public for documentation collaboration, review, and issue
 tracking. It does not grant an open source or Creative Commons license for the
 documentation, downloads, or brand materials.
+
+## Local prediction content review
+
+The Prediction section adds 17 pages across all 20 configured languages.
+English and Simplified Chinese are authored together; Traditional Chinese is converted from the Chinese draft, and the other 17 locales use
+machine-assisted translation and need native-language editorial review before release.
+Review the business-rule checklist in `docs/prediction-content-review.md` before publication.
+
+```bash
+npm ci
+npm run check
+npm run preview:prediction
+```
+
+Open `http://127.0.0.1:3010/zh-CN/prediction/overview` (Chinese) or
+`http://127.0.0.1:3010/prediction/overview` (English), then use the existing language menu.
+The preview runs the normal Fern renderer with all configured languages.
+Ports default to 3010/3011; use `npm run preview:prediction -- --port=3012 --backend-port=3013`
+if needed. Nothing is published by this command.
+
+The old Edge translation auth endpoint returned HTTP 404. The generator now defaults
+to the public Google dictionary translation endpoint, with request throttling,
+bounded retries, and protected-token validation. This unofficial endpoint may change;
+`DOCS_TRANSLATION_PROVIDER=edge` retains the previous provider for environments where it works.
+Existing manifest hashes still control incremental generation; do not refresh them to hide
+missing translations. The full `npm run check` validates all 20 locales.

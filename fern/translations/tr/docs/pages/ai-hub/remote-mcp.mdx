@@ -1,0 +1,50 @@
+---
+title: "Uzaktan MCP Dağıtım"
+subtitle: "Kullanıcı tarafından yönetilen veya kurum tarafından yönetilen altyapıda bir 6MM MCP uç noktası dağıtın."
+slug: ai-hub/remote-mcp
+canonical-url: https://docs.6mm.com/tr/ai-hub/remote-mcp
+---
+
+> **Planlandı — henüz başlatılmadı**
+> AI Hub planlanmış bir özelliktir. Bu sayfadaki yetenekler, uç noktalar, komutlar ve istemci yapılandırmaları önerilen tasarımı açıklamaktadır ve şu anda mevcut değildir. Nihai kullanılabilirlik ve kurulum talimatları lansman sırasında duyurulacaktır.
+
+
+Uzaktan MCP, kendi kontrolleri altında uzun süre çalışan bir MCP uç noktası isteyen kullanıcılar veya kurumlar içindir.
+
+Barındırılan MCP'dan farklı olarak, Uzak MCP, kullanıcı için 6MM tarafından çalıştırılmaz. 6MM kod, görseller, şablonlar ve belgeler sağlar; kullanıcı barındırma ve kimlik bilgilerini kontrol eder.
+
+<h2 id="architecture">Mimarlık</h2>
+
+```text
+AI client
+  -> user-managed MCP HTTP endpoint
+  -> 6MM REST / WebSocket API
+```
+
+<h2 id="deployment-targets">Dağıtım hedefleri</h2>
+
+- Docker veya Docker Oluşturma.
+- Ters proxy ile VPS.
+- Demiryolu.
+- Oluştur.
+- Fly.io.
+- AWS ECS veya Lambda.
+- Dahili Kubernet'ler.
+
+<h2 id="required-files">Gerekli dosyalar</h2>
+
+- Docker dosyası.
+- docker-compose.yml.
+- .env.template.
+- HTTP taşıma modu.
+- /mcp uç noktası.
+- /sağlık uç noktası.
+- Ters proxy ve TLS notları.
+
+<h2 id="credential-model">Kimlik bilgisi modeli</h2>
+
+Kimlik bilgileri AI istemci isteminde değil, kullanıcı tarafından yönetilen ortamda saklanmalıdır. Kurum tarafından yönetilen dağıtımlar için onaylı istemcilere ve ağlara erişimi kısıtlayın.
+
+<h2 id="recommended-first-release">Önerilen ilk sürüm</h2>
+
+Kamu piyasası verileriyle başlayın. Yalnızca kimlik doğrulama, anahtar kapsamı, günlükler ve erişim kontrolleri kullanıma sunulduktan sonra hesap okuma özelliği ekleyin. Kontrollü ticaret gereklilikleri karşılanana kadar ticaret devre dışı bırakılmalıdır.

@@ -1,113 +1,58 @@
 ---
 title: "Take Profit / Stop Loss (TP/SL)"
-description: "Take Profit (TP) i Stop Loss (SL) to zautomatyzowane zlecenia zaprojektowane, aby pomóc traderom zablokować zyski i ograniczyć straty bez ciągłego monitorowania rynku."
+description: "Take Profit i Stop Loss to instrukcje warunkowego wyjścia. Osiągnięcie ceny wyzwalającej aktywuje skonfigurowane zlecenie; nie gwarantuje wypełnienia, ceny wykonania, zysku ani maksymalnej straty."
 slug: trading/take-profit-stop-loss
 canonical-url: https://docs.6mm.com/pl/trading/take-profit-stop-loss
 ---
 
-Take Profit (TP) i Stop Loss (SL) to zautomatyzowane zlecenia zaprojektowane, aby pomóc traderom zablokować zyski i ograniczyć straty bez ciągłego monitorowania rynku.
+Take Profit i Stop Loss to instrukcje warunkowego wyjścia. Osiągnięcie ceny wyzwalającej aktywuje skonfigurowane zlecenie; nie gwarantuje wypełnienia, ceny wykonania, zysku ani maksymalnej straty.
 
-Na 6MMTP/SL jest kluczowym narzędziem zarządzania ryzykiem dla kontraktów wieczystych z marginesem U.
+<h2 id="what-is-take-profit">Co to jest realizacja zysku?</h2>
 
-***
+Take Profit uruchamia zlecenie wyjścia, gdy skonfigurowana cena referencyjna osiągnie korzystny poziom wyzwalający.
 
-<h2 id="what-is-take-profit">Czym jest Take Profit?</h2>
+Na przykład długa pozycja otwarta po cenie 20 000 ma wyzwalacz Take Profit przy wartości 20 600. Dotarcie do tego wyzwalacza aktywuje skonfigurowaną kolejność; 20 600 nie jest gwarantowaną ceną wykonania. Przed oceną wyniku należy potwierdzić wypełnioną ilość, cenę wykonania i opłaty.
 
-Take Profit automatycznie zamyka Twoją pozycję, gdy cena osiągnie z góry określony korzystny poziom.
+<h2 id="what-is-stop-loss">Co to jest Stop Loss?</h2>
 
-Cel:
+Stop Loss uruchamia zlecenie wyjścia po niekorzystnym ruchu cenowym, w celu zmniejszenia ekspozycji.
 
-* Zabezpiecz zyski
-* Unikaj podejmowania decyzji emocjonalnych
-* Wykonaj wyjścia nawet będąc offline
+Na przykład długa pozycja otwarta przy 20 000 ma wyzwalacz Stop Loss przy 19 600. Dotarcie do wyzwalacza aktywuje skonfigurowane zlecenie. Poślizgi, ograniczenia płynności i zleceń mogą mieć wpływ na realizację; cena wywoławcza nie wyznacza gwarantowanej maksymalnej straty.
 
-Przykład:
+<h2 id="how-tp-sl-works">Złożenie, uruchomienie i wykonanie</h2>
 
-* Otwierasz długą pozycję przy 20 000
-* Ustawiasz TP na 20 600
-* Gdy cena osiągnie 20 600, pozycja zostaje automatycznie zamknięta
+1. Złóż zamówienie warunkowe i potwierdź jego przyjęcie oraz zapisane warunki.
+2. Monitoruj skonfigurowaną cenę referencyjną, taką jak cena markowa lub cena ostatniej transakcji, zgodnie z zasadami platformy.
+3. Gdy warunki zostaną spełnione, zostaje uruchomione skonfigurowane zlecenie rynkowe lub zlecenie z limitem.
+4. Sprawdź wynikowy status zamówienia i faktyczne wypełnienia. Częściowo wypełnione zlecenie pozostawia pozostałą pozycję odkrytą.
 
-***
+Zlecenie rynkowe zależy od dostępnej płynności i ograniczeń handlowych. Zlecenie z limitem musi spełniać cenę limitu i może pozostać niewypełnione. Samo uruchomienie nie oznacza zamknięcia pozycji.
 
-<h2 id="what-is-stop-loss">Czym jest Stop Loss?</h2>
+<h2 id="setting-tp-sl">Ustawianie Take Profit i Stop Loss</h2>
 
-Stop Loss automatycznie zamyka Twoją pozycję, gdy cena zmierza przeciwko tobie.
+Jeśli jest to możliwe, skonfiguruj te instrukcje podczas otwierania pozycji lub dla istniejącej pozycji. Sprawdź kierunek pozycji, ilość, cenę referencyjną, cenę wywoławczą i metodę realizacji. W przypadku zlecenia z limitem sprawdź także cenę limitu. Dostępne ustawienia zależą od pary handlowej i konfiguracji platformy.
 
-Cel:
+<h2 id="tp-sl-vs-liquidation">Take Profit, Stop Loss i likwidacja</h2>
 
-* Limit maksymalnej straty
-* Chronić saldo konta
-* Zapobieganie likwidacji na niestabilnych rynkach
+Take Profit i Stop Loss to instrukcje warunkowe konfigurowane przez użytkownika. Likwidacja odbywa się zgodnie z zasadami platformy dotyczącymi marży i ryzyka. Ustawienie Stop Loss nie gwarantuje, że zostanie ono wypełnione przed likwidacją; różne ceny referencyjne, ruchy rynkowe i warunki realizacji mogą mieć wpływ na kolejność.
 
-Przykład:
+<h2 id="common-beginner-mistakes">Powszechne nieporozumienia</h2>
 
-* Otwierasz długą pozycję przy 20 000
-* Ustawiasz SL na 19 600
-* Jeśli cena spadnie do 19 600, pozycja zostaje zamknięta
+- Traktowanie ceny wywoławczej jako gwarantowanej ceny wykonania.
+- Zakładając, że uruchomione zlecenie zamknęło całą pozycję.
+- Zakładając, że aktywowane zlecenie z limitem musi zostać wypełnione.
+- Ignorowanie opłat, poślizgu i pozycji pozostałej po częściowym wypełnieniu.
 
-***
+<h2 id="best-practices">Sprawdź wynik</h2>
 
-<h2 id="how-tp-sl-works">Jak działa TP / SL</h2>
+Po złożeniu lub uruchomieniu sprawdź status zamówienia, wypełnioną ilość i pozostałą pozycję. Jeżeli wynik jest niejasny, przed złożeniem kolejnej dyspozycji wyjścia sprawdź istniejące zlecenia. Skontaktuj się z pomocą techniczną platformy, jeśli wynik wykonania wymaga sprawdzenia.
 
-* Rozkazy TP/SL są porządkami warunkowymi
-* Są aktywowane, gdy cena markowa lub ostatnia cena osiąga poziom wyzwalający (w zależności od konfiguracji)
-* Po wyzwalaniu wykonuje się jako zlecenie rynkowe lub limitujące
+<h2 id="summary">Streszczenie</h2>
 
-Zachowanie wykonawcze może się różnić w zależności od ustawień partnera.
-
-***
-
-<h2 id="setting-tp-sl">Ustawianie TP / SL</h2>
-
-TP/SL można zazwyczaj ustawić:
-
-* Podczas otwierania stanowiska
-* Po tym, jak stanowisko jest już wolne
-
-Obie metody pomagają automatyzować strategie wyjścia.
-
-***
-
-<h2 id="tp-sl-vs-liquidation">TP / SL vs. likwidacja</h2>
-
-* TP/SL zamyka pozycje zanim margines stanie się krytyczny
-* Likwidacja następuje, gdy marża jest niewystarczająca
-* Stosowanie SL zmniejsza ryzyko likwidacji
-
-TP/SL to narzędzie proaktywnej kontroli ryzyka, natomiast likwidacja to mechanizm egzekwowany przez system.
-
-***
-
-<h2 id="common-beginner-mistakes">Typowe błędy początkujących</h2>
-
-* Ustawianie SL zbyt blisko ceny wejścia
-* Ignorowanie zmienności rynku
-* Nie uwzględniając opłat i poślizgów
-* Zapominanie ustawienia TP lub SL
-
-***
-
-<h2 id="best-practices">Najlepsze praktyki</h2>
-
-* Zawsze ustaw Stop Loss przed lub bezpośrednio po otwarciu pozycji
-* Użyj Take Profit, aby uniknąć nadtrzymania pozycji
-* Dostosowywanie TP/SL w miarę rozwoju rynku
-* Połączenie TP/SL z niskim dźwignieniem
-
-***
-
-<h2 id="summary">Podsumowanie</h2>
-
-Na 6MMTP/SL pomaga użytkownikom:
-
-* Automatyzuj wyjścia
-* Ogranicz emocjonalny handel
-* Skuteczne zarządzanie ryzykiem
-
-Korzystanie z TP/SL jest niezbędne dla zdyscyplinowanego handlu kontraktami wieczystymi.
+Take Profit i Stop Loss pomagają zautomatyzować instrukcje wyjścia. Rzeczywista redukcja ryzyka zależy od wykonania, a nie tylko od ustawienia lub uruchomienia zlecenia.
 
 <h2 id="related-guides">Powiązane przewodniki</h2>
 
-- [Typy porządków](/pl/trading/order-types): wspierane zachowanie kolejności warunkowej.
-- [Mechanika dźwigni](/pl/trading/leverage-mechanics): ekspozycja na pozycję i ryzyko.
-- [Ryzyko i likwidacje](/pl/trading/risk-and-liquidations): dlaczego TP/SL nie eliminuje ryzyka likwidacji.
+- [Typy zleceń](/pl/trading/order-types): zlecenia rynkowe, limitowe i warunkowe.
+- [Mechanika dźwigni](/pl/trading/leverage-mechanics): ekspozycja pozycji i marża.
+- [Ryzyko i likwidacje](/pl/trading/risk-and-liquidations): ryzyko marży i likwidacja.

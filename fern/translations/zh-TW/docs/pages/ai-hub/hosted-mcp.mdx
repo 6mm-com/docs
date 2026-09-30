@@ -1,0 +1,83 @@
+---
+title: "Hosted MCP"
+subtitle: "連接 6MM 官方託管 MCP 端點，讀取公開行情和交易規則上下文。"
+slug: ai-hub/hosted-mcp
+canonical-url: https://docs.6mm.com/zh-TW/ai-hub/hosted-mcp
+---
+
+> **規劃中 · 尚未上線**
+> AI Hub 為規劃內容。本頁中的功能、服務地址、命令及客戶端配置用於說明擬定方案，目前尚未開放使用。實際開放範圍與接入方式以上線公告為準。
+
+
+Hosted MCP 是開始使用 6MM AI Hub 的最簡單方式。
+
+用戶只需要把 AI 客戶端連接到 6MM 官方託管 MCP 端點，就可以詢問公開市場數據。不需要安裝本地服務，不需要維護雲部署，公開數據也不需要用戶 API key。
+
+<h2 id="what-you-can-do">可以做什麼</h2>
+
+- 查詢實時和歷史市場數據。
+- 瀏覽可交易永續合約市場。
+- 查看盤口深度和近期成交。
+- 對比資金費率。
+- 讀取費用、合約、保證金和風控規則上下文。
+
+Hosted MCP 適合研究、產品探索和公開市場分析。它不是私有賬戶訪問或交易操作的第一選擇。
+
+<h2 id="endpoint">端點</h2>
+
+```text
+https://mcp.6mm.com/mcp
+```
+
+健康檢查：
+
+```text
+https://mcp.6mm.com/health
+```
+
+<h2 id="recommended-first-release-scope">第一階段推薦範圍</h2>
+
+Hosted MCP 第一階段應只暴露公開和只讀信息：
+
+- 市場列表。
+- 行情 ticker。
+- 盤口。
+- 最新成交。
+- K 線。
+- 資金費率。
+- 系統狀態。
+- 交易費率。
+- 合約規格。
+- 風險和保證金規則資源。
+
+<h2 id="not-supported-in-the-first-release">第一階段不支持</h2>
+
+Hosted MCP 不應作為以下能力的第一入口：
+
+- 賬戶餘額。
+- 倉位。
+- 當前委託。
+- 創建訂單。
+- 撤單。
+- 劃轉或提現。
+- 用戶 API key 託管。
+
+<h2 id="why-public-data-first">為什麼先做公開數據</h2>
+
+Hosted MCP 由 6MM 託管並通過網絡訪問，使用方便，但不應該成為用戶提交私有 API key 的默認位置。敏感賬戶和交易流程應優先通過 Local MCP、CLI 或用戶自託管 Remote MCP 實現。
+
+<h2 id="example-user-prompt">示例提示詞</h2>
+
+```text
+Use 6MM to check BTC-USDT-PERP orderbook depth and summarize liquidity.
+```
+
+<h2 id="operational-requirements">運營要求</h2>
+
+- 所有端點使用 TLS。
+- 請求限流。
+- 濫用保護。
+- 結構化日誌和指標。
+- 健康檢查。
+- 清晰的工具描述和 schema。
+- 面向 AI 客戶端的穩定錯誤返回。

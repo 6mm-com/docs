@@ -1,0 +1,64 @@
+---
+title: "6MM CLI"
+subtitle: "Gunakan antarmuka baris perintah 6MM dari terminal, skrip, dan agen pengkodean AI."
+slug: ai-hub/cli
+canonical-url: https://docs.6mm.com/id/ai-hub/cli
+---
+
+> **Direncanakan — belum diluncurkan**
+> AI Hub adalah fitur yang direncanakan. Kemampuan, titik akhir, perintah, dan konfigurasi klien di halaman ini menjelaskan desain yang diusulkan dan saat ini tidak tersedia. Ketersediaan akhir dan petunjuk pengaturan akan diumumkan saat peluncuran.
+
+
+6MM CLI adalah titik masuk baris perintah untuk pengguna, skrip, dan Agen AI yang dapat menjalankan perintah shell.
+
+Gunakan CLI ketika lingkungan AI dapat menjalankan perintah terminal secara langsung. Ini sering kali merupakan jalur paling sederhana untuk agen pengkodean karena tidak diperlukan server MCP terpisah. CLI harus mengembalikan JSON stabil secara default sehingga agen dapat menguraikan hasil tanpa bergantung pada format terminal.
+
+<h2 id="what-the-cli-is-good-for">Apa gunanya CLI</h2>
+
+- Permintaan data pasar cepat dari terminal.
+- Analisis berbasis agen di Codex, Claude Code, Gemini CLI, atau alat serupa.
+- CI atau skrip terjadwal yang memerlukan data 6MM.
+- Pemeriksaan pembacaan akun ketika kredensial lokal dikonfigurasi.
+- Pratinjau pesanan mengalir saat agen menyiapkan parameter tetapi tidak melakukan pemesanan.
+
+<h2 id="example-commands">Contoh perintah</h2>
+
+```bash
+6mm markets
+6mm ticker BTC-USDT-PERP
+6mm orderbook BTC-USDT-PERP --depth 20
+6mm klines BTC-USDT-PERP --interval 1h --limit 100
+6mm account summary
+6mm positions
+6mm orders open
+6mm order preview --symbol BTC-USDT-PERP --side buy --type limit --price 65000 --size 0.01
+6mm order create --symbol BTC-USDT-PERP --side buy --type limit --price 65000 --size 0.01
+6mm order cancel --order-id xxx
+```
+
+<h2 id="output-modes">Mode keluaran</h2>
+
+| Mode | Kasus penggunaan |
+| --- | --- |
+| JSON | Default untuk Agen AI, skrip, dan otomatisasi. |
+| Meja | Ulasan terminal yang dapat dibaca manusia. |
+| Mentah | Tes debugging dan integrasi. |
+
+<h2 id="recommended-safety-defaults">Default keamanan yang disarankan</h2>
+
+- Lingkungan default adalah testnet.
+- Keluaran defaultnya adalah JSON.
+- Perintah perdagangan memerlukan keikutsertaan yang eksplisit.
+- Pembuatan pesanan Mainnet memerlukan konfirmasi.
+- Mode pratinjau tersedia sebelum dibuat.
+- Kesalahan mencakup kode stabil dan pesan yang jelas.
+
+<h2 id="agent-usage">Penggunaan agen</h2>
+
+Agen AI sebaiknya memilih perintah hanya baca kecuali pengguna secara eksplisit meminta pratinjau atau tindakan perdagangan.
+
+Contoh perintah:
+
+```text
+Use the 6MM CLI to fetch BTC-USDT-PERP orderbook depth and return a short liquidity summary.
+```

@@ -1,0 +1,35 @@
+---
+title: "Mécanismes de cotes de prédiction"
+headline: "Mécanismes de cotes de prédiction | 6MM Prédiction"
+description: "Comparez les cotes haut/bas basées sur le pool, les cotes personnalisées fixes et les cotations de grille basées sur les probabilités sans confondre le rendement cible avec une garantie."
+slug: prediction/odds
+canonical-url: https://docs.6mm.com/fr/prediction/odds
+---
+
+Les cotes sont un multiplicateur de paiement. Le mécanisme de tarification dépend du jeu ; le devis actuellement affiché ne constitue pas une preuve des conditions d'une commande déjà acceptée.
+
+## Trois mécanismes
+
+| Jeu | Mécanisme | Distinction importante |
+| --- | --- | --- |
+| Prédiction haut/bas | Cotation dynamique des deux pools directionnels | Le solde du pool et la mise proposée affectent la cotation |
+| Prédiction personnalisée | Cotes fixes configurées par symbole et période | Les deux directions utilisent les cotes fixes de cette période ; l'acceptation stocke un instantané |
+| Grille de prédiction | Taux de retour cible divisé par la probabilité de réussite estimée | Le devis varie en fonction de l'intervalle de prix et de la fenêtre de temps ; l'acceptation le verrouille |
+
+## Tarification haut/bas du pool
+
+La configuration décrit la cotation Up comme un plus le facteur de rendement cible multiplié par le pool Down, divisé par le pool Up plus la mise proposée. Pour Down, échangez les deux pools. Les limites inférieures et supérieures configurées contraignent le résultat.
+
+Les liquidités fournies par les comptes de tenue de marché des plateformes peuvent participer à ces pools. Leurs commandes ne sont pas comptées comme une réelle participation des utilisateurs. Le nombre de participants affiché ne constitue donc pas une représentation complète des fonds du pool.
+
+## Tarification de probabilité de grille
+
+La probabilité de réussite estimée prend en compte le prix de référence, la volatilité récente et les limites prix/temps choisies. Il estime le contact pendant une fenêtre, et ne se termine pas simplement à l'intérieur d'une plage.
+
+Pour un facteur de rendement cible de 97 % et une probabilité de réussite estimée à 20 %, la cotation du modèle est de 4,85x. La configuration du réseau définit un minimum ; les cotes supérieures au maximum rendent la cellule indisponible plutôt que d'être plafonnée à ce maximum.
+
+## Le rendement cible n'est pas un résultat promis
+
+Un paramètre de rendement cible est une entrée dans la tarification. Il ne s'agit pas d'un rendement individuel garanti, d'un taux de réussite observé ou d'une promesse que les résultats d'un utilisateur convergeront vers ce pourcentage. Les estimations du modèle, les limites de cotes et les résultats réels sont des quantités différentes.
+
+Pour des exemples d'argent et des précisions, voir [Paiements et PnL](/fr/prediction/returns-pnl).

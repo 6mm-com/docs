@@ -1,12 +1,12 @@
 ---
 title: "Perpetual Trading Fee Structure"
-description: "Reference the 6MM maker, taker, funding, liquidation, and settlement fee model for U-margined perpetual contracts."
+description: "This page explains the trading, funding, liquidation and settlement rules applicable to users of partner or white-label platforms."
 slug: trading/fee-structure
 ---
 
-6MM applies a transparent and execution-based fee model for U-margined perpetual contracts.
+6MM does not directly charge trading users trading fees or funding fees. User trading fees follow the rules of their partner or white-label platform. 6MM earns service revenue through agreed revenue-sharing arrangements with partners or white-label platforms.
 
-Fees are charged only when trades are executed and are designed to align with market liquidity and trading behavior.
+Trading fees are calculated on executed trades. Funding payments follow the contract funding rate and scheduled settlement rules; liquidation-related charges follow the applicable liquidation rules.
 
 This page is the reference for fee categories and settlement. To understand how order-book depth and execution price affect total trading cost, see [Trading Costs: Fees & Slippage](/trading/fees-and-slippage).
 
@@ -17,10 +17,10 @@ This page is the reference for fee categories and settlement. To understand how 
 Trading fees on 6MM are calculated based on:
 
 * Executed trade value
-* Order type (Maker or Taker)
+* Execution role (Maker or Taker)
 * Trading pair and partner configuration
 
-Unfilled or canceled orders do not incur any fees.
+The unfilled portion of an order incurs no trading fee. If an order is partially filled and then canceled, its executed portion remains subject to the applicable trading fee; cancellation does not reverse that fee.
 
 For an executed quantity, the general calculation is:
 
@@ -32,6 +32,8 @@ trading fee = executed notional × applicable maker or taker fee rate
 The applicable rate depends on the trading pair and partner configuration. Confirm the displayed rate before placing an order.
 
 ***
+
+Maker and Taker describe the role of each execution, not the order type. An immediately executed limit order may be charged as Taker; a portion that rests on the order book and is later passively filled follows the applicable Maker rules. Different fills of one order may have different execution roles.
 
 <h2 id="maker-fees">Maker Fees</h2>
 
@@ -64,7 +66,7 @@ Taker fees are generally higher due to immediate execution.
 In addition to trading fees, perpetual contracts involve funding payments.
 
 * Funding fees are exchanged between long and short positions
-* 6MM does not collect funding fees
+* 6MM does not charge funding fees. Funding payments are settled under the contract rules and recorded separately from trading fees. Check the direction, amount and settlement result against the account funding-payment records and linked balance transactions.
 * Funding rates vary by market conditions
 
 Funding payments help keep contract prices aligned with the spot market.
@@ -86,7 +88,7 @@ Specific liquidation fee rules depend on partner configuration.
 
 * Fees are settled in stablecoins (e.g. USDT)
 * Fees are deducted directly from the Perpetual Account
-* Fee calculations occur in real time at execution
+* Trading fees are calculated on executed trades; funding payments and liquidation-related charges follow their respective settlement rules.
 
 ***
 
@@ -102,7 +104,7 @@ Specific liquidation fee rules depend on partner configuration.
 
 <h2 id="beginner-tips">Beginner Tips</h2>
 
-* Use limit orders to reduce taker fees
+* Check the execution role and applicable fee rate; placing a limit order does not guarantee Maker fees.
 * Avoid excessive overtrading
 * Consider fees when calculating TP/SL levels
 * Review fee rates before opening large positions
@@ -115,7 +117,7 @@ On 6MM:
 
 * Fees are execution-based and transparent
 * Maker and taker models support healthy liquidity
-* Funding fees are peer-to-peer, not platform revenue
+* 6MM does not charge funding fees. Funding payments are settled under the contract rules and recorded separately from trading fees. Check the direction, amount and settlement result against the account funding-payment records and linked balance transactions.
 
 Understanding the fee structure helps users trade more efficiently and sustainably.
 

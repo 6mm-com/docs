@@ -1,0 +1,47 @@
+---
+title: "Model bezpieczeństwa"
+subtitle: "Zapoznaj się z modelem uprawnień, domyślną postawą bezpieczeństwa i poręczami handlowymi dla AI-dostępu wspomaganego."
+slug: ai-hub/security-model
+canonical-url: https://docs.6mm.com/pl/ai-hub/security-model
+---
+
+> **Planowane — jeszcze nie uruchomione**
+> AI Hub to planowana funkcja. Możliwości, punkty końcowe, polecenia i konfiguracje klienta na tej stronie opisują proponowany projekt i nie są obecnie dostępne. Ostateczna dostępność i instrukcje konfiguracji zostaną ogłoszone w momencie premiery.
+
+
+Dostęp do transakcji wspomagany sztuczną inteligencją musi być bezpieczniejszy niż zwykła automatyzacja, ponieważ intencje użytkownika są wyrażane w języku naturalnym.
+
+<h2 id="required-permission-scopes">Wymagane zakresy uprawnień</h2>
+
+| Zakres | Pozwala |
+| --- | --- |
+| rynek:czytaj | Publiczne dane rynkowe i zasoby dotyczące reguł. |
+| konto: czytaj | Salda, pozycje, otwarte zamówienia, wypełnienia i podsumowania kont. |
+| zamówienie: napisz | Tworzenie, zmiana i anulowanie zamówienia. |
+
+<h2 id="default-safety-posture">Domyślna postawa bezpieczeństwa</h2>
+
+- Domyślnie tylko do odczytu.
+- Domyślnie do sieci testowej.
+- Nie ujawniaj wypłat ani przelewów za pośrednictwem narzędzi AI.
+- Wymagaj podglądu przed utworzeniem.
+- Wymagaj wyraźnego potwierdzenia przed rozpoczęciem handlu w sieci głównej.
+- Używaj kluczy idempotencji do działań handlowych.
+- Zastosuj maksymalne limity nominalne i dźwigni.
+- Prowadź pełne dzienniki audytu.
+
+<h2 id="controlled-trading-flow">Kontrolowany przepływ transakcji</h2>
+
+```text
+User natural language intent
+  -> AI maps intent to tool parameters
+  -> 6mm_preview_order validates the order
+  -> service returns risk checks and margin impact
+  -> user explicitly confirms
+  -> 6mm_create_order submits the order
+  -> audit log records the full flow
+```
+
+<h2 id="prompt-injection-protection">Szybka ochrona wtrysku</h2>
+
+Klienci AI i serwery MCP powinni traktować treści zewnętrzne jako niezaufane. Strony rynkowe, skopiowany tekst, dokumenty i treści internetowe nie mogą zastępować uprawnień narzędzi, zasad potwierdzania ani limitów handlowych.

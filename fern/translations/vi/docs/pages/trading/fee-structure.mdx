@@ -1,13 +1,13 @@
 ---
 title: "Cấu trúc phí giao dịch vĩnh viễn"
-description: "Tham khảo mô hình phí 6MM tạo ra, nhận, tài trợ, thanh lý và thanh toán cho các hợp đồng vĩnh cửu có biên độ U."
+description: "Trang này giải thích các quy tắc giao dịch, cấp vốn, thanh lý và thanh toán áp dụng cho người dùng nền tảng đối tác hoặc nền tảng nhãn trắng."
 slug: trading/fee-structure
 canonical-url: https://docs.6mm.com/vi/trading/fee-structure
 ---
 
-6MM áp dụng mô hình phí minh bạch và dựa trên thực hiện cho các hợp đồng vĩnh cửu có biên độ U.
+6MM không tính trực tiếp phí giao dịch hoặc phí cấp vốn cho người dùng giao dịch. Phí giao dịch của người dùng tuân theo các quy tắc của đối tác hoặc nền tảng nhãn trắng của họ. 6MM kiếm doanh thu dịch vụ thông qua các thỏa thuận chia sẻ doanh thu đã thỏa thuận với các đối tác hoặc nền tảng nhãn trắng.
 
-Phí chỉ được tính khi các giao dịch được thực hiện và được thiết kế phù hợp với tính thanh khoản và hành vi giao dịch của thị trường.
+Phí giao dịch được tính trên các giao dịch được thực hiện. Các khoản thanh toán tài trợ tuân theo tỷ lệ tài trợ hợp đồng và các quy tắc giải quyết theo lịch trình; các khoản phí liên quan đến thanh lý tuân theo các quy tắc thanh lý hiện hành.
 
 Trang này là tài liệu tham khảo cho các loại phí và thanh toán. Để hiểu cách độ sâu sổ lệnh và giá thực hiện ảnh hưởng đến tổng chi phí giao dịch, xem [Chi phí giao dịch: Phí & Trượt](/vi/trading/fees-and-slippage).
 
@@ -18,10 +18,10 @@ Trang này là tài liệu tham khảo cho các loại phí và thanh toán. Đ�
 Phí giao dịch trên 6MM được tính dựa trên:
 
 * Giá trị giao dịch đã thực hiện
-* Loại đơn hàng (Nhà sản xuất hoặc Người nhận)
+* Vai trò thực thi (Maker hoặc Taker)
 * Cấu hình cặp giao dịch và đối tác
 
-Đơn hàng chưa hoàn thành hoặc hủy sẽ không phát sinh bất kỳ khoản phí nào.
+Phần chưa được thực hiện của lệnh không phải chịu phí giao dịch. Nếu lệnh được thực hiện một phần và sau đó bị hủy, phần được thực hiện vẫn phải chịu phí giao dịch hiện hành; việc hủy bỏ không hoàn lại khoản phí đó.
 
 Đối với một đại lượng đã thực hiện, phép tính tổng quát là:
 
@@ -33,6 +33,8 @@ trading fee = executed notional × applicable maker or taker fee rate
 Tỷ giá áp dụng phụ thuộc vào cặp giao dịch và cấu hình đối tác. Xác nhận tỷ giá hiển thị trước khi đặt lệnh.
 
 ***
+
+Maker và Taker mô tả vai trò của từng lần thực hiện chứ không phải loại lệnh. Lệnh giới hạn được thực hiện ngay lập tức có thể được tính là Taker; một phần nằm trong sổ đặt hàng và sau đó được điền một cách thụ động tuân theo các quy tắc hiện hành của Nhà sản xuất. Các lần điền khác nhau của một đơn hàng có thể có vai trò thực thi khác nhau.
 
 <h2 id="maker-fees">Phí nhà sản xuất</h2>
 
@@ -65,7 +67,7 @@ Phí người tham gia thường cao hơn do thực hiện ngay lập tức.
 Ngoài phí giao dịch, hợp đồng vĩnh cửu còn bao gồm các khoản thanh toán tài trợ.
 
 * Phí huy động vốn được trao đổi giữa vị thế mua và vị thế bán
-* 6MM không thu phí tài trợ
+* 6MM không tính phí cấp vốn. Các khoản thanh toán tài trợ được giải quyết theo các quy tắc hợp đồng và được ghi nhận riêng biệt với phí giao dịch. Kiểm tra phương hướng, số tiền và kết quả quyết toán đối với hồ sơ thanh toán cấp vốn tài khoản và giao dịch số dư liên kết.
 * Tỷ lệ huy động vốn thay đổi tùy theo điều kiện thị trường
 
 Các khoản thanh toán tài trợ giúp giữ giá hợp đồng phù hợp với thị trường giao ngay.
@@ -87,7 +89,7 @@ Các quy định về phí thanh lý cụ thể phụ thuộc vào cấu hình �
 
 * Phí được thanh toán bằng stablecoin (ví dụ: USDT)
 * Phí được trừ trực tiếp từ Tài khoản Vĩnh viễn
-* Việc tính phí diễn ra theo thời gian thực khi thực hiện
+* Phí giao dịch được tính trên các giao dịch được thực hiện; các khoản thanh toán tài trợ và các khoản phí liên quan đến thanh lý tuân theo các quy tắc thanh toán tương ứng.
 
 ***
 
@@ -103,7 +105,7 @@ Các quy định về phí thanh lý cụ thể phụ thuộc vào cấu hình �
 
 <h2 id="beginner-tips">Mẹo cho người mới bắt đầu</h2>
 
-* Sử dụng lệnh giới hạn để giảm phí người nhận
+* Kiểm tra vai trò thực hiện và mức phí áp dụng; việc đặt lệnh giới hạn không đảm bảo phí Maker.
 * Tránh giao dịch quá mức
 * Xem xét phí khi tính mức TP/SL
 * Xem xét mức phí trước khi mở vị thế lớn
@@ -116,7 +118,7 @@ Về 6MM:
 
 * Phí dựa trên thực hiện và minh bạch
 * Mô hình maker và taker hỗ trợ thanh khoản lành mạnh
-* Phí tài trợ là ngang hàng, không phải doanh thu từ nền tảng
+* 6MM không tính phí cấp vốn. Các khoản thanh toán tài trợ được giải quyết theo các quy tắc hợp đồng và được ghi nhận riêng biệt với phí giao dịch. Kiểm tra phương hướng, số tiền và kết quả quyết toán đối với hồ sơ thanh toán cấp vốn tài khoản và giao dịch số dư liên kết.
 
 Hiểu rõ cấu trúc phí giúp người dùng giao dịch hiệu quả và bền vững hơn.
 

@@ -28,9 +28,9 @@ Questa sezione spiega il flusso di lavoro di trading principale e i meccanismi c
 
 <h2 id="market-order">Ordine di mercato</h2>
 
-* Esegue immediatamente al miglior prezzo di mercato disponibile
-* Dà priorità alla velocità di esecuzione rispetto alla precisione del prezzo
-* Adatto per ingresso o uscita rapidi
+Un ordine di mercato viene eseguito contro la liquidità disponibile ai migliori prezzi disponibili. L'esecuzione dipende dalla profondità del book degli ordini e dalle restrizioni di negoziazione: l'ordine può essere eseguito a prezzi multipli, essere eseguito parzialmente o non essere completato. Controlla lo stato effettivo dell'ordine e i riempimenti.
+
+***
 
 <h2 id="limit-order">Ordine limite</h2>
 
@@ -46,6 +46,8 @@ Questa sezione spiega il flusso di lavoro di trading principale e i meccanismi c
 > disponibilità degli ordini può variare in base alla coppia di trading e alla modalità di integrazione.
 
 ***
+
+Invio significa che è stata inviata una richiesta d'ordine; l'accettazione, l'attivazione e l'esecuzione sono stati separati. Un ordine di mercato attivato dipende dalla liquidità disponibile. Un ordine limite attivato deve inoltre soddisfare il suo prezzo limite e può rimanere non eseguito.
 
 <h2 id="leverage-and-margin">Leva e margine</h2>
 
@@ -69,9 +71,7 @@ I contratti perpetui utilizzano un meccanismo di tasso di finanziamento per mant
 * Se il tasso di finanziamento è negativo:
   * Le posizioni corte pagano a lunga
 
-Le commissioni di finanziamento vengono scambiate direttamente tra i trader.
-
-6MM non riscuotisce i pagamenti di finanziamento come entrate.
+6MM non applica commissioni di finanziamento. I pagamenti dei finanziamenti sono regolati secondo le regole del contratto e registrati separatamente dalle commissioni di negoziazione. Controllare la direzione, l'importo e il risultato del regolamento rispetto ai record di finanziamento-pagamento del conto e alle transazioni di saldo collegate.
 
 ***
 
@@ -84,7 +84,7 @@ Le commissioni di finanziamento vengono scambiate direttamente tra i trader.
   * Ordini del produttore
   * Ordini del ricevitore
 
-I tabelloni tariffari sono definiti dalla piattaforma partner e possono variare.
+Le tariffe Maker/Taker applicabili seguono le regole del partner o della piattaforma white label e possono variare in base alla coppia di trading e alla configurazione.
 
 <h2 id="slippage">Slippage</h2>
 
@@ -109,12 +109,7 @@ Gli utenti possono ridurre lo slippage utilizzando ordini limite e gestendo la d
 
 <h2 id="risk-management-and-liquidation">Gestione del Rischio e Liquidazione</h2>
 
-* 6MM monitora i rapporti di margine in tempo reale
-* Quando il margine scende sotto la soglia di mantenimento:
-  * Le posizioni possono essere parzialmente o completamente liquidate
-* I prezzi di liquidazione vengono calcolati utilizzando il prezzo di marca, non l'ultimo prezzo scambiato
-
-Questo meccanismo aiuta a ridurre le liquidazioni inutili causate dalla volatilità del mercato a breve termine.
+Monitora il capitale del conto o della posizione, i requisiti di margine di mantenimento e gli indicatori di rischio della piattaforma. Se le condizioni di liquidazione applicabili sono soddisfatte, le posizioni possono essere ridotte parzialmente o chiuse interamente. Controlla la posizione rimanente effettiva e i record del saldo anziché confrontare direttamente una percentuale con un importo di margine.
 
 ***
 

@@ -1,0 +1,55 @@
+---
+title: "Vorhersageraster"
+headline: "Vorhersageraster | 6MM Vorhersage"
+description: "Lesen Sie Preis- und Zeitzellen, verstehen Sie berührungsbasierte Ergebnisse und befolgen Sie die gesperrten Bedingungen einer Prediction Grid-Bestellung."
+slug: prediction/grid
+canonical-url: https://docs.6mm.com/de/prediction/grid
+---
+
+Das Vorhersageraster zeigt Preisintervalle vertikal und zukünftige Zeitfenster horizontal an. Durch die Auswahl einer Zelle wird eine unabhängige Order für dieses Preisintervall und Zeitfenster erstellt.
+
+## Eine Zelle lesen
+
+| Details zu den Gitterzellen | Bedeutung |
+| --- | --- |
+| Preisintervall | Die unteren und oberen Preisgrenzen |
+| Start- und Endzeit | Das Zeitfenster, in dem sich eine Berührung qualifizieren kann |
+| angebotenen Auszahlungsmultiplikator | Der für diese Zelle angebotene Renditemultiplikator |
+| Einsatz | Der für diese Bestellung zugesagte Betrag |
+
+Ein Raster mit 10 Zeilen und 10 Spalten und zwei Sekunden pro Spalte würde 20 Sekunden abdecken. Dies ist ein Lesebeispiel; Verwenden Sie die im aktiven Produkt angezeigten Abmessungen und absoluten Zeiten.
+
+## Was zählt als Treffer?
+
+Während des gültigen Zeitfensters der Zelle muss der Plattformmarkierungspreis in sein Preisintervall eintreten oder dieses überschreiten. Eine gültige Preisberührung reicht aus; Der Preis muss nicht bis zum Ende dort bleiben.
+
+| Beispiel: 65.010–65.020 im Zeitraum 10:00:04–10:00:06 | Ergebnisinterpretation |
+| --- | --- |
+| Um 10:00:05 Uhr erreicht der Preis 65.015 | Gibt das Intervall während des Fensters ein |
+| Innerhalb des Fensters bewegt sich der Preis von 65.005 auf 65.025 | Überschreitet das Intervall |
+| Der Preis bleibt draußen, ohne dass er während des Fensters überschritten wird | Kein qualifizierender Treffer |
+| Die erste Berührung erfolgt nach Ende des Fensters | Zu spät für diese Bestellung |
+
+Genaue Grenzpreise und Zeitstempel folgen der anerkannten Regel. Ein fehlender Preisfeed ist kein Beweis dafür, dass der Preis die Zelle nie berührt hat.
+
+## So nehmen Sie teil
+
+1. Wählen Sie ein Symbol aus und überprüfen Sie die angezeigten Zeit- und Preisachsen.
+2. Wählen Sie eine verfügbare Zelle und einen Betrag innerhalb ihrer Grenzen.
+3. Bestätigen Sie die Zellgrenzen, das gültige Fenster, die Gewinnchancen und die erwartete Auszahlung.
+4. Überprüfen Sie die angenommene Bestellung. Sein Preisintervall, sein gültiges Fenster und seine Quoten bleiben gesperrt, auch wenn sich das Live-Raster bewegt.
+5. Verfolgen Sie das Ergebnis und die tatsächliche Abrechnung in der Bestellhistorie.
+
+## Quoten und nicht verfügbare Zellen
+
+Das Preismodell schätzt die Wahrscheinlichkeit, das Intervall innerhalb des Fensters zu berühren, aus dem Markpreis, der Volatilität und den Preis-/Zeitgrenzen. Das Modellangebot basiert auf der angestrebten Rücklaufquote dividiert durch die geschätzte Trefferwahrscheinlichkeit und unterliegt den konfigurierten Regeln.
+
+Beispielsweise ergibt 97 % dividiert durch 20 % das 4,85-fache. Eine erfolgreiche Order über 100 USDT, die bei 4,85x gesperrt ist, hat eine Bruttoauszahlung von 485 USDT. Eine abgerundete Bezeichnung rechtfertigt keine Änderung des gespeicherten Multiplikators.
+
+Gemäß der konfigurierten Rasterregel führt ein berechneter Kurs über dem Maximum dazu, dass die Zelle nicht verfügbar ist, anstatt diesen Kurs auf den Maximalwert zu reduzieren. Auch andere Einschränkungen können einer Annahme entgegenstehen.
+
+## Preisbeweis unterbrochen
+
+Wenn der Feed während des gültigen Fensters unterbrochen wird und kein Treffer ermittelt werden kann, gelangt die Bestellung in die Ausnahmebehandlung oder Rückerstattungsverarbeitung. Schließen Sie nicht aus einem leeren Diagrammsegment auf einen Verlust.
+
+Sehen [Preisquellen](/de/prediction/price-source), [Quotenmechanismen](/de/prediction/odds), Und [Rückerstattungen und Ausnahmen](/de/prediction/refunds-exceptions).

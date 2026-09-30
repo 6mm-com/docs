@@ -1,0 +1,50 @@
+---
+title: "Implantação remota MCP"
+subtitle: "Implemente um endpoint 6MM MCP numa infraestrutura gerida pelo utilizador ou pela instituição."
+slug: ai-hub/remote-mcp
+canonical-url: https://docs.6mm.com/pt-PT/ai-hub/remote-mcp
+---
+
+> **Planeado – ainda não lançado**
+> O AI Hub é um recurso planeado. As características, terminais, comandos e definições do cliente nesta página descrevem o design proposto e não estão atualmente disponíveis. A disponibilidade final e as instruções de configuração serão anunciadas no lançamento.
+
+
+MCP remoto é para utilizadores ou instituições que desejam um endpoint MCP de longa duração sob o seu próprio controlo.
+
+Ao contrário do MCP alojado, o MCP remoto não é operado por 6MM para o utilizador. 6MM fornece código, imagens, modelos e documentação; o utilizador controla o alojamento e as credenciais.
+
+<h2 id="architecture">Arquitetura</h2>
+
+```text
+AI client
+  -> user-managed MCP HTTP endpoint
+  -> 6MM REST / WebSocket API
+```
+
+<h2 id="deployment-targets">Metas de implementação</h2>
+
+- Docker ou Docker Compose.
+- VPS com um proxy inverso.
+- Ferrovia.
+- Devolver.
+- Voe.io.
+- AWS ECS ou Lambda.
+- Kubernetes internos.
+
+<h2 id="required-files">Arquivos necessários</h2>
+
+- Dockerfile.
+- docker-compose.yml.
+- .env.modelo.
+- HTTP modo de transporte.
+- /mcp ponto final.
+- /ponto final de integridade.
+- Proxy reverso e notas TLS.
+
+<h2 id="credential-model">Modelo de credencial</h2>
+
+As credenciais devem ser armazenadas no ambiente gerido pelo utilizador, e não no prompt do cliente de IA. Para implementações geridas pela instituição, restrinja o acesso a clientes e redes aprovados.
+
+<h2 id="recommended-first-release">Primeiro lançamento recomendado</h2>
+
+Comece pelos dados públicos de mercado. Adicione a leitura apenas da conta depois de a autenticação, o âmbito da chave, os registos e os controlos de acesso estarem disponíveis. A negociação deve permanecer desativada até que os requisitos de negociação controlada sejam cumpridos.

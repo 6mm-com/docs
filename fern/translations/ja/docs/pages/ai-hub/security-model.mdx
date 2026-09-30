@@ -1,0 +1,47 @@
+---
+title: "セキュリティモデル"
+subtitle: "権限モデル、デフォルトの安全体制、AI-補助アクセスのガードレールの取引について理解します。"
+slug: ai-hub/security-model
+canonical-url: https://docs.6mm.com/ja/ai-hub/security-model
+---
+
+> **計画中 – まだ開始されていません**
+> AI Hub は計画中の機能です。このページの機能、エンドポイント、コマンド、およびクライアント構成は、提案された設計について説明したものであり、現在は利用できません。最終的な可用性とセットアップ手順は発売時に発表されます。
+
+
+AI-取引支援アクセスは、ユーザーの意図が自然言語で表現されるため、通常の自動化よりも安全でなければなりません。
+
+<h2 id="required-permission-scopes">必要な権限の範囲</h2>
+
+| 範囲 | 許可します |
+| --- | --- |
+| マーケット:読み取り | 公開市場データとルールリソース。 |
+| アカウント:読み取り | 残高、ポジション、オープン注文、約定、口座概要。 |
+| 順序:書く | 注文の作成、変更、キャンセル。 |
+
+<h2 id="default-safety-posture">デフォルトの安全姿勢</h2>
+
+- デフォルトは読み取り専用です。
+- デフォルトはテストネットです。
+- AI ツールを介した出金や送金を公開しないでください。
+- 作成前にプレビューが必要です。
+- メインネット取引の前に明示的な確認を要求します。
+- 取引アクションには冪等キーを使用します。
+- 最大想定元本およびレバレッジ制限を適用します。
+- 完全な監査ログを保存します。
+
+<h2 id="controlled-trading-flow">制御された取引フロー</h2>
+
+```text
+User natural language intent
+  -> AI maps intent to tool parameters
+  -> 6mm_preview_order validates the order
+  -> service returns risk checks and margin impact
+  -> user explicitly confirms
+  -> 6mm_create_order submits the order
+  -> audit log records the full flow
+```
+
+<h2 id="prompt-injection-protection">即時噴射保護</h2>
+
+AI クライアントと MCP サーバーは、外部コンテンツを信頼できないものとして扱う必要があります。マーケット ページ、コピーされたテキスト、ドキュメント、および Web コンテンツは、ツールの権限、確認ルール、または取引制限をオーバーライドしてはなりません。

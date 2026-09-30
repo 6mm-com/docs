@@ -1,13 +1,13 @@
 ---
 title: "永續交易費用結構"
-description: "參考U保證金永續合約的 6MM 製作者、接受者、資金、清算及結算費用模型。"
+description: "本頁說明合作方或白標平臺用戶適用的交易手續費、資金費用、強平相關費用及結算規則。"
 slug: trading/fee-structure
 canonical-url: https://docs.6mm.com/zh-TW/trading/fee-structure
 ---
 
-6MM 對U保證金永續合約採用透明且以執行為基礎的費用模式。
+6MM 不直接向交易用戶收取交易手續費，也不收取資金費用。用戶側交易手續費按所屬合作方或白標平臺的規則執行。6MM 的服務收入來自與合作方或白標平臺約定的分成。
 
-僅在交易執行時才會收取費用，且設計上會依市場流動性及交易行為調整。
+交易手續費按實際成交計算；資金費用按合約資金費率及結算週期處理；強平相關費用按適用的強平規則執行。
 
 本頁為費用類別與結算的參考資料。欲了解訂單簿深度與執行價格如何影響總交易成本，請參閱[交易成本：費用與滑票]（/trading/fees-and-slippage）。
 
@@ -18,10 +18,10 @@ canonical-url: https://docs.6mm.com/zh-TW/trading/fee-structure
 6MM的交易手續費計算依據：
 
 * 已執行交易價值
-* 訂單類型（製造者或接受者）
+* 實際成交角色（Maker / Taker）
 * 交易對與合作夥伴配置
 
-未完成或取消的訂單不會產生任何費用。
+訂單未成交部分不產生成交手續費。若訂單部分成交後撤單，已成交部分仍按適用規則計費，撤單不會撤銷這部分手續費。
 
 對於已執行的量，一般計算為：
 
@@ -33,6 +33,8 @@ trading fee = executed notional × applicable maker or taker fee rate
 適用的利率取決於交易對及合作夥伴配置。下單前請確認顯示的匯率。
 
 ***
+
+Maker 和 Taker 表示每筆成交的角色，不是訂單類型。限價單立即成交時，可能按 Taker 計費；掛入訂單簿後被動成交的部分，按適用的 Maker 規則計費。同一訂單的不同成交部分可能對應不同角色。
 
 <h2 id="maker-fees">創客費用</h2>
 
@@ -65,7 +67,7 @@ trading fee = executed notional × applicable maker or taker fee rate
 除了交易費用外，永續合約還涉及資金支付。
 
 * 資金費用會在多空部位間交換
-* 6MM 不收取資金費用
+* 6MM 不收取資金費用。資金費用按合約規則結算，與成交手續費分別記錄。具體收付方向、金額和結算結果，以賬戶資金費記錄及關聯流水為準。
 * 資金利率依市場狀況而異
 
 資金支付有助於保持合約價格與現貨市場保持一致。
@@ -87,7 +89,7 @@ trading fee = executed notional × applicable maker or taker fee rate
 
 * 費用以穩定幣結算（例如 USDT）
 * 費用直接從永續帳戶扣除
-* 費用計算在執行時即時進行
+* 交易手續費按實際成交計算；資金費用與強平相關費用分別按各自的結算規則處理。
 
 ***
 
@@ -103,7 +105,7 @@ trading fee = executed notional × applicable maker or taker fee rate
 
 <h2 id="beginner-tips">初學者小技巧</h2>
 
-* 使用限價單以降低接受者手續費
+* 核對實際成交角色和適用費率；提交限價單不代表一定按 Maker 計費。
 * 避免過度交易
 * 計算TP/SL等級時請考慮費用
 * 開立大額頭寸前，請先檢視費用率
@@ -116,7 +118,7 @@ trading fee = executed notional × applicable maker or taker fee rate
 
 * 費用依執行方式且透明
 * 做客與吃者模型支持健康的流動性
-* 資金手續費是點對點，而非平台收入
+* 6MM 不收取資金費用。資金費用按合約規則結算，與成交手續費分別記錄。具體收付方向、金額和結算結果，以賬戶資金費記錄及關聯流水為準。
 
 了解費用結構有助於用戶更有效率且可持續地交易。
 

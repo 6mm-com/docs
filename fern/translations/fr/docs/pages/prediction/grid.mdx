@@ -1,0 +1,55 @@
+---
+title: "Grille de prédiction"
+headline: "Grille de prédiction | 6MM Prédiction"
+description: "Lisez les cellules de prix et de temps, comprenez les résultats tactiles et suivez les conditions verrouillées d'une commande de grille de prédiction."
+slug: prediction/grid
+canonical-url: https://docs.6mm.com/fr/prediction/grid
+---
+
+Prediction Grid affiche les intervalles de prix verticalement et les fenêtres temporelles futures horizontalement. La sélection d'une cellule crée une commande indépendante pour cet intervalle de prix et cette fenêtre de temps.
+
+## Lire une cellule
+
+| Détails des cellules de la grille | Signification |
+| --- | --- |
+| Intervalle de prix | Les limites inférieures et supérieures des prix |
+| Heure de début et de fin | La fenêtre pendant laquelle une touche peut se qualifier |
+| multiplicateur de paiement offert | Le multiplicateur de rendement offert pour cette cellule |
+| Mise | Le montant engagé pour cette commande |
+
+Une grille de 10 lignes et 10 colonnes avec deux secondes par colonne couvrirait 20 secondes. Ceci est un exemple de lecture ; utiliser les dimensions et les temps absolus indiqués dans le produit actif.
+
+## Qu'est-ce qui compte comme un succès ?
+
+Pendant la fenêtre de temps de validité de la cellule, le prix de la plateforme doit entrer ou traverser son intervalle de prix. Une touche qualificative suffit ; le prix ne doit pas nécessairement y rester jusqu'à la fin.
+
+| Exemple : 65 010 à 65 020 entre 10 h 00 min 04 et 10 h 00 min 06 s | Interprétation des résultats |
+| --- | --- |
+| A 10:00:05 le prix atteint 65 015 | Saisit l'intervalle pendant la fenêtre |
+| Dans la fenêtre, le prix passe de 65 005 à 65 025 | Traverse l'intervalle |
+| Le prix reste dehors sans traverser pendant la fenêtre | Aucun succès qualificatif |
+| Le premier contact se produit après la fin de la fenêtre | Trop tard pour cette commande |
+
+Les prix limites exacts et les horodatages suivent la règle acceptée. Un flux de prix manquant ne constitue pas une preuve que le prix n’a jamais touché la cellule.
+
+## Comment participer
+
+1. Sélectionnez un symbole et inspectez les axes de temps et de prix affichés.
+2. Choisissez une cellule disponible et un montant dans ses limites.
+3. Confirmez les limites de la cellule, la fenêtre valide, les cotes et le paiement attendu.
+4. Vérifiez la commande acceptée. Son intervalle de prix, sa fenêtre de validité et ses cotes restent verrouillés même lorsque la grille en direct évolue.
+5. Suivez le résultat et le règlement réel dans l'historique des commandes.
+
+## Cotes et cellules indisponibles
+
+Le modèle de tarification estime la probabilité de toucher l'intervalle dans la fenêtre à partir du prix de référence, de la volatilité et des limites prix/temps. Le devis modèle est basé sur le taux de retour cible divisé par la probabilité de réussite estimée, sous réserve des règles configurées.
+
+Par exemple, 97 % divisé par 20 % donne 4,85x. Un ordre gagnant de 100 USDT bloqué à 4,85x génère un paiement brut de 485 USDT. Une étiquette arrondie ne justifie pas la modification du multiplicateur stocké.
+
+Selon la règle de grille configurée, un devis calculé au-dessus du maximum rend la cellule indisponible au lieu de réduire ce devis au maximum. D'autres restrictions peuvent également empêcher l'acceptation.
+
+## Preuve de prix interrompue
+
+Si le flux est interrompu pendant la fenêtre valide et qu'un succès ne peut pas être établi, la commande entre dans le traitement des exceptions ou dans le traitement du remboursement. Ne déduisez pas de perte à partir d’un segment de graphique vide.
+
+Voir [Sources de prix](/fr/prediction/price-source), [Mécanismes de cotes](/fr/prediction/odds), et [Remboursements et exceptions](/fr/prediction/refunds-exceptions).

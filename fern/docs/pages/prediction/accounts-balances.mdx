@@ -1,0 +1,31 @@
+---
+title: "Prediction Accounts and Balances"
+headline: "Prediction Accounts and Balances | 6MM Prediction"
+description: "Understand funding balance, available funds, and prediction reservations without double-counting user assets."
+slug: prediction/accounts-balances
+---
+
+Prediction uses the funding account. Its reserved stake is represented as prediction-frozen funds within that account, not as an additional independent asset account.
+
+## Balance components
+
+| Component | Meaning |
+| --- | --- |
+| Funding balance | The account balance containing available and prediction-frozen funds in this model |
+| Available balance | Funds currently available for permitted new actions |
+| Prediction-frozen balance | Funds reserved for prediction orders pending financial resolution |
+| Expected payout | A potential result amount; not current available funds |
+
+Within the prediction balance model, funding balance equals available balance plus prediction-frozen balance. Other account restrictions should be checked separately where displayed.
+
+## Reservation example
+
+Assume 1,000 USDT available and no prediction reservation or other movements. If a 100 USDT order is accepted and reserved, available funds become 900 USDT and prediction-frozen funds become 100 USDT. Reserving the amount does not create another 100 USDT of assets.
+
+Final settlement changes the account according to the recorded outcome. See [Payouts and PnL](/prediction/returns-pnl) for result amounts.
+
+## Avoid double counting
+
+Do not add prediction-frozen funds on top of a funding balance that already contains them. Likewise, do not count expected payouts from pending orders as realized assets.
+
+Funds in spot or perpetual accounts should not be assumed available for prediction until the relevant supported transfer is complete. See [Transfers and Transactions](/prediction/transfers-ledger).

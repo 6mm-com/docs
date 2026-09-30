@@ -1,0 +1,50 @@
+---
+title: "Remote MCP Bereitstellung"
+subtitle: "Stellen Sie einen 6MM MCP-Endpunkt in einer benutzerverwalteten oder institutionell verwalteten Infrastruktur bereit."
+slug: ai-hub/remote-mcp
+canonical-url: https://docs.6mm.com/de/ai-hub/remote-mcp
+---
+
+> **Geplant – noch nicht gestartet**
+> AI Hub ist eine geplante Funktion. Die Funktionen, Endpunkte, Befehle und Clientkonfigurationen auf dieser Seite beschreiben das vorgeschlagene Design und sind derzeit nicht verfügbar. Die endgültige Verfügbarkeit und Einrichtungsanweisungen werden beim Start bekannt gegeben.
+
+
+Remote MCP ist für Benutzer oder Institutionen gedacht, die einen langlebigen MCP-Endpunkt unter ihrer eigenen Kontrolle haben möchten.
+
+Im Gegensatz zu Hosted MCP wird Remote MCP nicht von 6MM für den Benutzer betrieben. 6MM stellt Code, Bilder, Vorlagen und Dokumentation bereit; Der Benutzer kontrolliert Hosting und Anmeldeinformationen.
+
+<h2 id="architecture">Architektur</h2>
+
+```text
+AI client
+  -> user-managed MCP HTTP endpoint
+  -> 6MM REST / WebSocket API
+```
+
+<h2 id="deployment-targets">Bereitstellungsziele</h2>
+
+- Docker oder Docker Compose.
+- VPS mit einem Reverse-Proxy.
+- Eisenbahn.
+- Machen.
+- Fly.io.
+- AWS ECS oder Lambda.
+- Internes Kubernetes.
+
+<h2 id="required-files">Erforderliche Dateien</h2>
+
+- Docker-Datei.
+- docker-compose.yml.
+- .env.template.
+- HTTP Transportmodus.
+- /mcp-Endpunkt.
+- /health-Endpunkt.
+- Reverse-Proxy- und TLS-Notizen.
+
+<h2 id="credential-model">Berechtigungsmodell</h2>
+
+Anmeldeinformationen sollten in der benutzerverwalteten Umgebung gespeichert werden, nicht in der AI-Client-Eingabeaufforderung. Beschränken Sie bei von Institutionen verwalteten Bereitstellungen den Zugriff auf genehmigte Clients und Netzwerke.
+
+<h2 id="recommended-first-release">Empfohlene Erstveröffentlichung</h2>
+
+Beginnen Sie mit öffentlichen Marktdaten. Fügen Sie ein schreibgeschütztes Konto hinzu, nachdem Authentifizierung, Schlüsselbereichsbestimmung, Protokolle und Zugriffskontrollen verfügbar sind. Der Handel sollte deaktiviert bleiben, bis die Anforderungen für den kontrollierten Handel erfüllt sind.

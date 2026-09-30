@@ -1,0 +1,83 @@
+---
+title: "Alojado MCP"
+subtitle: "Ligue os clientes de IA ao endpoint MCP alojado por 6MM para obter dados de mercado públicos e contexto de regras de negociação."
+slug: ai-hub/hosted-mcp
+canonical-url: https://docs.6mm.com/pt-PT/ai-hub/hosted-mcp
+---
+
+> **Planeado – ainda não lançado**
+> O AI Hub é um recurso planeado. As características, terminais, comandos e definições do cliente nesta página descrevem o design proposto e não estão atualmente disponíveis. A disponibilidade final e as instruções de configuração serão anunciadas no lançamento.
+
+
+O MCP alojado é a forma mais simples de começar a utilizar o 6MM AI Hub.
+
+Ligue um cliente de IA ao endpoint MCP alojado por 6MM e coloque questões sobre dados públicos de mercado. Não há servidor local para instalar, não há implementação na nuvem para manter e não há chave de utilizador API necessária para dados públicos.
+
+<h2 id="what-you-can-do">O que pode fazer</h2>
+
+- Consulte os dados históricos e em tempo real do mercado.
+- Navegue pelos mercados perpétuos disponíveis.
+- Verifique a profundidade do livro de encomendas e as negociações recentes.
+- Compare as taxas de financiamento.
+- Leia o contexto das taxas, contratos, margens e regras de risco.
+
+Hospedado MCP é melhor para pesquisa, exploração de produtos e análise de mercado público. Não é a primeira configuração correta para acesso ou negociação a contas privadas.
+
+<h2 id="endpoint">Ponto final</h2>
+
+```text
+https://mcp.6mm.com/mcp
+```
+
+Verificação de saúde:
+
+```text
+https://mcp.6mm.com/health
+```
+
+<h2 id="recommended-first-release-scope">Âmbito de primeiro lançamento recomendado</h2>
+
+O MCP alojado deve expor apenas informação pública e de leitura apenas na primeira versão:
+
+- Mercados.
+- Relógios.
+- Encomende livros.
+- Negociações recentes.
+- Klines.
+- Taxas de financiamento.
+- Estado do sistema.
+- Taxas de negociação.
+- Especificações do contrato.
+- Recursos de regras de risco e margem.
+
+<h2 id="not-supported-in-the-first-release">Não suportado na primeira versão</h2>
+
+Alojado MCP não deve ser o primeiro local a expor:
+
+- Saldos de contas.
+- Posições.
+- Pedidos abertos.
+- Criação de encomendas.
+- Cancelamento de encomenda.
+- Transferências ou levantamentos.
+- Armazenamento de chaves do utilizador API.
+
+<h2 id="why-public-data-first">Por que razão os dados públicos primeiro</h2>
+
+Alojado MCP é operado por 6MM e acedido através da rede. É conveniente, mas não deve tornar-se o local padrão para onde os utilizadores enviam chaves privadas API. As contas confidenciais e os fluxos de trabalho de negociação devem começar por Local MCP, CLI ou Remoto gerido pelo utilizador MCP.
+
+<h2 id="example-user-prompt">Exemplo de prompt do utilizador</h2>
+
+```text
+Use 6MM to check BTC-USDT-PERP orderbook depth and summarize liquidity.
+```
+
+<h2 id="operational-requirements">Requisitos operacionais</h2>
+
+- TLS em todos os terminais.
+- Solicite limites de taxa.
+- Proteção contra maus tratos.
+- Logs e métricas estruturadas.
+- Verificações de saúde.
+- Descrições e esquemas de ferramentas claros.
+- Respostas de erro estáveis ​​​​para clientes de IA.
