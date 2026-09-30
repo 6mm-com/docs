@@ -70,8 +70,8 @@ assert.equal(nodes[1].nodeValue, "نسخ الصفحة");
 assert.equal(nodes[2].nodeValue, "Search", "Article, code and embedded applications must remain unchanged");
 assert.equal(nodes[3].nodeValue, "نسخ إلى الحافظة", "Code toolbar controls inside articles must be localized");
 assert.equal(attributes.get("aria-label"), "بحث");
-assert.equal(heading.dataset.sixmmAnchorTarget, "the-participation-journey");
-assert.equal(sectionHref, "#the-participation-journey", "Native TOC links must retain cross-language chapter positions");
+assert.equal(heading.dataset.sixmmAnchorTarget, undefined);
+assert.equal(sectionHref, "#" + encodeURIComponent(heading.id), "Keep Fern's native TOC markup and click handlers unchanged");
 assert.equal(link.href, "https://github.com/6mm-com/docs/blob/main/fern/translations/ar/docs/pages/prediction/overview.mdx?plain=1");
 for (const [prefix, expected] of [["zh-CN", "translations/zh-CN/"], ["ja", "translations/ja/"], ["", ""]]) {
   window.location.pathname = "/" + (prefix ? prefix + "/" : "") + "prediction/overview";

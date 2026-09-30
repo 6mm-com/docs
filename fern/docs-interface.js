@@ -48,7 +48,11 @@
   function isHydrated(element) {
     if (typeof element.closest !== "function") return true;
     var island = element.closest("astro-island");
-    return !island || island.hasAttribute("data-fern-hydrated");
+    while (island) {
+      if (!island.hasAttribute("data-fern-hydrated")) return false;
+      island = island.parentElement && island.parentElement.closest("astro-island");
+    }
+    return true;
   }
   function syncEditLinks(lang) {
     document.querySelectorAll('a[href^="https://github.com/6mm-com/docs/blob/main/fern/"]').forEach(function (link) {
@@ -59,25 +63,6 @@
         "/fern/" + (lang ? "translations/" + lang + "/" : "") + "docs/"
       );
       if (link.href !== url.href) link.href = url.href;
-    });
-  }
-  function syncSectionLinks() {
-    var aliases = Object.create(null);
-    document.querySelectorAll("[data-sixmm-canonical-anchor]").forEach(function (marker) {
-      var heading = marker.nextElementSibling;
-      if (!heading || !/^H[2-6]$/.test(heading.tagName)) return;
-      if (!isHydrated(heading)) return;
-      var canonical = marker.getAttribute("data-sixmm-canonical-anchor");
-      heading.dataset.sixmmAnchorTarget = canonical;
-      if (heading.id) aliases[heading.id] = canonical;
-    });
-    document.querySelectorAll('a[href^="#"]').forEach(function (link) {
-      if (!isHydrated(link)) return;
-      try {
-        var hash = link.getAttribute("href");
-        var canonical = aliases[decodeURIComponent(hash.slice(1))];
-        if (canonical && hash !== "#" + canonical) link.setAttribute("href", "#" + canonical);
-      } catch (error) { /* Leave malformed fragments unchanged. */ }
     });
   }
   function syncArabic() {
@@ -121,7 +106,6 @@
     try {
       var lang = locale();
       syncEditLinks(lang);
-      syncSectionLinks();
       if (lang === "ar") syncArabic();
     } finally { observe(); }
   }

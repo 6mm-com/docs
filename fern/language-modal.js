@@ -662,7 +662,11 @@
   function isHydratedControl(element) {
     if (typeof element.closest !== "function") return true;
     var island = element.closest("astro-island");
-    return !island || island.hasAttribute("data-fern-hydrated");
+    while (island) {
+      if (!island.hasAttribute("data-fern-hydrated")) return false;
+      island = island.parentElement && island.parentElement.closest("astro-island");
+    }
+    return true;
   }
 
   function scheduleSync() {

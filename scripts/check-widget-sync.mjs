@@ -575,7 +575,7 @@ const adapterDocument = {
   getElementById(id) {
     if (id === "language-menu" && activeMenu === languageMenu) return languageMenu;
     if (id === "theme-menu" && activeMenu === themeMenu) return themeMenu;
-    if (id === "基本参与流程") return { dataset: { sixmmAnchorTarget: "the-participation-journey" } };
+    if (id === "基本参与流程") return { dataset: {}, previousElementSibling: { dataset: { sixmmCanonicalAnchor: "the-participation-journey" } } };
     return null;
   },
   querySelectorAll(selector) {
