@@ -10,7 +10,8 @@ const link = { href: "https://github.com/6mm-com/docs/blob/main/fern/docs/pages/
 const nodes = [
   { nodeValue: "Search", parentElement: { closest: () => null } },
   { nodeValue: "Copy page", parentElement: { closest: () => null } },
-  { nodeValue: "Search", parentElement: { closest: () => ({}) } },
+  { nodeValue: "Search", parentElement: { closest: (selector) => selector === "main article" ? {} : null } },
+  { nodeValue: "Copy to clipboard", parentElement: { closest: (selector) => selector === "main article" || selector === "button, .fern-page-actions" ? {} : null } },
 ];
 const attributes = new Map([["aria-label", "Search"]]);
 const input = {
@@ -49,6 +50,7 @@ flush();
 assert.equal(nodes[0].nodeValue, "بحث");
 assert.equal(nodes[1].nodeValue, "نسخ الصفحة");
 assert.equal(nodes[2].nodeValue, "Search", "Article, code and embedded applications must remain unchanged");
+assert.equal(nodes[3].nodeValue, "نسخ إلى الحافظة", "Code toolbar controls inside articles must be localized");
 assert.equal(attributes.get("aria-label"), "بحث");
 assert.equal(link.href, "https://github.com/6mm-com/docs/blob/main/fern/translations/ar/docs/pages/prediction/overview.mdx?plain=1");
 for (const [prefix, expected] of [["zh-CN", "translations/zh-CN/"], ["ja", "translations/ja/"], ["", ""]]) {

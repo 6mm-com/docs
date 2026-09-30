@@ -62,12 +62,14 @@
     var node;
     while ((node = walker.nextNode())) {
       var parent = node.parentElement;
-      if (!parent || parent.closest('main article, pre, code, script, style, textarea, .fern-language-selector, .fern-language-dropdown-content, .sixmm-mobile-language-dialog, #cs-widget-container')) continue;
+      if (!parent || parent.closest('pre, code, script, style, textarea, .fern-language-selector, .fern-language-dropdown-content, .sixmm-mobile-language-dialog, #cs-widget-container')) continue;
+      if (parent.closest('main article') && !parent.closest('button, .fern-page-actions')) continue;
       var replacement = translate(node.nodeValue);
       if (replacement !== node.nodeValue) node.nodeValue = replacement;
     }
     document.querySelectorAll('[aria-label], [title], [placeholder]').forEach(function (element) {
-      if (element.closest('main article, pre, code, #cs-widget-container')) return;
+      if (element.closest('pre, code, #cs-widget-container')) return;
+      if (element.closest('main article') && !element.closest('button, .fern-page-actions')) return;
       ["aria-label", "title", "placeholder"].forEach(function (name) {
         var value = element.getAttribute(name);
         if (value === null) return;
