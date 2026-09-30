@@ -53,10 +53,127 @@
   };
 
   var statusLabels = {
-    en: ['Loading customer support…', 'Customer support is taking longer to load. Check your connection and try again.', 'Retry', 'Close'],
-    'zh-CN': ['正在加载在线客服…', '客服加载时间较长，请检查网络后重试。', '重试', '关闭'],
-    'zh-TW': ['正在載入線上客服…', '客服載入時間較長，請檢查網路後重試。', '重試', '關閉']
-  };
+  "en": [
+    "Loading customer support…",
+    "Customer support is taking longer to load. Check your connection and try again.",
+    "Retry",
+    "Close"
+  ],
+  "zh-CN": [
+    "正在加载在线客服…",
+    "客服加载时间较长，请检查网络后重试。",
+    "重试",
+    "关闭"
+  ],
+  "zh-TW": [
+    "正在載入線上客服…",
+    "客服載入時間較長，請檢查網路後重試。",
+    "重試",
+    "關閉"
+  ],
+  "ja": [
+    "サポートを読み込み中…",
+    "読み込みに時間がかかっています。接続を確認して再試行してください。",
+    "再試行",
+    "閉じる"
+  ],
+  "ru": [
+    "Загрузка поддержки…",
+    "Загрузка поддержки занимает больше времени. Проверьте соединение и повторите попытку.",
+    "Повторить",
+    "Закрыть"
+  ],
+  "es-419": [
+    "Cargando atención al cliente…",
+    "La carga está tardando más de lo esperado. Revisa tu conexión e inténtalo de nuevo.",
+    "Reintentar",
+    "Cerrar"
+  ],
+  "it": [
+    "Caricamento assistenza clienti…",
+    "Il caricamento richiede più tempo. Controlla la connessione e riprova.",
+    "Riprova",
+    "Chiudi"
+  ],
+  "fr": [
+    "Chargement du support client…",
+    "Le chargement prend plus de temps. Vérifiez votre connexion et réessayez.",
+    "Réessayer",
+    "Fermer"
+  ],
+  "de": [
+    "Kundensupport wird geladen…",
+    "Das Laden dauert länger. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
+    "Erneut versuchen",
+    "Schließen"
+  ],
+  "pt-BR": [
+    "Carregando atendimento ao cliente…",
+    "O carregamento está demorando mais. Verifique sua conexão e tente novamente.",
+    "Tentar novamente",
+    "Fechar"
+  ],
+  "id": [
+    "Memuat layanan pelanggan…",
+    "Pemuatan memerlukan waktu lebih lama. Periksa koneksi Anda dan coba lagi.",
+    "Coba lagi",
+    "Tutup"
+  ],
+  "pl": [
+    "Ładowanie obsługi klienta…",
+    "Ładowanie trwa dłużej. Sprawdź połączenie i spróbuj ponownie.",
+    "Spróbuj ponownie",
+    "Zamknij"
+  ],
+  "vi": [
+    "Đang tải hỗ trợ khách hàng…",
+    "Quá trình tải mất nhiều thời gian hơn. Kiểm tra kết nối và thử lại.",
+    "Thử lại",
+    "Đóng"
+  ],
+  "uk": [
+    "Завантаження підтримки…",
+    "Завантаження триває довше. Перевірте з’єднання та спробуйте ще раз.",
+    "Спробувати ще раз",
+    "Закрити"
+  ],
+  "pt-PT": [
+    "A carregar apoio ao cliente…",
+    "O carregamento está a demorar mais. Verifique a ligação e tente novamente.",
+    "Tentar novamente",
+    "Fechar"
+  ],
+  "es-ES": [
+    "Cargando atención al cliente…",
+    "La carga está tardando más de lo esperado. Comprueba tu conexión e inténtalo de nuevo.",
+    "Reintentar",
+    "Cerrar"
+  ],
+  "tr": [
+    "Müşteri desteği yükleniyor…",
+    "Yükleme daha uzun sürüyor. Bağlantınızı kontrol edip tekrar deneyin.",
+    "Tekrar dene",
+    "Kapat"
+  ],
+  "ko": [
+    "고객 지원 로딩 중…",
+    "로딩이 지연되고 있습니다. 연결을 확인하고 다시 시도하세요.",
+    "다시 시도",
+    "닫기"
+  ],
+  "el": [
+    "Φόρτωση υποστήριξης πελατών…",
+    "Η φόρτωση καθυστερεί. Ελέγξτε τη σύνδεσή σας και δοκιμάστε ξανά.",
+    "Δοκιμή ξανά",
+    "Κλείσιμο"
+  ],
+  "ar": [
+    "جارٍ تحميل دعم العملاء…",
+    "يستغرق التحميل وقتًا أطول. تحقق من اتصالك وحاول مرة أخرى.",
+    "إعادة المحاولة",
+    "إغلاق"
+  ]
+};
 
   function renderSupportStatus() {
     if (!supportStatus) return;

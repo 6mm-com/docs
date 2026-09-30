@@ -6,6 +6,8 @@ const script = await readFile(new URL("../fern/docs-interface.js", import.meta.u
 const callbacks = [];
 const listeners = {};
 let observerCount = 0;
+const observerCallbacks = [];
+let fullWalks = 0;
 let islandReady = false;
 let layoutReady = false;
 const layoutIsland = { hasAttribute: () => layoutReady };
@@ -31,7 +33,7 @@ const input = {
   getAttribute: (name) => attributes.get(name) ?? null,
   setAttribute: (name, value) => attributes.set(name, value),
 };
-const uiRoot = { classList: { contains: () => false }, closest: hydratedAncestor, querySelectorAll: () => [input], getAttribute: () => null };
+const uiRoot = { isConnected: true, classList: { contains: () => false }, closest: hydratedAncestor, querySelectorAll: () => [input], getAttribute: () => null };
 let disabled = "true";
 const window = {
   location: { pathname: "/ar/prediction/overview" },
@@ -43,7 +45,7 @@ const document = {
   readyState: "complete", documentElement: { lang:"ar" }, body: {},
   getElementById: () => ({ getAttribute: () => disabled }),
   querySelectorAll: (selector) => {
-    if (selector.startsWith('#fern-header')) return [uiRoot];
+    if (selector.startsWith('#fern-header')) { fullWalks++; return [uiRoot]; }
     if (selector.startsWith('a[data-astro-prefetch')) return [];
     if (selector === "[data-sixmm-canonical-anchor]") return [marker];
     if (selector === 'a[href^="#"]') return [sectionLink];
@@ -55,7 +57,7 @@ const document = {
 const sandbox = {
   window, document, URL, NodeFilter: { SHOW_TEXT: 4 },
   MutationObserver: class {
-    constructor() { observerCount++; }
+    constructor(callback) { observerCount++; observerCallbacks.push(callback); }
     observe() {} disconnect() {}
   },
 };
@@ -105,4 +107,20 @@ assert.equal(nodes[4].nodeValue,'Edit this page','Normalize the GitHub edit labe
 nodes[4].nodeValue='在仪表板中编辑';
 window.__sixmmPrepareInterfaceSwap(document,'zh-CN');
 assert.equal(nodes[4].nodeValue,'Edit this page','Both native edit label variants share the English key');
+nodes.push({ nodeValue: 'Light', parentElement: { closest: hydratedAncestor } });
+window.__sixmmDocsLocales.push({ code: 'de' }, { code: 'id' }, { code: 'uk' }, { code: 'vi' });
+window.location.pathname = '/de/sdk/overview'; listeners['astro:page-load'](); flush();
+assert.equal(nodes.at(-1).nodeValue, 'Hell', 'Hydrated theme controls use the selected locale');
+window.__sixmmPrepareInterfaceSwap(document, 'de');
+assert.equal(nodes.at(-1).nodeValue, 'Light', 'Added theme translations must normalize back to native markup before hydration');
+for (const [lang, expected] of [['id', 'Asisten'], ['uk', 'Помічник'], ['vi', 'Trợ lý']]) {
+  nodes[1].nodeValue = 'Assistant';
+  window.location.pathname = '/' + lang + '/sdk/overview'; listeners['astro:page-load'](); flush();
+  assert.equal(nodes[1].nodeValue, expected);
+}
+const previousWalks = fullWalks;
+nodes[0].nodeValue = 'Search';
+observerCallbacks[0]([{ target: { nodeType: 1, closest: () => uiRoot } }]); flush();
+assert.equal(fullWalks, previousWalks, 'A changed control must not trigger another whole-document lookup');
+assert.equal(nodes[0].nodeValue, 'Tìm kiếm');
 console.log("Docs interface regression checks passed: locale edit links, reversible labels, hydration guard and scoped singleton lifecycle.");

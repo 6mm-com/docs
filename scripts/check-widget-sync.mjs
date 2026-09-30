@@ -353,6 +353,17 @@ expiredCallback();
 assert.equal(status.dataset.state,'error','A stalled frame shows a recoverable loading failure');
 const retry=status.children.find(node=>node.tagName==='BUTTON');
 assert.equal(retry.hidden,false);
+const localizedStatuses = JSON.parse(supportScript.match(/var statusLabels = (\{[\s\S]*?\n\});/)[1]);
+assert.equal(Object.keys(localizedStatuses).length, browserLocales.length);
+for (const locale of browserLocales) {
+  const code = locale.code || 'en';
+  const labels = localizedStatuses[code];
+  assert.equal(labels.length, 4, `All support status labels exist for ${code}`);
+  completeDocsNavigation(`${locale.code ? `/${locale.code}` : ''}/sdk/overview`);
+  assert.equal(retry.textContent, labels[2], `Retry updates without reloading the frame for ${code}`);
+  assert.equal(status.children.find(node => node.tagName === 'P').textContent, labels[1]);
+  assert.equal(container.iframe.draft, 'unfinished');
+}
 retry.listeners.click();
 assert.equal(status.dataset.state,'loading');
 listeners.message({origin:'https://csadmin.6mm.com',source:container.iframe.contentWindow,data:{type:'cs-widget-browser-theme'}});

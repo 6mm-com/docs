@@ -350,13 +350,13 @@ function extractDocumentRecords(content) {
       continue;
     }
 
-    const linkedLine = tokenizeMarkdownLinks(lineWithAttributeTokens, index);
+    const blockPrefix = lineWithAttributeTokens.match(/^(\s*(?:(?:>\s*)+|#{1,6}\s+|\d+\.\s+|[-*]\s+))/)?.[0] ?? "";
+    const linkedLine = tokenizeMarkdownLinks(lineWithAttributeTokens.slice(blockPrefix.length), index);
     if (linkedLine != null) {
-      lines[index] = linkedLine;
+      lines[index] = blockPrefix + linkedLine;
       continue;
     }
 
-    const blockPrefix = lineWithAttributeTokens.match(/^(\s*(?:#{1,6}\s+|>\s*|\d+\.\s+|[-*]\s+))/)?.[0] ?? "";
     const protectedRecord = protectText(lineWithAttributeTokens.slice(blockPrefix.length));
     if (
       !/[A-Za-z]/.test(

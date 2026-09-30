@@ -89,6 +89,11 @@ function tableSignatures(content) {
     .map((line) => (line.match(/(?<!\\)\|/g) ?? []).length);
 }
 
+function blockquoteSignatures(content) {
+  return content.replace(/```[^\n]*\n[\s\S]*?```/g, "").split("\n")
+    .filter(line => /^\s*>/.test(line)).map(line => line.match(/^\s*(?:>\s*)+/)[0].replace(/\s/g, ""));
+}
+
 function sameArray(left, right) {
   return left.length === right.length && left.every((value, index) => value === right[index]);
 }
@@ -431,6 +436,10 @@ for (const relativePagePath of activePages) {
       pushError(
         `[${locale}] translation quality issue /${issue}/ in ${relativePagePath}`,
       );
+    }
+
+    if (generatedLocales.includes(locale) && !sameArray(blockquoteSignatures(translated), blockquoteSignatures(source))) {
+      pushError(`[${locale}] Markdown blockquote structure changed in ${relativePagePath}`);
     }
 
     if (generatedLocales.includes(locale)) {
