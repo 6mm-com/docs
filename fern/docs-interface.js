@@ -27,6 +27,7 @@
   var observedRoots = new WeakSet();
   var uiObserver;
   var dirtyRoots = new Set();
+  var fullSyncRequested = false;
   function locale() {
     var first = window.location.pathname.split('/').filter(Boolean)[0] || '';
     return (window.__sixmmDocsLocales || []).some(function (entry) { return entry.code === first && first; }) ? first : 'en';
@@ -100,12 +101,14 @@
     var ai = document.getElementById('fern-ask-ai-button');
     if (document.readyState !== 'complete' || (ai && ai.getAttribute('aria-disabled') === 'true')) return;
     var lang = locale();
-    if (dirtyRoots.size) {
+    if (!fullSyncRequested && dirtyRoots.size) {
       var changed = Array.from(dirtyRoots).filter(function (root) { return root.isConnected; });
       dirtyRoots.clear();
       syncLabels(document, lang, false, changed);
       return;
     }
+    fullSyncRequested = false;
+    dirtyRoots.clear();
     uiObserver.disconnect();
     observedRoots = new WeakSet();
     syncLabels(document, lang, false);
@@ -115,6 +118,7 @@
     });
   }
   function schedule() {
+    fullSyncRequested = true;
     dirtyRoots.clear();
     queueSync();
   }
