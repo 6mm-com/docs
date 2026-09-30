@@ -577,11 +577,12 @@
     var pathname = new URL(targetUrl, window.location.origin).pathname;
     var previousContent = pageContentState();
 
-    // Use a normal link: Fern's client navigation can handle it when available,
-    // and the browser can load it directly otherwise. Do not inspect React's
-    // private Fiber/context objects; current Fern pages also use Astro islands.
+    // A locale change must initialize a new document. Keeping the previous
+    // locale's React providers during an Astro swap causes hydration errors.
+    // Ordinary same-locale links can still use Fern's client navigation.
     var link = document.createElement("a");
     link.href = targetUrl;
+    link.setAttribute("data-astro-reload", "");
     link.hidden = true;
     document.body.appendChild(link);
     try {

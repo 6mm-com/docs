@@ -26,6 +26,55 @@
   var pendingWidgetDocsResolved = false;
   var pendingWidgetTheme = null;
   var widgetDocsRequestId = 0;
+  var retainedWidgetNodes = [];
+
+  function prepareWidgetSwap(event) {
+    var incoming = event.newDocument;
+    if (!incoming || !incoming.body || !incoming.head) return;
+
+    var nodes = [
+      document.getElementById('cs-widget-bubble'),
+      document.getElementById('cs-widget-container'),
+      document.getElementById('cs-bubble-style'),
+      document.querySelector('script[data-sixmm-support-widget="true"]'),
+    ];
+    retainedWidgetNodes = [];
+    nodes.forEach(function (node, index) {
+      if (!node) return;
+      var key = 'sixmm-support-' + index;
+      var inHead = node.parentNode === document.head;
+      var target = inHead ? incoming.head : incoming.body;
+      node.setAttribute('data-astro-transition-persist', key);
+      retainedWidgetNodes.push({ node: node, key: key, inHead: inHead });
+
+      // Astro only preserves nodes that have a matching incoming placeholder.
+      // Its state-preserving move keeps an open iframe connected where supported.
+      var placeholder = incoming.querySelector(
+        '[data-astro-transition-persist="' + key + '"]',
+      );
+      if (!placeholder) {
+        placeholder = incoming.createElement(node.tagName.toLowerCase());
+        placeholder.setAttribute('data-astro-transition-persist', key);
+        target.appendChild(placeholder);
+      }
+    });
+  }
+
+  function restoreWidgetAfterSwap() {
+    retainedWidgetNodes.forEach(function (entry) {
+      if (entry.node.isConnected) return;
+      // Fallback for hosts that did not preserve the marked nodes during a swap.
+      var target = entry.inHead ? document.head : document.body;
+      target.appendChild(entry.node);
+    });
+    loadWidget();
+    if (pendingWidgetDocsLocale !== null) {
+      confirmPendingWidgetDocsNavigation();
+    } else {
+      syncWidgetLanguageFromHost(20, false);
+    }
+    syncWidgetThemeFromHost(20, false);
+  }
 
   function normalizeLanguage(lang) {
     return typeof lang === 'string'
@@ -215,6 +264,9 @@
     script.src = WIDGET_SRC;
     script.async = true;
     script.dataset.sixmmSupportWidget = 'true';
+    // This script starts executing when appended. Astro must not execute the
+    // retained SDK again after swapping pages, which would duplicate listeners.
+    script.dataset.astroExec = '';
     script.dataset.lang = initialLang;
     script.dataset.theme = initialTheme;
     script.dataset.color = currentAccentColor();
@@ -235,6 +287,8 @@
   function boot() {
     window.addEventListener('cs-widget-lang-change', onWidgetLanguageChange);
     window.addEventListener('cs-widget-theme-change', onWidgetThemeChange);
+    document.addEventListener('astro:before-swap', prepareWidgetSwap);
+    document.addEventListener('astro:page-load', restoreWidgetAfterSwap);
 
     loadWidget();
 

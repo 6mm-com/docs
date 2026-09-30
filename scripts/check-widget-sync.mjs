@@ -41,6 +41,43 @@ const docsLanguageNavigations = [];
 const docsThemeNavigations = [];
 const rootClasses = new Set(["light"]);
 let appendedWidgetScript = null;
+const documentListeners = {};
+let widgetScriptLoads = 0;
+const loadedWidgetScripts = new Set();
+const widgetBodyNodes = [];
+const widgetHeadNodes = [];
+
+function widgetNode(tag) {
+  const attributes = new Map();
+  return {
+    tagName: tag.toUpperCase(),
+    dataset: {},
+    isConnected: false,
+    getAttribute: (name) => attributes.get(name) ?? null,
+    setAttribute(name, value) { attributes.set(name, value); },
+  };
+}
+
+function widgetParent(nodes) {
+  return {
+    appendChild(node) {
+      if (!nodes.includes(node)) nodes.push(node);
+      node.parentNode = this;
+      node.isConnected = true;
+      return node;
+    },
+  };
+}
+
+function findWidgetNode(selector, nodes) {
+  if (selector === 'script[data-sixmm-support-widget="true"]') {
+    return nodes.find((node) => node.dataset.sixmmSupportWidget === "true") ?? null;
+  }
+  const match = selector.match(/^\[data-astro-transition-persist="([^"]+)"\]$/);
+  return match
+    ? nodes.find((node) => node.getAttribute("data-astro-transition-persist") === match[1]) ?? null
+    : null;
+}
 
 const documentElement = {
   dataset: { theme: "light" },
@@ -99,17 +136,29 @@ sandboxWindow.window = sandboxWindow;
 const sandboxDocument = {
   readyState: "complete",
   documentElement,
-  querySelector() {
-    return null;
+  addEventListener(name, listener) {
+    documentListeners[name] = listener;
   },
-  body: {
-    appendChild(element) {
-      appendedWidgetScript = element;
-    },
+  getElementById(id) {
+    return [...widgetBodyNodes, ...widgetHeadNodes].find((node) => node.id === id) ?? null;
   },
-  createElement() {
-    return { dataset: {} };
+  querySelector(selector) {
+    return findWidgetNode(selector, [...widgetBodyNodes, ...widgetHeadNodes]);
   },
+  head: widgetParent(widgetHeadNodes),
+  body: widgetParent(widgetBodyNodes),
+  createElement: widgetNode,
+};
+const appendWidgetNode = sandboxDocument.body.appendChild;
+sandboxDocument.body.appendChild = function (element) {
+  if (element.tagName === "SCRIPT") {
+    appendedWidgetScript = element;
+    if (!loadedWidgetScripts.has(element)) {
+      loadedWidgetScripts.add(element);
+      widgetScriptLoads++;
+    }
+  }
+  return appendWidgetNode.call(this, element);
 };
 
 class SandboxMutationObserver {
@@ -127,6 +176,8 @@ runInNewContext(supportScript, {
 });
 
 assert.ok(appendedWidgetScript, "The support Widget script must be appended");
+assert.equal(appendedWidgetScript.dataset.astroExec, "",
+  "Astro's script runner must skip the already-executing retained SDK");
 appendedWidgetScript.onload();
 assert.deepEqual(widgetCalls, [
   ["lang", "en"],
@@ -248,6 +299,60 @@ rootClasses.add("light");
 documentElement.dataset.theme = "light";
 observers[0].listener();
 assert.deepEqual(widgetCalls, [["theme", "light"]]);
+
+// Reproduce Astro's body replacement. An unmarked widget or one without an
+// incoming placeholder is removed; matching persisted nodes keep their identity.
+const bubble = widgetNode("div");
+bubble.id = "cs-widget-bubble";
+const container = widgetNode("div");
+container.id = "cs-widget-container";
+container.iframe = { conversation: "active", draft: "unfinished" };
+const widgetStyle = widgetNode("style");
+widgetStyle.id = "cs-bubble-style";
+sandboxDocument.body.appendChild(bubble);
+sandboxDocument.body.appendChild(container);
+sandboxDocument.head.appendChild(widgetStyle);
+const originalFrame = container.iframe;
+
+for (let navigation = 0; navigation < 3; navigation++) {
+  const incomingBody = [];
+  const incomingHead = [];
+  const incoming = {
+    body: widgetParent(incomingBody),
+    head: widgetParent(incomingHead),
+    createElement: widgetNode,
+    querySelector: (selector) => findWidgetNode(selector, [...incomingBody, ...incomingHead]),
+  };
+  documentListeners["astro:before-swap"]({ newDocument: incoming });
+  documentListeners["astro:before-swap"]({ newDocument: incoming });
+  assert.equal(incomingBody.length, 3, "Repeated swap preparation must not duplicate placeholders");
+  assert.equal(incomingHead.length, 1);
+  for (const [live, next, parent] of [
+    [widgetBodyNodes, incomingBody, sandboxDocument.body],
+    [widgetHeadNodes, incomingHead, sandboxDocument.head],
+  ]) {
+    const persisted = live.filter((node) => next.some(
+      (placeholder) => placeholder.getAttribute("data-astro-transition-persist")
+        === node.getAttribute("data-astro-transition-persist"),
+    ));
+    live.forEach((node) => { node.isConnected = false; });
+    live.length = 0;
+    persisted.forEach((node) => parent.appendChild(node));
+  }
+  documentListeners["astro:page-load"]();
+  assert.equal(sandboxDocument.getElementById("cs-widget-bubble"), bubble);
+  assert.equal(sandboxDocument.getElementById("cs-widget-container"), container);
+  assert.equal(sandboxDocument.getElementById("cs-bubble-style"), widgetStyle);
+  assert.equal(container.iframe, originalFrame, "Navigation must retain the active iframe");
+  assert.equal(container.iframe.draft, "unfinished");
+  assert.equal(widgetScriptLoads, 1, "Page navigation must not reload the widget SDK");
+}
+runInNewContext(supportScript, {
+  window: sandboxWindow, document: sandboxDocument,
+  MutationObserver: SandboxMutationObserver,
+});
+assert.equal(intervals.length, 1, "Re-executing custom scripts must not duplicate polling");
+assert.equal(observers.length, 1);
 
 // Fern adapter: navigate through standard links without a React/Next router.
 let activeMenu = null;
@@ -420,7 +525,12 @@ const adapterDocument = {
     return {
       href: "",
       hidden: false,
+      setAttribute(name, value) {
+        this[name] = value;
+      },
       click() {
+        assert.equal(this["data-astro-reload"], "",
+          "Cross-locale links must initialize a new document instead of keeping stale React providers");
         nativeLinkNavigations.push(this.href);
         const target = new URL(this.href, adapterWindow.location.origin);
         adapterWindow.location.pathname = target.pathname;

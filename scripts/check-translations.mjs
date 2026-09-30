@@ -698,7 +698,7 @@ const supportScript = await readFile(path.join(fernRoot, "support-widget.js"), "
 if (/window\.location\.(?:assign|replace|reload)|window\.location\s*=/.test(
   `${languageScript}\n${supportScript}`,
 )) {
-  pushError("Locale navigation must use links rather than forcing a full-page reload");
+  pushError("Locale navigation must use standard links rather than assigning window.location");
 }
 for (const contract of [
   "CSWidget",
