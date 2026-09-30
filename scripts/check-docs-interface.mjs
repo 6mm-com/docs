@@ -22,14 +22,16 @@ const nodes = [
   { nodeValue: "Copy page", parentElement: { closest: hydratedAncestor } },
   { nodeValue: "Search", parentElement: { closest: (selector) => selector === "main article" ? {} : null } },
   { nodeValue: "Copy to clipboard", parentElement: { closest: (selector) => selector === "main article" || selector === "button, .fern-page-actions" ? {} : null } },
+  { nodeValue: "编辑此页面", parentElement: { closest: hydratedAncestor } },
 ];
 const attributes = new Map([["aria-label", "Search"]]);
 const input = {
+  classList: { contains: () => false },
   closest: hydratedAncestor,
   getAttribute: (name) => attributes.get(name) ?? null,
   setAttribute: (name, value) => attributes.set(name, value),
 };
-const uiRoot = { closest: hydratedAncestor, querySelectorAll: () => [input], getAttribute: () => null };
+const uiRoot = { classList: { contains: () => false }, closest: hydratedAncestor, querySelectorAll: () => [input], getAttribute: () => null };
 let disabled = "true";
 const window = {
   location: { pathname: "/ar/prediction/overview" },
@@ -99,4 +101,8 @@ listeners['astro:page-load'](); flush();
 assert.equal(nodes[0].nodeValue, 'Search', 'Returning to English must restore labels');
 window.__sixmmPrepareInterfaceSwap(document,'zh-CN');
 assert.equal(nodes[0].nodeValue,'Search','Unsupported initial UI languages normalize to Fern native English before hydration');
+assert.equal(nodes[4].nodeValue,'Edit this page','Normalize the GitHub edit label before lazy footer hydration');
+nodes[4].nodeValue='在仪表板中编辑';
+window.__sixmmPrepareInterfaceSwap(document,'zh-CN');
+assert.equal(nodes[4].nodeValue,'Edit this page','Both native edit label variants share the English key');
 console.log("Docs interface regression checks passed: locale edit links, reversible labels, hydration guard and scoped singleton lifecycle.");
