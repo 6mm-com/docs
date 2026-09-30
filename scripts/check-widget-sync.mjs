@@ -249,13 +249,12 @@ documentElement.dataset.theme = "light";
 observers[0].listener();
 assert.deepEqual(widgetCalls, [["theme", "light"]]);
 
-// Fern adapter: use the mounted Next.js router for locales and the native item
-// for themes.
+// Fern adapter: navigate through standard links without a React/Next router.
 let activeMenu = null;
 let activeThemeIcon = "light";
 let languageTriggerClicks = 0;
-const directRouterNavigations = [];
-const directRouterRefreshes = [];
+const nativeLinkNavigations = [];
+const adapterArticle = { textContent: "English page" };
 const adapterRootClasses = new Set(["light"]);
 const adapterStorage = new Map([["theme", "light"]]);
 const adapterStorageEvents = [];
@@ -298,33 +297,6 @@ const adapterWindow = {
   setTimeout,
   clearTimeout,
 };
-const directRouter = {
-  push() {},
-  prefetch() {},
-  replace(url, options) {
-    directRouterNavigations.push([url, options]);
-    const target = new URL(url, adapterWindow.location.origin);
-    adapterWindow.location.pathname = target.pathname;
-    adapterWindow.location.search = target.search;
-    adapterWindow.location.hash = target.hash;
-  },
-  refresh() {
-    directRouterRefreshes.push(adapterWindow.location.pathname);
-  },
-};
-const mountedFernLink = {
-  href: "/home",
-  __reactFiber$test: {
-    dependencies: {
-      firstContext: {
-        memoizedValue: directRouter,
-        next: null,
-      },
-    },
-    return: null,
-  },
-};
-
 function makeClassList() {
   const values = new Set();
   return {
@@ -442,8 +414,25 @@ const adapterDocument = {
   readyState: "loading",
   documentElement: adapterRoot,
   addEventListener() {},
-  createElement() {
-    return { className: "", textContent: "" };
+  body: { appendChild() {} },
+  createElement(tag) {
+    if (tag !== "a") return { className: "", textContent: "" };
+    return {
+      href: "",
+      hidden: false,
+      click() {
+        nativeLinkNavigations.push(this.href);
+        const target = new URL(this.href, adapterWindow.location.origin);
+        adapterWindow.location.pathname = target.pathname;
+        adapterWindow.location.search = target.search;
+        adapterWindow.location.hash = target.hash;
+        adapterArticle.textContent = "Page " + target.pathname;
+      },
+      remove() {},
+    };
+  },
+  querySelector(selector) {
+    return selector === "main article" ? adapterArticle : null;
   },
   getElementById(id) {
     if (id === "language-menu" && activeMenu === languageMenu) return languageMenu;
@@ -451,7 +440,7 @@ const adapterDocument = {
     return null;
   },
   querySelectorAll(selector) {
-    if (selector === "a[href]") return [mountedFernLink];
+    if (selector === "a[href]") return [];
     if (selector === ".fern-language-selector") return [languageSelector];
     if (selector === ".fern-language-selector + button") return [themeTrigger];
     if (selector.includes(".fern-language-dropdown-content")) {
@@ -498,9 +487,7 @@ assert.equal(
   true,
 );
 assert.equal(adapterWindow.location.pathname, "/fr/home");
-assert.equal(directRouterNavigations.at(-1)[0], "/fr/home");
-assert.equal(directRouterNavigations.at(-1)[1].scroll, false);
-assert.deepEqual(directRouterRefreshes, []);
+assert.equal(nativeLinkNavigations.at(-1), "/fr/home");
 assert.equal(
   languageTriggerClicks,
   0,
@@ -515,8 +502,7 @@ assert.equal(
 assert.equal(adapterWindow.location.pathname, "/de/home");
 assert.equal(adapterWindow.location.search, "?from=widget");
 assert.equal(adapterWindow.location.hash, "#example");
-assert.equal(directRouterNavigations.at(-1)[0], "/de/home?from=widget#example");
-assert.deepEqual(directRouterRefreshes, []);
+assert.equal(nativeLinkNavigations.at(-1), "/de/home?from=widget#example");
 
 adapterWindow.location.pathname = "/";
 adapterWindow.location.search = "";
@@ -526,13 +512,21 @@ assert.equal(
   true,
 );
 assert.equal(adapterWindow.location.pathname, "/ja");
-assert.equal(directRouterNavigations.at(-1)[0], "/ja");
+assert.equal(nativeLinkNavigations.at(-1), "/ja");
 assert.equal(
   await adapterWindow.__sixmmNavigateDocsLocale(""),
   true,
 );
 assert.equal(adapterWindow.location.pathname, "/");
-assert.equal(directRouterNavigations.at(-1)[0], "/");
+assert.equal(nativeLinkNavigations.at(-1), "/");
+
+const previousNavigationCount = nativeLinkNavigations.length;
+assert.equal(await adapterWindow.__sixmmNavigateDocsLocale(""), true);
+assert.equal(await adapterWindow.__sixmmNavigateDocsLocale("unsupported"), false);
+assert.equal(nativeLinkNavigations.length, previousNavigationCount,
+  "Current and unsupported locales must not start a navigation");
+assert.doesNotMatch(languageScript, /__reactFiber|memoizedValue/,
+  "Locale switching must work without a private Next router");
 
 activeMenu = null;
 assert.equal(

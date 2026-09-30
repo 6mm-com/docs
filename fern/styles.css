@@ -130,17 +130,19 @@ button:focus-visible,
   color: var(--sixmm-accent) !important;
 }
 
-/* Fern's compatible scalar tabs theme leaves the tab-list wrapper shrink-wrapped
- * at the start edge. Let the wrapper fill the header so short locale labels stay
- * centered, while long translations remain horizontally scrollable. */
-.fern-header-tabs > div:has(> [role="tablist"]) {
+/* Fill the header in both legacy Fern and current Astro layouts so short
+ * locale labels stay centered and long translations can scroll horizontally. */
+.fern-header-tabs > div:has(> [role="tablist"]),
+.fern-header-tabs > astro-island > div:has(> [role="tablist"]) {
   min-width: 0;
   flex: 1 1 auto;
+  width: 100%;
   overflow-x: auto;
   scrollbar-width: none;
 }
 
-.fern-header-tabs > div:has(> [role="tablist"])::-webkit-scrollbar {
+.fern-header-tabs > div:has(> [role="tablist"])::-webkit-scrollbar,
+.fern-header-tabs > astro-island > div:has(> [role="tablist"])::-webkit-scrollbar {
   display: none;
 }
 

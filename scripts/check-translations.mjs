@@ -698,7 +698,7 @@ const supportScript = await readFile(path.join(fernRoot, "support-widget.js"), "
 if (/window\.location\.(?:assign|replace|reload)|window\.location\s*=/.test(
   `${languageScript}\n${supportScript}`,
 )) {
-  pushError("Language switching must not trigger a full-page navigation");
+  pushError("Locale navigation must use links rather than forcing a full-page reload");
 }
 for (const contract of [
   "CSWidget",
@@ -711,6 +711,13 @@ for (const contract of [
   if (!supportScript.includes(contract)) {
     pushError(`Support widget integration is missing ${contract}`);
   }
+}
+
+if (/__reactFiber|memoizedValue|dependencies\.firstContext/.test(languageScript)) {
+  pushError("Locale navigation must not depend on private React router internals");
+}
+if (!styles.includes('.fern-header-tabs > astro-island > div:has(> [role="tablist"])')) {
+  pushError("Header tab centering must support Fern's Astro island wrapper");
 }
 
 const seoScript = await readFile(

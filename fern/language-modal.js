@@ -286,6 +286,7 @@
         }
 
         event.preventDefault();
+        event.stopImmediatePropagation();
         menu.dispatchEvent(
           new KeyboardEvent("keydown", {
             key: "Escape",
@@ -538,43 +539,6 @@
       route.locale || "en";
   }
 
-  function looksLikeNextRouter(value) {
-    return Boolean(
-      value &&
-        typeof value === "object" &&
-        typeof value.push === "function" &&
-        typeof value.replace === "function" &&
-        typeof value.prefetch === "function",
-    );
-  }
-
-  function fernRouter() {
-    var links = document.querySelectorAll("a[href]");
-    for (var linkIndex = 0; linkIndex < links.length; linkIndex += 1) {
-      var link = links[linkIndex];
-      var fiberKey = Object.getOwnPropertyNames(link).find(function (key) {
-        return key.indexOf("__reactFiber$") === 0;
-      });
-      var fiber = fiberKey ? link[fiberKey] : null;
-      var depth = 0;
-
-      while (fiber && depth < 64) {
-        var context = fiber.dependencies
-          ? fiber.dependencies.firstContext
-          : null;
-        while (context) {
-          if (looksLikeNextRouter(context.memoizedValue)) {
-            return context.memoizedValue;
-          }
-          context = context.next;
-        }
-        fiber = fiber.return;
-        depth += 1;
-      }
-    }
-    return null;
-  }
-
   function pageContentState() {
     if (typeof document.querySelector !== "function") {
       return { article: null, text: "" };
@@ -595,25 +559,6 @@
     );
   }
 
-  async function replaceFernRoute(router, targetUrl, navigationId) {
-    var pathname = new URL(targetUrl, window.location.origin).pathname;
-    if (
-      window.location.pathname +
-        window.location.search +
-        window.location.hash ===
-      targetUrl
-    ) {
-      return true;
-    }
-    var previousContent = pageContentState();
-    router.replace(targetUrl, { scroll: false });
-    var changed = await waitFor(function () {
-      if (window.location.pathname !== pathname) return null;
-      return pageContentChanged(previousContent) ? true : null;
-    }, 15000);
-    return navigationId === localeNavigationId && Boolean(changed);
-  }
-
   async function navigateDocsLocale(locale) {
     if (
       !locales.some(function (item) {
@@ -626,18 +571,29 @@
 
     var navigationId = ++localeNavigationId;
     var route = currentRoute();
-    var targetPath = localizedPath(locale, route.pagePath);
     var targetUrl =
-      targetPath + window.location.search + window.location.hash;
+      localizedPath(locale, route.pagePath) +
+      window.location.search + window.location.hash;
+    var pathname = new URL(targetUrl, window.location.origin).pathname;
+    var previousContent = pageContentState();
 
-    // Fern does not expose a public locale API. Read the Next.js router already
-    // attached to Fern's mounted links and navigate directly without opening
-    // the language menu or reloading the support widget.
-    var router = await waitFor(fernRouter, 2500);
-    if (!router || navigationId !== localeNavigationId) return false;
-
-    if (typeof router.prefetch === "function") router.prefetch(targetPath);
-    return replaceFernRoute(router, targetUrl, navigationId);
+    // Use a normal link: Fern's client navigation can handle it when available,
+    // and the browser can load it directly otherwise. Do not inspect React's
+    // private Fiber/context objects; current Fern pages also use Astro islands.
+    var link = document.createElement("a");
+    link.href = targetUrl;
+    link.hidden = true;
+    document.body.appendChild(link);
+    try {
+      link.click();
+    } finally {
+      link.remove();
+    }
+    var changed = await waitFor(function () {
+      if (window.location.pathname !== pathname) return null;
+      return pageContentChanged(previousContent) ? true : null;
+    }, 15000);
+    return navigationId === localeNavigationId && Boolean(changed);
   }
 
   function currentTheme() {
