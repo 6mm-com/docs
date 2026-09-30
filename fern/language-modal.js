@@ -619,16 +619,19 @@
     if (root.classList.contains("light")) return "light";
     return root.dataset.theme === "dark" ? "dark" : "light";
   }
+  var localeRemountMode = false;
   function prepareLocaleSwap(event) {
     if (!event.from || !event.to || !event.newDocument) return;
     var routeLocale = function (url) {
       var first = url.pathname.split("/").filter(Boolean)[0] || "";
       return locales.some(function (item) { return item.code && item.code === first; }) ? first : "";
     };
-    if (routeLocale(event.from) === routeLocale(event.to)) return;
+    if (routeLocale(event.from) !== routeLocale(event.to)) localeRemountMode = true;
+    if (!localeRemountMode) return;
     // Fern's shared client state may still hold the previous locale when an
     // incoming server-rendered island connects. Mount fresh client roots for
-    // locale changes instead of hydrating markup against the previous locale.
+    // locale changes and subsequent navigation instead of hydrating markup
+    // against the previous locale. Shared state survives until a full reload.
     // Keep slot contents intact; the support iframe is persisted separately.
     event.newDocument.querySelectorAll('astro-island[client]:not([client="only"])').forEach(function (island) {
       var options;

@@ -629,6 +629,11 @@ prepareIncomingLocale("/sdk/overview", "/zh-CN/sdk/overview");
 assert.equal(incomingIslandAttributes.get("client"), "only", "Cross-locale navigation must not hydrate against stale-locale state");
 assert.equal(JSON.parse(incomingIslandAttributes.get("opts")).value, "react");
 assert.equal(incomingIsland.innerHTML, "<astro-slot>Localized article content</astro-slot>", "Locale remounting must preserve article slots");
+incomingIslandAttributes.set("client", "load");
+incomingIslandAttributes.set("opts", JSON.stringify({ name: "PageHeaderIsland", value: true }));
+prepareIncomingLocale("/zh-CN/sdk/overview", "/zh-CN/developer-api/overview");
+assert.equal(incomingIslandAttributes.get("client"), "only", "Navigation after a language switch must continue avoiding stale shared locale state");
+assert.equal(incomingIsland.innerHTML, "<astro-slot>Localized article content</astro-slot>", "Subsequent navigation must preserve article slots");
 assert.equal(
   adapterRoot.dataset.sixmmDocsLocale,
   "en",
