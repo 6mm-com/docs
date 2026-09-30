@@ -52,6 +52,11 @@ function widgetNode(tag) {
   return {
     tagName: tag.toUpperCase(),
     dataset: {},
+    style: {},
+    listeners: {},
+    addEventListener(name, listener) { this.listeners[name] = listener; },
+    querySelector(selector) { return selector === "iframe" ? this.iframe ?? null : null; },
+    click() { this.clicks = (this.clicks || 0) + 1; },
     isConnected: false,
     getAttribute: (name) => attributes.get(name) ?? null,
     setAttribute(name, value) { attributes.set(name, value); },
@@ -166,7 +171,7 @@ class SandboxMutationObserver {
     this.listener = listener;
     observers.push(this);
   }
-  observe() {}
+  observe(target) { this.target = target; }
 }
 
 runInNewContext(supportScript, {
@@ -288,7 +293,7 @@ assert.equal(docsLanguageNavigations.at(-1), "de");
 // Widget -> Docs theme: update the host without writing setTheme back.
 widgetCalls.length = 0;
 listeners["cs-widget-theme-change"]({ detail: { theme: "dark" } });
-observers[0].listener();
+observers.find((observer) => observer.target === documentElement).listener();
 assert.equal(documentElement.dataset.theme, "dark");
 assert.equal(docsThemeNavigations.at(-1), "dark");
 assert.deepEqual(widgetCalls, []);
@@ -297,7 +302,7 @@ assert.deepEqual(widgetCalls, []);
 rootClasses.delete("dark");
 rootClasses.add("light");
 documentElement.dataset.theme = "light";
-observers[0].listener();
+observers.find((observer) => observer.target === documentElement).listener();
 assert.deepEqual(widgetCalls, [["theme", "light"]]);
 
 // Reproduce Astro's body replacement. An unmarked widget or one without an
@@ -306,7 +311,8 @@ const bubble = widgetNode("div");
 bubble.id = "cs-widget-bubble";
 const container = widgetNode("div");
 container.id = "cs-widget-container";
-container.iframe = { conversation: "active", draft: "unfinished" };
+container.style.display = "none";
+container.iframe = { conversation: "active", draft: "unfinished", setAttribute() {} };
 const widgetStyle = widgetNode("style");
 widgetStyle.id = "cs-bubble-style";
 sandboxDocument.body.appendChild(bubble);
@@ -346,13 +352,27 @@ for (let navigation = 0; navigation < 3; navigation++) {
   assert.equal(container.iframe, originalFrame, "Navigation must retain the active iframe");
   assert.equal(container.iframe.draft, "unfinished");
   assert.equal(widgetScriptLoads, 1, "Page navigation must not reload the widget SDK");
+  assert.equal(bubble.getAttribute("role"), "button");
+  assert.equal(bubble.getAttribute("tabindex"), "0");
+  assert.ok(bubble.getAttribute("aria-label"));
 }
+let prevented = 0;
+for (const key of ["Enter", " "]) {
+  bubble.listeners.keydown({ key, repeat: false, preventDefault() { prevented++; } });
+}
+assert.equal(bubble.clicks, 2, "Enter and Space activate the retained customer support button");
+assert.equal(prevented, 2, "Space must not scroll the document");
+container.style.display = "block";
+documentListeners["astro:page-load"]();
+assert.equal(bubble.getAttribute("tabindex"), "-1", "The invisible entry must not receive keyboard focus while the panel is open");
+assert.equal(bubble.getAttribute("aria-expanded"), "true");
+const observersBeforeReload = observers.length;
 runInNewContext(supportScript, {
   window: sandboxWindow, document: sandboxDocument,
   MutationObserver: SandboxMutationObserver,
 });
 assert.equal(intervals.length, 1, "Re-executing custom scripts must not duplicate polling");
-assert.equal(observers.length, 1);
+assert.equal(observers.length, observersBeforeReload, "Re-executing the loader must not add accessibility observers");
 
 // Fern adapter: navigate through standard links without a React/Next router.
 let activeMenu = null;
@@ -547,6 +567,7 @@ const adapterDocument = {
   getElementById(id) {
     if (id === "language-menu" && activeMenu === languageMenu) return languageMenu;
     if (id === "theme-menu" && activeMenu === themeMenu) return themeMenu;
+    if (id === "基本参与流程") return { dataset: { sixmmAnchorTarget: "the-participation-journey" } };
     return null;
   },
   querySelectorAll(selector) {
@@ -613,6 +634,12 @@ assert.equal(adapterWindow.location.pathname, "/de/home");
 assert.equal(adapterWindow.location.search, "?from=widget");
 assert.equal(adapterWindow.location.hash, "#example");
 assert.equal(nativeLinkNavigations.at(-1), "/de/home?from=widget#example");
+
+adapterWindow.location.pathname = "/zh-CN/prediction/overview";
+adapterWindow.location.hash = "#" + encodeURIComponent("基本参与流程");
+assert.equal(await adapterWindow.__sixmmNavigateDocsLocale(""), true);
+assert.equal(nativeLinkNavigations.at(-1), "/prediction/overview?from=widget#the-participation-journey",
+  "An old localized section link must switch languages using its canonical anchor");
 
 adapterWindow.location.pathname = "/";
 adapterWindow.location.search = "";

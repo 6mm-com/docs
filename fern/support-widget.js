@@ -27,6 +27,48 @@
   var pendingWidgetTheme = null;
   var widgetDocsRequestId = 0;
   var retainedWidgetNodes = [];
+  var observedWidgetContainer = null;
+  var supportLabels = {
+    en: 'Open customer support', ja: 'カスタマーサポートを開く',
+    ru: 'Открыть поддержку', 'es-419': 'Abrir atención al cliente',
+    it: 'Apri assistenza clienti', fr: 'Ouvrir le support client',
+    de: 'Kundensupport öffnen', 'zh-CN': '打开在线客服',
+    'zh-TW': '開啟線上客服', 'pt-BR': 'Abrir atendimento ao cliente',
+    id: 'Buka layanan pelanggan', pl: 'Otwórz obsługę klienta',
+    vi: 'Mở hỗ trợ khách hàng', uk: 'Відкрити підтримку',
+    'pt-PT': 'Abrir apoio ao cliente', 'es-ES': 'Abrir atención al cliente',
+    tr: 'Müşteri desteğini aç', ko: '고객 지원 열기',
+    el: 'Άνοιγμα υποστήριξης πελατών', ar: 'فتح دعم العملاء'
+  };
+
+  function syncWidgetAccessibility() {
+    var bubble = document.getElementById('cs-widget-bubble');
+    var container = document.getElementById('cs-widget-container');
+    if (!bubble || !container) return;
+    var open = container.style.display !== 'none';
+    var label = supportLabels[currentDocsLocale() || 'en'] || supportLabels.en;
+    bubble.setAttribute('role', 'button');
+    bubble.setAttribute('tabindex', open ? '-1' : '0');
+    bubble.setAttribute('aria-label', label);
+    bubble.setAttribute('aria-controls', 'cs-widget-container');
+    bubble.setAttribute('aria-expanded', open ? 'true' : 'false');
+    var frame = container.querySelector('iframe');
+    if (frame) frame.setAttribute('title', label);
+    if (bubble.dataset.sixmmKeyboardSupport !== 'true') {
+      bubble.dataset.sixmmKeyboardSupport = 'true';
+      bubble.addEventListener('keydown', function (event) {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        event.preventDefault();
+        if (!event.repeat) bubble.click();
+      });
+    }
+    if (observedWidgetContainer !== container) {
+      observedWidgetContainer = container;
+      new MutationObserver(syncWidgetAccessibility).observe(container, {
+        attributes: true, attributeFilter: ['style']
+      });
+    }
+  }
 
   function prepareWidgetSwap(event) {
     var incoming = event.newDocument;
@@ -68,6 +110,7 @@
       target.appendChild(entry.node);
     });
     loadWidget();
+    syncWidgetAccessibility();
     if (pendingWidgetDocsLocale !== null) {
       confirmPendingWidgetDocsNavigation();
     } else {
@@ -276,6 +319,7 @@
       // The host may have changed while widget.js was loading.
       syncWidgetLanguageFromHost(20, true);
       syncWidgetThemeFromHost(20, true);
+      syncWidgetAccessibility();
     };
     script.onerror = function () {
       document.documentElement.classList.remove('sixmm-support-widget-loading');
@@ -291,6 +335,11 @@
     document.addEventListener('astro:page-load', restoreWidgetAfterSwap);
 
     loadWidget();
+    syncWidgetAccessibility();
+    // The SDK mounts the controls asynchronously as direct body children.
+    new MutationObserver(syncWidgetAccessibility).observe(document.body, {
+      childList: true
+    });
 
     var observer = new MutationObserver(function () {
       syncWidgetThemeFromHost(20, false);

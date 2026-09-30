@@ -571,9 +571,20 @@
 
     var navigationId = ++localeNavigationId;
     var route = currentRoute();
+    var hash = window.location.hash;
+    // Old shared links can still point at a translated alias. Navigate to the
+    // canonical section so changing languages preserves that chapter.
+    if (hash && typeof document.getElementById === "function") {
+      try {
+        var anchor = document.getElementById(decodeURIComponent(hash.slice(1)));
+        if (anchor && anchor.dataset.sixmmAnchorTarget) {
+          hash = "#" + anchor.dataset.sixmmAnchorTarget;
+        }
+      } catch (error) { /* Preserve malformed incoming fragments verbatim. */ }
+    }
     var targetUrl =
       localizedPath(locale, route.pagePath) +
-      window.location.search + window.location.hash;
+      window.location.search + hash;
     var pathname = new URL(targetUrl, window.location.origin).pathname;
     var previousContent = pageContentState();
 
