@@ -619,6 +619,26 @@
     if (root.classList.contains("light")) return "light";
     return root.dataset.theme === "dark" ? "dark" : "light";
   }
+  function prepareLocaleSwap(event) {
+    if (!event.from || !event.to || !event.newDocument) return;
+    var routeLocale = function (url) {
+      var first = url.pathname.split("/").filter(Boolean)[0] || "";
+      return locales.some(function (item) { return item.code && item.code === first; }) ? first : "";
+    };
+    if (routeLocale(event.from) === routeLocale(event.to)) return;
+    // Fern's shared client state may still hold the previous locale when an
+    // incoming server-rendered island connects. Mount fresh client roots for
+    // locale changes instead of hydrating markup against the previous locale.
+    // Keep slot contents intact; the support iframe is persisted separately.
+    event.newDocument.querySelectorAll('astro-island[client]:not([client="only"])').forEach(function (island) {
+      var options;
+      try { options = JSON.parse(island.getAttribute("opts") || "{}"); }
+      catch (error) { return; }
+      options.value = "react";
+      island.setAttribute("opts", JSON.stringify(options));
+      island.setAttribute("client", "only");
+    });
+  }
 
   async function navigateDocsTheme(theme) {
     if (theme !== "light" && theme !== "dark") return false;
@@ -679,6 +699,7 @@
   // locale immediately so standalone navigation tabs never flash on first paint.
   syncLocaleTabs();
   document.addEventListener("DOMContentLoaded", scheduleSync);
+  document.addEventListener("astro:before-swap", prepareLocaleSwap);
   document.addEventListener("fern:island-hydrated", scheduleSync);
   document.addEventListener("astro:page-load", scheduleSync);
   window.addEventListener("pageshow", function () {
