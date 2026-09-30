@@ -30,6 +30,14 @@
   var widgetRequested = false;
   var openWhenReady = false;
   var retainedModalStyles = null;
+  var supportFrame = null;
+  var supportStatus = null;
+  var supportMessage = null;
+  var supportRetry = null;
+  var supportClose = null;
+  var supportFrameReady = false;
+  var supportFrameFailed = false;
+  var supportDeadline = null;
   var modalProperties = ['overflow', 'position', 'top', 'left', 'right', 'width', 'background', 'padding-right'];
   var supportLabels = {
     en: 'Open customer support', ja: 'カスタマーサポートを開く',
@@ -44,12 +52,88 @@
     el: 'Άνοιγμα υποστήριξης πελατών', ar: 'فتح دعم العملاء'
   };
 
+  var statusLabels = {
+    en: ['Loading customer support…', 'Customer support is taking longer to load. Check your connection and try again.', 'Retry', 'Close'],
+    'zh-CN': ['正在加载在线客服…', '客服加载时间较长，请检查网络后重试。', '重试', '关闭'],
+    'zh-TW': ['正在載入線上客服…', '客服載入時間較長，請檢查網路後重試。', '重試', '關閉']
+  };
+
+  function renderSupportStatus() {
+    if (!supportStatus) return;
+    var labels = statusLabels[currentDocsLocale() || 'en'] || statusLabels.en;
+    supportStatus.hidden = supportFrameReady;
+    supportStatus.dataset.state = supportFrameFailed ? 'error' : 'loading';
+    supportMessage.textContent = labels[supportFrameFailed ? 1 : 0];
+    supportRetry.textContent = labels[2];
+    supportRetry.hidden = !supportFrameFailed;
+    supportClose.textContent = labels[3];
+  }
+
+  function startSupportDeadline() {
+    if (supportDeadline !== null) window.clearTimeout(supportDeadline);
+    supportFrameFailed = false;
+    renderSupportStatus();
+    supportDeadline = window.setTimeout(function () {
+      supportDeadline = null;
+      if (!supportFrameReady) { supportFrameFailed = true; renderSupportStatus(); }
+    }, 12000);
+  }
+
+  function ensureSupportStatus(container, frame) {
+    if (supportFrame === frame) { renderSupportStatus(); return; }
+    supportFrame = frame;
+    supportFrameReady = false;
+    supportFrameFailed = false;
+    supportStatus = document.createElement('div');
+    supportStatus.className = 'sixmm-support-status';
+    supportStatus.setAttribute('role', 'status');
+    supportStatus.setAttribute('aria-live', 'polite');
+    var spinner = document.createElement('span');
+    spinner.className = 'sixmm-support-spinner';
+    spinner.setAttribute('aria-hidden', 'true');
+    supportMessage = document.createElement('p');
+    supportRetry = document.createElement('button');
+    supportRetry.type = 'button';
+    supportRetry.addEventListener('click', function () {
+      if (supportFrameReady) return;
+      startSupportDeadline();
+      // Retry only on explicit request. Never reload an active conversation.
+      frame.src = frame.src;
+    });
+    supportClose = document.createElement('button');
+    supportClose.type = 'button';
+    supportClose.addEventListener('click', function () { callWidget('close'); });
+    [spinner, supportMessage, supportRetry, supportClose].forEach(function (node) { supportStatus.appendChild(node); });
+    container.appendChild(supportStatus);
+    frame.addEventListener('error', function () {
+      if (supportFrame !== frame || supportFrameReady) return;
+      supportFrameFailed = true;
+      renderSupportStatus();
+    });
+    startSupportDeadline();
+  }
+
+  function onSupportFrameMessage(event) {
+    if (!supportFrame || event.source !== supportFrame.contentWindow) return;
+    var origin;
+    try { origin = new URL(supportFrame.src).origin; } catch (_) { return; }
+    // This existing SDK message is emitted by the widget's React theme effect
+    // after its interface mounts. An iframe load event alone is not app ready.
+    if (event.origin !== origin || !event.data || event.data.type !== 'cs-widget-browser-theme') return;
+    supportFrameReady = true;
+    if (supportDeadline !== null) window.clearTimeout(supportDeadline);
+    supportDeadline = null;
+    renderSupportStatus();
+  }
+
   function syncWidgetAccessibility() {
     var bubble = document.getElementById('cs-widget-bubble');
     var container = document.getElementById('cs-widget-container');
     var launcher = document.getElementById('sixmm-support-launcher');
     if (launcher) launcher.setAttribute('aria-label', supportLabels[currentDocsLocale() || 'en'] || supportLabels.en);
     if (!bubble || !container) return;
+    var frame = container.querySelector('iframe');
+    if (frame) ensureSupportStatus(container, frame);
     if (launcher) launcher.remove();
     if (openWhenReady && window.CSWidget && typeof window.CSWidget.open === 'function') {
       openWhenReady = false;
@@ -62,7 +146,6 @@
     bubble.setAttribute('aria-label', label);
     bubble.setAttribute('aria-controls', 'cs-widget-container');
     bubble.setAttribute('aria-expanded', open ? 'true' : 'false');
-    var frame = container.querySelector('iframe');
     if (frame) frame.setAttribute('title', label);
     if (bubble.dataset.sixmmKeyboardSupport !== 'true') {
       bubble.dataset.sixmmKeyboardSupport = 'true';
@@ -379,7 +462,6 @@
       launcher.className = 'sixmm-support-launcher';
       launcher.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 14v-3a9 9 0 0 1 18 0v3"/><rect x="1" y="13" width="4" height="7" rx="2"/><rect x="19" y="13" width="4" height="7" rx="2"/><path d="M21 18v1a3 3 0 0 1-3 3h-4"/></svg>';
       launcher.addEventListener('click', function () {
-        if (widgetRequested) return;
         widgetRequested = true;
         openWhenReady = true;
         launcher.setAttribute('aria-busy', 'true');
@@ -399,6 +481,7 @@
   }
 
   function boot() {
+    window.addEventListener('message', onSupportFrameMessage);
     window.addEventListener('cs-widget-lang-change', onWidgetLanguageChange);
     window.addEventListener('cs-widget-theme-change', onWidgetThemeChange);
     document.addEventListener('astro:before-swap', prepareWidgetSwap);
@@ -411,6 +494,10 @@
     new MutationObserver(syncWidgetAccessibility).observe(document.body, {
       childList: true
     });
+    // Initialize in the background on every fresh page load, so the iframe can
+    // mount before the user opens support. Astro navigation retains this SDK.
+    widgetRequested = true;
+    loadWidget();
 
     var observer = new MutationObserver(function () {
       if (widgetRequested) syncWidgetThemeFromHost(20, false);

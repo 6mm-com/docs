@@ -47,6 +47,8 @@ let widgetScriptLoads = 0;
 const loadedWidgetScripts = new Set();
 const widgetBodyNodes = [];
 const widgetHeadNodes = [];
+const supportDeadlines = new Map();
+let deadlineId = 0;
 
 function widgetNode(tag) {
   const attributes = new Map();
@@ -55,6 +57,8 @@ function widgetNode(tag) {
     dataset: {},
     style: {},
     listeners: {},
+    children: [],
+    appendChild(node) { this.children.push(node); node.parentNode=this; return node; },
     addEventListener(name, listener) { this.listeners[name] = listener; },
     querySelector(selector) { return selector === "iframe" ? this.iframe ?? null : null; },
     click() { this.clicks = (this.clicks || 0) + 1; },
@@ -125,7 +129,9 @@ const sandboxWindow = {
   setInterval(listener) {
     intervals.push(listener);
   },
-  setTimeout(listener) {
+  clearTimeout(id) { supportDeadlines.delete(id); },
+  setTimeout(listener, delay) {
+    if (delay === 12000) { const id=++deadlineId; supportDeadlines.set(id,listener); return id; }
     listener();
   },
   getComputedStyle() {
@@ -187,13 +193,15 @@ runInNewContext(supportScript, {
   window: sandboxWindow,
   document: sandboxDocument,
   MutationObserver: SandboxMutationObserver,
+  URL,
 });
 
-assert.equal(appendedWidgetScript,null,'The SDK must not load until customer support is requested');
+assert.ok(appendedWidgetScript,'The SDK starts loading on page initialization without a click');
+assert.equal(widgetOpenCalls,0,'Background initialization must not open the support panel');
 const launcher = sandboxDocument.getElementById('sixmm-support-launcher');
 assert.ok(launcher,'A keyboard-accessible support entry must remain visible before SDK load');
 launcher.listeners.click(); launcher.listeners.click();
-assert.ok(appendedWidgetScript, 'The first support request loads the SDK');
+assert.ok(appendedWidgetScript, 'An early support click reuses the SDK already loading');
 assert.equal(widgetScriptLoads,1,'Repeated clicks while loading must not duplicate the SDK');
 assert.equal(appendedWidgetScript.dataset.astroExec, "",
   "Astro's script runner must skip the already-executing retained SDK");
@@ -326,7 +334,7 @@ bubble.id = "cs-widget-bubble";
 const container = widgetNode("div");
 container.id = "cs-widget-container";
 container.style.display = "none";
-container.iframe = { conversation: "active", draft: "unfinished", setAttribute() {} };
+container.iframe = { conversation: "active", draft: "unfinished", src:'https://csadmin.6mm.com/widget/?app_id=6mm-docs', contentWindow:{}, setAttribute() {}, addEventListener() {} };
 const widgetStyle = widgetNode("style");
 widgetStyle.id = "cs-bubble-style";
 sandboxDocument.body.appendChild(bubble);
@@ -334,6 +342,22 @@ sandboxDocument.body.appendChild(container);
 sandboxDocument.head.appendChild(widgetStyle);
 observers.find((observer) => observer.target === sandboxDocument.body).listener();
 assert.equal(widgetOpenCalls,1,'The SDK opens automatically once the first requested panel becomes ready');
+const status=container.children.find(node=>node.className==='sixmm-support-status');
+assert.equal(status.hidden,false,'Cover the empty iframe until the application mounts');
+listeners.message({origin:'https://untrusted.example',source:container.iframe.contentWindow,data:{type:'cs-widget-browser-theme'}});
+listeners.message({origin:'https://csadmin.6mm.com',source:{},data:{type:'cs-widget-browser-theme'}});
+assert.equal(status.hidden,false,'Ignore readiness messages from another origin or frame');
+const [expiredId,expiredCallback]=supportDeadlines.entries().next().value;
+supportDeadlines.delete(expiredId);
+expiredCallback();
+assert.equal(status.dataset.state,'error','A stalled frame shows a recoverable loading failure');
+const retry=status.children.find(node=>node.tagName==='BUTTON');
+assert.equal(retry.hidden,false);
+retry.listeners.click();
+assert.equal(status.dataset.state,'loading');
+listeners.message({origin:'https://csadmin.6mm.com',source:container.iframe.contentWindow,data:{type:'cs-widget-browser-theme'}});
+assert.equal(status.hidden,true,'Reveal content only after the widget application mounts');
+assert.equal(supportDeadlines.size,0,'Readiness cancels the pending timeout');
 const originalFrame = container.iframe;
 let overlay;
 
