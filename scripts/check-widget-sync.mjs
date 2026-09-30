@@ -543,10 +543,11 @@ const themeTrigger = {
   },
 };
 
+const adapterDocumentListeners = {};
 const adapterDocument = {
   readyState: "loading",
   documentElement: adapterRoot,
-  addEventListener() {},
+  addEventListener(name, listener) { adapterDocumentListeners[name] = listener; },
   body: { appendChild() {} },
   createElement(tag) {
     if (tag !== "a") return { className: "", textContent: "" };
@@ -606,6 +607,28 @@ const adapterSandbox = {
   Promise,
 };
 runInNewContext(languageScript, adapterSandbox);
+const incomingIslandAttributes = new Map([
+  ["client", "load"],
+  ["opts", JSON.stringify({ name: "PageHeaderIsland", value: true })],
+]);
+const incomingIsland = {
+  innerHTML: "<astro-slot>Localized article content</astro-slot>",
+  getAttribute: (name) => incomingIslandAttributes.get(name),
+  setAttribute: (name, value) => incomingIslandAttributes.set(name, value),
+};
+function prepareIncomingLocale(from, to) {
+  adapterDocumentListeners["astro:before-swap"]({
+    from: new URL(from, adapterWindow.location.origin),
+    to: new URL(to, adapterWindow.location.origin),
+    newDocument: { querySelectorAll: () => [incomingIsland] },
+  });
+}
+prepareIncomingLocale("/zh-CN/sdk/overview", "/zh-CN/trading/overview");
+assert.equal(incomingIslandAttributes.get("client"), "load", "Ordinary page navigation must keep normal SSR hydration");
+prepareIncomingLocale("/sdk/overview", "/zh-CN/sdk/overview");
+assert.equal(incomingIslandAttributes.get("client"), "only", "Cross-locale navigation must not hydrate against stale-locale state");
+assert.equal(JSON.parse(incomingIslandAttributes.get("opts")).value, "react");
+assert.equal(incomingIsland.innerHTML, "<astro-slot>Localized article content</astro-slot>", "Locale remounting must preserve article slots");
 assert.equal(
   adapterRoot.dataset.sixmmDocsLocale,
   "en",
