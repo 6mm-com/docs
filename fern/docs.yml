@@ -997,17 +997,27 @@ favicon: docs/assets/favicon.svg
 
 css: styles.css
 
+header: ./components/DocsHeader.tsx
+experimental:
+  mdx-components:
+    - ./components
+
+settings:
+  # No project analytics provider is configured. Avoid the duplicated default
+  # PostHog initializations and their optional extensions on every document.
+  disable-analytics: true
+
 js:
   - path: ./language-modal.js
     strategy: beforeInteractive
   - path: ./locale-direction.js
     strategy: beforeInteractive
   - path: ./seo-structured-data.js
-    strategy: beforeInteractive
+    strategy: lazyOnload
   - path: ./support-widget.js
     strategy: beforeInteractive
   - path: ./docs-interface.js
-    strategy: beforeInteractive
+    strategy: afterInteractive
 
 metadata:
   canonical-host: docs.6mm.com

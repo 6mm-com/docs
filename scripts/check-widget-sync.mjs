@@ -37,6 +37,7 @@ const listeners = {};
 const intervals = [];
 const observers = [];
 const widgetCalls = [];
+let widgetOpenCalls = 0;
 const docsLanguageNavigations = [];
 const docsThemeNavigations = [];
 const rootClasses = new Set(["light"]);
@@ -57,6 +58,7 @@ function widgetNode(tag) {
     addEventListener(name, listener) { this.listeners[name] = listener; },
     querySelector(selector) { return selector === "iframe" ? this.iframe ?? null : null; },
     click() { this.clicks = (this.clicks || 0) + 1; },
+    remove() { this.isConnected = false; const i=widgetBodyNodes.indexOf(this); if(i>=0)widgetBodyNodes.splice(i,1); },
     isConnected: false,
     getAttribute: (name) => attributes.get(name) ?? null,
     setAttribute(name, value) { attributes.set(name, value); },
@@ -65,6 +67,7 @@ function widgetNode(tag) {
 
 function widgetParent(nodes) {
   return {
+    style: fakeStyle(),
     appendChild(node) {
       if (!nodes.includes(node)) nodes.push(node);
       node.parentNode = this;
@@ -72,6 +75,10 @@ function widgetParent(nodes) {
       return node;
     },
   };
+}
+
+function fakeStyle() {
+  return { getPropertyValue(name) { return this[name] || ''; }, getPropertyPriority() {return '';}, setProperty(name,value) {this[name]=value;} };
 }
 
 function findWidgetNode(selector, nodes) {
@@ -86,7 +93,7 @@ function findWidgetNode(selector, nodes) {
 
 const documentElement = {
   dataset: { theme: "light" },
-  style: {},
+  style: fakeStyle(),
   classList: {
     contains(value) {
       return rootClasses.has(value);
@@ -104,6 +111,7 @@ const sandboxWindow = {
   location: { pathname: "/home" },
   __sixmmDocsLocales: browserLocales,
   CSWidget: {
+    open() { widgetOpenCalls++; },
     setLang(value) {
       widgetCalls.push(["lang", value]);
     },
@@ -142,7 +150,8 @@ const sandboxDocument = {
   readyState: "complete",
   documentElement,
   addEventListener(name, listener) {
-    documentListeners[name] = listener;
+    const previous=documentListeners[name];
+    documentListeners[name] = previous ? (event)=>{previous(event);listener(event);} : listener;
   },
   getElementById(id) {
     return [...widgetBodyNodes, ...widgetHeadNodes].find((node) => node.id === id) ?? null;
@@ -180,7 +189,12 @@ runInNewContext(supportScript, {
   MutationObserver: SandboxMutationObserver,
 });
 
-assert.ok(appendedWidgetScript, "The support Widget script must be appended");
+assert.equal(appendedWidgetScript,null,'The SDK must not load until customer support is requested');
+const launcher = sandboxDocument.getElementById('sixmm-support-launcher');
+assert.ok(launcher,'A keyboard-accessible support entry must remain visible before SDK load');
+launcher.listeners.click(); launcher.listeners.click();
+assert.ok(appendedWidgetScript, 'The first support request loads the SDK');
+assert.equal(widgetScriptLoads,1,'Repeated clicks while loading must not duplicate the SDK');
 assert.equal(appendedWidgetScript.dataset.astroExec, "",
   "Astro's script runner must skip the already-executing retained SDK");
 appendedWidgetScript.onload();
@@ -196,7 +210,7 @@ function emitWidgetLanguage(lang) {
 
 function completeDocsNavigation(pathname) {
   sandboxWindow.location.pathname = pathname;
-  intervals[0]();
+  documentListeners['astro:page-load']();
 }
 
 // Widget -> Docs: navigate the host and never write the language back.
@@ -318,11 +332,18 @@ widgetStyle.id = "cs-bubble-style";
 sandboxDocument.body.appendChild(bubble);
 sandboxDocument.body.appendChild(container);
 sandboxDocument.head.appendChild(widgetStyle);
+observers.find((observer) => observer.target === sandboxDocument.body).listener();
+assert.equal(widgetOpenCalls,1,'The SDK opens automatically once the first requested panel becomes ready');
 const originalFrame = container.iframe;
+let overlay;
 
 for (let navigation = 0; navigation < 3; navigation++) {
   if (navigation === 1) {
     container.style.display = "block";
+    overlay=widgetNode('div'); overlay.id='cs-widget-overlay';
+    sandboxDocument.body.appendChild(overlay);
+    sandboxDocument.body.style.position='fixed'; sandboxDocument.body.style.top='-320px';
+    sandboxDocument.body.style.overflow='hidden'; documentElement.style.overflow='hidden';
     emitWidgetLanguage("fr");
     completeDocsNavigation("/fr/home");
     await Promise.resolve();
@@ -332,12 +353,13 @@ for (let navigation = 0; navigation < 3; navigation++) {
   const incoming = {
     body: widgetParent(incomingBody),
     head: widgetParent(incomingHead),
+    documentElement:{style:fakeStyle()},
     createElement: widgetNode,
     querySelector: (selector) => findWidgetNode(selector, [...incomingBody, ...incomingHead]),
   };
   documentListeners["astro:before-swap"]({ newDocument: incoming });
   documentListeners["astro:before-swap"]({ newDocument: incoming });
-  assert.equal(incomingBody.length, 3, "Repeated swap preparation must not duplicate placeholders");
+  assert.equal(incomingBody.length, navigation ? 4 : 3, "Repeated swap preparation must not duplicate placeholders");
   assert.equal(incomingHead.length, 1);
   for (const [live, next, parent] of [
     [widgetBodyNodes, incomingBody, sandboxDocument.body],
@@ -351,7 +373,15 @@ for (let navigation = 0; navigation < 3; navigation++) {
     live.length = 0;
     persisted.forEach((node) => parent.appendChild(node));
   }
+  sandboxDocument.body.style=fakeStyle(); documentElement.style=fakeStyle();
   documentListeners["astro:page-load"]();
+  if(navigation) {
+    assert.equal(sandboxDocument.getElementById('cs-widget-overlay'),overlay,'The active modal overlay must retain its identity and listeners');
+    assert.equal(sandboxDocument.body.style.position,'fixed');
+    assert.equal(sandboxDocument.body.style.top,'-320px','Preserve the reading position represented by the mobile body lock');
+    assert.equal(sandboxDocument.body.style.overflow,'hidden');
+    assert.equal(documentElement.style.overflow,'hidden');
+  }
   assert.equal(sandboxDocument.getElementById("cs-widget-bubble"), bubble);
   assert.equal(sandboxDocument.getElementById("cs-widget-container"), container);
   assert.equal(sandboxDocument.getElementById("cs-bubble-style"), widgetStyle);
@@ -379,7 +409,7 @@ runInNewContext(supportScript, {
   window: sandboxWindow, document: sandboxDocument,
   MutationObserver: SandboxMutationObserver,
 });
-assert.equal(intervals.length, 1, "Re-executing custom scripts must not duplicate polling");
+assert.equal(intervals.length, 0, 'Navigation synchronization must not poll the pathname');
 assert.equal(observers.length, observersBeforeReload, "Re-executing the loader must not add accessibility observers");
 
 // Fern adapter: navigate through standard links without a React/Next router.
@@ -632,8 +662,14 @@ assert.equal(incomingIsland.innerHTML, "<astro-slot>Localized article content</a
 incomingIslandAttributes.set("client", "load");
 incomingIslandAttributes.set("opts", JSON.stringify({ name: "PageHeaderIsland", value: true }));
 prepareIncomingLocale("/zh-CN/sdk/overview", "/zh-CN/developer-api/overview");
-assert.equal(incomingIslandAttributes.get("client"), "only", "Navigation after a language switch must continue avoiding stale shared locale state");
+assert.equal(incomingIslandAttributes.get("client"), "load", "Ordinary navigation keeps the original loading strategy");
 assert.equal(incomingIsland.innerHTML, "<astro-slot>Localized article content</astro-slot>", "Subsequent navigation must preserve article slots");
+let bridgeCalls=0;
+adapterWindow.__sixmmPrepareInterfaceSwap=()=>{bridgeCalls++;};
+incomingIslandAttributes.set('client','lazy');
+prepareIncomingLocale('/sdk/overview','/zh-CN/sdk/overview');
+assert.equal(incomingIslandAttributes.get('client'),'lazy','A ready interface bridge preserves deferred and lazy hydration');
+assert.equal(bridgeCalls,1);
 assert.equal(
   adapterRoot.dataset.sixmmDocsLocale,
   "en",

@@ -1,7 +1,6 @@
 (function () {
   if (window.__sixmmSupportWidgetLoader) return;
   window.__sixmmSupportWidgetLoader = true;
-  document.documentElement.classList.add('sixmm-support-widget-loading');
 
   var WIDGET_SRC = 'https://csadmin.6mm.com/widget/widget.js';
   var APP_ID = '6mm-docs';
@@ -28,6 +27,10 @@
   var widgetDocsRequestId = 0;
   var retainedWidgetNodes = [];
   var observedWidgetContainer = null;
+  var widgetRequested = false;
+  var openWhenReady = false;
+  var retainedModalStyles = null;
+  var modalProperties = ['overflow', 'position', 'top', 'left', 'right', 'width', 'background', 'padding-right'];
   var supportLabels = {
     en: 'Open customer support', ja: 'カスタマーサポートを開く',
     ru: 'Открыть поддержку', 'es-419': 'Abrir atención al cliente',
@@ -44,7 +47,14 @@
   function syncWidgetAccessibility() {
     var bubble = document.getElementById('cs-widget-bubble');
     var container = document.getElementById('cs-widget-container');
+    var launcher = document.getElementById('sixmm-support-launcher');
+    if (launcher) launcher.setAttribute('aria-label', supportLabels[currentDocsLocale() || 'en'] || supportLabels.en);
     if (!bubble || !container) return;
+    if (launcher) launcher.remove();
+    if (openWhenReady && window.CSWidget && typeof window.CSWidget.open === 'function') {
+      openWhenReady = false;
+      window.CSWidget.open();
+    }
     var open = container.style.display !== 'none';
     var label = supportLabels[currentDocsLocale() || 'en'] || supportLabels.en;
     bubble.setAttribute('role', 'button');
@@ -74,11 +84,25 @@
     var incoming = event.newDocument;
     if (!incoming || !incoming.body || !incoming.head) return;
 
+    var container = document.getElementById('cs-widget-container');
+    retainedModalStyles = null;
+    if (container && container.style.display !== 'none') {
+      retainedModalStyles = {};
+      ['body', 'documentElement'].forEach(function (part) {
+        retainedModalStyles[part] = modalProperties.map(function (property) {
+          var style = document[part].style;
+          return [property, style.getPropertyValue(property), style.getPropertyPriority(property)];
+        });
+        applyModalStyles(incoming[part], retainedModalStyles[part]);
+      });
+    }
     var nodes = [
       document.getElementById('cs-widget-bubble'),
       document.getElementById('cs-widget-container'),
       document.getElementById('cs-bubble-style'),
       document.querySelector('script[data-sixmm-support-widget="true"]'),
+      document.getElementById('cs-widget-overlay'),
+      document.getElementById('sixmm-support-launcher'),
     ];
     retainedWidgetNodes = [];
     nodes.forEach(function (node, index) {
@@ -102,6 +126,12 @@
     });
   }
 
+  function applyModalStyles(element, entries) {
+    entries.forEach(function (entry) {
+      if (entry[1]) element.style.setProperty(entry[0], entry[1], entry[2]);
+    });
+  }
+
   function restoreWidgetAfterSwap() {
     retainedWidgetNodes.forEach(function (entry) {
       if (entry.node.isConnected) return;
@@ -109,14 +139,21 @@
       var target = entry.inHead ? document.head : document.body;
       target.appendChild(entry.node);
     });
-    loadWidget();
+    if (retainedModalStyles) {
+      ['body', 'documentElement'].forEach(function (part) {
+        applyModalStyles(document[part], retainedModalStyles[part]);
+      });
+      retainedModalStyles = null;
+    }
+    if (widgetRequested) loadWidget();
+    else ensureLauncher();
     syncWidgetAccessibility();
     if (pendingWidgetDocsLocale !== null) {
       confirmPendingWidgetDocsNavigation();
     } else {
-      syncWidgetLanguageFromHost(20, false);
+      if (widgetRequested) syncWidgetLanguageFromHost(20, false);
     }
-    syncWidgetThemeFromHost(20, false);
+    if (widgetRequested) syncWidgetThemeFromHost(20, false);
   }
 
   function normalizeLanguage(lang) {
@@ -323,9 +360,42 @@
     };
     script.onerror = function () {
       document.documentElement.classList.remove('sixmm-support-widget-loading');
+      script.remove();
+      widgetRequested = false;
+      openWhenReady = false;
+      ensureLauncher();
     };
     lastTheme = initialTheme;
     document.body.appendChild(script);
+  }
+
+  function ensureLauncher() {
+    if (document.getElementById('cs-widget-bubble')) return;
+    var launcher = document.getElementById('sixmm-support-launcher');
+    if (!launcher) {
+      launcher = document.createElement('button');
+      launcher.id = 'sixmm-support-launcher';
+      launcher.type = 'button';
+      launcher.className = 'sixmm-support-launcher';
+      launcher.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 14v-3a9 9 0 0 1 18 0v3"/><rect x="1" y="13" width="4" height="7" rx="2"/><rect x="19" y="13" width="4" height="7" rx="2"/><path d="M21 18v1a3 3 0 0 1-3 3h-4"/></svg>';
+      launcher.addEventListener('click', function () {
+        if (widgetRequested) return;
+        widgetRequested = true;
+        openWhenReady = true;
+        launcher.setAttribute('aria-busy', 'true');
+        loadWidget();
+      });
+      document.body.appendChild(launcher);
+    }
+    launcher.setAttribute('aria-busy', widgetRequested ? 'true' : 'false');
+    syncWidgetAccessibility();
+  }
+
+  function syncHostNavigation() {
+    lastPathname = window.location.pathname;
+    if (!widgetRequested) { syncWidgetAccessibility(); return; }
+    if (pendingWidgetDocsLocale !== null) { confirmPendingWidgetDocsNavigation(); return; }
+    syncWidgetLanguageFromHost(20, false);
   }
 
   function boot() {
@@ -334,31 +404,23 @@
     document.addEventListener('astro:before-swap', prepareWidgetSwap);
     document.addEventListener('astro:page-load', restoreWidgetAfterSwap);
 
-    loadWidget();
-    syncWidgetAccessibility();
+    ensureLauncher();
+    window.addEventListener('popstate', syncHostNavigation);
+    window.addEventListener('pageshow', syncHostNavigation);
     // The SDK mounts the controls asynchronously as direct body children.
     new MutationObserver(syncWidgetAccessibility).observe(document.body, {
       childList: true
     });
 
     var observer = new MutationObserver(function () {
-      syncWidgetThemeFromHost(20, false);
+      if (widgetRequested) syncWidgetThemeFromHost(20, false);
     });
     observer.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ['class', 'data-theme']
     });
 
-    window.setInterval(function () {
-      if (window.location.pathname !== lastPathname) {
-        lastPathname = window.location.pathname;
-        if (pendingWidgetDocsLocale !== null) {
-          confirmPendingWidgetDocsNavigation();
-          return;
-        }
-        syncWidgetLanguageFromHost(20, false);
-      }
-    }, 600);
+    document.addEventListener('astro:page-load', syncHostNavigation);
   }
 
   if (document.readyState === 'loading') {

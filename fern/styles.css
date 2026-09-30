@@ -45,6 +45,20 @@
   outline-offset: 4px;
 }
 
+.sixmm-docs-header { display:flex; align-items:center; gap:16px; width:100%; max-width:var(--page-width, 1600px); margin:auto; }
+.sixmm-docs-header .fern-header-logo-container { flex:1; }
+.sixmm-header-search { flex:1; min-width:0; max-width:640px; }
+.sixmm-header-links { display:flex; flex:1; align-items:center; justify-content:flex-end; }
+.sixmm-header-settings { display:flex; align-items:center; gap:8px; }
+.sixmm-docs-header .sixmm-theme-trigger { display:inline-flex; justify-content:center; align-items:center; width:36px; height:36px; border-radius:8px; }
+.sixmm-docs-header .sixmm-theme-trigger:hover { background:var(--sixmm-accent-soft); }
+@media (min-width:1024px) { .sixmm-docs-header .fern-header-mobile-menu-button { display:none; } }
+@media (max-width:1023px) { .sixmm-docs-header { gap:8px; } .sixmm-docs-header .fern-header-logo-container { flex:0 0 auto; } .sixmm-header-links { display:none; } .sixmm-header-search { flex:1; } .sixmm-header-settings .fern-language-selector { width:32px; min-width:32px; } .sixmm-header-settings .language-dropdown-trigger .truncate { display:none; } .sixmm-docs-header .fern-header-mobile-menu-button { flex:0 0 auto; } }
+
+.sixmm-support-launcher { position:fixed; z-index:999997; right:calc(24px + env(safe-area-inset-right, 0px)); bottom:calc(24px + env(safe-area-inset-bottom, 0px)); width:48px; height:48px; display:grid; place-items:center; border:0; border-radius:15px; background:var(--sixmm-accent); color:white; cursor:pointer; box-shadow:0 2px 8px #0002; }
+.sixmm-support-launcher:focus-visible { outline:3px solid var(--sixmm-accent-strong); outline-offset:4px; }
+.sixmm-support-launcher[aria-busy="true"] { opacity:.65; cursor:wait; }
+
 :root,
 :root.dark {
   accent-color: var(--sixmm-accent);
@@ -606,14 +620,16 @@ button.fern-button.outlined:focus-visible {
   }
 
   /* Keep the localized accessible name without letting long labels push
-     search or the navigation menu outside a narrow viewport. */
+     search or the navigation menu outside a narrow viewport. Do not truncate
+     this span: Fern's automatic overflow tooltip lacks its mobile Provider. */
   #fern-ask-ai-button .fern-button-text {
     position: absolute;
-    width: 1px;
+    width: max-content;
+    max-width: none;
     height: 1px;
     padding: 0;
     margin: -1px;
-    overflow: hidden;
+    overflow: visible;
     clip: rect(0, 0, 0, 0);
     white-space: nowrap;
     border: 0;

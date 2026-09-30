@@ -619,24 +619,24 @@
     if (root.classList.contains("light")) return "light";
     return root.dataset.theme === "dark" ? "dark" : "light";
   }
-  var localeRemountMode = false;
   function prepareLocaleSwap(event) {
     if (!event.from || !event.to || !event.newDocument) return;
     var routeLocale = function (url) {
       var first = url.pathname.split("/").filter(Boolean)[0] || "";
       return locales.some(function (item) { return item.code && item.code === first; }) ? first : "";
     };
-    if (routeLocale(event.from) !== routeLocale(event.to)) localeRemountMode = true;
-    if (!localeRemountMode) return;
-    // Fern's shared client state may still hold the previous locale when an
-    // incoming server-rendered island connects. Mount fresh client roots for
-    // locale changes and subsequent navigation instead of hydrating markup
-    // against the previous locale. Shared state survives until a full reload.
-    // Keep slot contents intact; the support iframe is persisted separately.
+    if (typeof window.__sixmmPrepareInterfaceSwap === 'function') {
+      window.__sixmmPrepareInterfaceSwap(event.newDocument, routeLocale(event.to) || 'en');
+      return;
+    }
+    if (routeLocale(event.from) === routeLocale(event.to)) return;
+    // A fast navigation before the interface bridge loads only remounts the
+    // small UI roots. Article/sidebar content keeps its original lazy strategy.
     event.newDocument.querySelectorAll('astro-island[client]:not([client="only"])').forEach(function (island) {
       var options;
       try { options = JSON.parse(island.getAttribute("opts") || "{}"); }
       catch (error) { return; }
+      if (!/^(HeaderContentIsland|PageHeaderIsland|TableOfContentsIsland|FooterIsland)$/.test(options.name)) return;
       options.value = "react";
       island.setAttribute("opts", JSON.stringify(options));
       island.setAttribute("client", "only");
@@ -716,7 +716,16 @@
   window.addEventListener("resize", function () {
     if (!isMobileViewport()) closeMobileLocaleDialog(false);
   });
-  new MutationObserver(scheduleSync).observe(document.documentElement, {
+  new MutationObserver(function (records) {
+    var controls = '.fern-language-selector, .fern-language-dropdown-content, .sixmm-theme-trigger, .fern-header-mobile-menu-button';
+    if (records.some(function (record) {
+      var target = record.target.nodeType === 1 ? record.target : record.target.parentElement;
+      if (target && target.closest(controls)) return true;
+      return Array.from(record.addedNodes).some(function (node) {
+        return node.nodeType === 1 && (node.matches(controls) || node.querySelector(controls));
+      });
+    })) scheduleSync();
+  }).observe(document.documentElement, {
     childList: true,
     subtree: true,
   });

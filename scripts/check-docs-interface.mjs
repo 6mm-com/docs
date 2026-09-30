@@ -29,6 +29,7 @@ const input = {
   getAttribute: (name) => attributes.get(name) ?? null,
   setAttribute: (name, value) => attributes.set(name, value),
 };
+const uiRoot = { closest: hydratedAncestor, querySelectorAll: () => [input], getAttribute: () => null };
 let disabled = "true";
 const window = {
   location: { pathname: "/ar/prediction/overview" },
@@ -37,9 +38,11 @@ const window = {
   addEventListener: (name, callback) => { listeners[name] = callback; },
 };
 const document = {
-  readyState: "complete", documentElement: {}, body: {},
+  readyState: "complete", documentElement: { lang:"ar" }, body: {},
   getElementById: () => ({ getAttribute: () => disabled }),
   querySelectorAll: (selector) => {
+    if (selector.startsWith('#fern-header')) return [uiRoot];
+    if (selector.startsWith('a[data-astro-prefetch')) return [];
     if (selector === "[data-sixmm-canonical-anchor]") return [marker];
     if (selector === 'a[href^="#"]') return [sectionLink];
     return selector.startsWith("a[") ? [link] : [input];
@@ -86,5 +89,14 @@ for (const [prefix, expected] of [["zh-CN", "translations/zh-CN/"], ["ja", "tran
   assert.equal(link.href, "https://github.com/6mm-com/docs/blob/main/fern/" + expected + "docs/pages/prediction/overview.mdx?plain=1");
 }
 runInNewContext(script, sandbox);
-assert.equal(observerCount, 1);
-console.log("Docs interface regression checks passed: locale edit links, Arabic labels, hydration guard and singleton lifecycle.");
+assert.equal(observerCount, 2, 'Keep one scoped UI observer and one portal discovery observer');
+window.location.pathname = '/zh-CN/sdk/overview';
+listeners['astro:page-load'](); flush();
+assert.equal(nodes[0].nodeValue, '搜索', 'Cross-locale navigation updates previously localized labels');
+assert.equal(nodes[2].nodeValue, 'Search', 'Article text is never translated by the UI bridge');
+window.location.pathname = '/sdk/overview';
+listeners['astro:page-load'](); flush();
+assert.equal(nodes[0].nodeValue, 'Search', 'Returning to English must restore labels');
+window.__sixmmPrepareInterfaceSwap(document,'zh-CN');
+assert.equal(nodes[0].nodeValue,'Search','Unsupported initial UI languages normalize to Fern native English before hydration');
+console.log("Docs interface regression checks passed: locale edit links, reversible labels, hydration guard and scoped singleton lifecycle.");

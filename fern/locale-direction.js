@@ -1,4 +1,6 @@
 (function () {
+  if (window.__sixmmLocaleDirection) return;
+  window.__sixmmLocaleDirection = true;
   var lastPathname;
   var lastLocaleSignature;
 
@@ -33,8 +35,5 @@
   window.addEventListener("popstate", syncLocale);
   window.addEventListener("pageshow", syncLocale);
   document.addEventListener("DOMContentLoaded", syncLocale);
-  new MutationObserver(syncLocale).observe(document.documentElement, {
-    childList: true,
-    subtree: true,
-  });
+  document.addEventListener("astro:page-load", syncLocale);
 })();
