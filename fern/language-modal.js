@@ -577,9 +577,11 @@
     if (hash && typeof document.getElementById === "function") {
       try {
         var anchor = document.getElementById(decodeURIComponent(hash.slice(1)));
-        if (anchor && anchor.dataset.sixmmAnchorTarget) {
-          hash = "#" + anchor.dataset.sixmmAnchorTarget;
+        var canonical = anchor && (anchor.dataset.sixmmAnchorTarget || anchor.dataset.sixmmCanonicalAnchor);
+        if (!canonical && anchor && anchor.previousElementSibling) {
+          canonical = anchor.previousElementSibling.dataset.sixmmCanonicalAnchor;
         }
+        if (canonical) hash = "#" + canonical;
       } catch (error) { /* Preserve malformed incoming fragments verbatim. */ }
     }
     var targetUrl =

@@ -13,75 +13,62 @@ function collect(value) {
 }
 collect(config.navigation);
 const check = process.argv.includes("--check");
-const headingPattern = /^(#{2,6}) ([^\r\n]+)\r?$/gm;
-const htmlPattern = /<h([2-6]) id="([^"]+)">([^<]*)<\/h[2-6]>/g;
+const pattern = /^(?:<span[^\r\n]*data-sixmm-canonical-anchor="([^"]+)"[^\r\n]*><\/span>\r?\n(?:\r?\n)?)?(#{2,6}) ([^\r\n]+)\r?$|^<h([2-6]) id="([^"]+)">([^<]*)<\/h[2-6]>\r?$/gm;
 function slug(text) {
   return text.toLowerCase().replace(/[^\p{L}\p{M}\p{N}\s_-]/gu, "").replace(/ /g, "-");
 }
-function escape(text) {
-  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+function decode(text) {
+  return text.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">");
+}
+function sections(content) {
+  return [...content.matchAll(pattern)].map((match) => ({
+    match, level: match[2]?.length || Number(match[4]),
+    id: match[1] || match[5], text: match[3] || decode(match[6]),
+    native: Boolean(match[2]), marked: Boolean(match[1]),
+  }));
 }
 let changed = 0;
 for (const file of files) {
   const sourcePath = path.join(root, file);
   const source = await readFile(sourcePath, "utf8");
-  const headings = [...source.matchAll(headingPattern)];
   const seen = new Set();
-  const canonical = headings.length
-    ? headings.map((heading) => {
-        const base = slug(heading[2]);
-        let id = base, suffix = 0;
-        while (seen.has(id)) id = base + "-" + (++suffix);
-        seen.add(id);
-        return { level: heading[1].length, id };
-      })
-    : [...source.matchAll(htmlPattern)].map((heading) => ({ level: Number(heading[1]), id: heading[2] }));
+  const canonical = sections(source).map((heading) => {
+    const base = heading.id || slug(heading.text);
+    let id = base, suffix = 0;
+    while (seen.has(id)) id = base + "-" + (++suffix);
+    seen.add(id);
+    return { level: heading.level, id };
+  });
   for (const locale of config.translations) {
     const targetPath = locale.default ? sourcePath : path.join(root, "translations", locale.lang, file);
     const content = await readFile(targetPath, "utf8");
-    const raw = [...content.matchAll(headingPattern)];
+    const headings = sections(content);
+    if (headings.length !== canonical.length) throw new Error("Heading count mismatch: " + locale.lang + ":" + file);
     if (check) {
-      const ids = [...content.matchAll(htmlPattern)].map((heading) => heading[2]);
-      if (raw.length || canonical.some((heading) => !ids.includes(heading.id))) {
-        throw new Error("Unstable prediction heading anchors: " + locale.lang + ":" + file);
-      }
-      if (!locale.default) {
-        for (const heading of content.matchAll(htmlPattern)) {
-          const previous = slug(heading[3].replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">"));
-          if (previous !== heading[2] && !content.includes('id="' + previous + '" data-sixmm-anchor-target="' + heading[2] + '"')) {
-            throw new Error("Missing localized anchor alias: " + locale.lang + ":" + file);
-          }
+      headings.forEach((heading, index) => {
+        const expected = canonical[index];
+        if (!heading.native || !heading.marked || heading.id !== expected.id || heading.level !== expected.level) {
+          throw new Error("Unstable native heading anchors: " + locale.lang + ":" + file);
         }
-      }
-      continue;
-    }
-    if (!raw.length) {
-      if (locale.default) continue;
-      const ids = new Set([...content.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]));
-      const output = content.replace(htmlPattern, (heading, level, id, text) => {
-        const previous = slug(text.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">"));
-        if (previous === id || ids.has(previous)) return heading;
-        ids.add(previous);
-        return '<span id="' + previous + '" data-sixmm-anchor-target="' + id + '" aria-hidden="true"></span>\n' + heading;
+        if (!locale.default && slug(heading.text) !== expected.id && !heading.match[0].includes('id="' + expected.id + '"')) {
+          throw new Error("Missing canonical alias: " + locale.lang + ":" + file);
+        }
       });
-      if (output !== content) { await writeFile(targetPath, output); changed++; }
       continue;
     }
-    if (raw.length !== canonical.length) throw new Error("Heading count mismatch: " + locale.lang + ":" + file);
+    const withoutLegacyAliases = content.replace(/^<span[^\r\n]*data-sixmm-anchor-target="[^"]+"[^\r\n]*><\/span>\r?\n/gm, "");
     let index = 0;
-    const output = content.replace(headingPattern, (_, marks, text) => {
-      const heading = canonical[index++];
-      if (marks.length !== heading.level) throw new Error("Heading level mismatch: " + locale.lang + ":" + file);
-      const previous = slug(text);
-      // Preserve existing localized shared links, while all new TOC links use
-      // the same canonical section ID in every locale.
-      const alias = previous !== heading.id
-        ? '<span id="' + previous + '" data-sixmm-anchor-target="' + heading.id + '" aria-hidden="true"></span>\n'
-        : "";
-      return alias + "<h" + heading.level + ' id="' + heading.id + '">' + escape(text) + "</h" + heading.level + ">";
+    const output = withoutLegacyAliases.replace(pattern, (...args) => {
+      const [original, markerId, marks, markdownText, htmlLevel, htmlId, htmlText] = args;
+      const expected = canonical[index++];
+      const level = marks?.length || Number(htmlLevel);
+      const text = markdownText || decode(htmlText);
+      if (level !== expected.level) throw new Error("Heading level mismatch: " + locale.lang + ":" + file);
+      const alias = !locale.default && slug(text) !== expected.id ? ' id="' + expected.id + '"' : "";
+      return "<span" + alias + ' data-sixmm-canonical-anchor="' + expected.id + '" aria-hidden="true"></span>\n\n'
+        + "#".repeat(level) + " " + text;
     });
-    await writeFile(targetPath, output);
-    changed++;
+    if (output !== content) { await writeFile(targetPath, output); changed++; }
   }
 }
-console.log(check ? "Stable heading anchors verified for " + files.size + " prediction pages in 20 locales." : "Updated " + changed + " prediction documents.");
+console.log(check ? "Native TOC and stable anchors verified for " + files.size + " prediction pages in 20 locales." : "Updated " + changed + " prediction documents.");

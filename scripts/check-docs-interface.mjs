@@ -7,6 +7,10 @@ const callbacks = [];
 const listeners = {};
 let observerCount = 0;
 const link = { href: "https://github.com/6mm-com/docs/blob/main/fern/docs/pages/prediction/overview.mdx?plain=1" };
+const heading = { tagName: "H2", id: "رحلة-المشاركة", dataset: {} };
+const marker = { nextElementSibling: heading, getAttribute: () => "the-participation-journey" };
+let sectionHref = "#" + encodeURIComponent(heading.id);
+const sectionLink = { getAttribute: () => sectionHref, setAttribute: (_, value) => { sectionHref = value; } };
 const nodes = [
   { nodeValue: "Search", parentElement: { closest: () => null } },
   { nodeValue: "Copy page", parentElement: { closest: () => null } },
@@ -29,7 +33,11 @@ const window = {
 const document = {
   readyState: "complete", documentElement: {}, body: {},
   getElementById: () => ({ getAttribute: () => disabled }),
-  querySelectorAll: (selector) => selector.startsWith("a[") ? [link] : [input],
+  querySelectorAll: (selector) => {
+    if (selector === "[data-sixmm-canonical-anchor]") return [marker];
+    if (selector === 'a[href^="#"]') return [sectionLink];
+    return selector.startsWith("a[") ? [link] : [input];
+  },
   createTreeWalker() { let index = 0; return { nextNode: () => nodes[index++] ?? null }; },
   addEventListener: (name, callback) => { listeners[name] = callback; },
 };
@@ -52,6 +60,8 @@ assert.equal(nodes[1].nodeValue, "نسخ الصفحة");
 assert.equal(nodes[2].nodeValue, "Search", "Article, code and embedded applications must remain unchanged");
 assert.equal(nodes[3].nodeValue, "نسخ إلى الحافظة", "Code toolbar controls inside articles must be localized");
 assert.equal(attributes.get("aria-label"), "بحث");
+assert.equal(heading.dataset.sixmmAnchorTarget, "the-participation-journey");
+assert.equal(sectionHref, "#the-participation-journey", "Native TOC links must retain cross-language chapter positions");
 assert.equal(link.href, "https://github.com/6mm-com/docs/blob/main/fern/translations/ar/docs/pages/prediction/overview.mdx?plain=1");
 for (const [prefix, expected] of [["zh-CN", "translations/zh-CN/"], ["ja", "translations/ja/"], ["", ""]]) {
   window.location.pathname = "/" + (prefix ? prefix + "/" : "") + "prediction/overview";
