@@ -78,6 +78,14 @@ Before submitting a pull request:
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the full contribution guide.
 
+## Customer support integration
+
+`fern/support-widget.js` loads the SaaS SDK from `https://cs.6mm.com/widget/widget.js` using the 6MM tenant's public `data-app-key`. This is a public tenant identifier, not a signing secret. If the key changes, update the loader and its assertion in `scripts/check-widget-sync.mjs` together.
+
+The tenant's website allowlist must include `https://docs.6mm.com` and, when used, the fixed Fern host `https://6mm.docs.buildwithfern.com`. Other preview domains are not implicitly allowed.
+
+The documentation site uses anonymous visitor access. Never embed identity-signing secrets or administrator passwords. The loader preserves bidirectional language and light/dark theme synchronization, with English as the fallback for unsupported widget languages.
+
 ## Publishing
 
 The production site is hosted by Fern.

@@ -2,8 +2,9 @@
   if (window.__sixmmSupportWidgetLoader) return;
   window.__sixmmSupportWidgetLoader = true;
 
-  var WIDGET_SRC = 'https://csadmin.6mm.com/widget/widget.js';
-  var APP_ID = '6mm-docs';
+  var WIDGET_SRC = 'https://cs.6mm.com/widget/widget.js';
+  // Public SaaS tenant identifier, not a signing secret.
+  var APP_KEY = 'app_-ofLSy2QTO0xAI4pkAiQ3Jch';
   var locales = window.__sixmmDocsLocales || [];
   var localeRoutes = locales
     .filter(function (locale) {
@@ -550,7 +551,7 @@
     script.dataset.lang = initialLang;
     script.dataset.theme = initialTheme;
     script.dataset.color = currentAccentColor();
-    script.dataset.appId = APP_ID;
+    script.dataset.appKey = APP_KEY;
     script.onload = function () {
       document.documentElement.classList.remove('sixmm-support-widget-loading');
       // The host may have changed while widget.js was loading.

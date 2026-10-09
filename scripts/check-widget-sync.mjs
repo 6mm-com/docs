@@ -197,6 +197,11 @@ runInNewContext(supportScript, {
 });
 
 assert.ok(appendedWidgetScript,'The SDK starts loading on page initialization without a click');
+assert.equal(appendedWidgetScript.src, "https://cs.6mm.com/widget/widget.js");
+assert.equal(appendedWidgetScript.dataset.appKey, "app_-ofLSy2QTO0xAI4pkAiQ3Jch");
+assert.equal(appendedWidgetScript.dataset.appId, undefined, "Legacy appId must not replace the SaaS tenant credential");
+assert.equal(appendedWidgetScript.dataset.lang, "en");
+assert.equal(appendedWidgetScript.dataset.theme, "light");
 assert.equal(widgetOpenCalls,0,'Background initialization must not open the support panel');
 const launcher = sandboxDocument.getElementById('sixmm-support-launcher');
 assert.ok(launcher,'A keyboard-accessible support entry must remain visible before SDK load');
