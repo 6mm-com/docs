@@ -1,11 +1,11 @@
 ---
-title: "Webhook 簽名驗證與冪等性"
-subtitle: "6MM agent webhook 與原始請求體驗證，並處理重試、逾時及重複事件，避免重複業務操作。"
+title: "Webhook 簽名驗證和冪等性"
+subtitle: "使用原始請求正文驗證 6MM 代理 webhooks，並處理重試、超時和重複事件，而無需重複的業務操作。"
 slug: sdk/security/webhooks-idempotency
 canonical-url: https://docs.6mm.com/zh-TW/sdk/security/webhooks-idempotency
 ---
 
-Webhook 會通知合作夥伴後端非同步的業務狀態變更。由於傳送可能會被重試，每個接收端必須在解析受信任資料前驗證簽名，且事件必須冪等處理。
+Webhooks 通知合作伙伴後端有關異步業務狀態更改的信息。由於可能會重試傳遞，因此每個接收者都必須在解析可信數據之前驗證簽名，並且必須冪等地處理事件。
 
 <span id="webhook-headers" data-sixmm-canonical-anchor="webhook-headers" aria-hidden="true"></span>
 
@@ -13,87 +13,97 @@ Webhook 會通知合作夥伴後端非同步的業務狀態變更。由於傳送
 
 | 標頭 | 描述 |
 | --- | --- |
-| X-代理時間戳 | Unix 的時間戳記在幾秒內。 |
-| X-特工-假人 | 重播保護 nonce。 |
-| X-代理-簽名 | HMAC-SHA256 簽名。 |
+| X-代理時間戳 | Unix 時間戳（以秒為單位）。 |
+| X-代理-隨機數 | 重放保護隨機數。 |
+| X-代理簽名 | HMAC-SHA256簽名。 |
 
 ```text
 timestamp + nonce + rawBody
 ```
 
-在重建有符號值時，請使用截 HTTP 收到的原始請求實體。先解析並重新序列化 JSON 可以改變空白或欄位順序，產生不同的簽章。
+重建簽名值時，使用通過 HTTP 收到的確切原始請求正文。首先解析和重新序列化 JSON 可以更改空格或字段順序併產生不同的簽名。
 
 <span id="verification-flow" data-sixmm-canonical-anchor="verification-flow" aria-hidden="true"></span>
 
 ## 驗證流程
 
-1. 讀取時間戳、nonce 和簽章標頭。
-2. 擷取未修改的原始請求實體。
-3. 建造 `timestamp + nonce + rawBody`。
-4. 計算HMAC- 與夥伴API 秘密SHA256。
-5. 使用恆定時間比較，比較計算出的與收到的簽名。
-6. 套用核准的時間戳新鮮度及非重複使用檢查。
-7. 只有在驗證成功後才解析並處理事件。
+1. 讀取時間戳、隨機數和簽名標頭。
+2. 捕獲未修改的原始請求正文。
+3. 構建`timestamp + nonce + rawBody`。
+4. 使用夥伴 API 秘密計算 HMAC-SHA256。
+5. 使用恆定時間比較來比較計算出的簽名和接收到的簽名。
+6. 應用批准的時間戳新鮮度和隨機數重用檢查。
+7. 驗證成功後才解析並處理該事件。
 
-當官方 Agent SDK 驗證器可用時，請使用它，而非維護獨立的簽署碼。
+當官方 Agent SDK 驗證器可用時，使用它而不是維護獨立的簽名代碼。
 
 <span id="order-idempotency" data-sixmm-canonical-anchor="order-idempotency" aria-hidden="true"></span>
 
-## 訂單冪等性
+## 順序冪等性
 
-| 案件 | 操控 |
+| 案件 | 處理 |
 | --- | --- |
-| 初始轉移申請 | 創造一個全球獨一無二的 agentOrderNo。 |
-| HTTP 暫停 | 在建立新 agentOrderNo 之前，先查詢原始。 |
-| PROCESSING 回應 | 等待 webhook 或查詢訂單狀態。 |
-| 重複的Webhook | 依冪等性鍵與最終狀態進行重複解碼。 |
+| 初始轉移請求 | 創建一個全球唯一的 agentOrderNo。 |
+| HTTP 超時 | 在創建新的之前查詢原始的 agentOrderNo。 |
+| PROCESSING 回覆 | 等待webhook或查詢訂單狀態。 |
+| 重複webhook | 按冪等鍵和最終狀態進行重複數據刪除。 |
 
 <span id="recommended-idempotency-record" data-sixmm-canonical-anchor="recommended-idempotency-record" aria-hidden="true"></span>
 
-## 推薦的冪등 性紀錄
+## 推薦冪等記錄
 
-儲存足夠資訊以辨識重複送達並安全恢復：
+存儲足夠的信息以識別重複交付並安全恢復：
 
 | 場地 | 目的 |
 | --- | --- |
-| 活動或商業鑰匙 | 唯一識別通知或操作。 |
-| 合作夥伴訂單號碼 | 將事件與原始請求連結起來。 |
-| 有效載荷雜湊 | 有助於辨識重複的重複有效載荷衝突。 |
-| 目前處理狀態 | 有被接受、處理、成功與失敗的工作。 |
-| 最終業務狀況 | 防止終端動作重複應用。 |
-| 處理過的時間戳記 | 支援調查與保留政策。 |
+| 活動或業務密鑰 | 唯一標識通知或操作。 |
+| 合作伙伴訂單號 | 將事件連接到原始請求。 |
+| 有效負載哈希 | 幫助識別衝突的重複負載。 |
+| 當前處理狀態 | 區分接收、處理、成功和失敗的工作。 |
+| 最終經營狀況 | 防止終端操作被應用兩次。 |
+| 處理時間戳 | 支持調查和保留策略。 |
 
-盡可能在同一筆交易中提交業務變更與冪等性記錄。重複事件應回傳已知結果，而非重複套用餘額、訂單或使用者變更。
+儘可能在同一事務中提交業務變更和冪等記錄。重複的事件應該返回已知的結果，而不是再次應用餘額、訂單或用戶更改。
 
 <span id="timeout-and-retry-rule" data-sixmm-canonical-anchor="timeout-and-retry-rule" aria-hidden="true"></span>
 
-## 暫停與重試規則
+## 超時和重試規則
 
-HTTP逾時並不證明原始請求失敗。使用原始`agentOrderNo`查詢操作，或等待其 webhook 後，再決定是否需要其他行動。每次逾時後建立新的業務訂單號碼可能導致重複資金流動。
+HTTP 超時並不能證明原始請求失敗。使用原始的 `agentOrderNo` 查詢操作，或等待其 webhook，然後再決定是否需要執行其他操作。每次超時後創建新的業務訂單號可能會導致重複的資金流動。
 
 <span id="production-checklist" data-sixmm-canonical-anchor="production-checklist" aria-hidden="true"></span>
 
-## 製作檢查清單
+## 生產清單
 
-- 在 JSON 解析或業務處理前驗證簽名。
-- 獨立於解析後的有效載荷保存原始本體。
-- 依核准的整合政策拒絕過時或重播請求。
-- 使事件處理安全，適合重複且順序錯序的傳遞。
-- 記錄事件 ID、合作夥伴訂單號碼、處理結果及請求時間。
-- 從日誌和支援附件中刪除秘密與簽章值。
+- 在JSON解析或業務處理之前驗證簽名。
+- 獨立於解析的有效負載保留原始主體。
+- 根據批准的集成策略拒絕過時或重播的請求。
+- 確保事件處理對於重複和無序交付來說是安全的。
+- 記錄事件 ID、合作伙伴訂單號、處理結果和請求時間。
+- 編輯日誌和支持附件中的機密和簽名值。
 
 <span id="related-docs" data-sixmm-canonical-anchor="related-docs" aria-hidden="true"></span>
 
-## 相關文件
+## 相關文檔
 
 <CardGroup cols={3}>
-<Card title="秘密與 HMAC 簽名" icon="fa-duotone fa-shield-keyhole" href="/zh-TW/sdk/security/secrets-signing">
-保護用於請求與 webhook 驗證的 API 秘密。
+<Card title="秘密 & HMAC 簽名" icon="fa-duotone fa-shield-keyhole" href="/zh-TW/sdk/security/secrets-signing">
+保護用於請求和 webhook 驗證的 API 秘密。
 </Card>
 <Card title="Agent SDK 概述" icon="fa-duotone fa-server" href="/zh-TW/sdk/agent-sdk/overview">
-檢視完整的後端整合工作流程。
+查看完整的後端集成工作流程。
 </Card>
 <Card title="SDK 故障排除" icon="fa-duotone fa-screwdriver-wrench" href="/zh-TW/sdk/security/troubleshooting">
-調查被拒絕的簽名、重複事件及待執行的行動。
+調查被拒絕的簽名、重複事件和待處理的操作。
 </Card>
 </CardGroup>
+
+<span id="funding-and-environment-boundaries" data-sixmm-canonical-anchor="funding-and-environment-boundaries" aria-hidden="true"></span>
+
+## 資金和環境邊界
+
+原始合同轉賬 webhook 和 `queryOrder` 流程不會自動應用於資金。使用`queryWalletTransfer`和原始訂單環境確認資金操作。資金用途`status`；原始合同傳輸響應使用`orderStatus`。成功的 HTTP 響應或 `code=0` 本身並不能證明資金已轉移。
+
+顯式模擬合約轉移通知包括`environment=SIMULATED`。首先驗證原始主體，然後根據保存的本地業務訂單檢查用戶、金額、訂單身份和環境。
+
+[資金回收指南](/zh-TW/sdk/agent-sdk/java/funding-wallet) · [環境指南](/zh-TW/sdk/agent-sdk/java/environments)

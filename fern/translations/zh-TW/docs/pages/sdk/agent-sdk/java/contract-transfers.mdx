@@ -1,0 +1,260 @@
+---
+title: "合同轉讓與對賬"
+subtitle: "合同傳輸和對賬：Agent Java SDK v0.3.0 集成、示例、參數和響應語義。"
+slug: sdk/agent-sdk/java/contract-transfers
+canonical-url: https://docs.6mm.com/zh-TW/sdk/agent-sdk/java/contract-transfers
+---
+
+本指南針對 **Agent Java SDK `v0.3.0`**、Java 8+ 以及標記的公共合約。初始化 `client` 後在合作伙伴後端運行示例 [快速入門](/zh-TW/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## 先決條件示例
+
+Java 片段共享這些導入。使用快速啟動初始化 `client` 並從保存的綁定中獲取 `platformUserId`。示例用戶/訂單 ID 必須替換為您自己的持久值。
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span id="fixed-amount-transfer" data-sixmm-canonical-anchor="fixed-amount-transfer" aria-hidden="true"></span>
+
+## 固定金額轉賬
+
+使用 `transfer` 進行固定金額轉賬。 `Direction.IN` 表示轉移
+從合作伙伴平臺進入6MM。 `Direction.OUT` 表示從 6MM 轉入
+返回合作伙伴平臺。
+
+使用字符串或 `BigDecimal` 表示金額。請勿使用 `double` 或 `float`。
+
+<span id="transfer-by-agentuserid" data-sixmm-canonical-anchor="transfer-by-agentuserid" aria-hidden="true"></span>
+
+### 轉帳方式 `agentUserId`
+
+```java
+import com.sixmm.agent.model.Direction;
+import com.sixmm.agent.model.TransferRequest;
+import com.sixmm.agent.model.TransferResponse;
+
+TransferResponse resp = client.transfer(TransferRequest.fixed(
+        "AGT-ORDER-1001",
+        "agent-user-001",
+        Direction.IN,
+        "USDT",
+        "10.00"));
+
+System.out.println(resp.orderNo);
+System.out.println(resp.orderStatus);
+System.out.println(resp.agentUserId);
+System.out.println(resp.platformUserId);
+```
+
+<span id="transfer-by-platformuserid" data-sixmm-canonical-anchor="transfer-by-platformuserid" aria-hidden="true"></span>
+
+### 轉帳方式 `platformUserId`
+
+```java
+TransferResponse resp = client.transfer(TransferRequest.fixedByPlatformUserId(
+        "AGT-ORDER-1002",
+        "1188041528",
+        Direction.OUT,
+        "USDT",
+        "5.00"));
+```
+
+<span id="provide-both-ids" data-sixmm-canonical-anchor="provide-both-ids" aria-hidden="true"></span>
+
+### 提供兩個 ID
+
+如果提供了兩個 ID，則服務將驗證它們是否指向同一個
+綁定用戶。
+
+```java
+TransferRequest req = TransferRequest
+        .fixed("AGT-ORDER-1003", "agent-user-001", Direction.IN, "USDT", "20.00")
+        .withPlatformUserId("1188041528");
+
+TransferResponse resp = client.transfer(req);
+```
+
+請求字段：
+
+| 場地 | 類型 | 必需的 | 描述 |
+| --- | --- | --- | --- |
+| `agentOrderNo` | string | 是的 | 全球唯一的合作伙伴訂單號 |
+| `agentUserId` | string | 有條件地 | 當 `platformUserId` 不存在時需要 |
+| `platformUserId` | string | 有條件地 | 當 `agentUserId` 不存在時需要 |
+| `direction` | 枚舉 | 是的 | `IN` 或 `OUT` |
+| `currency` | string | 不 | 缺席時從 `defaultCurrency` 填充 |
+| `amount` | string | 是的 | 十進制金額字符串 |
+
+響應字段：
+
+| 場地 | 類型 | 描述 |
+| --- | --- | --- |
+| `orderNo` | string | 平臺訂單號 |
+| `orderStatus` | string | `SUCCESS`、`FAILED`、`PROCESSING`等 |
+| `agentUserId` | string | 合作伙伴端用戶ID |
+| `platformUserId` | string | 6MM 外部用戶 ID |
+
+
+<span id="order-confirmation-and-idempotency" data-sixmm-canonical-anchor="order-confirmation-and-idempotency" aria-hidden="true"></span>
+
+## 訂單確認和冪等性
+
+調用`transfer`後，Agent服務同步調用交易
+主路徑上的核心。在大多數情況下，API 響應已包含
+同步交易核心結果。
+
+| 結果 | 意義 | 合作伙伴行動 |
+| --- | --- | --- |
+| `SUCCESS` | 轉賬成功 | 將本地訂單標記為成功 |
+| `FAILED` | 轉移被拒絕或失敗 | 保存失敗原因並在適當的時候顯示 |
+| `PROCESSING` | 交易核心超時或網絡不確定性 | 請勿使用新訂單號重試。等待 webhook 或致電 `queryOrder` |
+
+冪等性要求：
+
+- 使用一個 `agentOrderNo` 進行一項業務交易。
+- 如果HTTP超時或網絡故障，請先查詢相同的`agentOrderNo`。
+- Webhooks 可以重試。通過冪等鍵對它們進行重複數據刪除。
+
+
+<span id="transfer-all-out" data-sixmm-canonical-anchor="transfer-all-out" aria-hidden="true"></span>
+
+## 全部轉出
+
+`transferAllOut`將用戶的可提現的6MM側餘額移回到
+合作伙伴平臺。
+
+```java
+import com.sixmm.agent.model.TransferAllOutRequest;
+import com.sixmm.agent.model.TransferAllOutResponse;
+
+TransferAllOutResponse resp = client.transferAllOut(
+        TransferAllOutRequest.of("AGT-ORDER-2001", "agent-user-001", "USDT"));
+
+System.out.println(resp.orderStatus);
+System.out.println(resp.amount);
+```
+
+作者：`platformUserId`：
+
+```java
+TransferAllOutResponse resp = client.transferAllOut(
+        TransferAllOutRequest.byPlatformUserId("AGT-ORDER-2002", "1188041528", "USDT"));
+```
+
+響應中的`amount`為實際轉賬金額。
+
+
+<span id="reverse-order" data-sixmm-canonical-anchor="reverse-order" aria-hidden="true"></span>
+
+## 逆序
+
+反向用於補償成功的轉賬訂單，當後端
+支持逆流。典型案例包括合作伙伴本地訂單異常
+或手動協調回滾。
+
+```java
+import com.sixmm.agent.model.ReverseOrderRequest;
+import com.sixmm.agent.model.ReverseOrderResponse;
+
+ReverseOrderResponse resp = client.reverse(ReverseOrderRequest.of(
+        "AGT-ORDER-1001",
+        "REV-ORDER-1001",
+        "partner order rollback"));
+
+System.out.println(resp.orderStatus);
+```
+
+領域：
+
+| 場地 | 類型 | 必需的 | 描述 |
+| --- | --- | --- | --- |
+| `origOrderNo` | string | 是的 | 原始轉移單號 |
+| `reverseOrderNo` | string | 是的 | 全球唯一的逆向訂單號 |
+| `reverseReason` | string | 是的 | 逆向原因 |
+
+筆記：
+
+- 反向操作不是正常的取消操作。
+- 反向訂單還必須按訂單號實現冪等。
+- 原訂單反轉後，webhook 可能會推動原訂單的
+`REVERSED`最終狀態。
+
+
+<span id="query-order" data-sixmm-canonical-anchor="query-order" aria-hidden="true"></span>
+
+## 查詢訂單
+
+```java
+import com.sixmm.agent.model.OrderQueryType;
+import com.sixmm.agent.model.QueryOrderRequest;
+import com.sixmm.agent.model.QueryOrderResponse;
+
+QueryOrderResponse resp = client.queryOrder(
+        QueryOrderRequest.of("AGT-ORDER-1001", OrderQueryType.TRANSFER_IN));
+
+System.out.println(resp.status);
+System.out.println(resp.failReason);
+```
+
+支持的 `orderType` 值：
+
+- `TRANSFER_IN`
+- `TRANSFER_OUT`
+
+常見響應字段：
+
+| 場地 | 類型 | 描述 |
+| --- | --- | --- |
+| `orderType` | string | 訂單類型 |
+| `orderNo` | string | 合作伙伴訂單號 |
+| `status` | string | 訂單狀態 |
+| `direction` | string | `IN` 或 `OUT` |
+| `transferMode` | string | `FIXED_AMOUNT` 或 `ALL_OUT` |
+| `currency` | string | 貨幣 |
+| `amount` | string | 數量 |
+| `agentUserId` | string | 合作伙伴端用戶ID |
+| `platformUserId` | string | 6MM 外部用戶 ID |
+| `failReason` | string | 失敗原因 |
+| `createdAt` | string | 創建時間 |
+| `completedAt` | string | 完成時間 |
+
+
+<span id="list-orders" data-sixmm-canonical-anchor="list-orders" aria-hidden="true"></span>
+
+## 列出訂單
+
+```java
+import com.sixmm.agent.model.ListOrdersRequest;
+import com.sixmm.agent.model.ListOrdersResponse;
+
+ListOrdersRequest req = ListOrdersRequest.page(1, 20);
+req.orderType = "TRANSFER_IN";
+req.status = "SUCCESS";
+req.startTime = "2026-06-01T00:00:00Z";
+req.endTime = "2026-06-16T00:00:00Z";
+
+ListOrdersResponse resp = client.listOrders(req);
+
+System.out.println(resp.total);
+resp.orders.forEach(order -> System.out.println(order.orderNo));
+```
+
+分頁建議：
+
+- `page` 從 1 開始。
+- 將 `pageSize` 保持在 100 或以下。
+- 對於調節作業，按時間窗口分頁並按 `orderNo` 進行重複數據刪除。
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## 來源及相關指南
+
+- [官方v0.3.0源碼](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [查詢概覽和分頁](/zh-TW/sdk/agent-sdk/java/perpetual-queries)
+- [資金錢包](/zh-TW/sdk/agent-sdk/java/funding-wallet)
+- [升級指南](/zh-TW/sdk/agent-sdk/java/upgrade)

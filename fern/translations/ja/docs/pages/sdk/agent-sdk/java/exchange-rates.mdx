@@ -1,0 +1,87 @@
+---
+title: "法定基準レート"
+subtitle: "法定基準レート: Agent Java SDK v0.3.0 の統合、例、パラメーター、および応答セマンティクス。"
+slug: sdk/agent-sdk/java/exchange-rates
+canonical-url: https://docs.6mm.com/ja/sdk/agent-sdk/java/exchange-rates
+---
+
+このガイドは、**Agent Java SDK `v0.3.0`**、Java 8 以降、およびタグ付けされたパブリック コントラクトを対象としています。例は `client` を初期化した後にパートナー バックエンドで実行されます。 [クイックスタート](/ja/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## 前提条件の例
+
+Java スニペットはこれらのインポートを共有します。クイック スタートを使用して `client` を初期化し、保存されたバインディングから `platformUserId` を取得します。ユーザー/オーダー ID の例は、独自の永続化された値に置き換える必要があります。
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span id="fx-reference-rates" data-sixmm-canonical-anchor="fx-reference-rates" aria-hidden="true"></span>
+
+## FXリファレンスレート
+
+どちらの FX メソッドも、通常の署名付きエージェント API フローを使用します。を発見することから始めましょう
+現在サポートされているソース通貨:
+
+```java
+import com.sixmm.agent.model.ListSupportedFiatCurrenciesResponse;
+
+ListSupportedFiatCurrenciesResponse supported = client.listSupportedFiatCurrencies();
+System.out.println(supported.targetCurrency);     // USDT
+System.out.println(supported.sourceCurrencies);  // AUD, BRL, CNY, EUR, USD, ...
+```
+
+サポートされているすべての法定通貨対USDT参照レートをクエリします。
+
+```java
+import com.sixmm.agent.model.ExchangeRateItem;
+import com.sixmm.agent.model.QueryExchangeRatesResponse;
+
+QueryExchangeRatesResponse rates = client.queryExchangeRates();
+for (ExchangeRateItem item : rates.rates) {
+    System.out.println("1 " + item.sourceCurrency + " = " + item.rate + " " + item.targetCurrency);
+}
+```
+
+選択した通貨をクエリします。
+
+```java
+import com.sixmm.agent.model.QueryExchangeRatesRequest;
+
+QueryExchangeRatesResponse rates = client.queryExchangeRates(
+        QueryExchangeRatesRequest.of("CNY", "EUR", "USD"));
+```
+
+リクエスト ファクトリは、通貨コードを切り取って大文字にし、次のようにシリアル化します。
+API で必要なコンマ区切りの `sourceCurrencies` 値。を省略すると、
+リクエストまたはすべての有効な通貨値は、サポートされているすべての通貨をクエリします。
+
+| 応答フィールド | タイプ | 説明 |
+| --- | --- | --- |
+| `snapshotVersion` | string | 監査と調整のための安定したスナップショット バージョン |
+| `provider` | string | 上流プロバイダー、現在 `ECB` |
+| `sourceDate` | string | `yyyy-MM-dd` 形式の上流観測日 |
+| `fetchedAt` / `expiresAt` | int64 | ミリ秒単位の Unix タイムスタンプ |
+| `pricingPolicy` | string | 現在`FIXED_PEG` |
+| `usdtUsdRate` | string | USD 1 あたりの金額 USDT、現在は `1` に固定されています |
+| `rateType` | string | 現在`INDICATIVE_DAILY` |
+| `usage` | string | 現在`REFERENCE_ONLY` |
+| `rateMeaning` | string | `1 sourceCurrency = rate USDT` |
+| `rates[].rate` | string | USDT ソース法定通貨の 1 単位に相当する金額 |
+
+これらの値は、パートナーの多通貨ウォレットが計算するための参照です。
+USDT の金額が 6MM に送金されました。これらは約定可能な価格、ロックされた相場、または
+リアルタイム USDT の市場価格。金額には `BigDecimal` と文字列を使用します
+計算; `double` や `float` は使用しないでください。
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## ソースおよび関連ガイド
+
+- [公式 v0.3.0 ソース](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [クエリの概要とページネーション](/ja/sdk/agent-sdk/java/perpetual-queries)
+- [資金調達ウォレット](/ja/sdk/agent-sdk/java/funding-wallet)
+- [アップグレードガイド](/ja/sdk/agent-sdk/java/upgrade)

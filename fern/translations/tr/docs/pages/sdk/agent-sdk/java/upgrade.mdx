@@ -1,0 +1,83 @@
+---
+title: "V0.3.0'a yükseltme"
+subtitle: "V0.3.0'a yükseltme: Agent Java SDK v0.3.0 entegrasyonu, örnekler, parametreler ve yanıt semantiği."
+slug: sdk/agent-sdk/java/upgrade
+canonical-url: https://docs.6mm.com/tr/sdk/agent-sdk/java/upgrade
+---
+
+Bu kılavuz **Agent Java SDK `v0.3.0`** ve Java 8+'yi hedefler.
+
+<span id="decide-what-needs-upgrading" data-sixmm-canonical-anchor="decide-what-needs-upgrading" aria-hidden="true"></span>
+
+## Neyin yükseltilmesi gerektiğine karar verin
+
+| Mevcut entegrasyon | Aksiyon |
+| --- | --- |
+| Ortamın çıkarıldığı mevcut üretim fonksiyonları | Mevcut yanıt şekilleri uyumlu kalır; yeni sorgular yükseltmeyi zorlamaz. |
+| Saniyelik işlemler için mevcut genel yerleştirme kimlik doğrulaması | Kimlik doğrulama ve yenilemeyi yeniden kullanın; gerekli ürün sayfasını seçin. |
+| Finansman bakiyeleri, transferler ve geri kazanım | `withFunding`, `walletTransfer` ve `queryWalletTransfer` içeren modelleri kullanın. |
+| Açık simüle edilmiş fonlar | `environment` destekleyen istek/yanıt modellerini kullanın. |
+| Altı kalıcı veri sorgusu | Altı yöntem ve dizi imzalama desteği dahil olmak üzere genel Java SDK `v0.3.0` kullanın. |
+
+Mevcut `baseUrl`, `agentCode`, `apiSecret`, kullanıcı bağlamalarınızı ve orijinal iş emirlerinizi koruyun.
+
+<span id="install-the-stable-public-tag" data-sixmm-canonical-anchor="install-the-stable-public-tag" aria-hidden="true"></span>
+
+## Kararlı genel etiketi yükleyin
+
+GitHub ana makine kaynağını barındırır. GitHub etiketi yayınlamak, Maven koordinatlarını Maven Central'da yayınlamaz. Etiketli kaynağı yerel olarak yükleyin veya doğrulanmış JAR/POM'yi kuruluşunuzun yapı deposunda yayınlayın.
+
+```bash
+git clone --branch v0.3.0 --single-branch https://github.com/6mm-com/agent-java-sdk.git agent-java-sdk-v0.3.0
+cd agent-java-sdk-v0.3.0
+git rev-parse HEAD
+git rev-parse 'v0.3.0^{commit}'
+mvn install
+```
+
+İki taahhüt kimliğinin eşleşmesi gerekir. İş ortağı projesindeki bağımlılığı bildirin:
+
+```xml
+<dependency>
+    <groupId>com.sixmm.exchange.sdk</groupId>
+    <artifactId>agent</artifactId>
+    <version>0.3.0</version>
+</dependency>
+```
+
+Çözümlenen bağımlılığı doğrulayın:
+
+```bash
+mvn dependency:tree -Dincludes=com.sixmm.exchange.sdk:agent
+```
+
+Yerel kurulum, yapıtın yalnızca söz konusu makinede kullanılabilir olmasını sağlar. CI ve diğer geliştiricilerin aynı etiketli kuruluma veya doğrulanmış yapı deponuza ihtiyacı vardır. Zaten `0.3.0` adında özel bir yapıtınız varsa kaynağını ve yöntemlerini doğrulayın; paylaşılan bir yapıtın üzerine sessizce yazmayın.
+
+<span id="required-integration-changes" data-sixmm-canonical-anchor="required-integration-changes" aria-hidden="true"></span>
+
+## Gerekli entegrasyon değişiklikleri
+
+1. Açık `environment` için istek ve yanıt modellerini güncelleyin. Daha katı olan eski yanıt modelleri ek alanı reddedebilir.
+2. `funding` okumadan önce `withFunding()` kullanın. Sözleşme bakiyeleri saniyelik ticaret bakiyeleri değildir.
+3. Finansman için `/v1/agent/wallet-transfer` ve `/v1/agent/wallet-transfer-status` kullanın. Eski `queryOrder` bir Finansman işlemini kurtaramaz.
+4. Altı sorgu, dize dizisi olarak `platformUserIds` kullanır. Dizileri kompakt JSON olarak imzalayın; Java `List.toString()` uyumlu değil.
+5. Depo transfer emirleri, olağan alım satım emirleri, koşullu emirler ve doldurmalar ayrı varlıklar olarak. İşleme göre `orderStatus` veya `status`'yi ayrıştırın.
+6. Ayrıştırmadan önce orijinal webhook gövdesini doğrulayın. Açık benzetilmiş bildirimler şunları içerir: `environment`; kayıtlı siparişle karşılaştırın.
+7. Java ve Widget sürümlerini bağımsız olarak yönetin. Bir arka uç yükseltmesi, ön uç sayfasını veya ticaret modunu değiştirmez ve saniye ticareti, yeni bir token türü gerektirmez.
+
+<span id="verify-the-upgrade" data-sixmm-canonical-anchor="verify-the-upgrade" aria-hidden="true"></span>
+
+## Yükseltmeyi doğrulayın
+
+İş ortağı projesinin yapısını çalıştırın ve bağımlılık ağacını inceleyin. Test bağlama, orijinal üretim akışı, açık simüle edilmiş bakiyeler, Finansman sonucu kurtarma, altı sorgunun tümü, sabit pencere sayfalandırma, hata işleme ve bağımsız geri aramalar.
+
+Özel bir HTTP istemci için eski modellerin yeni alanları kapsadığını varsaymak yerine etiketli isteği ve imza sözleşmesini takip edin. Görmek [Sorguya genel bakış](/tr/sdk/agent-sdk/java/perpetual-queries) Ve [Çevre kılavuzu](/tr/sdk/agent-sdk/java/environments).
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Kaynak ve ilgili kılavuzlar
+
+- [Resmi v0.3.0 kaynağı](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Sorguya genel bakış ve sayfalandırma](/tr/sdk/agent-sdk/java/perpetual-queries)
+- [Finansman cüzdanı](/tr/sdk/agent-sdk/java/funding-wallet)
+- [Yükseltme kılavuzu](/tr/sdk/agent-sdk/java/upgrade)

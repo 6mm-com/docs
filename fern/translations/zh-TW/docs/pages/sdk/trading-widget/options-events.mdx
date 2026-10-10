@@ -1,29 +1,29 @@
 ---
-title: "選項與活動"
-subtitle: "初始化選項、執行時事件及常見錯誤碼。"
+title: "選項和活動"
+subtitle: "初始化選項、運行時事件和常見錯誤代碼。"
 slug: sdk/trading-widget/options-events
 canonical-url: https://docs.6mm.com/zh-TW/sdk/trading-widget/options-events
 ---
 
 <span id="options" data-sixmm-canonical-anchor="options" aria-hidden="true"></span>
 
-## 選擇權
+## 選項
 
-| 場地 | 類型 | 預設 | 註釋 |
+| 場地 | 類型 | 默認 | 筆記 |
 | --- | --- | --- | --- |
-| baseUrl | string | SDK 文字起源 | iframe 網域。明確傳遞到合作夥伴頁面。 |
-| 象徵 | string | BTCUSDT | 標準化為大寫並以條帶表示 - / _。 |
-| 主題 | 黑暗 \| 光 | 黑暗 | 初始主題參數。 |
-| 地點 | en \| 美國 \| Zh-CN | 瀏覽器/預設 | 支援英文及簡體中文。 |
-| 佈局 | 預設 \| 緊湊型 | 預設 | 保留版面配置選項。 |
-| 顯示 | object | `showHeader: false`， `showTicker: false`， `hidden: []` | 控制系統包含貝殼區域和高階交易容器。 |
-| 認證 | object | 沒有 | 使用 partner-token 來整合新的 SSO 。 |
+| baseUrl | string | SDK 腳本來源 | iframe 域。在合作伙伴頁面中明確傳遞。 |
+| 象徵 | string | BTCUSDT | 標準化為大寫並去掉 - / _。 |
+| 主題 | 黑暗的 \| 光 | 黑暗的 | 初始主題參數。 |
+| 語言環境 | zh \| en-US \| zh-CN | 瀏覽器/默認 | 支持英語和簡體中文。 |
+| 佈局 | 默認 \| 袖珍的 | 默認 | 保留佈局選項。 |
+| 展示 | object | `showHeader: false`，`showTicker: false`，`hidden: []` | 控制嵌入外殼區域和高級交易容器。 |
+| 授權 | object | 沒有任何 | 使用合作伙伴令牌進行新的 SSO 集成。 |
 
 <span id="display-controls" data-sixmm-canonical-anchor="display-controls" aria-hidden="true"></span>
 
 ## 顯示控制
 
-`display` 控制內嵌的交易頁面殼層與高階容器。在合作夥伴嵌入中，PC 標頭和底部市場行情條預設隱藏。
+`display` 控制嵌入式交易頁面 shell 和高級容器。在合作伙伴嵌入中，PC 標題和底部市場代碼默認隱藏。
 
 ```js
 display: {
@@ -33,55 +33,74 @@ display: {
 }
 ```
 
-| 場地 | 類型 | 預設 | 註釋 |
+| 場地 | 類型 | 默認 | 筆記 |
 | --- | --- | --- | --- |
-| showHeader | boolean | 錯誤 | 是否要在 iframe 中顯示 PC 嵌入標頭。 |
-| showTicker | boolean | 錯誤 | 是否要在嵌入殼層中顯示底盤股票。 |
-| 隱藏 | string[] | [] | 在交易頁面隱藏高階容器。 |
+| showHeader | boolean | 錯誤的 | 是否在 iframe 內顯示 PC 嵌入標頭。 |
+| showTicker | boolean | 錯誤的 | 是否在嵌入外殼中顯示底部市場行情。 |
+| 隱 | 細繩[] | [] | 隱藏交易頁面中的高級容器。 |
 
-支持 `display.hidden` 價值觀：
+支持的 `display.hidden` 值：
 
 | 價值 | 容器 |
 | --- | --- |
-| 排行榜 | 圖表容器 |
+| 圖表 | 圖表容器 |
 | orderBook | 訂單簿容器 |
-| orderForm | 訂單表單面板 |
-| 倉位 | 底層倉位與開放訂單面板 |
-| 帳號 | 帳戶資產容器 |
+| orderForm | 訂單面板 |
+| 職位 | 底部倉位和未平倉訂單面板 |
+| 帳戶 | 賬戶資產容器 |
 
-`display.hidden` 只會隱藏整個容器。它不會隱藏容器內的個別按鈕、欄位或工具。不對應到當前視窗的值會被忽略。
+`display.hidden` 僅隱藏整個容器。它不會隱藏容器內的各個按鈕、字段或工具。未映射到當前視口的值將被忽略。
 
 <span id="events" data-sixmm-canonical-anchor="events" aria-hidden="true"></span>
 
 ## 活動
 
-| 活動 | 觸發 |
+| 事件 | 扳機 |
 | --- | --- |
-| 準備好了 | iframe 初始化完成。 |
-| 錯誤 | SDK、iframe或認證錯誤。 |
-| state_changed | SDK 生命週期狀態改變了。 |
-| auth_state_changed | 夥伴代幣認證狀態變更。 |
-| symbol_changed | 實際的 iframe 符號已經改變。 |
-| locale_changed | 實際的 iframe 地點有變動。 |
-| order_created | 使用者在 iframe 內建立了訂單。 |
-| order_failed | 訂單提交失敗。 |
-| 已毀滅 | SDK 個實例被摧毀了。 |
+| 準備好 | iframe初始化完成。 |
+| 錯誤 | SDK、iframe 或身份驗證錯誤。 |
+| 狀態改變 | SDK 生命週期狀態已更改。 |
+| auth_state_changed | 合作伙伴令牌身份驗證狀態已更改。 |
+| 符號_更改 | 實際的 iframe 符號已更改。 |
+| 語言環境已更改 | 實際 iframe 區域設置已更改。 |
+| 訂單創建 | 用戶在 iframe 內創建了訂單。 |
+| 訂單失敗 | 訂單提交失敗。 |
+| 被摧毀 | SDK實例被摧毀。 |
 
 <span id="related-widget-guides" data-sixmm-canonical-anchor="related-widget-guides" aria-hidden="true"></span>
 
-## 相關小工具指南
+## 相關小部件指南
 
-- [Trading Widget 快速入門 ]（/sdk/trading-widget/quick-start）
-- [認證]（/sdk/trading-widget/authentication）
-- [實例方法]（/sdk/trading-widget/instance-methods）
-- [故障排除]（/sdk/security/troubleshooting）
-{/* sixmm-localized-link-repair:start */}
-<span id="localized-page-links" data-sixmm-canonical-anchor="localized-page-links" aria-hidden="true"></span>
-
-## 相關頁面
-
-- [嵌入 6MM Trading Widget：快速開始](/zh-TW/sdk/trading-widget/quick-start)
-- [Trading Widget 認證](/zh-TW/sdk/trading-widget/authentication)
+- [Trading Widget 快速入門](/zh-TW/sdk/trading-widget/quick-start)
+- [驗證](/zh-TW/sdk/trading-widget/authentication)
 - [實例方法](/zh-TW/sdk/trading-widget/instance-methods)
-- [SDK 整合故障排除](/zh-TW/sdk/security/troubleshooting)
-{/* sixmm-localized-link-repair:end */}
+- [故障排除](/zh-TW/sdk/security/troubleshooting)
+
+<span id="product-pages-and-trading-mode" data-sixmm-canonical-anchor="product-pages-and-trading-mode" aria-hidden="true"></span>
+
+## 產品頁面及交易模式
+
+Java Agent SDK 和瀏覽器 Trading Widget SDK 版本獨立。對於秒交易，請使用當前的 Widget 功能並明確選擇頁面和交易模式。
+
+| 選項 | 價值觀 | 意義 |
+| --- | --- | --- |
+| `page` | `up-down`，`high-low`，`grid-prediction` | 秒交易產品頁面。 |
+| `tradingMode` | `real`，`demo` | 默認為`real`；明確匹配後端融資環境。 |
+
+初始化前檢查`TradingWidget.capabilities.pages`、`TradingWidget.capabilities.tradingModes`和`TradingWidget.capabilities.partnerToken`。代幣創建不選擇資金環境。要更改用戶或真實/演示模式，請銷燬舊實例並創建一個新實例。
+
+看 [完整的秒交易示例](/zh-TW/sdk/agent-sdk/java/seconds-trading) 和 [生產/模擬配置](/zh-TW/sdk/agent-sdk/java/environments).
+
+<span id="additional-display-targets-and-events" data-sixmm-canonical-anchor="additional-display-targets-and-events" aria-hidden="true"></span>
+
+## 附加顯示目標和事件
+
+當前運行時還接受 `display.hidden` 中的 `symbolFavorites` 和 `symbolTicker`。始終檢查`TradingWidget.capabilities.displayTargets`；目標控制高級容器，而不是字段級權限設置。
+
+| 事件 | 意義 |
+| --- | --- |
+| `rendered` | iframe 發送其渲染的通知。 |
+| `theme_changed` | iframe 報告其實際主題。 |
+| `page_changed` | iframe 報告其實際產品頁面。 |
+
+使用 `onRendered` 或 `widget.on('rendered', handler)` 與初始化分開處理渲染。當前支持的頁面發佈在`TradingWidget.capabilities.pages`中；驗證請求的頁面而不是猜測路徑。

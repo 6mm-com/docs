@@ -1,0 +1,81 @@
+---
+title: "法币参考汇率"
+subtitle: "法币参考汇率: Agent Java SDK v0.3.0 接入、示例、参数及响应说明。"
+slug: sdk/agent-sdk/java/exchange-rates
+canonical-url: https://docs.6mm.com/zh-CN/sdk/agent-sdk/java/exchange-rates
+---
+
+本文对应 **Agent Java SDK `v0.3.0`**、Java 8+ 与该标签的公开契约。示例在合作方后端运行；先按[快速开始](/zh-CN/sdk/agent-sdk/java/quick-start)初始化 `client`。
+
+<span data-sixmm-canonical-anchor="示例前提" aria-hidden="true"></span>
+
+## 示例前提
+
+Java 示例共用以下导入。按快速开始初始化 `client`，从已保存的绑定取得 `platformUserId`。示例用户和订单 ID 必须替换为实际持久化值。
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span data-sixmm-canonical-anchor="法币参考汇率" aria-hidden="true"></span>
+
+## 法币参考汇率
+
+SDK 提供两个已签名方法。先查询服务端当前支持的源法币：
+
+```java
+import com.sixmm.agent.model.ListSupportedFiatCurrenciesResponse;
+
+ListSupportedFiatCurrenciesResponse supported = client.listSupportedFiatCurrencies();
+System.out.println(supported.targetCurrency);     // USDT
+System.out.println(supported.sourceCurrencies);  // AUD、BRL、CNY、EUR、USD 等
+```
+
+查询全部支持法币的参考汇率：
+
+```java
+import com.sixmm.agent.model.ExchangeRateItem;
+import com.sixmm.agent.model.QueryExchangeRatesResponse;
+
+QueryExchangeRatesResponse rates = client.queryExchangeRates();
+for (ExchangeRateItem item : rates.rates) {
+    System.out.println("1 " + item.sourceCurrency + " = " + item.rate + " " + item.targetCurrency);
+}
+```
+
+只查询指定法币：
+
+```java
+import com.sixmm.agent.model.QueryExchangeRatesRequest;
+
+QueryExchangeRatesResponse rates = client.queryExchangeRates(
+        QueryExchangeRatesRequest.of("CNY", "EUR", "USD"));
+```
+
+请求工厂会去除首尾空格并转换为大写，再按服务端契约序列化为逗号分隔的 `sourceCurrencies`。不传请求或不传有效币种时查询全部支持法币。
+
+| 响应字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `snapshotVersion` | string | 可用于审计和对账的汇率快照版本 |
+| `provider` | string | 数据提供方，当前为 `ECB` |
+| `sourceDate` | string | 上游汇率数据日期，格式 `yyyy-MM-dd` |
+| `fetchedAt` / `expiresAt` | int64 | Unix 毫秒时间戳 |
+| `pricingPolicy` | string | 当前为 `FIXED_PEG` |
+| `usdtUsdRate` | string | 每 1 USDT 对应的 USD 数量，当前固定为 `1` |
+| `rateType` | string | 当前为 `INDICATIVE_DAILY` |
+| `usage` | string | 当前为 `REFERENCE_ONLY` |
+| `rateMeaning` | string | `1 sourceCurrency = rate USDT` |
+| `rates[].rate` | string | 每 1 单位源法币对应的 USDT 数量 |
+
+这些汇率用于代理商多币种钱包换算后的 USDT 入参参考，不是成交价、锁价或实时 USDT 市场报价。金额计算请使用 `BigDecimal` 和字符串，不要使用 `double` 或 `float`。
+
+<span data-sixmm-canonical-anchor="来源与相关指南" aria-hidden="true"></span>
+
+## 来源与相关指南
+
+- [官方 v0.3.0 源码](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [合约查询与分页](/zh-CN/sdk/agent-sdk/java/perpetual-queries)
+- [Funding 钱包](/zh-CN/sdk/agent-sdk/java/funding-wallet)
+- [升级指南](/zh-CN/sdk/agent-sdk/java/upgrade)

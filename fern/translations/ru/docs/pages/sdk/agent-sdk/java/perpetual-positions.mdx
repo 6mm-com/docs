@@ -1,0 +1,142 @@
+---
+title: "Бессрочные позиции"
+subtitle: "Бессрочные позиции: Интеграция с Agent Java SDK v0.3.0, примеры, параметры и семантика ответа."
+slug: sdk/agent-sdk/java/perpetual-positions
+canonical-url: https://docs.6mm.com/ru/sdk/agent-sdk/java/perpetual-positions
+---
+
+Это руководство предназначено для **Agent Java SDK `v0.3.0`**, Java 8+ и помеченного публичного контракта. Примеры выполняются в серверной части партнера после инициализации `client` в [Быстрый старт](/ru/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## Пример предварительных условий
+
+Фрагменты Java разделяют этот импорт. Инициализируйте `client` с помощью быстрого запуска и получите `platformUserId` из сохраненной привязки. Примеры идентификаторов пользователей/заказов необходимо заменить вашими собственными сохраненными значениями.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span data-sixmm-canonical-anchor="listcurrentperpetualpositions" aria-hidden="true"></span>
+
+## `listCurrentPerpetualPositions`
+
+Модель запроса: `CurrentPerpetualPositionsRequest`.
+
+```java
+import com.sixmm.agent.model.CurrentPerpetualPositionsRequest;
+import com.sixmm.agent.model.PerpetualResponse;
+import java.util.Collections;
+
+CurrentPerpetualPositionsRequest request = new CurrentPerpetualPositionsRequest();
+request.platformUserIds = Collections.singletonList("1188041528");
+request.limit = 100;
+request.symbol = "BTCUSDT";
+PerpetualResponse response = client.listCurrentPerpetualPositions(request);
+System.out.println(response.data.items.size());
+System.out.println(response.data.hasMore);
+System.out.println(response.data.nextCursor);
+```
+
+<span id="request-fields" data-sixmm-canonical-anchor="request-fields" aria-hidden="true"></span>
+
+### Поля запроса
+
+| Поле | Java тип | Необходимый | Значение |
+| --- | --- | --- | --- |
+| `platformUserIds` | `java.util.List<String>` | Условный | 1–100 уникальных публичных идентификаторов; требуется для исполнения и условных ордеров. Опустить поддерживаемые запросы для прямой области действия игрока; [] недействительно. |
+| `symbol` | `String` | Нет | Дополнительный фильтр торговых пар. |
+| `limit` | `Integer` | Нет | По умолчанию 500; 1–1000. |
+| `cursor` | `String` | Нет | Используйте возвращенный nextCursor с неизмененными фильтрами; остановитесь, когда hasMore имеет значение false. |
+
+Пример читает одну страницу. Для обязательных полей, области действия игрока, семантики фильтра, ограничения, курсора и ограниченных повторов следуйте инструкциям. [Обзор запроса](/ru/sdk/agent-sdk/java/perpetual-queries). Сохраняйте все фильтры неизменными при пейджинге; не интерпретируйте ошибку как пустой результат.
+
+<span data-sixmm-canonical-anchor="listperpetualpositionhistory" aria-hidden="true"></span>
+
+## `listPerpetualPositionHistory`
+
+Модель запроса: `PerpetualPositionHistoryRequest`.
+
+```java
+import com.sixmm.agent.model.PerpetualPositionHistoryRequest;
+import com.sixmm.agent.model.PerpetualResponse;
+import java.util.Collections;
+
+PerpetualPositionHistoryRequest request = new PerpetualPositionHistoryRequest();
+request.platformUserIds = Collections.singletonList("1188041528");
+request.limit = 100;
+request.symbol = "BTCUSDT";
+request.endTime = System.currentTimeMillis();
+request.startTime = request.endTime - 3_600_000L;
+PerpetualResponse response = client.listPerpetualPositionHistory(request);
+System.out.println(response.data.items.size());
+System.out.println(response.data.hasMore);
+System.out.println(response.data.nextCursor);
+```
+
+<span id="request-fields-1" data-sixmm-canonical-anchor="request-fields-1" aria-hidden="true"></span>
+
+### Поля запроса
+
+| Поле | Java тип | Необходимый | Значение |
+| --- | --- | --- | --- |
+| `platformUserIds` | `java.util.List<String>` | Условный | 1–100 уникальных публичных идентификаторов; требуется для исполнения и условных ордеров. Опустить поддерживаемые запросы для прямой области действия игрока; [] недействительно. |
+| `symbol` | `String` | Нет | Дополнительный фильтр торговых пар. |
+| `positionSide` | `String` | Нет | Фильтрация с использованием перечисления на стороне позиции источника. |
+| `startTime` | `Long` | Нет | Включительно миллисекунды Unix; используйте фиксированное окно истории UTC. |
+| `endTime` | `Long` | Нет | Эксклюзивные миллисекунды Unix. |
+| `limit` | `Integer` | Нет | По умолчанию 500; 1–1000. |
+| `cursor` | `String` | Нет | Используйте возвращенный nextCursor с неизмененными фильтрами; остановитесь, когда hasMore имеет значение false. |
+
+Пример читает одну страницу. Для обязательных полей, области действия игрока, семантики фильтра, ограничения, курсора и ограниченных повторов следуйте инструкциям. [Обзор запроса](/ru/sdk/agent-sdk/java/perpetual-queries). Сохраняйте все фильтры неизменными при пейджинге; не интерпретируйте ошибку как пустой результат.
+
+<span id="positions-current-and-historical" data-sixmm-canonical-anchor="positions-current-and-historical" aria-hidden="true"></span>
+
+## Позиции: текущие и исторические
+
+| Поле `data` | тип | Текущая позиция | Исторические позиции | значение |
+| --- | --- | --- | --- | --- |
+| `positionId` | string | поставлять | поставлять | Идентификатор позиции, соответствующий entityId |
+| `symbol` | string | поставлять | поставлять | торговая пара |
+| `positionSide` | string | поставлять | поставлять | LONG / SHORT / BOTH и другие направления позиции |
+| `status` | string | поставлять | поставлять | Строка с числовым статусом позиции, см. обзор запроса |
+| `leverage` | integer | поставлять | поставлять | Используйте несколько |
+| `marginMode` | string | поставлять | поставлять | Числовая строка перечисления «1» для полной позиции, «2» для изолированной позиции. |
+| `quantity` | string | поставлять | Нет в наличии | Текущее количество позиций |
+| `entryPrice` | string | поставлять | поставлять | Средняя цена открытия сохраненных позиций |
+| `margin` | string | поставлять | Нет в наличии | Текущая сумма маржи позиции, а не весь баланс контрактного кошелька пользователя. |
+| `maxQuantity` | string | Нет в наличии | поставлять | Максимальное количество позиций, зафиксированных в этой исторической позиции |
+| `closeQuantity` | string | Нет в наличии | поставлять | Совокупное количество позиций, закрытых в течение жизненного цикла исторической позиции. |
+| `closePrice` | string | Нет в наличии | поставлять | Сохраненная средняя цена закрытия |
+| `pnl` | string | Нет в наличии | поставлять | Историческая позиция прибылей и убытков; не объединяйте его с транзакцией realizedPnl для простого повторения и накопления |
+| `roe` | string | Нет в наличии | поставлять | Пропорциональное значение доходности исторической позиции, не умноженное на 100; например, `"0.043"` представляет собой `4.3%`, `"-0.05"` представляет собой `-5%` |
+| `fundingFeeAccum` | string | поставлять | поставлять | Накопленная комиссия за финансирование с сохранением исходного символа и точности. |
+| `openedAt` | integer | поставлять | поставлять | Время открытия позиции, миллисекунды |
+| `updatedAt` | integer | поставлять | Нет в наличии | Время обновления текущей позиции, миллисекунды |
+| `closedAt` | integer | Нет в наличии | поставлять | Время закрытия, миллисекунды; используйте это поле для фильтрации времени исторической позиции |
+
+Калибр расчета истории `roe` — `pnl / (entryPrice × maxQuantity / leverage)`, и интерфейс напрямую возвращает сохраненное значение пропорции. При отображении процентов используйте десятичную операцию и умножьте на 100, затем добавьте `%`; в знаменателе используется номинальная маржа записи исторической позиции, а не баланс кошелька счета. Когда цена открытия или максимальный объем позиции равны 0, кредитное плечо недействительно и т. д. и не может быть рассчитано, источник сохраняется как 0. Следовательно, нельзя сделать вывод, что прибыль или убыток равны 0 только на основе `roe=0`.
+
+Текущая позиция не имеет цены маркировки в реальном времени, плавающей прибыли и убытка в реальном времени, цены ROE или цены ликвидации в реальном времени. Он отражает сохраненный статус позиции и не может использовать поля времени обновления и маржи для получения текущих результатов контроля рисков в режиме реального времени.
+
+
+<span id="example-response-envelope" data-sixmm-canonical-anchor="example-response-envelope" aria-hidden="true"></span>
+
+## Пример конверта ответа
+
+Это иллюстративная пустая страница, а не образец завершенной сделки. В приведенных выше таблицах полей для конкретных ресурсов описываются заполненные `items[].data`.
+
+```json
+{"code":0,"message":"success","data":{"items":[],"nextCursor":"","hasMore":false}}
+```
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Источник и связанные руководства
+
+- [Официальный источник v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Обзор запроса и нумерация страниц](/ru/sdk/agent-sdk/java/perpetual-queries)
+- [Финансирование кошелька](/ru/sdk/agent-sdk/java/funding-wallet)
+- [Руководство по обновлению](/ru/sdk/agent-sdk/java/upgrade)

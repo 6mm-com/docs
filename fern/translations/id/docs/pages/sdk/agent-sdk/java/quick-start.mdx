@@ -1,53 +1,66 @@
 ---
 title: "Java Mulai Cepat"
-subtitle: "Instal dan inisialisasi Java SDK dari layanan backend."
+subtitle: "Java Mulai Cepat: Agent Java SDK integrasi v0.3.0, contoh, parameter, dan semantik respons."
 slug: sdk/agent-sdk/java/quick-start
 canonical-url: https://docs.6mm.com/id/sdk/agent-sdk/java/quick-start
 ---
 
-<span id="install" data-sixmm-canonical-anchor="install" aria-hidden="true"></span>
+Panduan ini menargetkan **Agent Java SDK `v0.3.0`**, Java 8+, dan kontrak publik yang diberi tag. Contoh dijalankan di backend mitra setelah menginisialisasi `client` di [Mulai Cepat](/id/sdk/agent-sdk/java/quick-start).
 
-## Instal
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
 
-Sumber SDK publik saat ini mendokumentasikan tag `v0.1.1` dengan koordinat Maven berikut:
+## Contoh prasyarat
+
+Cuplikan Java membagikan impor ini. Inisialisasi `client` menggunakan Quick Start dan dapatkan `platformUserId` dari pengikatan yang disimpan. Contoh ID pengguna/pesanan harus diganti dengan nilai Anda yang tetap.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span id="maven-coordinates" data-sixmm-canonical-anchor="maven-coordinates" aria-hidden="true"></span>
+
+## Koordinat Maven
+
+Koordinat sumber saat ini:
 
 ```xml
 <dependency>
     <groupId>com.sixmm.exchange.sdk</groupId>
     <artifactId>agent</artifactId>
-    <version>0.1.1</version>
+    <version>0.3.0</version>
 </dependency>
 ```
 
-GitHub tidak berfungsi sebagai repositori ketergantungan Maven. Instal sumber yang ditandai secara lokal sebelum menyelesaikan ketergantungan:
+GitHub adalah hosting sumber, bukan repositori ketergantungan Maven. Jika SDK belum
+telah dipublikasikan ke repositori Maven, instal ke Maven lokal Anda
+repositori terlebih dahulu:
 
 ```bash
 git clone https://github.com/6mm-com/agent-java-sdk.git
 cd agent-java-sdk
-git checkout v0.1.1
+git checkout v0.3.0
 mvn install
 ```
 
-> **Membangun tim**
->
-> Publikasikan artefak yang disetujui ke repositori Maven organisasi Anda untuk build CI, pengujian, dan produksi. Konfirmasi versi yang disetujui dengan 6MM sebelum penerapan produksi.
+Setelah instalasi lokal, proyek bisnis Anda dapat diselesaikan
+`com.sixmm.exchange.sdk:agent:0.3.0` dari repositori Maven lokal.
 
-Kode sumber dan contoh penggunaan tersedia di repositori resmi Java SDK :
+Untuk pembangunan tim dan lingkungan pengujian, publikasikan SDK ke repositori Maven
+seperti Nexus, Artifactory, Paket GitHub, Maven Central, atau gunakan GitHub
+layanan build berbasis seperti JitPack.
 
-[6mm-com/agent-java-sdk] (https://github.com/6mm-com/agent-java-sdk)
+Untuk integrasi yang sudah ada, lihat [SDK panduan peningkatan](https://github.com/6mm-com/agent-java-sdk/blob/v0.3.0/docs/merchant-integration.md#8-旧-sdk-升级). Gunakan tag sumber stabil `v0.3.0` untuk menginstal SDK dan membaca dokumentasi integrasi yang cocok.
 
-<span id="before-you-start" data-sixmm-canonical-anchor="before-you-start" aria-hidden="true"></span>
 
-## Sebelum Anda mulai
+<span id="client-initialization" data-sixmm-canonical-anchor="client-initialization" aria-hidden="true"></span>
 
-- Konfirmasi Agen produksi Anda API URL markas dengan tim 6MM .
-- Simpan apiSecret hanya di manajemen rahasia backend.
-- Siapkan pemetaan stabil antara platformUserId dan agentUserId.
-- Aktifkan log terstruktur di sekitar aliran bind, transfer, order, dan webhook.
+## Inisialisasi Klien
 
-<span id="initialize-client" data-sixmm-canonical-anchor="initialize-client" aria-hidden="true"></span>
+<span id="plain-java" data-sixmm-canonical-anchor="plain-java" aria-hidden="true"></span>
 
-## Inisialisasi klien
+### Biasa Java
 
 ```java
 import com.sixmm.agent.AgentClient;
@@ -61,42 +74,156 @@ AgentClient client = new AgentClient(AgentClientConfig.builder()
         .build());
 ```
 
-> **Hanya backend**
->
-> Jangan inisialisasi Agent SDK dari kode klien browser, mobile, atau desktop. SDK menandatangani permintaan API Agen yang memiliki hak istimewa.
+<span id="spring-boot" data-sixmm-canonical-anchor="spring-boot" aria-hidden="true"></span>
 
-<span id="example-transfer-funds-in" data-sixmm-canonical-anchor="example-transfer-funds-in" aria-hidden="true"></span>
-
-## Contoh: transfer dana ke
+### sepatu bot musim semi
 
 ```java
-TransferResponse resp = client.transfer(TransferRequest.fixed(
-        "AGT-ORDER-1001",
-        "agent-user-001",
-        Direction.IN,
-        "USDT",
-        "10.00"));
+import com.sixmm.agent.AgentClient;
+import com.sixmm.agent.AgentClientConfig;
+import java.time.Duration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class AgentSdkConfig {
+
+    @Bean
+    public AgentClient agentClient(AgentSdkProperties props) {
+        return new AgentClient(AgentClientConfig.builder()
+                .baseUrl(props.getBaseUrl())
+                .agentCode(props.getAgentCode())
+                .apiSecret(props.getApiSecret())
+                .defaultCurrency("USDT")
+                .timeout(Duration.ofSeconds(10))
+                .build());
+    }
+}
 ```
 
-Gunakan nomor pesanan sisi mitra yang unik untuk setiap permintaan transfer. Jika permintaan habis waktu, kueri pesanan asli sebelum membuat yang baru.
+Contoh properti aplikasi:
 
-<span id="next-steps" data-sixmm-canonical-anchor="next-steps" aria-hidden="true"></span>
+```properties
+agent.sdk.base-url=https://agent-api.6mm.com
+agent.sdk.agent-code=AGENT001
+agent.sdk.api-secret=${AGENT_API_SECRET}
+```
 
-## Langkah selanjutnya
 
-| Kebutuhan | Halaman berikutnya |
-| --- | --- |
-| Terbitkan kredensial Trading Widget | [Buat Token Embed] (/sdk/agent-sdk/java/embed-token) |
-| Verifikasi callback dari 6MM | [Webhooks & Idempotensi] (/sdk/security/webhooks-idempotency) |
-| Tinjau perilaku penandatanganan | [Rahasia & Penandatanganan] (/sdk/security/secrets-signing) |
-| Mendiagnosis masalah integrasi | [SDK Pemecahan Masalah ] (/sdk/security/troubleshooting) |
-{/* sixmm-localized-link-repair:start */}
-<span id="localized-page-links" data-sixmm-canonical-anchor="localized-page-links" aria-hidden="true"></span>
+<span id="bind-user" data-sixmm-canonical-anchor="bind-user" aria-hidden="true"></span>
 
-## Halaman terkait
+## Ikat Pengguna
 
-- [Buat Token Sematan](/id/sdk/agent-sdk/java/embed-token)
-- [Verifikasi & Idempotensi Tanda Tangan Webhook](/id/sdk/security/webhooks-idempotency)
-- [Agent SDK Secrets & HMAC Penandatanganan](/id/sdk/security/secrets-signing)
-- [Pemecahan Masalah Integrasi SDK](/id/sdk/security/troubleshooting)
-{/* sixmm-localized-link-repair:end */}
+Bind membuat atau mengambil hubungan antara pengguna mitra dan 6MM
+pengguna platform. Sebut saja saat pengguna pertama kali memasuki alur perdagangan atau sebelum
+transfer pertama ke 6MM.
+
+```java
+import com.sixmm.agent.model.BindRequest;
+import com.sixmm.agent.model.BindResponse;
+
+BindResponse resp = client.bind(
+        BindRequest.of("agent-user-001")
+                .withUsername("alice")
+                .withExt("{\"source\":\"web\"}"));
+
+System.out.println(resp.platformUserId);
+System.out.println(resp.bindStatus);
+System.out.println(resp.isSimulatedUser);
+```
+
+Bidang permintaan:
+
+| Bidang | Jenis | Diperlukan | Keterangan |
+| --- | --- | --- | --- |
+| `agentUserId` | string | Ya | ID pengguna sisi mitra yang unik |
+| `username` | string | TIDAK | Nama tampilan sisi mitra digunakan sebagai nama panggilan pengguna platform |
+| `ext` | string | TIDAK | Bidang ekstensi. String JSON direkomendasikan |
+
+Bidang respons:
+
+| Bidang | Jenis | Keterangan |
+| --- | --- | --- |
+| `platformUserId` | string | 6MM ID pengguna eksternal |
+| `bindStatus` | string | Biasanya `BOUND` |
+| `isSimulatedUser` | boolean | Apakah ini pengguna simulasi |
+
+
+<span id="recommended-business-flows" data-sixmm-canonical-anchor="recommended-business-flows" aria-hidden="true"></span>
+
+## Alur Bisnis yang Direkomendasikan
+
+<span id="first-trading-entry" data-sixmm-canonical-anchor="first-trading-entry" aria-hidden="true"></span>
+
+### Entri Perdagangan Pertama
+
+```text
+1. User logs in to the partner site.
+2. Partner backend calls bind with agentUserId.
+3. Partner stores the agentUserId and platformUserId relationship.
+4. User clicks the trading entry.
+5. Redirect mode: call createEntryUrl and open webUrl in the browser.
+6. Embed mode: Trading Widget calls tokenProvider, and partner backend calls createEmbedToken.
+```
+
+<span id="deposit-into-6mm" data-sixmm-canonical-anchor="deposit-into-6mm" aria-hidden="true"></span>
+
+### Setor Ke 6MM
+
+```text
+1. Partner creates a unique agentOrderNo.
+2. Partner calls transfer(Direction.IN).
+3. If SUCCESS is returned, mark the local order as successful.
+4. If PROCESSING is returned, wait for webhook or poll queryOrder.
+5. If FAILED is returned or AgentApiException is thrown, handle it as failed.
+```
+
+<span id="withdraw-back-to-partner" data-sixmm-canonical-anchor="withdraw-back-to-partner" aria-hidden="true"></span>
+
+### Tarik Kembali Ke Mitra
+
+```text
+1. Partner creates a unique agentOrderNo.
+2. Fixed amount withdraw: call transfer(Direction.OUT).
+3. Full withdraw: call transferAllOut.
+4. Confirm the final result by orderStatus, webhook, or queryOrder.
+```
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Sumber dan panduan terkait
+
+- [Sumber resmi v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Ikhtisar kueri dan penomoran halaman](/id/sdk/agent-sdk/java/perpetual-queries)
+- [Dompet pendanaan](/id/sdk/agent-sdk/java/funding-wallet)
+- [Panduan peningkatan](/id/sdk/agent-sdk/java/upgrade)
+<span id="error-handling" data-sixmm-canonical-anchor="error-handling" aria-hidden="true"></span>
+
+## Penanganan Kesalahan
+
+Pengecualian SDK dibagi menjadi dua kategori:
+
+| Pengecualian | Skenario | Penanganan yang disarankan |
+| --- | --- | --- |
+| `AgentApiException` | HTTP status bukan 2xx, atau respons Agen `code != 0` | Baca `getHttpStatus()`, `getCode()`, dan `getResponseBody()` dan perlakukan itu sebagai kegagalan bisnis/API |
+| `AgentSdkException` | Kegagalan jaringan, serialisasi, konfigurasi, atau penandatanganan | Catat dan perlakukan itu sebagai pengecualian sistem |
+
+Contoh:
+
+```java
+import com.sixmm.agent.AgentApiException;
+import com.sixmm.agent.AgentSdkException;
+
+try {
+    TransferResponse resp = client.transfer(TransferRequest.fixed(
+            "AGT-ORDER-1001", "agent-user-001", Direction.IN, "USDT", "10.00"));
+    // Update the local order according to resp.orderStatus.
+} catch (AgentApiException e) {
+    // Business rejection or HTTP error.
+    log.warn("6mm agent api rejected request, httpStatus={}, code={}, body={}",
+            e.getHttpStatus(), e.getCode(), e.getResponseBody());
+} catch (AgentSdkException e) {
+    // Local SDK error or network error.
+    log.error("6mm agent sdk request failed", e);
+}
+```

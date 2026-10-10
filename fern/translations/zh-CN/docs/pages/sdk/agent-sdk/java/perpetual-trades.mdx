@@ -1,0 +1,104 @@
+---
+title: "成交明细"
+subtitle: "成交明细: Agent Java SDK v0.3.0 接入、示例、参数及响应说明。"
+slug: sdk/agent-sdk/java/perpetual-trades
+canonical-url: https://docs.6mm.com/zh-CN/sdk/agent-sdk/java/perpetual-trades
+---
+
+本文对应 **Agent Java SDK `v0.3.0`**、Java 8+ 与该标签的公开契约。示例在合作方后端运行；先按[快速开始](/zh-CN/sdk/agent-sdk/java/quick-start)初始化 `client`。
+
+<span data-sixmm-canonical-anchor="示例前提" aria-hidden="true"></span>
+
+## 示例前提
+
+Java 示例共用以下导入。按快速开始初始化 `client`，从已保存的绑定取得 `platformUserId`。示例用户和订单 ID 必须替换为实际持久化值。
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span data-sixmm-canonical-anchor="listperpetualtrades" aria-hidden="true"></span>
+
+## `listPerpetualTrades`
+
+请求模型: `PerpetualTradesRequest`.
+
+```java
+import com.sixmm.agent.model.PerpetualTradesRequest;
+import com.sixmm.agent.model.PerpetualResponse;
+import java.util.Collections;
+
+PerpetualTradesRequest request = new PerpetualTradesRequest();
+request.platformUserIds = Collections.singletonList("1188041528");
+request.limit = 100;
+request.symbol = "BTCUSDT";
+request.endTime = System.currentTimeMillis();
+request.startTime = request.endTime - 3_600_000L;
+PerpetualResponse response = client.listPerpetualTrades(request);
+System.out.println(response.data.items.size());
+System.out.println(response.data.hasMore);
+System.out.println(response.data.nextCursor);
+```
+
+<span data-sixmm-canonical-anchor="请求字段" aria-hidden="true"></span>
+
+### 请求字段
+
+| 字段 | Java 类型 | 必填 | 含义 |
+| --- | --- | --- | --- |
+| `platformUserIds` | `java.util.List<String>` | 条件必填 | 1～100 个不重复公开 ID；成交及条件委托必填。支持省略的查询使用直属玩家范围；[] 非法。 |
+| `symbol` | `String` | 否 | 可选交易对筛选。 |
+| `orderId` | `String` | 否 | 普通委托 ID，不是合作方资金划转单号。 |
+| `startTime` | `Long` | 否 | 包含起点，Unix 毫秒；使用固定 UTC 历史窗口。 |
+| `endTime` | `Long` | 否 | 不包含终点，Unix 毫秒。 |
+| `limit` | `Integer` | 否 | 默认 500，范围 1～1000。 |
+| `cursor` | `String` | 否 | 保持筛选条件，用 nextCursor 续页；hasMore=false 时结束。 |
+
+示例仅读取一页。必填条件、玩家范围、筛选语义、limit、cursor 与有限重试见[查询概览](/zh-CN/sdk/agent-sdk/java/perpetual-queries)。翻页保持全部筛选条件不变；不能把错误当作空结果。
+
+<span data-sixmm-canonical-anchor="成交明细" aria-hidden="true"></span>
+
+## 成交明细
+
+接口：`trades`。需显式 platformUserIds。
+
+| `data` 字段 | 类型 | 含义 |
+| --- | --- | --- |
+| `fillId` | string | 成交明细 ID，对应本记录 entityId |
+| `tradeId` | string | 成交关联的撮合交易 ID；不代替明细 ID |
+| `orderId` | string | 该明细所属普通委托 ID |
+| `positionId` | string | 关联持仓 ID |
+| `symbol` | string | 交易对 |
+| `side` | string | 本玩家的买卖方向 BUY / SELL |
+| `roleType` | string | 本玩家的成交角色 MAKER / TAKER |
+| `positionSide` | string | 持仓方向，按实际值 LONG / SHORT / BOTH 等解释 |
+| `price` | string | 本次成交价 |
+| `quantity` | string | 本次成交数量，不是原委托总数量 |
+| `tradeValue` | string | 本次成交名义价值，来源为成交 notional |
+| `handlingFee` | string | 本次成交手续费，保留来源符号和精度，不自行取绝对值 |
+| `realizedPnl` | string | 本次成交对应的已实现盈亏；不是当前持仓实时浮盈亏 |
+| `tradedAt` | integer | 成交时间，毫秒；时间筛选使用该字段 |
+
+一笔委托可能有多条成交，应以明细为单位保存。不要将不同玩家/成交角色的记录按 tradeId 合并后丢弃其明细身份。
+
+
+<span data-sixmm-canonical-anchor="响应结构示例" aria-hidden="true"></span>
+
+## 响应结构示例
+
+以下为合法空页的结构示例，不代表一笔已成交记录。有记录时，`items[].data` 的字段按上面的资源字段表解释。
+
+```json
+{"code":0,"message":"success","data":{"items":[],"nextCursor":"","hasMore":false}}
+```
+
+<span data-sixmm-canonical-anchor="来源与相关指南" aria-hidden="true"></span>
+
+## 来源与相关指南
+
+- [官方 v0.3.0 源码](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [合约查询与分页](/zh-CN/sdk/agent-sdk/java/perpetual-queries)
+- [Funding 钱包](/zh-CN/sdk/agent-sdk/java/funding-wallet)
+- [升级指南](/zh-CN/sdk/agent-sdk/java/upgrade)

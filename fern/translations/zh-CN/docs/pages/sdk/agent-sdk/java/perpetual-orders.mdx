@@ -1,0 +1,186 @@
+---
+title: "当前委托与委托历史"
+subtitle: "当前委托与委托历史: Agent Java SDK v0.3.0 接入、示例、参数及响应说明。"
+slug: sdk/agent-sdk/java/perpetual-orders
+canonical-url: https://docs.6mm.com/zh-CN/sdk/agent-sdk/java/perpetual-orders
+---
+
+本文对应 **Agent Java SDK `v0.3.0`**、Java 8+ 与该标签的公开契约。示例在合作方后端运行；先按[快速开始](/zh-CN/sdk/agent-sdk/java/quick-start)初始化 `client`。
+
+<span data-sixmm-canonical-anchor="示例前提" aria-hidden="true"></span>
+
+## 示例前提
+
+Java 示例共用以下导入。按快速开始初始化 `client`，从已保存的绑定取得 `platformUserId`。示例用户和订单 ID 必须替换为实际持久化值。
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span data-sixmm-canonical-anchor="listcurrentperpetualorders" aria-hidden="true"></span>
+
+## `listCurrentPerpetualOrders`
+
+请求模型: `CurrentPerpetualOrdersRequest`.
+
+```java
+import com.sixmm.agent.model.CurrentPerpetualOrdersRequest;
+import com.sixmm.agent.model.PerpetualResponse;
+import java.util.Collections;
+
+CurrentPerpetualOrdersRequest request = new CurrentPerpetualOrdersRequest();
+request.platformUserIds = Collections.singletonList("1188041528");
+request.limit = 100;
+request.orderCategory = "NORMAL";
+request.symbol = "BTCUSDT";
+PerpetualResponse response = client.listCurrentPerpetualOrders(request);
+System.out.println(response.data.items.size());
+System.out.println(response.data.hasMore);
+System.out.println(response.data.nextCursor);
+```
+
+<span data-sixmm-canonical-anchor="请求字段" aria-hidden="true"></span>
+
+### 请求字段
+
+| 字段 | Java 类型 | 必填 | 含义 |
+| --- | --- | --- | --- |
+| `orderCategory` | `String` | 是 | NORMAL 或 CONDITIONAL；条件委托需显式玩家列表。 |
+| `platformUserIds` | `java.util.List<String>` | 条件必填 | 1～100 个不重复公开 ID；成交及条件委托必填。支持省略的查询使用直属玩家范围；[] 非法。 |
+| `symbol` | `String` | 否 | 可选交易对筛选。 |
+| `limit` | `Integer` | 否 | 默认 500，范围 1～1000。 |
+| `cursor` | `String` | 否 | 保持筛选条件，用 nextCursor 续页；hasMore=false 时结束。 |
+
+示例仅读取一页。必填条件、玩家范围、筛选语义、limit、cursor 与有限重试见[查询概览](/zh-CN/sdk/agent-sdk/java/perpetual-queries)。翻页保持全部筛选条件不变；不能把错误当作空结果。
+
+<span data-sixmm-canonical-anchor="listperpetualorderhistory" aria-hidden="true"></span>
+
+## `listPerpetualOrderHistory`
+
+请求模型: `PerpetualOrderHistoryRequest`.
+
+```java
+import com.sixmm.agent.model.PerpetualOrderHistoryRequest;
+import com.sixmm.agent.model.PerpetualResponse;
+import java.util.Collections;
+
+PerpetualOrderHistoryRequest request = new PerpetualOrderHistoryRequest();
+request.platformUserIds = Collections.singletonList("1188041528");
+request.limit = 100;
+request.orderCategory = "NORMAL";
+request.symbol = "BTCUSDT";
+request.endTime = System.currentTimeMillis();
+request.startTime = request.endTime - 3_600_000L;
+PerpetualResponse response = client.listPerpetualOrderHistory(request);
+System.out.println(response.data.items.size());
+System.out.println(response.data.hasMore);
+System.out.println(response.data.nextCursor);
+```
+
+<span data-sixmm-canonical-anchor="请求字段-1" aria-hidden="true"></span>
+
+### 请求字段
+
+| 字段 | Java 类型 | 必填 | 含义 |
+| --- | --- | --- | --- |
+| `orderCategory` | `String` | 是 | NORMAL 或 CONDITIONAL；条件委托需显式玩家列表。 |
+| `platformUserIds` | `java.util.List<String>` | 条件必填 | 1～100 个不重复公开 ID；成交及条件委托必填。支持省略的查询使用直属玩家范围；[] 非法。 |
+| `symbol` | `String` | 否 | 可选交易对筛选。 |
+| `orderId` | `String` | 否 | 普通委托 ID，不是合作方资金划转单号。 |
+| `conditionId` | `String` | 否 | 条件委托 ID，不能与 orderId 混用。 |
+| `clientOrderId` | `String` | 否 | 交易客户端单号，不是 agentOrderNo。 |
+| `side` | `String` | 否 | BUY / SELL 筛选。 |
+| `status` | `String` | 否 | 使用该资源的状态枚举，见状态参考。 |
+| `startTime` | `Long` | 否 | 包含起点，Unix 毫秒；使用固定 UTC 历史窗口。 |
+| `endTime` | `Long` | 否 | 不包含终点，Unix 毫秒。 |
+| `limit` | `Integer` | 否 | 默认 500，范围 1～1000。 |
+| `cursor` | `String` | 否 | 保持筛选条件，用 nextCursor 续页；hasMore=false 时结束。 |
+
+示例仅读取一页。必填条件、玩家范围、筛选语义、limit、cursor 与有限重试见[查询概览](/zh-CN/sdk/agent-sdk/java/perpetual-queries)。翻页保持全部筛选条件不变；不能把错误当作空结果。
+
+<span data-sixmm-canonical-anchor="普通委托当前与历史" aria-hidden="true"></span>
+
+## 普通委托：当前与历史
+
+当前：`orders/current` + `orderCategory=NORMAL`；历史：`orders/history` + `orderCategory=NORMAL`。
+
+| `data` 字段 | 类型 | 含义与适用范围 |
+| --- | --- | --- |
+| `symbol` | string | 交易对，如 BTCUSDT |
+| `orderId` | string | 平台普通委托 ID |
+| `orderCategory` | string | 固定 NORMAL |
+| `clientOrderId` | string | 交易订单来源提供的客户端单号；与商户资金划转 agentOrderNo 不是同一字段 |
+| `orderType` | string | 委托类型，例如 LIMIT、MARKET；以实际枚举值为准 |
+| `side` | string | 买卖方向 BUY / SELL |
+| `status` | string | 普通委托状态，见相关指南 |
+| `timeInForce` | string | 有效期/成交执行策略，例如 GTC、IOC、FOK；按实际值解释 |
+| `price` | string | 委托价格；未提供价格时可能省略，不自行补市场成交价 |
+| `quantity` | string | 原始委托数量 |
+| `filledQuantity` | string | 已成交数量 |
+| `remainingQuantity` | string | 未成交数量；当前查询取 quantity − filledQuantity，历史查询取历史记录值 |
+| `avgFilledPrice` | string | 已成交部分的平均成交价；未成交时可能没有值 |
+| `reduceOnly` | boolean | 是否仅减少持仓 |
+| `closeOnly` | boolean | 是否仅用于平仓 |
+| `makerOnly` | boolean | 是否仅作为 Maker 执行 |
+| `leverage` | integer | 杠杆倍数；**历史普通委托**有来源，当前普通委托不补造此值 |
+| `marginMode` | string | 保证金模式；**历史普通委托**目前返回数字枚举的字符串，如 "1"、"2"；当前普通委托不提供 |
+| `createdAt` | integer | 委托创建时间，毫秒；历史委托时间筛选使用该字段 |
+| `updatedAt` | integer | 委托记录更新时间，毫秒 |
+
+委托历史包括已终结的普通委托，不能仅凭接口名称将每条记录当成已完全成交。当前委托页是当前状态查询，不是委托事件流。
+
+
+<span data-sixmm-canonical-anchor="条件委托当前与历史" aria-hidden="true"></span>
+
+## 条件委托：当前与历史
+
+当前：`orders/current` + `orderCategory=CONDITIONAL`；历史：`orders/history` + `orderCategory=CONDITIONAL`。两者均需显式 platformUserIds。
+
+| `data` 字段 | 类型 | 含义 |
+| --- | --- | --- |
+| `symbol` | string | 交易对 |
+| `conditionId` | string | 条件委托 ID，与普通 orderId 独立 |
+| `orderCategory` | string | 固定 CONDITIONAL |
+| `generatedOrderId` | string | 触发生成的普通委托 ID；未生成时可能省略 |
+| `clientOrderId` | string | 条件委托的客户端单号，存在时输出 |
+| `side` | string | BUY / SELL |
+| `orderType` | string | 触发后委托类型，按实际值解释 |
+| `triggerType` | string | 触发规则类型，按实际来源枚举解释 |
+| `workingType` | string | 触发价格的工作类型/价格来源，按实际枚举解释 |
+| `timeInForce` | string | 触发后委托的有效期/执行策略 |
+| `price` | string | 触发后委托价格，来源有值时输出 |
+| `quantity` | string | 条件委托数量 |
+| `triggerPrice` | string | 触发价格 |
+| `reduceOnly` | boolean | 是否仅减仓 |
+| `closePosition` | boolean | 是否采用全仓位平仓语义，不能与 closeOnly 混为同一字段 |
+| `leverage` | integer | 杠杆倍数，非零时输出 |
+| `marginMode` | string | 此类返回 CROSS / ISOLATED，区别于普通历史委托/持仓的数字字符串 |
+| `status` | string | 条件单触发状态，见相关指南 |
+| `triggerStatus` | string | 当前实现与 status 使用相同的条件单状态值 |
+| `createdAt` | integer | 条件委托创建时间，毫秒；历史条件单按此时间筛选 |
+| `updatedAt` | integer | 更新时间，有值时输出，毫秒 |
+| `deletedAt` | integer | 删除标记时间，有值时输出，毫秒；不是统一的成交/取消时间字段 |
+
+条件单未提供普通委托的 filledQuantity、remainingQuantity、avgFilledPrice。触发后如需普通单成交情况，通过 generatedOrderId 查询普通委托/成交，不从条件单 status 推断成交量。
+
+
+<span data-sixmm-canonical-anchor="响应结构示例" aria-hidden="true"></span>
+
+## 响应结构示例
+
+以下为合法空页的结构示例，不代表一笔已成交记录。有记录时，`items[].data` 的字段按上面的资源字段表解释。
+
+```json
+{"code":0,"message":"success","data":{"items":[],"nextCursor":"","hasMore":false}}
+```
+
+<span data-sixmm-canonical-anchor="来源与相关指南" aria-hidden="true"></span>
+
+## 来源与相关指南
+
+- [官方 v0.3.0 源码](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [合约查询与分页](/zh-CN/sdk/agent-sdk/java/perpetual-queries)
+- [Funding 钱包](/zh-CN/sdk/agent-sdk/java/funding-wallet)
+- [升级指南](/zh-CN/sdk/agent-sdk/java/upgrade)

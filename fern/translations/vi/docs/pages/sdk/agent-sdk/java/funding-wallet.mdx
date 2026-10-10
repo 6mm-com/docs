@@ -1,0 +1,165 @@
+---
+title: "Ví cấp vốn"
+subtitle: "Ví cấp vốn: Agent Java SDK tích hợp v0.3.0, ví dụ, tham số và ngữ nghĩa phản hồi."
+slug: sdk/agent-sdk/java/funding-wallet
+canonical-url: https://docs.6mm.com/vi/sdk/agent-sdk/java/funding-wallet
+---
+
+Hướng dẫn này hướng tới **Agent Java SDK `v0.3.0`**, Java 8+ và hợp đồng công khai được gắn thẻ. Các ví dụ chạy trong phần phụ trợ của đối tác sau khi khởi tạo `client` trong [Bắt đầu nhanh](/vi/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## Điều kiện tiên quyết mẫu
+
+Đoạn mã Java chia sẻ những nội dung nhập này. Khởi tạo `client` bằng cách sử dụng Bắt đầu nhanh và lấy `platformUserId` từ liên kết đã lưu. ID người dùng/đơn đặt hàng mẫu phải được thay thế bằng các giá trị cố định của riêng bạn.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span id="wallet-queries-and-transfers" data-sixmm-canonical-anchor="wallet-queries-and-transfers" aria-hidden="true"></span>
+
+## Truy vấn và chuyển khoản ví
+
+<span id="distinguish-the-three-wallets" data-sixmm-canonical-anchor="distinguish-the-three-wallets" aria-hidden="true"></span>
+
+### Phân biệt ba ví
+
+| cái ví | Nguồn cân bằng | sử dụng |
+| --- | --- | --- |
+| Ví người dùng riêng của người bán | Hệ thống kế toán riêng của người bán | Số dư khả dụng của người dùng ở phía người bán |
+| Tài trợ nền tảng | `queryUserAssets` của `funding` | Quỹ giao dịch thứ hai và chuyển giao tài trợ/hợp đồng lẫn nhau |
+| Hợp đồng nền tảng | Trường tài sản hợp đồng của `queryUserAssets` | Ký quỹ hợp đồng vĩnh cửu và số dư có thể chuyển nhượng |
+
+`queryAccount` Truy vấn tài khoản ký quỹ của nền tảng người bán, không phải ví của người dùng người bán. Giao diện này không có tham số `environment` và không thể truy vấn dưới dạng nội dung người dùng mô phỏng.
+
+Truy vấn hai ví nền tảng của người dùng được mô phỏng:
+
+```java
+QueryUserAssetsResponse assets = client.queryUserAssets(
+        QueryUserAssetsRequest.of(platformUserId)
+                .withFunding()
+                .withEnvironment(ExecutionEnvironment.SIMULATED));
+```
+
+Giao diện: `POST /v1/agent/query-user-assets`. Chỉ yêu cầu cấp vốn khi `includeFunding=true`; ngữ nghĩa truy vấn nội dung hợp đồng ban đầu được sử dụng theo mặc định.
+
+| trường phản hồi | nghĩa |
+| --- | --- |
+| `walletBalance`, `availableBalance`, `frozenMargin`, `usedMargin`, `isolatedMargin` | Số tiền liên quan đến ví hợp đồng |
+| `funding.assetCode` | Hiện tại USDT |
+| `funding.availableAmount`, `heldAmount`, `totalAmount` | Nguồn tài trợ hiện có, đã sử dụng và tổng số tiền |
+| `funding.materialized` | Liệu tài khoản Tài trợ đã được hiện thực hóa chưa? |
+| `environment` | Trường này được lặp lại khi môi trường được truyền một cách rõ ràng; các yêu cầu cũ bỏ qua môi trường sẽ không trả về trường này. |
+| `isSimulatedUser` | Phân loại tài khoản; không thể thay thế việc lựa chọn môi trường giao dịch |
+
+Số tiền được xử lý dưới dạng chuỗi hoặc `BigDecimal`, không phải `float`/`double`.
+
+<span id="funding-transfer-directions" data-sixmm-canonical-anchor="funding-transfer-directions" aria-hidden="true"></span>
+
+### Hướng chuyển tiền tài trợ
+
+Tạo: `POST /v1/agent/wallet-transfer`, SDK `walletTransfer`.
+
+| `direction` | Dòng vốn | `transferAll` |
+| --- | --- | --- |
+| `PARTNER_TO_FUNDING` | Người bán → Tài trợ cho nền tảng | Chỉ số tiền cố định |
+| `FUNDING_TO_PARTNER` | Tài trợ cho nền tảng → Người bán | Chỉ số tiền cố định |
+| `FUNDING_TO_CONTRACT` | Nền tảng môi trường tương tự Tài trợ → Hợp đồng | Hỗ trợ số tiền cố định hoặc tất cả các khoản tiền có thể rút |
+| `CONTRACT_TO_FUNDING` | Nền tảng tương tự môi trường Hợp đồng → Tài trợ | Hỗ trợ số tiền cố định hoặc tất cả các khoản tiền có thể rút |
+
+Loại tiền hiện tại chỉ hỗ trợ USDT. Số tiền cố định phải là một chuỗi dương có tối đa 8 chữ số thập phân và không được sử dụng ký hiệu khoa học. Khi `transferAll=true`, hãy bỏ qua `amount` và ghi lại làm phản hồi cuối cùng `amount`; "tất cả" chỉ bao gồm số tiền có thể rút được.
+
+Ví dụ: Người bán chuyển 10 USDT vào Tài trợ mô phỏng. Trước tiên, hãy lưu đơn đặt hàng và môi trường kinh doanh trong hệ thống người bán, sau đó gửi yêu cầu:
+
+```java
+String fundingOrderNo = "SIM-FUNDING-20261010-000001";
+WalletTransferResponse transfer = client.walletTransfer(
+        WalletTransferRequest.of(fundingOrderNo, "merchant-user-001",
+                "PARTNER_TO_FUNDING", "10.00000000", false)
+                .withEnvironment(ExecutionEnvironment.SIMULATED));
+```
+
+Kinh phí Chuyển tất cả số tiền có thể được chuyển sang Hợp đồng mô phỏng:
+
+```java
+WalletTransferResponse move = client.walletTransfer(
+        WalletTransferRequest.of("SIM-F2C-20261010-000001", "merchant-user-001",
+                "FUNDING_TO_CONTRACT", null, true)
+                .withEnvironment(ExecutionEnvironment.SIMULATED));
+```
+
+Thao tác tương tự phải tiếp tục sử dụng `agentOrderNo` ban đầu; các hoạt động khác nhau và môi trường khác nhau sử dụng số thứ tự khác nhau. Việc thay đổi số lượng, người dùng, hướng hoặc môi trường có cùng số thứ tự sẽ bị từ chối. Việc chuyển tiền/chuyển khoản theo hợp đồng chỉ có thể được thực hiện trong cùng một môi trường và tiền mô phỏng không thể được chuyển sang tiền thật.
+
+<span id="result-confirmation-and-unknown-result-recovery" data-sixmm-canonical-anchor="result-confirmation-and-unknown-result-recovery" aria-hidden="true"></span>
+
+### Xác nhận kết quả và phục hồi kết quả chưa biết
+
+Phản hồi cấp vốn được biểu thị bằng `status`, `SUCCESS`, `PROCESSING` hoặc `FAILED` và được trả về `orderNo`, `direction`, `currency`, `amount`, `resultCode`, v.v. `code=0` chỉ có nghĩa là yêu cầu được xử lý thành công và bạn cần tiếp tục phán xét `status`.
+
+| kết quả | Xử lý thương gia |
+| --- | --- |
+| `SUCCESS` | Hoàn thành xử lý kế toán địa phương dựa trên số tiền thực tế |
+| `PROCESSING` | Giữ nó ở địa phương để xác nhận và kiểm tra đơn hàng ban đầu |
+| HTTP Hết thời gian chờ, lỗi mạng, không thể phân tích cú pháp kết quả | Kết quả được coi là không xác định và thứ tự ban đầu được truy vấn; nó không thể được xác định trực tiếp là lỗi hoặc tạo đơn hàng mới và thử lại. |
+| Đã xác định `FAILED` | Giải phóng dự trữ cục bộ theo kết quả thất bại rõ ràng; tạo một đơn đặt hàng kinh doanh mới khi công việc kinh doanh cần được bắt đầu lại |
+
+Truy vấn tài trợ sử dụng giao diện chuyên dụng `POST /v1/agent/wallet-transfer-status`:
+
+```java
+WalletTransferResponse recovered = client.queryWalletTransfer(
+        WalletTransferQueryRequest.of(fundingOrderNo)
+                .withEnvironment(ExecutionEnvironment.SIMULATED));
+```
+
+Sử dụng điểm cuối chuyên dụng này để khôi phục hoạt động Cấp vốn ban đầu; `queryOrder` không thể thay thế nó. Lưu môi trường ban đầu và chuyển nó một cách rõ ràng trong quá trình khôi phục. Nếu `environment` bị bỏ qua khỏi `wallet-transfer-status`, máy chủ sẽ sử dụng môi trường được lưu trên đơn hàng ban đầu, bao gồm cả các đơn hàng mô phỏng. Một môi trường xung đột rõ ràng trả về `102002` (`order environment mismatch`). Khi người gọi bỏ qua môi trường, phản hồi cũng bỏ qua `environment`; điều này không có nghĩa là lệnh ban đầu là lệnh sản xuất.
+
+Tiền gửi và rút tiền địa phương của người bán không có giá trị; các lệnh và số dư liên tục được bảo lưu trước khi bắt đầu và được bảo lưu để xác nhận khi chưa biết kết quả. Truy cập nguồn tài trợ sử dụng truy vấn chuyên dụng để xác nhận trạng thái cuối cùng; đừng cho rằng các phương thức chuyển khoản hợp đồng cũ Webhook hoặc đảo ngược sẽ tự động được áp dụng cho Tài trợ.
+
+<span id="existing-contract-transfer-flow" data-sixmm-canonical-anchor="existing-contract-transfer-flow" aria-hidden="true"></span>
+
+### Luồng chuyển nhượng hợp đồng hiện tại
+
+`transfer`, `transferAllOut`, `reverse`, `queryOrder`, `listOrders` tiếp tục xử lý quá trình chuyển nhượng hợp đồng ban đầu. `queryOrder` đang truy vấn lệnh chuyển tiền, `listOrders` là danh sách đối chiếu chuyển tiền; thay vào đó, sáu loại truy vấn trong phần tiếp theo được sử dụng cho các lệnh giao dịch vĩnh viễn.
+
+Phản hồi tài trợ ban đầu sử dụng `orderStatus`; phản hồi Tài trợ sử dụng `status`, không trộn lẫn chúng. Quá trình chuyển ban đầu Webhook được xác minh bằng `X-Agent-Timestamp`, `X-Agent-Nonce`, `X-Agent-Signature` và văn bản chữ ký ban đầu là `timestamp + nonce + rawBody`; nội dung yêu cầu ban đầu được xác minh trước tiên, sau đó được giải tuần tự hóa và không có giá trị. Thông báo môi trường mô phỏng rõ ràng chứa `environment=SIMULATED`, thông báo sản xuất vẫn tương thích với các trường cũ. Số lượng, số đơn hàng, trạng thái và môi trường cần phải được kiểm tra theo đơn đặt hàng kinh doanh địa phương.
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Nguồn và hướng dẫn liên quan
+
+- [Nguồn v0.3.0 chính thức](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Tổng quan về truy vấn và phân trang](/vi/sdk/agent-sdk/java/perpetual-queries)
+- [Ví tiền tài trợ](/vi/sdk/agent-sdk/java/funding-wallet)
+- [Hướng dẫn nâng cấp](/vi/sdk/agent-sdk/java/upgrade)
+
+<span id="funding-request-fields" data-sixmm-canonical-anchor="funding-request-fields" aria-hidden="true"></span>
+
+## Các trường yêu cầu tài trợ
+
+| Cánh đồng | Yêu cầu | Nghĩa |
+| --- | --- | --- |
+| `agentOrderNo` | Đúng | Số đơn đặt hàng đối tác duy nhất trên toàn cầu; vẫn tồn tại trước khi gửi. |
+| `agentUserId / platformUserId` | Một | Xác định người dùng bị ràng buộc; nếu cả hai được cung cấp thì chúng phải khớp nhau. |
+| `direction` | Đúng | Một trong bốn hướng được ghi ở trên. |
+| `currency` | Mặc định USDT | Chỉ USDT được hỗ trợ. |
+| `transferAll` | Mặc định sai | Chỉ hỗ trợ chuyển khoản nội bộ Tài trợ/Hợp đồng là đúng. |
+| `amount` | có điều kiện | Chuỗi thập phân dương cho một lần chuyển cố định; bỏ qua transferAll=true. |
+| `environment` | Không bắt buộc | Sản xuất khi bị bỏ qua để chuyển giao mới; SIMULATED chọn tiền mô phỏng. |
+
+<span id="funding-response-fields" data-sixmm-canonical-anchor="funding-response-fields" aria-hidden="true"></span>
+
+## Các trường phản hồi tài trợ
+
+| Cánh đồng | Nghĩa |
+| --- | --- |
+| `orderNo` | Mã định danh hoạt động được trả về; giữ lại cùng với số đơn đặt hàng ban đầu của đối tác. |
+| `status` | SUCCESS / PROCESSING / FAILED; quyết định việc hoàn thành công việc kinh doanh. |
+| `direction / currency` | Đã xác nhận hướng chuyển và tài sản. |
+| `amount` | Số tiền thực tế được chuyển dưới dạng chuỗi. |
+| `transferAll` | Liệu hoạt động này có yêu cầu tất cả số tiền có thể rút được hay không. |
+| `agentUserId / platformUserId` | Trả lại danh tính người dùng; so sánh với đơn hàng đã lưu. |
+| `resultCode` | Chi tiết kết quả hoạt động; giữ lại để hòa giải và hỗ trợ. |
+| `environment` | Được vang vọng khi người gọi cung cấp nó một cách rõ ràng; sự vắng mặt không phải là bằng chứng sản xuất cho truy vấn trạng thái đơn hàng gốc. |

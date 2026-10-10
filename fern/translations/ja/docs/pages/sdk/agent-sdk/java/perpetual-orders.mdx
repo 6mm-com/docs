@@ -1,0 +1,186 @@
+---
+title: "永久注文"
+subtitle: "永久注文: Agent Java SDK v0.3.0 の統合、例、パラメーター、および応答セマンティクス。"
+slug: sdk/agent-sdk/java/perpetual-orders
+canonical-url: https://docs.6mm.com/ja/sdk/agent-sdk/java/perpetual-orders
+---
+
+このガイドは、**Agent Java SDK `v0.3.0`**、Java 8 以降、およびタグ付けされたパブリック コントラクトを対象としています。例は `client` を初期化した後にパートナー バックエンドで実行されます。 [クイックスタート](/ja/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## 前提条件の例
+
+Java スニペットはこれらのインポートを共有します。クイック スタートを使用して `client` を初期化し、保存されたバインディングから `platformUserId` を取得します。ユーザー/オーダー ID の例は、独自の永続化された値に置き換える必要があります。
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span data-sixmm-canonical-anchor="listcurrentperpetualorders" aria-hidden="true"></span>
+
+## `listCurrentPerpetualOrders`
+
+リクエストモデル: `CurrentPerpetualOrdersRequest`。
+
+```java
+import com.sixmm.agent.model.CurrentPerpetualOrdersRequest;
+import com.sixmm.agent.model.PerpetualResponse;
+import java.util.Collections;
+
+CurrentPerpetualOrdersRequest request = new CurrentPerpetualOrdersRequest();
+request.platformUserIds = Collections.singletonList("1188041528");
+request.limit = 100;
+request.orderCategory = "NORMAL";
+request.symbol = "BTCUSDT";
+PerpetualResponse response = client.listCurrentPerpetualOrders(request);
+System.out.println(response.data.items.size());
+System.out.println(response.data.hasMore);
+System.out.println(response.data.nextCursor);
+```
+
+<span id="request-fields" data-sixmm-canonical-anchor="request-fields" aria-hidden="true"></span>
+
+### リクエストフィールド
+
+| 分野 | Java タイプ | 必須 | 意味 |
+| --- | --- | --- | --- |
+| `orderCategory` | `String` | はい | NORMAL または CONDITIONAL;条件付きクエリには明示的なユーザーが必要です。 |
+| `platformUserIds` | `java.util.List<String>` | 条件付き | 1 ～ 100 個の一意のパブリック ID。約定および条件付き注文に必要です。ダイレクトプレイヤースコープでサポートされているクエリを省略します。 []は無効です。 |
+| `symbol` | `String` | いいえ | オプションの取引ペアフィルター。 |
+| `limit` | `Integer` | いいえ | デフォルトは 500。 1 ～ 1000。 |
+| `cursor` | `String` | いいえ | 返された nextCursor をフィルターを変更せずに使用します。 hasMore が false の場合に停止します。 |
+
+この例では 1 ページを読み取ります。必須フィールド、プレーヤーのスコープ、フィルター セマンティクス、制限、カーソル、制限された再試行については、次のとおりです。 [クエリの概要](/ja/sdk/agent-sdk/java/perpetual-queries)。ページング中はすべてのフィルターを変更しないでください。エラーを空の結果として解釈しないでください。
+
+<span data-sixmm-canonical-anchor="listperpetualorderhistory" aria-hidden="true"></span>
+
+## `listPerpetualOrderHistory`
+
+リクエストモデル: `PerpetualOrderHistoryRequest`。
+
+```java
+import com.sixmm.agent.model.PerpetualOrderHistoryRequest;
+import com.sixmm.agent.model.PerpetualResponse;
+import java.util.Collections;
+
+PerpetualOrderHistoryRequest request = new PerpetualOrderHistoryRequest();
+request.platformUserIds = Collections.singletonList("1188041528");
+request.limit = 100;
+request.orderCategory = "NORMAL";
+request.symbol = "BTCUSDT";
+request.endTime = System.currentTimeMillis();
+request.startTime = request.endTime - 3_600_000L;
+PerpetualResponse response = client.listPerpetualOrderHistory(request);
+System.out.println(response.data.items.size());
+System.out.println(response.data.hasMore);
+System.out.println(response.data.nextCursor);
+```
+
+<span id="request-fields-1" data-sixmm-canonical-anchor="request-fields-1" aria-hidden="true"></span>
+
+### リクエストフィールド
+
+| 分野 | Java タイプ | 必須 | 意味 |
+| --- | --- | --- | --- |
+| `orderCategory` | `String` | はい | NORMAL または CONDITIONAL;条件付きクエリには明示的なユーザーが必要です。 |
+| `platformUserIds` | `java.util.List<String>` | 条件付き | 1 ～ 100 個の一意のパブリック ID。約定および条件付き注文に必要です。ダイレクトプレイヤースコープでサポートされているクエリを省略します。 []は無効です。 |
+| `symbol` | `String` | いいえ | オプションの取引ペアフィルター。 |
+| `orderId` | `String` | いいえ | 通常の注文ID。パートナー転送注文番号ではありません。 |
+| `conditionId` | `String` | いいえ | 条件付き注文 ID。 orderId と混合しないでください。 |
+| `clientOrderId` | `String` | いいえ | agentOrderNo ではなく、取引クライアントの注文参照。 |
+| `side` | `String` | いいえ | BUY / SELL フィルター。 |
+| `status` | `String` | いいえ | リソース固有のステータス。ステータスリファレンスを参照してください。 |
+| `startTime` | `Long` | いいえ | Unix ミリ秒を含みます。固定の UTC 履歴ウィンドウを使用します。 |
+| `endTime` | `Long` | いいえ | 排他的な Unix ミリ秒。 |
+| `limit` | `Integer` | いいえ | デフォルトは 500。 1 ～ 1000。 |
+| `cursor` | `String` | いいえ | 返された nextCursor をフィルターを変更せずに使用します。 hasMore が false の場合に停止します。 |
+
+この例では 1 ページを読み取ります。必須フィールド、プレーヤーのスコープ、フィルター セマンティクス、制限、カーソル、制限された再試行については、次のとおりです。 [クエリの概要](/ja/sdk/agent-sdk/java/perpetual-queries)。ページング中はすべてのフィルターを変更しないでください。エラーを空の結果として解釈しないでください。
+
+<span id="ordinary-delegation-current-and-history" data-sixmm-canonical-anchor="ordinary-delegation-current-and-history" aria-hidden="true"></span>
+
+## 通常の注文：現在と履歴
+
+現在: `orders/current` + `orderCategory=NORMAL`;履歴: `orders/history` + `orderCategory=NORMAL`。
+
+| `data` フィールド | タイプ | 意味と適用範囲 |
+| --- | --- | --- |
+| `symbol` | string | BTCUSDT などの取引ペア |
+| `orderId` | string | プラットフォーム通常注文ID |
+| `orderCategory` | string | NORMALを修正しました |
+| `clientOrderId` | string | トランザクション注文ソースによって提供されるクライアント注文番号。販売者の資金移動 agentOrderNo と同じフィールドではありません |
+| `orderType` | string | デリゲートの種類 (LIMIT、MARKET など)。実際の列挙値が優先されます |
+| `side` | string | 売買方向 BUY / SELL |
+| `status` | string | 通常の注文ステータス。クエリの概要を参照してください。 |
+| `timeInForce` | string | 有効期間/取引実行戦略。GTC、IOC、FOK など。実際の値に従って解釈される |
+| `price` | string | 委託価格；価格の提示がない場合は省略することができ、市場取引価格を自ら補充することはありません。 |
+| `quantity` | string | 元の注文数量 |
+| `filledQuantity` | string | 取引数量 |
+| `remainingQuantity` | string | 未取引数量。現在のクエリは数量 − filledQuantity を受け取り、履歴クエリは履歴レコードの値を受け取ります。 |
+| `avgFilledPrice` | string | 完成した部品の平均取引価格。未完成だと価値がないかもしれない |
+| `reduceOnly` | boolean | ポジションだけを減らすかどうか |
+| `closeOnly` | boolean | ポジションを決済するためだけに使用されるかどうか |
+| `makerOnly` | boolean | Makerとしてのみ実行するかどうか |
+| `leverage` | integer | 複数を活用する。 **過去の通常順序**にはソースがあり、現在の通常順序はこの値を作成しません。 |
+| `marginMode` | string | マージンモード。 **歴史的通常順序** は現在、「1」、「2」などの数値列挙文字列を返します。現在の通常の注文は提供されません |
+| `createdAt` | integer | 注文作成時間 (ミリ秒)。このフィールドを使用して過去の注文時間をフィルタリングします |
+| `updatedAt` | integer | デリゲート レコードの更新時間 (ミリ秒) |
+
+注文履歴には終了した通常注文も含まれます。インターフェイス名だけでは、各レコードが完全に完了していると見なすことはできません。現在の注文ページは現在のステータスのクエリであり、注文イベント ストリームではありません。
+
+
+<span id="conditional-delegation-current-and-history" data-sixmm-canonical-anchor="conditional-delegation-current-and-history" aria-hidden="true"></span>
+
+## 条件付き注文: 現在および履歴
+
+現在: `orders/current` + `orderCategory=CONDITIONAL`;履歴: `orders/history` + `orderCategory=CONDITIONAL`。どちらも明示的な platformUserIds を必要とします。
+
+| `data` フィールド | タイプ | 意味 |
+| --- | --- | --- |
+| `symbol` | string | 取引ペア |
+| `conditionId` | string | 通常の orderId とは独立した条件付き注文 ID |
+| `orderCategory` | string | CONDITIONALを修正しました |
+| `generatedOrderId` | string | トリガー後に生成される通常の注文 ID。生成されない場合は省略できます |
+| `clientOrderId` | string | 条件付き注文のクライアント注文数。存在する場合は出力されます。 |
+| `side` | string | BUY / SELL |
+| `orderType` | string | 実際の値に従って解釈されるポストトリガー注文タイプ |
+| `triggerType` | string | 実際のソース列挙によって説明されるトリガー ルール タイプ |
+| `workingType` | string | 実際の列挙として解釈される、価格をトリガーするジョブ タイプ/価格ソース |
+| `timeInForce` | string | トリガー後の注文の有効期間/約定戦略 |
+| `price` | string | トリガー後の注文価格、ソースに価値がある場合に出力されます |
+| `quantity` | string | 条件付き注文数量 |
+| `triggerPrice` | string | トリガー価格 |
+| `reduceOnly` | boolean | ポジションだけを減らすかどうか |
+| `closePosition` | boolean | 完全なポジションクローズセマンティクスを使用するかどうか。同じフィールドとして closeOnly と混同することはできません |
+| `leverage` | integer | 複数のレバレッジ、ゼロ以外の場合の出力 |
+| `marginMode` | string | このクラスは CROSS / ISOLATED を返します。これは、通常の過去の注文/ポジションとは異なる数値文字列です。 |
+| `status` | string | 条件付き単一トリガー状態。クエリの概要を参照してください。 |
+| `triggerStatus` | string | 現在の実装では、ステータスと同じ条件付きステータス値を使用します。 |
+| `createdAt` | integer | 条件付き注文の作成時間 (ミリ秒)。履歴条件はこの時間によってフィルタリングされます |
+| `updatedAt` | integer | 更新時間、値がある場合に出力、ミリ秒 |
+| `deletedAt` | integer | 削除マーク時間、値がある場合に出力、ミリ秒。統一されたトランザクション/キャンセル時間フィールドではありません |
+
+条件付き注文では、通常の注文の filledQuantity、remainingQuantity、avgFilledPrice は提供されません。トリガー後に通常の注文の取引ステータスが必要な場合は、generatedOrderId を通じて通常の注文/トランザクションをクエリし、条件付き注文ステータスから取引量を推測しないでください。
+
+
+<span id="example-response-envelope" data-sixmm-canonical-anchor="example-response-envelope" aria-hidden="true"></span>
+
+## 応答エンベロープの例
+
+これは空のページの例であり、完了した取引のサンプルではありません。上記のリソース固有のフィールド テーブルは、設定された `items[].data` について説明しています。
+
+```json
+{"code":0,"message":"success","data":{"items":[],"nextCursor":"","hasMore":false}}
+```
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## ソースおよび関連ガイド
+
+- [公式 v0.3.0 ソース](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [クエリの概要とページネーション](/ja/sdk/agent-sdk/java/perpetual-queries)
+- [資金調達ウォレット](/ja/sdk/agent-sdk/java/funding-wallet)
+- [アップグレードガイド](/ja/sdk/agent-sdk/java/upgrade)

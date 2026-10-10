@@ -1,99 +1,109 @@
 ---
-title: "Verificação de Assinatura em Webhook e Idempotência"
-subtitle: "Verifique os webhooks 6MM Agentes com o corpo bruto da solicitação e processe tentativas, timeouts e eventos repetidos sem ações comerciais duplicadas."
+title: "Webhook Verificação de assinatura e idempotência"
+subtitle: "Verifique o 6MM Agente webhooks com o corpo da solicitação bruta e processe novas tentativas, tempos limite e eventos repetidos sem ações de negócios duplicadas."
 slug: sdk/security/webhooks-idempotency
 canonical-url: https://docs.6mm.com/pt-BR/sdk/security/webhooks-idempotency
 ---
 
-Webhooks notificam um backend parceiro sobre mudanças assíncronas no estado do negócio. Como a entrega pode ser tentada novamente, todo receptor deve verificar a assinatura antes de analisar dados confiáveis e deve processar o evento de forma idempotente.
+Webhooks notificar um back-end de parceiro sobre alterações assíncronas no estado do negócio. Como a entrega pode ser repetida, cada receptor deve verificar a assinatura antes de analisar dados confiáveis ​​e deve processar o evento de forma idempotente.
 
 <span id="webhook-headers" data-sixmm-canonical-anchor="webhook-headers" aria-hidden="true"></span>
 
-## Cabeçalhos Webhook
+## Webhook cabeçalhos
 
 | Cabeçalho | Descrição |
 | --- | --- |
-| X-Agente-Timestamp | Carimbo de data e hora do Unix em segundos. |
-| X-Agente-Nonce | Proteção contra repetição. |
-| X-Agent-Signature | HMAC-SHA256 assinatura. |
+| Carimbo de data e hora do agente X | Carimbo de data/hora Unix em segundos. |
+| X-Agente-Nonce | Nonce de proteção de repetição. |
+| Assinatura do Agente X | Assinatura HMAC-SHA256. |
 
 ```text
 timestamp + nonce + rawBody
 ```
 
-Use o corpo bruto exato da solicitação recebido sobre HTTP ao reconstruir o valor assinado. Analisar e reserializar JSON primeiro pode alterar a ordem dos espaços em branco ou dos campos e produzir uma assinatura diferente.
+Use o corpo exato da solicitação bruta recebida em HTTP ao reconstruir o valor assinado. Analisar e serializar novamente JSON primeiro pode alterar os espaços em branco ou a ordem dos campos e produzir uma assinatura diferente.
 
 <span id="verification-flow" data-sixmm-canonical-anchor="verification-flow" aria-hidden="true"></span>
 
 ## Fluxo de verificação
 
-1. Leia os cabeçalhos de carimbo de data/hora, nonce e assinatura.
-2. Capturar o corpo bruto da solicitação não modificado.
-3. Construa `timestamp + nonce + rawBody`.
-4. Calcule HMAC-SHA256 com o parceiro API segredo.
-5. Compare as assinaturas calculadas e recebidas usando uma comparação em tempo constante.
-6. Aplique as verificações aprovadas de atualização e reutilização de data.
-7. Analisar e processar o evento somente após o sucesso da verificação.
+1. Leia o carimbo de data/hora, o nonce e os cabeçalhos de assinatura.
+2. Capture o corpo da solicitação bruta não modificado.
+3. Construir `timestamp + nonce + rawBody`.
+4. Calcule HMAC-SHA256 com o segredo do parceiro API.
+5. Compare as assinaturas calculadas e recebidas usando uma comparação de tempo constante.
+6. Aplique as verificações aprovadas de atualização de carimbo de data/hora e reutilização sem uso.
+7. Analise e processe o evento somente após a verificação ser bem-sucedida.
 
-Quando um verificador oficial de Agent SDK estiver disponível, use-o em vez de manter um código de assinatura independente.
+Quando um verificador oficial Agent SDK estiver disponível, use-o em vez de manter o código de assinatura independente.
 
 <span id="order-idempotency" data-sixmm-canonical-anchor="order-idempotency" aria-hidden="true"></span>
 
-## Idempotência de ordem
+## Idempotência do pedido
 
-| Caso | Dirigibilidade |
+| Caso | Manuseio |
 | --- | --- |
-| Pedido inicial de transferência | Crie uma agentOrderNoglobalmente única. |
-| HTTP tempo | Consulte a agentOrderNo original antes de criar uma nova. |
-| PROCESSING resposta | Espere pelo status do webhook ou da ordem de consulta. |
-| Webhook repetido | Deduplicar pela chave de idempotência e status final. |
+| Solicitação de transferência inicial | Crie um agentOrderNo globalmente exclusivo. |
+| HTTP tempo limite | Consulte o agentOrderNo original antes de criar um novo. |
+| PROCESSING resposta | Aguarde webhook ou consulte o status do pedido. |
+| Repetido webhook | Desduplicar por chave de idempotência e status final. |
 
 <span id="recommended-idempotency-record" data-sixmm-canonical-anchor="recommended-idempotency-record" aria-hidden="true"></span>
 
-## Registro recomendado de idempotência
+## Registro de idempotência recomendado
 
-Armazene informações suficientes para reconhecer uma entrega repetida e recuperar com segurança:
+Armazene informações suficientes para reconhecer uma entrega repetida e recuperá-la com segurança:
 
 | Campo | Propósito |
 | --- | --- |
-| Chave de evento ou negócio | Identifica de forma única a notificação ou operação. |
-| Número do pedido do parceiro | Conecta o evento ao pedido original. |
-| Hash da carga útil | Ajuda a identificar cargas úteis repetidas e conflitantes. |
-| Estado atual de processamento | Distingue trabalhos recebidos, processando, bem-sucedidos e fracassados. |
-| Status final do negócio | Impede que uma ação terminal seja aplicada duas vezes. |
-| Carimbo de data processado | Apoia políticas de investigação e retenção. |
+| Chave de evento ou negócio | Identifica exclusivamente a notificação ou operação. |
+| Número do pedido do parceiro | Conecta o evento à solicitação original. |
+| Hash de carga útil | Ajuda a identificar cargas repetidas conflitantes. |
+| Estado de processamento atual | Distingue trabalhos recebidos, processados, bem-sucedidos e com falha. |
+| Situação final do negócio | Impede que uma ação terminal seja aplicada duas vezes. |
+| Carimbo de data/hora processado | Suporta políticas de investigação e retenção. |
 
-Comprometa o registro de mudança de negócio e de idempotência na mesma transação sempre que possível. Um evento repetido deve devolver o resultado já conhecido em vez de aplicar novamente o saldo, ordem ou alteração do usuário.
+Confirme a mudança de negócios e o registro de idempotência na mesma transação, sempre que possível. Um evento repetido deve retornar o resultado já conhecido em vez de aplicar novamente o saldo, o pedido ou a alteração do usuário.
 
 <span id="timeout-and-retry-rule" data-sixmm-canonical-anchor="timeout-and-retry-rule" aria-hidden="true"></span>
 
-## Regra do tempo limite e da tentativa de retentar
+## Regra de tempo limite e nova tentativa
 
-Um tempo de espera HTTP não prova que a solicitação original falhou. Consulte a operação usando o `agentOrderNo`original ou espere pelo webhook antes de decidir se outra ação é necessária. Criar um novo número de ordem de negócio após cada timeout pode causar movimentos duplicados de fundos.
+Um tempo limite HTTP não prova que a solicitação original falhou. Consulte a operação usando o `agentOrderNo` original ou aguarde seu webhook, antes de decidir se outra ação é necessária. A criação de um novo número de ordem comercial após cada tempo limite pode causar movimentos duplicados de fundos.
 
 <span id="production-checklist" data-sixmm-canonical-anchor="production-checklist" aria-hidden="true"></span>
 
-## Checklist de produção
+## Lista de verificação de produção
 
-- Verificar a assinatura antes de JSON análise ou processamento empresarial.
-- Preservar o corpo bruto independentemente da carga útil analisada.
-- Rejeitar solicitações obsoletas ou reproduzidas de acordo com a política de integração aprovada.
-- Tornar o processamento de eventos seguro para entregas repetidas e fora de ordem.
-- Registrar IDs de eventos, números de pedido de parceiros, resultado de processamento e tempo de solicitação.
-- Redigir segredos e valores de assinatura de logs e anexos de suporte.
+- Verifique a assinatura antes da análise de JSON ou do processamento comercial.
+- Preservar o corpo bruto independentemente da carga analisada.
+- Rejeite solicitações obsoletas ou reproduzidas de acordo com a política de integração aprovada.
+- Torne o processamento de eventos seguro para entregas repetidas e fora de ordem.
+- Registre IDs de eventos, números de pedidos de parceiros, resultados de processamento e horário de solicitação.
+- Edite segredos e valores de assinatura de logs e anexos de suporte.
 
 <span id="related-docs" data-sixmm-canonical-anchor="related-docs" aria-hidden="true"></span>
 
-## Documentação relacionada
+## Documentos relacionados
 
 <CardGroup cols={3}>
 <Card title="Segredos e HMAC Assinatura" icon="fa-duotone fa-shield-keyhole" href="/pt-BR/sdk/security/secrets-signing">
-Proteja o segredo API usado para verificação de solicitações e webhooks.
+Proteja o segredo API usado para solicitação e verificação webhook.
 </Card>
-<Card title="Agent SDK Visão Geral" icon="fa-duotone fa-server" href="/pt-BR/sdk/agent-sdk/overview">
-Revise o fluxo completo de integração do backend.
+<Card title="Agent SDK Visão geral" icon="fa-duotone fa-server" href="/pt-BR/sdk/agent-sdk/overview">
+Revise o fluxo de trabalho completo de integração de back-end.
 </Card>
 <Card title="SDK Solução de problemas" icon="fa-duotone fa-screwdriver-wrench" href="/pt-BR/sdk/security/troubleshooting">
 Investigue assinaturas rejeitadas, eventos repetidos e operações pendentes.
 </Card>
 </CardGroup>
+
+<span id="funding-and-environment-boundaries" data-sixmm-canonical-anchor="funding-and-environment-boundaries" aria-hidden="true"></span>
+
+## Limites de financiamento e ambientais
+
+A transferência original do Contrato webhook e o fluxo `queryOrder` não se aplicam automaticamente ao Financiamento. Confirme as operações de financiamento usando `queryWalletTransfer` e o ambiente do pedido original. Usos de financiamento `status`; as respostas originais de transferência de contrato usam `orderStatus`. Uma resposta HTTP ou `code=0` bem-sucedida não prova, por si só, que os fundos foram movimentados.
+
+Notificações explícitas de transferência de contrato simuladas incluem `environment=SIMULATED`. Verifique primeiro o corpo bruto e, em seguida, verifique o usuário, o valor, a identidade do pedido e o ambiente em relação à ordem comercial local salva.
+
+[Guia de recuperação de financiamento](/pt-BR/sdk/agent-sdk/java/funding-wallet) · [Guia ambiental](/pt-BR/sdk/agent-sdk/java/environments)

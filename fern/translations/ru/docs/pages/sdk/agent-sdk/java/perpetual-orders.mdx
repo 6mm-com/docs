@@ -1,0 +1,186 @@
+---
+title: "Бессрочные заказы"
+subtitle: "Бессрочные заказы: Интеграция с Agent Java SDK v0.3.0, примеры, параметры и семантика ответа."
+slug: sdk/agent-sdk/java/perpetual-orders
+canonical-url: https://docs.6mm.com/ru/sdk/agent-sdk/java/perpetual-orders
+---
+
+Это руководство предназначено для **Agent Java SDK `v0.3.0`**, Java 8+ и помеченного публичного контракта. Примеры выполняются в серверной части партнера после инициализации `client` в [Быстрый старт](/ru/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## Пример предварительных условий
+
+Фрагменты Java разделяют этот импорт. Инициализируйте `client` с помощью быстрого запуска и получите `platformUserId` из сохраненной привязки. Примеры идентификаторов пользователей/заказов необходимо заменить вашими собственными сохраненными значениями.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span data-sixmm-canonical-anchor="listcurrentperpetualorders" aria-hidden="true"></span>
+
+## `listCurrentPerpetualOrders`
+
+Модель запроса: `CurrentPerpetualOrdersRequest`.
+
+```java
+import com.sixmm.agent.model.CurrentPerpetualOrdersRequest;
+import com.sixmm.agent.model.PerpetualResponse;
+import java.util.Collections;
+
+CurrentPerpetualOrdersRequest request = new CurrentPerpetualOrdersRequest();
+request.platformUserIds = Collections.singletonList("1188041528");
+request.limit = 100;
+request.orderCategory = "NORMAL";
+request.symbol = "BTCUSDT";
+PerpetualResponse response = client.listCurrentPerpetualOrders(request);
+System.out.println(response.data.items.size());
+System.out.println(response.data.hasMore);
+System.out.println(response.data.nextCursor);
+```
+
+<span id="request-fields" data-sixmm-canonical-anchor="request-fields" aria-hidden="true"></span>
+
+### Поля запроса
+
+| Поле | Java тип | Необходимый | Значение |
+| --- | --- | --- | --- |
+| `orderCategory` | `String` | Да | NORMAL или CONDITIONAL; условные запросы требуют явных пользователей. |
+| `platformUserIds` | `java.util.List<String>` | Условный | 1–100 уникальных публичных идентификаторов; требуется для исполнения и условных ордеров. Опустить поддерживаемые запросы для прямой области действия игрока; [] недействительно. |
+| `symbol` | `String` | Нет | Дополнительный фильтр торговых пар. |
+| `limit` | `Integer` | Нет | По умолчанию 500; 1–1000. |
+| `cursor` | `String` | Нет | Используйте возвращенный nextCursor с неизмененными фильтрами; остановитесь, когда hasMore имеет значение false. |
+
+Пример читает одну страницу. Для обязательных полей, области действия игрока, семантики фильтра, ограничения, курсора и ограниченных повторов следуйте инструкциям. [Обзор запроса](/ru/sdk/agent-sdk/java/perpetual-queries). Сохраняйте все фильтры неизменными при пейджинге; не интерпретируйте ошибку как пустой результат.
+
+<span data-sixmm-canonical-anchor="listperpetualorderhistory" aria-hidden="true"></span>
+
+## `listPerpetualOrderHistory`
+
+Модель запроса: `PerpetualOrderHistoryRequest`.
+
+```java
+import com.sixmm.agent.model.PerpetualOrderHistoryRequest;
+import com.sixmm.agent.model.PerpetualResponse;
+import java.util.Collections;
+
+PerpetualOrderHistoryRequest request = new PerpetualOrderHistoryRequest();
+request.platformUserIds = Collections.singletonList("1188041528");
+request.limit = 100;
+request.orderCategory = "NORMAL";
+request.symbol = "BTCUSDT";
+request.endTime = System.currentTimeMillis();
+request.startTime = request.endTime - 3_600_000L;
+PerpetualResponse response = client.listPerpetualOrderHistory(request);
+System.out.println(response.data.items.size());
+System.out.println(response.data.hasMore);
+System.out.println(response.data.nextCursor);
+```
+
+<span id="request-fields-1" data-sixmm-canonical-anchor="request-fields-1" aria-hidden="true"></span>
+
+### Поля запроса
+
+| Поле | Java тип | Необходимый | Значение |
+| --- | --- | --- | --- |
+| `orderCategory` | `String` | Да | NORMAL или CONDITIONAL; условные запросы требуют явных пользователей. |
+| `platformUserIds` | `java.util.List<String>` | Условный | 1–100 уникальных публичных идентификаторов; требуется для исполнения и условных ордеров. Опустить поддерживаемые запросы для прямой области действия игрока; [] недействительно. |
+| `symbol` | `String` | Нет | Дополнительный фильтр торговых пар. |
+| `orderId` | `String` | Нет | Обычный идентификатор заказа; не номер заказа на передачу партнера. |
+| `conditionId` | `String` | Нет | Условный идентификатор заказа; не смешивайте с orderId. |
+| `clientOrderId` | `String` | Нет | Ссылка на ордер торгового клиента, а не agentOrderNo. |
+| `side` | `String` | Нет | Фильтр BUY / SELL. |
+| `status` | `String` | Нет | Статус конкретного ресурса; см. ссылку на статус. |
+| `startTime` | `Long` | Нет | Включительно миллисекунды Unix; используйте фиксированное окно истории UTC. |
+| `endTime` | `Long` | Нет | Эксклюзивные миллисекунды Unix. |
+| `limit` | `Integer` | Нет | По умолчанию 500; 1–1000. |
+| `cursor` | `String` | Нет | Используйте возвращенный nextCursor с неизмененными фильтрами; остановитесь, когда hasMore имеет значение false. |
+
+Пример читает одну страницу. Для обязательных полей, области действия игрока, семантики фильтра, ограничения, курсора и ограниченных повторов следуйте инструкциям. [Обзор запроса](/ru/sdk/agent-sdk/java/perpetual-queries). Сохраняйте все фильтры неизменными при пейджинге; не интерпретируйте ошибку как пустой результат.
+
+<span id="ordinary-delegation-current-and-history" data-sixmm-canonical-anchor="ordinary-delegation-current-and-history" aria-hidden="true"></span>
+
+## Обыкновенные заказы: текущие и история
+
+Текущий: `orders/current` + `orderCategory=NORMAL`; История: `orders/history` + `orderCategory=NORMAL`.
+
+| Поле `data` | тип | Значение и сфера применения |
+| --- | --- | --- |
+| `symbol` | string | Торговая пара, например BTCUSDT |
+| `orderId` | string | Идентификатор обычного заказа платформы |
+| `orderCategory` | string | Исправлено NORMAL |
+| `clientOrderId` | string | Номер клиентского заказа, предоставленный источником заказа на транзакцию; это не то же поле, что и для перевода средств продавцу agentOrderNo |
+| `orderType` | string | Тип делегата, например LIMIT, MARKET; фактическое значение перечисления имеет преимущественную силу |
+| `side` | string | Направление покупки и продажи BUY / SELL |
+| `status` | string | Обычный статус заказа, см. обзор запроса |
+| `timeInForce` | string | Срок действия/стратегия исполнения сделки, например GTC, IOC, FOK; интерпретируется в соответствии с фактическими значениями |
+| `price` | string | Доверенная цена; его можно опустить, если цена не указана, и цена рыночной сделки не будет дополняться самостоятельно. |
+| `quantity` | string | Исходное количество заказа |
+| `filledQuantity` | string | Сумма транзакции |
+| `remainingQuantity` | string | Неоперированное количество; текущий запрос принимает количество — filledQuantity, а исторический запрос принимает значение исторической записи |
+| `avgFilledPrice` | string | Средняя цена сделки завершенной детали; не может быть никакой ценности, если оно не завершено |
+| `reduceOnly` | boolean | Стоит ли только сокращать позиции |
+| `closeOnly` | boolean | Используется ли он только для закрытия позиций |
+| `makerOnly` | boolean | Выполнять ли только как Maker |
+| `leverage` | integer | Используйте многократное кредитное плечо; **Исторический обычный порядок** имеет источник, а текущий обычный порядок не создает эту ценность. |
+| `marginMode` | string | Маржинальный режим; **Исторический обычный порядок** в настоящее время возвращает числовую строку перечисления, например "1", "2"; текущий обычный заказ не указан |
+| `createdAt` | integer | Время создания ордера, миллисекунды; используйте это поле для фильтрации исторического времени заказа |
+| `updatedAt` | integer | Время обновления записи делегата, миллисекунды |
+
+История заказов включает прекращенные обычные заказы. Каждую запись нельзя считать полностью завершенной только на основании имени интерфейса. Текущая страница заказа — это запрос текущего статуса, а не поток событий заказа.
+
+
+<span id="conditional-delegation-current-and-history" data-sixmm-canonical-anchor="conditional-delegation-current-and-history" aria-hidden="true"></span>
+
+## Условные ордера: текущие и история
+
+Текущий: `orders/current` + `orderCategory=CONDITIONAL`; История: `orders/history` + `orderCategory=CONDITIONAL`. Оба требуют явного platformUserIds.
+
+| Поле `data` | тип | значение |
+| --- | --- | --- |
+| `symbol` | string | торговая пара |
+| `conditionId` | string | ID условных ордеров, независимый от обычных orderId |
+| `orderCategory` | string | Исправлено CONDITIONAL |
+| `generatedOrderId` | string | Обычный идентификатор ордера, формируемый после срабатывания; может быть опущено, если не сгенерировано |
+| `clientOrderId` | string | Количество условных заказов клиента, выводится, если оно существует. |
+| `side` | string | BUY / SELL |
+| `orderType` | string | Тип ордера после триггера, интерпретируемый в соответствии с фактическим значением |
+| `triggerType` | string | Тип триггерного правила, поясняемый фактическим перечислением источников |
+| `workingType` | string | Тип задания/источник цены, который запускает цену, интерпретируется как фактическое перечисление. |
+| `timeInForce` | string | Срок действия/стратегия исполнения ордера после срабатывания |
+| `price` | string | Цена ордера после срабатывания, выводится, когда источник имеет значение. |
+| `quantity` | string | Условный объем заказа |
+| `triggerPrice` | string | триггерная цена |
+| `reduceOnly` | boolean | Стоит ли только сокращать позиции |
+| `closePosition` | boolean | Использовать ли семантику закрытия полной позиции, нельзя путать с closeOnly как с тем же полем. |
+| `leverage` | integer | Использовать несколько значений, выводить, если они ненулевые |
+| `marginMode` | string | Этот класс возвращает CROSS / ISOLATED, который представляет собой числовую строку, отличную от обычных исторических ордеров/позиций. |
+| `status` | string | Состояние условного одиночного триггера, см. обзор запроса. |
+| `triggerStatus` | string | Текущая реализация использует то же значение условного статуса, что и status. |
+| `createdAt` | integer | Время создания условного ордера, миллисекунды; исторические условия фильтруются к этому времени |
+| `updatedAt` | integer | Время обновления, вывод при наличии значения, миллисекунды |
+| `deletedAt` | integer | Удалить время отметки, вывести при наличии значения в миллисекундах; это не единое поле времени транзакции/отмены |
+
+Условные заказы не предоставляют filledQuantity, remainingQuantity, avgFilledPrice для обычных заказов. Если вам нужен статус транзакций обычных заказов после их запуска, запрашивайте обычные заказы/транзакции через generatedOrderId и не делайте вывод об объеме транзакции на основе статуса условного заказа.
+
+
+<span id="example-response-envelope" data-sixmm-canonical-anchor="example-response-envelope" aria-hidden="true"></span>
+
+## Пример конверта ответа
+
+Это иллюстративная пустая страница, а не образец завершенной сделки. В приведенных выше таблицах полей для конкретных ресурсов описываются заполненные `items[].data`.
+
+```json
+{"code":0,"message":"success","data":{"items":[],"nextCursor":"","hasMore":false}}
+```
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Источник и связанные руководства
+
+- [Официальный источник v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Обзор запроса и нумерация страниц](/ru/sdk/agent-sdk/java/perpetual-queries)
+- [Финансирование кошелька](/ru/sdk/agent-sdk/java/funding-wallet)
+- [Руководство по обновлению](/ru/sdk/agent-sdk/java/upgrade)

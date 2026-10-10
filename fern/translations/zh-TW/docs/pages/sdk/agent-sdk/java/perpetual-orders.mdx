@@ -1,0 +1,186 @@
+---
+title: "永久訂單"
+subtitle: "永久訂單：Agent Java SDK v0.3.0 集成、示例、參數和響應語義。"
+slug: sdk/agent-sdk/java/perpetual-orders
+canonical-url: https://docs.6mm.com/zh-TW/sdk/agent-sdk/java/perpetual-orders
+---
+
+本指南針對 **Agent Java SDK `v0.3.0`**、Java 8+ 以及標記的公共合約。初始化 `client` 後在合作伙伴後端運行示例 [快速入門](/zh-TW/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## 先決條件示例
+
+Java 片段共享這些導入。使用快速啟動初始化 `client` 並從保存的綁定中獲取 `platformUserId`。示例用戶/訂單 ID 必須替換為您自己的持久值。
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span data-sixmm-canonical-anchor="listcurrentperpetualorders" aria-hidden="true"></span>
+
+## `listCurrentPerpetualOrders`
+
+請求模型：`CurrentPerpetualOrdersRequest`。
+
+```java
+import com.sixmm.agent.model.CurrentPerpetualOrdersRequest;
+import com.sixmm.agent.model.PerpetualResponse;
+import java.util.Collections;
+
+CurrentPerpetualOrdersRequest request = new CurrentPerpetualOrdersRequest();
+request.platformUserIds = Collections.singletonList("1188041528");
+request.limit = 100;
+request.orderCategory = "NORMAL";
+request.symbol = "BTCUSDT";
+PerpetualResponse response = client.listCurrentPerpetualOrders(request);
+System.out.println(response.data.items.size());
+System.out.println(response.data.hasMore);
+System.out.println(response.data.nextCursor);
+```
+
+<span id="request-fields" data-sixmm-canonical-anchor="request-fields" aria-hidden="true"></span>
+
+### 請求字段
+
+| 場地 | Java 類型 | 必需的 | 意義 |
+| --- | --- | --- | --- |
+| `orderCategory` | `String` | 是的 | NORMAL或CONDITIONAL；條件查詢需要明確的用戶。 |
+| `platformUserIds` | `java.util.List<String>` | 有條件的 | 1–100 個唯一的公共 ID；成交和有條件訂單所需。省略直接玩家範圍支持的查詢； []無效。 |
+| `symbol` | `String` | 不 | 可選的交易對過濾器。 |
+| `limit` | `Integer` | 不 | 默認500； 1–1000。 |
+| `cursor` | `String` | 不 | 使用返回的 nextCursor 和未更改的過濾器；當 hasMore 為 false 時停止。 |
+
+該示例讀取一頁。對於必填字段、播放器範圍、過濾器語義、限制、光標和有界重試，請遵循 [查詢概覽](/zh-TW/sdk/agent-sdk/java/perpetual-queries)。分頁時保持所有過濾器不變；不要將錯誤解釋為空結果。
+
+<span data-sixmm-canonical-anchor="listperpetualorderhistory" aria-hidden="true"></span>
+
+## `listPerpetualOrderHistory`
+
+請求模型：`PerpetualOrderHistoryRequest`。
+
+```java
+import com.sixmm.agent.model.PerpetualOrderHistoryRequest;
+import com.sixmm.agent.model.PerpetualResponse;
+import java.util.Collections;
+
+PerpetualOrderHistoryRequest request = new PerpetualOrderHistoryRequest();
+request.platformUserIds = Collections.singletonList("1188041528");
+request.limit = 100;
+request.orderCategory = "NORMAL";
+request.symbol = "BTCUSDT";
+request.endTime = System.currentTimeMillis();
+request.startTime = request.endTime - 3_600_000L;
+PerpetualResponse response = client.listPerpetualOrderHistory(request);
+System.out.println(response.data.items.size());
+System.out.println(response.data.hasMore);
+System.out.println(response.data.nextCursor);
+```
+
+<span id="request-fields-1" data-sixmm-canonical-anchor="request-fields-1" aria-hidden="true"></span>
+
+### 請求字段
+
+| 場地 | Java 類型 | 必需的 | 意義 |
+| --- | --- | --- | --- |
+| `orderCategory` | `String` | 是的 | NORMAL或CONDITIONAL；條件查詢需要明確的用戶。 |
+| `platformUserIds` | `java.util.List<String>` | 有條件的 | 1–100 個唯一的公共 ID；成交和有條件訂單所需。省略直接玩家範圍支持的查詢； []無效。 |
+| `symbol` | `String` | 不 | 可選的交易對過濾器。 |
+| `orderId` | `String` | 不 | 普通訂單ID；不是合作伙伴轉移訂單號。 |
+| `conditionId` | `String` | 不 | 條件訂單 ID；不要與orderId混合。 |
+| `clientOrderId` | `String` | 不 | 交易客戶訂單參考，而非agentOrderNo。 |
+| `side` | `String` | 不 | BUY / SELL 過濾器。 |
+| `status` | `String` | 不 | 資源特定狀態；請參閱狀態參考。 |
+| `startTime` | `Long` | 不 | 包含 Unix 毫秒；使用固定的 UTC 歷史窗口。 |
+| `endTime` | `Long` | 不 | Unix 獨有的毫秒。 |
+| `limit` | `Integer` | 不 | 默認500； 1–1000。 |
+| `cursor` | `String` | 不 | 使用返回的 nextCursor 和未更改的過濾器；當 hasMore 為 false 時停止。 |
+
+該示例讀取一頁。對於必填字段、播放器範圍、過濾器語義、限制、光標和有界重試，請遵循 [查詢概覽](/zh-TW/sdk/agent-sdk/java/perpetual-queries)。分頁時保持所有過濾器不變；不要將錯誤解釋為空結果。
+
+<span id="ordinary-delegation-current-and-history" data-sixmm-canonical-anchor="ordinary-delegation-current-and-history" aria-hidden="true"></span>
+
+## 普通訂單：當前訂單和歷史訂單
+
+當前：`orders/current` + `orderCategory=NORMAL`;歷史記錄：`orders/history` + `orderCategory=NORMAL`。
+
+| `data` 字段 | 類型 | 含義及適用範圍 |
+| --- | --- | --- |
+| `symbol` | string | 交易對，如BTCUSDT |
+| `orderId` | string | 平臺普通訂單ID |
+| `orderCategory` | string | 已修復NORMAL |
+| `clientOrderId` | string | 交易訂單來源提供的客戶訂單號；與商戶資金轉賬不屬於同一字段 agentOrderNo |
+| `orderType` | string | 委託類型，如LIMIT、MARKET；以實際枚舉值為準 |
+| `side` | string | 買賣方向 BUY / SELL |
+| `status` | string | 普通訂單狀態，查看查詢概覽 |
+| `timeInForce` | string | 有效期/交易執行策略，如GTC、IOC、FOK；按實際值解釋 |
+| `price` | string | 委託價格；未提供價格時可省略，且按市場交易價自行補充。 |
+| `quantity` | string | 原始訂單數量 |
+| `filledQuantity` | string | 交易數量 |
+| `remainingQuantity` | string | 未成交數量；當前查詢取數量 - filledQuantity，歷史查詢取歷史記錄值 |
+| `avgFilledPrice` | string | 已完成部分的平均成交價格；未完成時可能沒有價值 |
+| `reduceOnly` | boolean | 是否只減持倉位 |
+| `closeOnly` | boolean | 是否僅用於平倉 |
+| `makerOnly` | boolean | 是否僅作為Maker執行 |
+| `leverage` | integer | 多重槓桿； **歷史普通訂單**有來源，當前普通訂單不創造這個值 |
+| `marginMode` | string | 保證金模式； **歷史普通訂單**目前返回的是數值枚舉字符串，如“1”、“2”；不提供當前普通訂單 |
+| `createdAt` | integer | 訂單創建時間，毫秒；使用該字段過濾歷史訂單時間 |
+| `updatedAt` | integer | 委託記錄更新時間，毫秒 |
+
+訂單歷史記錄包括已終止的普通訂單。僅憑接口名稱並不能認為每條記錄都完整。當前訂單頁面是當前狀態查詢，而不是訂單事件流。
+
+
+<span id="conditional-delegation-current-and-history" data-sixmm-canonical-anchor="conditional-delegation-current-and-history" aria-hidden="true"></span>
+
+## 條件訂單：當前訂單和歷史訂單
+
+當前：`orders/current` + `orderCategory=CONDITIONAL`;歷史記錄：`orders/history` + `orderCategory=CONDITIONAL`。兩者都需要明確的platformUserIds。
+
+| `data` 字段 | 類型 | 意義 |
+| --- | --- | --- |
+| `symbol` | string | 交易對 |
+| `conditionId` | string | 條件訂單ID，獨立於普通的orderId |
+| `orderCategory` | string | 已修復CONDITIONAL |
+| `generatedOrderId` | string | 觸發後生成的普通訂單ID；如果沒有生成可以省略 |
+| `clientOrderId` | string | 條件訂單的客戶訂單數量，存在時輸出 |
+| `side` | string | BUY / SELL |
+| `orderType` | string | 觸發後訂單類型，根據實際價值解讀 |
+| `triggerType` | string | 觸發規則類型，由實際源枚舉解釋 |
+| `workingType` | string | 觸發價格的作業類型/價格來源，解釋為實際枚舉 |
+| `timeInForce` | string | 訂單觸發後的有效期/執行策略 |
+| `price` | string | 觸發後的委託價格，當源有值時輸出 |
+| `quantity` | string | 有條件訂購數量 |
+| `triggerPrice` | string | 觸發價 |
+| `reduceOnly` | boolean | 是否只減持倉位 |
+| `closePosition` | boolean | 是否使用全倉關閉語義，不能與 closeOnly 混淆為同一字段 |
+| `leverage` | integer | 槓桿倍數，非零時輸出 |
+| `marginMode` | string | 該類返回CROSS / ISOLATED，這是一個數字字符串，與普通的歷史訂單/持倉不同 |
+| `status` | string | 有條件的單次觸發狀態，參見查詢概述 |
+| `triggerStatus` | string | 當前的實現使用與 status 相同的條件狀態值 |
+| `createdAt` | integer | 條件訂單創建時間，毫秒；歷史條件按此時間過濾 |
+| `updatedAt` | integer | 更新時間，有值時輸出，毫秒 |
+| `deletedAt` | integer | 刪除標記時間，有值時輸出，毫秒；不是統一的交易/取消時間字段 |
+
+有條件訂單不提供普通訂單的filledQuantity、remainingQuantity、avgFilledPrice。如果您需要普通訂單觸發後的成交狀態，請通過generatedOrderId查詢普通訂單/交易，不要從條件訂單狀態推斷交易量。
+
+
+<span id="example-response-envelope" data-sixmm-canonical-anchor="example-response-envelope" aria-hidden="true"></span>
+
+## 響應信封示例
+
+這是一個說明性的空白頁面，而不是已完成交易的示例。上面的資源特定字段表描述了填充的 `items[].data`。
+
+```json
+{"code":0,"message":"success","data":{"items":[],"nextCursor":"","hasMore":false}}
+```
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## 來源及相關指南
+
+- [官方v0.3.0源碼](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [查詢概覽和分頁](/zh-TW/sdk/agent-sdk/java/perpetual-queries)
+- [資金錢包](/zh-TW/sdk/agent-sdk/java/funding-wallet)
+- [升級指南](/zh-TW/sdk/agent-sdk/java/upgrade)

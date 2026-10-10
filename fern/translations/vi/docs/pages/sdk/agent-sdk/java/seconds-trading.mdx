@@ -1,0 +1,165 @@
+---
+title: "Tích hợp giao dịch giây"
+subtitle: "Tích hợp giao dịch giây: Agent Java SDK tích hợp v0.3.0, ví dụ, tham số và ngữ nghĩa phản hồi."
+slug: sdk/agent-sdk/java/seconds-trading
+canonical-url: https://docs.6mm.com/vi/sdk/agent-sdk/java/seconds-trading
+---
+
+Hướng dẫn này hướng đến **Agent Java SDK `v0.3.0`** và Java 8+.
+
+<span id="prepare-identity-authentication-and-funds" data-sixmm-canonical-anchor="prepare-identity-authentication-and-funds" aria-hidden="true"></span>
+
+## Chuẩn bị danh tính, xác thực và tiền
+
+Giao dịch theo giây sử dụng cùng một ràng buộc người dùng và xác thực mục nhập như giao dịch vĩnh viễn. Nó sử dụng số dư Tài trợ; ký quỹ vĩnh viễn sử dụng số dư Hợp đồng. Định cấu hình riêng môi trường sản phẩm/chế độ giao diện người dùng và quỹ phụ trợ.
+
+Khởi tạo `client` bằng cách sử dụng [Bắt đầu nhanh](/vi/sdk/agent-sdk/java/quick-start). Lưu ánh xạ người dùng bị ràng buộc và lấy ID người dùng đối tác từ phiên phụ trợ đã xác thực.
+
+<span id="redirect-entry" data-sixmm-canonical-anchor="redirect-entry" aria-hidden="true"></span>
+
+## Chuyển hướng mục nhập
+
+```java
+import com.sixmm.agent.model.CreateEntryUrlRequest;
+import com.sixmm.agent.model.CreateEntryUrlResponse;
+
+CreateEntryUrlResponse entry = client.createEntryUrl(
+        CreateEntryUrlRequest.of("merchant-user-001")
+                .withRedirectPath("/zh-CN/up-down?tradingMode=demo")
+                .withReturnUrl("https://merchant.example/markets"));
+String webUrl = entry.webUrl;
+```
+
+SDK gọi `POST /v1/agent/create-entry-url`. Trả lại `webUrl` cho giao diện đối tác và mở nó ngay lập tức. `expireAt` sử dụng giây Unix. Vé có thời hạn sử dụng ngắn hạn và chỉ dùng một lần; có được cái khác sau khi hết hạn hoặc tiêu thụ.
+
+| Sản phẩm | Đường dẫn giao diện người dùng mẫu | Cái ví |
+| --- | --- | --- |
+| Lên/Xuống | `/zh-CN/up-down?tradingMode=real` hoặc `demo` | Tài trợ |
+| Cao/Thấp | `/zh-CN/high-low?tradingMode=real` hoặc `demo` | Tài trợ |
+| Lưới | `/zh-CN/grid-prediction?tradingMode=real` hoặc `demo` | Tài trợ |
+| Hợp đồng tương lai vĩnh viễn | `/zh-CN/futures/BTCUSDT?tradingMode=real` hoặc `demo` | Hợp đồng |
+
+Sử dụng các tuyến giao diện người dùng thực tế được cung cấp bởi 6MM. `redirectPath` là đường dẫn nền tảng tương đối bắt đầu bằng `/`; `returnUrl` là đối tác tuyệt đối HTTP/HTTPS URL. Vé vào sẽ xác thực người dùng và không thực hiện chuyển khoản.
+
+<span id="embedded-entry" data-sixmm-canonical-anchor="embedded-entry" aria-hidden="true"></span>
+
+## Mục nhúng
+
+Sử dụng luồng `partner-token` và `tokenProvider` hiện có. Không có mã thông báo dự đoán cụ thể. Tạo Widget với `page` và `tradingMode` mong muốn và sử dụng `channelId` hiện tại khi gọi chương trình phụ trợ của đối tác.
+
+```java
+import com.sixmm.agent.model.CreateEmbedTokenRequest;
+import com.sixmm.agent.model.CreateEmbedTokenResponse;
+
+String channelId = "tw_example_channel";
+CreateEmbedTokenResponse auth = client.createEmbedToken(
+        CreateEmbedTokenRequest.of("merchant-user-001", channelId));
+String embedToken = auth.embedToken;
+long expireAt = auth.expireAt;
+```
+
+SDK gọi `POST /v1/agent/create-embed-token`. `symbol` là tùy chọn; nó không chọn sản phẩm giao dịch theo giây. Lựa chọn sản phẩm thuộc về frontend. Mã thông báo không chọn môi trường tiền hoặc thay đổi số dư.
+
+<span id="complete-frontend-example" data-sixmm-canonical-anchor="complete-frontend-example" aria-hidden="true"></span>
+
+## Hoàn thành ví dụ về giao diện người dùng
+
+Các tùy chọn này đã được xác minh dựa trên thời gian chạy Trading Widget `1.8.0` công khai vào ngày 10-10-2026. Các phiên bản widget và Agent Java SDK là độc lập.
+
+```html
+<div id="seconds-widget" style="width: 100%; height: 720px"></div>
+<script src="https://app.6mm.com/sdk/trading-widget/v1/index.js"></script>
+<script>
+  const page = 'up-down';
+  const tradingMode = 'demo';
+  const capabilities = TradingWidget.capabilities;
+  if (!capabilities?.partnerToken ||
+      !capabilities.pages?.includes(page) ||
+      !capabilities.tradingModes?.includes(tradingMode)) {
+    throw new Error('Trading Widget SDK does not support the requested page or mode');
+  }
+
+  const widget = TradingWidget.create('#seconds-widget', {
+    baseUrl: 'https://app.6mm.com',
+    page,
+    tradingMode,
+    theme: 'dark',
+    locale: 'zh-CN',
+    auth: {
+      mode: 'partner-token',
+      tokenProvider: async ({ channelId }) => {
+        // Partner-owned endpoint; derive the user from the backend session.
+        const response = await fetch('/api/seconds/embed-token', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ channelId }),
+        });
+        if (!response.ok) {
+          throw new Error('Failed to request embed token');
+        }
+        const result = await response.json();
+        if (typeof result.embedToken !== 'string' || !result.embedToken.trim() ||
+            !Number.isFinite(result.expireAt) || result.channelId !== channelId) {
+          throw new Error('Invalid embed token response');
+        }
+        return {
+          embedToken: result.embedToken,
+          expireAt: result.expireAt,
+          channelId: result.channelId,
+        };
+      },
+    },
+    onReady() {
+      console.log('Trading widget ready');
+    },
+    onError(error) {
+      console.error('Trading widget error', error.code);
+    },
+  });
+  window.addEventListener('beforeunload', () => widget.destroy());
+</script>
+```
+
+| Lựa chọn | Giá trị | Nghĩa |
+| --- | --- | --- |
+| `page` | `up-down`, `high-low`, `grid-prediction` | Trang sản phẩm. |
+| `tradingMode` | `real`, `demo` | Mặc định là `real`; đặt ra một cách rõ ràng. |
+| `baseUrl` | `https://app.6mm.com` | Nguồn gốc giao diện người dùng nền tảng; Widget xây dựng phần nhúng của nó URL. |
+
+<span id="partner-backend-response" data-sixmm-canonical-anchor="partner-backend-response" aria-hidden="true"></span>
+
+## Phản hồi phụ trợ của đối tác
+
+`/api/seconds/embed-token` là điểm cuối do đối tác sở hữu, không phải là 6MM API mới. Xác thực phiên, lấy `agentUserId` phía máy chủ và gọi `createEmbedToken`. Trả về cấu trúc cấp cao nhất này:
+
+```json
+{
+  "embedToken": "short-one-time-token",
+  "expireAt": 1791590700,
+  "channelId": "tw_xxx"
+}
+```
+
+Sử dụng `expireAt` thực tế của phản hồi của Tác nhân, không phải giá trị minh họa. Phản hồi của Tác nhân không chứa `channelId`; chương trình phụ trợ của bạn lặp lại giá trị của yêu cầu hiện tại. Nếu API kết thúc gói của bạn dẫn đến `data`, hãy mở lớp đó trước khi quay lại từ tokenProvider. Từ chối những thất bại trong kinh doanh thay vì trả lại một đối tượng thành công không hợp lệ.
+
+Mỗi lần khởi tạo hoặc gia hạn đều nhận được mã thông báo mới. Không bao giờ lưu vào bộ đệm và trao đổi lại cùng một mã thông báo hoặc đặt nó vào URL. Tái sử dụng cùng một kênh phiên bản trong quá trình gia hạn; sử dụng kênh mới sau khi tạo lại phiên bản.
+
+<span id="match-the-funds-environment" data-sixmm-canonical-anchor="match-the-funds-environment" aria-hidden="true"></span>
+
+## Phù hợp với môi trường quỹ
+
+Giao diện người dùng `demo` yêu cầu các yêu cầu cấp tiền mô phỏng với `environment=SIMULATED`. Giao diện người dùng `real` yêu cầu kinh phí sản xuất. Cả `tradingMode` lẫn việc tạo mã thông báo đều không thay đổi mục tiêu quỹ phụ trợ.
+
+Khi chuyển đổi người dùng hoặc chế độ giao dịch, hãy hủy Widget cũ và tạo một phiên bản mới. Truy vấn số dư Tài trợ, chuyển tiền và xác nhận kết quả cuối cùng thông qua điểm cuối trạng thái cụ thể về Tài trợ trước khi coi người dùng là đã nạp tiền.
+
+Nhìn thấy [Ví tiền tài trợ](/vi/sdk/agent-sdk/java/funding-wallet) Và [Hướng dẫn môi trường](/vi/sdk/agent-sdk/java/environments).
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Nguồn và hướng dẫn liên quan
+
+- [Nguồn v0.3.0 chính thức](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Tổng quan về truy vấn và phân trang](/vi/sdk/agent-sdk/java/perpetual-queries)
+- [Ví tiền tài trợ](/vi/sdk/agent-sdk/java/funding-wallet)
+- [Hướng dẫn nâng cấp](/vi/sdk/agent-sdk/java/upgrade)

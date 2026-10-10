@@ -1,15 +1,15 @@
 ---
 title: "Trading Widget Xác thực"
-subtitle: "Sử dụng partner-token cho các tích hợp SSO giao dịch nhúng mới."
+subtitle: "Sử dụng mã thông báo đối tác để tích hợp giao dịch nhúng SSO mới."
 slug: sdk/trading-widget/authentication
 canonical-url: https://docs.6mm.com/vi/sdk/trading-widget/authentication
 ---
 
 <span id="recommended-mode-partner-token" data-sixmm-canonical-anchor="recommended-mode-partner-token" aria-hidden="true"></span>
 
-## Chế độ khuyến nghị: partner-token
+## Chế độ được đề xuất: mã thông báo đối tác
 
-partner-token tránh đặt token ngắn trong URL và giữ apiSecret trên backend đối tác.
+mã thông báo đối tác tránh đặt mã thông báo ngắn vào URL và giữ apiSecret trên phần phụ trợ của đối tác.
 
 ```js
 const widget = TradingWidget.create('#trading-widget', {
@@ -38,14 +38,14 @@ const widget = TradingWidget.create('#trading-widget', {
 
 ## Tài liệu liên quan
 
-- [Create Embed Token](/vi/sdk/agent-sdk/java/embed-token): ví dụ phát hành token backend.
-- [Trading Widget Khởi động nhanh](/vi/sdk/trading-widget/quick-start): quy trình khởi tạo hoàn chỉnh.
-- [Secrets & Signing](/vi/sdk/security/secrets-signing): giữ thông tin đăng nhập Privileged Agent ở backend.
-- [Khắc phục sự cố](/vi/sdk/security/troubleshooting): chẩn đoán các lỗi phiên làm việc, token, nguồn gốc và khởi tạo.
+- [Tạo mã thông báo nhúng](/vi/sdk/agent-sdk/java/embed-token): ví dụ về phát hành mã thông báo phụ trợ.
+- [Trading Widget Bắt đầu nhanh](/vi/sdk/trading-widget/quick-start): hoàn thành luồng khởi tạo.
+- [Bí mật & Ký kết](/vi/sdk/security/secrets-signing): giữ thông tin đăng nhập của Đại lý đặc quyền ở phần phụ trợ.
+- [Khắc phục sự cố](/vi/sdk/security/troubleshooting): chẩn đoán lỗi phiên, mã thông báo, nguồn gốc và khởi tạo.
 
 <span id="backend-flow" data-sixmm-canonical-anchor="backend-flow" aria-hidden="true"></span>
 
-## Quy trình phía sau
+## Luồng phụ trợ
 
 ```text
 1. Partner frontend receives auth_request from the iframe.
@@ -60,32 +60,32 @@ const widget = TradingWidget.create('#trading-widget', {
 
 <span id="tokenprovider-contract" data-sixmm-canonical-anchor="tokenprovider-contract" aria-hidden="true"></span>
 
-## hợp đồng tokenProvider
+## tokenProvider hợp đồng
 
-| Lĩnh vực | Hướng đi | Mô tả |
+| Cánh đồng | Phương hướng | Sự miêu tả |
 | --- | --- | --- |
-| channelId | SDK -> Đối tác phía sau | Định danh phiên widget duy nhất. Backend nên chuyển cho createEmbedToken. |
-| biểu tượng | SDK -> Đối tác phía sau | Biểu tượng giao dịch được yêu cầu hiện tại. Dùng nó để kiểm tra token khi cần. |
-| lý do | SDK -> Đối tác phía sau | Tại sao SDK lại yêu cầu token, chẳng hạn như tải ban đầu hoặc làm mới. |
-| embedToken | Backend đối tác -> SDK | Token tồn tại ngắn hạn được tạo bởi Agent SDK hoặc Agent API. |
-| expireAt | Backend đối tác -> SDK | Dấu thời gian hết hạn của token được trả về bởi 6MM. |
+| channelId | SDK -> Phần phụ trợ của đối tác | Mã định danh phiên tiện ích duy nhất. Phần phụ trợ sẽ chuyển nó tới createEmbedToken. |
+| biểu tượng | SDK -> Phần phụ trợ của đối tác | Biểu tượng giao dịch được yêu cầu hiện tại. Sử dụng nó để xác định phạm vi mã thông báo khi cần. |
+| lý do | SDK -> Phần phụ trợ của đối tác | Tại sao SDK lại yêu cầu mã thông báo, chẳng hạn như tải lần đầu hoặc làm mới. |
+| embedToken | Phần phụ trợ của đối tác -> SDK | Mã thông báo tồn tại trong thời gian ngắn được tạo bởi Agent SDK hoặc Đại lý API. |
+| expireAt | Phần phụ trợ của đối tác -> SDK | Dấu thời gian hết hạn mã thông báo được trả về bởi 6MM. |
 
 <span id="failure-handling" data-sixmm-canonical-anchor="failure-handling" aria-hidden="true"></span>
 
 ## Xử lý lỗi
 
-| Tình trạng | Khuyến nghị sử dụng |
+| Tình trạng | Đề xuất xử lý |
 | --- | --- |
-| Phiên đối tác đã hết hạn | Trả về 401 từ điểm cuối đối tác và yêu cầu người dùng đăng nhập lại. |
-| Việc tạo token tạm thời thất bại | Hiển thị lỗi trong tokenProvider và cho phép widget xuất hiện lỗi xác thực. |
-| channelId sự không khớp | Từ chối yêu cầu và tạo lại phiên bản widget. |
-| Người dùng không được phép giao dịch | Trả về lỗi do đối tác kiểm soát và không tạo token nhúng. |
+| Phiên đối tác đã hết hạn | Trả về 401 từ điểm cuối của đối tác và yêu cầu người dùng đăng nhập lại. |
+| Tạo mã thông báo tạm thời không thành công | Đưa ra lỗi trong tokenProvider và cho phép tiện ích hiển thị lỗi xác thực. |
+| channelId không khớp | Từ chối yêu cầu và tạo lại phiên bản widget. |
+| Người dùng không được phép giao dịch | Trả về lỗi do đối tác kiểm soát và không tạo mã thông báo nhúng. |
 
 <span id="compatibility-mode-agent-sso" data-sixmm-canonical-anchor="compatibility-mode-agent-sso" aria-hidden="true"></span>
 
-## Chế độ tương thích: agent-sso
+## Chế độ tương thích: Agent-sso
 
-agent-sso giữ lại luồng vé /agent-entry cũ hơn. Ưu tiên token đối tác cho các tích hợp mới.
+Agent-sso giữ luồng vé /agent-entry cũ hơn. Ưu tiên mã thông báo đối tác cho các tích hợp mới.
 
 ```js
 const widget = TradingWidget.create('#trading-widget', {
@@ -105,3 +105,13 @@ const widget = TradingWidget.create('#trading-widget', {
   },
 })
 ```
+
+<span id="seconds-trading-and-environment-rules" data-sixmm-canonical-anchor="seconds-trading-and-environment-rules" aria-hidden="true"></span>
+
+## Giao dịch giây và quy tắc môi trường
+
+Đối với các trang giây, hãy sử dụng cùng một xác thực `partner-token` với `page` và `tradingMode` được định cấu hình trên Widget. Không có mã thông báo dự đoán riêng biệt. Mỗi cuộc gọi tokenProvider phải nhận được mã thông báo một lần mới từ chương trình phụ trợ của bạn.
+
+Trả về `embedToken`, `expireAt` trong vài giây Unix và `channelId` ban đầu làm đối tượng cấp cao nhất. Phản hồi mã thông báo Agent SDK không chứa `channelId`; phần phụ trợ của bạn lặp lại kênh Widget hiện tại. Nếu điểm cuối của bạn gói các phản hồi trong `data`, hãy mở gói đó trước khi quay lại từ tokenProvider.
+
+[Tích hợp đầy đủ giây](/vi/sdk/agent-sdk/java/seconds-trading) · [Hướng dẫn về môi trường quỹ](/vi/sdk/agent-sdk/java/environments)

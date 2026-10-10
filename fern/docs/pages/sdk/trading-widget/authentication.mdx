@@ -104,3 +104,13 @@ const widget = TradingWidget.create('#trading-widget', {
   },
 })
 ```
+
+<span data-sixmm-canonical-anchor="seconds-trading-and-environment-rules" aria-hidden="true"></span>
+
+## Seconds trading and environment rules
+
+For seconds pages, use the same `partner-token` authentication with `page` and `tradingMode` configured on the Widget. There is no separate prediction token. Every tokenProvider call must obtain a fresh one-time token from your backend.
+
+Return `embedToken`, `expireAt` in Unix seconds, and the original `channelId` as a top-level object. The Agent SDK token response does not contain `channelId`; your backend echoes the current Widget channel. If your endpoint wraps responses in `data`, unwrap it before returning from tokenProvider.
+
+[Full seconds integration](/sdk/agent-sdk/java/seconds-trading) · [Funds environment guide](/sdk/agent-sdk/java/environments)

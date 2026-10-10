@@ -1,0 +1,133 @@
+---
+title: "Sözleşme Defteri"
+subtitle: "Sözleşme Defteri: Agent Java SDK v0.3.0 entegrasyonu, örnekler, parametreler ve yanıt semantiği."
+slug: sdk/agent-sdk/java/perpetual-ledger
+canonical-url: https://docs.6mm.com/tr/sdk/agent-sdk/java/perpetual-ledger
+---
+
+Bu kılavuz **Agent Java SDK `v0.3.0`**, Java 8+ ve etiketli kamu sözleşmesini hedefler. Örnekler, `client` başlatıldıktan sonra bir iş ortağı arka ucunda çalıştırılır. [Hızlı Başlangıç](/tr/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## Örnek önkoşullar
+
+Java parçacıkları bu içe aktarmaları paylaşır. Hızlı Başlangıç'ı kullanarak `client`'ı başlatın ve kaydedilen bağlamadan `platformUserId`'i edinin. Örnek kullanıcı/sipariş kimlikleri kendi kalıcı değerlerinizle değiştirilmelidir.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span data-sixmm-canonical-anchor="listperpetualledger" aria-hidden="true"></span>
+
+## `listPerpetualLedger`
+
+Talep modeli: `PerpetualLedgerRequest`.
+
+```java
+import com.sixmm.agent.model.PerpetualLedgerRequest;
+import com.sixmm.agent.model.PerpetualResponse;
+import java.util.Collections;
+
+PerpetualLedgerRequest request = new PerpetualLedgerRequest();
+request.platformUserIds = Collections.singletonList("1188041528");
+request.limit = 100;
+request.endTime = System.currentTimeMillis();
+request.startTime = request.endTime - 3_600_000L;
+PerpetualResponse response = client.listPerpetualLedger(request);
+System.out.println(response.data.items.size());
+System.out.println(response.data.hasMore);
+System.out.println(response.data.nextCursor);
+```
+
+<span id="request-fields" data-sixmm-canonical-anchor="request-fields" aria-hidden="true"></span>
+
+### Talep alanları
+
+| Alan | Java türü | Gerekli | Anlam |
+| --- | --- | --- | --- |
+| `platformUserIds` | `java.util.List<String>` | Koşullu | 1-100 benzersiz genel kimlik; Dolumlar ve koşullu siparişler için gereklidir. Doğrudan oynatıcı kapsamı için desteklenen sorguları hariç tutun; [] geçersiz. |
+| `assetType` | `String` | HAYIR | Defter tarafından döndürülen varlık sınıflandırması; USDT varsaymayın. |
+| `changeType` | `String` | HAYIR | Kaynak değerlerini koruyan defter iş değişikliği türü. |
+| `startTime` | `Long` | HAYIR | Kapsamlı Unix milisaniye; sabit bir UTC geçmiş penceresi kullanın. |
+| `endTime` | `Long` | HAYIR | Özel Unix milisaniyesi. |
+| `limit` | `Integer` | HAYIR | Varsayılan 500; 1–1000. |
+| `cursor` | `String` | HAYIR | Döndürülen nextCursor öğesini değişmemiş filtrelerle kullanın; hasMore yanlış olduğunda dur. |
+
+Örnek bir sayfayı okuyor. Gerekli alanlar, oynatıcı kapsamı, filtre semantiği, limit, imleç ve sınırlı yeniden denemeler için aşağıdaki adımları izleyin [Sorguya genel bakış](/tr/sdk/agent-sdk/java/perpetual-queries). Sayfalama sırasında tüm filtreleri değiştirmeden tutun; Bir hatayı boş bir sonuç olarak yorumlamayın.
+
+<span id="contract-account-change-details" data-sixmm-canonical-anchor="contract-account-change-details" aria-hidden="true"></span>
+
+## Sözleşme defteri kayıtları
+
+Arayüz: `account/ledger`. Döndürülen veriler yalnızca aşağıdaki 11 iş alanını içerir ve sipariş boole bayraklarını taşımaz.
+
+| `data` alanı | tip | Anlam |
+| --- | --- | --- |
+| `ledgerId` | string | Kaynak defter, işlem kimliğine kayıt yapar; aynı işlem birden fazla ayrıntıya bölünebilir |
+| `symbol` | string | İlgili işlem çifti, ilişkili değilse atlanabilir |
+| `assetType` | string | Kaynak değerine göre kaydedilen varlık türü; varlık sınıflandırması için kullanılır, varsayılan olarak çıkarılmaz USDT |
+| `changeType` | string | İşlem ücreti, kar ve zarar, transfer gibi kaynak değerine göre kaydedilen hesap değişikliği iş türü; aynı alana göre filtrelenebilir |
+| `amount` | string | Bu detayın değişim miktarı, pozitif sayı artışı, negatif sayı ise azalmayı; hassasiyet korunur |
+| `walletBalanceBefore` | string | Bu ayrıntıda kaydedilen hesap değişikliğinden önceki cüzdan bakiyesi |
+| `walletBalanceAfter` | string | Bu ayrıntıda kaydedilen hesap değişikliğinden sonraki cüzdan bakiyesi |
+| `frozenBalanceBefore` | string | Hesap değişikliği öncesi dondurulan bakiye bu detayda kayıt altına alınır. |
+| `frozenBalanceAfter` | string | Hesap değişikliği sonrasında bu detayda kaydedilen dondurulan bakiye |
+| `referenceId` | string | İlgili işletme numarası; changeType olarak yorumlanır ve tekdüze olarak orderId sırası olarak kabul edilemez; "0", kaynağın geçerli bir ilişkili numarasının olmadığını gösterir |
+| `createdAt` | integer | Hesap değişikliği ayrıntılarının oluşturulma süresi, milisaniye; bu alan bu arayüzde zaman filtreleme için kullanılır |
+
+Arayüzün döndürdüğü hesap değişikliğinden önceki ve sonraki bakiyeyi kullanın. Farklı changeType farklı anlamlara sahiptir ve her miktarın walletBalanceAfter − walletBalanceBefore'ye eşit olduğu varsayılamaz. Defter kayıtlarının gösterimi/özeti, tür ve ayrıntı kimliğini korumalıdır.
+
+Hayali bir kimlik ve tutarın kullanıldığı formatın bir örneğini burada bulabilirsiniz:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "items": [
+      {
+        "platformUserId": "1188041528",
+        "entityType": "ACCOUNT_LEDGER",
+        "entityId": "900001",
+        "data": {
+          "ledgerId": "ledger-example-001",
+          "symbol": "BTCUSDT",
+          "assetType": "USDT",
+          "changeType": "HANDLING_FEE",
+          "amount": "-0.10000000",
+          "walletBalanceBefore": "100.00000000",
+          "walletBalanceAfter": "99.90000000",
+          "frozenBalanceBefore": "0.00000000",
+          "frozenBalanceAfter": "0.00000000",
+          "referenceId": "800001",
+          "createdAt": 1791590400000
+        }
+      }
+    ],
+    "nextCursor": "",
+    "hasMore": false
+  }
+}
+```
+
+
+<span id="example-response-envelope" data-sixmm-canonical-anchor="example-response-envelope" aria-hidden="true"></span>
+
+## Örnek yanıt zarfı
+
+Bu, tamamlanmış bir işlemin örneği değil, açıklayıcı boş bir sayfadır. Yukarıdaki kaynağa özgü alan tablolarında doldurulmuş `items[].data` açıklanmaktadır.
+
+```json
+{"code":0,"message":"success","data":{"items":[],"nextCursor":"","hasMore":false}}
+```
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Kaynak ve ilgili kılavuzlar
+
+- [Resmi v0.3.0 kaynağı](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Sorguya genel bakış ve sayfalandırma](/tr/sdk/agent-sdk/java/perpetual-queries)
+- [Finansman cüzdanı](/tr/sdk/agent-sdk/java/funding-wallet)
+- [Yükseltme kılavuzu](/tr/sdk/agent-sdk/java/upgrade)

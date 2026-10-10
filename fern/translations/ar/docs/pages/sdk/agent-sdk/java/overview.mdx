@@ -1,67 +1,109 @@
 ---
 title: "Agent Java SDK"
-subtitle: "قم بتثبيت 6MM Agent Java SDK واستخدم API الخلفية الموقعة لربط المستخدم، والنقلات، وبيانات الدخول والتحقق من webhook."
+subtitle: "Agent Java SDK: Agent Java SDK التكامل v0.3.0 والأمثلة والمعلمات ودلالات الاستجابة."
 slug: sdk/agent-sdk/java/overview
 canonical-url: https://docs.6mm.com/ar/sdk/agent-sdk/java/overview
 ---
 
-<span id="official-repository" data-sixmm-canonical-anchor="official-repository" aria-hidden="true"></span>
+يستهدف هذا الدليل **Agent Java SDK `v0.3.0`**، Java 8+، والعقد العام الموسوم. يتم تشغيل الأمثلة في الواجهة الخلفية للشريك بعد تهيئة `client` في [بداية سريعة](/ar/sdk/agent-sdk/java/quick-start).
 
-## المستودع الرسمي
+<span id="version-and-installation" data-sixmm-canonical-anchor="version-and-installation" aria-hidden="true"></span>
 
-يعد المستودع Java SDK مصدر الحقيقة لشيفرة المصدر SDK ، وملاحظات الإصدار، وأمثلة الاستخدام، وتفاصيل التنفيذ:
+## الإصدار والتثبيت
 
-[6mm-com/agent-java-sdk](https://github.com/6mm-com/agent-java-sdk)
-
-<span id="runtime" data-sixmm-canonical-anchor="runtime" aria-hidden="true"></span>
-
-## مدة العرض
-
-| العنصر | القيمة |
+| غرض | قيمة |
 | --- | --- |
-| النسخة Java الأدنى | Java 8+ |
-| أداة البناء الموصى بها | مافن 3.9+ |
-| مجموعة مافن | `com.sixmm.exchange.sdk` |
-| قطعة أثرية من مافن | `agent` |
-| وسم المصدر الموثق | `v0.1.1` |
+| علامة مصدر مستقرة | `v0.3.0` |
+| Java | Java 8+ |
+| مخضرم | مخضرم 3.9+ |
+| الإحداثيات | `com.sixmm.exchange.sdk:agent:0.3.0` |
 
-المستودع العام في GitHub هو استضافة المصدر، وليس مستودع اعتماد Maven. قم ببناء وتثبيت المصدر الموسوم محليا أو انشر القطعة المعتمدة في مستودع Maven الخاص بمؤسستك قبل استخدامها في بناءات الفريق.
+يستضيف GitHub المصدر؛ لا يجعل هذه الإحداثيات قابلة للحل من Maven Central. استخدم التثبيت المحلي الموسوم أو مستودع القطع الأثرية المعتمد لديك.
 
-<span id="typical-backend-responsibilities" data-sixmm-canonical-anchor="typical-backend-responsibilities" aria-hidden="true"></span>
+<span id="what-the-sdk-covers" data-sixmm-canonical-anchor="what-the-sdk-covers" aria-hidden="true"></span>
 
-## المسؤوليات النموذجية للخلف
+## ما يغطيه SDK
 
-- التحقق من جلسة المستخدم الشريكة.
-- تعيين المستخدم الشريك إلى agentUserId.
-- ربط المكالمات قبل أول تداول أو تدفقات تحويل.
-- اتصل createEntryUrl للحصول على SSOبكامل الموقع لمرة واحدة.
-- اتصل createEmbedToken لوضع Trading Widget الشريك الرمزي.
-- التحقق من نقل webhooks ومعالجتها بشكل متكامل.
+| فئة | سيناريو | SDK API | وصف |
+| --- | --- | --- | --- |
+| ملزمة المستخدم | ربط المستخدم | `bind` | قم بإنشاء أو جلب الارتباط بين مستخدم شريك ومستخدم النظام الأساسي 6MM |
+| استعلامات الأصول | الاستعلام عن حساب الشريك | `queryAccount` | الاستعلام عن هامش الشريك أو حساب التمويل |
+| استعلامات الأصول | الاستعلام عن أصول المستخدم | `queryUserAssets` | الاستعلام عن أصول العقد؛ استخدم `withFunding()` لتضمين أرصدة التمويل |
+| التحويلات | تحويل مبلغ ثابت | `transfer` | تحويل الأموال إلى أو من 6MM |
+| التحويلات | نقل كل شيء | `transferAllOut` | قم بنقل كافة أرصدة المستخدم القابلة للسحب مرة أخرى إلى النظام الأساسي الشريك |
+| التحويلات | ترتيب عكسي | `reverse` | قم بعكس النقل الناجح عندما تدعم الواجهة الخلفية تدفق التعويض |
+| التحويلات | ترتيب الاستعلام | `queryOrder` | الاستعلام عن أمر تحويل واحد عن طريق رقم أمر الشريك |
+| التحويلات | قائمة الطلبات | `listOrders` | صفحة من خلال أوامر النقل للمصالحة |
+| التحويلات | Webhook التحقق | `WebhookVerifier.verify` | التحقق من نقل عمليات رد الاتصال للحالة النهائية من 6MM |
+| محفظة التمويل | تحويل التمويل | `walletTransfer` | الشريك ↔ التمويل أو التمويل ↔ العقد؛ تأكيد الحالة التي تم إرجاعها |
+| محفظة التمويل | حالة تحويل التمويل | `queryWalletTransfer` | استرداد عملية التمويل باستخدام رقم طلب الشريك الأصلي الخاص بها |
+| دخول التداول | الدخول المباشر URL | `createEntryUrl` | قم بإنشاء SSO URL مرة واحدة لوضع إعادة التوجيه |
+| دخول التداول | تضمين الرمز المميز | `createEmbedToken` | قم بإنشاء رمز مميز قصير العمر لوضع Trading Widget `tokenProvider` |
+| بيانات دائمة | الأوامر الدائمة الحالية | `listCurrentPerpetualOrders` | الاستعلام عن الطلبات الحالية NORMAL أو CONDITIONAL |
+| بيانات دائمة | تاريخ النظام الدائم | `listPerpetualOrderHistory` | الاستعلام عن أوامر NORMAL أو CONDITIONAL |
+| بيانات دائمة | الصفقات الدائمة | `listPerpetualTrades` | الاستعلام عن تعبئة قائمة اللاعبين العامة الصريحة |
+| بيانات دائمة | المواقف الدائمة الحالية | `listCurrentPerpetualPositions` | الاستعلام عن المناصب الحالية |
+| بيانات دائمة | تاريخ الموقف الدائم | `listPerpetualPositionHistory` | الاستعلام عن المراكز المغلقة |
+| بيانات دائمة | دفتر الحسابات الدائم | `listPerpetualLedger` | الاستعلام عن سجلات تغيير رصيد العقد الفردي |
+| الأسعار المرجعية لشركة فيات | قائمة العملات الورقية المدعومة | `listSupportedFiatCurrencies` | قائمة العملات الورقية القابلة للتحويل حاليًا إلى USDT |
+| الأسعار المرجعية لشركة فيات | الاستعلام عن الأسعار المرجعية للعملات الأجنبية | `queryExchangeRates` | الاستعلام اليومي عن النسب المرجعية للعملات الورقية إلى USDT لجميع العملات أو العملات المحددة |
+| معلومات الخدمة | نسخة الخدمة | `version` | معلومات إصدار خدمة وكيل الاستعلام |
 
-<span id="security-and-operational-rules" data-sixmm-canonical-anchor="security-and-operational-rules" aria-hidden="true"></span>
 
-## قواعد الأمن والتشغيل
+<span id="configuration" data-sixmm-canonical-anchor="configuration" aria-hidden="true"></span>
 
-- تخزين `apiSecret` فقط في مدير سري خلفي أو متغير بيئة محمية.
-- الحفاظ على تزامن وقت الخادم لأن الطلبات الموقعة تحتوي على الطوابع الزمنية.
-- عامل `agentOrderNo` كمفتاح موثوق دائم والحفاظ على فريده عالميا.
-- تخزين `platformUserId` كسلسلة والحفاظ على علاقتها مع `agentUserId`.
-- الاستعلام عن النقل الأصلي قبل إعادة المحاولة بعد انتهاء الوقت أو نتيجة الشبكة غير المؤكدة.
+## إعدادات
 
-<span id="next-steps" data-sixmm-canonical-anchor="next-steps" aria-hidden="true"></span>
+احصل على القيم التالية من 6MM من قبل
+دمج.
 
-## الخطوات التالية
+| غرض | مثال | وصف |
+| --- | --- | --- |
+| `baseUrl` | `https://agent-api.6mm.com` | الوكيل API قاعدة URL، بدون شرطة مائلة زائدة |
+| `agentCode` | `AGENT001` | رمز الشريك |
+| `apiSecret` | `your-api-secret` | API سر التوقيع. احتفظ بها على الواجهة الخلفية فقط |
+| `defaultCurrency` | `USDT` | العملة الافتراضية، عادة `USDT` |
+| `webhookUrl` | `https://partner.example.com/6mm/webhook` | نقطة نهاية الشريك لعمليات الاسترجاعات 6MM |
 
-- [Java Quick Start] (/sdk/agent-sdk/java/quick-start): تثبيت المصدر الموسوم وتهيئة `AgentClient`.
-- [إنشاء رمز تضمين] (/sdk/agent-sdk/java/embed-token): إصدار بيانات اعتماد قصيرة العمر ل Trading Widget.
-- [الأسرار والإشارة] (/sdk/security/secrets-signing): فهم التوقيع التلقائي HMAC والتعامل السري.
-- [Webhooks & Idempotency](/ar/sdk/security/webhooks-idempotency): التحقق من المكالمات المتكررة ومنع المعالجة المكررة.
-{/* sixmm-localized-link-repair:start */}
-<span id="localized-page-links" data-sixmm-canonical-anchor="localized-page-links" aria-hidden="true"></span>
+توصيات الإنتاج:
 
-## صفحات ذات صلة
+- استخدم HTTPS لنقاط النهاية للعامل API وwebhook.
+- قم بتخزين `apiSecret` في مدير سري أو مركز تكوين أو متغير بيئة.
+- حافظ على مزامنة وقت الخادم، ويفضل أن يكون ذلك مع NTP.
+- الحفاظ على جميع أرقام طلبات الشركاء والاحتفاظ بها فريدة عالميًا.
+- لا ترسل أبدًا `apiSecret` إلى المتصفحات أو التطبيقات أو البرامج الصغيرة أو كود مصدر الواجهة الأمامية.
 
-- [Java البداية السريعة](/ar/sdk/agent-sdk/java/quick-start)
-- [إنشاء رمز التضمين](/ar/sdk/agent-sdk/java/embed-token)
-- [Agent SDK أسرار وتوقيع HMAC](/ar/sdk/security/secrets-signing)
-{/* sixmm-localized-link-repair:end */}
+
+<span id="automatic-signing-fields" data-sixmm-canonical-anchor="automatic-signing-fields" aria-hidden="true"></span>
+
+## حقول التوقيع التلقائي
+
+بالنسبة لمكالمات الوكيل الموقعة API، يقوم SDK بإدخال ما يلي تلقائيًا:
+
+| مجال | مصدر | وصف |
+| --- | --- | --- |
+| `agentCode` | `AgentClientConfig.agentCode` | رمز الشريك |
+| `timestamp` | الطابع الزمني الحالي UTC لنظام التشغيل Unix | ثواني |
+| `nonce` | تأمين مولد عشوائي | إعادة الحماية |
+| `sign` | HMAC-SHA256 | طلب التوقيع |
+| `currency` | `defaultCurrency` | يتم ملؤها عند حذف طلبات التحويل/الحساب العملة |
+
+قواعد التوقيع:
+
+1. استبعاد `sign`.
+2. استبعاد القيم الفارغة.
+3. فرز المفاتيح حسب ترتيب ASCII.
+4. انضم باسم `k=v&k2=v2`.
+5. احسب الست عشري HMAC-SHA256 باستخدام `apiSecret`.
+
+لا يجب أن يقوم رمز العمل العادي بحساب التوقيعات أو تعيينها يدويًا
+`agentCode`، `timestamp`، `nonce`، أو `sign`.
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## المصدر والأدلة ذات الصلة
+
+- [المصدر الرسمي v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [نظرة عامة على الاستعلام وترقيم الصفحات](/ar/sdk/agent-sdk/java/perpetual-queries)
+- [محفظة التمويل](/ar/sdk/agent-sdk/java/funding-wallet)
+- [دليل الترقية](/ar/sdk/agent-sdk/java/upgrade)

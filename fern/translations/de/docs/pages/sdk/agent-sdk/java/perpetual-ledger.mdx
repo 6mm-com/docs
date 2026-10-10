@@ -1,0 +1,133 @@
+---
+title: "Vertragsbuch"
+subtitle: "Vertragsbuch: Agent Java SDK v0.3.0-Integration, Beispiele, Parameter und Antwortsemantik."
+slug: sdk/agent-sdk/java/perpetual-ledger
+canonical-url: https://docs.6mm.com/de/sdk/agent-sdk/java/perpetual-ledger
+---
+
+Dieser Leitfaden richtet sich an **Agent Java SDK `v0.3.0`**, Java 8+ und den getaggten öffentlichen Auftrag. Beispiele werden nach der Initialisierung von `client` in einem Partner-Backend ausgeführt [Schnellstart](/de/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## Beispielvoraussetzungen
+
+Die Java-Snippets teilen diese Importe. Initialisieren Sie `client` mit Quick Start und rufen Sie `platformUserId` aus der gespeicherten Bindung ab. Beispiel-Benutzer-/Bestell-IDs müssen durch Ihre eigenen persistenten Werte ersetzt werden.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span data-sixmm-canonical-anchor="listperpetualledger" aria-hidden="true"></span>
+
+## `listPerpetualLedger`
+
+Anforderungsmodell: `PerpetualLedgerRequest`.
+
+```java
+import com.sixmm.agent.model.PerpetualLedgerRequest;
+import com.sixmm.agent.model.PerpetualResponse;
+import java.util.Collections;
+
+PerpetualLedgerRequest request = new PerpetualLedgerRequest();
+request.platformUserIds = Collections.singletonList("1188041528");
+request.limit = 100;
+request.endTime = System.currentTimeMillis();
+request.startTime = request.endTime - 3_600_000L;
+PerpetualResponse response = client.listPerpetualLedger(request);
+System.out.println(response.data.items.size());
+System.out.println(response.data.hasMore);
+System.out.println(response.data.nextCursor);
+```
+
+<span id="request-fields" data-sixmm-canonical-anchor="request-fields" aria-hidden="true"></span>
+
+### Anforderungsfelder
+
+| Feld | Java Typ | Erforderlich | Bedeutung |
+| --- | --- | --- | --- |
+| `platformUserIds` | `java.util.List<String>` | Bedingt | 1–100 eindeutige öffentliche IDs; erforderlich für Ausführungen und bedingte Bestellungen. Bei unterstützten Abfragen für den Direktspielerbereich weglassen; [] ist ungültig. |
+| `assetType` | `String` | NEIN | Vermögensklassifizierung, wie vom Hauptbuch zurückgegeben; gehen Sie nicht von USDT aus. |
+| `changeType` | `String` | NEIN | Ledger-Geschäftstyp ändern, Quellwerte beibehalten. |
+| `startTime` | `Long` | NEIN | Inklusive Unix-Millisekunden; Verwenden Sie ein festes UTC-Verlaufsfenster. |
+| `endTime` | `Long` | NEIN | Exklusive Unix-Millisekunden. |
+| `limit` | `Integer` | NEIN | Standard 500; 1–1000. |
+| `cursor` | `String` | NEIN | Verwenden Sie den zurückgegebenen nextCursor mit unveränderten Filtern. stoppen, wenn hasMore falsch ist. |
+
+Das Beispiel liest eine Seite. Informationen zu erforderlichen Feldern, Player-Bereich, Filtersemantik, Limit, Cursor und begrenzten Wiederholungsversuchen finden Sie hier [Abfrageübersicht](/de/sdk/agent-sdk/java/perpetual-queries). Lassen Sie beim Blättern alle Filter unverändert; Interpretieren Sie einen Fehler nicht als leeres Ergebnis.
+
+<span id="contract-account-change-details" data-sixmm-canonical-anchor="contract-account-change-details" aria-hidden="true"></span>
+
+## Vertragsbuchaufzeichnungen
+
+Schnittstelle: `account/ledger`. Die zurückgegebenen Daten enthalten nur die folgenden 11 Geschäftsfelder und enthalten nicht die booleschen Bestellflags.
+
+| `data` Feld | Typ | Bedeutung |
+| --- | --- | --- |
+| `ledgerId` | string | Das Quellbuch zeichnet die Transaktions-ID auf; Dieselbe Transaktion kann in mehrere Details aufgeteilt werden |
+| `symbol` | string | Verwandtes Handelspaar, kann weggelassen werden, wenn es nicht verwandt ist |
+| `assetType` | string | Asset-Typ, gespeichert nach Quellwert; wird für die Asset-Klassifizierung verwendet, standardmäßig nicht abgeleitet USDT |
+| `changeType` | string | Geschäftstyp des Kontowechsels, gespeichert nach Quellwert, z. B. Bearbeitungsgebühr, Gewinn und Verlust, Überweisung; können nach demselben Feld gefiltert werden |
+| `amount` | string | Der Änderungsbetrag dieses Details. Eine positive Zahl bedeutet eine Zunahme, eine negative Zahl bedeutet eine Abnahme. Präzision bleibt erhalten |
+| `walletBalanceBefore` | string | In diesem Detail wird der Wallet-Saldo vor der Kontoänderung erfasst |
+| `walletBalanceAfter` | string | In diesem Detail wird der Wallet-Saldo nach der Kontoänderung erfasst |
+| `frozenBalanceBefore` | string | In diesem Detail wird der eingefrorene Saldo erfasst, der vor der Kontoänderung erfasst wurde |
+| `frozenBalanceAfter` | string | Der in diesem Detail erfasste eingefrorene Saldo nach der Kontoänderung |
+| `referenceId` | string | Zugehörige Geschäftsnummer; interpretiert als changeType und kann nicht einheitlich als Ordnung orderId angesehen werden; „0“ gibt an, dass die Quelle keine gültige zugeordnete Nummer hat |
+| `createdAt` | integer | Erstellungszeit der Kontoänderungsdetails, Millisekunden; Dieses Feld wird für die Zeitfilterung in dieser Schnittstelle verwendet |
+
+Verwenden Sie den von der Schnittstelle zurückgegebenen Saldo vor und nach der Kontoänderung. Unterschiedliche changeType haben unterschiedliche Semantiken und es kann nicht davon ausgegangen werden, dass jeder Betrag gleich walletBalanceAfter − walletBalanceBefore ist. Die Anzeige/Zusammenfassung der Sachkontodatensätze sollte die Typ- und Detailidentität beibehalten.
+
+Hier ist ein Beispiel für das Format mit einer fiktiven ID und einem fiktiven Betrag:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "items": [
+      {
+        "platformUserId": "1188041528",
+        "entityType": "ACCOUNT_LEDGER",
+        "entityId": "900001",
+        "data": {
+          "ledgerId": "ledger-example-001",
+          "symbol": "BTCUSDT",
+          "assetType": "USDT",
+          "changeType": "HANDLING_FEE",
+          "amount": "-0.10000000",
+          "walletBalanceBefore": "100.00000000",
+          "walletBalanceAfter": "99.90000000",
+          "frozenBalanceBefore": "0.00000000",
+          "frozenBalanceAfter": "0.00000000",
+          "referenceId": "800001",
+          "createdAt": 1791590400000
+        }
+      }
+    ],
+    "nextCursor": "",
+    "hasMore": false
+  }
+}
+```
+
+
+<span id="example-response-envelope" data-sixmm-canonical-anchor="example-response-envelope" aria-hidden="true"></span>
+
+## Beispiel eines Antwortumschlags
+
+Dies ist eine leere Seite zur Veranschaulichung, kein Beispiel eines abgeschlossenen Handels. Die obigen ressourcenspezifischen Feldtabellen beschreiben ausgefüllte `items[].data`.
+
+```json
+{"code":0,"message":"success","data":{"items":[],"nextCursor":"","hasMore":false}}
+```
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Quelle und zugehörige Leitfäden
+
+- [Offizielle Quelle v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Abfrageübersicht und Paginierung](/de/sdk/agent-sdk/java/perpetual-queries)
+- [Funding-Wallet](/de/sdk/agent-sdk/java/funding-wallet)
+- [Upgrade-Anleitung](/de/sdk/agent-sdk/java/upgrade)

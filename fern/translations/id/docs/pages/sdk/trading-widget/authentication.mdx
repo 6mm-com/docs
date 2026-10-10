@@ -1,15 +1,15 @@
 ---
-title: "Trading Widget Autentikasi"
-subtitle: "Gunakan token-partner untuk integrasi SSO trading tertanam baru."
+title: "Trading Widget Otentikasi"
+subtitle: "Gunakan token mitra untuk integrasi SSO perdagangan tertanam yang baru."
 slug: sdk/trading-widget/authentication
 canonical-url: https://docs.6mm.com/id/sdk/trading-widget/authentication
 ---
 
 <span id="recommended-mode-partner-token" data-sixmm-canonical-anchor="recommended-mode-partner-token" aria-hidden="true"></span>
 
-## Mode yang direkomendasikan: token mitra
+## Mode yang disarankan: token mitra
 
-partner-token menghindari menempatkan token pendek di URL dan menjaga apiSecret di backend mitra.
+partner-token menghindari penempatan token pendek di URL dan menyimpan apiSecret di backend partner.
 
 ```js
 const widget = TradingWidget.create('#trading-widget', {
@@ -38,14 +38,14 @@ const widget = TradingWidget.create('#trading-widget', {
 
 ## Dokumentasi terkait
 
-- [Create Embed Token](/id/sdk/agent-sdk/java/embed-token): contoh penerbitan token backend.
-- [Trading Widget Quick Start](/id/sdk/trading-widget/quick-start): alur inisialisasi lengkap.
-- [Secrets & Signing](/id/sdk/security/secrets-signing): simpan kredensial Agen yang berhak milik di backend.
-- [Pemecahan Masalah](/id/sdk/security/troubleshooting): mendiagnosis kegagalan sesi, token, asal, dan inisialisasi.
+- [Buat Token Sematan](/id/sdk/agent-sdk/java/embed-token): contoh penerbitan token backend.
+- [Trading Widget Mulai Cepat](/id/sdk/trading-widget/quick-start): menyelesaikan aliran inisialisasi.
+- [Rahasia & Penandatanganan](/id/sdk/security/secrets-signing): menyimpan kredensial Agen yang memiliki hak istimewa di backend.
+- [Pemecahan masalah](/id/sdk/security/troubleshooting): mendiagnosis kegagalan sesi, token, asal, dan inisialisasi.
 
 <span id="backend-flow" data-sixmm-canonical-anchor="backend-flow" aria-hidden="true"></span>
 
-## Alur backend
+## Aliran ujung belakang
 
 ```text
 1. Partner frontend receives auth_request from the iframe.
@@ -60,32 +60,32 @@ const widget = TradingWidget.create('#trading-widget', {
 
 <span id="tokenprovider-contract" data-sixmm-canonical-anchor="tokenprovider-contract" aria-hidden="true"></span>
 
-## kontrak tokenProvider
+## tokenProvider kontrak
 
-| Lapangan | Arah | Deskripsi |
+| Bidang | Arah | Keterangan |
 | --- | --- | --- |
-| channelId | SDK -> Backend Mitra | Pengidentifikasi sesi widget unik. Backend seharusnya meneruskannya ke createEmbedToken. |
-| simbol | SDK -> Backend Mitra | Simbol perdagangan yang diminta saat ini. Gunakan untuk scope token saat dibutuhkan. |
-| alasan | SDK -> Backend Mitra | Mengapa SDK meminta token, seperti pemuatan awal atau refresh. |
-| embedToken | Backend mitra -> SDK | Token berumur pendek yang dibuat oleh Agent SDK atau Agent API. |
-| expireAt | Backend mitra -> SDK | Cap waktu kedaluwarsa token dikembalikan oleh 6MM. |
+| channelId | SDK -> Backend mitra | Pengidentifikasi sesi widget unik. Backend harus meneruskannya ke createEmbedToken. |
+| simbol | SDK -> Backend mitra | Simbol perdagangan yang diminta saat ini. Gunakan itu untuk mencakup token bila diperlukan. |
+| alasan | SDK -> Backend mitra | Mengapa SDK meminta token, seperti pemuatan awal atau penyegaran. |
+| embedToken | Backend mitra -> SDK | Token berumur pendek yang dibuat oleh Agent SDK atau Agen API. |
+| expireAt | Backend mitra -> SDK | Stempel waktu kedaluwarsa token dikembalikan oleh 6MM. |
 
 <span id="failure-handling" data-sixmm-canonical-anchor="failure-handling" aria-hidden="true"></span>
 
 ## Penanganan kegagalan
 
-| Kondisi | Penanganan yang direkomendasikan |
+| Kondisi | Penanganan yang disarankan |
 | --- | --- |
-| Sesi mitra telah kedaluwarsa | Kembalikan 401 dari endpoint mitra dan minta pengguna untuk masuk lagi. |
-| Pembuatan token gagal sementara | Masukkan error ke tokenProvider dan biarkan widget muncul error autentikasi. |
-| ketidakcocokan channelId | Tolak permintaan dan buat ulang instance widget. |
-| Pengguna tidak diperbolehkan untuk berdagang | Kembalikan error yang dikendalikan mitra dan jangan buat token embed. |
+| Sesi mitra berakhir | Kembalikan 401 dari titik akhir mitra dan minta pengguna untuk masuk lagi. |
+| Pembuatan token gagal untuk sementara | Lemparkan kesalahan di tokenProvider dan izinkan widget menampilkan kesalahan autentikasi. |
+| channelId ketidakcocokan | Tolak permintaan dan buat ulang instance widget. |
+| Pengguna tidak diizinkan untuk berdagang | Kembalikan kesalahan yang dikontrol mitra dan jangan membuat token semat. |
 
 <span id="compatibility-mode-agent-sso" data-sixmm-canonical-anchor="compatibility-mode-agent-sso" aria-hidden="true"></span>
 
-## Mode kompatibilitas: agent-sso
+## Mode kompatibilitas: agen-sso
 
-agent-sso mempertahankan alur tiket /agent-entry yang lebih lama. Pilih token-partner untuk integrasi baru.
+agent-sso mempertahankan aliran tiket lama /agent-entry. Lebih memilih token mitra untuk integrasi baru.
 
 ```js
 const widget = TradingWidget.create('#trading-widget', {
@@ -105,3 +105,13 @@ const widget = TradingWidget.create('#trading-widget', {
   },
 })
 ```
+
+<span id="seconds-trading-and-environment-rules" data-sixmm-canonical-anchor="seconds-trading-and-environment-rules" aria-hidden="true"></span>
+
+## Perdagangan detik dan aturan lingkungan
+
+Untuk halaman detik, gunakan autentikasi `partner-token` yang sama dengan `page` dan `tradingMode` yang dikonfigurasi pada Widget. Tidak ada token prediksi terpisah. Setiap panggilan tokenProvider harus mendapatkan token satu kali baru dari backend Anda.
+
+Kembalikan `embedToken`, `expireAt` dalam hitungan detik Unix, dan `channelId` asli sebagai objek tingkat atas. Respons token Agent SDK tidak mengandung `channelId`; backend Anda menggemakan saluran Widget saat ini. Jika titik akhir Anda membungkus respons dalam `data`, buka bungkusnya sebelum kembali dari tokenProvider.
+
+[Integrasi detik penuh](/id/sdk/agent-sdk/java/seconds-trading) · [Panduan lingkungan dana](/id/sdk/agent-sdk/java/environments)

@@ -1,0 +1,186 @@
+---
+title: "Commandes perpétuelles"
+subtitle: "Commandes perpétuelles: Intégration Agent Java SDK v0.3.0, exemples, paramètres et sémantique de réponse."
+slug: sdk/agent-sdk/java/perpetual-orders
+canonical-url: https://docs.6mm.com/fr/sdk/agent-sdk/java/perpetual-orders
+---
+
+Ce guide cible **Agent Java SDK `v0.3.0`**, Java 8+ et le contrat public étiqueté. Exemples exécutés dans un backend partenaire après l'initialisation de `client` dans [Démarrage rapide](/fr/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## Exemples de prérequis
+
+Les extraits de code Java partagent ces importations. Initialisez `client` à l'aide de Quick Start et obtenez `platformUserId` à partir de la liaison enregistrée. Les exemples d’ID utilisateur/commande doivent être remplacés par vos propres valeurs persistantes.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span data-sixmm-canonical-anchor="listcurrentperpetualorders" aria-hidden="true"></span>
+
+## `listCurrentPerpetualOrders`
+
+Modèle de demande : `CurrentPerpetualOrdersRequest`.
+
+```java
+import com.sixmm.agent.model.CurrentPerpetualOrdersRequest;
+import com.sixmm.agent.model.PerpetualResponse;
+import java.util.Collections;
+
+CurrentPerpetualOrdersRequest request = new CurrentPerpetualOrdersRequest();
+request.platformUserIds = Collections.singletonList("1188041528");
+request.limit = 100;
+request.orderCategory = "NORMAL";
+request.symbol = "BTCUSDT";
+PerpetualResponse response = client.listCurrentPerpetualOrders(request);
+System.out.println(response.data.items.size());
+System.out.println(response.data.hasMore);
+System.out.println(response.data.nextCursor);
+```
+
+<span id="request-fields" data-sixmm-canonical-anchor="request-fields" aria-hidden="true"></span>
+
+### Champs de requête
+
+| Champ | Java tapez | Requis | Signification |
+| --- | --- | --- | --- |
+| `orderCategory` | `String` | Oui | NORMAL ou CONDITIONAL ; les requêtes conditionnelles nécessitent des utilisateurs explicites. |
+| `platformUserIds` | `java.util.List<String>` | Conditionnel | 1 à 100 identifiants publics uniques ; requis pour les exécutions et les commandes conditionnelles. Omettre les requêtes prises en charge pour la portée directe du lecteur ; [] n'est pas valide. |
+| `symbol` | `String` | Non | Filtre de paire de trading en option. |
+| `limit` | `Integer` | Non | Par défaut 500 ; 1 à 1000. |
+| `cursor` | `String` | Non | Utilisez le nextCursor renvoyé avec des filtres inchangés ; arrêter lorsque hasMore est faux. |
+
+L'exemple lit une page. Pour les champs obligatoires, la portée du joueur, la sémantique du filtre, la limite, le curseur et les tentatives limitées, suivez [Présentation de la requête](/fr/sdk/agent-sdk/java/perpetual-queries). Gardez tous les filtres inchangés pendant la pagination ; n’interprètez pas une erreur comme un résultat vide.
+
+<span data-sixmm-canonical-anchor="listperpetualorderhistory" aria-hidden="true"></span>
+
+## `listPerpetualOrderHistory`
+
+Modèle de demande : `PerpetualOrderHistoryRequest`.
+
+```java
+import com.sixmm.agent.model.PerpetualOrderHistoryRequest;
+import com.sixmm.agent.model.PerpetualResponse;
+import java.util.Collections;
+
+PerpetualOrderHistoryRequest request = new PerpetualOrderHistoryRequest();
+request.platformUserIds = Collections.singletonList("1188041528");
+request.limit = 100;
+request.orderCategory = "NORMAL";
+request.symbol = "BTCUSDT";
+request.endTime = System.currentTimeMillis();
+request.startTime = request.endTime - 3_600_000L;
+PerpetualResponse response = client.listPerpetualOrderHistory(request);
+System.out.println(response.data.items.size());
+System.out.println(response.data.hasMore);
+System.out.println(response.data.nextCursor);
+```
+
+<span id="request-fields-1" data-sixmm-canonical-anchor="request-fields-1" aria-hidden="true"></span>
+
+### Champs de requête
+
+| Champ | Java tapez | Requis | Signification |
+| --- | --- | --- | --- |
+| `orderCategory` | `String` | Oui | NORMAL ou CONDITIONAL ; les requêtes conditionnelles nécessitent des utilisateurs explicites. |
+| `platformUserIds` | `java.util.List<String>` | Conditionnel | 1 à 100 identifiants publics uniques ; requis pour les exécutions et les commandes conditionnelles. Omettre les requêtes prises en charge pour la portée directe du lecteur ; [] n'est pas valide. |
+| `symbol` | `String` | Non | Filtre de paire de trading en option. |
+| `orderId` | `String` | Non | ID de commande ordinaire ; pas un numéro d'ordre de transfert de partenaire. |
+| `conditionId` | `String` | Non | ID de commande conditionnelle ; ne pas mélanger avec orderId. |
+| `clientOrderId` | `String` | Non | Référence de l'ordre du client de trading, et non agentOrderNo. |
+| `side` | `String` | Non | Filtre BUY / SELL. |
+| `status` | `String` | Non | Statut spécifique à la ressource ; voir la référence d'état. |
+| `startTime` | `Long` | Non | Millisecondes Unix incluses ; utilisez une fenêtre d'historique UTC fixe. |
+| `endTime` | `Long` | Non | Millisecondes Unix exclusives. |
+| `limit` | `Integer` | Non | Par défaut 500 ; 1 à 1000. |
+| `cursor` | `String` | Non | Utilisez le nextCursor renvoyé avec des filtres inchangés ; arrêter lorsque hasMore est faux. |
+
+L'exemple lit une page. Pour les champs obligatoires, la portée du joueur, la sémantique du filtre, la limite, le curseur et les tentatives limitées, suivez [Présentation de la requête](/fr/sdk/agent-sdk/java/perpetual-queries). Gardez tous les filtres inchangés pendant la pagination ; n’interprètez pas une erreur comme un résultat vide.
+
+<span id="ordinary-delegation-current-and-history" data-sixmm-canonical-anchor="ordinary-delegation-current-and-history" aria-hidden="true"></span>
+
+## Commandes ordinaires : actuelles et historiques
+
+Actuel : `orders/current` + `orderCategory=NORMAL` ; Historique : `orders/history` + `orderCategory=NORMAL`.
+
+| Champ `data` | taper | Signification et champ d'application |
+| --- | --- | --- |
+| `symbol` | string | Paire de trading, telle que BTCUSDT |
+| `orderId` | string | ID de commande ordinaire de la plateforme |
+| `orderCategory` | string | Corrigé NORMAL |
+| `clientOrderId` | string | Numéro de commande client fourni par la source de la commande de transaction ; ce n'est pas le même champ que le transfert de fonds du commerçant agentOrderNo |
+| `orderType` | string | Type de délégué, tel que LIMIT, MARKET ; la valeur réelle du dénombrement prévaudra |
+| `side` | string | Direction d'achat et de vente BUY / SELL |
+| `status` | string | Statut de commande ordinaire, voir l'aperçu des requêtes |
+| `timeInForce` | string | Période de validité/stratégie d'exécution de la transaction, telle que GTC, IOC, FOK ; interprété en fonction des valeurs réelles |
+| `price` | string | Prix ​​confié ; il peut être omis lorsqu'aucun prix n'est fourni et le prix de transaction sur le marché ne sera pas complété par soi-même. |
+| `quantity` | string | Quantité de commande initiale |
+| `filledQuantity` | string | Quantité de transaction |
+| `remainingQuantity` | string | Quantité non négociée ; la requête actuelle prend la quantité - filledQuantity, et la requête historique prend la valeur de l'enregistrement historique |
+| `avgFilledPrice` | string | Le prix de transaction moyen de la pièce réalisée ; il peut n'y avoir aucune valeur s'il n'est pas terminé |
+| `reduceOnly` | boolean | Faut-il uniquement réduire les postes |
+| `closeOnly` | boolean | S'il est uniquement utilisé pour clôturer des positions |
+| `makerOnly` | boolean | S'il faut exécuter uniquement en tant que Maker |
+| `leverage` | integer | Tirez parti de plusieurs ; **L'ordre ordinaire historique** a une source, et l'ordre ordinaire actuel ne crée pas cette valeur |
+| `marginMode` | string | Mode marge ; **L'ordre ordinaire historique** renvoie actuellement une chaîne d'énumération numérique, telle que « 1 », « 2 » ; l'ordre ordinaire actuel n'est pas fourni |
+| `createdAt` | integer | Temps de création de la commande, millisecondes ; utilisez ce champ pour filtrer l'historique des commandes |
+| `updatedAt` | integer | Temps de mise à jour de l'enregistrement délégué, millisecondes |
+
+L'historique des commandes comprend les commandes ordinaires terminées. Chaque enregistrement ne peut pas être considéré comme entièrement complété sur la base du seul nom de l'interface. La page de commande actuelle est une requête d'état actuel et non un flux d'événements de commande.
+
+
+<span id="conditional-delegation-current-and-history" data-sixmm-canonical-anchor="conditional-delegation-current-and-history" aria-hidden="true"></span>
+
+## Commandes conditionnelles : actuelles et historiques
+
+Actuel : `orders/current` + `orderCategory=CONDITIONAL` ; Historique : `orders/history` + `orderCategory=CONDITIONAL`. Les deux nécessitent des platformUserIds.
+
+| Champ `data` | taper | signification |
+| --- | --- | --- |
+| `symbol` | string | paire de trading |
+| `conditionId` | string | ID des commandes conditionnelles, indépendantes des orderId ordinaires |
+| `orderCategory` | string | Corrigé CONDITIONAL |
+| `generatedOrderId` | string | ID de commande ordinaire généré après le déclenchement ; peut être omis s'il n'est pas généré |
+| `clientOrderId` | string | Le numéro de commande client des commandes conditionnelles, affiché lorsqu'il existe |
+| `side` | string | BUY / SELL |
+| `orderType` | string | Type d'ordre post-déclenchement, interprété en fonction de la valeur réelle |
+| `triggerType` | string | Type de règle de déclenchement, expliqué par l'énumération source réelle |
+| `workingType` | string | Type de travail/source de prix qui déclenche le prix, interprété comme une énumération réelle |
+| `timeInForce` | string | Durée de validité/stratégie d'exécution de l'ordre après déclenchement |
+| `price` | string | Le prix de la commande après déclenchement, sortie lorsque la source a de la valeur |
+| `quantity` | string | Quantité de commande conditionnelle |
+| `triggerPrice` | string | prix de déclenchement |
+| `reduceOnly` | boolean | Faut-il uniquement réduire les postes |
+| `closePosition` | boolean | S'il faut utiliser la sémantique de clôture complète de la position, ne peut pas être confondu avec closeOnly comme le même champ |
+| `leverage` | integer | Tirer parti de plusieurs, sortie lorsqu'elle est différente de zéro |
+| `marginMode` | string | Cette classe renvoie CROSS / ISOLATED, qui est une chaîne numérique différente des ordres/positions historiques ordinaires. |
+| `status` | string | État de déclenchement unique conditionnel, voir la présentation des requêtes |
+| `triggerStatus` | string | L'implémentation actuelle utilise la même valeur de statut conditionnel que le statut |
+| `createdAt` | integer | Temps de création de la commande conditionnelle, millisecondes ; les conditions historiques sont filtrées par cette heure |
+| `updatedAt` | integer | Temps de mise à jour, sortie lorsqu'il y a une valeur, millisecondes |
+| `deletedAt` | integer | Supprimer le temps de marquage, sortie lorsqu'il y a une valeur, millisecondes ; ce n'est pas un champ de temps de transaction/annulation unifié |
+
+Les commandes conditionnelles ne fournissent pas de filledQuantity, remainingQuantity, avgFilledPrice pour les commandes ordinaires. Si vous avez besoin du statut de transaction des ordres ordinaires après le déclenchement, interrogez les ordres/transactions ordinaires via generatedOrderId et ne déduisez pas le volume de transactions du statut de la commande conditionnelle.
+
+
+<span id="example-response-envelope" data-sixmm-canonical-anchor="example-response-envelope" aria-hidden="true"></span>
+
+## Exemple d'enveloppe de réponse
+
+Il s'agit d'une page vide illustrative, et non d'un échantillon d'une transaction terminée. Les tableaux de champs spécifiques aux ressources ci-dessus décrivent les `items[].data` renseignés.
+
+```json
+{"code":0,"message":"success","data":{"items":[],"nextCursor":"","hasMore":false}}
+```
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Source et guides associés
+
+- [Source officielle v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Présentation et pagination des requêtes](/fr/sdk/agent-sdk/java/perpetual-queries)
+- [Portefeuille de financement](/fr/sdk/agent-sdk/java/funding-wallet)
+- [Guide de mise à niveau](/fr/sdk/agent-sdk/java/upgrade)

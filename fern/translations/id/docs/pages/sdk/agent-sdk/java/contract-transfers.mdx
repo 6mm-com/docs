@@ -1,0 +1,260 @@
+---
+title: "Transfer & Rekonsiliasi Kontrak"
+subtitle: "Transfer & Rekonsiliasi Kontrak: Agent Java SDK integrasi v0.3.0, contoh, parameter, dan semantik respons."
+slug: sdk/agent-sdk/java/contract-transfers
+canonical-url: https://docs.6mm.com/id/sdk/agent-sdk/java/contract-transfers
+---
+
+Panduan ini menargetkan **Agent Java SDK `v0.3.0`**, Java 8+, dan kontrak publik yang diberi tag. Contoh dijalankan di backend mitra setelah menginisialisasi `client` di [Mulai Cepat](/id/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## Contoh prasyarat
+
+Cuplikan Java membagikan impor ini. Inisialisasi `client` menggunakan Quick Start dan dapatkan `platformUserId` dari pengikatan yang disimpan. Contoh ID pengguna/pesanan harus diganti dengan nilai Anda yang tetap.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span id="fixed-amount-transfer" data-sixmm-canonical-anchor="fixed-amount-transfer" aria-hidden="true"></span>
+
+## Transfer Jumlah Tetap
+
+Gunakan `transfer` untuk transfer jumlah tetap. `Direction.IN` artinya mentransfer
+dari platform mitra ke 6MM. `Direction.OUT` berarti mentransfer dari 6MM
+kembali ke platform mitra.
+
+Gunakan string atau `BigDecimal` untuk jumlah. Jangan gunakan `double` atau `float`.
+
+<span id="transfer-by-agentuserid" data-sixmm-canonical-anchor="transfer-by-agentuserid" aria-hidden="true"></span>
+
+### Transfer Oleh `agentUserId`
+
+```java
+import com.sixmm.agent.model.Direction;
+import com.sixmm.agent.model.TransferRequest;
+import com.sixmm.agent.model.TransferResponse;
+
+TransferResponse resp = client.transfer(TransferRequest.fixed(
+        "AGT-ORDER-1001",
+        "agent-user-001",
+        Direction.IN,
+        "USDT",
+        "10.00"));
+
+System.out.println(resp.orderNo);
+System.out.println(resp.orderStatus);
+System.out.println(resp.agentUserId);
+System.out.println(resp.platformUserId);
+```
+
+<span id="transfer-by-platformuserid" data-sixmm-canonical-anchor="transfer-by-platformuserid" aria-hidden="true"></span>
+
+### Transfer Oleh `platformUserId`
+
+```java
+TransferResponse resp = client.transfer(TransferRequest.fixedByPlatformUserId(
+        "AGT-ORDER-1002",
+        "1188041528",
+        Direction.OUT,
+        "USDT",
+        "5.00"));
+```
+
+<span id="provide-both-ids" data-sixmm-canonical-anchor="provide-both-ids" aria-hidden="true"></span>
+
+### Berikan Kedua ID
+
+Jika kedua ID diberikan, layanan akan memvalidasi bahwa keduanya mengarah ke hal yang sama
+pengguna terikat.
+
+```java
+TransferRequest req = TransferRequest
+        .fixed("AGT-ORDER-1003", "agent-user-001", Direction.IN, "USDT", "20.00")
+        .withPlatformUserId("1188041528");
+
+TransferResponse resp = client.transfer(req);
+```
+
+Bidang permintaan:
+
+| Bidang | Jenis | Diperlukan | Keterangan |
+| --- | --- | --- | --- |
+| `agentOrderNo` | string | Ya | Nomor pesanan mitra yang unik secara global |
+| `agentUserId` | string | Secara kondisional | Diperlukan ketika `platformUserId` tidak ada |
+| `platformUserId` | string | Secara kondisional | Diperlukan ketika `agentUserId` tidak ada |
+| `direction` | enum | Ya | `IN` atau `OUT` |
+| `currency` | string | TIDAK | Diisi dari `defaultCurrency` bila tidak ada |
+| `amount` | string | Ya | String jumlah desimal |
+
+Bidang respons:
+
+| Bidang | Jenis | Keterangan |
+| --- | --- | --- |
+| `orderNo` | string | Nomor pesanan platform |
+| `orderStatus` | string | `SUCCESS`, `FAILED`, `PROCESSING`, dll. |
+| `agentUserId` | string | ID pengguna sisi mitra |
+| `platformUserId` | string | 6MM ID pengguna eksternal |
+
+
+<span id="order-confirmation-and-idempotency" data-sixmm-canonical-anchor="order-confirmation-and-idempotency" aria-hidden="true"></span>
+
+## Konfirmasi Pesanan Dan Idempotensi
+
+Setelah `transfer` dipanggil, layanan Agen secara sinkron memanggil perdagangan
+inti di jalur utama. Dalam kebanyakan kasus, respons API sudah berisi
+hasil inti perdagangan yang sinkron.
+
+| Hasil | Arti | Tindakan mitra |
+| --- | --- | --- |
+| `SUCCESS` | Transfer berhasil | Tandai pesanan lokal sebagai berhasil |
+| `FAILED` | Transfer ditolak atau gagal | Simpan alasan kegagalan dan tunjukkan bila perlu |
+| `PROCESSING` | Batas waktu inti perdagangan atau ketidakpastian jaringan | Jangan mencoba lagi dengan nomor pesanan baru. Tunggu webhook atau hubungi `queryOrder` |
+
+Persyaratan idempotensi:
+
+- Gunakan satu `agentOrderNo` untuk satu transaksi bisnis.
+- Jika HTTP waktu habis atau jaringan gagal, tanyakan `agentOrderNo` yang sama terlebih dahulu.
+- Webhooks dapat dicoba lagi. Hapus duplikatnya dengan kunci idempotensi.
+
+
+<span id="transfer-all-out" data-sixmm-canonical-anchor="transfer-all-out" aria-hidden="true"></span>
+
+## Transfer Semua Keluar
+
+`transferAllOut` memindahkan saldo sisi 6MM yang dapat ditarik kembali ke
+platform mitra.
+
+```java
+import com.sixmm.agent.model.TransferAllOutRequest;
+import com.sixmm.agent.model.TransferAllOutResponse;
+
+TransferAllOutResponse resp = client.transferAllOut(
+        TransferAllOutRequest.of("AGT-ORDER-2001", "agent-user-001", "USDT"));
+
+System.out.println(resp.orderStatus);
+System.out.println(resp.amount);
+```
+
+Oleh `platformUserId`:
+
+```java
+TransferAllOutResponse resp = client.transferAllOut(
+        TransferAllOutRequest.byPlatformUserId("AGT-ORDER-2002", "1188041528", "USDT"));
+```
+
+`amount` dalam respon adalah jumlah sebenarnya yang ditransfer.
+
+
+<span id="reverse-order" data-sixmm-canonical-anchor="reverse-order" aria-hidden="true"></span>
+
+## Urutan Terbalik
+
+Reverse digunakan untuk mengkompensasi perintah transfer yang berhasil saat backend
+mendukung aliran balik. Kasus yang umum mencakup pengecualian pesanan lokal mitra
+atau rollback rekonsiliasi manual.
+
+```java
+import com.sixmm.agent.model.ReverseOrderRequest;
+import com.sixmm.agent.model.ReverseOrderResponse;
+
+ReverseOrderResponse resp = client.reverse(ReverseOrderRequest.of(
+        "AGT-ORDER-1001",
+        "REV-ORDER-1001",
+        "partner order rollback"));
+
+System.out.println(resp.orderStatus);
+```
+
+Bidang:
+
+| Bidang | Jenis | Diperlukan | Keterangan |
+| --- | --- | --- | --- |
+| `origOrderNo` | string | Ya | Nomor pesanan transfer asli |
+| `reverseOrderNo` | string | Ya | Nomor pesanan terbalik yang unik secara global |
+| `reverseReason` | string | Ya | Alasan sebaliknya |
+
+Catatan:
+
+- Mundur bukanlah operasi pembatalan yang normal.
+- Pesanan terbalik juga harus idempoten berdasarkan nomor pesanan.
+- Setelah pesanan awal dibalik, webhook dapat mendorong pesanan awal
+`REVERSED` keadaan akhir.
+
+
+<span id="query-order" data-sixmm-canonical-anchor="query-order" aria-hidden="true"></span>
+
+## Urutan Kueri
+
+```java
+import com.sixmm.agent.model.OrderQueryType;
+import com.sixmm.agent.model.QueryOrderRequest;
+import com.sixmm.agent.model.QueryOrderResponse;
+
+QueryOrderResponse resp = client.queryOrder(
+        QueryOrderRequest.of("AGT-ORDER-1001", OrderQueryType.TRANSFER_IN));
+
+System.out.println(resp.status);
+System.out.println(resp.failReason);
+```
+
+Nilai `orderType` yang didukung:
+
+- `TRANSFER_IN`
+- `TRANSFER_OUT`
+
+Bidang respons umum:
+
+| Bidang | Jenis | Keterangan |
+| --- | --- | --- |
+| `orderType` | string | Jenis pesanan |
+| `orderNo` | string | Nomor pesanan mitra |
+| `status` | string | Status pesanan |
+| `direction` | string | `IN` atau `OUT` |
+| `transferMode` | string | `FIXED_AMOUNT` atau `ALL_OUT` |
+| `currency` | string | Mata uang |
+| `amount` | string | Jumlah |
+| `agentUserId` | string | ID pengguna sisi mitra |
+| `platformUserId` | string | 6MM ID pengguna eksternal |
+| `failReason` | string | Alasan kegagalan |
+| `createdAt` | string | Waktu penciptaan |
+| `completedAt` | string | Waktu penyelesaian |
+
+
+<span id="list-orders" data-sixmm-canonical-anchor="list-orders" aria-hidden="true"></span>
+
+## Daftar Pesanan
+
+```java
+import com.sixmm.agent.model.ListOrdersRequest;
+import com.sixmm.agent.model.ListOrdersResponse;
+
+ListOrdersRequest req = ListOrdersRequest.page(1, 20);
+req.orderType = "TRANSFER_IN";
+req.status = "SUCCESS";
+req.startTime = "2026-06-01T00:00:00Z";
+req.endTime = "2026-06-16T00:00:00Z";
+
+ListOrdersResponse resp = client.listOrders(req);
+
+System.out.println(resp.total);
+resp.orders.forEach(order -> System.out.println(order.orderNo));
+```
+
+Rekomendasi penomoran halaman:
+
+- `page` dimulai dari 1.
+- Pertahankan `pageSize` pada atau di bawah 100.
+- Untuk pekerjaan rekonsiliasi, halaman demi jendela waktu dan hapus duplikatnya berdasarkan `orderNo`.
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Sumber dan panduan terkait
+
+- [Sumber resmi v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Ikhtisar kueri dan penomoran halaman](/id/sdk/agent-sdk/java/perpetual-queries)
+- [Dompet pendanaan](/id/sdk/agent-sdk/java/funding-wallet)
+- [Panduan peningkatan](/id/sdk/agent-sdk/java/upgrade)

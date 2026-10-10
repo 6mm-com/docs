@@ -1,80 +1,95 @@
 ---
-title: "SDK Resolução de Problemas de Integração"
-subtitle: "Diagnostica Trading Widget, Agent SDK, assinatura, webhook, timeout e problemas de ambiente antes de escalar um pedido de suporte."
+title: "SDK Resolução de problemas de integração"
+subtitle: "Diagnosticar Trading Widget, Agent SDK, assinatura, webhook, tempo limite e problemas de ambiente antes de escalar um pedido de suporte."
 slug: sdk/security/troubleshooting
 canonical-url: https://docs.6mm.com/pt-PT/sdk/security/troubleshooting
 ---
 
-Comece pelo ambiente, carimbo temporal e identificador de negócio da operação falhada. Uma verificação estruturada geralmente separa problemas de configuração de autenticação, rede e processamento assíncrono.
+Comece pelo ambiente, o carimbo de data/hora e o identificador comercial da operação com falha. Uma verificação estruturada separa frequentemente os problemas de configuração dos problemas de autenticação, de rede e de processamento assíncrono.
 
 <span id="diagnostic-order" data-sixmm-canonical-anchor="diagnostic-order" aria-hidden="true"></span>
 
-## Ordem diagnóstica recomendada
+## Ordem de diagnóstico recomendada
 
-1. Confirmar o ambiente afetado e a URL base.
-2. Registar o intervalo de tempo UTC e o primeiro pedido falhado.
-3. Identificar o módulo: Trading Widget, Agent SDK, REST API, WebSocket, ou webhook.
-4. Capturar o ID do pedido, ID do utilizador do parceiro, `agentOrderNo`, ID da encomenda ou ID do evento webhook.
-5. Verifique o código recente, credencial, IP whitelist ou alterações de implementação.
-6. Reproduzir com o menor caso de teste seguro.
+1. Confirme o ambiente afetado e a base URL.
+2. Registe o intervalo de tempo UTC e o primeiro pedido com falha.
+3. Identifique o módulo: Trading Widget, Agent SDK, REST API, WebSocket ou webhook.
+4. Capte o ID do pedido, o ID do utilizador parceiro, `agentOrderNo`, o ID do pedido ou o ID do evento webhook.
+5. Verifique o código recente, a credencial, a lista de permissões IP ou as alterações de implementação.
+6. Reproduza com o mais pequeno caso de teste seguro.
 
 <span id="trading-widget-issues" data-sixmm-canonical-anchor="trading-widget-issues" aria-hidden="true"></span>
 
-## Trading Widget questões
+## Trading Widget problemas
 
 | Sintoma | Causa provável | Corrigir |
 | --- | --- | --- |
-| O iframe solicita domínio local parceiro | baseUrl falta | Passe baseUrl: 'https://app.6mm.com'. |
-| O iframe é invisível ou muito baixo | O recipiente principal não tem altura | Defina a altura do recipiente ou a altura de passagem. |
-| token_provider_missing | O modo partner-token não tem fornecedor | Adicione autorizaçãotokenProvider. |
-| auth_exchange_failed | Token embed inválido, expirado ou incompatível | Verifique a resposta do token no backend e channelId. |
+| iframe solicita domínio local do parceiro | baseUrl está em falta | Passe baseUrl: 'https://app.6mm.com'. |
+| iframe é invisível ou demasiado curto | O contentor pai não tem altura | Defina a altura do recipiente ou a altura da passagem. |
+| token_provider_missing | modo de token de parceiro não tem fornecedor | Adicionar autenticação.tokenProvider. |
+| auth_exchange_failed | Token incorporado inválido, expirado ou incompatível | Verifique a resposta do token de backend e channelId. |
 
 <span id="agent-sdk-issues" data-sixmm-canonical-anchor="agent-sdk-issues" aria-hidden="true"></span>
 
-## Agent SDK questões
+## Agent SDK problemas
 
 | Sintoma | Causa provável | Corrigir |
 | --- | --- | --- |
-| Assinatura rejeitada | Segredo errado, desvio de relógio ou campos de assinatura alterados manualmente | Deixa- SDK gerar campos de assinatura e sincronizar o tempo do servidor. |
-| Risco de movimento de fundos duplicados | Novo número de encomenda usado após o tempo de espera | Consulta por agentOrderNo original primeiro. |
-| PROCESSING tratado como fracasso | Estado pendente mal interpretado | Espera pelo webhook ou liga para queryOrder. |
-| Webhook processado várias vezes | Comportamento de retentar sem idempotência | Adiciona chaves de idempotência e verificações de estado final. |
+| Assinatura rejeitada | Segredo errado, desvio de relógio ou campos assinados alterados manualmente | Deixe SDK gerar campos de assinatura e sincronizar a hora do servidor. |
+| Risco de movimentação de fundos duplicados | Novo número de encomenda utilizado após o tempo limite | Consulte primeiro pelo agentOrderNo original. |
+| PROCESSING tratado como falha | Estado pendente mal compreendido | Aguarde webhook ou ligue para queryOrder. |
+| Webhook processado várias vezes | Tentar novamente o comportamento sem idempotência | Adicione chave de idempotência e verificações de estado final. |
 
 <span id="evidence-to-capture" data-sixmm-canonical-anchor="evidence-to-capture" aria-hidden="true"></span>
 
-## Provas a capturar
+## Evidências para captar
 
-| Integração | Evidências úteis |
+| Integração | Evidência útil |
 | --- | --- |
-| Trading Widget | Página URL, SDK caminho de versão, consola do navegador, pedidos de rede falhados, carga útil `onError` e dimensões do contentor. |
-| Agent SDK | SDK linguagem/versão, URL base, carimbo temporal UTC , ID do pedido, `agentOrderNo`, código de resposta e registos sanitizados. |
-| Webhook | Tempo de entrega, chave de evento ou negócio, resultado de validação de assinatura, estado de processamento e hash do corpo bruto sanitizado. |
-| REST API | Método, caminho, ambiente, ID do pedido, código de resposta e parâmetros sanitizados. |
+| Trading Widget | Página URL, caminho da versão SDK, consola do browser, pedidos de rede com falha, carga útil `onError` e dimensões do contentor. |
+| Agent SDK | SDK idioma/versão, base URL, UTC carimbo de data/hora, ID do pedido, `agentOrderNo`, código de resposta e registos limpos. |
+| Webhook | Prazo de entrega, evento ou chave de negócio, resultado da validação da assinatura, estado de processamento e hash do corpo bruto higienizado. |
+| REST API | Método, caminho, ambiente, ID de pedido, código de resposta e parâmetros higienizados. |
 
-Nunca inclua palavras-passe, tokens de acesso, API segredos, assinaturas completas, chaves privadas ou dados pessoais não censurados nos diagnósticos.
+Nunca inclua palavras-passe, tokens de acesso, API segredos, assinaturas completas, chaves privadas ou dados pessoais não editados nos diagnósticos.
 
 <span id="before-escalating" data-sixmm-canonical-anchor="before-escalating" aria-hidden="true"></span>
 
 ## Antes de escalar
 
-- Tentar novamente apenas quando a operação estiver documentada como segura para tentar novamente.
-- Após um timeout, consultar o identificador original da empresa em vez de criar um novo.
-- Confirmar o relógio do sistema e o ambiente de credenciais para erros de assinatura.
-- Preservar o primeiro fracasso e quaisquer resultados de tentativas posteriores.
-- Utilizar o [Modelo de Pedido de Suporte](/pt-PT/resources/support-request-template) para enviar um relatório completo e censurado.
+- Tente novamente apenas quando a operação estiver documentada como segura para tentar novamente.
+- Após um tempo limite, consulte o identificador comercial original em vez de criar um novo.
+- Confirme o relógio do sistema e o ambiente de credenciais para erros de assinatura.
+- Preserve a primeira falha e quaisquer resultados de novas tentativas posteriores.
+- Use o [Modelo de pedido de suporte](/pt-PT/resources/support-request-template) para enviar um relatório completo e redigido.
 
 <span id="related-docs" data-sixmm-canonical-anchor="related-docs" aria-hidden="true"></span>
 
-## Documentação relacionada
+## Documentos relacionados
 
 <CardGroup cols={3}>
-<Card title="Trading Widget Início Rápido" icon="fa-duotone fa-chart-line" href="/pt-PT/sdk/trading-widget/quick-start">
-Verifique o carregamento do script, tamanho do contentor, configuração e callbacks.
+<Card title="Trading Widget Início rápido" icon="fa-duotone fa-chart-line" href="/pt-PT/sdk/trading-widget/quick-start">
+Verifique o carregamento do script, o tamanho do contentor, a configuração e as chamadas de retorno.
 </Card>
-<Card title="Segredos e Assinatura" icon="fa-duotone fa-shield-keyhole" href="/pt-PT/sdk/security/secrets-signing">
-Verifique Agent SDK credenciais, relógios e campos assinados.
+<Card title="Segredos e assinatura" icon="fa-duotone fa-shield-keyhole" href="/pt-PT/sdk/security/secrets-signing">
+Verifique as credenciais, os relógios e os campos assinados Agent SDK.
 </Card>
-<Card title="Webhooks & Idempotência" icon="fa-duotone fa-webhook" href="/pt-PT/sdk/security/webhooks-idempotency">
-Revise a verificação de callback e o tratamento de eventos duplicados.
+<Card title="Webhooks e idempotência" icon="fa-duotone fa-webhook" href="/pt-PT/sdk/security/webhooks-idempotency">
+Reveja a verificação de retorno de chamada e o tratamento de eventos duplicados.
 </Card>
 </CardGroup>
+
+<span id="java-v030-diagnostics" data-sixmm-canonical-anchor="java-v030-diagnostics" aria-hidden="true"></span>
+
+## Diagnóstico Java v0.3.0
+
+| Sintoma | Verificação e recuperação |
+| --- | --- |
+| A solicitação de financiamento tem um resultado desconhecido | Mantenha o original `agentOrderNo`; chame `queryWalletTransfer` com o ambiente original. Não utilize `queryOrder`. |
+| UI de simulação mostra fundos inesperados | Verifique o frontend `tradingMode` separadamente do backend `environment`; a conta `isSimulatedUser` não encaminha pedidos. |
+| Erro de consulta `6905` | Recue utilizando a quota de parceiro partilhado, tente novamente o mesmo cursor e filtre por SDK. |
+| Erro de consulta `6904` | Reduza as consultas simultâneas e restrinja a janela de tempo; contacte o suporte se persistir. |
+| Cursor inválido ou expirado | Reinicie a mesma janela de histórico fixa e desduplique os registos guardados. |
+| Novo método Java em falta | Verifique o artefacto Maven resolvido em relação à etiqueta pública `v0.3.0`; remova as dependências conflituantes de acordo com a sua política de artefactos. |
+
+[Referência de consulta e erro](/pt-PT/sdk/agent-sdk/java/perpetual-queries) · [Guia de atualização](/pt-PT/sdk/agent-sdk/java/upgrade)

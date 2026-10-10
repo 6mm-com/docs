@@ -1,0 +1,87 @@
+---
+title: "Tarif Referensi Fiat"
+subtitle: "Tarif Referensi Fiat: Agent Java SDK integrasi v0.3.0, contoh, parameter, dan semantik respons."
+slug: sdk/agent-sdk/java/exchange-rates
+canonical-url: https://docs.6mm.com/id/sdk/agent-sdk/java/exchange-rates
+---
+
+Panduan ini menargetkan **Agent Java SDK `v0.3.0`**, Java 8+, dan kontrak publik yang diberi tag. Contoh dijalankan di backend mitra setelah menginisialisasi `client` di [Mulai Cepat](/id/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## Contoh prasyarat
+
+Cuplikan Java membagikan impor ini. Inisialisasi `client` menggunakan Quick Start dan dapatkan `platformUserId` dari pengikatan yang disimpan. Contoh ID pengguna/pesanan harus diganti dengan nilai Anda yang tetap.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span id="fx-reference-rates" data-sixmm-canonical-anchor="fx-reference-rates" aria-hidden="true"></span>
+
+## Tarif Referensi FX
+
+Kedua metode FX menggunakan aliran Agen API yang ditandatangani secara normal. Mulailah dengan menemukan
+mata uang sumber yang saat ini didukung:
+
+```java
+import com.sixmm.agent.model.ListSupportedFiatCurrenciesResponse;
+
+ListSupportedFiatCurrenciesResponse supported = client.listSupportedFiatCurrencies();
+System.out.println(supported.targetCurrency);     // USDT
+System.out.println(supported.sourceCurrencies);  // AUD, BRL, CNY, EUR, USD, ...
+```
+
+Kueri semua tarif referensi fiat-ke-USDT yang didukung:
+
+```java
+import com.sixmm.agent.model.ExchangeRateItem;
+import com.sixmm.agent.model.QueryExchangeRatesResponse;
+
+QueryExchangeRatesResponse rates = client.queryExchangeRates();
+for (ExchangeRateItem item : rates.rates) {
+    System.out.println("1 " + item.sourceCurrency + " = " + item.rate + " " + item.targetCurrency);
+}
+```
+
+Kueri mata uang yang dipilih:
+
+```java
+import com.sixmm.agent.model.QueryExchangeRatesRequest;
+
+QueryExchangeRatesResponse rates = client.queryExchangeRates(
+        QueryExchangeRatesRequest.of("CNY", "EUR", "USD"));
+```
+
+Permintaan pabrik memangkas dan huruf besar kode mata uang dan membuat serialisasinya sebagai
+nilai `sourceCurrencies` yang dipisahkan koma yang diperlukan oleh API. Menghilangkan
+permintaan atau semua nilai mata uang efektif menanyakan setiap mata uang yang didukung.
+
+| Bidang respons | Jenis | Keterangan |
+| --- | --- | --- |
+| `snapshotVersion` | string | Versi snapshot yang stabil untuk audit dan rekonsiliasi |
+| `provider` | string | Penyedia hulu, saat ini `ECB` |
+| `sourceDate` | string | Tanggal observasi hulu dalam format `yyyy-MM-dd` |
+| `fetchedAt` / `expiresAt` | int64 | Stempel waktu Unix dalam milidetik |
+| `pricingPolicy` | string | Saat ini `FIXED_PEG` |
+| `usdtUsdRate` | string | USD jumlah per 1 USDT, saat ini ditetapkan pada `1` |
+| `rateType` | string | Saat ini `INDICATIVE_DAILY` |
+| `usage` | string | Saat ini `REFERENCE_ONLY` |
+| `rateMeaning` | string | `1 sourceCurrency = rate USDT` |
+| `rates[].rate` | string | USDT jumlah yang sesuai dengan satu unit fiat sumber |
+
+Nilai-nilai ini adalah referensi untuk dihitung oleh dompet multi-mata uang mitra
+jumlah USDT yang dikirim ke 6MM. Itu bukan harga yang dapat dieksekusi, kuotasi terkunci, atau
+harga pasar USDT waktu nyata. Gunakan `BigDecimal` dan string untuk jumlahnya
+perhitungan; jangan gunakan `double` atau `float`.
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Sumber dan panduan terkait
+
+- [Sumber resmi v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Ikhtisar kueri dan penomoran halaman](/id/sdk/agent-sdk/java/perpetual-queries)
+- [Dompet pendanaan](/id/sdk/agent-sdk/java/funding-wallet)
+- [Panduan peningkatan](/id/sdk/agent-sdk/java/upgrade)

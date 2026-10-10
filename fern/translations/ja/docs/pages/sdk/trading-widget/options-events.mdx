@@ -1,6 +1,6 @@
 ---
 title: "オプションとイベント"
-subtitle: "初期化オプション、実行時イベント、一般的なエラーコード。"
+subtitle: "初期化オプション、実行時イベント、および一般的なエラー コード。"
 slug: sdk/trading-widget/options-events
 canonical-url: https://docs.6mm.com/ja/sdk/trading-widget/options-events
 ---
@@ -9,21 +9,21 @@ canonical-url: https://docs.6mm.com/ja/sdk/trading-widget/options-events
 
 ## オプション
 
-| フィールド | 種類 | デフォルト | 注記 |
+| 分野 | タイプ | デフォルト | 注意事項 |
 | --- | --- | --- | --- |
-| baseUrl | string | SDK 文字の起源 | iframeドメイン。パートナーページに明示的にパスします。 |
-| シンボル | string | BTCUSDT | 大文字とストリップに正規化 - / _。 |
-| テーマ | 暗い \| 光 | 暗い | 初期テーマパラメータ。 |
-| 場所 | え \| en-US \| zh-CN | ブラウザ/デフォルト | 英語および簡体字中国語も対応しています。 |
-| レイアウト | デフォルト \| コンパクト | デフォルト | 予約レイアウトオプション。 |
-| ディスプレイ | object | `showHeader: false`、 `showTicker: false`、 `hidden: []` | コントロールはシェルエリアや高レベルの取引コンテナを埋め込んでいます。 |
-| 認証 | object | なし | 新しい SSO 統合にはpartner-tokenを使いましょう。 |
+| baseUrl | string | SDK スクリプトの起源 | iframe ドメイン。パートナーページで明示的に渡します。 |
+| シンボル | string | BTCUSDT | 大文字とストリップ - / _ に正規化されます。 |
+| テーマ | 暗い \| ライト | 暗い | テーマの初期パラメータ。 |
+| ロケール | ja \| en-US \| zh-CN | ブラウザ/デフォルト | 英語と簡体字中国語がサポートされています。 |
+| レイアウト | デフォルト \| コンパクト | デフォルト | 予約されたレイアウト オプション。 |
+| 画面 | object | `showHeader: false`、`showTicker: false`、`hidden: []` | コントロールには、シェル領域と高レベルの取引コンテナが埋め込まれています。 |
+| 認証 | object | なし | 新しい SSO 統合にはパートナー トークンを使用します。 |
 
 <span id="display-controls" data-sixmm-canonical-anchor="display-controls" aria-hidden="true"></span>
 
 ## 表示コントロール
 
-`display` は埋め込まれたトレーディングページのシェルや高レベルのコンテナを制御します。パートナー埋め込みでは、PCヘッダーとボトムマーケットティッカーはデフォルトで隠されています。
+`display` は、埋め込まれた取引ページのシェルと高レベルのコンテナを制御します。パートナーの埋め込みでは、PC ヘッダーと底値市場ティッカーはデフォルトで非表示になります。
 
 ```js
 display: {
@@ -33,23 +33,23 @@ display: {
 }
 ```
 
-| フィールド | 種類 | デフォルト | 注記 |
+| 分野 | タイプ | デフォルト | 注意事項 |
 | --- | --- | --- | --- |
-| showHeader | boolean | 偽り | iframe内にPC組み込みヘッダーを表示するかどうか。 |
-| showTicker | boolean | 偽り | 埋め込みシェルにボトムマーケットのティッカーを表示するかどうか。 |
-| 隠れている | 文字列[] | [] | 取引ページに高レベルのコンテナを隠します。 |
+| showHeader | boolean | 間違い | iframe 内に PC 埋め込みヘッダーを表示するかどうか。 |
+| showTicker | boolean | 間違い | 埋め込みシェルで底値市場ティッカーを表示するかどうか。 |
+| 隠れた | 弦[] | [] | 取引ページで高レベルのコンテナを非表示にします。 |
 
-支持される `display.hidden` 価値観:
+サポートされている `display.hidden` 値:
 
-| 価値 | コンテナ |
+| 価値 | 容器 |
 | --- | --- |
 | チャート | チャートコンテナ |
-| orderBook | 注文帳コンテナ |
-| orderForm | 注文書式パネル |
-| ポジション | ボトムポジションとオープンオーダーパネル |
+| orderBook | オーダーブックコンテナ |
+| orderForm | オーダーフォームパネル |
+| ポジション | 底値ポジションとオープン注文パネル |
 | アカウント | アカウント資産コンテナ |
 
-`display.hidden` コンテナ全体のみを隠します。コンテナ内の個々のボタン、フィールド、ツールを隠すことはありません。現在のビューポートにマッピングされていない値は無視されます。
+`display.hidden` はコンテナ全体のみを非表示にします。コンテナ内の個々のボタン、フィールド、ツールは非表示になりません。現在のビューポートにマップされない値は無視されます。
 
 <span id="events" data-sixmm-canonical-anchor="events" aria-hidden="true"></span>
 
@@ -57,21 +57,50 @@ display: {
 
 | イベント | トリガー |
 | --- | --- |
-| 準備 | iFrameの初期化が完了しました。 |
+| 準備ができて | iframeの初期化が完了しました。 |
 | エラー | SDK、iframe、または認証エラー。 |
-| state_changed | SDK ライフサイクル状態が変わりました。 |
-| auth_state_changed | パートナートークン認証の状態が変更されました。 |
-| symbol_changed | 実際のiframeシンボルが変更されました。 |
-| locale_changed | 実際のiframeのロケーションが変更されました。 |
-| order_created | ユーザーはiframe内で注文を作成しました。 |
-| order_failed | 注文提出が失敗しました。 |
-| 破壊 | SDK インスタンスは破壊されました。 |
+| 状態変更済み | SDK ライフサイクル状態が変更されました。 |
+| auth_state_changed | パートナートークンの認証状態が変更されました。 |
+| シンボル変更済み | 実際の iframe シンボルが変更されました。 |
+| ロケール_変更済み | 実際の iframe ロケールが変更されました。 |
+| 注文_作成済み | ユーザーが iframe 内で注文を作成しました。 |
+| 注文_失敗 | 注文の送信に失敗しました。 |
+| 破壊された | SDK インスタンスが破壊されました。 |
 
 <span id="related-widget-guides" data-sixmm-canonical-anchor="related-widget-guides" aria-hidden="true"></span>
 
-## 関連ウィジェットガイド
+## 関連するウィジェットのガイド
 
 - [Trading Widget クイックスタート](/ja/sdk/trading-widget/quick-start)
 - [認証](/ja/sdk/trading-widget/authentication)
 - [インスタンスメソッド](/ja/sdk/trading-widget/instance-methods)
 - [トラブルシューティング](/ja/sdk/security/troubleshooting)
+
+<span id="product-pages-and-trading-mode" data-sixmm-canonical-anchor="product-pages-and-trading-mode" aria-hidden="true"></span>
+
+## 商品ページと取引モード
+
+Java Agent SDK とブラウザ Trading Widget SDK は独立してバージョン管理されています。秒単位の取引の場合は、現在のウィジェット機能を使用し、ページと取引モードの両方を明示的に選択します。
+
+| オプション | 価値観 | 意味 |
+| --- | --- | --- |
+| `page` | `up-down`、`high-low`、`grid-prediction` | 秒取引の商品ページです。 |
+| `tradingMode` | `real`、`demo` | デフォルトは `real` です。バックエンドの資金調達環境と明示的に一致します。 |
+
+初期化の前に、`TradingWidget.capabilities.pages`、`TradingWidget.capabilities.tradingModes`、および `TradingWidget.capabilities.partnerToken` を確認してください。トークンの作成では資金環境は選択されません。ユーザーまたはリアル/デモ モードを変更するには、古いインスタンスを破棄し、新しいインスタンスを作成します。
+
+見る [完全な秒取引の例](/ja/sdk/agent-sdk/java/seconds-trading) そして [本番環境/シミュレートされた構成](/ja/sdk/agent-sdk/java/environments).
+
+<span id="additional-display-targets-and-events" data-sixmm-canonical-anchor="additional-display-targets-and-events" aria-hidden="true"></span>
+
+## 追加の表示ターゲットとイベント
+
+現在のランタイムは、`display.hidden` の `symbolFavorites` および `symbolTicker` も受け入れます。常に `TradingWidget.capabilities.displayTargets` をチェックしてください。ターゲットは高レベルのコンテナを制御し、フィールドレベルの権限設定ではありません。
+
+| イベント | 意味 |
+| --- | --- |
+| `rendered` | iframe はレンダリングされた通知を送信します。 |
+| `theme_changed` | iframe は実際のテーマを報告します。 |
+| `page_changed` | iframe は実際の商品ページをレポートします。 |
+
+`onRendered` または `widget.on('rendered', handler)` を使用して、初期化とは別にレンダリングを処理します。現在サポートされているページは `TradingWidget.capabilities.pages` で公開されています。パスを推測するのではなく、要求されたページを検証します。

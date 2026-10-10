@@ -1,0 +1,171 @@
+---
+title: "ユーザーと資産"
+subtitle: "ユーザーと資産: Agent Java SDK v0.3.0 の統合、例、パラメーター、および応答セマンティクス。"
+slug: sdk/agent-sdk/java/users-assets
+canonical-url: https://docs.6mm.com/ja/sdk/agent-sdk/java/users-assets
+---
+
+このガイドは、**Agent Java SDK `v0.3.0`**、Java 8 以降、およびタグ付けされたパブリック コントラクトを対象としています。例は `client` を初期化した後にパートナー バックエンドで実行されます。 [クイックスタート](/ja/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## 前提条件の例
+
+Java スニペットはこれらのインポートを共有します。クイック スタートを使用して `client` を初期化し、保存されたバインディングから `platformUserId` を取得します。ユーザー/オーダー ID の例は、独自の永続化された値に置き換える必要があります。
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span id="user-id-rules" data-sixmm-canonical-anchor="user-id-rules" aria-hidden="true"></span>
+
+## ユーザーIDのルール
+
+`platformUserId` は 6MM の外部ユーザー ID です。現在は 10 桁の数字です
+文字列、例:
+
+```text
+1188041528
+```
+
+ルール:
+
+- 整数ではなく文字列として保存します。
+- そこから意味を生成、解読、または推測しないでください。
+- 独自のパートナー側ユーザー ID を `agentUserId` として使用します。
+- `agentUserId`、`platformUserId`、および `agentOrderNo` 間の関係を維持します。
+
+
+<span id="bind-user" data-sixmm-canonical-anchor="bind-user" aria-hidden="true"></span>
+
+## バインドユーザー
+
+バインドは、パートナー ユーザーと 6MM の間の関係を作成または取得します。
+プラットフォームのユーザー。ユーザーが最初に取引フローに入るとき、または取引フローに入る前に呼び出します。
+最初に 6MM に転送します。
+
+```java
+import com.sixmm.agent.model.BindRequest;
+import com.sixmm.agent.model.BindResponse;
+
+BindResponse resp = client.bind(
+        BindRequest.of("agent-user-001")
+                .withUsername("alice")
+                .withExt("{\"source\":\"web\"}"));
+
+System.out.println(resp.platformUserId);
+System.out.println(resp.bindStatus);
+System.out.println(resp.isSimulatedUser);
+```
+
+リクエストフィールド:
+
+| 分野 | タイプ | 必須 | 説明 |
+| --- | --- | --- | --- |
+| `agentUserId` | string | はい | パートナー側の一意のユーザーID |
+| `username` | string | いいえ | プラットフォームユーザーのニックネームとして使用されるパートナー側の表示名 |
+| `ext` | string | いいえ | 拡張フィールド。 JSON 文字列が推奨されます |
+
+応答フィールド:
+
+| 分野 | タイプ | 説明 |
+| --- | --- | --- |
+| `platformUserId` | string | 6MM 外部ユーザー ID |
+| `bindStatus` | string | 通常 `BOUND` |
+| `isSimulatedUser` | boolean | これがシミュレートされたユーザーであるかどうか |
+
+
+<span id="query-partner-account" data-sixmm-canonical-anchor="query-partner-account" aria-hidden="true"></span>
+
+## パートナーアカウントのクエリ
+
+```java
+import com.sixmm.agent.model.QueryAccountRequest;
+import com.sixmm.agent.model.QueryAccountResponse;
+
+QueryAccountResponse resp = client.queryAccount(QueryAccountRequest.of("USDT"));
+
+System.out.println(resp.agentCode);
+System.out.println(resp.agentStatus);
+resp.assets.forEach(asset -> {
+    System.out.println(asset.currency);
+    System.out.println(asset.depositBalance);
+});
+```
+
+`currency` が存在しない場合、SDK は `defaultCurrency` を使用します。
+
+
+<span id="query-user-assets" data-sixmm-canonical-anchor="query-user-assets" aria-hidden="true"></span>
+
+## ユーザー資産のクエリ
+
+```java
+import com.sixmm.agent.model.QueryUserAssetsRequest;
+import com.sixmm.agent.model.QueryUserAssetsResponse;
+
+QueryUserAssetsResponse resp = client.queryUserAssets(
+        QueryUserAssetsRequest.of("1188041528"));
+
+System.out.println(resp.walletBalance);
+System.out.println(resp.availableBalance);
+System.out.println(resp.version);
+```
+
+フィールド:
+
+| 分野 | タイプ | 説明 |
+| --- | --- | --- |
+| `walletBalance` | string | ウォレット残高 |
+| `frozenMargin` | string | 凍結マージン |
+| `usedMargin` | string | 使用済み証拠金 |
+| `availableBalance` | string | 利用可能残高 |
+| `isolatedMargin` | string | 孤立したマージン |
+| `version` | int64 | アセットのバージョン |
+| `isSimulatedUser` | boolean | これがシミュレートされたユーザーであるかどうか |
+
+
+<span id="distinguish-the-three-wallets" data-sixmm-canonical-anchor="distinguish-the-three-wallets" aria-hidden="true"></span>
+
+### 3つの財布を区別する
+
+| 財布 | バランスソース | 使用 |
+| --- | --- | --- |
+| 販売者自身のユーザーウォレット | 加盟店独自の会計システム | ユーザーの加盟店側の利用可能残高 |
+| プラットフォームの資金調達 | `queryUserAssets`/`funding` | 秒取引資金と資金・契約の相互送金 |
+| プラットフォーム契約 | `queryUserAssets` の契約資産フィールド | 無期限契約証拠金と譲渡可能残高 |
+
+`queryAccount` 販売者ユーザーのウォレットではなく、販売者プラットフォームの証拠金口座をクエリします。このインターフェイスには `environment` パラメータがないため、シミュレートされたユーザー アセットとしてクエリを実行することはできません。
+
+シミュレートされたユーザーの 2 つのプラットフォーム ウォレットをクエリします。
+
+```java
+QueryUserAssetsResponse assets = client.queryUserAssets(
+        QueryUserAssetsRequest.of(platformUserId)
+                .withFunding()
+                .withEnvironment(ExecutionEnvironment.SIMULATED));
+```
+
+インターフェース: `POST /v1/agent/query-user-assets`。資金は `includeFunding=true` の場合にのみ要求されます。元の契約資産クエリ セマンティクスがデフォルトで使用されます。
+
+| 応答フィールド | 意味 |
+| --- | --- |
+| `walletBalance`、`availableBalance`、`frozenMargin`、`usedMargin`、`isolatedMargin` | 契約ウォレット関連金額 |
+| `funding.assetCode` | 現在USDT |
+| `funding.availableAmount`、`heldAmount`、`totalAmount` | 利用可能な資金、占有額、総額 |
+| `funding.materialized` | 資金口座が具体化されているかどうか? |
+| `environment` | このフィールドは、環境が明示的に渡されるときにエコーされます。環境を省略する古いリクエストは、このフィールドを返しません。 |
+| `isSimulatedUser` | アカウントの分類。取引環境の選択を置き換えることはできません |
+
+金額は、`float`/`double` ではなく、文字列または `BigDecimal` として処理されます。
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## ソースおよび関連ガイド
+
+- [公式 v0.3.0 ソース](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [クエリの概要とページネーション](/ja/sdk/agent-sdk/java/perpetual-queries)
+- [資金調達ウォレット](/ja/sdk/agent-sdk/java/funding-wallet)
+- [アップグレードガイド](/ja/sdk/agent-sdk/java/upgrade)

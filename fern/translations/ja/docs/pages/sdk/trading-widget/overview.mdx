@@ -10,20 +10,20 @@ canonical-url: https://docs.6mm.com/ja/sdk/trading-widget/overview
 
 ## 責任分担
 
-| 面積 | オーナー | 注記 |
+| エリア | 所有者 | 注意事項 |
 | --- | --- | --- |
-| コンテナ作成 | パートナーフロントエンド | 幅と高さが明確に示された可視要素を提供しましょう。 |
-| iframe作成 | Trading Widget SDK | SDK はiframeを作成し管理します。 |
-| トレーディングUI(取引UI) | 6MM iframe(iframe) | Kライン、注文簿、注文フォーム、ポジション、注文、アカウントデータがiframe内で実行されます。 |
-| 表示コントロール | Trading Widget SDK + iframe 6MM | PCの埋め込みヘッダーと下部ティッカーはデフォルトで隠されています。パートナーは `display` を使ってシェルエリアを表示したり、高レベルの取引コンテナを隠したりできます。 |
-| パートナーログインチェック | パートナーバックエンド | 認証資格を発行する前にパートナーユーザーセッションを検証してください。 |
-| 埋め込みトークン発行 | パートナーバックエンド+エージェント API | パートナートークンモードにおすすめします。 |
+| コンテナの作成 | パートナーフロントエンド | 可視要素に明示的な幅と高さを指定します。 |
+| iframeの作成 | Trading Widget SDK | SDK は iframe を作成および管理します。 |
+| 取引UI | 6MM iframe | K ライン、オーダーブック、オーダーフォーム、ポジション、オーダー、アカウントデータは iframe 内で実行されます。 |
+| 表示コントロール | Trading Widget SDK + 6MM iframe | PC 埋め込みヘッダーと下部ティッカーはデフォルトでは非表示になっています。パートナーは `display` を使用してシェル領域を表示したり、高レベルの取引コンテナを非表示にしたりできます。 |
+| パートナーログインチェック | パートナーバックエンド | 認証資格情報を発行する前に、パートナー ユーザー セッションを検証します。 |
+| 埋め込みトークン発行 | パートナー バックエンド + エージェント API | パートナートークンモードに推奨されます。 |
 
 <span id="versioning" data-sixmm-canonical-anchor="versioning" aria-hidden="true"></span>
 
 ## バージョン管理
 
-公開統合パスはv1スクリプト URLの下で安定しています。現在のv1の能力セットには、パートナートークン、 tokenProvider、 entryUrlProvider、表示コントロール、ライフサイクルイベント、インスタンスメソッド、オーダーイベントが含まれます。
+パブリック統合パスは、v1 スクリプト URL で安定したままです。現在の v1 機能セットには、パートナー トークン、tokenProvider、entryUrlProvider、表示コントロール、ライフサイクル イベント、インスタンス メソッド、および注文イベントが含まれています。
 
 ```html
 <script src="https://app.6mm.com/sdk/trading-widget/v1/index.js"></script>
@@ -31,15 +31,23 @@ canonical-url: https://docs.6mm.com/ja/sdk/trading-widget/overview
 
 <span id="when-to-use-the-widget" data-sixmm-canonical-anchor="when-to-use-the-widget" aria-hidden="true"></span>
 
-## ウィジェットの使い方
+## ウィジェットを使用する場合
 
-パートナーが既存のウェブ製品内に完全な取引インターフェースを必要とする場合 Trading Widget 選択してください。完全にカスタムした取引インターフェースを構築し維持する際は、 REST API や WebSocket ドキュメントを活用してください。
+パートナーが既存の Web 製品内に完全な取引インターフェイスを必要とする場合は、Trading Widget を選択してください。完全にカスタムの取引インターフェイスを構築および維持する場合は、代わりに REST API および WebSocket のドキュメントを使用してください。
 
 <span id="implementation-path" data-sixmm-canonical-anchor="implementation-path" aria-hidden="true"></span>
 
-## 実装経路
+## 実装パス
 
-1. 従う [Trading Widget クイックスタート](/ja/sdk/trading-widget/quick-start) スクリプトを読み込み、可視化コンテナを作成するために。
-2. 設定 [パートナートークン認証](/ja/sdk/trading-widget/authentication) パートナーのバックエンドを通じて。
-3. 必要なものを追加 [選択肢とイベント](/ja/sdk/trading-widget/options-events).
-4. 使用 [インスタンスメソッド](/ja/sdk/trading-widget/instance-methods) ライフサイクルおよびランタイム制御のために。
+1. フォローしてください [Trading Widget クイックスタート](/ja/sdk/trading-widget/quick-start) スクリプトをロードして、表示可能なコンテナを作成します。
+2. 設定する [パートナートークン認証](/ja/sdk/trading-widget/authentication) パートナーのバックエンド経由。
+3. 必要な項目を追加します [オプションとイベント](/ja/sdk/trading-widget/options-events).
+4. 使用 [インスタンスメソッド](/ja/sdk/trading-widget/instance-methods) ライフサイクルとランタイムの制御用。
+
+<span id="verified-public-runtime" data-sixmm-canonical-anchor="verified-public-runtime" aria-hidden="true"></span>
+
+## 検証済みのパブリック ランタイム
+
+パブリック `v1` スクリプトは、2026 年 10 月 10 日時点のバージョン `1.8.0` を報告します。この URL は、固定されたビルドではなく、安定したメジャー バージョンのエントリ ポイントです。オプション機能を使用する前に、ロードされたランタイムで `TradingWidget.version` と `TradingWidget.capabilities` を読み取ります。 Java Agent SDK `v0.3.0` は別個のバックエンド パッケージです。
+
+ランタイムは、単一のアクティブなインスタンス (`multiInstance=false`) をサポートします。別のウィジェットを作成すると、前のインスタンスが破棄されます。サポートされているロケールは、20 のドキュメント言語とは関係なく、`en`、`en-US`、および `zh-CN` です。

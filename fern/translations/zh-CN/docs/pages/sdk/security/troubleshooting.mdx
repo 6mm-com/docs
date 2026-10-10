@@ -78,3 +78,18 @@ canonical-url: https://docs.6mm.com/zh-CN/sdk/security/troubleshooting
 检查回调验证和重复事件处理。
 </Card>
 </CardGroup>
+
+<span data-sixmm-canonical-anchor="java-v030-排查" aria-hidden="true"></span>
+
+## Java v0.3.0 排查
+
+| 情况 | 检查与恢复 |
+| --- | --- |
+| Funding 请求结果未知 | 保留原 `agentOrderNo`，通过 `queryWalletTransfer` 按原环境查单，不能使用 `queryOrder`。 |
+| 模拟页面余额不符合预期 | 分别检查前端 `tradingMode` 与后端 `environment`，`isSimulatedUser` 不负责请求路由。 |
+| 查询返回 `6905` | 按商户共享额度退避，使用原游标及筛选条件重新调用 SDK。 |
+| 查询返回 `6904` | 降低并发、缩小时间窗口，持续出现时联系支持。 |
+| 游标非法或过期 | 重新拉取相同固定历史窗口，幂等保存记录。 |
+| Java 新方法不存在 | 核对 Maven 实际解析制品与公开标签 `v0.3.0`，按制品策略处理依赖冲突。 |
+
+[查询与错误说明](/zh-CN/sdk/agent-sdk/java/perpetual-queries) · [升级指南](/zh-CN/sdk/agent-sdk/java/upgrade)

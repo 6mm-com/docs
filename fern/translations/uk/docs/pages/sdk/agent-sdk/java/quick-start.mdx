@@ -1,53 +1,66 @@
 ---
-title: "Java Швидкий початок"
-subtitle: "Встановіть і ініціалізуйте Java SDK з бекенд-сервісу."
+title: "Java Швидкий старт"
+subtitle: "Java Швидкий старт: Інтеграція Agent Java SDK v0.3.0, приклади, параметри та семантика відповіді."
 slug: sdk/agent-sdk/java/quick-start
 canonical-url: https://docs.6mm.com/uk/sdk/agent-sdk/java/quick-start
 ---
 
-<span id="install" data-sixmm-canonical-anchor="install" aria-hidden="true"></span>
+Цей посібник призначений для **Agent Java SDK `v0.3.0`**, Java 8+ і публічного контракту з тегами. Приклади виконуються в серверній частині партнера після ініціалізації `client` у [Швидкий старт](/uk/sdk/agent-sdk/java/quick-start).
 
-## Встановлення
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
 
-Публічне SDK джерело наразі документує `v0.1.1` з такими координатами Maven:
+## Приклад передумов
+
+Фрагменти Java поділяють ці імпортовані файли. Ініціалізуйте `client` за допомогою швидкого запуску та отримайте `platformUserId` із збереженого зв’язування. Приклади ідентифікаторів користувача/замовлення потрібно замінити вашими постійними значеннями.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span id="maven-coordinates" data-sixmm-canonical-anchor="maven-coordinates" aria-hidden="true"></span>
+
+## Координати Maven
+
+Поточні координати джерела:
 
 ```xml
 <dependency>
     <groupId>com.sixmm.exchange.sdk</groupId>
     <artifactId>agent</artifactId>
-    <version>0.1.1</version>
+    <version>0.3.0</version>
 </dependency>
 ```
 
-GitHub не виконує функції репозиторію залежностей Maven. Встановіть позначене джерело локально перед вирішення залежності:
+GitHub — це вихідний хостинг, а не сховище залежностей Maven. Якщо SDK ні
+ще не було опубліковано в репозиторії Maven, встановіть його у свій локальний Maven
+спочатку репозиторій:
 
 ```bash
 git clone https://github.com/6mm-com/agent-java-sdk.git
 cd agent-java-sdk
-git checkout v0.1.1
+git checkout v0.3.0
 mvn install
 ```
 
-> **Командні збірки**
->
-> Опублікуйте затверджений артефакт у репозиторії Maven вашої організації для CI, тестування та продакшн-збірок. Підтвердіть затверджену версію 6MM перед запуском у виробництво.
+Після локального встановлення ваш бізнес-проект може вирішитися
+`com.sixmm.exchange.sdk:agent:0.3.0` з локального репозиторію Maven.
 
-Приклади вихідного коду та використання доступні в офіційному репозиторії Java SDK :
+Для групових збірок і тестових середовищ опублікуйте SDK у репозиторії Maven
+наприклад Nexus, Artifactory, GitHub Packages, Maven Central або використовувати GitHub
+на базі служби збирання, наприклад JitPack.
 
-[6mm-com/agent-java-sdk](https://github.com/6mm-com/agent-java-sdk)
+Для наявної інтеграції див [SDK посібник з оновлення](https://github.com/6mm-com/agent-java-sdk/blob/v0.3.0/docs/merchant-integration.md#8-旧-sdk-升级). Використовуйте стабільний вихідний тег `v0.3.0`, щоб установити SDK і прочитати відповідну документацію щодо інтеграції.
 
-<span id="before-you-start" data-sixmm-canonical-anchor="before-you-start" aria-hidden="true"></span>
 
-## Перш ніж почати
+<span id="client-initialization" data-sixmm-canonical-anchor="client-initialization" aria-hidden="true"></span>
 
-- Підтвердіть свого агента з виробництва API базову URL з командою 6MM .
-- Store apiSecret лише в бекенд-управлінні секретами.
-- Підготуйте стабільне відображення між platformUserId та agentUserId.
-- Увімкнути структуровані журнали навколо потоків зв'язування, передачі, порядку та вебхуків.
+## Ініціалізація клієнта
 
-<span id="initialize-client" data-sixmm-canonical-anchor="initialize-client" aria-hidden="true"></span>
+<span id="plain-java" data-sixmm-canonical-anchor="plain-java" aria-hidden="true"></span>
 
-## Ініціалізувати клієнта
+### Звичайний Java
 
 ```java
 import com.sixmm.agent.AgentClient;
@@ -61,32 +74,156 @@ AgentClient client = new AgentClient(AgentClientConfig.builder()
         .build());
 ```
 
-> **Тільки бекенд**
->
-> Не ініціалізуйте Agent SDK з браузера, мобільного чи десктопного клієнта. SDK підписує привілейовані Агенти API запити.
+<span id="spring-boot" data-sixmm-canonical-anchor="spring-boot" aria-hidden="true"></span>
 
-<span id="example-transfer-funds-in" data-sixmm-canonical-anchor="example-transfer-funds-in" aria-hidden="true"></span>
-
-## Приклад: переказ коштів у
+### Весняний черевик
 
 ```java
-TransferResponse resp = client.transfer(TransferRequest.fixed(
-        "AGT-ORDER-1001",
-        "agent-user-001",
-        Direction.IN,
-        "USDT",
-        "10.00"));
+import com.sixmm.agent.AgentClient;
+import com.sixmm.agent.AgentClientConfig;
+import java.time.Duration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class AgentSdkConfig {
+
+    @Bean
+    public AgentClient agentClient(AgentSdkProperties props) {
+        return new AgentClient(AgentClientConfig.builder()
+                .baseUrl(props.getBaseUrl())
+                .agentCode(props.getAgentCode())
+                .apiSecret(props.getApiSecret())
+                .defaultCurrency("USDT")
+                .timeout(Duration.ofSeconds(10))
+                .build());
+    }
+}
 ```
 
-Використовуйте унікальний номер замовлення на стороні партнера для кожного запиту на передачу. Якщо час запиту закінчується, запитуйте оригінальне замовлення перед створенням нового.
+Приклад властивостей програми:
 
-<span id="next-steps" data-sixmm-canonical-anchor="next-steps" aria-hidden="true"></span>
+```properties
+agent.sdk.base-url=https://agent-api.6mm.com
+agent.sdk.agent-code=AGENT001
+agent.sdk.api-secret=${AGENT_API_SECRET}
+```
 
-## Наступні кроки
 
-| Потреба | Наступна сторінка |
-| --- | --- |
-| Видати Trading Widget сертифікат | [Створити токен вбудовування](/uk/sdk/agent-sdk/java/embed-token) |
-| Перевірте зворотні дзвінки з 6MM | [Вебхуки та ідемпотентність](/uk/sdk/security/webhooks-idempotency) |
-| Перегляд поведінки при підписах | [Секрети та жести](/uk/sdk/security/secrets-signing) |
-| Діагностуйте проблему інтеграції | [SDK Усунення несправностей](/uk/sdk/security/troubleshooting) |
+<span id="bind-user" data-sixmm-canonical-anchor="bind-user" aria-hidden="true"></span>
+
+## Прив’язати користувача
+
+Bind створює або отримує зв’язок між користувачем-партнером і 6MM
+користувач платформи. Викликайте його, коли користувач вперше входить до торгового потоку або перед
+перша передача в 6MM.
+
+```java
+import com.sixmm.agent.model.BindRequest;
+import com.sixmm.agent.model.BindResponse;
+
+BindResponse resp = client.bind(
+        BindRequest.of("agent-user-001")
+                .withUsername("alice")
+                .withExt("{\"source\":\"web\"}"));
+
+System.out.println(resp.platformUserId);
+System.out.println(resp.bindStatus);
+System.out.println(resp.isSimulatedUser);
+```
+
+Поля запиту:
+
+| Поле | Тип | Обов'язковий | опис |
+| --- | --- | --- | --- |
+| `agentUserId` | string | так | Унікальний ідентифікатор користувача на стороні партнера |
+| `username` | string | немає | Відображуване ім’я на стороні партнера, яке використовується як псевдонім користувача платформи |
+| `ext` | string | немає | Поле розширення. Рекомендується рядок JSON. |
+
+Поля відповіді:
+
+| Поле | Тип | опис |
+| --- | --- | --- |
+| `platformUserId` | string | 6MM зовнішній ідентифікатор користувача |
+| `bindStatus` | string | Зазвичай `BOUND` |
+| `isSimulatedUser` | boolean | Чи це імітований користувач |
+
+
+<span id="recommended-business-flows" data-sixmm-canonical-anchor="recommended-business-flows" aria-hidden="true"></span>
+
+## Рекомендовані бізнес-потоки
+
+<span id="first-trading-entry" data-sixmm-canonical-anchor="first-trading-entry" aria-hidden="true"></span>
+
+### Перший торговий запис
+
+```text
+1. User logs in to the partner site.
+2. Partner backend calls bind with agentUserId.
+3. Partner stores the agentUserId and platformUserId relationship.
+4. User clicks the trading entry.
+5. Redirect mode: call createEntryUrl and open webUrl in the browser.
+6. Embed mode: Trading Widget calls tokenProvider, and partner backend calls createEmbedToken.
+```
+
+<span id="deposit-into-6mm" data-sixmm-canonical-anchor="deposit-into-6mm" aria-hidden="true"></span>
+
+### Внести на 6MM
+
+```text
+1. Partner creates a unique agentOrderNo.
+2. Partner calls transfer(Direction.IN).
+3. If SUCCESS is returned, mark the local order as successful.
+4. If PROCESSING is returned, wait for webhook or poll queryOrder.
+5. If FAILED is returned or AgentApiException is thrown, handle it as failed.
+```
+
+<span id="withdraw-back-to-partner" data-sixmm-canonical-anchor="withdraw-back-to-partner" aria-hidden="true"></span>
+
+### Відкликати назад до партнера
+
+```text
+1. Partner creates a unique agentOrderNo.
+2. Fixed amount withdraw: call transfer(Direction.OUT).
+3. Full withdraw: call transferAllOut.
+4. Confirm the final result by orderStatus, webhook, or queryOrder.
+```
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Джерело та відповідні посібники
+
+- [Офіційне джерело v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Огляд запиту та розбивка на сторінки](/uk/sdk/agent-sdk/java/perpetual-queries)
+- [Гаманець для фінансування](/uk/sdk/agent-sdk/java/funding-wallet)
+- [Посібник з оновлення](/uk/sdk/agent-sdk/java/upgrade)
+<span id="error-handling" data-sixmm-canonical-anchor="error-handling" aria-hidden="true"></span>
+
+## Обробка помилок
+
+Винятки SDK поділяються на дві категорії:
+
+| Виняток | Сценарій | Рекомендоване поводження |
+| --- | --- | --- |
+| `AgentApiException` | HTTP статус не 2xx або відповідь агента `code != 0` | Прочитайте `getHttpStatus()`, `getCode()` і `getResponseBody()` і сприймайте це як бізнес/API помилку |
+| `AgentSdkException` | Помилка мережі, серіалізації, конфігурації або підписання | Зареєструйте його та розглядайте як системний виняток |
+
+приклад:
+
+```java
+import com.sixmm.agent.AgentApiException;
+import com.sixmm.agent.AgentSdkException;
+
+try {
+    TransferResponse resp = client.transfer(TransferRequest.fixed(
+            "AGT-ORDER-1001", "agent-user-001", Direction.IN, "USDT", "10.00"));
+    // Update the local order according to resp.orderStatus.
+} catch (AgentApiException e) {
+    // Business rejection or HTTP error.
+    log.warn("6mm agent api rejected request, httpStatus={}, code={}, body={}",
+            e.getHttpStatus(), e.getCode(), e.getResponseBody());
+} catch (AgentSdkException e) {
+    // Local SDK error or network error.
+    log.error("6mm agent sdk request failed", e);
+}
+```

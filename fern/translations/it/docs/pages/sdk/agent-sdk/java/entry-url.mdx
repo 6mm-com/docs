@@ -1,0 +1,72 @@
+---
+title: "Inserimento diretto URL"
+subtitle: "Inserimento diretto URL: Agent Java SDK Integrazione v0.3.0, esempi, parametri e semantica della risposta."
+slug: sdk/agent-sdk/java/entry-url
+canonical-url: https://docs.6mm.com/it/sdk/agent-sdk/java/entry-url
+---
+
+Questa guida è rivolta a **Agent Java SDK `v0.3.0`**, Java 8+ e agli appalti pubblici contrassegnati. Gli esempi vengono eseguiti nel backend di un partner dopo aver inizializzato `client` in [Avvio rapido](/it/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## Prerequisiti di esempio
+
+Gli snippet Java condividono queste importazioni. Inizializza `client` utilizzando Quick Start e ottieni `platformUserId` dall'associazione salvata. Gli ID utente/ordine di esempio devono essere sostituiti con i tuoi valori persistenti.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span id="direct-entry-url" data-sixmm-canonical-anchor="direct-entry-url" aria-hidden="true"></span>
+
+## Inserimento diretto URL
+
+L'immissione diretta URL è per la modalità reindirizzamento. Un utente partner fa clic su un pulsante sul
+sito partner, apre il frontend 6MM e accede automaticamente.
+
+```java
+import com.sixmm.agent.model.CreateEntryUrlRequest;
+import com.sixmm.agent.model.CreateEntryUrlResponse;
+
+CreateEntryUrlResponse resp = client.createEntryUrl(
+        CreateEntryUrlRequest.of("agent-user-001")
+                .withRedirectPath("/trade/BTCUSDT")
+                .withReturnUrl("https://partner.example.com/return#markets"));
+
+System.out.println(resp.webUrl);
+System.out.println(resp.expireAt);
+```
+
+Regole sul campo:
+
+| Campo | Descrizione |
+| --- | --- |
+| `redirectPath` | 6MM percorso relativo frontend. Deve iniziare con `/`, ad esempio `/trade/BTCUSDT` |
+| `returnUrl` | Partner assoluto URL utilizzato quando l'utente esce dal frontend 6MM. Sono consentiti solo `http` e `https` |
+| `expireAt` | Scadenza del biglietto d'ingresso come timestamp Unix in secondi |
+
+Requisiti di sicurezza:
+
+- `webUrl` contiene un biglietto una tantum. Usalo immediatamente e non conservarlo a lungo termine.
+- Se la voce URL scade o è stata utilizzata, generane una nuova dal sito partner.
+- `returnUrl` non deve essere `javascript:`, un percorso relativo o un URL con informazioni utente.
+
+
+<span id="product-and-mode-selection" data-sixmm-canonical-anchor="product-and-mode-selection" aria-hidden="true"></span>
+
+## Selezione del prodotto e della modalità
+
+Utilizza il percorso frontend corrente fornito da 6MM. Ad esempio `/zh-CN/up-down?tradingMode=demo`, `/zh-CN/high-low?tradingMode=real`, `/zh-CN/grid-prediction?tradingMode=real` o `/zh-CN/futures/BTCUSDT?tradingMode=real`. Il ticket autentica l'utente; non seleziona un ambiente di finanziamento né sposta fondi.
+
+Vedere [Scambio di secondi](/it/sdk/agent-sdk/java/seconds-trading) per esempi di reindirizzamento ed incorporati.
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Fonte e guide correlate
+
+- [Fonte ufficiale v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Panoramica delle query e impaginazione](/it/sdk/agent-sdk/java/perpetual-queries)
+- [Portafoglio di finanziamento](/it/sdk/agent-sdk/java/funding-wallet)
+- [Guida all'aggiornamento](/it/sdk/agent-sdk/java/upgrade)

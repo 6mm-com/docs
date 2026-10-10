@@ -6,7 +6,7 @@ slug: sdk/agent-sdk/overview
 canonical-url: https://docs.6mm.com/pt-BR/sdk/agent-sdk/overview
 ---
 
-A 6MM Agent SDK é para serviços backend parceiros que precisam chamar o Agente privilegiado API sem implementar assinatura e tratamento de requisições do zero. Não deve rodar em código de navegador, celular ou desktop público porque a integração usa um parceiro API segredo.
+O 6MM Agent SDK é para serviços de back-end de parceiros que precisam chamar o agente privilegiado APIs sem implementar assinatura e manipulação de solicitações do zero. Ele não deve ser executado em código de navegador, celular ou desktop público porque a integração usa um segredo de parceiro API.
 
 <span id="when-to-use-the-agent-sdk" data-sixmm-canonical-anchor="when-to-use-the-agent-sdk" aria-hidden="true"></span>
 
@@ -20,13 +20,13 @@ Use o Agent SDK quando o backend precisar vincular um usuário parceiro, transfe
 
 | Cenário | Java SDK | PHP SDK |
 | --- | --- | --- |
-| Vincular usuário | Apoiado | Apoiado |
-| Transferência de valor fixo | Apoiado | Apoiado |
-| Transferir tudo para fora | Apoiado | Apoiado |
-| Transferência reversa | Apoiado | Apoiado |
-| Ordens de consulta | Apoiado | Apoiado |
-| Criar URL de entrada | Apoiado | Apoiado |
-| Verificação de Webhook | Apoiado | Apoiado |
+| Vincular usuário | Suportado | Suportado |
+| Transferência de valor fixo | Suportado | Suportado |
+| Transfira tudo | Suportado | Suportado |
+| Transferência reversa | Suportado | Suportado |
+| Consultar ordens de transferência | Suportado | Suportado |
+| Criar entrada URL | Suportado | Suportado |
+| Verificação Webhook | Suportado | Suportado |
 
 <span id="common-configuration" data-sixmm-canonical-anchor="common-configuration" aria-hidden="true"></span>
 
@@ -34,55 +34,71 @@ Use o Agent SDK quando o backend precisar vincular um usuário parceiro, transfe
 
 | Chave | Exemplo | Descrição |
 | --- | --- | --- |
-| baseUrl | `https://agent-api.6mm.com` | 6MM Agente API URL serviço sem slash de trança. |
+| baseUrl | `https://agent-api.6mm.com` | 6MM Agente API serviço URL sem barra final. |
 | agentCode | AGENT001 | Código do agente parceiro. |
-| apiSecret | Seu-API-Segredo | API segredo de assinatura armazenado apenas no backend. |
-| defaultCurrency | USDT | Moeda padrão para transferências e API da conta. |
-| webhookUrl | https://partner.example.com/6mm/webhook | Endpoint parceiro para notificações de webhook 6MM . |
+| apiSecret | seu-api-secret | API segredo de assinatura armazenado apenas no back-end. |
+| defaultCurrency | USDT | Moeda padrão para transferência e conta APIs. |
+| webhookUrl | https://partner.example.com/6mm/webhook | Endpoint do parceiro para notificações 6MM webhook. |
 
 <span id="typical-integration-flow" data-sixmm-canonical-anchor="typical-integration-flow" aria-hidden="true"></span>
 
-## Fluxo típico de integração
+## Fluxo de integração típico
 
-1. A interface do parceiro autentica o usuário por meio do próprio sistema de conta do parceiro.
-2. O backend parceiro mapeia o usuário para um identificador estável do lado do parceiro.
-3. O backend chama o Agent SDK com `agentCode` e o API protegido como segredo.
-4. O SDK assina e envia o Agente API pedido.
-5. O backend armazena o identificador de negócio retornado e processa webhooks posteriores idempotentemente.
-6. O frontend recebe apenas o resultado de curta duração ou credencial de entrada que precisa.
+1. O frontend do parceiro autentica o usuário por meio do sistema de conta do próprio parceiro.
+2. O back-end do parceiro mapeia o usuário para um identificador estável do lado do parceiro.
+3. O back-end chama o Agent SDK com `agentCode` e o segredo protegido API.
+4. O SDK assina e envia a solicitação do Agente API.
+5. O back-end armazena o identificador comercial retornado e processa posteriormente webhooks de forma idempotente.
+6. O frontend recebe apenas o resultado de curta duração ou a credencial de entrada necessária.
 
 <span id="choose-an-sdk" data-sixmm-canonical-anchor="choose-an-sdk" aria-hidden="true"></span>
 
 ## Escolha um SDK
 
-| Pilha backend | Comece aqui |
+| Pilha de back-end | Comece aqui |
 | --- | --- |
-| Java | [Java SDK Visão Geral](/pt-BR/sdk/agent-sdk/java/overview) e [Java Início Rápido](/pt-BR/sdk/agent-sdk/java/quick-start) |
-| PHP | [PHP SDK Visão Geral](/pt-BR/sdk/agent-sdk/php/overview) e [PHP Início Rápido](/pt-BR/sdk/agent-sdk/php/quick-start) |
+| Java | [Java SDK Visão geral](/pt-BR/sdk/agent-sdk/java/overview) e [Java Início rápido](/pt-BR/sdk/agent-sdk/java/quick-start) |
+| PHP | [PHP SDK Visão geral](/pt-BR/sdk/agent-sdk/php/overview) e [PHP Início rápido](/pt-BR/sdk/agent-sdk/php/quick-start) |
 
 <span id="production-checklist" data-sixmm-canonical-anchor="production-checklist" aria-hidden="true"></span>
 
-## Checklist de produção
+## Lista de verificação de produção
 
-- Carregar `apiSecret` de um gerenciador de segredos backend, não do código-fonte.
-- Mantenha as credenciais de desenvolvimento, encenação e produção separadas.
-- Utilizar um mapeamento de usuário de parceiro estável e identificadores únicos de ordem de negócios.
-- Preservar o identificador original ao verificar o status de uma solicitação com tempo de expiração.
-- Verificar assinaturas de webhooks e armazenar IDs de eventos processados.
-- Ocultar segredos e assinaturas dos logs enquanto retém IDs de solicitação para suporte.
+- Carregue `apiSecret` de um gerenciador de segredos de back-end, não do código-fonte.
+- Mantenha as credenciais de desenvolvimento, preparação e produção separadas.
+- Use um mapeamento estável de usuários parceiros e identificadores exclusivos de ordem comercial.
+- Preserve o identificador original ao verificar o status de uma solicitação que expirou.
+- Verifique as assinaturas webhook e armazene IDs de eventos processados.
+- Edite segredos e assinaturas de logs, mantendo IDs de solicitação de suporte.
 
 <span id="next-steps" data-sixmm-canonical-anchor="next-steps" aria-hidden="true"></span>
 
-## Próximos passos
+## Próximas etapas
 
 <CardGroup cols={3}>
-<Card title="Java Início Rápido" icon="fa-brands fa-java" href="/pt-BR/sdk/agent-sdk/java/quick-start">
-Instale e inicialize o Agent SDK em um backend Java .
+<Card title="Java Início rápido" icon="fa-brands fa-java" href="/pt-BR/sdk/agent-sdk/java/quick-start">
+Instale e inicialize o Agent SDK em um backend Java.
 </Card>
-<Card title="PHP Início Rápido" icon="fa-brands fa-php" href="/pt-BR/sdk/agent-sdk/php/quick-start">
-Instale e inicialize o Agent SDK em um backend PHP .
+<Card title="PHP Início rápido" icon="fa-brands fa-php" href="/pt-BR/sdk/agent-sdk/php/quick-start">
+Instale e inicialize o Agent SDK em um backend PHP.
 </Card>
-<Card title="Webhooks & Idempotência" icon="fa-duotone fa-webhook" href="/pt-BR/sdk/security/webhooks-idempotency">
+<Card title="Webhooks e idempotência" icon="fa-duotone fa-webhook" href="/pt-BR/sdk/security/webhooks-idempotency">
 Verifique retornos de chamada e evite processamento comercial duplicado.
 </Card>
 </CardGroup>
+
+<span id="java-sdk-v030-capabilities" data-sixmm-canonical-anchor="java-sdk-v030-capabilities" aria-hidden="true"></span>
+
+## Java SDK recursos v0.3.0
+
+Java SDK agora inclui carteiras de financiamento, ambientes de fundos explícitos, seis consultas de dados perpétuos e taxas de referência fiduciárias. Os recursos do PHP devem ser verificados em relação ao pacote fornecido pelo parceiro; Adições de Java não implicam métodos PHP correspondentes.
+
+| Fluxo de trabalho de negócios | Java guia v0.3.0 |
+| --- | --- |
+| Ativos Vinculantes e Contratuais/Financiamento | [Usuários e ativos](/pt-BR/sdk/agent-sdk/java/users-assets) |
+| Transferências de contratos e consultas de ordens de transferência | [Transferências de contrato](/pt-BR/sdk/agent-sdk/java/contract-transfers) |
+| Transferências de financiamento e consultas de recuperação dedicadas | [Carteira de financiamento](/pt-BR/sdk/agent-sdk/java/funding-wallet) |
+| Pedidos atuais/históricos, preenchimentos, posições e razão | [Consultas perpétuas](/pt-BR/sdk/agent-sdk/java/perpetual-queries) |
+| Redirecionamento e incorporação de negociação de segundos | [Negociação de segundos](/pt-BR/sdk/agent-sdk/java/seconds-trading) |
+| Produção e fundos simulados | [Guia ambiental](/pt-BR/sdk/agent-sdk/java/environments) |
+| Atualizando uma integração Java existente | [Atualize para v0.3.0](/pt-BR/sdk/agent-sdk/java/upgrade) |

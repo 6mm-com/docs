@@ -1,0 +1,87 @@
+---
+title: "Tỷ giá tham chiếu Fiat"
+subtitle: "Tỷ giá tham chiếu Fiat: Agent Java SDK tích hợp v0.3.0, ví dụ, tham số và ngữ nghĩa phản hồi."
+slug: sdk/agent-sdk/java/exchange-rates
+canonical-url: https://docs.6mm.com/vi/sdk/agent-sdk/java/exchange-rates
+---
+
+Hướng dẫn này hướng tới **Agent Java SDK `v0.3.0`**, Java 8+ và hợp đồng công khai được gắn thẻ. Các ví dụ chạy trong phần phụ trợ của đối tác sau khi khởi tạo `client` trong [Bắt đầu nhanh](/vi/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## Điều kiện tiên quyết mẫu
+
+Đoạn mã Java chia sẻ những nội dung nhập này. Khởi tạo `client` bằng cách sử dụng Bắt đầu nhanh và lấy `platformUserId` từ liên kết đã lưu. ID người dùng/đơn đặt hàng mẫu phải được thay thế bằng các giá trị cố định của riêng bạn.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span id="fx-reference-rates" data-sixmm-canonical-anchor="fx-reference-rates" aria-hidden="true"></span>
+
+## Tỷ giá tham chiếu ngoại hối
+
+Cả hai phương thức FX đều sử dụng luồng Tác nhân API đã ký thông thường. Hãy bắt đầu bằng việc khám phá
+Các loại tiền tệ nguồn hiện được hỗ trợ:
+
+```java
+import com.sixmm.agent.model.ListSupportedFiatCurrenciesResponse;
+
+ListSupportedFiatCurrenciesResponse supported = client.listSupportedFiatCurrencies();
+System.out.println(supported.targetCurrency);     // USDT
+System.out.println(supported.sourceCurrencies);  // AUD, BRL, CNY, EUR, USD, ...
+```
+
+Truy vấn tất cả các tỷ lệ tham chiếu fiat-to-USDT được hỗ trợ:
+
+```java
+import com.sixmm.agent.model.ExchangeRateItem;
+import com.sixmm.agent.model.QueryExchangeRatesResponse;
+
+QueryExchangeRatesResponse rates = client.queryExchangeRates();
+for (ExchangeRateItem item : rates.rates) {
+    System.out.println("1 " + item.sourceCurrency + " = " + item.rate + " " + item.targetCurrency);
+}
+```
+
+Truy vấn các loại tiền tệ đã chọn:
+
+```java
+import com.sixmm.agent.model.QueryExchangeRatesRequest;
+
+QueryExchangeRatesResponse rates = client.queryExchangeRates(
+        QueryExchangeRatesRequest.of("CNY", "EUR", "USD"));
+```
+
+Nhà máy yêu cầu cắt bớt và viết hoa các mã tiền tệ rồi sắp xếp chúng thành
+giá trị `sourceCurrencies` được phân tách bằng dấu phẩy được yêu cầu bởi API. Bỏ qua
+yêu cầu hoặc tất cả các giá trị tiền tệ hiệu quả truy vấn mọi loại tiền được hỗ trợ.
+
+| Trường phản hồi | Kiểu | Sự miêu tả |
+| --- | --- | --- |
+| `snapshotVersion` | string | Phiên bản chụp nhanh ổn định để kiểm tra và đối chiếu |
+| `provider` | string | Nhà cung cấp thượng nguồn, hiện tại `ECB` |
+| `sourceDate` | string | Ngày quan sát ngược dòng ở định dạng `yyyy-MM-dd` |
+| `fetchedAt` / `expiresAt` | int64 | Dấu thời gian Unix tính bằng mili giây |
+| `pricingPolicy` | string | Hiện tại `FIXED_PEG` |
+| `usdtUsdRate` | string | USD số tiền trên 1 USDT, hiện được cố định ở mức `1` |
+| `rateType` | string | Hiện tại `INDICATIVE_DAILY` |
+| `usage` | string | Hiện tại `REFERENCE_ONLY` |
+| `rateMeaning` | string | `1 sourceCurrency = rate USDT` |
+| `rates[].rate` | string | USDT số tiền tương ứng với một đơn vị tiền pháp định nguồn |
+
+Các giá trị này là tham chiếu để ví đa tiền tệ của đối tác tính toán
+số tiền USDT được gửi tới 6MM. Chúng không phải là giá thực thi, báo giá bị khóa hoặc
+giá thị trường USDT theo thời gian thực. Sử dụng `BigDecimal` và chuỗi cho số tiền
+tính toán; không sử dụng `double` hoặc `float`.
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Nguồn và hướng dẫn liên quan
+
+- [Nguồn v0.3.0 chính thức](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Tổng quan về truy vấn và phân trang](/vi/sdk/agent-sdk/java/perpetual-queries)
+- [Ví tiền tài trợ](/vi/sdk/agent-sdk/java/funding-wallet)
+- [Hướng dẫn nâng cấp](/vi/sdk/agent-sdk/java/upgrade)

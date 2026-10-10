@@ -1,0 +1,165 @@
+---
+title: "資金錢包"
+subtitle: "資金錢包：Agent Java SDK v0.3.0 集成、示例、參數和響應語義。"
+slug: sdk/agent-sdk/java/funding-wallet
+canonical-url: https://docs.6mm.com/zh-TW/sdk/agent-sdk/java/funding-wallet
+---
+
+本指南針對 **Agent Java SDK `v0.3.0`**、Java 8+ 以及標記的公共合約。初始化 `client` 後在合作伙伴後端運行示例 [快速入門](/zh-TW/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## 先決條件示例
+
+Java 片段共享這些導入。使用快速啟動初始化 `client` 並從保存的綁定中獲取 `platformUserId`。示例用戶/訂單 ID 必須替換為您自己的持久值。
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span id="wallet-queries-and-transfers" data-sixmm-canonical-anchor="wallet-queries-and-transfers" aria-hidden="true"></span>
+
+## 錢包查詢及轉賬
+
+<span id="distinguish-the-three-wallets" data-sixmm-canonical-anchor="distinguish-the-three-wallets" aria-hidden="true"></span>
+
+### 區分三種錢包
+
+| 錢包 | 平衡源 | 使用 |
+| --- | --- | --- |
+| 商戶自己的用戶錢包 | 商戶自己的會計系統 | 用戶在商戶側的可用餘額 |
+| 平臺資金 | `queryUserAssets` `funding` | 秒交易資金及資金/合約相互轉賬 |
+| 平臺合約 | `queryUserAssets`的合約資產字段 | 永續合約保證金及可轉讓餘額 |
+
+`queryAccount`查詢的是商戶平臺保證金賬戶，不是商戶用戶錢包。該接口沒有`environment`參數，無法作為模擬用戶資產進行查詢。
+
+查詢模擬用戶的兩個平臺錢包：
+
+```java
+QueryUserAssetsResponse assets = client.queryUserAssets(
+        QueryUserAssetsRequest.of(platformUserId)
+                .withFunding()
+                .withEnvironment(ExecutionEnvironment.SIMULATED));
+```
+
+接口：`POST /v1/agent/query-user-assets`。僅在 `includeFunding=true` 時請求資金；默認使用原始合約資產查詢語義。
+
+| 響應字段 | 意義 |
+| --- | --- |
+| `walletBalance`、`availableBalance`、`frozenMargin`、`usedMargin`、`isolatedMargin` | 合約錢包相關金額 |
+| `funding.assetCode` | 目前 USDT |
+| `funding.availableAmount`，`heldAmount`，`totalAmount` | 可用資金、已佔用資金及總額 |
+| `funding.materialized` | 資金賬戶是否已經落實？ |
+| `environment` | 當顯式傳遞環境時，會回顯該字段；忽略環境的舊請求不會返回此字段。 |
+| `isSimulatedUser` | 賬戶分類；無法替代交易環境選擇 |
+
+金額按字符串或 `BigDecimal` 處理，而不是 `float`/`double`。
+
+<span id="funding-transfer-directions" data-sixmm-canonical-anchor="funding-transfer-directions" aria-hidden="true"></span>
+
+### 資金轉移方向
+
+創建：`POST /v1/agent/wallet-transfer`、SDK `walletTransfer`。
+
+| `direction` | 資金流向 | `transferAll` |
+| --- | --- | --- |
+| `PARTNER_TO_FUNDING` | 商戶 → 平臺融資 | 僅固定金額 |
+| `FUNDING_TO_PARTNER` | 平臺資金 → 商戶 | 僅固定金額 |
+| `FUNDING_TO_CONTRACT` | 同一環境平臺 資金 → 合約 | 支持固定金額或全部可提取資金 |
+| `CONTRACT_TO_FUNDING` | 同環境平臺合約→資金 | 支持固定金額或全部可提取資金 |
+
+當前貨幣僅支持USDT。固定金額必須是正字符串，最多 8 位小數，且不能使用科學記數法。當`transferAll=true`時，省略`amount`，記錄為最終響應`amount`； “全部”僅包括可提取資金。
+
+示例：商戶將 10 USDT 轉賬至模擬資金。首先在商戶系統中保存商戶訂單和環境，然後發送請求：
+
+```java
+String fundingOrderNo = "SIM-FUNDING-20261010-000001";
+WalletTransferResponse transfer = client.walletTransfer(
+        WalletTransferRequest.of(fundingOrderNo, "merchant-user-001",
+                "PARTNER_TO_FUNDING", "10.00000000", false)
+                .withEnvironment(ExecutionEnvironment.SIMULATED));
+```
+
+資金轉賬 所有可轉賬至模擬合約的資金：
+
+```java
+WalletTransferResponse move = client.walletTransfer(
+        WalletTransferRequest.of("SIM-F2C-20261010-000001", "merchant-user-001",
+                "FUNDING_TO_CONTRACT", null, true)
+                .withEnvironment(ExecutionEnvironment.SIMULATED));
+```
+
+相同的操作必須繼續使用原來的`agentOrderNo`；不同的操作和不同的環境使用不同的訂單號。相同訂單號更改金額、用戶、方向或環境將被拒絕。資金/合約轉賬只能在同一環境下進行，模擬資金無法轉為真實資金。
+
+<span id="result-confirmation-and-unknown-result-recovery" data-sixmm-canonical-anchor="result-confirmation-and-unknown-result-recovery" aria-hidden="true"></span>
+
+### 結果確認和未知結果恢復
+
+資金響應由 `status`、`SUCCESS`、`PROCESSING` 或 `FAILED` 表示，並返回 `orderNo`、`direction`、`currency`、 `amount`、`resultCode`等`code=0`僅表示請求處理成功，需要繼續判斷`status`。
+
+| 結果 | 商家加工 |
+| --- | --- |
+| `SUCCESS` | 按實際金額完成本地記賬處理 |
+| `PROCESSING` | 保留本地以便確認並檢查原始訂單 |
+| HTTP超時，網絡錯誤，結果無法解析 | 結果認為未知，查詢原訂單；不能直接判定為失敗或創建新訂單重試。 |
+| 已識別`FAILED` | 根據明確的失敗結果釋放本地預留；當業務需要再次發起時創建新的業務訂單 |
+
+資金查詢使用專用接口`POST /v1/agent/wallet-transfer-status`：
+
+```java
+WalletTransferResponse recovered = client.queryWalletTransfer(
+        WalletTransferQueryRequest.of(fundingOrderNo)
+                .withEnvironment(ExecutionEnvironment.SIMULATED));
+```
+
+使用該專用端點恢復原來的Funding操作； `queryOrder` 無法替代它。保存原始環境並在恢復期間顯式傳遞它。如果`wallet-transfer-status`中省略`environment`，則服務器使用原始訂單上保存的環境，包括模擬訂單。顯式衝突的環境返回 `102002` (`order environment mismatch`)。當調用者省略環境時，響應也會省略 `environment`；這並不意味著原始訂單是生產訂單。
+
+商戶本地存取款冪等；持久訂單和餘額在啟動前保留，並在結果未知時保留以供確認。資金訪問使用專用查詢來確認最終狀態；不要假設舊合同轉讓 Webhook 或沖銷方法自動適用於資金。
+
+<span id="existing-contract-transfer-flow" data-sixmm-canonical-anchor="existing-contract-transfer-flow" aria-hidden="true"></span>
+
+### 現有合同轉讓流程
+
+原`transfer`、`transferAllOut`、`reverse`、`queryOrder`、`listOrders`繼續處理原合約轉賬流程。 `queryOrder`為查詢資金轉賬指令，`listOrders`為轉賬對賬表；相反，下一節中的六種類型的查詢用於永續交易訂單。
+
+原始資金響應使用`orderStatus`；資金響應使用 `status`，請勿混合使用。原始轉賬Webhook使用`X-Agent-Timestamp`、`X-Agent-Nonce`、`X-Agent-Signature`進行驗證，原始簽名文本為`timestamp + nonce + rawBody`；首先驗證原始請求主體，然後進行反序列化和冪等。顯式模擬環境通知包含`environment=SIMULATED`，生產通知仍與舊字段兼容。金額、訂單號、狀態、環境需要與當地業務訂單核對。
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## 來源及相關指南
+
+- [官方v0.3.0源碼](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [查詢概覽和分頁](/zh-TW/sdk/agent-sdk/java/perpetual-queries)
+- [資金錢包](/zh-TW/sdk/agent-sdk/java/funding-wallet)
+- [升級指南](/zh-TW/sdk/agent-sdk/java/upgrade)
+
+<span id="funding-request-fields" data-sixmm-canonical-anchor="funding-request-fields" aria-hidden="true"></span>
+
+## 資金請求字段
+
+| 場地 | 必需的 | 意義 |
+| --- | --- | --- |
+| `agentOrderNo` | 是的 | 全球唯一的合作伙伴訂單號；發送前堅持。 |
+| `agentUserId / platformUserId` | 一 | 識別綁定用戶；如果兩者都提供，則它們必須匹配。 |
+| `direction` | 是的 | 上面記錄的四個方向之一。 |
+| `currency` | 默認 USDT | 僅支持 USDT。 |
+| `transferAll` | 默認 false | 僅資金/合同內部轉賬支持 true。 |
+| `amount` | 有條件的 | 固定傳輸的正十進制字符串；省略 transferAll=true。 |
+| `environment` | 選修的 | 新轉移時省略的生產； SIMULATED 選擇模擬資金。 |
+
+<span id="funding-response-fields" data-sixmm-canonical-anchor="funding-response-fields" aria-hidden="true"></span>
+
+## 資金響應領域
+
+| 場地 | 意義 |
+| --- | --- |
+| `orderNo` | 返回的操作標識符；保留原始合作伙伴訂單號。 |
+| `status` | SUCCESS / PROCESSING / FAILED;決定業務完成情況。 |
+| `direction / currency` | 確認轉移方向和資產。 |
+| `amount` | 實際轉移金額作為字符串。 |
+| `transferAll` | 此操作是否要求全部提取資金。 |
+| `agentUserId / platformUserId` | 返回的用戶身份；與保存的訂單進行比較。 |
+| `resultCode` | 運算結果詳情；保留以獲得和解和支持。 |
+| `environment` | 當調用者明確提供時回顯；缺席並不是原始訂單狀態查詢的生產證明。 |

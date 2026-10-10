@@ -1,0 +1,99 @@
+---
+title: "Produkcja i symulowany handel"
+subtitle: "Produkcja i symulowany handel: Agent Java SDK Integracja v0.3.0, przykłady, parametry i semantyka odpowiedzi."
+slug: sdk/agent-sdk/java/environments
+canonical-url: https://docs.6mm.com/pl/sdk/agent-sdk/java/environments
+---
+
+Ten przewodnik jest przeznaczony dla **Agent Java SDK `v0.3.0`** i Java 8+.
+
+<span id="choose-both-the-frontend-mode-and-the-funds-environment" data-sixmm-canonical-anchor="choose-both-the-frontend-mode-and-the-funds-environment" aria-hidden="true"></span>
+
+## Wybierz zarówno tryb frontendowy, jak i środowisko funduszy
+
+Skonfiguruj środowisko funduszy partnera oddzielnie od trybu handlu frontonu. Poświadczenia powiązania i wejścia są udostępniane; wystawienie biletu lub tokena nie powoduje wyboru portfela ani przeniesienia środków.
+
+| Konfiguracja | Produkcja | Symulowane |
+| --- | --- | --- |
+| Wiązanie i uwierzytelnianie | Udostępnione powiązanie użytkownika i jednorazowe poświadczenia | Ta sama tożsamość i uwierzytelnianie |
+| Nowe przelewy i salda użytkowników | Pomiń `environment` lub użyj `PRODUCTION` | Jawnie użyj `SIMULATED` |
+| Finansowanie odzyskiwania pierwotnego zamówienia | Użyj zapisanego oryginalnego środowiska | Użyj zapisanego oryginalnego środowiska |
+| Tryb handlu widgetami | `tradingMode=real` | `tradingMode=demo` |
+| Frontend HTTP/cel WS | Cel produkcyjny dostarczony przez 6MM | Symulowany cel dostarczony przez 6MM |
+| Sześć zapytań o dane ciągłe | Dane produkcyjne | Brak selektora środowiska; metody te nie wysyłają zapytań do symulowanych danych |
+
+W przypadku `wallet-transfer-status` pominięcie `environment` powoduje wykorzystanie zapisanego środowiska pierwotnego zamówienia, w tym zamówienia symulowanego. Środowisko wyraźnie sprzeczne jest odrzucane. Wolę przechowywać środowisko i przekazywać je jawnie podczas odzyskiwania operacji.
+
+`isSimulatedUser` opisuje konto. Nie kieruje nowych żądań do symulowanego portfela. Pominięcie `environment` w nowym żądaniu środków nadal powoduje wybranie produkcji, nawet jeśli flaga konta ma wartość true.
+
+<span id="supported-java-request-models" data-sixmm-canonical-anchor="supported-java-request-models" aria-hidden="true"></span>
+
+## Obsługiwane modele żądań Java.
+
+Te żądania obsługują `withEnvironment(ExecutionEnvironment.SIMULATED)`:
+
+- `TransferRequest`, `TransferAllOutRequest`, `ReverseOrderRequest`.
+- `QueryOrderRequest`, `ListOrdersRequest`.
+- `QueryUserAssetsRequest`.
+- `WalletTransferRequest`, `WalletTransferQueryRequest`.
+
+`bind`, `queryAccount`, `createEntryUrl`, `createEmbedToken` i sześć modeli żądań ciągłego zapytania nie wybierają środowiska funduszy.
+
+```java
+import com.sixmm.agent.model.ExecutionEnvironment;
+import com.sixmm.agent.model.QueryUserAssetsRequest;
+import com.sixmm.agent.model.QueryUserAssetsResponse;
+
+QueryUserAssetsResponse assets = client.queryUserAssets(
+        QueryUserAssetsRequest.of("1188041528")
+                .withFunding()
+                .withEnvironment(ExecutionEnvironment.SIMULATED));
+```
+
+Zainicjuj `client` za pomocą [Szybki start](/pl/sdk/agent-sdk/java/quick-start) i użyj publicznego identyfikatora użytkownika z zapisanego powiązania.
+
+<span id="preserve-the-original-environment" data-sixmm-canonical-anchor="preserve-the-original-environment" aria-hidden="true"></span>
+
+## Zachowaj oryginalne środowisko
+
+Utrwal typ interfejsu, `agentOrderNo`, tożsamość użytkownika i środowisko przed wysłaniem prośby o środki. Zachowaj to środowisko podczas zapytań o status, odzyskiwania, uzgadniania i przetwarzania webhook. Po upływie limitu czasu nigdy nie próbuj ponownie, pomijając oryginalne środowisko lub używając nowego numeru zamówienia.
+
+Transfery środków/kontraktów pozostają w jednym środowisku. Fundusze symulowane nie mogą stać się funduszami produkcyjnymi. Używaj oddzielnych symulowanych rozliczeń po stronie partnera i rozpoznawalnych prefiksów zamówień, takich jak `SIM-`.
+
+<span id="simulated-integration-sequence" data-sixmm-canonical-anchor="simulated-integration-sequence" aria-hidden="true"></span>
+
+## Symulowana sekwencja integracji
+
+1. Powiąż użytkownika i zapisz identyfikator użytkownika platformy publicznej.
+2. Zapytaj o salda z wyraźnym `SIMULATED` i w razie potrzeby uwzględnij finansowanie.
+3. Utwórz mały symulowany transfer środków i utrzymuj pierwotny porządek biznesowy.
+4. Potwierdź końcowy wynik za pomocą dedykowanego zapytania o status finansowania.
+5. Otwórz lub osadź stronę docelowych sekund w trybie `demo`.
+6. Zapytaj te same symulowane portfele i uzgodnij rzeczywistą przesłaną kwotę.
+7. Aby przetestować handel wieczysty, przenieś symulowane środki do symulowanego kontraktu i skorzystaj z interfejsu symulowanego kontraktu futures. Sześć zapytań wieczystych partnerów nie może zweryfikować symulowanej historii transakcji.
+
+<span id="acceptance-checklist" data-sixmm-canonical-anchor="acceptance-checklist" aria-hidden="true"></span>
+
+## Lista kontrolna akceptacji
+
+| Scenariusz | Dowody do sprawdzenia |
+| --- | --- |
+| Tożsamość | Powiązane mapowanie użytkowników zostało zapisane; nie można przepytywać użytkowników innego partnera. |
+| Uwierzytelnianie | Przekierowanie i osadzenie przepływów korzysta z nowych poświadczeń; podpisanie nie tworzy zleceń środków. |
+| Fundusze | Obie strony zgadzają się co do faktycznej kwoty i ostatecznego statusu. |
+| Nieznany wynik | Odzyskiwanie wykorzystuje oryginalne zlecenie bez tworzenia drugiego przelewu. |
+| Izolacja środowiska | Symulowane cele backendu i frontendu są zgodne; bilanse produkcyjne pozostają nienaruszone. |
+| Zapytania | Obsługiwane są wymagane filtry użytkowników/kategorii, okna milisekundowe, puste strony i kursory. |
+| Limity stawek | Wszyscy wywołujący zapytania udostępniają ograniczanie i ponawiają pierwotną nieudaną stronę. |
+| Składowanie | Kwoty i identyfikatory pozostają ciągami znaków; rekordy jednostek są zapisywane idempotentnie. |
+
+Przed przejściem do wersji produkcyjnej zmień zarówno cel funduszy backendu, jak i tryb frontendu. Zamówienia oczekujące są nadal odtwarzane w oryginalnym środowisku.
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Źródło i powiązane przewodniki
+
+- [Oficjalne źródło v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Przegląd zapytań i paginacja](/pl/sdk/agent-sdk/java/perpetual-queries)
+- [Portfel finansowania](/pl/sdk/agent-sdk/java/funding-wallet)
+- [Przewodnik po aktualizacji](/pl/sdk/agent-sdk/java/upgrade)

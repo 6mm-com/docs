@@ -75,3 +75,32 @@ display: {
 - [身份认证](/zh-CN/sdk/trading-widget/authentication)
 - [实例方法](/zh-CN/sdk/trading-widget/instance-methods)
 - [故障排查](/zh-CN/sdk/security/troubleshooting)
+
+<span data-sixmm-canonical-anchor="产品页面与交易模式" aria-hidden="true"></span>
+
+## 产品页面与交易模式
+
+Java Agent SDK 与浏览器 Trading Widget SDK 分别管理版本。秒合约接入需检查当前 Widget 能力，显式选择页面和交易模式。
+
+| 参数 | 值 | 含义 |
+| --- | --- | --- |
+| `page` | `up-down`、`high-low`、`grid-prediction` | 秒合约产品页面。 |
+| `tradingMode` | `real`、`demo` | 默认 `real`；应显式与后端资金环境配套。 |
+
+初始化之前检查 `TradingWidget.capabilities.pages`、`TradingWidget.capabilities.tradingModes` 和 `TradingWidget.capabilities.partnerToken`。签发 token 不选择资金环境。切换用户或实盘/模拟模式时销毁旧实例，再创建新实例。
+
+见[秒合约完整示例](/zh-CN/sdk/agent-sdk/java/seconds-trading)和[实盘/模拟配置](/zh-CN/sdk/agent-sdk/java/environments)。
+
+<span data-sixmm-canonical-anchor="补充显示目标与事件" aria-hidden="true"></span>
+
+## 补充显示目标与事件
+
+当前运行时的 `display.hidden` 还支持 `symbolFavorites` 与 `symbolTicker`。应检查 `TradingWidget.capabilities.displayTargets`；显示目标控制高层容器，不是字段权限设置。
+
+| 事件 | 含义 |
+| --- | --- |
+| `rendered` | iframe 发送渲染通知。 |
+| `theme_changed` | iframe 返回实际主题。 |
+| `page_changed` | iframe 返回实际产品页面。 |
+
+通过 `onRendered` 或 `widget.on('rendered', handler)` 将渲染通知与初始化分别处理。支持页面以 `TradingWidget.capabilities.pages` 为准，接入时检查目标页面，不自行猜测路径。

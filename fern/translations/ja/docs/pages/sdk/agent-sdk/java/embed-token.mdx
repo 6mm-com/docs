@@ -1,17 +1,36 @@
 ---
 title: "埋め込みトークンの作成"
-subtitle: "パートナートークンモード用の短命な埋め込みトークン Trading Widget 発行してください。"
+subtitle: "埋め込みトークンの作成: Agent Java SDK v0.3.0 の統合、例、パラメーター、および応答セマンティクス。"
 slug: sdk/agent-sdk/java/embed-token
 canonical-url: https://docs.6mm.com/ja/sdk/agent-sdk/java/embed-token
 ---
 
-<span id="sdk-call" data-sixmm-canonical-anchor="sdk-call" aria-hidden="true"></span>
+このガイドは、**Agent Java SDK `v0.3.0`**、Java 8 以降、およびタグ付けされたパブリック コントラクトを対象としています。例は `client` を初期化した後にパートナー バックエンドで実行されます。 [クイックスタート](/ja/sdk/agent-sdk/java/quick-start).
 
-## SDK
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
 
-パートナーユーザーセッションを検証した後、バックエンドから埋め込みトークンを作成します。ブラウザはエンドポイントを呼び出し、エンドポイントはAgent SDK を通じて6MMを呼び出します。
+## 前提条件の例
+
+Java スニペットはこれらのインポートを共有します。クイック スタートを使用して `client` を初期化し、保存されたバインディングから `platformUserId` を取得します。ユーザー/オーダー ID の例は、独自の永続化された値に置き換える必要があります。
 
 ```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span id="trading-widget-embed-token" data-sixmm-canonical-anchor="trading-widget-embed-token" aria-hidden="true"></span>
+
+## Trading Widget 埋め込みトークン
+
+埋め込みトークンは Trading Widget SDK `partner-token + tokenProvider` モード用です。の
+ブラウザーがパートナー バックエンドを呼び出し、パートナー バックエンドがこれを呼び出します Java SDK
+`embedToken` を作成します。
+
+```java
+import com.sixmm.agent.model.CreateEmbedTokenRequest;
+import com.sixmm.agent.model.CreateEmbedTokenResponse;
+
 CreateEmbedTokenResponse resp = client.createEmbedToken(
         CreateEmbedTokenRequest.of("agent-user-001", "tw_abc123")
                 .withSymbol("ETHUSDT"));
@@ -20,13 +39,15 @@ System.out.println(resp.embedToken);
 System.out.println(resp.expireAt);
 ```
 
-> **一度限りの資格証明**
->
-> embedToken は短期間で一度きりの使用です。 URL クエリ文字列には置かないでください。
+統合要件:
 
-<span id="backend-endpoint-example" data-sixmm-canonical-anchor="backend-endpoint-example" aria-hidden="true"></span>
+- `channelId` は、Trading Widget SDK によって渡された値を使用する必要があります。
+- `symbol` はオプションですが、現在の初期シンボルを渡すことをお勧めします。
+- `embedToken` は短命かつ 1 回限りです。 URL クエリ文字列には入れないでください。
+- パートナーのフロントエンドは `apiSecret` を保持してはなりません。
+- `expireAt` は、TTL ではなく、秒単位の Unix タイムスタンプです。
 
-## バックエンドエンドポイントの例
+パートナー バックエンド エンドポイントの例:
 
 ```java
 @PostMapping("/api/trading/embed-token")
@@ -41,24 +62,20 @@ public EmbedTokenView createEmbedToken(@RequestBody EmbedTokenRequest request,
 }
 ```
 
-Trading Widgetトークン提供者が必要とするフィールドのみを返してください。apiSecret、生の署名フィールド、内部サービス構成は返さないでください。
 
-<span id="failure-handling" data-sixmm-canonical-anchor="failure-handling" aria-hidden="true"></span>
+<span id="partner-endpoint-contract" data-sixmm-canonical-anchor="partner-endpoint-contract" aria-hidden="true"></span>
 
-## 故障処理
+## パートナーエンドポイント契約
 
-| 状態 | 推奨取り扱い |
-| --- | --- |
-| ユーザーセッションが失われているか、期限切れになっています | パートナーエンドポイントから401を返し、ユーザーに再度サインインを求めます。 |
-| エージェントユーザーは拘束されません | まずユーザーをバインドし、その後トークン作成を再試行してください。 |
-| 6MM 一時的なエラーを返します | 再試行可能なエラーをフロントエンドに返し、サポートのためにログ requestId してください。 |
-| channelId ウィジェットインスタンスと一致しません | リクエストを拒否してウィジェットセッションを再作成してください。 |
+パートナーセッションを認証し、サーバー側で `agentUserId` を取得します。現在のウィジェット `channelId` を受け入れます。最上位の `embedToken`、`expireAt` (Unix 秒)、および同じ `channelId` を返します。エージェントの応答は `channelId` を提供しません。バックエンドはそれをエコーし​​ます。初期化および更新時に新しいトークンを取得します。決して再利用しないでください。トークンの作成では、資金を転送したり、ウォレット環境を選択したりしません。
 
-<span id="related-documentation" data-sixmm-canonical-anchor="related-documentation" aria-hidden="true"></span>
+見る [秒取引](/ja/sdk/agent-sdk/java/seconds-trading) 完全なフロントエンド/バックエンド フローについては、
 
-## 関連文書
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
 
-- [Trading Widget 認証](/ja/sdk/trading-widget/authentication):パートナーエンドポイントに `tokenProvider` 接続します。
-- [Java クイックスタート](/ja/sdk/agent-sdk/java/quick-start)インストールと初期化 `AgentClient`。
-- [秘密と署名](/ja/sdk/security/secrets-signing)エージェントの秘密を守る API 。
-- [ウェブフックと冪等性](/ja/sdk/security/webhooks-idempotency):統合のコールバック側を確保してください。
+## ソースおよび関連ガイド
+
+- [公式 v0.3.0 ソース](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [クエリの概要とページネーション](/ja/sdk/agent-sdk/java/perpetual-queries)
+- [資金調達ウォレット](/ja/sdk/agent-sdk/java/funding-wallet)
+- [アップグレードガイド](/ja/sdk/agent-sdk/java/upgrade)

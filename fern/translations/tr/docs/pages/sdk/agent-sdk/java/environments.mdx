@@ -1,0 +1,99 @@
+---
+title: "Üretim ve Simülasyonlu Ticaret"
+subtitle: "Üretim ve Simülasyonlu Ticaret: Agent Java SDK v0.3.0 entegrasyonu, örnekler, parametreler ve yanıt semantiği."
+slug: sdk/agent-sdk/java/environments
+canonical-url: https://docs.6mm.com/tr/sdk/agent-sdk/java/environments
+---
+
+Bu kılavuz **Agent Java SDK `v0.3.0`** ve Java 8+'yi hedefler.
+
+<span id="choose-both-the-frontend-mode-and-the-funds-environment" data-sixmm-canonical-anchor="choose-both-the-frontend-mode-and-the-funds-environment" aria-hidden="true"></span>
+
+## Hem ön uç modunu hem de fon ortamını seçin
+
+İş ortağının arka ucunun fon ortamını ön uç ticaret modundan ayrı olarak yapılandırın. Bağlama ve giriş kimlik bilgileri paylaşılır; Bilet veya jeton düzenlemek bir cüzdan seçmez veya parayı taşımaz.
+
+| Yapılandırma | Üretme | Simüle edilmiş |
+| --- | --- | --- |
+| Bağlama ve kimlik doğrulama | Paylaşılan kullanıcı bağlama ve tek seferlik kimlik bilgileri | Aynı kimlik ve kimlik doğrulama |
+| Yeni transferler ve kullanıcı bakiyeleri | `environment`'ı atlayın veya `PRODUCTION` kullanın | Açıkça `SIMULATED` kullanın |
+| Orijinal sipariş kurtarmanın finansmanı | Kaydedilen orijinal ortamı kullan | Kaydedilen orijinal ortamı kullan |
+| Widget ticaret modu | `tradingMode=real` | `tradingMode=demo` |
+| Ön uç HTTP/WS hedefi | 6MM tarafından sağlanan üretim hedefi | 6MM tarafından sağlanan simüle edilmiş hedef |
+| Altı kalıcı veri sorgusu | Üretim verileri | Ortam seçici yok; bu yöntemler simüle edilmiş verileri sorgulamaz |
+
+`wallet-transfer-status` için, `environment`'nin atlanması, simüle edilmiş bir sipariş de dahil olmak üzere orijinal siparişin kayıtlı ortamını kullanır. Açıkça çelişen bir ortam reddedilir. Bir işlemi kurtarırken ortamı saklamayı ve açıkça iletmeyi tercih edin.
+
+`isSimulatedUser` hesabı açıklar. Yeni istekleri simüle edilmiş bir cüzdana yönlendirmez. Yeni bir para talebinde `environment` atlanırsa, hesap işareti doğru olsa bile üretim seçilir.
+
+<span id="supported-java-request-models" data-sixmm-canonical-anchor="supported-java-request-models" aria-hidden="true"></span>
+
+## Desteklenen Java istek modelleri
+
+Bu istekler `withEnvironment(ExecutionEnvironment.SIMULATED)` desteği sağlar:
+
+- `TransferRequest`, `TransferAllOutRequest`, `ReverseOrderRequest`.
+- `QueryOrderRequest`, `ListOrdersRequest`.
+- `QueryUserAssetsRequest`.
+- `WalletTransferRequest`, `WalletTransferQueryRequest`.
+
+`bind`, `queryAccount`, `createEntryUrl`, `createEmbedToken` ve altı sürekli sorgu isteği modeli bir fon ortamı seçmez.
+
+```java
+import com.sixmm.agent.model.ExecutionEnvironment;
+import com.sixmm.agent.model.QueryUserAssetsRequest;
+import com.sixmm.agent.model.QueryUserAssetsResponse;
+
+QueryUserAssetsResponse assets = client.queryUserAssets(
+        QueryUserAssetsRequest.of("1188041528")
+                .withFunding()
+                .withEnvironment(ExecutionEnvironment.SIMULATED));
+```
+
+Kullanarak `client`'ı başlat [Hızlı Başlangıç](/tr/sdk/agent-sdk/java/quick-start) ve kayıtlı bağlamanızdaki genel kullanıcı kimliğini kullanın.
+
+<span id="preserve-the-original-environment" data-sixmm-canonical-anchor="preserve-the-original-environment" aria-hidden="true"></span>
+
+## Orijinal ortamı koruyun
+
+Para talebi göndermeden önce arayüz tipini, `agentOrderNo`, kullanıcı kimliğini ve ortamını sürdürün. Durum sorguları, kurtarma, mutabakat ve webhook işleme sırasında bu ortamı koruyun. Bir zaman aşımından sonra asla orijinal ortamı atlayarak veya yeni bir sipariş numarası kullanarak yeniden denemeyin.
+
+Finansman/Sözleşme transferleri tek bir ortamda kalır. Simüle edilmiş fonlar üretim fonu olamaz. Ayrı iş ortağı tarafı simülasyonlu muhasebe ve `SIM-` gibi tanınabilir sipariş öneklerini kullanın.
+
+<span id="simulated-integration-sequence" data-sixmm-canonical-anchor="simulated-integration-sequence" aria-hidden="true"></span>
+
+## Simüle edilmiş entegrasyon sırası
+
+1. Kullanıcıyı bağlayın ve genel platform kullanıcı kimliğini kaydedin.
+2. Dengeleri açıkça `SIMULATED` ile sorgulayın ve gerektiğinde Finansmanı dahil edin.
+3. Küçük bir simülasyonlu Finansman transferi oluşturun ve orijinal iş emrini sürdürün.
+4. Nihai sonucu, özel Finansman durumu sorgusuyla onaylayın.
+5. Hedef saniye sayfasını `demo` modunda açın veya gömün.
+6. Aynı simüle edilmiş cüzdanları sorgulayın ve aktarılan gerçek tutarı mutabakata varın.
+7. Sürekli ticareti test etmek için simüle edilmiş Fonlamayı simüle edilmiş Sözleşmeye aktarın ve simüle edilmiş vadeli işlem ön yüzünü kullanın. Altı ortak sürekli sorgusu simüle edilmiş ticaret geçmişini doğrulayamıyor.
+
+<span id="acceptance-checklist" data-sixmm-canonical-anchor="acceptance-checklist" aria-hidden="true"></span>
+
+## Kabul kontrol listesi
+
+| Senaryo | Doğrulanacak kanıt |
+| --- | --- |
+| Kimlik | Bağlı kullanıcı eşlemesi kaydedilir; başka bir iş ortağının kullanıcıları sorgulanamaz. |
+| Kimlik doğrulama | Yönlendirme ve yerleştirme akışları yeni kimlik bilgilerini kullanır; imzalama para emri yaratmaz. |
+| Fonlar | Her iki taraf da gerçek miktar ve nihai durum konusunda hemfikir. |
+| Bilinmeyen sonuç | Kurtarma, ikinci bir aktarım oluşturmadan orijinal sırayı kullanır. |
+| Çevre izolasyonu | Simüle edilmiş arka uç ve ön uç hedefleri aynı fikirde; Üretim dengeleri etkilenmez. |
+| Sorgular | Gerekli kullanıcı/kategori filtreleri, milisaniyelik pencereler, boş sayfalar ve imleçler işlenir. |
+| Oran sınırları | Tüm sorgu çağıranları kısıtlamayı paylaşır ve başarısız olan orijinal sayfayı yeniden dener. |
+| Depolamak | Tutarlar ve kimlikler dize olarak kalır; varlık kayıtları değişmez bir şekilde kaydedilir. |
+
+Üretime geçmeden önce hem arka uç fon hedefini hem de ön uç modunu değiştirin. Bekleyen siparişler orijinal ortamlarında iyileşmeye devam ediyor.
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Kaynak ve ilgili kılavuzlar
+
+- [Resmi v0.3.0 kaynağı](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Sorguya genel bakış ve sayfalandırma](/tr/sdk/agent-sdk/java/perpetual-queries)
+- [Finansman cüzdanı](/tr/sdk/agent-sdk/java/funding-wallet)
+- [Yükseltme kılavuzu](/tr/sdk/agent-sdk/java/upgrade)

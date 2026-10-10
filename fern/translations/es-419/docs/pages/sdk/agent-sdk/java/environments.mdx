@@ -1,0 +1,99 @@
+---
+title: "Producción y comercio simulado"
+subtitle: "Producción y comercio simulado: Agent Java SDK v0.3.0 integración, ejemplos, parámetros y semántica de respuesta."
+slug: sdk/agent-sdk/java/environments
+canonical-url: https://docs.6mm.com/es-419/sdk/agent-sdk/java/environments
+---
+
+Esta guía está dirigida a **Agent Java SDK `v0.3.0`** y Java 8+.
+
+<span id="choose-both-the-frontend-mode-and-the-funds-environment" data-sixmm-canonical-anchor="choose-both-the-frontend-mode-and-the-funds-environment" aria-hidden="true"></span>
+
+## Elija tanto el modo frontend como el entorno de fondos.
+
+Configure el entorno de fondos del backend del socio por separado del modo de negociación frontend. Las credenciales de enlace y de entrada se comparten; La emisión de un billete o token no selecciona una billetera ni mueve fondos.
+
+| Configuración | Producción | Simulado |
+| --- | --- | --- |
+| Vinculación y autenticación | Enlace de usuario compartido y credenciales de un solo uso | Misma identidad y autenticación. |
+| Nuevas transferencias y saldos de usuarios | Omita `environment` o use `PRODUCTION` | Utilice explícitamente `SIMULATED` |
+| Financiar la recuperación del pedido original | Utilice el entorno original guardado | Utilice el entorno original guardado |
+| Modo de comercio de widgets | `tradingMode=real` | `tradingMode=demo` |
+| Frontend HTTP/destino WS | Objetivo de producción proporcionado por 6MM | Objetivo simulado proporcionado por 6MM |
+| Seis consultas de datos permanentes | Datos de producción | Sin selector de entorno; Estos métodos no consultan datos simulados. |
+
+Para `wallet-transfer-status`, omitir `environment` utiliza el entorno guardado del pedido original, incluido un pedido simulado. Se rechaza un entorno explícitamente conflictivo. Prefiere almacenar el entorno y pasarlo explícitamente al recuperar una operación.
+
+`isSimulatedUser` describe la cuenta. No enruta nuevas solicitudes a una billetera simulada. Omitir `environment` en una nueva solicitud de fondos aún selecciona producción, incluso cuando el indicador de cuenta es verdadero.
+
+<span id="supported-java-request-models" data-sixmm-canonical-anchor="supported-java-request-models" aria-hidden="true"></span>
+
+## Modelos de solicitud Java admitidos
+
+Estas solicitudes admiten `withEnvironment(ExecutionEnvironment.SIMULATED)`:
+
+- `TransferRequest`, `TransferAllOutRequest`, `ReverseOrderRequest`.
+- `QueryOrderRequest`, `ListOrdersRequest`.
+- `QueryUserAssetsRequest`.
+- `WalletTransferRequest`, `WalletTransferQueryRequest`.
+
+`bind`, `queryAccount`, `createEntryUrl`, `createEmbedToken` y los seis modelos de solicitud de consulta perpetua no seleccionan un entorno de fondos.
+
+```java
+import com.sixmm.agent.model.ExecutionEnvironment;
+import com.sixmm.agent.model.QueryUserAssetsRequest;
+import com.sixmm.agent.model.QueryUserAssetsResponse;
+
+QueryUserAssetsResponse assets = client.queryUserAssets(
+        QueryUserAssetsRequest.of("1188041528")
+                .withFunding()
+                .withEnvironment(ExecutionEnvironment.SIMULATED));
+```
+
+Inicialice `client` usando [Inicio rápido](/es-419/sdk/agent-sdk/java/quick-start) y utilice la ID de usuario pública de su enlace guardado.
+
+<span id="preserve-the-original-environment" data-sixmm-canonical-anchor="preserve-the-original-environment" aria-hidden="true"></span>
+
+## Preservar el entorno original.
+
+Conserve el tipo de interfaz, `agentOrderNo`, la identidad del usuario y el entorno antes de enviar una solicitud de fondos. Mantenga ese entorno durante las consultas de estado, la recuperación, la conciliación y el procesamiento webhook. Después de un tiempo de espera, nunca vuelva a intentarlo omitiendo el entorno original o utilizando un nuevo número de pedido.
+
+Las transferencias de financiación/contratos permanecen dentro de un entorno. Los fondos simulados no pueden convertirse en fondos de producción. Utilice contabilidad simulada del lado del socio independiente y prefijos de pedidos reconocibles, como `SIM-`.
+
+<span id="simulated-integration-sequence" data-sixmm-canonical-anchor="simulated-integration-sequence" aria-hidden="true"></span>
+
+## Secuencia de integración simulada
+
+1. Vincule al usuario y guarde la ID de usuario de la plataforma pública.
+2. Consulta saldos con `SIMULATED` explícito e incluye financiación cuando sea necesario.
+3. Cree una pequeña transferencia de fondos simulada y mantenga su orden comercial original.
+4. Confirme el resultado final con la consulta de estado de financiación dedicada.
+5. Abra o incruste la página de segundos de destino en modo `demo`.
+6. Consulta las mismas billeteras simuladas y concilia el monto real transferido.
+7. Para probar el comercio perpetuo, transfiera los fondos simulados al contrato simulado y utilice la interfaz de futuros simulada. Las consultas perpetuas de los seis socios no pueden validar el historial comercial simulado.
+
+<span id="acceptance-checklist" data-sixmm-canonical-anchor="acceptance-checklist" aria-hidden="true"></span>
+
+## Lista de verificación de aceptación
+
+| Guión | Evidencia para verificar |
+| --- | --- |
+| Identidad | Se guarda la asignación de usuarios vinculados; Los usuarios de otro socio no pueden ser consultados. |
+| Autenticación | Los flujos de redirección e inserción utilizan credenciales nuevas; la firma no crea órdenes de fondos. |
+| Fondos | Ambas partes están de acuerdo sobre el importe real y el estado final. |
+| Resultado desconocido | La recuperación utiliza el pedido original sin crear una segunda transferencia. |
+| Aislamiento del entorno | Los objetivos simulados de backend y frontend coinciden; Los saldos de producción no se ven afectados. |
+| Consultas | Se manejan los filtros de usuario/categoría requeridos, ventanas de milisegundos, páginas vacías y cursores. |
+| Límites de tarifas | Todos los llamadores de consultas comparten la limitación y vuelven a intentar la página fallida original. |
+| Almacenamiento | Los montos y los ID siguen siendo cadenas; Los registros de entidad se guardan de forma idempotente. |
+
+Antes de pasar a producción, cambie tanto el destino de los fondos backend como el modo frontend. Los pedidos pendientes continúan recuperándose en su entorno original.
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Guías fuente y relacionadas
+
+- [Fuente oficial v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Descripción general de consultas y paginación](/es-419/sdk/agent-sdk/java/perpetual-queries)
+- [Cartera de financiación](/es-419/sdk/agent-sdk/java/funding-wallet)
+- [Guía de actualización](/es-419/sdk/agent-sdk/java/upgrade)

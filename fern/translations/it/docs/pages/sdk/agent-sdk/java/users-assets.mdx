@@ -1,0 +1,171 @@
+---
+title: "Utenti e risorse"
+subtitle: "Utenti e risorse: Agent Java SDK Integrazione v0.3.0, esempi, parametri e semantica della risposta."
+slug: sdk/agent-sdk/java/users-assets
+canonical-url: https://docs.6mm.com/it/sdk/agent-sdk/java/users-assets
+---
+
+Questa guida è rivolta a **Agent Java SDK `v0.3.0`**, Java 8+ e agli appalti pubblici contrassegnati. Gli esempi vengono eseguiti nel backend di un partner dopo aver inizializzato `client` in [Avvio rapido](/it/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## Prerequisiti di esempio
+
+Gli snippet Java condividono queste importazioni. Inizializza `client` utilizzando Quick Start e ottieni `platformUserId` dall'associazione salvata. Gli ID utente/ordine di esempio devono essere sostituiti con i tuoi valori persistenti.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span id="user-id-rules" data-sixmm-canonical-anchor="user-id-rules" aria-hidden="true"></span>
+
+## Regole ID utente
+
+`platformUserId` è l'ID utente esterno 6MM Attualmente è un numero di 10 cifre
+stringa, ad esempio:
+
+```text
+1188041528
+```
+
+Regole:
+
+- Memorizzalo come una stringa, non come un numero intero.
+- Non generare, decodificare o dedurre significato da esso.
+- Utilizza il tuo ID utente lato partner come `agentUserId`.
+- Persistenza della relazione tra `agentUserId`, `platformUserId` e `agentOrderNo`.
+
+
+<span id="bind-user" data-sixmm-canonical-anchor="bind-user" aria-hidden="true"></span>
+
+## Associa utente
+
+Bind crea o recupera la relazione tra un utente partner e un 6MM
+utente della piattaforma. Chiamalo quando un utente entra per la prima volta nel flusso di trading o prima del
+primo trasferimento in 6MM.
+
+```java
+import com.sixmm.agent.model.BindRequest;
+import com.sixmm.agent.model.BindResponse;
+
+BindResponse resp = client.bind(
+        BindRequest.of("agent-user-001")
+                .withUsername("alice")
+                .withExt("{\"source\":\"web\"}"));
+
+System.out.println(resp.platformUserId);
+System.out.println(resp.bindStatus);
+System.out.println(resp.isSimulatedUser);
+```
+
+Campi richiesta:
+
+| Campo | Tipo | Necessario | Descrizione |
+| --- | --- | --- | --- |
+| `agentUserId` | string | SÌ | ID utente univoco lato partner |
+| `username` | string | NO | Nome visualizzato lato partner utilizzato come nickname dell'utente della piattaforma |
+| `ext` | string | NO | Campo estensione. Si consiglia la stringa JSON |
+
+Campi di risposta:
+
+| Campo | Tipo | Descrizione |
+| --- | --- | --- |
+| `platformUserId` | string | 6MM ID utente esterno |
+| `bindStatus` | string | Di solito `BOUND` |
+| `isSimulatedUser` | boolean | Indica se si tratta di un utente simulato |
+
+
+<span id="query-partner-account" data-sixmm-canonical-anchor="query-partner-account" aria-hidden="true"></span>
+
+## Interroga l'account del partner
+
+```java
+import com.sixmm.agent.model.QueryAccountRequest;
+import com.sixmm.agent.model.QueryAccountResponse;
+
+QueryAccountResponse resp = client.queryAccount(QueryAccountRequest.of("USDT"));
+
+System.out.println(resp.agentCode);
+System.out.println(resp.agentStatus);
+resp.assets.forEach(asset -> {
+    System.out.println(asset.currency);
+    System.out.println(asset.depositBalance);
+});
+```
+
+Quando `currency` è assente, SDK utilizza `defaultCurrency`.
+
+
+<span id="query-user-assets" data-sixmm-canonical-anchor="query-user-assets" aria-hidden="true"></span>
+
+## Interrogare le risorse utente
+
+```java
+import com.sixmm.agent.model.QueryUserAssetsRequest;
+import com.sixmm.agent.model.QueryUserAssetsResponse;
+
+QueryUserAssetsResponse resp = client.queryUserAssets(
+        QueryUserAssetsRequest.of("1188041528"));
+
+System.out.println(resp.walletBalance);
+System.out.println(resp.availableBalance);
+System.out.println(resp.version);
+```
+
+Campi:
+
+| Campo | Tipo | Descrizione |
+| --- | --- | --- |
+| `walletBalance` | string | Saldo del portafoglio |
+| `frozenMargin` | string | Margine congelato |
+| `usedMargin` | string | Margine utilizzato |
+| `availableBalance` | string | Saldo disponibile |
+| `isolatedMargin` | string | Margine isolato |
+| `version` | int64 | Versione dell'asset |
+| `isSimulatedUser` | boolean | Indica se si tratta di un utente simulato |
+
+
+<span id="distinguish-the-three-wallets" data-sixmm-canonical-anchor="distinguish-the-three-wallets" aria-hidden="true"></span>
+
+### Distinguere i tre portafogli
+
+| portafoglio | Fonte del saldo | utilizzo |
+| --- | --- | --- |
+| Portafoglio utente del commerciante | Il sistema contabile del commerciante | Il saldo disponibile dell'utente dal lato commerciante |
+| Finanziamento della piattaforma | `queryUserAssets` di `funding` | Secondi scambi di fondi e trasferimento reciproco di finanziamenti/contratti |
+| Contratto di piattaforma | Il campo della risorsa contratto di `queryUserAssets` | Margine contrattuale perpetuo e saldo trasferibile |
+
+`queryAccount` Interroga il conto di margine della piattaforma del commerciante, non il portafoglio dell'utente del commerciante. Questa interfaccia non dispone di parametri `environment` e non può essere interrogata come risorsa utente simulata.
+
+Interroga i due portafogli della piattaforma degli utenti simulati:
+
+```java
+QueryUserAssetsResponse assets = client.queryUserAssets(
+        QueryUserAssetsRequest.of(platformUserId)
+                .withFunding()
+                .withEnvironment(ExecutionEnvironment.SIMULATED));
+```
+
+Interfaccia: `POST /v1/agent/query-user-assets`. Il finanziamento viene richiesto solo quando `includeFunding=true`; per impostazione predefinita viene utilizzata la semantica della query della risorsa contratto originale.
+
+| campi di risposta | Senso |
+| --- | --- |
+| `walletBalance`, `availableBalance`, `frozenMargin`, `usedMargin`, `isolatedMargin` | Importi relativi al portafoglio contrattuale |
+| `funding.assetCode` | Attualmente USDT |
+| `funding.availableAmount`, `heldAmount`, `totalAmount` | Fondi disponibili, occupati e importo totale |
+| `funding.materialized` | Se il conto di finanziamento è stato materializzato? |
+| `environment` | Questo campo viene ripetuto quando l'ambiente viene passato esplicitamente; le vecchie richieste che omettono l'ambiente non restituiscono questo campo. |
+| `isSimulatedUser` | Classificazione dei conti; non può sostituire la selezione dell'ambiente di trading |
+
+Gli importi vengono gestiti come stringhe o `BigDecimal`, non `float`/`double`.
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Fonte e guide correlate
+
+- [Fonte ufficiale v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Panoramica delle query e impaginazione](/it/sdk/agent-sdk/java/perpetual-queries)
+- [Portafoglio di finanziamento](/it/sdk/agent-sdk/java/funding-wallet)
+- [Guida all'aggiornamento](/it/sdk/agent-sdk/java/upgrade)

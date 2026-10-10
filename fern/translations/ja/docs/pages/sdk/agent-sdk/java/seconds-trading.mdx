@@ -1,0 +1,165 @@
+---
+title: "秒取引の統合"
+subtitle: "秒取引の統合: Agent Java SDK v0.3.0 の統合、例、パラメーター、および応答セマンティクス。"
+slug: sdk/agent-sdk/java/seconds-trading
+canonical-url: https://docs.6mm.com/ja/sdk/agent-sdk/java/seconds-trading
+---
+
+このガイドは、**Agent Java SDK `v0.3.0`** および Java 8 以降を対象としています。
+
+<span id="prepare-identity-authentication-and-funds" data-sixmm-canonical-anchor="prepare-identity-authentication-and-funds" aria-hidden="true"></span>
+
+## ID、認証、資金を準備する
+
+秒取引では、永久取引と同じユーザー バインディングとエントリ認証が使用されます。資金残高を使用します。永久証拠金は契約残高を使用します。フロントエンドの製品/モードとバックエンドの資金環境を個別に構成します。
+
+を使用して `client` を初期化します [クイックスタート](/ja/sdk/agent-sdk/java/quick-start)。バインドされたユーザー マッピングを保存し、認証されたバックエンド セッションからパートナー ユーザー ID を取得します。
+
+<span id="redirect-entry" data-sixmm-canonical-anchor="redirect-entry" aria-hidden="true"></span>
+
+## リダイレクトエントリ
+
+```java
+import com.sixmm.agent.model.CreateEntryUrlRequest;
+import com.sixmm.agent.model.CreateEntryUrlResponse;
+
+CreateEntryUrlResponse entry = client.createEntryUrl(
+        CreateEntryUrlRequest.of("merchant-user-001")
+                .withRedirectPath("/zh-CN/up-down?tradingMode=demo")
+                .withReturnUrl("https://merchant.example/markets"));
+String webUrl = entry.webUrl;
+```
+
+SDK は `POST /v1/agent/create-entry-url` を呼び出します。 `webUrl` をパートナー フロントエンドに返し、すぐに開きます。 `expireAt` は Unix 秒を使用します。チケットの有効期間は短く、1 回限りです。期限切れまたは消費後に別のものを入手してください。
+
+| 製品 | フロントエンドパスの例 | 財布 |
+| --- | --- | --- |
+| 上/下 | `/zh-CN/up-down?tradingMode=real` または `demo` | 資金調達 |
+| 高/低 | `/zh-CN/high-low?tradingMode=real` または `demo` | 資金調達 |
+| グリッド | `/zh-CN/grid-prediction?tradingMode=real` または `demo` | 資金調達 |
+| 無期限先物 | `/zh-CN/futures/BTCUSDT?tradingMode=real` または `demo` | 契約 |
+
+6MM によって提供される実際のフロントエンド ルートを使用します。 `redirectPath` は、`/` で始まる相対プラットフォーム パスです。 `returnUrl` は絶対的なパートナー HTTP/HTTPS URL です。エントリーチケットはユーザーを認証するものであり、転送は実行されません。
+
+<span id="embedded-entry" data-sixmm-canonical-anchor="embedded-entry" aria-hidden="true"></span>
+
+## 埋め込みエントリ
+
+既存の `partner-token` および `tokenProvider` フローを使用します。予測固有のトークンはありません。目的の `page` および `tradingMode` を使用してウィジェットを作成し、パートナー バックエンドを呼び出すときに現在の `channelId` を使用します。
+
+```java
+import com.sixmm.agent.model.CreateEmbedTokenRequest;
+import com.sixmm.agent.model.CreateEmbedTokenResponse;
+
+String channelId = "tw_example_channel";
+CreateEmbedTokenResponse auth = client.createEmbedToken(
+        CreateEmbedTokenRequest.of("merchant-user-001", channelId));
+String embedToken = auth.embedToken;
+long expireAt = auth.expireAt;
+```
+
+SDK は `POST /v1/agent/create-embed-token` を呼び出します。 `symbol` はオプションです。秒単位で取引される商品を選びません。製品の選択はフロントエンドに属します。トークンは資金環境を選択したり、残高を変更したりしません。
+
+<span id="complete-frontend-example" data-sixmm-canonical-anchor="complete-frontend-example" aria-hidden="true"></span>
+
+## 完全なフロントエンドの例
+
+これらのオプションは、2026 年 10 月 10 日にパブリック Trading Widget `1.8.0` ランタイムに対して検証されました。ウィジェットと Agent Java SDK のバージョンは独立しています。
+
+```html
+<div id="seconds-widget" style="width: 100%; height: 720px"></div>
+<script src="https://app.6mm.com/sdk/trading-widget/v1/index.js"></script>
+<script>
+  const page = 'up-down';
+  const tradingMode = 'demo';
+  const capabilities = TradingWidget.capabilities;
+  if (!capabilities?.partnerToken ||
+      !capabilities.pages?.includes(page) ||
+      !capabilities.tradingModes?.includes(tradingMode)) {
+    throw new Error('Trading Widget SDK does not support the requested page or mode');
+  }
+
+  const widget = TradingWidget.create('#seconds-widget', {
+    baseUrl: 'https://app.6mm.com',
+    page,
+    tradingMode,
+    theme: 'dark',
+    locale: 'zh-CN',
+    auth: {
+      mode: 'partner-token',
+      tokenProvider: async ({ channelId }) => {
+        // Partner-owned endpoint; derive the user from the backend session.
+        const response = await fetch('/api/seconds/embed-token', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ channelId }),
+        });
+        if (!response.ok) {
+          throw new Error('Failed to request embed token');
+        }
+        const result = await response.json();
+        if (typeof result.embedToken !== 'string' || !result.embedToken.trim() ||
+            !Number.isFinite(result.expireAt) || result.channelId !== channelId) {
+          throw new Error('Invalid embed token response');
+        }
+        return {
+          embedToken: result.embedToken,
+          expireAt: result.expireAt,
+          channelId: result.channelId,
+        };
+      },
+    },
+    onReady() {
+      console.log('Trading widget ready');
+    },
+    onError(error) {
+      console.error('Trading widget error', error.code);
+    },
+  });
+  window.addEventListener('beforeunload', () => widget.destroy());
+</script>
+```
+
+| オプション | 価値観 | 意味 |
+| --- | --- | --- |
+| `page` | `up-down`、`high-low`、`grid-prediction` | 製品ページ。 |
+| `tradingMode` | `real`、`demo` | デフォルトは `real` です。明示的に設定します。 |
+| `baseUrl` | `https://app.6mm.com` | プラットフォームのフロントエンドの起点。ウィジェットはその埋め込み URL を構築します。 |
+
+<span id="partner-backend-response" data-sixmm-canonical-anchor="partner-backend-response" aria-hidden="true"></span>
+
+## パートナーのバックエンド応答
+
+`/api/seconds/embed-token` はパートナー所有のエンドポイントであり、新しい 6MM API ではありません。セッションを認証し、サーバー側で `agentUserId` を取得し、`createEmbedToken` を呼び出します。この最上位構造を返します。
+
+```json
+{
+  "embedToken": "short-one-time-token",
+  "expireAt": 1791590700,
+  "channelId": "tw_xxx"
+}
+```
+
+例示的な値ではなく、エージェントの応答の実際の `expireAt` を使用してください。エージェントの応答には `channelId` が含まれていません。バックエンドは現在のリクエストの値をエコーし​​ます。 API のラップ結果が `data` になる場合は、tokenProvider から戻る前にそのレイヤーのラップを解除してください。無効な成功オブジェクトを返すのではなく、ビジネスの失敗を拒否します。
+
+初期化または更新のたびに、新しいトークンが取得されます。同じトークンを再度キャッシュして交換したり、URL に配置したりしないでください。更新中に同じインスタンス チャネルを再利用します。インスタンスを再作成した後、新しいチャネルを使用してください。
+
+<span id="match-the-funds-environment" data-sixmm-canonical-anchor="match-the-funds-environment" aria-hidden="true"></span>
+
+## 資金環境にマッチする
+
+`demo` フロントエンドには、`environment=SIMULATED` による資金リクエストのシミュレーションが必要です。 `real` フロントエンドには制作資金が必要です。 `tradingMode` もトークンの作成も、バックエンド資金の目標を変更しません。
+
+ユーザーまたは取引モードを切り替えるときは、古いウィジェットを破棄し、新しいインスタンスを作成します。ユーザーを資金提供済みとして扱う前に、Funding 固有のステータス エンドポイントを通じて Funding 残高をクエリし、資金を転送し、最終結果を確認します。
+
+見る [資金調達ウォレット](/ja/sdk/agent-sdk/java/funding-wallet) そして [環境ガイド](/ja/sdk/agent-sdk/java/environments).
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## ソースおよび関連ガイド
+
+- [公式 v0.3.0 ソース](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [クエリの概要とページネーション](/ja/sdk/agent-sdk/java/perpetual-queries)
+- [資金調達ウォレット](/ja/sdk/agent-sdk/java/funding-wallet)
+- [アップグレードガイド](/ja/sdk/agent-sdk/java/upgrade)

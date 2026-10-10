@@ -1,0 +1,87 @@
+---
+title: "Tasas de referencia de Fiat"
+subtitle: "Tasas de referencia de Fiat: Agent Java SDK v0.3.0 integración, ejemplos, parámetros y semántica de respuesta."
+slug: sdk/agent-sdk/java/exchange-rates
+canonical-url: https://docs.6mm.com/es-ES/sdk/agent-sdk/java/exchange-rates
+---
+
+Esta guía está dirigida a **Agent Java SDK `v0.3.0`**, Java 8+ y el contrato público etiquetado. Los ejemplos se ejecutan en un backend asociado después de inicializar `client` en [Inicio rápido](/es-ES/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## Requisitos previos de ejemplo
+
+Los fragmentos Java comparten estas importaciones. Inicialice `client` usando el Inicio rápido y obtenga `platformUserId` del enlace guardado. Los ID de usuario/pedido de ejemplo deben reemplazarse con sus propios valores persistentes.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span id="fx-reference-rates" data-sixmm-canonical-anchor="fx-reference-rates" aria-hidden="true"></span>
+
+## Tipos de cambio de referencia
+
+Ambos métodos FX utilizan el flujo normal del Agente firmado API. Empiece por descubrir el
+Monedas de origen admitidas actualmente:
+
+```java
+import com.sixmm.agent.model.ListSupportedFiatCurrenciesResponse;
+
+ListSupportedFiatCurrenciesResponse supported = client.listSupportedFiatCurrencies();
+System.out.println(supported.targetCurrency);     // USDT
+System.out.println(supported.sourceCurrencies);  // AUD, BRL, CNY, EUR, USD, ...
+```
+
+Consulta todas las tasas de referencia de fiat a USDT admitidas:
+
+```java
+import com.sixmm.agent.model.ExchangeRateItem;
+import com.sixmm.agent.model.QueryExchangeRatesResponse;
+
+QueryExchangeRatesResponse rates = client.queryExchangeRates();
+for (ExchangeRateItem item : rates.rates) {
+    System.out.println("1 " + item.sourceCurrency + " = " + item.rate + " " + item.targetCurrency);
+}
+```
+
+Consultar monedas seleccionadas:
+
+```java
+import com.sixmm.agent.model.QueryExchangeRatesRequest;
+
+QueryExchangeRatesResponse rates = client.queryExchangeRates(
+        QueryExchangeRatesRequest.of("CNY", "EUR", "USD"));
+```
+
+La fábrica de solicitudes recorta y pone en mayúsculas los códigos de moneda y los serializa como
+el valor `sourceCurrencies` separado por comas requerido por API. Omitiendo el
+La solicitud o todos los valores de moneda efectivos consulta todas las monedas admitidas.
+
+| Campo de respuesta | Tipo | Descripción |
+| --- | --- | --- |
+| `snapshotVersion` | string | Versión instantánea estable para auditoría y conciliación |
+| `provider` | string | Proveedor ascendente, actualmente `ECB` |
+| `sourceDate` | string | Fecha de observación aguas arriba en formato `yyyy-MM-dd` |
+| `fetchedAt` / `expiresAt` | int64 | Marcas de tiempo de Unix en milisegundos |
+| `pricingPolicy` | string | Actualmente `FIXED_PEG` |
+| `usdtUsdRate` | string | USD monto por 1 USDT, actualmente fijado en `1` |
+| `rateType` | string | Actualmente `INDICATIVE_DAILY` |
+| `usage` | string | Actualmente `REFERENCE_ONLY` |
+| `rateMeaning` | string | `1 sourceCurrency = rate USDT` |
+| `rates[].rate` | string | USDT cantidad correspondiente a una unidad de fiat de origen |
+
+Estos valores son referencias para que los calcule una billetera multidivisa asociada.
+el USDT monto enviado a 6MM. No son precios ejecutables, cotizaciones bloqueadas ni
+precios de mercado USDT en tiempo real. Utilice `BigDecimal` y cadenas para la cantidad
+cálculos; no utilice `double` o `float`.
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Guías fuente y relacionadas
+
+- [Fuente oficial v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Descripción general de consultas y paginación](/es-ES/sdk/agent-sdk/java/perpetual-queries)
+- [Cartera de financiación](/es-ES/sdk/agent-sdk/java/funding-wallet)
+- [Guía de actualización](/es-ES/sdk/agent-sdk/java/upgrade)

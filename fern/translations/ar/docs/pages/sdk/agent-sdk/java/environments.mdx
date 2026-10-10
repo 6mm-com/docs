@@ -1,0 +1,99 @@
+---
+title: "الإنتاج والتداول المحاكى"
+subtitle: "الإنتاج والتداول المحاكى: Agent Java SDK التكامل v0.3.0 والأمثلة والمعلمات ودلالات الاستجابة."
+slug: sdk/agent-sdk/java/environments
+canonical-url: https://docs.6mm.com/ar/sdk/agent-sdk/java/environments
+---
+
+يستهدف هذا الدليل **Agent Java SDK `v0.3.0`** وJava 8+.
+
+<span id="choose-both-the-frontend-mode-and-the-funds-environment" data-sixmm-canonical-anchor="choose-both-the-frontend-mode-and-the-funds-environment" aria-hidden="true"></span>
+
+## اختر كلا من وضع الواجهة الأمامية وبيئة الأموال
+
+قم بتكوين بيئة أموال الواجهة الخلفية للشريك بشكل منفصل عن وضع التداول الأمامي. تتم مشاركة بيانات اعتماد الربط والدخول؛ لا يؤدي إصدار تذكرة أو رمز مميز إلى تحديد المحفظة أو نقل الأموال.
+
+| إعدادات | إنتاج | مقلد |
+| --- | --- | --- |
+| ملزمة والمصادقة | ربط المستخدم المشترك وبيانات الاعتماد لمرة واحدة | نفس الهوية والمصادقة |
+| التحويلات الجديدة وأرصدة المستخدمين | احذف `environment` أو استخدم `PRODUCTION` | استخدم `SIMULATED` بشكل صريح |
+| تمويل استرداد الطلب الأصلي | استخدم البيئة الأصلية المحفوظة | استخدم البيئة الأصلية المحفوظة |
+| وضع التداول القطعة | `tradingMode=real` | `tradingMode=demo` |
+| هدف الواجهة الأمامية HTTP/WS | هدف الإنتاج المقدم من 6MM | محاكاة الهدف المقدمة من 6MM |
+| ستة استعلامات البيانات الدائمة | بيانات الإنتاج | لا يوجد محدد البيئة. لا تقوم هذه الأساليب بالاستعلام عن البيانات المحاكاة |
+
+بالنسبة إلى `wallet-transfer-status`، يؤدي حذف `environment` إلى استخدام البيئة المحفوظة للأمر الأصلي، بما في ذلك الطلب الذي تمت محاكاته. تم رفض البيئة المتعارضة بشكل صريح. يفضل تخزين البيئة وتمريرها بشكل صريح عند استعادة العملية.
+
+`isSimulatedUser` يصف الحساب. ولا يقوم بتوجيه الطلبات الجديدة إلى المحفظة المحاكاة. يؤدي حذف `environment` في طلب أموال جديد إلى تحديد الإنتاج، حتى عندما تكون علامة الحساب صحيحة.
+
+<span id="supported-java-request-models" data-sixmm-canonical-anchor="supported-java-request-models" aria-hidden="true"></span>
+
+## نماذج الطلب المدعومة Java
+
+تدعم هذه الطلبات `withEnvironment(ExecutionEnvironment.SIMULATED)`:
+
+- `TransferRequest`, `TransferAllOutRequest`, `ReverseOrderRequest`.
+- `QueryOrderRequest`, `ListOrdersRequest`.
+- `QueryUserAssetsRequest`.
+- `WalletTransferRequest`, `WalletTransferQueryRequest`.
+
+`bind`، `queryAccount`، `createEntryUrl`، `createEmbedToken`، ونماذج طلب الاستعلام الدائمة الستة لا تحدد بيئة الأموال.
+
+```java
+import com.sixmm.agent.model.ExecutionEnvironment;
+import com.sixmm.agent.model.QueryUserAssetsRequest;
+import com.sixmm.agent.model.QueryUserAssetsResponse;
+
+QueryUserAssetsResponse assets = client.queryUserAssets(
+        QueryUserAssetsRequest.of("1188041528")
+                .withFunding()
+                .withEnvironment(ExecutionEnvironment.SIMULATED));
+```
+
+تهيئة `client` باستخدام [بداية سريعة](/ar/sdk/agent-sdk/java/quick-start) واستخدم معرف المستخدم العام من الرابط المحفوظ الخاص بك.
+
+<span id="preserve-the-original-environment" data-sixmm-canonical-anchor="preserve-the-original-environment" aria-hidden="true"></span>
+
+## الحفاظ على البيئة الأصلية
+
+احتفظ بنوع الواجهة `agentOrderNo` وهوية المستخدم والبيئة قبل إرسال طلب الأموال. حافظ على هذه البيئة أثناء استعلامات الحالة والاسترداد والتسوية ومعالجة webhook. بعد انتهاء المهلة، لا تقم أبدًا بإعادة المحاولة عن طريق حذف البيئة الأصلية أو استخدام رقم طلب جديد.
+
+تظل عمليات نقل التمويل/العقود ضمن بيئة واحدة. لا يمكن للأموال المحاكية أن تصبح أموال إنتاج. استخدم محاسبة محاكاة منفصلة من جانب الشريك وبادئات ترتيب يمكن التعرف عليها مثل `SIM-`.
+
+<span id="simulated-integration-sequence" data-sixmm-canonical-anchor="simulated-integration-sequence" aria-hidden="true"></span>
+
+## محاكاة تسلسل التكامل
+
+1. ربط المستخدم وحفظ معرف مستخدم النظام الأساسي العام.
+2. الاستعلام عن الأرصدة مع `SIMULATED` الصريحة وتضمين التمويل عند الحاجة.
+3. قم بإنشاء محاكاة لتحويل تمويل صغير واحتفظ بأمر العمل الأصلي الخاص به.
+4. قم بتأكيد النتيجة النهائية من خلال الاستعلام المخصص عن حالة التمويل.
+5. افتح أو قم بتضمين صفحة الثواني المستهدفة في وضع `demo`.
+6. الاستعلام عن نفس المحافظ المحاكاة وتسوية المبلغ الفعلي المحول.
+7. لاختبار التداول الدائم، قم بتحويل التمويل المحاكى إلى عقد محاكى واستخدام الواجهة الأمامية للعقود الآجلة المحاكية. لا يمكن للاستعلامات الدائمة الستة للشركاء التحقق من صحة سجل التداول المحاكي.
+
+<span id="acceptance-checklist" data-sixmm-canonical-anchor="acceptance-checklist" aria-hidden="true"></span>
+
+## قائمة التحقق من القبول
+
+| سيناريو | أدلة للتحقق |
+| --- | --- |
+| هوية | يتم حفظ تعيين المستخدم المنضم؛ لا يمكن الاستعلام عن مستخدمي شريك آخر. |
+| المصادقة | تستخدم عمليات إعادة التوجيه والتضمين بيانات اعتماد جديدة؛ التوقيع لا يؤدي إلى إنشاء أوامر مالية. |
+| أموال | ويتفق الجانبان على المبلغ الفعلي والوضع النهائي. |
+| نتيجة غير معروفة | يستخدم الاسترداد الترتيب الأصلي دون إنشاء عملية نقل ثانية. |
+| العزلة البيئية | توافق أهداف الواجهة الخلفية والواجهة الأمامية المحاكاة؛ أرصدة الإنتاج لم تتأثر. |
+| الاستعلامات | يتم التعامل مع مرشحات المستخدم/الفئة المطلوبة، ونوافذ المللي ثانية، والصفحات الفارغة والمؤشرات. |
+| حدود المعدل | يشترك جميع المتصلين بالاستعلام في التقييد ويعيدون محاولة الصفحة الأصلية الفاشلة. |
+| تخزين | تبقى المبالغ والمعرفات عبارة عن سلاسل؛ يتم حفظ سجلات الكيان بشكل غير فعال. |
+
+قبل التبديل إلى الإنتاج، قم بتغيير كل من هدف الأموال الخلفية ووضع الواجهة الأمامية. تستمر الأوامر المعلقة في التعافي في بيئتها الأصلية.
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## المصدر والأدلة ذات الصلة
+
+- [المصدر الرسمي v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [نظرة عامة على الاستعلام وترقيم الصفحات](/ar/sdk/agent-sdk/java/perpetual-queries)
+- [محفظة التمويل](/ar/sdk/agent-sdk/java/funding-wallet)
+- [دليل الترقية](/ar/sdk/agent-sdk/java/upgrade)

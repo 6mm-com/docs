@@ -1,0 +1,104 @@
+---
+title: "영구 거래 채우기"
+subtitle: "영구 거래 채우기: Agent Java SDK v0.3.0 통합, 예시, 매개변수 및 응답 의미 체계."
+slug: sdk/agent-sdk/java/perpetual-trades
+canonical-url: https://docs.6mm.com/ko/sdk/agent-sdk/java/perpetual-trades
+---
+
+이 가이드는 **Agent Java SDK `v0.3.0`**, Java 8+ 및 태그된 공개 계약을 대상으로 합니다. 예제는 `client`를 초기화한 후 파트너 백엔드에서 실행됩니다. [빠른 시작](/ko/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## 예시 전제조건
+
+Java 조각은 이러한 가져오기를 공유합니다. 빠른 시작을 사용하여 `client`를 초기화하고 저장된 바인딩에서 `platformUserId`를 가져옵니다. 예시 사용자/주문 ID는 고유한 지속 값으로 대체되어야 합니다.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span data-sixmm-canonical-anchor="listperpetualtrades" aria-hidden="true"></span>
+
+## `listPerpetualTrades`
+
+요청 모델: `PerpetualTradesRequest`.
+
+```java
+import com.sixmm.agent.model.PerpetualTradesRequest;
+import com.sixmm.agent.model.PerpetualResponse;
+import java.util.Collections;
+
+PerpetualTradesRequest request = new PerpetualTradesRequest();
+request.platformUserIds = Collections.singletonList("1188041528");
+request.limit = 100;
+request.symbol = "BTCUSDT";
+request.endTime = System.currentTimeMillis();
+request.startTime = request.endTime - 3_600_000L;
+PerpetualResponse response = client.listPerpetualTrades(request);
+System.out.println(response.data.items.size());
+System.out.println(response.data.hasMore);
+System.out.println(response.data.nextCursor);
+```
+
+<span id="request-fields" data-sixmm-canonical-anchor="request-fields" aria-hidden="true"></span>
+
+### 요청 필드
+
+| 필드 | Java 유형 | 필수의 | 의미 |
+| --- | --- | --- | --- |
+| `platformUserIds` | `java.util.List<String>` | 가정 어구 | 1~100개의 고유한 공개 ID 채우기 및 조건부 주문에 필요합니다. 직접 플레이어 범위에 대해 지원되는 쿼리를 생략합니다. []는 유효하지 않습니다. |
+| `symbol` | `String` | 아니요 | 선택적 거래 쌍 필터. |
+| `orderId` | `String` | 아니요 | 일반 주문 ID 파트너 이전 주문 번호가 아닙니다. |
+| `startTime` | `Long` | 아니요 | Unix 밀리초를 포함합니다. 고정된 UTC 기록 창을 사용합니다. |
+| `endTime` | `Long` | 아니요 | 독점 Unix 밀리초. |
+| `limit` | `Integer` | 아니요 | 기본 500; 1~1000. |
+| `cursor` | `String` | 아니요 | 변경되지 않은 필터와 함께 반환된 nextCursor를 사용합니다. hasMore가 false인 경우 중지합니다. |
+
+예제에서는 한 페이지를 읽습니다. 필수 필드, 플레이어 범위, 필터 의미, 제한, 커서 및 제한된 재시도에 대해서는 다음을 따르세요. [쿼리 개요](/ko/sdk/agent-sdk/java/perpetual-queries). 페이징하는 동안 모든 필터를 변경하지 않고 유지하세요. 오류를 빈 결과로 해석하지 마십시오.
+
+<span id="transaction-details" data-sixmm-canonical-anchor="transaction-details" aria-hidden="true"></span>
+
+## 거래 채우기 세부정보
+
+인터페이스: `trades`. 명시적인 platformUserIds가 필요합니다.
+
+| `data` 필드 | 유형 | 의미 |
+| --- | --- | --- |
+| `fillId` | string | 이 레코드에 해당하는 거래 채우기 세부정보 ID entityId |
+| `tradeId` | string | 거래와 관련된 일치하는 거래 ID입니다. 세부 ID를 대체하지 않습니다. |
+| `orderId` | string | 이 세부정보가 속한 일반 주문 ID입니다. |
+| `positionId` | string | 관련 위치 ID |
+| `symbol` | string | 거래쌍 |
+| `side` | string | 이 플레이어의 매수 및 매도 방향 BUY / SELL |
+| `roleType` | string | 이 플레이어의 거래 캐릭터 MAKER / TAKER |
+| `positionSide` | string | 위치 방향은 실제 값 LONG / SHORT / BOTH 등에 따라 설명됩니다. |
+| `price` | string | 이번 거래가격 |
+| `quantity` | string | 이 거래의 수량은 원래 주문의 총 수량이 아닙니다. |
+| `tradeValue` | string | 이 거래의 명목 가치는 거래 명목 가치에서 비롯됩니다. |
+| `handlingFee` | string | 본 거래에 대한 거래 수수료는 출처 기호와 정확성을 유지하며 그 자체로 절대적인 가치를 가지지 않습니다. |
+| `realizedPnl` | string | 본 거래에 따른 실현손익 현재 포지션의 실시간 변동 손익이 아닌 |
+| `tradedAt` | integer | 트랜잭션 시간(밀리초) 시간 필터링에 이 필드를 사용하세요. |
+
+주문에는 여러 개의 채우기가 있을 수 있으며, 이를 자세히 저장해야 합니다. tradeId로 다른 플레이어의 기록을 병합하거나 역할을 채우지 말고 해당 기록 ID를 폐기하지 마십시오.
+
+
+<span id="example-response-envelope" data-sixmm-canonical-anchor="example-response-envelope" aria-hidden="true"></span>
+
+## 응답 봉투 예시
+
+이것은 완료된 거래의 샘플이 아닌 예시용 빈 페이지입니다. 위의 리소스별 필드 테이블은 채워진 `items[].data`에 대해 설명합니다.
+
+```json
+{"code":0,"message":"success","data":{"items":[],"nextCursor":"","hasMore":false}}
+```
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## 소스 및 관련 가이드
+
+- [공식 v0.3.0 소스](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [쿼리 개요 및 페이지 매김](/ko/sdk/agent-sdk/java/perpetual-queries)
+- [펀딩 지갑](/ko/sdk/agent-sdk/java/funding-wallet)
+- [업그레이드 가이드](/ko/sdk/agent-sdk/java/upgrade)

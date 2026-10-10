@@ -1,58 +1,109 @@
 ---
 title: "Agent Java SDK"
-subtitle: "Cài đặt 6MM Agent Java SDK và sử dụng API backend đã ký để liên kết người dùng, chuyển giao dữ liệu, thông tin đăng nhập và xác minh webhook."
+subtitle: "Agent Java SDK: Agent Java SDK tích hợp v0.3.0, ví dụ, tham số và ngữ nghĩa phản hồi."
 slug: sdk/agent-sdk/java/overview
 canonical-url: https://docs.6mm.com/vi/sdk/agent-sdk/java/overview
 ---
 
-<span id="official-repository" data-sixmm-canonical-anchor="official-repository" aria-hidden="true"></span>
+Hướng dẫn này hướng tới **Agent Java SDK `v0.3.0`**, Java 8+ và hợp đồng công khai được gắn thẻ. Các ví dụ chạy trong phần phụ trợ của đối tác sau khi khởi tạo `client` trong [Bắt đầu nhanh](/vi/sdk/agent-sdk/java/quick-start).
 
-## Kho lưu trữ chính thức
+<span id="version-and-installation" data-sixmm-canonical-anchor="version-and-installation" aria-hidden="true"></span>
 
-Kho lưu trữ Java SDK là nguồn dữ liệu cho mã nguồn, ghi chú phát hành, ví dụ sử dụng và chi tiết triển khai SDK :
-
-[6mm-com/agent-java-sdk](https://github.com/6mm-com/agent-java-sdk)
-
-<span id="runtime" data-sixmm-canonical-anchor="runtime" aria-hidden="true"></span>
-
-## Thời gian chạy
+## Phiên bản và cài đặt
 
 | Mục | Giá trị |
 | --- | --- |
-| Phiên bản Java tối thiểu | Java 8+ |
-| Công cụ xây dựng được khuyến nghị | Maven 3.9+ |
-| Nhóm Maven | `com.sixmm.exchange.sdk` |
-| Hiện vật Maven | `agent` |
-| Thẻ nguồn được tài liệu hóa | `v0.1.1` |
+| Thẻ nguồn ổn định | `v0.3.0` |
+| Java | Java 8+ |
+| Maven | Maven 3.9+ |
+| tọa độ | `com.sixmm.exchange.sdk:agent:0.3.0` |
 
-Kho lưu trữ GitHub công khai là lưu trữ nguồn, không phải kho lưu trữ phụ thuộc Maven. Xây dựng và cài đặt mã nguồn được gắn thẻ cục bộ hoặc xuất bản artifact đã được phê duyệt vào kho Maven riêng của tổ chức bạn trước khi sử dụng trong các nhóm build.
+Nguồn máy chủ GitHub; nó không làm cho các tọa độ này có thể phân giải được từ Maven Central. Sử dụng cài đặt cục bộ được gắn thẻ hoặc kho lưu trữ tạo tác đã được phê duyệt của bạn.
 
-<span id="typical-backend-responsibilities" data-sixmm-canonical-anchor="typical-backend-responsibilities" aria-hidden="true"></span>
+<span id="what-the-sdk-covers" data-sixmm-canonical-anchor="what-the-sdk-covers" aria-hidden="true"></span>
 
-## Các trách nhiệm điển hình của backend
+## SDK bao gồm những gì
 
-- Xác thực phiên người dùng đối tác.
-- Ánh xạ người dùng đối tác với agentUserId.
-- Bind Call trước khi giao dịch hoặc chuyển tiền lần đầu.
-- Gọi createEntryUrl để được kiểm tra toàn SSOmột lần.
-- Gọi createEmbedToken để Trading Widget chế độ token đối tác.
-- Xác minh các webhook truyền và xử lý chúng một cách hiệu quả.
+| Loại | Kịch bản | SDK API | Sự miêu tả |
+| --- | --- | --- | --- |
+| Ràng buộc người dùng | Ràng buộc người dùng | `bind` | Tạo hoặc tìm nạp liên kết giữa người dùng đối tác và người dùng nền tảng 6MM |
+| Truy vấn nội dung | Truy vấn tài khoản đối tác | `queryAccount` | Truy vấn ký quỹ đối tác hoặc tài khoản cấp vốn |
+| Truy vấn nội dung | Truy vấn nội dung người dùng | `queryUserAssets` | Truy vấn tài sản hợp đồng; sử dụng `withFunding()` để bao gồm số dư Kinh phí |
+| chuyển nhượng | Chuyển số tiền cố định | `transfer` | Chuyển tiền vào hoặc ra khỏi 6MM |
+| chuyển nhượng | Chuyển tất cả ra ngoài | `transferAllOut` | Di chuyển tất cả số dư người dùng có thể rút trở lại nền tảng đối tác |
+| chuyển nhượng | Đảo ngược thứ tự | `reverse` | Đảo ngược quá trình chuyển thành công khi phần phụ trợ hỗ trợ luồng bù |
+| chuyển nhượng | Thứ tự truy vấn | `queryOrder` | Truy vấn một lệnh chuyển theo mã số đơn hàng của đối tác |
+| chuyển nhượng | Liệt kê đơn hàng | `listOrders` | Trang thông qua lệnh chuyển nhượng để đối chiếu |
+| chuyển nhượng | Webhook xác minh | `WebhookVerifier.verify` | Xác minh chuyển lệnh gọi lại trạng thái cuối cùng từ 6MM |
+| Ví tiền tài trợ | Chuyển tiền tài trợ | `walletTransfer` | Đối tác ↔ Tài trợ hoặc Tài trợ ↔ Hợp đồng; xác nhận trạng thái trả lại |
+| Ví tiền tài trợ | Tình trạng chuyển tiền | `queryWalletTransfer` | Khôi phục hoạt động cấp vốn bằng cách sử dụng số đơn đặt hàng đối tác ban đầu của nó |
+| Nhập giao dịch | Vào trực tiếp URL | `createEntryUrl` | Tạo SSO URL một lần cho chế độ chuyển hướng |
+| Nhập giao dịch | Nhúng mã thông báo | `createEmbedToken` | Tạo mã thông báo tồn tại trong thời gian ngắn cho chế độ Trading Widget `tokenProvider` |
+| Dữ liệu vĩnh viễn | Lệnh vĩnh viễn hiện tại | `listCurrentPerpetualOrders` | Truy vấn các đơn hàng NORMAL hoặc CONDITIONAL hiện tại |
+| Dữ liệu vĩnh viễn | Lịch sử đặt hàng vĩnh viễn | `listPerpetualOrderHistory` | Thiết bị đầu cuối truy vấn NORMAL hoặc CONDITIONAL lệnh |
+| Dữ liệu vĩnh viễn | Giao dịch vĩnh viễn | `listPerpetualTrades` | Truy vấn giao dịch điền vào danh sách người chơi công khai rõ ràng |
+| Dữ liệu vĩnh viễn | Vị trí vĩnh viễn hiện tại | `listCurrentPerpetualPositions` | Truy vấn vị trí hiện tại |
+| Dữ liệu vĩnh viễn | Lịch sử vị trí vĩnh viễn | `listPerpetualPositionHistory` | Truy vấn các vị trí đã đóng |
+| Dữ liệu vĩnh viễn | Sổ cái tài khoản vĩnh viễn | `listPerpetualLedger` | Truy vấn hồ sơ thay đổi số dư hợp đồng cá nhân |
+| Tỷ giá tham chiếu Fiat | Liệt kê các loại tiền tệ fiat được hỗ trợ | `listSupportedFiatCurrencies` | Liệt kê các loại tiền tệ pháp định hiện có thể chuyển đổi thành USDT |
+| Tỷ giá tham chiếu Fiat | Truy vấn tỷ giá tham chiếu FX | `queryExchangeRates` | Truy vấn tỷ lệ tham chiếu fiat-to-USDT hàng ngày cho tất cả hoặc các loại tiền tệ được chọn |
+| Thông tin dịch vụ | Phiên bản dịch vụ | `version` | Thông tin phiên bản dịch vụ của Tác nhân truy vấn |
 
-<span id="security-and-operational-rules" data-sixmm-canonical-anchor="security-and-operational-rules" aria-hidden="true"></span>
 
-## Quy tắc an ninh và vận hành
+<span id="configuration" data-sixmm-canonical-anchor="configuration" aria-hidden="true"></span>
 
-- Lưu `apiSecret` chỉ trong một biến quản lý bí mật phía sau hoặc môi trường bảo vệ.
-- Giữ thời gian máy chủ đồng bộ vì các yêu cầu đã ký có dấu thời gian.
-- Xem `agentOrderNo` như một khóa idempotency bền vững và giữ cho nó duy nhất trên toàn cầu.
-- Lưu `platformUserId` dưới dạng chuỗi và duy trì mối quan hệ với `agentUserId`.
-- Truy vấn lần truyền gốc trước khi thử lại sau khi hết thời gian chờ hoặc kết quả mạng không chắc chắn.
+## Cấu hình
 
-<span id="next-steps" data-sixmm-canonical-anchor="next-steps" aria-hidden="true"></span>
+Lấy các giá trị sau từ 6MM trước
+tích hợp.
 
-## Các bước tiếp theo
+| Mục | Ví dụ | Sự miêu tả |
+| --- | --- | --- |
+| `baseUrl` | `https://agent-api.6mm.com` | Tác nhân API cơ sở URL, không có dấu gạch chéo ở cuối |
+| `agentCode` | `AGENT001` | Mã đối tác |
+| `apiSecret` | `your-api-secret` | API ký bí mật. Chỉ giữ nó ở phần phụ trợ |
+| `defaultCurrency` | `USDT` | Đơn vị tiền tệ mặc định, thường là `USDT` |
+| `webhookUrl` | `https://partner.example.com/6mm/webhook` | Điểm cuối của đối tác cho lệnh gọi lại 6MM |
 
-- [Java Khởi động nhanh](/vi/sdk/agent-sdk/java/quick-start): cài đặt nguồn được gắn thẻ và khởi tạo `AgentClient`.
-- [Create Embed Token](/vi/sdk/agent-sdk/java/embed-token): phát hành thông tin xác thực ngắn hạn cho Trading Widget.
-- [Secrets & Signing](/vi/sdk/security/secrets-signing): hiểu về ký HMAC tự động và xử lý bí mật.
-- [Webhooks & Idempotency](/vi/sdk/security/webhooks-idempotency): xác minh callback và ngăn chặn xử lý trùng lặp.
+Khuyến nghị sản xuất:
+
+- Sử dụng HTTPS cho điểm cuối Tác nhân API và webhook.
+- Lưu trữ `apiSecret` trong trình quản lý bí mật, trung tâm cấu hình hoặc biến môi trường.
+- Giữ thời gian của máy chủ được đồng bộ hóa, tốt nhất là với NTP.
+- Duy trì tất cả số đơn đặt hàng của đối tác và giữ chúng duy nhất trên toàn cầu.
+- Không bao giờ gửi `apiSecret` tới trình duyệt, ứng dụng, chương trình nhỏ hoặc mã nguồn giao diện người dùng.
+
+
+<span id="automatic-signing-fields" data-sixmm-canonical-anchor="automatic-signing-fields" aria-hidden="true"></span>
+
+## Trường ký tự động
+
+Đối với các cuộc gọi Đại lý đã ký API, SDK sẽ tự động đưa vào:
+
+| Cánh đồng | Nguồn | Sự miêu tả |
+| --- | --- | --- |
+| `agentCode` | `AgentClientConfig.agentCode` | Mã đối tác |
+| `timestamp` | Dấu thời gian Unix UTC hiện tại | Giây |
+| `nonce` | Trình tạo ngẫu nhiên an toàn | Bảo vệ phát lại |
+| `sign` | HMAC-SHA256 | Yêu cầu chữ ký |
+| `currency` | `defaultCurrency` | Được điền khi yêu cầu chuyển khoản/tài khoản bỏ qua loại tiền tệ |
+
+Nguyên tắc ký:
+
+1. Loại trừ `sign`.
+2. Loại trừ các giá trị trống.
+3. Sắp xếp các khóa theo thứ tự ASCII.
+4. Tham gia với tư cách `k=v&k2=v2`.
+5. Tính toán hệ thập lục phân HMAC-SHA256 với `apiSecret`.
+
+Mã doanh nghiệp thông thường không nên tính toán chữ ký hoặc đặt thủ công
+`agentCode`, `timestamp`, `nonce` hoặc `sign`.
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Nguồn và hướng dẫn liên quan
+
+- [Nguồn v0.3.0 chính thức](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Tổng quan về truy vấn và phân trang](/vi/sdk/agent-sdk/java/perpetual-queries)
+- [Ví tiền tài trợ](/vi/sdk/agent-sdk/java/funding-wallet)
+- [Hướng dẫn nâng cấp](/vi/sdk/agent-sdk/java/upgrade)

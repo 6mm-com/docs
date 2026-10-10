@@ -1,0 +1,164 @@
+---
+title: "Seconds Trading Integration"
+subtitle: "Seconds Trading Integration: Agent Java SDK v0.3.0 integration, examples, parameters and response semantics."
+slug: sdk/agent-sdk/java/seconds-trading
+---
+
+This guide targets **Agent Java SDK `v0.3.0`** and Java 8+.
+
+<span data-sixmm-canonical-anchor="prepare-identity-authentication-and-funds" aria-hidden="true"></span>
+
+## Prepare identity, authentication and funds
+
+Seconds trading uses the same user binding and entry authentication as perpetual trading. It uses Funding balances; perpetual margin uses Contract balances. Configure the frontend product/mode and backend funds environment separately.
+
+Initialize `client` using [Quick Start](/sdk/agent-sdk/java/quick-start). Save the bound user mapping and obtain the partner user ID from the authenticated backend session.
+
+<span data-sixmm-canonical-anchor="redirect-entry" aria-hidden="true"></span>
+
+## Redirect entry
+
+```java
+import com.sixmm.agent.model.CreateEntryUrlRequest;
+import com.sixmm.agent.model.CreateEntryUrlResponse;
+
+CreateEntryUrlResponse entry = client.createEntryUrl(
+        CreateEntryUrlRequest.of("merchant-user-001")
+                .withRedirectPath("/zh-CN/up-down?tradingMode=demo")
+                .withReturnUrl("https://merchant.example/markets"));
+String webUrl = entry.webUrl;
+```
+
+The SDK calls `POST /v1/agent/create-entry-url`. Return `webUrl` to the partner frontend and open it immediately. `expireAt` uses Unix seconds. A ticket is short-lived and one-time; obtain another after expiration or consumption.
+
+| Product | Example frontend path | Wallet |
+| --- | --- | --- |
+| Up/Down | `/zh-CN/up-down?tradingMode=real` or `demo` | Funding |
+| High/Low | `/zh-CN/high-low?tradingMode=real` or `demo` | Funding |
+| Grid | `/zh-CN/grid-prediction?tradingMode=real` or `demo` | Funding |
+| Perpetual futures | `/zh-CN/futures/BTCUSDT?tradingMode=real` or `demo` | Contract |
+
+Use the actual frontend routes supplied by 6MM. `redirectPath` is a relative platform path starting with `/`; `returnUrl` is an absolute partner HTTP/HTTPS URL. An entry ticket authenticates the user and does not execute a transfer.
+
+<span data-sixmm-canonical-anchor="embedded-entry" aria-hidden="true"></span>
+
+## Embedded entry
+
+Use the existing `partner-token` and `tokenProvider` flow. There is no prediction-specific token. Create the Widget with the desired `page` and `tradingMode`, and use its current `channelId` when calling the partner backend.
+
+```java
+import com.sixmm.agent.model.CreateEmbedTokenRequest;
+import com.sixmm.agent.model.CreateEmbedTokenResponse;
+
+String channelId = "tw_example_channel";
+CreateEmbedTokenResponse auth = client.createEmbedToken(
+        CreateEmbedTokenRequest.of("merchant-user-001", channelId));
+String embedToken = auth.embedToken;
+long expireAt = auth.expireAt;
+```
+
+The SDK calls `POST /v1/agent/create-embed-token`. `symbol` is optional; it does not choose a seconds-trading product. Product selection belongs to the frontend. The token does not select a funds environment or change balances.
+
+<span data-sixmm-canonical-anchor="complete-frontend-example" aria-hidden="true"></span>
+
+## Complete frontend example
+
+These options were verified against the public Trading Widget `1.8.0` runtime on 2026-10-10. Widget and Agent Java SDK versions are independent.
+
+```html
+<div id="seconds-widget" style="width: 100%; height: 720px"></div>
+<script src="https://app.6mm.com/sdk/trading-widget/v1/index.js"></script>
+<script>
+  const page = 'up-down';
+  const tradingMode = 'demo';
+  const capabilities = TradingWidget.capabilities;
+  if (!capabilities?.partnerToken ||
+      !capabilities.pages?.includes(page) ||
+      !capabilities.tradingModes?.includes(tradingMode)) {
+    throw new Error('Trading Widget SDK does not support the requested page or mode');
+  }
+
+  const widget = TradingWidget.create('#seconds-widget', {
+    baseUrl: 'https://app.6mm.com',
+    page,
+    tradingMode,
+    theme: 'dark',
+    locale: 'zh-CN',
+    auth: {
+      mode: 'partner-token',
+      tokenProvider: async ({ channelId }) => {
+        // Partner-owned endpoint; derive the user from the backend session.
+        const response = await fetch('/api/seconds/embed-token', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ channelId }),
+        });
+        if (!response.ok) {
+          throw new Error('Failed to request embed token');
+        }
+        const result = await response.json();
+        if (typeof result.embedToken !== 'string' || !result.embedToken.trim() ||
+            !Number.isFinite(result.expireAt) || result.channelId !== channelId) {
+          throw new Error('Invalid embed token response');
+        }
+        return {
+          embedToken: result.embedToken,
+          expireAt: result.expireAt,
+          channelId: result.channelId,
+        };
+      },
+    },
+    onReady() {
+      console.log('Trading widget ready');
+    },
+    onError(error) {
+      console.error('Trading widget error', error.code);
+    },
+  });
+  window.addEventListener('beforeunload', () => widget.destroy());
+</script>
+```
+
+| Option | Values | Meaning |
+| --- | --- | --- |
+| `page` | `up-down`, `high-low`, `grid-prediction` | Product page. |
+| `tradingMode` | `real`, `demo` | Defaults to `real`; set explicitly. |
+| `baseUrl` | `https://app.6mm.com` | Platform frontend origin; the Widget builds its embed URL. |
+
+<span data-sixmm-canonical-anchor="partner-backend-response" aria-hidden="true"></span>
+
+## Partner backend response
+
+`/api/seconds/embed-token` is a partner-owned endpoint, not a new 6MM API. Authenticate the session, derive `agentUserId` server-side and call `createEmbedToken`. Return this top-level structure:
+
+```json
+{
+  "embedToken": "short-one-time-token",
+  "expireAt": 1791590700,
+  "channelId": "tw_xxx"
+}
+```
+
+Use the Agent response's actual `expireAt`, not the illustrative value. The Agent response does not contain `channelId`; your backend echoes the current request's value. If your API wraps results in `data`, unwrap that layer before returning from tokenProvider. Reject business failures rather than returning an invalid success object.
+
+Every initialization or renewal obtains a fresh token. Never cache and exchange the same token again, or place it in a URL. Reuse the same instance channel during renewal; use the new channel after recreating the instance.
+
+<span data-sixmm-canonical-anchor="match-the-funds-environment" aria-hidden="true"></span>
+
+## Match the funds environment
+
+A `demo` frontend requires simulated funds requests with `environment=SIMULATED`. A `real` frontend requires production funds. Neither `tradingMode` nor token creation changes the backend funds target.
+
+When switching users or trading mode, destroy the old Widget and create a new instance. Query Funding balances, transfer funds and confirm the final result through the Funding-specific status endpoint before treating the user as funded.
+
+See [Funding wallet](/sdk/agent-sdk/java/funding-wallet) and [Environment guide](/sdk/agent-sdk/java/environments).
+
+<span data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Source and related guides
+
+- [Official v0.3.0 source](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Query overview and pagination](/sdk/agent-sdk/java/perpetual-queries)
+- [Funding wallet](/sdk/agent-sdk/java/funding-wallet)
+- [Upgrade guide](/sdk/agent-sdk/java/upgrade)

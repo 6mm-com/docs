@@ -1,0 +1,186 @@
+---
+title: "영구 주문"
+subtitle: "영구 주문: Agent Java SDK v0.3.0 통합, 예시, 매개변수 및 응답 의미 체계."
+slug: sdk/agent-sdk/java/perpetual-orders
+canonical-url: https://docs.6mm.com/ko/sdk/agent-sdk/java/perpetual-orders
+---
+
+이 가이드는 **Agent Java SDK `v0.3.0`**, Java 8+ 및 태그된 공개 계약을 대상으로 합니다. 예제는 `client`를 초기화한 후 파트너 백엔드에서 실행됩니다. [빠른 시작](/ko/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## 예시 전제조건
+
+Java 조각은 이러한 가져오기를 공유합니다. 빠른 시작을 사용하여 `client`를 초기화하고 저장된 바인딩에서 `platformUserId`를 가져옵니다. 예시 사용자/주문 ID는 고유한 지속 값으로 대체되어야 합니다.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span data-sixmm-canonical-anchor="listcurrentperpetualorders" aria-hidden="true"></span>
+
+## `listCurrentPerpetualOrders`
+
+요청 모델: `CurrentPerpetualOrdersRequest`.
+
+```java
+import com.sixmm.agent.model.CurrentPerpetualOrdersRequest;
+import com.sixmm.agent.model.PerpetualResponse;
+import java.util.Collections;
+
+CurrentPerpetualOrdersRequest request = new CurrentPerpetualOrdersRequest();
+request.platformUserIds = Collections.singletonList("1188041528");
+request.limit = 100;
+request.orderCategory = "NORMAL";
+request.symbol = "BTCUSDT";
+PerpetualResponse response = client.listCurrentPerpetualOrders(request);
+System.out.println(response.data.items.size());
+System.out.println(response.data.hasMore);
+System.out.println(response.data.nextCursor);
+```
+
+<span id="request-fields" data-sixmm-canonical-anchor="request-fields" aria-hidden="true"></span>
+
+### 요청 필드
+
+| 필드 | Java 유형 | 필수의 | 의미 |
+| --- | --- | --- | --- |
+| `orderCategory` | `String` | 예 | NORMAL 또는 CONDITIONAL; 조건부 쿼리에는 명시적인 사용자가 필요합니다. |
+| `platformUserIds` | `java.util.List<String>` | 가정 어구 | 1~100개의 고유한 공개 ID 채우기 및 조건부 주문에 필요합니다. 직접 플레이어 범위에 대해 지원되는 쿼리를 생략합니다. []는 유효하지 않습니다. |
+| `symbol` | `String` | 아니요 | 선택적 거래 쌍 필터. |
+| `limit` | `Integer` | 아니요 | 기본 500; 1~1000. |
+| `cursor` | `String` | 아니요 | 변경되지 않은 필터와 함께 반환된 nextCursor를 사용합니다. hasMore가 false인 경우 중지합니다. |
+
+예제에서는 한 페이지를 읽습니다. 필수 필드, 플레이어 범위, 필터 의미, 제한, 커서 및 제한된 재시도에 대해서는 다음을 따르세요. [쿼리 개요](/ko/sdk/agent-sdk/java/perpetual-queries). 페이징하는 동안 모든 필터를 변경하지 않고 유지하세요. 오류를 빈 결과로 해석하지 마십시오.
+
+<span data-sixmm-canonical-anchor="listperpetualorderhistory" aria-hidden="true"></span>
+
+## `listPerpetualOrderHistory`
+
+요청 모델: `PerpetualOrderHistoryRequest`.
+
+```java
+import com.sixmm.agent.model.PerpetualOrderHistoryRequest;
+import com.sixmm.agent.model.PerpetualResponse;
+import java.util.Collections;
+
+PerpetualOrderHistoryRequest request = new PerpetualOrderHistoryRequest();
+request.platformUserIds = Collections.singletonList("1188041528");
+request.limit = 100;
+request.orderCategory = "NORMAL";
+request.symbol = "BTCUSDT";
+request.endTime = System.currentTimeMillis();
+request.startTime = request.endTime - 3_600_000L;
+PerpetualResponse response = client.listPerpetualOrderHistory(request);
+System.out.println(response.data.items.size());
+System.out.println(response.data.hasMore);
+System.out.println(response.data.nextCursor);
+```
+
+<span id="request-fields-1" data-sixmm-canonical-anchor="request-fields-1" aria-hidden="true"></span>
+
+### 요청 필드
+
+| 필드 | Java 유형 | 필수의 | 의미 |
+| --- | --- | --- | --- |
+| `orderCategory` | `String` | 예 | NORMAL 또는 CONDITIONAL; 조건부 쿼리에는 명시적인 사용자가 필요합니다. |
+| `platformUserIds` | `java.util.List<String>` | 가정 어구 | 1~100개의 고유한 공개 ID 채우기 및 조건부 주문에 필요합니다. 직접 플레이어 범위에 대해 지원되는 쿼리를 생략합니다. []는 유효하지 않습니다. |
+| `symbol` | `String` | 아니요 | 선택적 거래 쌍 필터. |
+| `orderId` | `String` | 아니요 | 일반 주문 ID 파트너 이전 주문 번호가 아닙니다. |
+| `conditionId` | `String` | 아니요 | 조건부 주문 ID orderId와 혼합하지 마십시오. |
+| `clientOrderId` | `String` | 아니요 | agentOrderNo가 아닌 거래 고객 주문 참조입니다. |
+| `side` | `String` | 아니요 | BUY / SELL 필터. |
+| `status` | `String` | 아니요 | 자원별 상태 상태 참조를 참조하세요. |
+| `startTime` | `Long` | 아니요 | Unix 밀리초를 포함합니다. 고정된 UTC 기록 창을 사용합니다. |
+| `endTime` | `Long` | 아니요 | 독점 Unix 밀리초. |
+| `limit` | `Integer` | 아니요 | 기본 500; 1~1000. |
+| `cursor` | `String` | 아니요 | 변경되지 않은 필터와 함께 반환된 nextCursor를 사용합니다. hasMore가 false인 경우 중지합니다. |
+
+예제에서는 한 페이지를 읽습니다. 필수 필드, 플레이어 범위, 필터 의미, 제한, 커서 및 제한된 재시도에 대해서는 다음을 따르세요. [쿼리 개요](/ko/sdk/agent-sdk/java/perpetual-queries). 페이징하는 동안 모든 필터를 변경하지 않고 유지하세요. 오류를 빈 결과로 해석하지 마십시오.
+
+<span id="ordinary-delegation-current-and-history" data-sixmm-canonical-anchor="ordinary-delegation-current-and-history" aria-hidden="true"></span>
+
+## 일반 주문: 현재 및 내역
+
+현재: `orders/current` + `orderCategory=NORMAL`; 기록: `orders/history` + `orderCategory=NORMAL`.
+
+| `data` 필드 | 유형 | 의미 및 적용 범위 |
+| --- | --- | --- |
+| `symbol` | string | BTCUSDT와 같은 거래 쌍 |
+| `orderId` | string | 플랫폼 일반 주문 ID |
+| `orderCategory` | string | 고정됨 NORMAL |
+| `clientOrderId` | string | 거래 주문 소스에서 제공한 고객 주문 번호 가맹점 자금 이체와 동일한 필드가 아닙니다. agentOrderNo |
+| `orderType` | string | LIMIT, MARKET 등의 위임 유형; 실제 열거 값이 우선합니다. |
+| `side` | string | 매수 및 매도 방향 BUY / SELL |
+| `status` | string | 일반 주문 상태, 쿼리 개요 참조 |
+| `timeInForce` | string | GTC, IOC, FOK와 같은 유효 기간/거래 실행 전략; 실제 값에 따라 해석됨 |
+| `price` | string | 위탁가격 가격이 제공되지 않는 경우 생략할 수 있으며, 시장 거래 가격은 자체적으로 보완되지 않습니다. |
+| `quantity` | string | 원래 주문 수량 |
+| `filledQuantity` | string | 거래수량 |
+| `remainingQuantity` | string | 미거래 수량 현재 쿼리는 수량 − filledQuantity을 사용하고 기록 쿼리는 기록 레코드 값을 사용합니다. |
+| `avgFilledPrice` | string | 완성된 부품의 평균 거래가격 완료되지 않으면 가치가 없을 수 있습니다. |
+| `reduceOnly` | boolean | 포지션 축소만 할 것인지 |
+| `closeOnly` | boolean | 포지션 청산에만 사용되는지 여부 |
+| `makerOnly` | boolean | Maker로만 실행할지 여부 |
+| `leverage` | integer | 여러 가지를 활용하세요. **과거의 일반 주문**에는 소스가 있으며, 현재의 일반 주문은 이 가치를 생성하지 않습니다. |
+| `marginMode` | string | 마진 모드; **역사적 일반 주문**은 현재 "1", "2"와 같은 숫자 열거 문자열을 반환합니다. 현재 일반 주문은 제공되지 않습니다. |
+| `createdAt` | integer | 주문 생성 시간(밀리초) 이 필드를 사용하여 과거 주문 시간을 필터링하세요. |
+| `updatedAt` | integer | 위임 레코드 업데이트 시간(밀리초) |
+
+주문 내역에는 종료된 일반 주문이 포함됩니다. 인터페이스 이름만으로는 각 레코드가 완전히 완료된 것으로 간주할 수 없습니다. 현재 주문 페이지는 주문 이벤트 스트림이 아닌 현재 상태 쿼리입니다.
+
+
+<span id="conditional-delegation-current-and-history" data-sixmm-canonical-anchor="conditional-delegation-current-and-history" aria-hidden="true"></span>
+
+## 조건부 주문: 현재 및 내역
+
+현재: `orders/current` + `orderCategory=CONDITIONAL`; 기록: `orders/history` + `orderCategory=CONDITIONAL`. 둘 다 명시적인 platformUserIds가 필요합니다.
+
+| `data` 필드 | 유형 | 의미 |
+| --- | --- | --- |
+| `symbol` | string | 거래쌍 |
+| `conditionId` | string | 일반 주문과 별개인 조건부 주문 ID orderId |
+| `orderCategory` | string | 고정됨 CONDITIONAL |
+| `generatedOrderId` | string | 트리거 후 생성된 일반 주문 ID입니다. 생성되지 않은 경우 생략 가능 |
+| `clientOrderId` | string | 조건부 주문의 고객 주문번호, 존재할 경우 출력 |
+| `side` | string | BUY / SELL |
+| `orderType` | string | 실제 가치에 따라 해석되는 사후 트리거 주문 유형 |
+| `triggerType` | string | 실제 소스 열거로 설명되는 트리거 규칙 유형 |
+| `workingType` | string | 실제 열거로 해석되는 가격을 유발하는 직업 유형/가격 소스 |
+| `timeInForce` | string | 발동 후 주문의 유효기간/실행 전략 |
+| `price` | string | 트리거 후 주문 가격, 소스에 값이 있을 때 출력 |
+| `quantity` | string | 조건부 주문 수량 |
+| `triggerPrice` | string | 방아쇠 가격 |
+| `reduceOnly` | boolean | 포지션 축소만 할 것인지 |
+| `closePosition` | boolean | 전체 위치 마감 의미론을 사용할지 여부는 closeOnly과 동일한 필드로 혼동될 수 없습니다. |
+| `leverage` | integer | 다중 활용, 0이 아닌 경우 출력 |
+| `marginMode` | string | 이 클래스는 일반적인 과거 주문/위치와 다른 숫자 문자열인 CROSS / ISOLATED를 반환합니다. |
+| `status` | string | 조건부 단일 트리거 상태, 쿼리 개요 참조 |
+| `triggerStatus` | string | 현재 구현에서는 상태와 동일한 조건부 상태 값을 사용합니다. |
+| `createdAt` | integer | 조건부 주문 생성 시간(밀리초) 과거 조건은 이 시간을 기준으로 필터링됩니다. |
+| `updatedAt` | integer | 업데이트 시간, 값이 있을 때 출력, 밀리초 |
+| `deletedAt` | integer | 마크 시간 삭제, 값이 있는 경우 출력, 밀리초; 통합된 거래/취소 시간 필드가 아닙니다. |
+
+조건부 주문은 일반 주문의 경우 filledQuantity, remainingQuantity, avgFilledPrice를 제공하지 않습니다. 실행 후 일반 주문의 거래 현황이 필요한 경우 generatedOrderId를 통해 일반 주문/거래를 조회하고, 조건부 주문 현황에서 거래량을 유추하지 마세요.
+
+
+<span id="example-response-envelope" data-sixmm-canonical-anchor="example-response-envelope" aria-hidden="true"></span>
+
+## 응답 봉투 예시
+
+이것은 완료된 거래의 샘플이 아닌 예시용 빈 페이지입니다. 위의 리소스별 필드 테이블은 채워진 `items[].data`에 대해 설명합니다.
+
+```json
+{"code":0,"message":"success","data":{"items":[],"nextCursor":"","hasMore":false}}
+```
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## 소스 및 관련 가이드
+
+- [공식 v0.3.0 소스](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [쿼리 개요 및 페이지 매김](/ko/sdk/agent-sdk/java/perpetual-queries)
+- [펀딩 지갑](/ko/sdk/agent-sdk/java/funding-wallet)
+- [업그레이드 가이드](/ko/sdk/agent-sdk/java/upgrade)

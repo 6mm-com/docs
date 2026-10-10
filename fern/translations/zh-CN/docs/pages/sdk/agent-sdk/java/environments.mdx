@@ -1,0 +1,62 @@
+---
+title: "实盘与模拟盘"
+subtitle: "实盘与模拟盘: Agent Java SDK v0.3.0 接入、示例、参数及响应说明。"
+slug: sdk/agent-sdk/java/environments
+canonical-url: https://docs.6mm.com/zh-CN/sdk/agent-sdk/java/environments
+---
+
+本文对应 **Agent Java SDK `v0.3.0`**、Java 8+ 与该标签的公开契约。示例在合作方后端运行；先按[快速开始](/zh-CN/sdk/agent-sdk/java/quick-start)初始化 `client`。
+
+<span data-sixmm-canonical-anchor="对接模拟盘" aria-hidden="true"></span>
+
+## 对接模拟盘
+
+模拟盘有两个配置面：商户后端选择资金目标，交易前端选择交易模式及对应 HTTP/WS 数据目标。两者必须一致；token 和绑定不自动选择模拟环境。
+
+| 项目 | 实盘 | 模拟盘 |
+| --- | --- | --- |
+| 绑定及入口认证 | 通用绑定、通用票据/token | 同一身份及通用认证，无需重新绑定 |
+| 新资金划转及余额查询 | 省略或 `PRODUCTION` | 必须显式 `SIMULATED` |
+| Funding 原单查单 `wallet-transfer-status` | 显式 `PRODUCTION`；省略时沿用原单环境 | 显式 `SIMULATED`；省略时沿用原单环境 |
+| 前端模式 | `tradingMode=real` 或 SDK 对应配置 | `tradingMode=demo` 或 SDK 对应配置 |
+| HTTP/WS 目标 | 实盘运行目标 | 模拟运行目标，按平台前端配置 |
+| 余额及资金查单 | 实盘钱包、实盘原单 | 模拟钱包、模拟原单 |
+| 本指南六类永续查询 | 查询正式环境数据 | 当前不提供模拟环境选择 |
+
+Java `v0.3.0` 支持环境的请求类型包括 `TransferRequest`、`TransferAllOutRequest`、`ReverseOrderRequest`、`QueryOrderRequest`、`ListOrdersRequest`、`QueryUserAssetsRequest`、`WalletTransferRequest`、`WalletTransferQueryRequest`，均可使用 `withEnvironment(ExecutionEnvironment.SIMULATED)`。
+
+商户后端须在发起、查询、恢复和对账中保持原单环境一致。模式由后端受控配置或授权选择，不能在超时后回退到省略环境。建议单号带 `SIM-` 前缀，数据库保存明确环境，并让模拟业务使用商户自己的虚拟账务流程。
+
+`isSimulatedUser` 是账户性质；它不负责将请求路由到模拟盘。发起新资金划转或查询余额时，即使该字段为 true，省略 `environment` 仍按实盘目标处理。Funding 原单查单的环境恢复规则见相关指南。
+
+模拟秒合约联调顺序：绑定 → 显式模拟余额查询 → 小额模拟 Funding 转入 → 查询原单确认成功 → 跳转或内嵌模拟秒合约页面 → 查询模拟余额 → 需要退出资金时按模拟 Funding 单独划回。模拟永续联调可将模拟 Funding 转至模拟 Contract，然后在模拟合约页面交易；业务数据验收使用平台支持的模拟交易前端/用户接口，本指南六类商户查询不能替代它。
+
+
+<span data-sixmm-canonical-anchor="商户联调验收" aria-hidden="true"></span>
+
+## 商户联调验收
+
+| 场景 | 通过标准 |
+| --- | --- |
+| 升级及旧业务兼容 | 固定 SDK 源码来源；原实盘查询省略 environment 可解析；新增方法可编译 |
+| 用户绑定 | 获取并保存公开 platformUserId，其他商户玩家无法被查询 |
+| 秒合约跳转 | ticket 可进入对应玩法及模式，过期/消费后重新签发 |
+| 秒合约内嵌 | 既有 tokenProvider 可登录并续签，新实例使用新通道；签 token 不增加资金单 |
+| Funding 固定金额 | 保存原单，确认 SUCCESS 后两端账务一致；使用实际响应金额 |
+| Funding/Contract 互转 | 来源及目标钱包在同环境内变化，冻结部分不被全部划出 |
+| 结果未知 | 模拟网络超时后只查原单，不产生第二笔资金操作 |
+| 模拟隔离 | 所有模拟资金请求/恢复显式 SIMULATED；模拟前端 HTTP/WS 目标正确；实盘余额不变 |
+| 合约六查询 | 六接口可用，必填玩家/类别、毫秒时间、空页及非空分页均正确处理 |
+| 限流恢复 | 统一控制六接口速率，6905 后原页恢复，不丢页或错误推进游标 |
+| 数据保存 | 字符串金额及 ID 无精度损失，实体幂等，固定 UTC 窗口可重复核对 |
+
+资金联调使用商户确认的模拟用户与模拟账务。正式切换时同时调整后端钱包目标和前端交易模式，并核对存量待确认单仍按其原环境恢复。
+
+<span data-sixmm-canonical-anchor="来源与相关指南" aria-hidden="true"></span>
+
+## 来源与相关指南
+
+- [官方 v0.3.0 源码](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [合约查询与分页](/zh-CN/sdk/agent-sdk/java/perpetual-queries)
+- [Funding 钱包](/zh-CN/sdk/agent-sdk/java/funding-wallet)
+- [升级指南](/zh-CN/sdk/agent-sdk/java/upgrade)

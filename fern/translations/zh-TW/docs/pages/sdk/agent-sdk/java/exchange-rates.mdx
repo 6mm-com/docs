@@ -1,0 +1,87 @@
+---
+title: "法定貨幣參考利率"
+subtitle: "菲亞特參考利率：Agent Java SDK v0.3.0 集成、示例、參數和響應語義。"
+slug: sdk/agent-sdk/java/exchange-rates
+canonical-url: https://docs.6mm.com/zh-TW/sdk/agent-sdk/java/exchange-rates
+---
+
+本指南針對 **Agent Java SDK `v0.3.0`**、Java 8+ 以及標記的公共合約。初始化 `client` 後在合作伙伴後端運行示例 [快速入門](/zh-TW/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## 先決條件示例
+
+Java 片段共享這些導入。使用快速啟動初始化 `client` 並從保存的綁定中獲取 `platformUserId`。示例用戶/訂單 ID 必須替換為您自己的持久值。
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span id="fx-reference-rates" data-sixmm-canonical-anchor="fx-reference-rates" aria-hidden="true"></span>
+
+## 外匯參考匯率
+
+兩種 FX 方法都使用正常的簽名代理 API 流程。首先發現
+目前支持的源貨幣：
+
+```java
+import com.sixmm.agent.model.ListSupportedFiatCurrenciesResponse;
+
+ListSupportedFiatCurrenciesResponse supported = client.listSupportedFiatCurrencies();
+System.out.println(supported.targetCurrency);     // USDT
+System.out.println(supported.sourceCurrencies);  // AUD, BRL, CNY, EUR, USD, ...
+```
+
+查詢所有支持的法幣兌USDT參考匯率：
+
+```java
+import com.sixmm.agent.model.ExchangeRateItem;
+import com.sixmm.agent.model.QueryExchangeRatesResponse;
+
+QueryExchangeRatesResponse rates = client.queryExchangeRates();
+for (ExchangeRateItem item : rates.rates) {
+    System.out.println("1 " + item.sourceCurrency + " = " + item.rate + " " + item.targetCurrency);
+}
+```
+
+查詢所選幣種：
+
+```java
+import com.sixmm.agent.model.QueryExchangeRatesRequest;
+
+QueryExchangeRatesResponse rates = client.queryExchangeRates(
+        QueryExchangeRatesRequest.of("CNY", "EUR", "USD"));
+```
+
+請求工廠修剪並大寫貨幣代碼並將它們序列化為
+API 所需的以逗號分隔的 `sourceCurrencies` 值。省略
+請求或所有有效貨幣值查詢每種支持的貨幣。
+
+| 響應字段 | 類型 | 描述 |
+| --- | --- | --- |
+| `snapshotVersion` | string | 用於審計和對賬的穩定快照版本 |
+| `provider` | string | 上游提供商，目前 `ECB` |
+| `sourceDate` | string | 上游觀測日期，格式為 `yyyy-MM-dd` |
+| `fetchedAt` / `expiresAt` | int64 | Unix 時間戳（以毫秒為單位） |
+| `pricingPolicy` | string | 目前 `FIXED_PEG` |
+| `usdtUsdRate` | string | USD 每 1 USDT 的金額，目前固定為 `1` |
+| `rateType` | string | 目前 `INDICATIVE_DAILY` |
+| `usage` | string | 目前 `REFERENCE_ONLY` |
+| `rateMeaning` | string | `1 sourceCurrency = rate USDT` |
+| `rates[].rate` | string | USDT 相當於一單位源法幣的金額 |
+
+這些值供合作伙伴多幣種錢包計算時參考
+USDT 金額髮送至 6MM。它們不是可執行價格、鎖定報價或
+實時USDT市場價格。使用 `BigDecimal` 和字符串表示金額
+計算；請勿使用 `double` 或 `float`。
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## 來源及相關指南
+
+- [官方v0.3.0源碼](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [查詢概覽和分頁](/zh-TW/sdk/agent-sdk/java/perpetual-queries)
+- [資金錢包](/zh-TW/sdk/agent-sdk/java/funding-wallet)
+- [升級指南](/zh-TW/sdk/agent-sdk/java/upgrade)

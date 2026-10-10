@@ -1,0 +1,260 @@
+---
+title: "Transfery i uzgadnianie kontraktów"
+subtitle: "Transfery i uzgadnianie kontraktów: Agent Java SDK Integracja v0.3.0, przykłady, parametry i semantyka odpowiedzi."
+slug: sdk/agent-sdk/java/contract-transfers
+canonical-url: https://docs.6mm.com/pl/sdk/agent-sdk/java/contract-transfers
+---
+
+Ten przewodnik jest przeznaczony dla **Agent Java SDK `v0.3.0`**, Java 8+ i oznaczonych zamówień publicznych. Przykłady działają w zapleczu partnera po inicjalizacji `client` w [Szybki start](/pl/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## Przykładowe wymagania wstępne
+
+Fragmenty Java dzielą ten import. Zainicjuj `client` za pomocą Szybki start i uzyskaj `platformUserId` z zapisanego powiązania. Przykładowe identyfikatory użytkowników/zamówień należy zastąpić własnymi, utrwalonymi wartościami.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span id="fixed-amount-transfer" data-sixmm-canonical-anchor="fixed-amount-transfer" aria-hidden="true"></span>
+
+## Transfer kwot stałych
+
+Użyj `transfer` w przypadku przelewów na stałą kwotę. `Direction.IN` oznacza przesyłanie
+z platformy partnerskiej do 6MM. `Direction.OUT` oznacza przeniesienie z 6MM
+z powrotem na platformę partnerską.
+
+W przypadku kwot użyj ciągów znaków lub `BigDecimal`. Nie używaj `double` ani `float`.
+
+<span id="transfer-by-agentuserid" data-sixmm-canonical-anchor="transfer-by-agentuserid" aria-hidden="true"></span>
+
+### Przelew przez `agentUserId`
+
+```java
+import com.sixmm.agent.model.Direction;
+import com.sixmm.agent.model.TransferRequest;
+import com.sixmm.agent.model.TransferResponse;
+
+TransferResponse resp = client.transfer(TransferRequest.fixed(
+        "AGT-ORDER-1001",
+        "agent-user-001",
+        Direction.IN,
+        "USDT",
+        "10.00"));
+
+System.out.println(resp.orderNo);
+System.out.println(resp.orderStatus);
+System.out.println(resp.agentUserId);
+System.out.println(resp.platformUserId);
+```
+
+<span id="transfer-by-platformuserid" data-sixmm-canonical-anchor="transfer-by-platformuserid" aria-hidden="true"></span>
+
+### Przelew przez `platformUserId`
+
+```java
+TransferResponse resp = client.transfer(TransferRequest.fixedByPlatformUserId(
+        "AGT-ORDER-1002",
+        "1188041528",
+        Direction.OUT,
+        "USDT",
+        "5.00"));
+```
+
+<span id="provide-both-ids" data-sixmm-canonical-anchor="provide-both-ids" aria-hidden="true"></span>
+
+### Podaj oba identyfikatory
+
+Jeśli zostaną podane oba identyfikatory, usługa sprawdza, czy wskazują na ten sam
+związany użytkownik.
+
+```java
+TransferRequest req = TransferRequest
+        .fixed("AGT-ORDER-1003", "agent-user-001", Direction.IN, "USDT", "20.00")
+        .withPlatformUserId("1188041528");
+
+TransferResponse resp = client.transfer(req);
+```
+
+Pola żądania:
+
+| Pole | Typ | Wymagany | Opis |
+| --- | --- | --- | --- |
+| `agentOrderNo` | string | Tak | Globalnie unikalny numer zamówienia partnera |
+| `agentUserId` | string | Warunkowo | Wymagane, gdy `platformUserId` jest nieobecny |
+| `platformUserId` | string | Warunkowo | Wymagane, gdy `agentUserId` jest nieobecny |
+| `direction` | wyliczenie | Tak | `IN` lub `OUT` |
+| `currency` | string | NIE | Wypełniane od `defaultCurrency` w przypadku nieobecności |
+| `amount` | string | Tak | Ciąg dziesiętny kwoty |
+
+Pola odpowiedzi:
+
+| Pole | Typ | Opis |
+| --- | --- | --- |
+| `orderNo` | string | Numer zamówienia platformy |
+| `orderStatus` | string | `SUCCESS`, `FAILED`, `PROCESSING` itd. |
+| `agentUserId` | string | Identyfikator użytkownika po stronie partnera |
+| `platformUserId` | string | 6MM identyfikator użytkownika zewnętrznego |
+
+
+<span id="order-confirmation-and-idempotency" data-sixmm-canonical-anchor="order-confirmation-and-idempotency" aria-hidden="true"></span>
+
+## Potwierdzenie zamówienia i idempotencja
+
+Po wywołaniu `transfer` usługa Agenta synchronicznie wywołuje transakcję
+rdzeń na głównej ścieżce. W większości przypadków odpowiedź API zawiera już
+wynik handlu synchronicznego.
+
+| Wynik | Oznaczający | Akcja partnerska |
+| --- | --- | --- |
+| `SUCCESS` | Przeniesienie powiodło się | Oznacz zamówienie lokalne jako udane |
+| `FAILED` | Transfer został odrzucony lub nie powiódł się | Zapisz przyczynę niepowodzenia i pokaż ją w razie potrzeby |
+| `PROCESSING` | Przekroczenie limitu czasu rdzenia handlowego lub niepewność sieci | Nie próbuj ponownie, podając nowy numer zamówienia. Poczekaj na webhook lub zadzwoń do `queryOrder` |
+
+Wymagania dotyczące idempotencji:
+
+- Użyj jednego `agentOrderNo` na jedną transakcję biznesową.
+- Jeśli upłynie limit czasu HTTP lub nastąpi awaria sieci, najpierw zapytaj o to samo `agentOrderNo`.
+- Webhooks może zostać ponowiona. Deduplikuj je za pomocą klucza idempotencji.
+
+
+<span id="transfer-all-out" data-sixmm-canonical-anchor="transfer-all-out" aria-hidden="true"></span>
+
+## Przenieś wszystko
+
+`transferAllOut` przenosi saldo wypłaty użytkownika 6MM z powrotem do
+platforma partnerska.
+
+```java
+import com.sixmm.agent.model.TransferAllOutRequest;
+import com.sixmm.agent.model.TransferAllOutResponse;
+
+TransferAllOutResponse resp = client.transferAllOut(
+        TransferAllOutRequest.of("AGT-ORDER-2001", "agent-user-001", "USDT"));
+
+System.out.println(resp.orderStatus);
+System.out.println(resp.amount);
+```
+
+Przez `platformUserId`:
+
+```java
+TransferAllOutResponse resp = client.transferAllOut(
+        TransferAllOutRequest.byPlatformUserId("AGT-ORDER-2002", "1188041528", "USDT"));
+```
+
+`amount` w odpowiedzi to rzeczywista przekazana kwota.
+
+
+<span id="reverse-order" data-sixmm-canonical-anchor="reverse-order" aria-hidden="true"></span>
+
+## Odwrotna kolejność
+
+Rewers służy do kompensowania udanego zlecenia transferu w przypadku backendu
+obsługuje przepływ wsteczny. Typowe przypadki obejmują wyjątki od zamówień lokalnych partnerów
+lub ręczne wycofanie uzgadniania.
+
+```java
+import com.sixmm.agent.model.ReverseOrderRequest;
+import com.sixmm.agent.model.ReverseOrderResponse;
+
+ReverseOrderResponse resp = client.reverse(ReverseOrderRequest.of(
+        "AGT-ORDER-1001",
+        "REV-ORDER-1001",
+        "partner order rollback"));
+
+System.out.println(resp.orderStatus);
+```
+
+Pola:
+
+| Pole | Typ | Wymagany | Opis |
+| --- | --- | --- | --- |
+| `origOrderNo` | string | Tak | Oryginalny numer polecenia przelewu |
+| `reverseOrderNo` | string | Tak | Globalnie unikalny numer zamówienia zwrotnego |
+| `reverseReason` | string | Tak | Odwrotny powód |
+
+Uwagi:
+
+- Odwrócenie nie jest normalną operacją anulowania.
+- Zlecenia odwrotne muszą być również idempotentne według numeru zamówienia.
+- Po odwróceniu pierwotnego zamówienia webhook może przesunąć pierwotne zamówienie
+`REVERSED` stan końcowy.
+
+
+<span id="query-order" data-sixmm-canonical-anchor="query-order" aria-hidden="true"></span>
+
+## Zamówienie zapytania
+
+```java
+import com.sixmm.agent.model.OrderQueryType;
+import com.sixmm.agent.model.QueryOrderRequest;
+import com.sixmm.agent.model.QueryOrderResponse;
+
+QueryOrderResponse resp = client.queryOrder(
+        QueryOrderRequest.of("AGT-ORDER-1001", OrderQueryType.TRANSFER_IN));
+
+System.out.println(resp.status);
+System.out.println(resp.failReason);
+```
+
+Obsługiwane wartości `orderType`:
+
+- `TRANSFER_IN`
+- `TRANSFER_OUT`
+
+Typowe pola odpowiedzi:
+
+| Pole | Typ | Opis |
+| --- | --- | --- |
+| `orderType` | string | Typ zamówienia |
+| `orderNo` | string | Numer zamówienia partnera |
+| `status` | string | Stan zamówienia |
+| `direction` | string | `IN` lub `OUT` |
+| `transferMode` | string | `FIXED_AMOUNT` lub `ALL_OUT` |
+| `currency` | string | Waluta |
+| `amount` | string | Kwota |
+| `agentUserId` | string | Identyfikator użytkownika po stronie partnera |
+| `platformUserId` | string | 6MM identyfikator użytkownika zewnętrznego |
+| `failReason` | string | Przyczyna niepowodzenia |
+| `createdAt` | string | Czas stworzenia |
+| `completedAt` | string | Czas realizacji |
+
+
+<span id="list-orders" data-sixmm-canonical-anchor="list-orders" aria-hidden="true"></span>
+
+## Lista zamówień
+
+```java
+import com.sixmm.agent.model.ListOrdersRequest;
+import com.sixmm.agent.model.ListOrdersResponse;
+
+ListOrdersRequest req = ListOrdersRequest.page(1, 20);
+req.orderType = "TRANSFER_IN";
+req.status = "SUCCESS";
+req.startTime = "2026-06-01T00:00:00Z";
+req.endTime = "2026-06-16T00:00:00Z";
+
+ListOrdersResponse resp = client.listOrders(req);
+
+System.out.println(resp.total);
+resp.orders.forEach(order -> System.out.println(order.orderNo));
+```
+
+Zalecenia dotyczące paginacji:
+
+- `page` zaczyna się od 1.
+- Utrzymuj `pageSize` na poziomie 100 lub niższym.
+- W przypadku zadań uzgadniania, strona po oknie czasowym i deduplikacja do `orderNo`.
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Źródło i powiązane przewodniki
+
+- [Oficjalne źródło v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Przegląd zapytań i paginacja](/pl/sdk/agent-sdk/java/perpetual-queries)
+- [Portfel finansowania](/pl/sdk/agent-sdk/java/funding-wallet)
+- [Przewodnik po aktualizacji](/pl/sdk/agent-sdk/java/upgrade)

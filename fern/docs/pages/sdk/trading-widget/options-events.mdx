@@ -74,3 +74,32 @@ Supported `display.hidden` values:
 - [Authentication](/sdk/trading-widget/authentication)
 - [Instance Methods](/sdk/trading-widget/instance-methods)
 - [Troubleshooting](/sdk/security/troubleshooting)
+
+<span data-sixmm-canonical-anchor="product-pages-and-trading-mode" aria-hidden="true"></span>
+
+## Product pages and trading mode
+
+Java Agent SDK and browser Trading Widget SDK are versioned independently. For seconds trading, use the current Widget capabilities and select both the page and trading mode explicitly.
+
+| Option | Values | Meaning |
+| --- | --- | --- |
+| `page` | `up-down`, `high-low`, `grid-prediction` | Product page for seconds trading. |
+| `tradingMode` | `real`, `demo` | Defaults to `real`; explicitly match the backend funding environment. |
+
+Check `TradingWidget.capabilities.pages`, `TradingWidget.capabilities.tradingModes`, and `TradingWidget.capabilities.partnerToken` before initialization. Token creation does not select a funds environment. To change users or real/demo mode, destroy the old instance and create a new one.
+
+See [complete seconds trading example](/sdk/agent-sdk/java/seconds-trading) and [production/simulated configuration](/sdk/agent-sdk/java/environments).
+
+<span data-sixmm-canonical-anchor="additional-display-targets-and-events" aria-hidden="true"></span>
+
+## Additional display targets and events
+
+The current runtime also accepts `symbolFavorites` and `symbolTicker` in `display.hidden`. Always check `TradingWidget.capabilities.displayTargets`; a target controls a high-level container and is not a field-level permission setting.
+
+| Event | Meaning |
+| --- | --- |
+| `rendered` | The iframe sends its rendered notification. |
+| `theme_changed` | The iframe reports its actual theme. |
+| `page_changed` | The iframe reports its actual product page. |
+
+Use `onRendered` or `widget.on('rendered', handler)` to handle rendering separately from initialization. Current supported pages are published in `TradingWidget.capabilities.pages`; validate the requested page rather than guessing a path.

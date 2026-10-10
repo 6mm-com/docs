@@ -1,33 +1,33 @@
 ---
-title: "Методы экземпляров"
-subtitle: "Управлять созданным виджетом после TradingWidget.create()."
+title: "Методы экземпляра"
+subtitle: "Управляйте созданным экземпляром виджета после TradingWidget.create()."
 slug: sdk/trading-widget/instance-methods
 canonical-url: https://docs.6mm.com/ru/sdk/trading-widget/instance-methods
 ---
 
 <span id="method-summary" data-sixmm-canonical-anchor="method-summary" aria-hidden="true"></span>
 
-## Краткое содержание метода
+## Краткое описание метода
 
-| Метод | Назначение |
+| Метод | Цель |
 | --- | --- |
-| уничтожить() | Удалите iframe и отпустите слушатели событий. |
-| getState() | Читайте текущее состояние SDK жизненного цикла. |
+| разрушать() | Удалите iframe и освободите прослушиватели событий. |
+| getState() | Прочтите текущее состояние жизненного цикла SDK. |
 | whenReady() | Подождите, пока iframe завершит инициализацию. |
 | setSymbol(символ) | Переключите торговую пару внутри iframe. |
 | setTheme(тема) | Обновите параметр темы iframe. |
-| setLocale(место) | Переключите язык iframe. |
+| setLocale(локаль) | Переключите язык iframe. |
 | setSize(ширина, высота) | Обновите размеры iframe. |
-| Перезарядка() | Перезагрузите текущий iframe. |
-| refreshAuth(причина) | Запустите процесс обновления автентификации виджета. |
-| setTokenProvider(провайдер) | Замените провайдера, используемого в режиме партнёрского токена. |
-| on (событие, куратор) | Подпишитесь на события во время выполнения и получите функцию отмены. |
+| перезагрузить() | Перезагрузите текущий iframe. |
+| refreshAuth(причина) | Запустите поток обновления аутентификации виджета. |
+| setTokenProvider(поставщик) | Замените поставщика, используемого в режиме партнерского токена. |
+| on(событие, обработчик) | Подпишитесь на события времени выполнения и получите функцию отказа от подписки. |
 
 <span id="destroy" data-sixmm-canonical-anchor="destroy" aria-hidden="true"></span>
 
-## уничтожить()
+## разрушать()
 
-Удалите iframe, очистите слушатели и издайте уничтоженный один раз для текущего экземпляра.
+Удалите iframe, очистите прослушиватели и один раз исключите уничтожение для текущего экземпляра.
 
 ```js
 widget.destroy()
@@ -37,7 +37,7 @@ widget.destroy()
 
 ## getState()
 
-Прочитайте текущий жизненный цикл экземпляра виджета.
+Прочтите текущее состояние жизненного цикла экземпляра виджета.
 
 ```js
 const state = widget.getState()
@@ -49,7 +49,7 @@ const state = widget.getState()
 
 ## whenReady()
 
-Подождите, пока iframe завершит инициализацию, прежде чем запускать логику зависимого интерфейса.
+Подождите, пока iframe завершит инициализацию, прежде чем запускать зависимую логику пользовательского интерфейса.
 
 ```js
 await widget.whenReady()
@@ -59,7 +59,7 @@ await widget.whenReady()
 
 ## setSymbol(символ)
 
-Переключите торговую пару внутри iframe. Если iframe всё ещё инициализируется, SDK ставит команду в очередь и отправляет её после готовности.
+Переключите торговую пару внутри iframe. Если iframe все еще инициализируется, SDK ставит команду в очередь и отправляет ее после готовности.
 
 ```js
 widget.setSymbol('ETHUSDT')
@@ -78,9 +78,9 @@ widget.setTheme('light')
 
 <span id="setlocale-locale" data-sixmm-canonical-anchor="setlocale-locale" aria-hidden="true"></span>
 
-## setLocale(место)
+## setLocale(локаль)
 
-Переключите язык iframe. Поддерживаемые значения — en, en-US и zh-CN.
+Переключите язык iframe. Поддерживаемые значения: en, en-US и zh-CN.
 
 ```js
 widget.setLocale('en')
@@ -92,7 +92,7 @@ widget.setLocale('zh-CN')
 
 ## setSize(ширина, высота)
 
-Обновите размер iframe DOM и уведомите iframe о новом внешнем размере. Числовые значения преобразуются в px.
+Обновите размер iframe DOM и уведомите iframe о новом внешнем размере. Числовые значения преобразуются в пиксели.
 
 ```js
 widget.setSize('100%', 720)
@@ -100,9 +100,9 @@ widget.setSize('100%', 720)
 
 <span id="reload" data-sixmm-canonical-anchor="reload" aria-hidden="true"></span>
 
-## Перезарядка()
+## перезагрузить()
 
-Перезагрузите текущий iframe и дождитесь, пока он снова инициализируется.
+Перезагрузите текущий iframe и дождитесь его повторной инициализации.
 
 ```js
 widget.reload()
@@ -112,7 +112,7 @@ widget.reload()
 
 ## refreshAuth(причина)
 
-Попросите iframe обновить текущий поток аутентификации. Необязательное значение причины пересылается для логирования и управления потоком.
+Попросите iframe обновить текущий поток аутентификации. Необязательное значение причины пересылается для ведения журнала и управления потоком.
 
 ```js
 widget.refreshAuth('manual')
@@ -120,9 +120,9 @@ widget.refreshAuth('manual')
 
 <span id="settokenprovider-provider" data-sixmm-canonical-anchor="settokenprovider-provider" aria-hidden="true"></span>
 
-## setTokenProvider(провайдер)
+## setTokenProvider(поставщик)
 
-Замените tokenProvider , используемый в режиме партнера-токена. SDK вызывает провайдера, когда iframe запрашивает новый встраиваемый токен.
+Замените tokenProvider, используемый режимом токена партнера. SDK вызывает провайдера, когда iframe запрашивает новый токен внедрения.
 
 ```js
 widget.setTokenProvider(async ({ channelId, symbol, reason }) => {
@@ -139,9 +139,9 @@ widget.setTokenProvider(async ({ channelId, symbol, reason }) => {
 
 <span id="on-event-handler" data-sixmm-canonical-anchor="on-event-handler" aria-hidden="true"></span>
 
-## on (событие, куратор)
+## on(событие, обработчик)
 
-Подпишитесь на событие во время выполнения. Возвращённая функция удаляет слушателя.
+Подпишитесь на событие времени выполнения. Возвращенная функция удаляет прослушиватель.
 
 ```js
 const off = widget.on('order_created', (event) => {
@@ -153,9 +153,32 @@ off()
 
 <span id="related-widget-guides" data-sixmm-canonical-anchor="related-widget-guides" aria-hidden="true"></span>
 
-## Связанные гайды по виджетам
+## Сопутствующие руководства по виджетам
 
 - [Trading Widget Быстрый старт](/ru/sdk/trading-widget/quick-start)
 - [Опции и события](/ru/sdk/trading-widget/options-events)
 - [Аутентификация](/ru/sdk/trading-widget/authentication)
-- [Устранение неполадок](/ru/sdk/security/troubleshooting)
+- [Поиск неисправностей](/ru/sdk/security/troubleshooting)
+
+<span id="additional-methods-in-the-current-v1-runtime" data-sixmm-canonical-anchor="additional-methods-in-the-current-v1-runtime" aria-hidden="true"></span>
+
+## Дополнительные методы в текущей среде выполнения v1
+
+| Метод | Цель |
+| --- | --- |
+| `whenRendered()` | Дождитесь уведомления об отображении iframe; это отдельно от готового. |
+| `setPage(page)` | Запросите страницу поддерживаемого продукта в текущем экземпляре. Это не меняет среду фондов. |
+| `prepareForRecreate()` | Запросить готовый iframe подготовиться к замене; возвращает обещание и может отклонить его, если оно недоступно, занято или истекло время ожидания. |
+| `cancelRecreate()` | Отмените ожидающий/подготовленный поток замены. |
+| `TradingWidget.validateOptions(options)` | Проверьте параметры инициализации перед созданием экземпляра. |
+
+Для изменения пользовательской или реальной/демонстрационной среды уничтожьте старый экземпляр и создайте новый с целевой аутентификацией и режимом. Не используйте `setPage` в качестве переключателя среды. Проверьте возможности перед использованием дополнительных методов.
+
+```js
+if (TradingWidget.capabilities.methods.includes('whenRendered')) {
+  await widget.whenRendered();
+}
+if (TradingWidget.capabilities.pages.includes('up-down')) {
+  widget.setPage('up-down');
+}
+```

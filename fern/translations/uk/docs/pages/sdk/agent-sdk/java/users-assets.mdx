@@ -1,0 +1,171 @@
+---
+title: "Користувачі та активи"
+subtitle: "Користувачі та активи: Інтеграція Agent Java SDK v0.3.0, приклади, параметри та семантика відповіді."
+slug: sdk/agent-sdk/java/users-assets
+canonical-url: https://docs.6mm.com/uk/sdk/agent-sdk/java/users-assets
+---
+
+Цей посібник призначений для **Agent Java SDK `v0.3.0`**, Java 8+ і публічного контракту з тегами. Приклади виконуються в серверній частині партнера після ініціалізації `client` у [Швидкий старт](/uk/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## Приклад передумов
+
+Фрагменти Java поділяють ці імпортовані файли. Ініціалізуйте `client` за допомогою швидкого запуску та отримайте `platformUserId` із збереженого зв’язування. Приклади ідентифікаторів користувача/замовлення потрібно замінити вашими постійними значеннями.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span id="user-id-rules" data-sixmm-canonical-anchor="user-id-rules" aria-hidden="true"></span>
+
+## Правила ідентифікації користувача
+
+`platformUserId` — зовнішній ідентифікатор користувача 6MM. Наразі це 10-значне число
+рядок, наприклад:
+
+```text
+1188041528
+```
+
+правила:
+
+- Зберігайте його як рядок, а не як ціле число.
+- Не створюйте, не декодуйте та не виводьте з цього значення.
+- Використовуйте власний ідентифікатор користувача на стороні партнера як `agentUserId`.
+- Зберігайте зв’язок між `agentUserId`, `platformUserId` і `agentOrderNo`.
+
+
+<span id="bind-user" data-sixmm-canonical-anchor="bind-user" aria-hidden="true"></span>
+
+## Прив’язати користувача
+
+Bind створює або отримує зв’язок між користувачем-партнером і 6MM
+користувач платформи. Викликайте його, коли користувач вперше входить до торгового потоку або перед
+перша передача в 6MM.
+
+```java
+import com.sixmm.agent.model.BindRequest;
+import com.sixmm.agent.model.BindResponse;
+
+BindResponse resp = client.bind(
+        BindRequest.of("agent-user-001")
+                .withUsername("alice")
+                .withExt("{\"source\":\"web\"}"));
+
+System.out.println(resp.platformUserId);
+System.out.println(resp.bindStatus);
+System.out.println(resp.isSimulatedUser);
+```
+
+Поля запиту:
+
+| Поле | Тип | Обов'язковий | опис |
+| --- | --- | --- | --- |
+| `agentUserId` | string | так | Унікальний ідентифікатор користувача на стороні партнера |
+| `username` | string | немає | Відображуване ім’я на стороні партнера, яке використовується як псевдонім користувача платформи |
+| `ext` | string | немає | Поле розширення. Рекомендується рядок JSON. |
+
+Поля відповіді:
+
+| Поле | Тип | опис |
+| --- | --- | --- |
+| `platformUserId` | string | 6MM зовнішній ідентифікатор користувача |
+| `bindStatus` | string | Зазвичай `BOUND` |
+| `isSimulatedUser` | boolean | Чи це імітований користувач |
+
+
+<span id="query-partner-account" data-sixmm-canonical-anchor="query-partner-account" aria-hidden="true"></span>
+
+## Обліковий запис партнера запиту
+
+```java
+import com.sixmm.agent.model.QueryAccountRequest;
+import com.sixmm.agent.model.QueryAccountResponse;
+
+QueryAccountResponse resp = client.queryAccount(QueryAccountRequest.of("USDT"));
+
+System.out.println(resp.agentCode);
+System.out.println(resp.agentStatus);
+resp.assets.forEach(asset -> {
+    System.out.println(asset.currency);
+    System.out.println(asset.depositBalance);
+});
+```
+
+Якщо `currency` відсутній, SDK використовує `defaultCurrency`.
+
+
+<span id="query-user-assets" data-sixmm-canonical-anchor="query-user-assets" aria-hidden="true"></span>
+
+## Запит ресурсів користувача
+
+```java
+import com.sixmm.agent.model.QueryUserAssetsRequest;
+import com.sixmm.agent.model.QueryUserAssetsResponse;
+
+QueryUserAssetsResponse resp = client.queryUserAssets(
+        QueryUserAssetsRequest.of("1188041528"));
+
+System.out.println(resp.walletBalance);
+System.out.println(resp.availableBalance);
+System.out.println(resp.version);
+```
+
+Поля:
+
+| Поле | Тип | опис |
+| --- | --- | --- |
+| `walletBalance` | string | Баланс гаманця |
+| `frozenMargin` | string | Заморожена маржа |
+| `usedMargin` | string | Використана маржа |
+| `availableBalance` | string | Доступний залишок |
+| `isolatedMargin` | string | Ізольоване поле |
+| `version` | int64 | Версія активу |
+| `isSimulatedUser` | boolean | Чи це імітований користувач |
+
+
+<span id="distinguish-the-three-wallets" data-sixmm-canonical-anchor="distinguish-the-three-wallets" aria-hidden="true"></span>
+
+### Розрізняють три гаманці
+
+| гаманець | Джерело балансу | використовувати |
+| --- | --- | --- |
+| Власний гаманець користувача продавця | Власна система обліку продавця | Доступний баланс користувача на стороні продавця |
+| Фінансування платформи | `queryUserAssets` з `funding` | Секундні торгові кошти та взаємний переказ фінансування/контракту |
+| Договір платформи | Поле активу контракту `queryUserAssets` | Безстрокова контрактна маржа та переказний залишок |
+
+`queryAccount` Запитуйте маржинальний рахунок платформи торговця, а не гаманець користувача торговця. Цей інтерфейс не має параметрів `environment` і не може запитуватися як імітований актив користувача.
+
+Запит двох гаманців платформи імітованих користувачів:
+
+```java
+QueryUserAssetsResponse assets = client.queryUserAssets(
+        QueryUserAssetsRequest.of(platformUserId)
+                .withFunding()
+                .withEnvironment(ExecutionEnvironment.SIMULATED));
+```
+
+Інтерфейс: `POST /v1/agent/query-user-assets`. Фінансування запитується лише тоді, коли `includeFunding=true`; за замовчуванням використовується оригінальна семантика запиту активу контракту.
+
+| поля відповідей | значення |
+| --- | --- |
+| `walletBalance`, `availableBalance`, `frozenMargin`, `usedMargin`, `isolatedMargin` | Контрактні суми гаманця |
+| `funding.assetCode` | Зараз USDT |
+| `funding.availableAmount`, `heldAmount`, `totalAmount` | Наявне фінансування, зайнятість і загальна сума |
+| `funding.materialized` | Чи був матеріалізований рахунок фінансування? |
+| `environment` | Це поле повторюється, коли середовище передається явно; старі запити, які пропускають середовище, не повертають це поле. |
+| `isSimulatedUser` | Класифікація рахунків; не може замінити вибір торгового середовища |
+
+Суми обробляються як рядки або `BigDecimal`, а не `float`/`double`.
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Джерело та відповідні посібники
+
+- [Офіційне джерело v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Огляд запиту та розбивка на сторінки](/uk/sdk/agent-sdk/java/perpetual-queries)
+- [Гаманець для фінансування](/uk/sdk/agent-sdk/java/funding-wallet)
+- [Посібник з оновлення](/uk/sdk/agent-sdk/java/upgrade)

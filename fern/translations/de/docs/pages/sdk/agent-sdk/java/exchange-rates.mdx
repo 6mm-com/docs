@@ -1,0 +1,87 @@
+---
+title: "Fiat-Referenzkurse"
+subtitle: "Fiat-Referenzkurse: Agent Java SDK v0.3.0-Integration, Beispiele, Parameter und Antwortsemantik."
+slug: sdk/agent-sdk/java/exchange-rates
+canonical-url: https://docs.6mm.com/de/sdk/agent-sdk/java/exchange-rates
+---
+
+Dieser Leitfaden richtet sich an **Agent Java SDK `v0.3.0`**, Java 8+ und den getaggten öffentlichen Auftrag. Beispiele werden nach der Initialisierung von `client` in einem Partner-Backend ausgeführt [Schnellstart](/de/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## Beispielvoraussetzungen
+
+Die Java-Snippets teilen diese Importe. Initialisieren Sie `client` mit Quick Start und rufen Sie `platformUserId` aus der gespeicherten Bindung ab. Beispiel-Benutzer-/Bestell-IDs müssen durch Ihre eigenen persistenten Werte ersetzt werden.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span id="fx-reference-rates" data-sixmm-canonical-anchor="fx-reference-rates" aria-hidden="true"></span>
+
+## FX-Referenzkurse
+
+Beide FX-Methoden verwenden den normalen signierten Agentenfluss API. Beginnen Sie mit der Entdeckung der
+Derzeit unterstützte Quellwährungen:
+
+```java
+import com.sixmm.agent.model.ListSupportedFiatCurrenciesResponse;
+
+ListSupportedFiatCurrenciesResponse supported = client.listSupportedFiatCurrencies();
+System.out.println(supported.targetCurrency);     // USDT
+System.out.println(supported.sourceCurrencies);  // AUD, BRL, CNY, EUR, USD, ...
+```
+
+Fragen Sie alle unterstützten Fiat-zu-USDT-Referenzkurse ab:
+
+```java
+import com.sixmm.agent.model.ExchangeRateItem;
+import com.sixmm.agent.model.QueryExchangeRatesResponse;
+
+QueryExchangeRatesResponse rates = client.queryExchangeRates();
+for (ExchangeRateItem item : rates.rates) {
+    System.out.println("1 " + item.sourceCurrency + " = " + item.rate + " " + item.targetCurrency);
+}
+```
+
+Ausgewählte Währungen abfragen:
+
+```java
+import com.sixmm.agent.model.QueryExchangeRatesRequest;
+
+QueryExchangeRatesResponse rates = client.queryExchangeRates(
+        QueryExchangeRatesRequest.of("CNY", "EUR", "USD"));
+```
+
+Die Anforderungsfabrik schneidet Währungscodes ab, schreibt sie in Großbuchstaben und serialisiert sie als
+der durch Kommas getrennte `sourceCurrencies`-Wert, der für API erforderlich ist. Weglassen des
+Anfrage oder alle effektiven Währungswerte fragt jede unterstützte Währung ab.
+
+| Antwortfeld | Typ | Beschreibung |
+| --- | --- | --- |
+| `snapshotVersion` | string | Stabile Snapshot-Version für Prüfung und Abgleich |
+| `provider` | string | Upstream-Anbieter, derzeit `ECB` |
+| `sourceDate` | string | Upstream-Beobachtungsdatum im Format `yyyy-MM-dd`. |
+| `fetchedAt` / `expiresAt` | int64 | Unix-Zeitstempel in Millisekunden |
+| `pricingPolicy` | string | Derzeit `FIXED_PEG` |
+| `usdtUsdRate` | string | USD Betrag pro 1 USDT, derzeit festgelegt auf `1` |
+| `rateType` | string | Derzeit `INDICATIVE_DAILY` |
+| `usage` | string | Derzeit `REFERENCE_ONLY` |
+| `rateMeaning` | string | `1 sourceCurrency = rate USDT` |
+| `rates[].rate` | string | USDT Betrag, der einer Einheit des Quell-Fiat entspricht |
+
+Bei diesen Werten handelt es sich um Referenzwerte für die Berechnung durch ein Partner-Multiwährungs-Wallet
+der USDT Betrag, der an 6MM gesendet wurde. Es handelt sich nicht um ausführbare Preise, gesperrte Quotes oder
+Echtzeit-Marktpreise USDT. Verwenden Sie `BigDecimal` und Zeichenfolgen für den Betrag
+Berechnungen; Verwenden Sie nicht `double` oder `float`.
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Quelle und zugehörige Leitfäden
+
+- [Offizielle Quelle v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Abfrageübersicht und Paginierung](/de/sdk/agent-sdk/java/perpetual-queries)
+- [Funding-Wallet](/de/sdk/agent-sdk/java/funding-wallet)
+- [Upgrade-Anleitung](/de/sdk/agent-sdk/java/upgrade)

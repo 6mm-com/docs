@@ -474,12 +474,23 @@ async function requestTranslations(texts, sourceLanguage, targetLanguage, attemp
     if (!Array.isArray(output) || output.length !== texts.length || output.some(x => typeof x !== "string")) {
       throw new Error("Translation response shape mismatch");
     }
-    return output.map((text, index) => {
-      const normalized = text.replace(/(?:\[\s*)+ph\s*(\d+)(?:\s*\])+/gi, "[[[ph$1]]]");
+    return await Promise.all(output.map(async (text, index) => {
+      const normalized = text.replace(/(?:\[\s*)+p\s*h\s*((?:\d\s*)+)(?:\s*\])+/gi, (_, digits) => `[[[ph${digits.replace(/\s/g, "")}]]]`);
       const tokens = texts[index].match(/\[\[\[ph\d+\]\]\]/g) ?? [];
-      if (tokens.some(token => !normalized.includes(token))) throw new Error(`Translation lost a protected token: ${JSON.stringify({ source: texts[index], translated: normalized })}`);
+      const received = normalized.match(/\[\[\[ph\d+\]\]\]/g) ?? [];
+      if ([...tokens].sort().join("|") !== [...received].sort().join("|")) {
+        // Some providers omit placeholders inside natural sentences. Translate
+        // only the surrounding prose and retain every protected token verbatim.
+        const parts = texts[index].split(/(\[\[\[ph\d+\]\]\])/g);
+        const indices = parts.map((part, i) => ({part, i})).filter(({part}) => part.trim() && !/^\[\[\[ph\d+\]\]\]$/.test(part));
+        const prose = indices.length ? await requestTranslations(indices.map(({part}) => part.trim()), sourceLanguage, targetLanguage) : [];
+        indices.forEach(({part, i}, j) => {
+          parts[i] = (part.match(/^\s*/)?.[0] ?? "") + prose[j].trim() + (part.match(/\s*$/)?.[0] ?? "");
+        });
+        return parts.join("");
+      }
       return normalized;
-    });
+    }));
   } catch (error) {
     if (attempt >= 4 || (error.status && ![429, 500, 502, 503, 504].includes(error.status))) throw error;
     await sleep(error.status === 429 ? 30_000 : 2_000 * attempt);
@@ -693,8 +704,8 @@ const activePages = [
   ),
 ];
 
-if (activePages.length !== 125) {
-  throw new Error(`Expected 125 active pages, found ${activePages.length}`);
+if (activePages.length !== 139) {
+  throw new Error(`Expected 139 active pages, found ${activePages.length}`);
 }
 
 const manifest = await loadManifest();

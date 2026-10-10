@@ -1,6 +1,6 @@
 ---
 title: "Trading Widget Автентифікація"
-subtitle: "Використовуйте партнерський токен для нових вбудованих торгових SSO інтеграцій."
+subtitle: "Використовуйте маркер партнера для нових інтеграцій вбудованої торгівлі SSO."
 slug: sdk/trading-widget/authentication
 canonical-url: https://docs.6mm.com/uk/sdk/trading-widget/authentication
 ---
@@ -9,7 +9,7 @@ canonical-url: https://docs.6mm.com/uk/sdk/trading-widget/authentication
 
 ## Рекомендований режим: партнер-токен
 
-Partner-token уникає розміщення коротких токенів у URL і зберігає apiSecret на партнерському бекенді.
+partner-token уникає розміщення коротких маркерів в URL-адресах і зберігає apiSecret на сервері партнера.
 
 ```js
 const widget = TradingWidget.create('#trading-widget', {
@@ -36,16 +36,16 @@ const widget = TradingWidget.create('#trading-widget', {
 
 <span id="related-documentation" data-sixmm-canonical-anchor="related-documentation" aria-hidden="true"></span>
 
-## Пов'язана документація
+## Супутня документація
 
-- [Create Embed Token](/uk/sdk/agent-sdk/java/embed-token): приклад випуску бекенд-токена.
-- [Trading Widget Швидкий старт](/uk/sdk/trading-widget/quick-start): повний процес ініціалізації.
-- [Секрети та підписи](/uk/sdk/security/secrets-signing): зберігайте привілейовані облікові дані Агента на бекенді.
-- [Усунення несправностей](/uk/sdk/security/troubleshooting): збоїв у діагностиці сесії, токена, початку та ініціалізації.
+- [Створити маркер вбудовування](/uk/sdk/agent-sdk/java/embed-token): приклад випуску бекенд-токена.
+- [Trading Widget Швидкий старт](/uk/sdk/trading-widget/quick-start): повний потік ініціалізації.
+- [Секрети та підписання](/uk/sdk/security/secrets-signing): зберігати облікові дані привілейованого агента на сервері.
+- [Усунення несправностей](/uk/sdk/security/troubleshooting): діагностувати помилки сеансу, маркера, джерела та ініціалізації.
 
 <span id="backend-flow" data-sixmm-canonical-anchor="backend-flow" aria-hidden="true"></span>
 
-## Бекенд-потік
+## Серверний потік
 
 ```text
 1. Partner frontend receives auth_request from the iframe.
@@ -60,32 +60,32 @@ const widget = TradingWidget.create('#trading-widget', {
 
 <span id="tokenprovider-contract" data-sixmm-canonical-anchor="tokenprovider-contract" aria-hidden="true"></span>
 
-## tokenProvider контракт
+## tokenProvider договір
 
-| Поле | Режисура | Опис |
+| Поле | Напрямок | опис |
 | --- | --- | --- |
-| channelId | SDK -> Партнерський бекенд | Унікальний ідентифікатор сесії віджета. Бекенд має передавати його createEmbedToken. |
-| Символ | SDK -> Партнерський бекенд | Поточний запитуваний торговий символ. Використовуйте його для обмеження токена, коли це потрібно. |
-| Причина | SDK -> Партнерський бекенд | Чому SDK запитує токен, наприклад, початкове завантаження або оновлення. |
-| embedToken | Партнерський бекенд -> SDK | Короткочасний токен, створений Agent SDK або агентом API. |
-| expireAt | Партнерський бекенд -> SDK | Термін дії токена повернений 6MM. |
+| channelId | SDK -> Партнерська серверна частина | Унікальний ідентифікатор сеансу віджета. Сервер має передати його createEmbedToken. |
+| символ | SDK -> Партнерська серверна частина | Поточний запитаний торговий символ. Використовуйте його для визначення області маркера, коли це необхідно. |
+| причина | SDK -> Партнерська серверна частина | Чому SDK запитує маркер, наприклад початкове завантаження або оновлення. |
+| embedToken | Партнерська серверна частина -> SDK | Короткочасний маркер, створений Agent SDK або агентом API. |
+| expireAt | Партнерська серверна частина -> SDK | Позначку часу закінчення терміну дії маркера повернуто 6MM. |
 
 <span id="failure-handling" data-sixmm-canonical-anchor="failure-handling" aria-hidden="true"></span>
 
-## Обробка відмов
+## Усунення несправностей
 
-| Стан | Рекомендоване поводження |
+| Хвороба | Рекомендоване поводження |
 | --- | --- |
-| Партнерна сесія закінчилася | Поверніть 401 з партнерської кінцевої точки і попросіть користувача увійти ще раз. |
-| Створення токена тимчасово не вдалося | Додайте помилку в tokenProvider і дозвольте віджету виявити помилку автентифікації. |
-| channelId невідповідність | Відхиліть запит і створіть екземпляр віджета. |
-| Користувач не має права торгувати | Поверніть помилку, контрольовану партнером, і не створюйте embed-токен. |
+| Сеанс партнера закінчився | Поверніть 401 від кінцевої точки партнера та попросіть користувача знову ввійти. |
+| Тимчасово не вдалося створити маркер | Видає помилку в tokenProvider і дозволяє віджету виявляти помилку авторизації. |
+| channelId невідповідність | Відхилити запит і повторно створити екземпляр віджета. |
+| Користувачеві заборонено торгувати | Повернути помилку, контрольовану партнером, і не створювати маркер вбудовування. |
 
 <span id="compatibility-mode-agent-sso" data-sixmm-canonical-anchor="compatibility-mode-agent-sso" aria-hidden="true"></span>
 
 ## Режим сумісності: agent-sso
 
-Agent-sso зберігає старий потік /agent-entry ticket. Віддавайте перевагу партнерському токені для нових інтеграцій.
+agent-sso зберігає старіший потік квитків /agent-entry. Віддайте перевагу маркеру партнера для нових інтеграцій.
 
 ```js
 const widget = TradingWidget.create('#trading-widget', {
@@ -105,3 +105,13 @@ const widget = TradingWidget.create('#trading-widget', {
   },
 })
 ```
+
+<span id="seconds-trading-and-environment-rules" data-sixmm-canonical-anchor="seconds-trading-and-environment-rules" aria-hidden="true"></span>
+
+## Секундна торгівля та правила середовища
+
+Для секундних сторінок використовуйте ту саму `partner-token` автентифікацію з `page` і `tradingMode`, налаштованими у віджеті. Немає окремого маркера передбачення. Кожен виклик tokenProvider має отримати свіжий одноразовий маркер із серверної частини.
+
+Повертає `embedToken`, `expireAt` у секундах Unix та оригінальний `channelId` як об’єкт верхнього рівня. Відповідь маркера Agent SDK не містить `channelId`; ваш сервер повторює поточний канал Widget. Якщо ваша кінцева точка загортає відповіді в `data`, розгорніть її перед поверненням із tokenProvider.
+
+[Повна секундна інтеграція](/uk/sdk/agent-sdk/java/seconds-trading) · [Посібник з охорони навколишнього середовища](/uk/sdk/agent-sdk/java/environments)

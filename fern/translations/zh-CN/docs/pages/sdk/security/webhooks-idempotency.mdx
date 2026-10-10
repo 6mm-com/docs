@@ -97,3 +97,13 @@ HTTP 超时不能证明原请求失败。再次操作前，应使用原始 `agen
 排查签名失败、重复事件和待确认操作。
 </Card>
 </CardGroup>
+
+<span data-sixmm-canonical-anchor="funding-与环境边界" aria-hidden="true"></span>
+
+## Funding 与环境边界
+
+原合约划转 Webhook 及 `queryOrder` 流程不自动适用于 Funding。Funding 操作使用 `queryWalletTransfer` 按原单和原环境确认。Funding 使用 `status`，原合约划转响应使用 `orderStatus`。HTTP 成功或 `code=0` 不单独证明资金划转已完成。
+
+显式模拟合约划转通知包含 `environment=SIMULATED`。先验证原始请求体，再与本地业务单核对用户、金额、订单身份和环境。
+
+[Funding 恢复指南](/zh-CN/sdk/agent-sdk/java/funding-wallet) · [环境指南](/zh-CN/sdk/agent-sdk/java/environments)

@@ -1,0 +1,104 @@
+---
+title: "Вічні торгові заповнення"
+subtitle: "Вічні торгові заповнення: Інтеграція Agent Java SDK v0.3.0, приклади, параметри та семантика відповіді."
+slug: sdk/agent-sdk/java/perpetual-trades
+canonical-url: https://docs.6mm.com/uk/sdk/agent-sdk/java/perpetual-trades
+---
+
+Цей посібник призначений для **Agent Java SDK `v0.3.0`**, Java 8+ і публічного контракту з тегами. Приклади виконуються в серверній частині партнера після ініціалізації `client` у [Швидкий старт](/uk/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## Приклад передумов
+
+Фрагменти Java поділяють ці імпортовані файли. Ініціалізуйте `client` за допомогою швидкого запуску та отримайте `platformUserId` із збереженого зв’язування. Приклади ідентифікаторів користувача/замовлення потрібно замінити вашими постійними значеннями.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span data-sixmm-canonical-anchor="listperpetualtrades" aria-hidden="true"></span>
+
+## `listPerpetualTrades`
+
+Модель запиту: `PerpetualTradesRequest`.
+
+```java
+import com.sixmm.agent.model.PerpetualTradesRequest;
+import com.sixmm.agent.model.PerpetualResponse;
+import java.util.Collections;
+
+PerpetualTradesRequest request = new PerpetualTradesRequest();
+request.platformUserIds = Collections.singletonList("1188041528");
+request.limit = 100;
+request.symbol = "BTCUSDT";
+request.endTime = System.currentTimeMillis();
+request.startTime = request.endTime - 3_600_000L;
+PerpetualResponse response = client.listPerpetualTrades(request);
+System.out.println(response.data.items.size());
+System.out.println(response.data.hasMore);
+System.out.println(response.data.nextCursor);
+```
+
+<span id="request-fields" data-sixmm-canonical-anchor="request-fields" aria-hidden="true"></span>
+
+### Поля запиту
+
+| Поле | Тип Java. | Обов'язковий | Значення |
+| --- | --- | --- | --- |
+| `platformUserIds` | `java.util.List<String>` | Умовний | 1–100 унікальних публічних ідентифікаторів; необхідні для заповнення та умовних замовлень. Пропустити підтримувані запити для області прямого гравця; [] недійсний. |
+| `symbol` | `String` | немає | Додатковий фільтр торгових пар. |
+| `orderId` | `String` | немає | ID звичайного замовлення; не номер замовлення на переказ партнера. |
+| `startTime` | `Long` | немає | Включно Unix мілісекунди; використовуйте фіксоване вікно історії UTC. |
+| `endTime` | `Long` | немає | Ексклюзивні мілісекунди Unix. |
+| `limit` | `Integer` | немає | За замовчуванням 500; 1–1000. |
+| `cursor` | `String` | немає | Використовуйте повернутий nextCursor із незмінними фільтрами; зупинятися, коли hasMore невірно. |
+
+Приклад читає одну сторінку. Для обов’язкових полів, обсягу гравця, семантики фільтра, обмеження, курсору та обмежених повторних спроб див [Огляд запиту](/uk/sdk/agent-sdk/java/perpetual-queries). Зберігайте всі фільтри незмінними під час перегляду сторінок; не інтерпретуйте помилку як порожній результат.
+
+<span id="transaction-details" data-sixmm-canonical-anchor="transaction-details" aria-hidden="true"></span>
+
+## Деталі торгового заповнення
+
+Інтерфейс: `trades`. Потрібен явний platformUserIds.
+
+| `data` поле | типу | значення |
+| --- | --- | --- |
+| `fillId` | string | Ідентифікатор даних про торгівлю, що відповідає цьому запису entityId |
+| `tradeId` | string | Ідентифікатор транзакції, що відповідає транзакції; не замінює детальний ідентифікатор |
+| `orderId` | string | Загальний ідентифікатор замовлення, до якого належить ця деталь |
+| `positionId` | string | Ідентифікатор пов’язаної позиції |
+| `symbol` | string | торгова пара |
+| `side` | string | Напрям купівлі та продажу цього гравця BUY / SELL |
+| `roleType` | string | Персонаж транзакції цього гравця MAKER / TAKER |
+| `positionSide` | string | Напрямок позиції, пояснений відповідно до фактичного значення LONG / SHORT / BOTH тощо. |
+| `price` | string | Ця ціна угоди |
+| `quantity` | string | Кількість цієї транзакції не є загальною кількістю оригінального замовлення. |
+| `tradeValue` | string | Номінальна вартість цієї операції походить від умовної вартості операції |
+| `handlingFee` | string | Комісія за цю транзакцію зберігає вихідний символ і точність і не приймає абсолютного значення. |
+| `realizedPnl` | string | Реалізований прибуток і збиток, що відповідають цій операції; не плаваючий прибуток і збиток поточної позиції в реальному часі |
+| `tradedAt` | integer | Час транзакції, мілісекунди; використовуйте це поле для фільтрації часу |
+
+Замовлення може мати кілька заповнень, які необхідно детально зберегти. Не об’єднуйте записи різних гравців/заповнюйте ролі за допомогою tradeId, а потім скидайте їхні записи.
+
+
+<span id="example-response-envelope" data-sixmm-canonical-anchor="example-response-envelope" aria-hidden="true"></span>
+
+## Приклад конверта відповіді
+
+Це ілюстративна порожня сторінка, а не зразок завершеної торгівлі. У наведених вище таблицях полів для певних ресурсів описано заповнені `items[].data`.
+
+```json
+{"code":0,"message":"success","data":{"items":[],"nextCursor":"","hasMore":false}}
+```
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Джерело та відповідні посібники
+
+- [Офіційне джерело v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Огляд запиту та розбивка на сторінки](/uk/sdk/agent-sdk/java/perpetual-queries)
+- [Гаманець для фінансування](/uk/sdk/agent-sdk/java/funding-wallet)
+- [Посібник з оновлення](/uk/sdk/agent-sdk/java/upgrade)

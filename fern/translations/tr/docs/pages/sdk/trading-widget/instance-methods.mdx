@@ -1,6 +1,6 @@
 ---
 title: "Örnek Yöntemleri"
-subtitle: "TradingWidget.create() girdikten sonra oluşturulan bir widget örneğini kontrol edin."
+subtitle: "TradingWidget.create() işleminden sonra oluşturulan bir widget örneğini kontrol edin."
 slug: sdk/trading-widget/instance-methods
 canonical-url: https://docs.6mm.com/tr/sdk/trading-widget/instance-methods
 ---
@@ -11,23 +11,23 @@ canonical-url: https://docs.6mm.com/tr/sdk/trading-widget/instance-methods
 
 | Yöntem | Amaç |
 | --- | --- |
-| yok et() | iframe'i kaldır ve etkinlik dinleyicilerini serbest bırak. |
-| getState() | Mevcut SDK yaşam döngüsü durumunu okuyun. |
-| whenReady() | iframe başlatmayı tamamlayana kadar bekleyin. |
-| setSymbol(sembol) | Ticaret çiftini iframe içinde değiştirin. |
+| tahrip etmek() | iframe'i kaldırın ve olay dinleyicilerini serbest bırakın. |
+| getState() | Geçerli SDK yaşam döngüsü durumunu okuyun. |
+| whenReady() | iframe'in başlatılması bitene kadar bekleyin. |
+| setSymbol(sembol) | İframe içindeki işlem çiftini değiştirin. |
 | setTheme(tema) | iframe tema parametresini güncelleyin. |
-| setLocale(bölge) | iframe dilini değiştirin. |
+| setLocale(yerel ayar) | iframe dilini değiştirin. |
 | setSize(genişlik, yükseklik) | iframe boyutlarını güncelleyin. |
-| reload() | Mevcut iframe'i yeniden yükleyin. |
-| refreshAuth(sebep) | Widget auth yenileme akışını tetikle. |
-| setTokenProvider(sağlayıcı) | Partner-token modunda kullanılan sağlayıcıyı değiştirin. |
-| On(etkinlik, yönetici) | Çalışma süresi etkinliklerine abone olun ve abonelikten çıkma fonksiyonu alın. |
+| yeniden yükle() | Geçerli iframe'i yeniden yükleyin. |
+| refreshAuth(sebep) | Widget kimlik doğrulama yenileme akışını tetikleyin. |
+| setTokenProvider(sağlayıcı) | İş ortağı belirteci modu tarafından kullanılan sağlayıcıyı değiştirin. |
+| on(olay, işleyici) | Çalışma zamanı etkinliklerine abone olun ve abonelikten çıkma işlevi alın. |
 
 <span id="destroy" data-sixmm-canonical-anchor="destroy" aria-hidden="true"></span>
 
-## yok et()
+## tahrip etmek()
 
-iframe'i kaldırın, dinleyicileri temizleyin ve mevcut örnek için bir kez yok edilmiş yayımlayın.
+Geçerli örnek için iframe'i kaldırın, dinleyicileri temizleyin ve yayının bir kez yok edilmesini sağlayın.
 
 ```js
 widget.destroy()
@@ -43,13 +43,13 @@ Widget örneğinin mevcut yaşam döngüsü durumunu okuyun.
 const state = widget.getState()
 ```
 
-İade değerleri arasında yükleme, doğrulama, hazır, hata ve yok etme bulunur.
+Dönüş değerleri arasında yükleme, kimlik doğrulama, hazır, hata ve yok etme bulunur.
 
 <span data-sixmm-canonical-anchor="whenready" aria-hidden="true"></span>
 
 ## whenReady()
 
-Bağımlı UI mantığı çalıştırmadan önce iframe'in başlatmayı tamamlamasını bekleyin.
+Bağımlı kullanıcı arayüzü mantığını çalıştırmadan önce iframe'in başlatma işlemini bitirmesini bekleyin.
 
 ```js
 await widget.whenReady()
@@ -59,7 +59,7 @@ await widget.whenReady()
 
 ## setSymbol(sembol)
 
-Ticaret çiftini iframe içinde değiştirin. iframe hâlâ başlatılıyorsa, SDK komutu sıraya alır ve hazır olduğunuzda gönderir.
+İframe içindeki işlem çiftini değiştirin. iframe hala başlatılıyorsa, SDK komutu sıraya alır ve hazır olduktan sonra gönderir.
 
 ```js
 widget.setSymbol('ETHUSDT')
@@ -69,7 +69,7 @@ widget.setSymbol('ETHUSDT')
 
 ## setTheme(tema)
 
-Gömülü işlem iframe'i tarafından kullanılan tema parametresini güncelleyin.
+Gömülü ticaret iframe'i tarafından kullanılan tema parametresini güncelleyin.
 
 ```js
 widget.setTheme('dark')
@@ -78,7 +78,7 @@ widget.setTheme('light')
 
 <span id="setlocale-locale" data-sixmm-canonical-anchor="setlocale-locale" aria-hidden="true"></span>
 
-## setLocale(bölge)
+## setLocale(yerel ayar)
 
 iframe dilini değiştirin. Desteklenen değerler en, en-US ve zh-CN'dir.
 
@@ -92,17 +92,17 @@ widget.setLocale('zh-CN')
 
 ## setSize(genişlik, yükseklik)
 
-iframe'in DOM boyutunu güncelleyin ve iframe'e yeni dış boyut hakkında bilgi verin. Sayısal değerler px'e dönüştürülür.
+iframe DOM boyutunu güncelleyin ve iframe'i yeni dış boyut hakkında bilgilendirin. Sayısal değerler piksele dönüştürülür.
 
 ```js
 widget.setSize('100%', 720)
 ```
 
-<span data-sixmm-canonical-anchor="reload" aria-hidden="true"></span>
+<span id="reload" data-sixmm-canonical-anchor="reload" aria-hidden="true"></span>
 
-## reload()
+## yeniden yükle()
 
-Mevcut iframe'i yeniden yükleyin ve tekrar başlatılmasını bekleyin.
+Geçerli iframe'i yeniden yükleyin ve yeniden başlatılmasını bekleyin.
 
 ```js
 widget.reload()
@@ -112,7 +112,7 @@ widget.reload()
 
 ## refreshAuth(sebep)
 
-iframe'den mevcut kimlik doğrulama akışını yenilemesini iste. Isteğe bağlı neden değeri ise logetme ve akış kontrolü için yönlendirilir.
+iframe'den mevcut kimlik doğrulama akışını yenilemesini isteyin. İsteğe bağlı neden değeri, günlük kaydı ve akış kontrolü için iletilir.
 
 ```js
 widget.refreshAuth('manual')
@@ -122,7 +122,7 @@ widget.refreshAuth('manual')
 
 ## setTokenProvider(sağlayıcı)
 
-Partner-token modunda kullanılan tokenProvider değiştirilir. SDK , iframe yeni bir gömme belirteçeği talep ettiğinde sağlayıcıyı arar.
+Ortak belirteç modu tarafından kullanılan tokenProvider'yi değiştirin. iframe yeni bir yerleştirme belirteci istediğinde SDK sağlayıcıyı arar.
 
 ```js
 widget.setTokenProvider(async ({ channelId, symbol, reason }) => {
@@ -139,9 +139,9 @@ widget.setTokenProvider(async ({ channelId, symbol, reason }) => {
 
 <span id="on-event-handler" data-sixmm-canonical-anchor="on-event-handler" aria-hidden="true"></span>
 
-## On(etkinlik, yönetici)
+## on(olay, işleyici)
 
-Bir süreli etkinlik etkinliğine abone olun. Geri dönen fonksiyon dinleyiciyi çıkarır.
+Bir çalışma zamanı etkinliğine abone olun. Döndürülen işlev dinleyiciyi kaldırır.
 
 ```js
 const off = widget.on('order_created', (event) => {
@@ -153,9 +153,32 @@ off()
 
 <span id="related-widget-guides" data-sixmm-canonical-anchor="related-widget-guides" aria-hidden="true"></span>
 
-## İlgili Widget rehberleri
+## İlgili Widget kılavuzları
 
 - [Trading Widget Hızlı Başlangıç](/tr/sdk/trading-widget/quick-start)
 - [Seçenekler ve Etkinlikler](/tr/sdk/trading-widget/options-events)
-- [Doğrulama](/tr/sdk/trading-widget/authentication)
-- [Sorun Giderme](/tr/sdk/security/troubleshooting)
+- [Kimlik doğrulama](/tr/sdk/trading-widget/authentication)
+- [Sorun giderme](/tr/sdk/security/troubleshooting)
+
+<span id="additional-methods-in-the-current-v1-runtime" data-sixmm-canonical-anchor="additional-methods-in-the-current-v1-runtime" aria-hidden="true"></span>
+
+## Geçerli v1 çalışma zamanındaki ek yöntemler
+
+| Yöntem | Amaç |
+| --- | --- |
+| `whenRendered()` | iframe'in oluşturulan bildirimini bekleyin; bu hazırdan ayrı. |
+| `setPage(page)` | Mevcut örnekte desteklenen bir ürün sayfası isteyin. Fon ortamını değiştirmez. |
+| `prepareForRecreate()` | Değiştirmeye hazırlanmak için hazır bir iframe isteyin; bir söz verir ve müsait değilse, meşgulse veya zaman aşımına uğramışsa reddedebilir. |
+| `cancelRecreate()` | Bekleyen/hazırlanan bir değiştirme akışını iptal edin. |
+| `TradingWidget.validateOptions(options)` | Örnek oluşturmadan önce başlatma seçeneklerini doğrulayın. |
+
+Bir kullanıcı veya gerçek/demo ortamı değişikliği için eski örneği yok edin ve hedef kimlik doğrulaması ve moduyla yeni bir tane oluşturun. Ortam anahtarı olarak `setPage` kullanmayın. İsteğe bağlı yöntemleri kullanmadan önce yetenekleri kontrol edin.
+
+```js
+if (TradingWidget.capabilities.methods.includes('whenRendered')) {
+  await widget.whenRendered();
+}
+if (TradingWidget.capabilities.pages.includes('up-down')) {
+  widget.setPage('up-down');
+}
+```

@@ -1,29 +1,29 @@
 ---
 title: "Trading Widget SDK"
 headline: "6MM Trading Widget SDK 통합 문서"
-description: "6MM 디지털 자산 거래 터미널을 파트너 웹사이트에 안전하게 인증, 디스플레이 제어, 런타임 메서드, 라이프사이클 이벤트를 포함해 내장하는 방법을 배워보세요."
+description: "보안 인증, 디스플레이 제어, 런타임 방법 및 수명주기 이벤트를 통해 파트너 웹사이트에 6MM 디지털 자산 거래 터미널을 삽입하는 방법을 알아보세요."
 slug: sdk/trading-widget/overview
 canonical-url: https://docs.6mm.com/ko/sdk/trading-widget/overview
 ---
 
 <span id="responsibility-split" data-sixmm-canonical-anchor="responsibility-split" aria-hidden="true"></span>
 
-## 책임 분담
+## 책임 분할
 
-| 면적 | 소유주 | 주석 |
+| 영역 | 소유자 | 메모 |
 | --- | --- | --- |
-| 컨테이너 생성 | 파트너 프론트엔드 | 명확한 너비와 높이가 있는 가시 요소를 제공하세요. |
-| iframe 생성 | Trading Widget SDK | SDK이 iframe을 생성하고 관리합니다. |
-| 트레이딩 UI | 6MM iframe | K-라인, 주문장부, 주문서, 포지션, 주문, 계정 데이터가 iframe 내에서 실행됩니다. |
-| 디스플레이 제어 | Trading Widget SDK + 6MM iframe | PC 임베드 헤더와 하단 티커는 기본적으로 숨겨져 있습니다. 파트너는 `display` 을 이용해 셸 지역을 보여주거나 고급 거래 컨테이너를 숨길 수 있습니다. |
-| 파트너 로그인 확인 | 파트너 백엔드 | 인증 증명을 발급하기 전에 파트너 사용자 세션을 검증하세요. |
-| 임베드 토큰 발행 | 파트너 백엔드 + 에이전트 API | 파트너-토큰 모드에 추천합니다. |
+| 컨테이너 생성 | 파트너 프런트엔드 | 명시적인 너비와 높이로 표시 요소를 제공합니다. |
+| iframe 생성 | Trading Widget SDK | SDK는 iframe을 생성하고 관리합니다. |
+| 거래 UI | 6MM iframe | K-line, 주문장, 주문 양식, 포지션, 주문 및 계정 데이터가 iframe 내에서 실행됩니다. |
+| 디스플레이 컨트롤 | Trading Widget SDK + 6MM iframe | PC 삽입 헤더와 하단 티커는 기본적으로 숨겨져 있습니다. 파트너는 `display`을 사용하여 쉘 영역을 표시하거나 상위 수준의 거래 컨테이너를 숨길 수 있습니다. |
+| 파트너 로그인 확인 | 파트너 백엔드 | 인증 자격 증명을 발급하기 전에 파트너 사용자 세션의 유효성을 검사하세요. |
+| 임베디드 토큰 발행 | 파트너 백엔드 + 에이전트 API | 파트너 토큰 모드에 권장됩니다. |
 
 <span id="versioning" data-sixmm-canonical-anchor="versioning" aria-hidden="true"></span>
 
 ## 버전 관리
 
-공개 통합 경로는 v1 스크립트 URL 하에서 안정적으로 유지됩니다. 현재 v1 기능 세트에는 파트너 토큰, tokenProvider, entryUrlProvider, 디스플레이 컨트롤, 라이프사이클 이벤트, 인스턴스 메서드, 명령 이벤트가 포함됩니다.
+공개 통합 경로는 v1 스크립트 URL 에서 안정적으로 유지됩니다. 현재 v1 기능 세트에는 파트너 토큰, tokenProvider, entryUrlProvider, 디스플레이 제어, 수명 주기 이벤트, 인스턴스 메서드 및 주문 이벤트가 포함됩니다.
 
 ```html
 <script src="https://app.6mm.com/sdk/trading-widget/v1/index.js"></script>
@@ -31,15 +31,23 @@ canonical-url: https://docs.6mm.com/ko/sdk/trading-widget/overview
 
 <span id="when-to-use-the-widget" data-sixmm-canonical-anchor="when-to-use-the-widget" aria-hidden="true"></span>
 
-## 위젯을 언제 사용해야 하는지에 대해
+## 위젯을 사용해야 하는 경우
 
-파트너가 기존 웹 제품 내에 완전한 거래 인터페이스가 필요할 때 Trading Widget 선택하세요. 완전 맞춤형 거래 인터페이스를 구축하고 유지할 때는 REST API 및 WebSocket 문서를 활용하세요.
+파트너가 기존 웹 제품 내에서 완전한 거래 인터페이스가 필요한 경우 Trading Widget를 선택하십시오. 완전한 맞춤형 거래 인터페이스를 구축하고 유지 관리할 때는 REST API 및 WebSocket 문서를 대신 사용하세요.
 
 <span id="implementation-path" data-sixmm-canonical-anchor="implementation-path" aria-hidden="true"></span>
 
 ## 구현 경로
 
-1. 다음에 따라 [Trading Widget 퀵 스타트](/ko/sdk/trading-widget/quick-start) 스크립트를 불러와서 가시적인 컨테이너를 생성하는 것입니다.
-2. 구성 [파트너 토큰 인증](/ko/sdk/trading-widget/authentication) 파트너 백엔드를 통해서요.
-3. 필요한 추가 [옵션 및 이벤트](/ko/sdk/trading-widget/options-events).
-4. 사용 [인스턴스 메서드](/ko/sdk/trading-widget/instance-methods) 라이프사이클 및 런타임 제어를 위한 것입니다.
+1. 따라가다 [Trading Widget 빠른 시작](/ko/sdk/trading-widget/quick-start) 스크립트를 로드하고 표시되는 컨테이너를 만듭니다.
+2. 구성 [파트너 토큰 인증](/ko/sdk/trading-widget/authentication) 파트너 백엔드를 통해.
+3. 필수 추가 [옵션과 이벤트](/ko/sdk/trading-widget/options-events).
+4. 사용 [인스턴스 메소드](/ko/sdk/trading-widget/instance-methods) 수명주기 및 런타임 제어를 위해.
+
+<span id="verified-public-runtime" data-sixmm-canonical-anchor="verified-public-runtime" aria-hidden="true"></span>
+
+## 검증된 공개 런타임
+
+공개 `v1` 스크립트는 2026년 10월 10일 기준 `1.8.0` 버전을 보고합니다. 이 URL 는 고정된 빌드가 아닌 안정적인 주요 버전 진입점입니다. 선택적 기능을 사용하기 전에 로드된 런타임에서 `TradingWidget.version` 및 `TradingWidget.capabilities`를 읽어보세요. Java Agent SDK `v0.3.0`는 별도의 백엔드 패키지입니다.
+
+런타임은 단일 활성 인스턴스(`multiInstance=false`)를 지원합니다. 다른 위젯을 생성하면 이전 인스턴스가 삭제됩니다. 지원되는 로케일은 20개의 문서 언어와 관계없이 `en`, `en-US` 및 `zh-CN`입니다.

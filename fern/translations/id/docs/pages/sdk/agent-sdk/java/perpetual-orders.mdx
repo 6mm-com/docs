@@ -1,0 +1,186 @@
+---
+title: "Perintah Abadi"
+subtitle: "Perintah Abadi: Agent Java SDK integrasi v0.3.0, contoh, parameter, dan semantik respons."
+slug: sdk/agent-sdk/java/perpetual-orders
+canonical-url: https://docs.6mm.com/id/sdk/agent-sdk/java/perpetual-orders
+---
+
+Panduan ini menargetkan **Agent Java SDK `v0.3.0`**, Java 8+, dan kontrak publik yang diberi tag. Contoh dijalankan di backend mitra setelah menginisialisasi `client` di [Mulai Cepat](/id/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## Contoh prasyarat
+
+Cuplikan Java membagikan impor ini. Inisialisasi `client` menggunakan Quick Start dan dapatkan `platformUserId` dari pengikatan yang disimpan. Contoh ID pengguna/pesanan harus diganti dengan nilai Anda yang tetap.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span data-sixmm-canonical-anchor="listcurrentperpetualorders" aria-hidden="true"></span>
+
+## `listCurrentPerpetualOrders`
+
+Model permintaan: `CurrentPerpetualOrdersRequest`.
+
+```java
+import com.sixmm.agent.model.CurrentPerpetualOrdersRequest;
+import com.sixmm.agent.model.PerpetualResponse;
+import java.util.Collections;
+
+CurrentPerpetualOrdersRequest request = new CurrentPerpetualOrdersRequest();
+request.platformUserIds = Collections.singletonList("1188041528");
+request.limit = 100;
+request.orderCategory = "NORMAL";
+request.symbol = "BTCUSDT";
+PerpetualResponse response = client.listCurrentPerpetualOrders(request);
+System.out.println(response.data.items.size());
+System.out.println(response.data.hasMore);
+System.out.println(response.data.nextCursor);
+```
+
+<span id="request-fields" data-sixmm-canonical-anchor="request-fields" aria-hidden="true"></span>
+
+### Bidang permintaan
+
+| Bidang | Java ketik | Diperlukan | Arti |
+| --- | --- | --- | --- |
+| `orderCategory` | `String` | Ya | NORMAL atau CONDITIONAL; kueri bersyarat memerlukan pengguna eksplisit. |
+| `platformUserIds` | `java.util.List<String>` | Bersyarat | 1–100 ID publik unik; diperlukan untuk pengisian dan pesanan bersyarat. Hilangkan kueri yang didukung untuk cakupan pemain langsung; [] tidak valid. |
+| `symbol` | `String` | TIDAK | Filter pasangan dagang opsional. |
+| `limit` | `Integer` | TIDAK | Bawaan 500; 1–1000. |
+| `cursor` | `String` | TIDAK | Gunakan nextCursor yang dikembalikan dengan filter yang tidak berubah; berhenti ketika hasMore salah. |
+
+Contohnya berbunyi satu halaman. Untuk bidang yang wajib diisi, cakupan pemain, semantik filter, batas, kursor, dan percobaan ulang terbatas, ikuti [Ikhtisar kueri](/id/sdk/agent-sdk/java/perpetual-queries). Biarkan semua filter tidak berubah saat melakukan paging; jangan menafsirkan kesalahan sebagai hasil kosong.
+
+<span data-sixmm-canonical-anchor="listperpetualorderhistory" aria-hidden="true"></span>
+
+## `listPerpetualOrderHistory`
+
+Model permintaan: `PerpetualOrderHistoryRequest`.
+
+```java
+import com.sixmm.agent.model.PerpetualOrderHistoryRequest;
+import com.sixmm.agent.model.PerpetualResponse;
+import java.util.Collections;
+
+PerpetualOrderHistoryRequest request = new PerpetualOrderHistoryRequest();
+request.platformUserIds = Collections.singletonList("1188041528");
+request.limit = 100;
+request.orderCategory = "NORMAL";
+request.symbol = "BTCUSDT";
+request.endTime = System.currentTimeMillis();
+request.startTime = request.endTime - 3_600_000L;
+PerpetualResponse response = client.listPerpetualOrderHistory(request);
+System.out.println(response.data.items.size());
+System.out.println(response.data.hasMore);
+System.out.println(response.data.nextCursor);
+```
+
+<span id="request-fields-1" data-sixmm-canonical-anchor="request-fields-1" aria-hidden="true"></span>
+
+### Bidang permintaan
+
+| Bidang | Java ketik | Diperlukan | Arti |
+| --- | --- | --- | --- |
+| `orderCategory` | `String` | Ya | NORMAL atau CONDITIONAL; kueri bersyarat memerlukan pengguna eksplisit. |
+| `platformUserIds` | `java.util.List<String>` | Bersyarat | 1–100 ID publik unik; diperlukan untuk pengisian dan pesanan bersyarat. Hilangkan kueri yang didukung untuk cakupan pemain langsung; [] tidak valid. |
+| `symbol` | `String` | TIDAK | Filter pasangan dagang opsional. |
+| `orderId` | `String` | TIDAK | ID pesanan biasa; bukan nomor pesanan transfer mitra. |
+| `conditionId` | `String` | TIDAK | ID pesanan bersyarat; jangan campur dengan orderId. |
+| `clientOrderId` | `String` | TIDAK | Referensi pesanan klien perdagangan, bukan agentOrderNo. |
+| `side` | `String` | TIDAK | BUY / SELL filter. |
+| `status` | `String` | TIDAK | Status spesifik sumber daya; lihat referensi status. |
+| `startTime` | `Long` | TIDAK | Milidetik Unix inklusif; gunakan jendela riwayat UTC yang tetap. |
+| `endTime` | `Long` | TIDAK | Milidetik Unix eksklusif. |
+| `limit` | `Integer` | TIDAK | Bawaan 500; 1–1000. |
+| `cursor` | `String` | TIDAK | Gunakan nextCursor yang dikembalikan dengan filter yang tidak berubah; berhenti ketika hasMore salah. |
+
+Contohnya berbunyi satu halaman. Untuk bidang yang wajib diisi, cakupan pemain, semantik filter, batas, kursor, dan percobaan ulang terbatas, ikuti [Ikhtisar kueri](/id/sdk/agent-sdk/java/perpetual-queries). Biarkan semua filter tidak berubah saat melakukan paging; jangan menafsirkan kesalahan sebagai hasil kosong.
+
+<span id="ordinary-delegation-current-and-history" data-sixmm-canonical-anchor="ordinary-delegation-current-and-history" aria-hidden="true"></span>
+
+## Perintah biasa: terkini dan sejarah
+
+Saat ini: `orders/current` + `orderCategory=NORMAL`; Riwayat: `orders/history` + `orderCategory=NORMAL`.
+
+| `data` bidang | jenis | Arti dan ruang lingkup penerapan |
+| --- | --- | --- |
+| `symbol` | string | Pasangan perdagangan, seperti BTCUSDT |
+| `orderId` | string | ID pesanan biasa platform |
+| `orderCategory` | string | Memperbaiki NORMAL |
+| `clientOrderId` | string | Nomor pesanan klien yang diberikan oleh sumber pesanan transaksi; bukan kolom yang sama dengan transfer dana merchant agentOrderNo |
+| `orderType` | string | Jenis delegasi, seperti LIMIT, MARKET; nilai pencacahan sebenarnya yang berlaku |
+| `side` | string | Arah jual beli BUY / SELL |
+| `status` | string | Status pesanan biasa, lihat ikhtisar kueri |
+| `timeInForce` | string | Masa berlaku/strategi eksekusi transaksi, seperti GTC, IOC, FOK; diinterpretasikan menurut nilai sebenarnya |
+| `price` | string | harga yang dipercayakan; dapat dihilangkan jika tidak ada harga yang diberikan, dan harga transaksi pasar tidak akan ditambah sendiri. |
+| `quantity` | string | Jumlah pesanan asli |
+| `filledQuantity` | string | Kuantitas transaksi |
+| `remainingQuantity` | string | Kuantitas yang belum ditransaksikan; kueri saat ini mengambil kuantitas − filledQuantity, dan kueri historis mengambil nilai catatan historis |
+| `avgFilledPrice` | string | Harga transaksi rata-rata dari bagian yang diselesaikan; mungkin tidak ada nilainya jika tidak selesai |
+| `reduceOnly` | boolean | Apakah hanya akan mengurangi posisi |
+| `closeOnly` | boolean | Entah itu hanya digunakan untuk menutup posisi |
+| `makerOnly` | boolean | Apakah akan mengeksekusi hanya sebagai Pembuat |
+| `leverage` | integer | Manfaatkan banyak; **Urutan biasa historis** memiliki sumber, dan tatanan biasa saat ini tidak menghasilkan nilai ini |
+| `marginMode` | string | Modus margin; **Urutan biasa historis** saat ini mengembalikan string enumerasi numerik, seperti "1", "2"; pesanan biasa saat ini tidak disediakan |
+| `createdAt` | integer | Waktu pembuatan pesanan, milidetik; gunakan bidang ini untuk memfilter waktu pemesanan historis |
+| `updatedAt` | integer | Delegasikan waktu pembaruan catatan, milidetik |
+
+Riwayat pesanan mencakup pesanan biasa yang dihentikan. Setiap catatan tidak dapat dianggap selesai sepenuhnya berdasarkan nama antarmuka saja. Halaman pesanan saat ini adalah kueri status saat ini, bukan aliran peristiwa pesanan.
+
+
+<span id="conditional-delegation-current-and-history" data-sixmm-canonical-anchor="conditional-delegation-current-and-history" aria-hidden="true"></span>
+
+## Perintah bersyarat: terkini dan sejarah
+
+Saat ini: `orders/current` + `orderCategory=CONDITIONAL`; Riwayat: `orders/history` + `orderCategory=CONDITIONAL`. Keduanya memerlukan platformUserIds secara eksplisit.
+
+| `data` bidang | jenis | arti |
+| --- | --- | --- |
+| `symbol` | string | pasangan perdagangan |
+| `conditionId` | string | ID pesanan bersyarat, tidak bergantung pada orderId biasa |
+| `orderCategory` | string | Memperbaiki CONDITIONAL |
+| `generatedOrderId` | string | ID pesanan biasa dihasilkan setelah pemicuan; dapat dihilangkan jika tidak dibuat |
+| `clientOrderId` | string | Nomor pesanan klien dari pesanan bersyarat, dikeluarkan jika ada |
+| `side` | string | BUY / SELL |
+| `orderType` | string | Jenis pesanan pasca-pemicu, ditafsirkan berdasarkan nilai sebenarnya |
+| `triggerType` | string | Jenis aturan pemicu, dijelaskan oleh enumerasi sumber sebenarnya |
+| `workingType` | string | Jenis pekerjaan/sumber harga yang memicu harga, ditafsirkan sebagai pencacahan sebenarnya |
+| `timeInForce` | string | Masa berlaku/strategi eksekusi pesanan setelah dipicu |
+| `price` | string | Harga pesanan setelah dipicu, dikeluarkan ketika sumber memiliki nilai |
+| `quantity` | string | Jumlah pesanan bersyarat |
+| `triggerPrice` | string | harga pemicu |
+| `reduceOnly` | boolean | Apakah hanya akan mengurangi posisi |
+| `closePosition` | boolean | Apakah akan menggunakan semantik penutupan posisi penuh, jangan bingung dengan closeOnly sebagai bidang yang sama |
+| `leverage` | integer | Manfaatkan kelipatan, hasilkan saat bukan nol |
+| `marginMode` | string | Kelas ini mengembalikan CROSS / ISOLATED, yang merupakan string numerik yang berbeda dari urutan/posisi historis biasa |
+| `status` | string | Status pemicu tunggal bersyarat, lihat ikhtisar kueri |
+| `triggerStatus` | string | Implementasi saat ini menggunakan nilai status bersyarat yang sama dengan status |
+| `createdAt` | integer | Waktu pembuatan pesanan bersyarat, milidetik; kondisi sejarah disaring pada saat ini |
+| `updatedAt` | integer | Perbarui waktu, keluaran ketika ada nilai, milidetik |
+| `deletedAt` | integer | Hapus waktu tanda, keluaran ketika ada nilai, milidetik; ini bukan bidang waktu transaksi/pembatalan terpadu |
+
+Pesanan bersyarat tidak menyediakan filledQuantity, remainingQuantity, avgFilledPrice untuk pesanan biasa. Jika Anda memerlukan status transaksi pesanan biasa setelah dipicu, tanyakan pesanan/transaksi biasa melalui generatedOrderId, dan jangan menyimpulkan volume transaksi dari status pesanan bersyarat.
+
+
+<span id="example-response-envelope" data-sixmm-canonical-anchor="example-response-envelope" aria-hidden="true"></span>
+
+## Contoh amplop tanggapan
+
+Ini adalah halaman kosong ilustrasi, bukan contoh perdagangan yang telah selesai. Tabel bidang khusus sumber daya di atas menjelaskan `items[].data` yang terisi.
+
+```json
+{"code":0,"message":"success","data":{"items":[],"nextCursor":"","hasMore":false}}
+```
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Sumber dan panduan terkait
+
+- [Sumber resmi v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Ikhtisar kueri dan penomoran halaman](/id/sdk/agent-sdk/java/perpetual-queries)
+- [Dompet pendanaan](/id/sdk/agent-sdk/java/funding-wallet)
+- [Panduan peningkatan](/id/sdk/agent-sdk/java/upgrade)

@@ -1,7 +1,7 @@
 ---
 title: "Trading Widget SDK"
 headline: "6MM Trading Widget SDK Documentazione di integrazione"
-description: "Impara come incorporare il terminale di trading di asset digitali 6MM in un sito partner con autenticazione sicura, controlli di visualizzazione, metodi di esecuzione e eventi del ciclo di vita."
+description: "Scopri come incorporare il terminale di trading di asset digitali 6MM in un sito web partner, con autenticazione sicura, controlli di visualizzazione, metodi di runtime ed eventi del ciclo di vita."
 slug: sdk/trading-widget/overview
 canonical-url: https://docs.6mm.com/it/sdk/trading-widget/overview
 ---
@@ -10,20 +10,20 @@ canonical-url: https://docs.6mm.com/it/sdk/trading-widget/overview
 
 ## Divisione delle responsabilità
 
-| Area | Proprietario | Note |
+| Zona | Proprietario | Note |
 | --- | --- | --- |
-| Creazione di contenitori | Frontend partner | Fornire un elemento visibile con larghezza e altezza esplicite. |
-| Creazione iframe | Trading Widget SDK | Il SDK crea e gestisce l'iframe. |
-| Interfaccia di Trading | 6MM iframe | K-line, libretto ordini, modulo d'ordine, posizioni, ordini e dati del conto vengono eseguiti all'interno dell'iframe. |
-| Controlli di visualizzazione | Trading Widget SDK + 6MM iframe | L'intestazione e il ticker inferiore del PC embed sono nascosti di default. I partner possono usare `display` per mostrare le aree delle shell o nascondere container di trading di alto livello. |
-| Controllo login partner | Backend partner | Valida la sessione utente partner prima di rilasciare le credenziali di autenticazione. |
-| Emissione di token di incorporamento | Backend partner + Agente API | Consigliato per la modalità partner-token. |
+| Creazione del contenitore | Front-end partner | Fornire un elemento visibile con larghezza e altezza esplicite. |
+| creazione dell'iframe | Trading Widget SDK | Il SDK crea e gestisce l'iframe. |
+| Interfaccia utente commerciale | 6MM iframe | K-line, portafoglio ordini, modulo d'ordine, posizioni, ordini e dati del conto vengono eseguiti all'interno dell'iframe. |
+| Visualizza i controlli | Trading Widget SDK + 6MM iframe | L'intestazione incorporata nel PC e il ticker inferiore sono nascosti per impostazione predefinita. I partner possono utilizzare `display` per mostrare aree di shell o nascondere contenitori commerciali di alto livello. |
+| Controllo dell'accesso del partner | Back-end partner | Convalidare la sessione dell'utente partner prima di emettere le credenziali di autenticazione. |
+| Incorpora l'emissione di token | Backend partner + Agente API | Consigliato per la modalità token partner. |
 
-<span data-sixmm-canonical-anchor="versioning" aria-hidden="true"></span>
+<span id="versioning" data-sixmm-canonical-anchor="versioning" aria-hidden="true"></span>
 
-## Versioning
+## Controllo delle versioni
 
-Il percorso di integrazione pubblica rimane stabile sotto lo script v1 URL. L'attuale set di capacità v1 include partner-token, tokenProvider, entryUrlProvider, controlli di visualizzazione, eventi del ciclo di vita, metodi di istanza ed eventi di ordine.
+Il percorso di integrazione pubblico rimane stabile nello script v1 URL. L'attuale set di funzionalità v1 include token partner, tokenProvider, entryUrlProvider, controlli di visualizzazione, eventi del ciclo di vita, metodi di istanza ed eventi di ordine.
 
 ```html
 <script src="https://app.6mm.com/sdk/trading-widget/v1/index.js"></script>
@@ -31,15 +31,23 @@ Il percorso di integrazione pubblica rimane stabile sotto lo script v1 URL. L'at
 
 <span id="when-to-use-the-widget" data-sixmm-canonical-anchor="when-to-use-the-widget" aria-hidden="true"></span>
 
-## Quando usare il widget
+## Quando utilizzare il widget
 
-Scegli Trading Widget quando un partner ha bisogno di un'interfaccia di trading completa all'interno di un prodotto web esistente. Usa invece la documentazione REST API e WebSocket quando costruisci e mantieni un'interfaccia di trading completamente personalizzata.
+Scegli Trading Widget quando un partner necessita di un'interfaccia di trading completa all'interno di un prodotto web esistente. Utilizza invece la documentazione REST API e WebSocket quando crei e mantieni un'interfaccia di trading completamente personalizzata.
 
 <span id="implementation-path" data-sixmm-canonical-anchor="implementation-path" aria-hidden="true"></span>
 
 ## Percorso di implementazione
 
 1. Segui il [Trading Widget Avvio rapido](/it/sdk/trading-widget/quick-start) per caricare lo script e creare un contenitore visibile.
-2. Configura [Autenticazione partner-token](/it/sdk/trading-widget/authentication) tramite un backend partner.
-3. Aggiungere il necessario [Opzioni ed eventi](/it/sdk/trading-widget/options-events).
-4. Utilizzo [Metodi di istanza](/it/sdk/trading-widget/instance-methods) per i controlli del ciclo di vita e dell'esecuzione.
+2. Configura [autenticazione token partner](/it/sdk/trading-widget/authentication) attraverso un backend partner.
+3. Aggiungi il necessario [opzioni ed eventi](/it/sdk/trading-widget/options-events).
+4. Utilizzo [metodi di istanza](/it/sdk/trading-widget/instance-methods) per i controlli del ciclo di vita e del runtime.
+
+<span id="verified-public-runtime" data-sixmm-canonical-anchor="verified-public-runtime" aria-hidden="true"></span>
+
+## Runtime pubblico verificato
+
+Lo script pubblico `v1` riporta la versione `1.8.0` a partire dal 10-10-2026. Questo URL è un punto di ingresso stabile della versione principale, non una build bloccata. Leggi `TradingWidget.version` e `TradingWidget.capabilities` nel runtime caricato prima di utilizzare funzionalità opzionali. Java Agent SDK `v0.3.0` è un pacchetto backend separato.
+
+Il runtime supporta una singola istanza attiva (`multiInstance=false`); la creazione di un altro widget distrugge l'istanza precedente. Le versioni locali supportate sono `en`, `en-US` e `zh-CN`, indipendentemente dalle 20 lingue della documentazione.

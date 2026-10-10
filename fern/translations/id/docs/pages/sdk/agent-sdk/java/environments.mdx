@@ -1,0 +1,99 @@
+---
+title: "Produksi & Simulasi Perdagangan"
+subtitle: "Produksi & Simulasi Perdagangan: Agent Java SDK integrasi v0.3.0, contoh, parameter, dan semantik respons."
+slug: sdk/agent-sdk/java/environments
+canonical-url: https://docs.6mm.com/id/sdk/agent-sdk/java/environments
+---
+
+Panduan ini menargetkan **Agent Java SDK `v0.3.0`** dan Java 8+.
+
+<span id="choose-both-the-frontend-mode-and-the-funds-environment" data-sixmm-canonical-anchor="choose-both-the-frontend-mode-and-the-funds-environment" aria-hidden="true"></span>
+
+## Pilih mode frontend dan lingkungan dana
+
+Konfigurasikan lingkungan dana backend mitra secara terpisah dari mode perdagangan frontend. Kredensial pengikatan dan entri dibagikan; menerbitkan tiket atau token tidak memilih dompet atau memindahkan dana.
+
+| Konfigurasi | Produksi | Disimulasikan |
+| --- | --- | --- |
+| Pengikatan dan otentikasi | Pengikatan pengguna bersama dan kredensial satu kali | Identitas dan otentikasi yang sama |
+| Transfer baru dan saldo pengguna | Hilangkan `environment` atau gunakan `PRODUCTION` | Gunakan `SIMULATED` secara eksplisit |
+| Mendanai pemulihan pesanan awal | Gunakan lingkungan asli yang disimpan | Gunakan lingkungan asli yang disimpan |
+| Mode perdagangan widget | `tradingMode=real` | `tradingMode=demo` |
+| Bagian depan HTTP/target WS | Target produksi dipasok oleh 6MM | Target simulasi disediakan oleh 6MM |
+| Enam kueri data abadi | Data produksi | Tidak ada pemilih lingkungan; metode ini tidak menanyakan data simulasi |
+
+Untuk `wallet-transfer-status`, menghilangkan `environment` akan menggunakan lingkungan tersimpan pesanan asli, termasuk pesanan simulasi. Lingkungan yang secara eksplisit bertentangan ditolak. Lebih suka menyimpan lingkungan dan meneruskannya secara eksplisit saat memulihkan operasi.
+
+`isSimulatedUser` menjelaskan akun tersebut. Itu tidak merutekan permintaan baru ke dompet simulasi. Menghilangkan `environment` pada permintaan dana baru tetap memilih produksi, meskipun tanda akun benar.
+
+<span id="supported-java-request-models" data-sixmm-canonical-anchor="supported-java-request-models" aria-hidden="true"></span>
+
+## Model permintaan Java yang didukung
+
+Permintaan ini mendukung `withEnvironment(ExecutionEnvironment.SIMULATED)`:
+
+- `TransferRequest`, `TransferAllOutRequest`, `ReverseOrderRequest`.
+- `QueryOrderRequest`, `ListOrdersRequest`.
+- `QueryUserAssetsRequest`.
+- `WalletTransferRequest`, `WalletTransferQueryRequest`.
+
+`bind`, `queryAccount`, `createEntryUrl`, `createEmbedToken`, dan enam model permintaan kueri abadi tidak memilih lingkungan dana.
+
+```java
+import com.sixmm.agent.model.ExecutionEnvironment;
+import com.sixmm.agent.model.QueryUserAssetsRequest;
+import com.sixmm.agent.model.QueryUserAssetsResponse;
+
+QueryUserAssetsResponse assets = client.queryUserAssets(
+        QueryUserAssetsRequest.of("1188041528")
+                .withFunding()
+                .withEnvironment(ExecutionEnvironment.SIMULATED));
+```
+
+Inisialisasi `client` menggunakan [Mulai Cepat](/id/sdk/agent-sdk/java/quick-start) dan gunakan ID pengguna publik dari pengikatan tersimpan Anda.
+
+<span id="preserve-the-original-environment" data-sixmm-canonical-anchor="preserve-the-original-environment" aria-hidden="true"></span>
+
+## Melestarikan lingkungan aslinya
+
+Pertahankan jenis antarmuka, `agentOrderNo`, identitas pengguna, dan lingkungan sebelum mengirim permintaan dana. Pertahankan lingkungan tersebut selama kueri status, pemulihan, rekonsiliasi, dan pemrosesan webhook. Setelah batas waktu habis, jangan pernah mencoba lagi dengan menghilangkan lingkungan asli atau menggunakan nomor pesanan baru.
+
+Transfer Pendanaan/Kontrak tetap dalam satu lingkungan. Dana simulasi tidak bisa menjadi dana produksi. Gunakan akuntansi simulasi sisi mitra yang terpisah dan awalan pesanan yang dapat dikenali seperti `SIM-`.
+
+<span id="simulated-integration-sequence" data-sixmm-canonical-anchor="simulated-integration-sequence" aria-hidden="true"></span>
+
+## Urutan integrasi yang disimulasikan
+
+1. Ikat pengguna dan simpan ID pengguna platform publik.
+2. Saldo kueri dengan `SIMULATED` eksplisit dan sertakan Pendanaan bila diperlukan.
+3. Buat simulasi transfer Pendanaan kecil dan pertahankan pesanan bisnis aslinya.
+4. Konfirmasikan hasil akhir dengan kueri status Pendanaan khusus.
+5. Buka atau sematkan halaman detik target dalam mode `demo`.
+6. Kueri dompet simulasi yang sama dan rekonsiliasi jumlah sebenarnya yang ditransfer.
+7. Untuk menguji perdagangan abadi, transfer Pendanaan simulasi ke Kontrak simulasi dan gunakan antarmuka berjangka simulasi. Enam kueri abadi mitra tidak dapat memvalidasi riwayat perdagangan yang disimulasikan.
+
+<span id="acceptance-checklist" data-sixmm-canonical-anchor="acceptance-checklist" aria-hidden="true"></span>
+
+## Daftar periksa penerimaan
+
+| Skenario | Bukti untuk diverifikasi |
+| --- | --- |
+| Identitas | Pemetaan pengguna yang terikat disimpan; pengguna mitra lain tidak dapat ditanyai. |
+| Otentikasi | Alur pengalihan dan penyematan menggunakan kredensial baru; penandatanganan tidak membuat pesanan dana. |
+| Dana | Kedua belah pihak menyepakati jumlah sebenarnya dan status akhir. |
+| Hasil tidak diketahui | Pemulihan menggunakan pesanan awal tanpa membuat transfer kedua. |
+| Isolasi lingkungan | Target backend dan frontend yang disimulasikan setuju; keseimbangan produksi tidak terpengaruh. |
+| Pertanyaan | Filter pengguna/kategori yang diperlukan, jendela milidetik, halaman kosong, dan kursor ditangani. |
+| Batasan tarif | Semua penelepon kueri berbagi pembatasan dan mencoba lagi halaman asli yang gagal. |
+| Penyimpanan | Jumlah dan ID tetap berupa string; catatan entitas disimpan secara idempoten. |
+
+Sebelum beralih ke produksi, ubah target dana backend dan mode frontend. Pesanan yang tertunda terus pulih di lingkungan aslinya.
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Sumber dan panduan terkait
+
+- [Sumber resmi v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Ikhtisar kueri dan penomoran halaman](/id/sdk/agent-sdk/java/perpetual-queries)
+- [Dompet pendanaan](/id/sdk/agent-sdk/java/funding-wallet)
+- [Panduan peningkatan](/id/sdk/agent-sdk/java/upgrade)

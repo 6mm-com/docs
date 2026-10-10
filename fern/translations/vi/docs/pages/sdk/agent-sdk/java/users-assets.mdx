@@ -1,0 +1,171 @@
+---
+title: "Người dùng & Tài sản"
+subtitle: "Người dùng & Tài sản: Agent Java SDK tích hợp v0.3.0, ví dụ, tham số và ngữ nghĩa phản hồi."
+slug: sdk/agent-sdk/java/users-assets
+canonical-url: https://docs.6mm.com/vi/sdk/agent-sdk/java/users-assets
+---
+
+Hướng dẫn này hướng tới **Agent Java SDK `v0.3.0`**, Java 8+ và hợp đồng công khai được gắn thẻ. Các ví dụ chạy trong phần phụ trợ của đối tác sau khi khởi tạo `client` trong [Bắt đầu nhanh](/vi/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## Điều kiện tiên quyết mẫu
+
+Đoạn mã Java chia sẻ những nội dung nhập này. Khởi tạo `client` bằng cách sử dụng Bắt đầu nhanh và lấy `platformUserId` từ liên kết đã lưu. ID người dùng/đơn đặt hàng mẫu phải được thay thế bằng các giá trị cố định của riêng bạn.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span id="user-id-rules" data-sixmm-canonical-anchor="user-id-rules" aria-hidden="true"></span>
+
+## Quy tắc ID người dùng
+
+`platformUserId` là 6MM ID người dùng bên ngoài. Hiện tại nó là số có 10 chữ số
+chuỗi, ví dụ:
+
+```text
+1188041528
+```
+
+Quy tắc:
+
+- Lưu trữ nó dưới dạng một chuỗi chứ không phải dưới dạng số nguyên.
+- Không tạo ra, giải mã hoặc suy ra ý nghĩa từ nó.
+- Sử dụng ID người dùng phía đối tác của riêng bạn làm `agentUserId`.
+- Duy trì mối quan hệ giữa `agentUserId`, `platformUserId` và `agentOrderNo`.
+
+
+<span id="bind-user" data-sixmm-canonical-anchor="bind-user" aria-hidden="true"></span>
+
+## Ràng buộc người dùng
+
+Bind tạo hoặc tìm nạp mối quan hệ giữa người dùng đối tác và 6MM
+người dùng nền tảng. Gọi nó khi người dùng lần đầu tiên tham gia vào luồng giao dịch hoặc trước khi
+lần chuyển đầu tiên vào 6MM.
+
+```java
+import com.sixmm.agent.model.BindRequest;
+import com.sixmm.agent.model.BindResponse;
+
+BindResponse resp = client.bind(
+        BindRequest.of("agent-user-001")
+                .withUsername("alice")
+                .withExt("{\"source\":\"web\"}"));
+
+System.out.println(resp.platformUserId);
+System.out.println(resp.bindStatus);
+System.out.println(resp.isSimulatedUser);
+```
+
+Các trường yêu cầu:
+
+| Cánh đồng | Kiểu | Yêu cầu | Sự miêu tả |
+| --- | --- | --- | --- |
+| `agentUserId` | string | Đúng | ID người dùng phía đối tác duy nhất |
+| `username` | string | KHÔNG | Tên hiển thị phía đối tác được sử dụng làm biệt hiệu của người dùng nền tảng |
+| `ext` | string | KHÔNG | Trường mở rộng. Nên sử dụng chuỗi JSON |
+
+Các trường phản hồi:
+
+| Cánh đồng | Kiểu | Sự miêu tả |
+| --- | --- | --- |
+| `platformUserId` | string | 6MM ID người dùng bên ngoài |
+| `bindStatus` | string | Thông thường `BOUND` |
+| `isSimulatedUser` | boolean | Đây có phải là người dùng mô phỏng hay không |
+
+
+<span id="query-partner-account" data-sixmm-canonical-anchor="query-partner-account" aria-hidden="true"></span>
+
+## Truy vấn tài khoản đối tác
+
+```java
+import com.sixmm.agent.model.QueryAccountRequest;
+import com.sixmm.agent.model.QueryAccountResponse;
+
+QueryAccountResponse resp = client.queryAccount(QueryAccountRequest.of("USDT"));
+
+System.out.println(resp.agentCode);
+System.out.println(resp.agentStatus);
+resp.assets.forEach(asset -> {
+    System.out.println(asset.currency);
+    System.out.println(asset.depositBalance);
+});
+```
+
+Khi `currency` vắng mặt, SDK sử dụng `defaultCurrency`.
+
+
+<span id="query-user-assets" data-sixmm-canonical-anchor="query-user-assets" aria-hidden="true"></span>
+
+## Truy vấn tài sản người dùng
+
+```java
+import com.sixmm.agent.model.QueryUserAssetsRequest;
+import com.sixmm.agent.model.QueryUserAssetsResponse;
+
+QueryUserAssetsResponse resp = client.queryUserAssets(
+        QueryUserAssetsRequest.of("1188041528"));
+
+System.out.println(resp.walletBalance);
+System.out.println(resp.availableBalance);
+System.out.println(resp.version);
+```
+
+Lĩnh vực:
+
+| Cánh đồng | Kiểu | Sự miêu tả |
+| --- | --- | --- |
+| `walletBalance` | string | Số dư trên ví |
+| `frozenMargin` | string | Biên độ cố định |
+| `usedMargin` | string | Ký quỹ đã sử dụng |
+| `availableBalance` | string | Số dư khả dụng |
+| `isolatedMargin` | string | Lề riêng biệt |
+| `version` | int64 | Phiên bản nội dung |
+| `isSimulatedUser` | boolean | Đây có phải là người dùng mô phỏng hay không |
+
+
+<span id="distinguish-the-three-wallets" data-sixmm-canonical-anchor="distinguish-the-three-wallets" aria-hidden="true"></span>
+
+### Phân biệt ba ví
+
+| cái ví | Nguồn cân bằng | sử dụng |
+| --- | --- | --- |
+| Ví người dùng riêng của người bán | Hệ thống kế toán riêng của người bán | Số dư khả dụng của người dùng ở phía người bán |
+| Tài trợ nền tảng | `queryUserAssets` của `funding` | Quỹ giao dịch thứ hai và chuyển giao tài trợ/hợp đồng lẫn nhau |
+| Hợp đồng nền tảng | Trường tài sản hợp đồng của `queryUserAssets` | Ký quỹ hợp đồng vĩnh cửu và số dư có thể chuyển nhượng |
+
+`queryAccount` Truy vấn tài khoản ký quỹ của nền tảng người bán, không phải ví của người dùng người bán. Giao diện này không có tham số `environment` và không thể truy vấn dưới dạng nội dung người dùng mô phỏng.
+
+Truy vấn hai ví nền tảng của người dùng được mô phỏng:
+
+```java
+QueryUserAssetsResponse assets = client.queryUserAssets(
+        QueryUserAssetsRequest.of(platformUserId)
+                .withFunding()
+                .withEnvironment(ExecutionEnvironment.SIMULATED));
+```
+
+Giao diện: `POST /v1/agent/query-user-assets`. Chỉ yêu cầu cấp vốn khi `includeFunding=true`; ngữ nghĩa truy vấn nội dung hợp đồng ban đầu được sử dụng theo mặc định.
+
+| trường phản hồi | nghĩa |
+| --- | --- |
+| `walletBalance`, `availableBalance`, `frozenMargin`, `usedMargin`, `isolatedMargin` | Số tiền liên quan đến ví hợp đồng |
+| `funding.assetCode` | Hiện tại USDT |
+| `funding.availableAmount`, `heldAmount`, `totalAmount` | Nguồn tài trợ hiện có, đã sử dụng và tổng số tiền |
+| `funding.materialized` | Liệu tài khoản Tài trợ đã được hiện thực hóa chưa? |
+| `environment` | Trường này được lặp lại khi môi trường được truyền một cách rõ ràng; các yêu cầu cũ bỏ qua môi trường sẽ không trả về trường này. |
+| `isSimulatedUser` | Phân loại tài khoản; không thể thay thế việc lựa chọn môi trường giao dịch |
+
+Số tiền được xử lý dưới dạng chuỗi hoặc `BigDecimal`, không phải `float`/`double`.
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Nguồn và hướng dẫn liên quan
+
+- [Nguồn v0.3.0 chính thức](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Tổng quan về truy vấn và phân trang](/vi/sdk/agent-sdk/java/perpetual-queries)
+- [Ví tiền tài trợ](/vi/sdk/agent-sdk/java/funding-wallet)
+- [Hướng dẫn nâng cấp](/vi/sdk/agent-sdk/java/upgrade)

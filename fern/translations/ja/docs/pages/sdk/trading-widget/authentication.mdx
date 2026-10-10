@@ -1,15 +1,15 @@
 ---
 title: "Trading Widget 認証"
-subtitle: "新しい組み込み取引 SSO 統合にはpartner-tokenを活用しましょう。"
+subtitle: "新しい組み込み取引 SSO 統合にはパートナー トークンを使用します。"
 slug: sdk/trading-widget/authentication
 canonical-url: https://docs.6mm.com/ja/sdk/trading-widget/authentication
 ---
 
 <span id="recommended-mode-partner-token" data-sixmm-canonical-anchor="recommended-mode-partner-token" aria-hidden="true"></span>
 
-## 推奨モード:パートナートークン
+## 推奨モード: パートナートークン
 
-Partner-TokenはURLに短いトークンを置かず、パートナーのバックエンドに保持 apiSecret 。
+Partner-token は、URL に短いトークンを入れることを回避し、apiSecret をパートナー バックエンドに保持します。
 
 ```js
 const widget = TradingWidget.create('#trading-widget', {
@@ -36,12 +36,12 @@ const widget = TradingWidget.create('#trading-widget', {
 
 <span id="related-documentation" data-sixmm-canonical-anchor="related-documentation" aria-hidden="true"></span>
 
-## 関連文書
+## 関連ドキュメント
 
-- [埋め込みトークンの作成](/ja/sdk/agent-sdk/java/embed-token): バックエンドトークン発行の例。
-- [Trading Widget クイックスタート](/ja/sdk/trading-widget/quick-start):完全な初期化フロー。
-- [秘密と署名](/ja/sdk/security/secrets-signing):特権エージェントの認証情報をバックエンドに保管してください。
-- [トラブルシューティング](/ja/sdk/security/troubleshooting)セッション、トークン、起源、初期化の失敗を診断します。
+- [埋め込みトークンの作成](/ja/sdk/agent-sdk/java/embed-token): バックエンドトークンの発行例。
+- [Trading Widget クイックスタート](/ja/sdk/trading-widget/quick-start): 初期化フローを完了します。
+- [秘密と署名](/ja/sdk/security/secrets-signing): 特権エージェントの資格情報をバックエンドに保持します。
+- [トラブルシューティング](/ja/sdk/security/troubleshooting): セッション、トークン、オリジン、および初期化の失敗を診断します。
 
 <span id="backend-flow" data-sixmm-canonical-anchor="backend-flow" aria-hidden="true"></span>
 
@@ -62,30 +62,30 @@ const widget = TradingWidget.create('#trading-widget', {
 
 ## tokenProvider 契約
 
-| フィールド | 演出 | 概要 |
+| 分野 | 方向 | 説明 |
 | --- | --- | --- |
-| channelId | SDK -> パートナーバックエンド | 一意のウィジェットセッション識別子。バックエンドはそれを createEmbedTokenに渡すべきです。 |
-| シンボル | SDK -> パートナーバックエンド | 現在リクエストされている取引シンボル。必要に応じてトークンの範囲に使ってください。 |
-| 理由 | SDK -> パートナーバックエンド | なぜ SDK が初期ロードやリフレッシュなどのトークンを要求しているのか。 |
-| embedToken | パートナーバックエンド -> SDK | Agent SDK またはエージェントAPI によって作成された短命トークン。 |
-| expireAt | パートナーバックエンド -> SDK | トークンの有効期限タイムスタンプは 6MMによって返されます。 |
+| channelId | SDK -> パートナー バックエンド | 一意のウィジェット セッション ID。バックエンドはそれを createEmbedToken に渡す必要があります。 |
+| シンボル | SDK -> パートナー バックエンド | 現在要求されている取引シンボル。必要に応じて、これを使用してトークンのスコープを設定します。 |
+| 理由 | SDK -> パートナー バックエンド | SDK が初期ロードやリフレッシュなどのトークンを要求する理由。 |
+| embedToken | パートナー バックエンド -> SDK | Agent SDK またはエージェント API によって作成された有効期間の短いトークン。 |
+| expireAt | パートナー バックエンド -> SDK | 6MM によって返されたトークンの有効期限のタイムスタンプ。 |
 
 <span id="failure-handling" data-sixmm-canonical-anchor="failure-handling" aria-hidden="true"></span>
 
-## 故障処理
+## 障害対応
 
-| 状態 | 推奨取り扱い |
+| 状態 | 推奨取り扱い方法 |
 | --- | --- |
-| パートナーセッションが終了しました | パートナーエンドポイントから401を返し、ユーザーに再度サインインを求めます。 |
-| トークン作成は一時的に失敗しました | tokenProviderにエラーを投げ入れ、ウィジェットに認証エラーを表示させます。 |
-| channelId ミスマッチ | リクエストを拒否してウィジェットインスタンスを再作成してください。 |
-| ユーザーは取引を許可されていません | パートナー制御エラーを返し、埋め込みトークンを作成しないこと。 |
+| パートナーセッションが期限切れになりました | パートナー エンドポイントから 401 を返し、ユーザーに再度サインインするように求めます。 |
+| トークンの作成が一時的に失敗しました | tokenProvider でエラーをスローし、ウィジェットが認証エラーを表示できるようにします。 |
+| channelId の不一致 | リクエストを拒否し、ウィジェット インスタンスを再作成します。 |
+| ユーザーは取引を許可されていません | パートナー制御のエラーを返し、埋め込みトークンを作成しません。 |
 
 <span id="compatibility-mode-agent-sso" data-sixmm-canonical-anchor="compatibility-mode-agent-sso" aria-hidden="true"></span>
 
-## 互換モード:エージェント-SSO
+## 互換モード: エージェント SSO
 
-agent-SSOは古い/agent-entryのチケットフローを維持します。新しい統合にはパートナートークンを優先してください。
+Agent-sso は古い /agent-entry チケット フローを保持します。新しい統合にはパートナー トークンを優先します。
 
 ```js
 const widget = TradingWidget.create('#trading-widget', {
@@ -105,3 +105,13 @@ const widget = TradingWidget.create('#trading-widget', {
   },
 })
 ```
+
+<span id="seconds-trading-and-environment-rules" data-sixmm-canonical-anchor="seconds-trading-and-environment-rules" aria-hidden="true"></span>
+
+## 秒取引と環境ルール
+
+秒ページの場合は、ウィジェットで構成された `page` および `tradingMode` と同じ `partner-token` 認証を使用します。個別の予測トークンはありません。すべての tokenProvider 呼び出しでは、バックエンドから新しいワンタイム トークンを取得する必要があります。
+
+`embedToken`、`expireAt` を Unix 秒単位で返し、元の `channelId` をトップレベル オブジェクトとして返します。 Agent SDK トークン応答には `channelId` が含まれていません。バックエンドは現在のウィジェット チャネルをエコーし​​ます。エンドポイントが応答を `data` でラップしている場合は、tokenProvider から戻る前にラップを解除してください。
+
+[完全な秒単位の統合](/ja/sdk/agent-sdk/java/seconds-trading) · [資金環境ガイド](/ja/sdk/agent-sdk/java/environments)

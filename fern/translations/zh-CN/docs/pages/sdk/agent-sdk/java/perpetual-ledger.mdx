@@ -1,0 +1,133 @@
+---
+title: "合约账变明细"
+subtitle: "合约账变明细: Agent Java SDK v0.3.0 接入、示例、参数及响应说明。"
+slug: sdk/agent-sdk/java/perpetual-ledger
+canonical-url: https://docs.6mm.com/zh-CN/sdk/agent-sdk/java/perpetual-ledger
+---
+
+本文对应 **Agent Java SDK `v0.3.0`**、Java 8+ 与该标签的公开契约。示例在合作方后端运行；先按[快速开始](/zh-CN/sdk/agent-sdk/java/quick-start)初始化 `client`。
+
+<span data-sixmm-canonical-anchor="示例前提" aria-hidden="true"></span>
+
+## 示例前提
+
+Java 示例共用以下导入。按快速开始初始化 `client`，从已保存的绑定取得 `platformUserId`。示例用户和订单 ID 必须替换为实际持久化值。
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span data-sixmm-canonical-anchor="listperpetualledger" aria-hidden="true"></span>
+
+## `listPerpetualLedger`
+
+请求模型: `PerpetualLedgerRequest`.
+
+```java
+import com.sixmm.agent.model.PerpetualLedgerRequest;
+import com.sixmm.agent.model.PerpetualResponse;
+import java.util.Collections;
+
+PerpetualLedgerRequest request = new PerpetualLedgerRequest();
+request.platformUserIds = Collections.singletonList("1188041528");
+request.limit = 100;
+request.endTime = System.currentTimeMillis();
+request.startTime = request.endTime - 3_600_000L;
+PerpetualResponse response = client.listPerpetualLedger(request);
+System.out.println(response.data.items.size());
+System.out.println(response.data.hasMore);
+System.out.println(response.data.nextCursor);
+```
+
+<span data-sixmm-canonical-anchor="请求字段" aria-hidden="true"></span>
+
+### 请求字段
+
+| 字段 | Java 类型 | 必填 | 含义 |
+| --- | --- | --- | --- |
+| `platformUserIds` | `java.util.List<String>` | 条件必填 | 1～100 个不重复公开 ID；成交及条件委托必填。支持省略的查询使用直属玩家范围；[] 非法。 |
+| `assetType` | `String` | 否 | 按账变返回的资产分类筛选，不默认推断 USDT。 |
+| `changeType` | `String` | 否 | 账变业务类型，保留来源值。 |
+| `startTime` | `Long` | 否 | 包含起点，Unix 毫秒；使用固定 UTC 历史窗口。 |
+| `endTime` | `Long` | 否 | 不包含终点，Unix 毫秒。 |
+| `limit` | `Integer` | 否 | 默认 500，范围 1～1000。 |
+| `cursor` | `String` | 否 | 保持筛选条件，用 nextCursor 续页；hasMore=false 时结束。 |
+
+示例仅读取一页。必填条件、玩家范围、筛选语义、limit、cursor 与有限重试见[查询概览](/zh-CN/sdk/agent-sdk/java/perpetual-queries)。翻页保持全部筛选条件不变；不能把错误当作空结果。
+
+<span data-sixmm-canonical-anchor="合约账变明细" aria-hidden="true"></span>
+
+## 合约账变明细
+
+接口：`account/ledger`。返回的 data 仅包含下面 11 个业务字段，不携带委托布尔标志。
+
+| `data` 字段 | 类型 | 含义 |
+| --- | --- | --- |
+| `ledgerId` | string | 来源账变流水 ID；同一流水可能拆分多条明细 |
+| `symbol` | string | 关联交易对，没有关联时可能省略 |
+| `assetType` | string | 资产类型，按来源值保存；用于资产分类，不默认推断为 USDT |
+| `changeType` | string | 账变业务类型，按来源值保存，例如手续费、盈亏、划转；可按同字段筛选 |
+| `amount` | string | 本明细变动额度，正数表示增加，负数表示减少；保留精度 |
+| `walletBalanceBefore` | string | 本明细记录的账变前钱包余额 |
+| `walletBalanceAfter` | string | 本明细记录的账变后钱包余额 |
+| `frozenBalanceBefore` | string | 本明细记录的账变前冻结余额 |
+| `frozenBalanceAfter` | string | 本明细记录的账变后冻结余额 |
+| `referenceId` | string | 关联业务编号；按 changeType 解释，不能统一当作委托 orderId；"0" 表示来源没有有效关联编号 |
+| `createdAt` | integer | 账变明细创建时间，毫秒；本接口时间筛选使用该字段 |
+
+使用接口返回的账变前后余额。不同 changeType 的语义不同，不能假定每条 amount 都等于 walletBalanceAfter − walletBalanceBefore。账变展示/汇总应保留类型和明细身份。
+
+以下为**格式示例，使用虚构 ID 和金额**：
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "items": [
+      {
+        "platformUserId": "1188041528",
+        "entityType": "ACCOUNT_LEDGER",
+        "entityId": "900001",
+        "data": {
+          "ledgerId": "ledger-example-001",
+          "symbol": "BTCUSDT",
+          "assetType": "USDT",
+          "changeType": "HANDLING_FEE",
+          "amount": "-0.10000000",
+          "walletBalanceBefore": "100.00000000",
+          "walletBalanceAfter": "99.90000000",
+          "frozenBalanceBefore": "0.00000000",
+          "frozenBalanceAfter": "0.00000000",
+          "referenceId": "800001",
+          "createdAt": 1791590400000
+        }
+      }
+    ],
+    "nextCursor": "",
+    "hasMore": false
+  }
+}
+```
+
+
+<span data-sixmm-canonical-anchor="响应结构示例" aria-hidden="true"></span>
+
+## 响应结构示例
+
+以下为合法空页的结构示例，不代表一笔已成交记录。有记录时，`items[].data` 的字段按上面的资源字段表解释。
+
+```json
+{"code":0,"message":"success","data":{"items":[],"nextCursor":"","hasMore":false}}
+```
+
+<span data-sixmm-canonical-anchor="来源与相关指南" aria-hidden="true"></span>
+
+## 来源与相关指南
+
+- [官方 v0.3.0 源码](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [合约查询与分页](/zh-CN/sdk/agent-sdk/java/perpetual-queries)
+- [Funding 钱包](/zh-CN/sdk/agent-sdk/java/funding-wallet)
+- [升级指南](/zh-CN/sdk/agent-sdk/java/upgrade)

@@ -1,58 +1,109 @@
 ---
 title: "Agent Java SDK"
-subtitle: "Instal 6MM Agent Java SDK dan gunakan API backend bertanda tangan untuk pengikatan pengguna, transfer, kredensial entri, dan verifikasi webhook."
+subtitle: "Agent Java SDK: Agent Java SDK integrasi v0.3.0, contoh, parameter, dan semantik respons."
 slug: sdk/agent-sdk/java/overview
 canonical-url: https://docs.6mm.com/id/sdk/agent-sdk/java/overview
 ---
 
-<span id="official-repository" data-sixmm-canonical-anchor="official-repository" aria-hidden="true"></span>
+Panduan ini menargetkan **Agent Java SDK `v0.3.0`**, Java 8+, dan kontrak publik yang diberi tag. Contoh dijalankan di backend mitra setelah menginisialisasi `client` di [Mulai Cepat](/id/sdk/agent-sdk/java/quick-start).
 
-## Repositori resmi
+<span id="version-and-installation" data-sixmm-canonical-anchor="version-and-installation" aria-hidden="true"></span>
 
-Repositori Java SDK adalah sumber kebenaran untuk kode sumber SDK , catatan rilis, contoh penggunaan, dan detail implementasi:
+## Versi dan instalasi
 
-[6mm-com/agent-java-sdk](https://github.com/6mm-com/agent-java-sdk)
-
-<span id="runtime" data-sixmm-canonical-anchor="runtime" aria-hidden="true"></span>
-
-## Durasi
-
-| Item | Nilai |
+| Barang | Nilai |
 | --- | --- |
-| Versi Java minimum | Java 8+ |
-| Alat build yang direkomendasikan | Maven 3.9+ |
-| Grup Maven | `com.sixmm.exchange.sdk` |
-| Artefak Maven | `agent` |
-| Tag sumber terdokumentasi | `v0.1.1` |
+| Tag sumber yang stabil | `v0.3.0` |
+| Java | Java 8+ |
+| Maven | Maven 3.9+ |
+| Koordinat | `com.sixmm.exchange.sdk:agent:0.3.0` |
 
-Repositori GitHub publik adalah hosting sumber, bukan repositori ketergantungan Maven. Bangun dan instal sumber yang ditandai secara lokal atau publikasikan artefak yang disetujui ke repositori Maven pribadi organisasi Anda sebelum menggunakannya dalam build tim.
+Sumber host GitHub; hal ini tidak membuat koordinat ini dapat diselesaikan dari Maven Central. Gunakan instalasi lokal yang diberi tag atau repositori artefak yang Anda setujui.
 
-<span id="typical-backend-responsibilities" data-sixmm-canonical-anchor="typical-backend-responsibilities" aria-hidden="true"></span>
+<span id="what-the-sdk-covers" data-sixmm-canonical-anchor="what-the-sdk-covers" aria-hidden="true"></span>
 
-## Tanggung jawab backend yang khas
+## Apa yang Dicakup oleh SDK
 
-- Validasi sesi pengguna partner.
-- Petakan pengguna mitra ke agentUserId.
-- Call bind sebelum alur perdagangan atau transfer pertama.
-- Hubungi createEntryUrl untuk SSOsatu kali di lokasi penuh.
-- Panggil createEmbedToken untuk mode token mitra Trading Widget .
-- Verifikasi webhook transfer dan prosesnya secara identitas.
+| Kategori | Skenario | SDK API | Keterangan |
+| --- | --- | --- | --- |
+| Pengikatan pengguna | Ikat pengguna | `bind` | Membuat atau mengambil pengikatan antara pengguna mitra dan pengguna platform 6MM |
+| Kueri aset | Akun mitra kueri | `queryAccount` | Tanyakan margin mitra atau akun pendanaan |
+| Kueri aset | Kueri aset pengguna | `queryUserAssets` | Aset Kontrak Kueri; gunakan `withFunding()` untuk memasukkan saldo Pendanaan |
+| Transfer | Transfer jumlah tetap | `transfer` | Transfer dana masuk atau keluar dari 6MM |
+| Transfer | Pindahkan semuanya | `transferAllOut` | Pindahkan semua saldo pengguna yang dapat ditarik kembali ke platform mitra |
+| Transfer | Urutan terbalik | `reverse` | Membalikkan transfer yang berhasil ketika backend mendukung aliran kompensasi |
+| Transfer | Urutan kueri | `queryOrder` | Kueri satu pesanan transfer berdasarkan nomor pesanan mitra |
+| Transfer | Daftar pesanan | `listOrders` | Halaman melalui perintah transfer untuk rekonsiliasi |
+| Transfer | Webhook verifikasi | `WebhookVerifier.verify` | Verifikasi callback status akhir transfer dari 6MM |
+| Dompet pendanaan | Transfer dana | `walletTransfer` | Mitra ↔ Pendanaan atau Pendanaan ↔ Kontrak; konfirmasi status pengembalian |
+| Dompet pendanaan | Status transfer dana | `queryWalletTransfer` | Memulihkan operasi Pendanaan menggunakan nomor pesanan mitra aslinya |
+| Entri perdagangan | Masuk langsung URL | `createEntryUrl` | Buat SSO URL satu kali untuk mode pengalihan |
+| Entri perdagangan | Sematkan token | `createEmbedToken` | Buat token berumur pendek untuk mode Trading Widget `tokenProvider` |
+| Data abadi | Pesanan abadi saat ini | `listCurrentPerpetualOrders` | Kueri pesanan NORMAL atau CONDITIONAL saat ini |
+| Data abadi | Sejarah tatanan abadi | `listPerpetualOrderHistory` | Terminal kueri pesanan NORMAL atau CONDITIONAL |
+| Data abadi | Perdagangan abadi | `listPerpetualTrades` | Pertukaran kueri mengisi daftar pemain publik yang eksplisit |
+| Data abadi | Posisi abadi saat ini | `listCurrentPerpetualPositions` | Kueri posisi saat ini |
+| Data abadi | Riwayat posisi abadi | `listPerpetualPositionHistory` | Permintaan posisi tertutup |
+| Data abadi | Buku besar akun abadi | `listPerpetualLedger` | Kueri catatan perubahan saldo Kontrak individual |
+| Tarif referensi Fiat | Daftar mata uang fiat yang didukung | `listSupportedFiatCurrencies` | Daftar mata uang fiat yang saat ini dapat dikonversi ke USDT |
+| Tarif referensi Fiat | Tarif referensi permintaan FX | `queryExchangeRates` | Kueri rasio referensi harian fiat-to-USDT untuk semua atau mata uang yang dipilih |
+| Informasi layanan | Versi layanan | `version` | Informasi versi layanan Agen Kueri |
 
-<span id="security-and-operational-rules" data-sixmm-canonical-anchor="security-and-operational-rules" aria-hidden="true"></span>
 
-## Aturan keamanan dan operasional
+<span id="configuration" data-sixmm-canonical-anchor="configuration" aria-hidden="true"></span>
 
-- Simpan `apiSecret` hanya dalam manajer rahasia backend atau variabel lingkungan yang dilindungi.
-- Jaga waktu server tetap sinkron karena permintaan yang ditandatangani mengandung cap waktu.
-- Perlakukan `agentOrderNo` sebagai kunci idempotensi yang tahan lama dan jaga agar tetap unik secara global.
-- Menyimpan `platformUserId` sebagai string dan mempertahankan hubungannya dengan `agentUserId`.
-- Query transfer asli sebelum mencoba ulang setelah timeout atau hasil jaringan yang tidak pasti.
+## Konfigurasi
 
-<span id="next-steps" data-sixmm-canonical-anchor="next-steps" aria-hidden="true"></span>
+Dapatkan nilai berikut dari 6MM sebelumnya
+mengintegrasikan.
 
-## Langkah selanjutnya
+| Barang | Contoh | Keterangan |
+| --- | --- | --- |
+| `baseUrl` | `https://agent-api.6mm.com` | Agen API basis URL, tanpa garis miring |
+| `agentCode` | `AGENT001` | Kode mitra |
+| `apiSecret` | `your-api-secret` | API rahasia penandatanganan. Simpan di backend saja |
+| `defaultCurrency` | `USDT` | Mata uang default, biasanya `USDT` |
+| `webhookUrl` | `https://partner.example.com/6mm/webhook` | Titik akhir mitra untuk panggilan balik 6MM |
 
-- [Java Quick Start](/id/sdk/agent-sdk/java/quick-start): instal sumber yang ditandai dan inisialisasi `AgentClient`.
-- [Create Embed Token](/id/sdk/agent-sdk/java/embed-token): mengeluarkan kredensial jangka pendek untuk Trading Widget.
-- [Secrets & Signing](/id/sdk/security/secrets-signing): memahami penandatanganan HMAC otomatis dan penanganan rahasia.
-- [Webhooks & Idempotensi](/id/sdk/security/webhooks-idempotency): verifikasi callback dan mencegah pemrosesan duplikat.
+Rekomendasi produksi:
+
+- Gunakan HTTPS untuk titik akhir Agen API dan webhook.
+- Simpan `apiSecret` di manajer rahasia, pusat konfigurasi, atau variabel lingkungan.
+- Jaga waktu server tetap tersinkronisasi, sebaiknya dengan NTP.
+- Pertahankan semua nomor pesanan mitra dan jaga agar nomor tersebut unik secara global.
+- Jangan pernah mengirim `apiSecret` ke browser, aplikasi, program mini, atau kode sumber frontend.
+
+
+<span id="automatic-signing-fields" data-sixmm-canonical-anchor="automatic-signing-fields" aria-hidden="true"></span>
+
+## Bidang Penandatanganan Otomatis
+
+Untuk panggilan Agen API yang ditandatangani, SDK secara otomatis memasukkan:
+
+| Bidang | Sumber | Keterangan |
+| --- | --- | --- |
+| `agentCode` | `AgentClientConfig.agentCode` | Kode mitra |
+| `timestamp` | Stempel waktu Unix UTC saat ini | Detik |
+| `nonce` | Amankan generator acak | Perlindungan pemutaran ulang |
+| `sign` | HMAC-SHA256 | Minta tanda tangan |
+| `currency` | `defaultCurrency` | Diisi ketika permintaan transfer/rekening menghilangkan mata uang |
+
+Aturan penandatanganan:
+
+1. Kecualikan `sign`.
+2. Kecualikan nilai kosong.
+3. Urutkan kunci berdasarkan urutan ASCII.
+4. Bergabunglah sebagai `k=v&k2=v2`.
+5. Hitung HMAC-SHA256 hex dengan `apiSecret`.
+
+Kode bisnis normal tidak boleh menghitung tanda tangan atau mengaturnya secara manual
+`agentCode`, `timestamp`, `nonce`, atau `sign`.
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Sumber dan panduan terkait
+
+- [Sumber resmi v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Ikhtisar kueri dan penomoran halaman](/id/sdk/agent-sdk/java/perpetual-queries)
+- [Dompet pendanaan](/id/sdk/agent-sdk/java/funding-wallet)
+- [Panduan peningkatan](/id/sdk/agent-sdk/java/upgrade)

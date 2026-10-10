@@ -1,0 +1,186 @@
+---
+title: "Đơn đặt hàng vĩnh viễn"
+subtitle: "Đơn đặt hàng vĩnh viễn: Agent Java SDK tích hợp v0.3.0, ví dụ, tham số và ngữ nghĩa phản hồi."
+slug: sdk/agent-sdk/java/perpetual-orders
+canonical-url: https://docs.6mm.com/vi/sdk/agent-sdk/java/perpetual-orders
+---
+
+Hướng dẫn này hướng tới **Agent Java SDK `v0.3.0`**, Java 8+ và hợp đồng công khai được gắn thẻ. Các ví dụ chạy trong phần phụ trợ của đối tác sau khi khởi tạo `client` trong [Bắt đầu nhanh](/vi/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## Điều kiện tiên quyết mẫu
+
+Đoạn mã Java chia sẻ những nội dung nhập này. Khởi tạo `client` bằng cách sử dụng Bắt đầu nhanh và lấy `platformUserId` từ liên kết đã lưu. ID người dùng/đơn đặt hàng mẫu phải được thay thế bằng các giá trị cố định của riêng bạn.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span data-sixmm-canonical-anchor="listcurrentperpetualorders" aria-hidden="true"></span>
+
+## `listCurrentPerpetualOrders`
+
+Mẫu yêu cầu: `CurrentPerpetualOrdersRequest`.
+
+```java
+import com.sixmm.agent.model.CurrentPerpetualOrdersRequest;
+import com.sixmm.agent.model.PerpetualResponse;
+import java.util.Collections;
+
+CurrentPerpetualOrdersRequest request = new CurrentPerpetualOrdersRequest();
+request.platformUserIds = Collections.singletonList("1188041528");
+request.limit = 100;
+request.orderCategory = "NORMAL";
+request.symbol = "BTCUSDT";
+PerpetualResponse response = client.listCurrentPerpetualOrders(request);
+System.out.println(response.data.items.size());
+System.out.println(response.data.hasMore);
+System.out.println(response.data.nextCursor);
+```
+
+<span id="request-fields" data-sixmm-canonical-anchor="request-fields" aria-hidden="true"></span>
+
+### Các trường yêu cầu
+
+| Cánh đồng | Java loại | Yêu cầu | Nghĩa |
+| --- | --- | --- | --- |
+| `orderCategory` | `String` | Đúng | NORMAL hoặc CONDITIONAL; truy vấn có điều kiện yêu cầu người dùng rõ ràng. |
+| `platformUserIds` | `java.util.List<String>` | có điều kiện | 1–100 ID công khai duy nhất; cần thiết cho việc điền và các đơn đặt hàng có điều kiện. Bỏ qua các truy vấn được hỗ trợ cho phạm vi trình phát trực tiếp; [] không hợp lệ. |
+| `symbol` | `String` | KHÔNG | Bộ lọc cặp giao dịch tùy chọn. |
+| `limit` | `Integer` | KHÔNG | Mặc định 500; 1–1000. |
+| `cursor` | `String` | KHÔNG | Sử dụng nextCursor được trả về với các bộ lọc không thay đổi; dừng khi hasMore sai. |
+
+Ví dụ đọc một trang. Đối với các trường bắt buộc, phạm vi trình phát, ngữ nghĩa bộ lọc, giới hạn, con trỏ và số lần thử giới hạn, hãy làm theo [Tổng quan về truy vấn](/vi/sdk/agent-sdk/java/perpetual-queries). Giữ tất cả các bộ lọc không thay đổi trong khi phân trang; không hiểu lỗi là kết quả trống.
+
+<span data-sixmm-canonical-anchor="listperpetualorderhistory" aria-hidden="true"></span>
+
+## `listPerpetualOrderHistory`
+
+Mẫu yêu cầu: `PerpetualOrderHistoryRequest`.
+
+```java
+import com.sixmm.agent.model.PerpetualOrderHistoryRequest;
+import com.sixmm.agent.model.PerpetualResponse;
+import java.util.Collections;
+
+PerpetualOrderHistoryRequest request = new PerpetualOrderHistoryRequest();
+request.platformUserIds = Collections.singletonList("1188041528");
+request.limit = 100;
+request.orderCategory = "NORMAL";
+request.symbol = "BTCUSDT";
+request.endTime = System.currentTimeMillis();
+request.startTime = request.endTime - 3_600_000L;
+PerpetualResponse response = client.listPerpetualOrderHistory(request);
+System.out.println(response.data.items.size());
+System.out.println(response.data.hasMore);
+System.out.println(response.data.nextCursor);
+```
+
+<span id="request-fields-1" data-sixmm-canonical-anchor="request-fields-1" aria-hidden="true"></span>
+
+### Các trường yêu cầu
+
+| Cánh đồng | Java loại | Yêu cầu | Nghĩa |
+| --- | --- | --- | --- |
+| `orderCategory` | `String` | Đúng | NORMAL hoặc CONDITIONAL; truy vấn có điều kiện yêu cầu người dùng rõ ràng. |
+| `platformUserIds` | `java.util.List<String>` | có điều kiện | 1–100 ID công khai duy nhất; cần thiết cho việc điền và các đơn đặt hàng có điều kiện. Bỏ qua các truy vấn được hỗ trợ cho phạm vi trình phát trực tiếp; [] không hợp lệ. |
+| `symbol` | `String` | KHÔNG | Bộ lọc cặp giao dịch tùy chọn. |
+| `orderId` | `String` | KHÔNG | ID đơn hàng thông thường; không phải là số thứ tự chuyển nhượng đối tác. |
+| `conditionId` | `String` | KHÔNG | ID lệnh có điều kiện; không trộn lẫn với orderId. |
+| `clientOrderId` | `String` | KHÔNG | Tham chiếu lệnh của khách hàng giao dịch, không phải agentOrderNo. |
+| `side` | `String` | KHÔNG | Bộ lọc BUY / SELL. |
+| `status` | `String` | KHÔNG | Trạng thái cụ thể của tài nguyên; xem tham chiếu trạng thái. |
+| `startTime` | `Long` | KHÔNG | Bao gồm Unix mili giây; sử dụng cửa sổ lịch sử UTC cố định. |
+| `endTime` | `Long` | KHÔNG | Unix mili giây độc quyền. |
+| `limit` | `Integer` | KHÔNG | Mặc định 500; 1–1000. |
+| `cursor` | `String` | KHÔNG | Sử dụng nextCursor được trả về với các bộ lọc không thay đổi; dừng khi hasMore sai. |
+
+Ví dụ đọc một trang. Đối với các trường bắt buộc, phạm vi trình phát, ngữ nghĩa bộ lọc, giới hạn, con trỏ và số lần thử giới hạn, hãy làm theo [Tổng quan về truy vấn](/vi/sdk/agent-sdk/java/perpetual-queries). Giữ tất cả các bộ lọc không thay đổi trong khi phân trang; không hiểu lỗi là kết quả trống.
+
+<span id="ordinary-delegation-current-and-history" data-sixmm-canonical-anchor="ordinary-delegation-current-and-history" aria-hidden="true"></span>
+
+## Lệnh thông thường: hiện tại và lịch sử
+
+Hiện tại: `orders/current` + `orderCategory=NORMAL`; Lịch sử: `orders/history` + `orderCategory=NORMAL`.
+
+| Trường `data` | kiểu | Ý nghĩa và phạm vi áp dụng |
+| --- | --- | --- |
+| `symbol` | string | Cặp giao dịch, chẳng hạn như BTCUSDT |
+| `orderId` | string | ID đơn hàng thông thường của nền tảng |
+| `orderCategory` | string | Đã sửa lỗi NORMAL |
+| `clientOrderId` | string | Mã lệnh của khách hàng do nguồn lệnh giao dịch cung cấp; không cùng lĩnh vực với chuyển tiền của người bán agentOrderNo |
+| `orderType` | string | Loại đại biểu, chẳng hạn như LIMIT, MARKET; giá trị liệt kê thực tế sẽ được ưu tiên áp dụng |
+| `side` | string | Hướng mua bán BUY / SELL |
+| `status` | string | Trạng thái đơn hàng thông thường, xem tổng quan truy vấn |
+| `timeInForce` | string | Chiến lược thực hiện giao dịch/thời gian hiệu lực, chẳng hạn như GTC, IOC, FOK; giải thích theo giá trị thực tế |
+| `price` | string | Giá ủy thác; nó có thể được bỏ qua khi không có giá được cung cấp và giá giao dịch thị trường sẽ không được tự bổ sung. |
+| `quantity` | string | Số lượng đặt hàng ban đầu |
+| `filledQuantity` | string | Số lượng giao dịch |
+| `remainingQuantity` | string | Số lượng chưa giao dịch; truy vấn hiện tại lấy số lượng − filledQuantity và truy vấn lịch sử lấy giá trị bản ghi lịch sử |
+| `avgFilledPrice` | string | Giá giao dịch bình quân của phần hoàn thành; có thể không có giá trị khi nó chưa được hoàn thành |
+| `reduceOnly` | boolean | Có phải chỉ giảm vị thế |
+| `closeOnly` | boolean | Cho dù nó chỉ được sử dụng để đóng các vị trí |
+| `makerOnly` | boolean | Có chỉ thực thi với tư cách là Người tạo hay không |
+| `leverage` | integer | Tận dụng nhiều; **Trật tự thông thường trong lịch sử** có nguồn và lệnh thông thường hiện tại không tạo ra giá trị này |
+| `marginMode` | string | Chế độ ký quỹ; **Thứ tự thông thường trong lịch sử** hiện trả về một chuỗi liệt kê số, chẳng hạn như "1", "2"; trật tự thông thường hiện tại không được cung cấp |
+| `createdAt` | integer | Thời gian tạo lệnh, mili giây; sử dụng trường này để lọc thời gian đặt hàng lịch sử |
+| `updatedAt` | integer | Thời gian cập nhật bản ghi của đại biểu, mili giây |
+
+Lịch sử đơn hàng bao gồm các đơn hàng thông thường đã chấm dứt. Mỗi bản ghi không thể được coi là hoàn thành đầy đủ nếu chỉ dựa vào tên giao diện. Trang đặt hàng hiện tại là truy vấn trạng thái hiện tại, không phải luồng sự kiện đặt hàng.
+
+
+<span id="conditional-delegation-current-and-history" data-sixmm-canonical-anchor="conditional-delegation-current-and-history" aria-hidden="true"></span>
+
+## Lệnh có điều kiện: hiện tại và lịch sử
+
+Hiện tại: `orders/current` + `orderCategory=CONDITIONAL`; Lịch sử: `orders/history` + `orderCategory=CONDITIONAL`. Cả hai đều yêu cầu platformUserIds rõ ràng.
+
+| Trường `data` | kiểu | nghĩa |
+| --- | --- | --- |
+| `symbol` | string | cặp giao dịch |
+| `conditionId` | string | ID lệnh có điều kiện, độc lập với thông thường orderId |
+| `orderCategory` | string | Đã sửa lỗi CONDITIONAL |
+| `generatedOrderId` | string | ID đơn hàng thông thường được tạo sau khi kích hoạt; có thể được bỏ qua nếu không được tạo ra |
+| `clientOrderId` | string | Số lệnh của khách hàng trong lệnh có điều kiện, xuất ra khi tồn tại |
+| `side` | string | BUY / SELL |
+| `orderType` | string | Loại lệnh sau kích hoạt, được diễn giải theo giá trị thực tế |
+| `triggerType` | string | Loại quy tắc kích hoạt, được giải thích bằng cách liệt kê nguồn thực tế |
+| `workingType` | string | Loại công việc/nguồn giá kích hoạt giá, được hiểu là bảng liệt kê thực tế |
+| `timeInForce` | string | Thời gian hiệu lực/chiến lược thực hiện lệnh sau khi kích hoạt |
+| `price` | string | Giá lệnh sau khi kích hoạt, xuất ra khi nguồn có giá trị |
+| `quantity` | string | Số lượng đặt hàng có điều kiện |
+| `triggerPrice` | string | giá kích hoạt |
+| `reduceOnly` | boolean | Có phải chỉ giảm vị thế |
+| `closePosition` | boolean | Có sử dụng ngữ nghĩa đóng vị trí đầy đủ hay không, không thể nhầm lẫn với closeOnly trong cùng một trường |
+| `leverage` | integer | Tận dụng bội số, xuất ra khi khác 0 |
+| `marginMode` | string | Lớp này trả về CROSS / ISOLATED, là một chuỗi số khác với các thứ tự/vị trí lịch sử thông thường |
+| `status` | string | Trạng thái kích hoạt duy nhất có điều kiện, xem tổng quan về truy vấn |
+| `triggerStatus` | string | Việc triển khai hiện tại sử dụng cùng một giá trị trạng thái có điều kiện như trạng thái |
+| `createdAt` | integer | Thời gian tạo lệnh có điều kiện, mili giây; điều kiện lịch sử được lọc vào thời điểm này |
+| `updatedAt` | integer | Thời gian cập nhật, xuất ra khi có giá trị, mili giây |
+| `deletedAt` | integer | Xóa thời gian đánh dấu, xuất ra khi có giá trị, mili giây; nó không phải là trường thời gian hủy/giao dịch thống nhất |
+
+Lệnh có điều kiện không cung cấp filledQuantity, remainingQuantity, avgFilledPrice cho các lệnh thông thường. Nếu bạn cần trạng thái giao dịch của các lệnh thông thường sau khi kích hoạt, hãy truy vấn các lệnh/giao dịch thông thường thông qua generatedOrderId và không suy ra khối lượng giao dịch từ trạng thái lệnh có điều kiện.
+
+
+<span id="example-response-envelope" data-sixmm-canonical-anchor="example-response-envelope" aria-hidden="true"></span>
+
+## Ví dụ về phong bì phản hồi
+
+Đây là trang trống minh họa, không phải mẫu giao dịch đã hoàn thành. Các bảng trường dành riêng cho tài nguyên ở trên mô tả `items[].data`.
+
+```json
+{"code":0,"message":"success","data":{"items":[],"nextCursor":"","hasMore":false}}
+```
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Nguồn và hướng dẫn liên quan
+
+- [Nguồn v0.3.0 chính thức](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Tổng quan về truy vấn và phân trang](/vi/sdk/agent-sdk/java/perpetual-queries)
+- [Ví tiền tài trợ](/vi/sdk/agent-sdk/java/funding-wallet)
+- [Hướng dẫn nâng cấp](/vi/sdk/agent-sdk/java/upgrade)

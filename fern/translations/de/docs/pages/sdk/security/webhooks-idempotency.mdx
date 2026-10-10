@@ -1,86 +1,86 @@
 ---
-title: "Webhook-Signaturverifizierung und Idempotenz"
-subtitle: "Überprüfen Sie 6MM Agent-Webhooks mit dem Rohanfrage-Body und verarbeiten Sie Wiederholungen, Zeitabwürfe und wiederholte Ereignisse ohne doppelte Geschäftsaktionen."
+title: "Webhook Signaturüberprüfung und Idempotenz"
+subtitle: "Überprüfen Sie den Agenten 6MM webhooks anhand des rohen Anforderungstexts und verarbeiten Sie Wiederholungsversuche, Zeitüberschreitungen und wiederholte Ereignisse ohne doppelte Geschäftsaktionen."
 slug: sdk/security/webhooks-idempotency
 canonical-url: https://docs.6mm.com/de/sdk/security/webhooks-idempotency
 ---
 
-Webhooks benachrichtigen ein Partner-Backend über asynchrone Änderungen des Geschäftszustands. Da die Zustellung erneut versucht werden kann, muss jeder Empfänger die Signatur vor der Analyse vertrauenswürdiger Daten überprüfen und das Ereignis idempotent verarbeiten.
+Webhooks benachrichtigen ein Partner-Backend über asynchrone Änderungen des Geschäftsstatus. Da die Zustellung wiederholt werden kann, muss jeder Empfänger die Signatur überprüfen, bevor er vertrauenswürdige Daten analysiert, und das Ereignis idempotent verarbeiten.
 
 <span id="webhook-headers" data-sixmm-canonical-anchor="webhook-headers" aria-hidden="true"></span>
 
 ## Webhook-Header
 
-| Header | Beschreibung |
+| Kopfzeile | Beschreibung |
 | --- | --- |
 | X-Agent-Zeitstempel | Unix-Zeitstempel in Sekunden. |
-| X-Agent-Nonce | Wiederholungsschutz-Nonce. |
-| X-Agent-Signatur | HMAC–SHA256 Unterschrift. |
+| X-Agent-Nonce | Wiedergabeschutz-Nonce. |
+| X-Agent-Signatur | HMAC-SHA256 Signatur. |
 
 ```text
 timestamp + nonce + rawBody
 ```
 
-Verwenden Sie beim Rekonstruieren des signierten Werts genau den rohen Request-Body, der über HTTP erhalten wurde. Das Parsen und Neuserialisieren JSON zuerst kann den Leerraum oder die Feldreihenfolge verändern und eine andere Signatur erzeugen.
+Verwenden Sie bei der Rekonstruktion des vorzeichenbehafteten Werts den genauen rohen Anforderungstext, der über HTTP empfangen wurde. Das erste Parsen und erneute Serialisieren von JSON kann die Leerzeichen- oder Feldreihenfolge ändern und eine andere Signatur erzeugen.
 
 <span id="verification-flow" data-sixmm-canonical-anchor="verification-flow" aria-hidden="true"></span>
 
-## Verifikationsfluss
+## Verifizierungsablauf
 
 1. Lesen Sie die Zeitstempel-, Nonce- und Signatur-Header.
-2. Erfassen Sie den unveränderten rohen Request-Körper.
-3. Baue `timestamp + nonce + rawBody`.
-4. Berechnen Sie HMAC–SHA256 mit dem Partner API Geheimnis.
-5. Vergleichen Sie die berechneten und empfangenen Signaturen mit einem konstanten Zeitvergleich.
-6. Wenden Sie die genehmigten Zeitstempel-Frische- und Nonce-Wiederverwendungsprüfungen an.
-7. Erst nach erfolgreicher Verifikation das Ereignis analysieren und verarbeiten.
+2. Erfassen Sie den unveränderten rohen Anforderungstext.
+3. Erstellen Sie `timestamp + nonce + rawBody`.
+4. Berechnen Sie HMAC-SHA256 mit dem Partner-Geheimnis API.
+5. Vergleichen Sie die berechneten und empfangenen Signaturen mithilfe eines zeitkonstanten Vergleichs.
+6. Wenden Sie die genehmigten Zeitstempelaktualisierungs- und Nonce-Wiederverwendungsprüfungen an.
+7. Analysieren und verarbeiten Sie das Ereignis erst, nachdem die Überprüfung erfolgreich war.
 
-Wenn ein offizieller Agent SDK -Verifizierer verfügbar ist, verwenden Sie ihn, anstatt einen unabhängigen Unterzeichnungscode zu führen.
+Wenn ein offizieller Prüfer Agent SDK verfügbar ist, verwenden Sie ihn, anstatt einen unabhängigen Signaturcode zu verwalten.
 
 <span id="order-idempotency" data-sixmm-canonical-anchor="order-idempotency" aria-hidden="true"></span>
 
-## Orderidopotenz
+## Orderen Sie Idempotenz
 
 | Fall | Handhabung |
 | --- | --- |
-| Erster Übertragungsantrag | Schaffen Sie ein weltweit einzigartiges agentOrderNo. |
-| HTTP Auszeit | Fragen Sie die ursprüngliche agentOrderNo ab, bevor Sie eine neue erstellen. |
-| PROCESSING Antwort | Warte auf den Status der Webhook- oder Abfragereihenfolge. |
-| Wiederholter Webhook | Deduplizieren Sie nach Idempotenzschlüssel und Endstatus. |
+| Erster Transferantrag | Erstellen Sie ein weltweit eindeutiges agentOrderNo. |
+| HTTP Zeitüberschreitung | Fragen Sie den ursprünglichen agentOrderNo ab, bevor Sie einen neuen erstellen. |
+| PROCESSING Antwort | Warten Sie auf webhook oder fragen Sie den Orderstatus ab. |
+| Wiederholt webhook | Deduplizieren nach Idempotenzschlüssel und Endstatus. |
 
 <span id="recommended-idempotency-record" data-sixmm-canonical-anchor="recommended-idempotency-record" aria-hidden="true"></span>
 
-## Empfohlene Idempotenzaufzeichnung
+## Empfohlener Idempotenz-Datensatz
 
-Speichern Sie genügend Informationen, um eine wiederholte Lieferung zu erkennen und sicher zurückzugewinnen:
+Speichern Sie genügend Informationen, um eine wiederholte Zustellung zu erkennen und sicher wiederherzustellen:
 
-| Spielfeld | Zweck |
+| Feld | Zweck |
 | --- | --- |
-| Ereignis- oder Geschäftsschlüssel | Identifiziert eindeutig die Benachrichtigung oder Operation. |
-| PartnerOrdersnummer | Verbindet das Ereignis mit der ursprünglichen Anfrage. |
-| Payload-Hash | Hilft, widersprüchliche wiederholte Nutzlasten zu identifizieren. |
-| Aktueller Verarbeitungszustand | Unterscheidet empfangene, verarbeitete, erfolgreiche und fehlgeschlagene Arbeiten. |
-| Endgültiger Geschäftsstatus | Verhindert, dass eine terminale Aktion zweimal angewendet wird. |
-| Bearbeitungszeitstempel | Unterstützt Richtlinien zur Untersuchung und Verwertung. |
+| Ereigniss- oder Geschäftsschlüssel | Identifiziert die Benachrichtigung oder den Vorgang eindeutig. |
+| Ordernummer des Partners | Verbindet das Ereignis mit der ursprünglichen Anfrage. |
+| Nutzlast-Hash | Hilft bei der Identifizierung widersprüchlicher wiederholter Nutzlasten. |
+| Aktueller Bearbeitungsstand | Unterscheidet zwischen empfangener, verarbeiteter, erfolgreicher und fehlgeschlagener Arbeit. |
+| Endgültiger Geschäftsstatus | Verhindert, dass eine Terminalaktion zweimal angewendet wird. |
+| Verarbeiteter Zeitstempel | Unterstützt Untersuchungs- und Aufbewahrungsrichtlinien. |
 
-Beziehen Sie die Geschäftsänderung und die Impotenzdatensatz, wo möglich, in derselben Transaktion ein. Ein wiederholtes Ereignis sollte das bereits bekannte Ergebnis zurückgeben, anstatt die Bilanz, Reihenfolge oder Benutzeränderung erneut anzuwenden.
+Übernehmen Sie die Geschäftsänderung und den Idempotenzdatensatz nach Möglichkeit in derselben Transaktion. Ein wiederholtes Ereignis sollte das bereits bekannte Ergebnis zurückgeben, anstatt den Kontostand, die Order oder die Benutzeränderung erneut anzuwenden.
 
 <span id="timeout-and-retry-rule" data-sixmm-canonical-anchor="timeout-and-retry-rule" aria-hidden="true"></span>
 
-## Auszeit- und Wiederholungsregel
+## Timeout- und Wiederholungsregel
 
-Ein HTTP Timeout beweist nicht, dass die ursprüngliche Anfrage fehlgeschlagen ist. Abfrage der Operation mit dem ursprünglichen `agentOrderNo`oder warten Sie auf den Webhook, bevor Sie entscheiden, ob eine weitere Aktion erforderlich ist. Das Erstellen einer neuen GeschäftsOrdersnummer nach jedem Timeout kann zu doppelten Kapitalbewegungen führen.
+Eine HTTP-Zeitüberschreitung beweist nicht, dass die ursprüngliche Anfrage fehlgeschlagen ist. Fragen Sie den Vorgang mit dem ursprünglichen `agentOrderNo` ab oder warten Sie auf dessen webhook, bevor Sie entscheiden, ob eine weitere Aktion erforderlich ist. Das Erstellen einer neuen Geschäftsauftragsnummer nach jeder Zeitüberschreitung kann zu doppelten Geldbewegungen führen.
 
 <span id="production-checklist" data-sixmm-canonical-anchor="production-checklist" aria-hidden="true"></span>
 
-## Produktionscheckliste
+## Checkliste für die Produktion
 
-- Verifizieren Sie die Signatur vor JSON Parsing oder Geschäftsverarbeitung.
-- Erhalte den rohen Körper unabhängig von der geanalysten Nutzlast.
-- Veraltete oder wiederholte Anfragen gemäß der genehmigten Integrationsrichtlinie ablehnen.
-- Ereignisverarbeitung für wiederholte und nicht in der Reihenfolge zugeteilte Zustellung sicher zu machen.
-- Protokolliere Ereignis-IDs, Partnerbefehlsnummern, Verarbeitungsergebnis und Anforderungszeit.
-- Geheimnisse und Signaturwerte aus Protokollen und Support-Anhängen zu schwärzen.
+- Überprüfen Sie vorher die Signatur JSON Parsing oder Geschäftsverarbeitung.
+- Bewahren Sie den Rohkörper unabhängig von der analysierten Nutzlast auf.
+- Lehnen Sie veraltete oder wiederholte Anfragen gemäß der genehmigten Integrationsrichtlinie ab.
+- Machen Sie die Ereignisverarbeitung für wiederholte und nicht ordnungsgemäße Zustellung sicher.
+- Protokollieren Sie Ereignis-IDs, Partnerbestellnummern, Verarbeitungsergebnis und Anfragezeit.
+- Schwärzen Sie Geheimnisse und Signaturwerte aus Protokollen und Support-Anhängen.
 
 <span id="related-docs" data-sixmm-canonical-anchor="related-docs" aria-hidden="true"></span>
 
@@ -88,12 +88,22 @@ Ein HTTP Timeout beweist nicht, dass die ursprüngliche Anfrage fehlgeschlagen i
 
 <CardGroup cols={3}>
 <Card title="Geheimnisse & HMAC Signieren" icon="fa-duotone fa-shield-keyhole" href="/de/sdk/security/secrets-signing">
-Schützen Sie das API Geheimnis, das für Anfragen und Webhook-Verifizierung verwendet wird.
+Schützen Sie das API-Geheimnis, das für die Anfrage und die webhook-Verifizierung verwendet wird.
 </Card>
-<Card title="Agent SDK Überblick" icon="fa-duotone fa-server" href="/de/sdk/agent-sdk/overview">
-Überprüfen Sie den vollständigen Backend-Integrationsworkflow.
+<Card title="Agent SDK Übersicht" icon="fa-duotone fa-server" href="/de/sdk/agent-sdk/overview">
+Sehen Sie sich den vollständigen Backend-Integrationsworkflow an.
 </Card>
 <Card title="SDK Fehlerbehebung" icon="fa-duotone fa-screwdriver-wrench" href="/de/sdk/security/troubleshooting">
-Untersuchen Sie abgelehnte Unterschriften, wiederholte Ereignisse und ausstehende Operationen.
+Untersuchen Sie abgelehnte Unterschriften, wiederholte Ereignisse und ausstehende Vorgänge.
 </Card>
 </CardGroup>
+
+<span id="funding-and-environment-boundaries" data-sixmm-canonical-anchor="funding-and-environment-boundaries" aria-hidden="true"></span>
+
+## Finanzierungs- und Umweltgrenzen
+
+Die ursprünglichen Vertragsübertragungsabläufe webhook und `queryOrder` gelten nicht automatisch für die Finanzierung. Bestätigen Sie Finanzierungsvorgänge mit `queryWalletTransfer` und der ursprünglichen Orderumgebung. Finanzierungsverwendungen `status`; Ursprüngliche Vertragsübertragungsantworten verwenden `orderStatus`. Eine erfolgreiche HTTP-Antwort oder `code=0` allein beweist nicht, dass Gelder bewegt wurden.
+
+Zu den expliziten simulierten Vertragsübertragungsbenachrichtigungen gehören `environment=SIMULATED`. Überprüfen Sie zuerst den Rohkörper und vergleichen Sie dann den Benutzer, den Betrag, die Orderidentität und die Umgebung mit der gespeicherten lokalen GeschäftsOrder.
+
+[Leitfaden zur Finanzierungswiederherstellung](/de/sdk/agent-sdk/java/funding-wallet) · [Umweltführer](/de/sdk/agent-sdk/java/environments)

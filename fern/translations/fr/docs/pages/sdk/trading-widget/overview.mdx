@@ -1,29 +1,29 @@
 ---
 title: "Trading Widget SDK"
-headline: "6MM Trading Widget SDK Documentation d’intégration"
-description: "Apprenez à intégrer le terminal de trading d’actifs numériques 6MM dans un site partenaire, avec une authentification sécurisée, des contrôles d’affichage, des méthodes d’exécution et des événements du cycle de vie."
+headline: "6MM Trading Widget SDK Documentation d'intégration"
+description: "Découvrez comment intégrer le terminal de trading d'actifs numériques 6MM dans un site Web partenaire, avec une authentification sécurisée, des contrôles d'affichage, des méthodes d'exécution et des événements de cycle de vie."
 slug: sdk/trading-widget/overview
 canonical-url: https://docs.6mm.com/fr/sdk/trading-widget/overview
 ---
 
 <span id="responsibility-split" data-sixmm-canonical-anchor="responsibility-split" aria-hidden="true"></span>
 
-## Répartition des responsabilités
+## Partage des responsabilités
 
-| Superficie | Propriétaire | Notes |
+| Zone | Propriétaire | Remarques |
 | --- | --- | --- |
-| Création de conteneurs | Interface partenaire | Fournir un élément visible avec une largeur et une hauteur explicites. |
-| Création d’iFrame | Trading Widget SDK | Le SDK crée et gère l’iframe. |
-| Interface de trading | 6MM iframe | K-line, carnet de commandes, formulaires de commande, positions, ordres et données de compte sont exécutés à l’intérieur de l’iframe. |
-| Commandes d’affichage | Trading Widget SDK + 6MM iframe | L’en-tête et le ticker inférieur de l’embed PC sont cachés par défaut. Les partenaires peuvent utiliser `display` pour afficher les zones de coques ou cacher des conteneurs de trading de haut niveau. |
-| Vérification de la connexion du partenaire | Backend partenaire | Validez la session utilisateur partenaire avant d’émettre les identifiants d’authentification. |
-| Émission de jeton intégré | Backend partenaire + Agent API | Recommandé pour le mode jeton partenaire. |
+| Création de conteneur | Interface partenaire | Fournissez un élément visible avec une largeur et une hauteur explicites. |
+| création d'iframe | Trading Widget SDK | Le SDK crée et gère l'iframe. |
+| Interface utilisateur de trading | 6MM iframe | La ligne K, le carnet de commandes, le formulaire de commande, les positions, les commandes et les données de compte s'exécutent dans l'iframe. |
+| Afficher les commandes | Trading Widget SDK + 6MM iframe | L’en-tête d’intégration du PC et le ticker inférieur sont masqués par défaut. Les partenaires peuvent utiliser `display` pour afficher les zones de shell ou masquer les conteneurs commerciaux de haut niveau. |
+| Vérification de la connexion du partenaire | Back-end partenaire | Validez la session de l'utilisateur partenaire avant de délivrer les informations d'identification d'authentification. |
+| Intégrer l'émission de jetons | Backend partenaire + Agent API | Recommandé pour le mode jeton partenaire. |
 
 <span id="versioning" data-sixmm-canonical-anchor="versioning" aria-hidden="true"></span>
 
-## Versionnement
+## Gestion des versions
 
-Le chemin d’intégration public reste stable sous le script v1 URL. L’ensemble actuel de capacités v1 comprend partner-token, tokenProvider, entryUrlProvider, contrôles d’affichage, événements du cycle de vie, méthodes d’instance et événements d’ordre.
+Le chemin d'intégration public reste stable sous le script v1 URL. L'ensemble de fonctionnalités v1 actuel comprend le jeton de partenaire, tokenProvider, entryUrlProvider, les contrôles d'affichage, les événements de cycle de vie, les méthodes d'instance et les événements de commande.
 
 ```html
 <script src="https://app.6mm.com/sdk/trading-widget/v1/index.js"></script>
@@ -33,13 +33,21 @@ Le chemin d’intégration public reste stable sous le script v1 URL. L’ensemb
 
 ## Quand utiliser le widget
 
-Choisissez Trading Widget lorsqu’un partenaire a besoin d’une interface de trading complète à l’intérieur d’un produit web existant. Utilisez plutôt la documentation REST API et WebSocket lors de la création et du maintien d’une interface de trading entièrement personnalisée.
+Choisissez Trading Widget lorsqu'un partenaire a besoin d'une interface de trading complète au sein d'un produit Web existant. Utilisez plutôt la documentation REST API et WebSocket lors de la création et de la maintenance d'une interface de trading entièrement personnalisée.
 
 <span id="implementation-path" data-sixmm-canonical-anchor="implementation-path" aria-hidden="true"></span>
 
-## Chemin d’implémentation
+## Chemin de mise en œuvre
 
-1. Suivre le [Trading Widget Départ rapide](/fr/sdk/trading-widget/quick-start) pour charger le script et créer un conteneur visible.
-2. Configurer [Authentification par jeton partenaire](/fr/sdk/trading-widget/authentication) via un backend partenaire.
-3. Ajouter les éléments requis [Options et événements](/fr/sdk/trading-widget/options-events).
-4. Utilisation [Méthodes d’instance](/fr/sdk/trading-widget/instance-methods) pour les contrôles du cycle de vie et de l’exécution.
+1. Suivez le [Trading Widget Démarrage rapide](/fr/sdk/trading-widget/quick-start) pour charger le script et créer un conteneur visible.
+2. Configurer [authentification par jeton de partenaire](/fr/sdk/trading-widget/authentication) via un backend partenaire.
+3. Ajoutez le requis [options et événements](/fr/sdk/trading-widget/options-events).
+4. Utiliser [méthodes d'instance](/fr/sdk/trading-widget/instance-methods) pour les contrôles du cycle de vie et de l’exécution.
+
+<span id="verified-public-runtime" data-sixmm-canonical-anchor="verified-public-runtime" aria-hidden="true"></span>
+
+## Runtime public vérifié
+
+Le script public `v1` signale la version `1.8.0` à compter du 10/10/2026. Ce URL est un point d'entrée stable pour une version majeure, pas une version épinglée. Lisez `TradingWidget.version` et `TradingWidget.capabilities` dans votre runtime chargé avant d'utiliser les fonctionnalités facultatives. Java Agent SDK `v0.3.0` est un package backend distinct.
+
+Le runtime prend en charge une seule instance active (`multiInstance=false`) ; la création d'un autre widget détruit l'instance précédente. Ses paramètres régionaux pris en charge sont `en`, `en-US` et `zh-CN`, indépendamment des 20 langues de documentation.

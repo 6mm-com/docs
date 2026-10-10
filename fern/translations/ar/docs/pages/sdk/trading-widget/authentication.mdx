@@ -1,6 +1,6 @@
 ---
 title: "Trading Widget المصادقة"
-subtitle: "استخدم رمز الشريك لتكاملات جديدة مدمجة SSO تداول."
+subtitle: "استخدم رمز الشريك لتكاملات التداول المضمنة الجديدة SSO."
 slug: sdk/trading-widget/authentication
 canonical-url: https://docs.6mm.com/ar/sdk/trading-widget/authentication
 ---
@@ -9,7 +9,7 @@ canonical-url: https://docs.6mm.com/ar/sdk/trading-widget/authentication
 
 ## الوضع الموصى به: رمز الشريك
 
-يتجنب الشريك-الرمز وضع رموز قصيرة في عناوين URL ويبقي apiSecret في خلفية الشريك.
+يتجنب رمز الشريك وضع الرموز المميزة القصيرة في عناوين URL ويحتفظ بـ apiSecret على الواجهة الخلفية للشريك.
 
 ```js
 const widget = TradingWidget.create('#trading-widget', {
@@ -36,12 +36,12 @@ const widget = TradingWidget.create('#trading-widget', {
 
 <span id="related-documentation" data-sixmm-canonical-anchor="related-documentation" aria-hidden="true"></span>
 
-## وثائق ذات صلة
+## الوثائق ذات الصلة
 
-- [إنشاء رمز تضمين] (/sdk/agent-sdk/java/embed-token): مثال على إصدار الرمز الخلفي.
-- [Trading Widget Quick Start] (/sdk/trading-widget/quick-start): تدفق تهيئة كامل.
-- [أسرار وتوقيع] (/sdk/security/secrets-signing): احتفظ ببيانات اعتماد العميل المميزة في الخلفية.
-- [استكشاف الأخطاء](/ar/sdk/security/troubleshooting): تشخيص فشل الجلسة، الرمز، المصدر، والتهيئة الصحيحة.
+- [إنشاء رمز التضمين](/ar/sdk/agent-sdk/java/embed-token): مثال على إصدار الرمز المميز للواجهة الخلفية.
+- [Trading Widget بداية سريعة](/ar/sdk/trading-widget/quick-start): تدفق التهيئة الكامل.
+- [الأسرار والتوقيع](/ar/sdk/security/secrets-signing): احتفظ ببيانات اعتماد الوكيل المميزة في الواجهة الخلفية.
+- [استكشاف الأخطاء وإصلاحها](/ar/sdk/security/troubleshooting): تشخيص فشل الجلسة والرمز المميز والأصل والتهيئة.
 
 <span id="backend-flow" data-sixmm-canonical-anchor="backend-flow" aria-hidden="true"></span>
 
@@ -62,30 +62,30 @@ const widget = TradingWidget.create('#trading-widget', {
 
 ## tokenProvider العقد
 
-| الميدان | الإخراج | الوصف |
+| مجال | اتجاه | وصف |
 | --- | --- | --- |
-| channelId | SDK -> الخلفية الشريكة | معرف جلسة الويدجت الفريد. يجب أن يمررها الخلف إلى createEmbedToken. |
-| الرمز | SDK -> الخلفية الشريكة | رمز التداول المطلوب حاليا. استخدمه لتحديد نطاق الرمز عند الحاجة. |
-| السبب | SDK -> الخلفية الشريكة | لماذا يطلب SDK رمزا، مثل التحميل الأولي أو التحديث. |
-| embedToken | خلفية الشريك -> SDK | رمز قصير العمر تم إنشاؤه بواسطة Agent SDK أو الوكيل API. |
-| expireAt | خلفية الشريك -> SDK | تم إعادة ختم انتهاء صلاحية الرمز بواسطة 6MM. |
+| channelId | SDK -> الواجهة الخلفية للشريك | معرف جلسة القطعة الفريدة. يجب أن تمررها الواجهة الخلفية إلى createEmbedToken. |
+| رمز | SDK -> الواجهة الخلفية للشريك | رمز التداول المطلوب الحالي. استخدمه لتحديد نطاق الرمز المميز عند الحاجة. |
+| سبب | SDK -> الواجهة الخلفية للشريك | لماذا يطلب SDK رمزًا مميزًا، مثل التحميل الأولي أو التحديث. |
+| embedToken | الواجهة الخلفية للشريك -> SDK | رمز مميز قصير الأمد تم إنشاؤه بواسطة Agent SDK أو الوكيل API. |
+| expireAt | الواجهة الخلفية للشريك -> SDK | تم إرجاع الطابع الزمني لانتهاء الرمز المميز بواسطة 6MM. |
 
 <span id="failure-handling" data-sixmm-canonical-anchor="failure-handling" aria-hidden="true"></span>
 
-## التعامل مع الأعطال
+## التعامل مع الفشل
 
-| الحالة | التعامل الموصى به |
+| حالة | التعامل الموصى به |
 | --- | --- |
-| انتهت صلاحية جلسة الشريك | أعد 401 من نقطة نهاية الشريك واطلب من المستخدم تسجيل الدخول مرة أخرى. |
-| فشل إنشاء الرموز مؤقتا | ضع خطأ في tokenProvider ويسمح للأداة بظهور خطأ في المصادقة. |
-| channelId عدم التوافق | ارفض الطلب وأعد إنشاء نسخة الويدجت. |
-| المستخدم غير مسموح له بالتداول | أعيد خطأ يتحكم به الشريك ولا تنشئ رمز تضمين. |
+| انتهت صلاحية جلسة الشريك | قم بإرجاع 401 من نقطة نهاية الشريك واطلب من المستخدم تسجيل الدخول مرة أخرى. |
+| فشل إنشاء الرمز المميز مؤقتًا | قم بإلقاء خطأ في tokenProvider واسمح للأداة بإظهار خطأ في المصادقة. |
+| channelId غير متطابق | ارفض الطلب وأعد إنشاء مثيل عنصر واجهة المستخدم. |
+| لا يسمح للمستخدم بالتداول | قم بإرجاع خطأ يتحكم فيه الشريك ولا تقم بإنشاء رمز مميز للتضمين. |
 
 <span id="compatibility-mode-agent-sso" data-sixmm-canonical-anchor="compatibility-mode-agent-sso" aria-hidden="true"></span>
 
-## وضع التوافق: agent-sso
+## وضع التوافق: Agent-SSO
 
-Agent-SSO يحافظ على تدفق تذاكر الدخول القديمة /وكيل. أفضل الشريك الرمزي للتكاملات الجديدة.
+يحتفظ Agent-SSO بتدفق تذكرة الدخول الأقدم/الوكيل. تفضيل رمز الشريك لعمليات التكامل الجديدة.
 
 ```js
 const widget = TradingWidget.create('#trading-widget', {
@@ -105,12 +105,13 @@ const widget = TradingWidget.create('#trading-widget', {
   },
 })
 ```
-{/* sixmm-localized-link-repair:start */}
-<span id="localized-page-links" data-sixmm-canonical-anchor="localized-page-links" aria-hidden="true"></span>
 
-## صفحات ذات صلة
+<span id="seconds-trading-and-environment-rules" data-sixmm-canonical-anchor="seconds-trading-and-environment-rules" aria-hidden="true"></span>
 
-- [إنشاء رمز التضمين](/ar/sdk/agent-sdk/java/embed-token)
-- [تضمين 6MM Trading Widget: البدء السريع](/ar/sdk/trading-widget/quick-start)
-- [Agent SDK أسرار وتوقيع HMAC](/ar/sdk/security/secrets-signing)
-{/* sixmm-localized-link-repair:end */}
+## تداول الثواني وقواعد البيئة
+
+بالنسبة لصفحات الثواني، استخدم نفس مصادقة `partner-token` مع `page` و`tradingMode` التي تم تكوينها على عنصر واجهة المستخدم. لا يوجد رمز تنبؤ منفصل. يجب أن تحصل كل مكالمة tokenProvider على رمز مميز جديد لمرة واحدة من الواجهة الخلفية لديك.
+
+قم بإرجاع `embedToken`، `expireAt` في ثواني Unix، والأصل `channelId` ككائن عالي المستوى. لا تحتوي استجابة الرمز المميز Agent SDK على `channelId`؛ الواجهة الخلفية الخاصة بك تعكس صدى قناة الأدوات الحالية. إذا كانت نقطة النهاية الخاصة بك تحتوي على الاستجابات في `data`، فقم بإزالتها قبل العودة من tokenProvider.
+
+[تكامل ثواني كاملة](/ar/sdk/agent-sdk/java/seconds-trading) · [دليل بيئة الصناديق](/ar/sdk/agent-sdk/java/environments)

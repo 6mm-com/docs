@@ -1,0 +1,165 @@
+---
+title: "Dompet Pendanaan"
+subtitle: "Dompet Pendanaan: Agent Java SDK integrasi v0.3.0, contoh, parameter, dan semantik respons."
+slug: sdk/agent-sdk/java/funding-wallet
+canonical-url: https://docs.6mm.com/id/sdk/agent-sdk/java/funding-wallet
+---
+
+Panduan ini menargetkan **Agent Java SDK `v0.3.0`**, Java 8+, dan kontrak publik yang diberi tag. Contoh dijalankan di backend mitra setelah menginisialisasi `client` di [Mulai Cepat](/id/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## Contoh prasyarat
+
+Cuplikan Java membagikan impor ini. Inisialisasi `client` menggunakan Quick Start dan dapatkan `platformUserId` dari pengikatan yang disimpan. Contoh ID pengguna/pesanan harus diganti dengan nilai Anda yang tetap.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span id="wallet-queries-and-transfers" data-sixmm-canonical-anchor="wallet-queries-and-transfers" aria-hidden="true"></span>
+
+## Pertanyaan dan transfer dompet
+
+<span id="distinguish-the-three-wallets" data-sixmm-canonical-anchor="distinguish-the-three-wallets" aria-hidden="true"></span>
+
+### Bedakan ketiga dompet tersebut
+
+| dompet | Sumber keseimbangan | menggunakan |
+| --- | --- | --- |
+| Dompet pengguna Merchant sendiri | Sistem akuntansi Merchant sendiri | Saldo yang tersedia pengguna di sisi pedagang |
+| Pendanaan Platform | `queryUserAssets` dari `funding` | Dana perdagangan detik dan transfer timbal balik Pendanaan/Kontrak |
+| Kontrak Platform | Bidang aset kontrak `queryUserAssets` | Margin kontrak perpetual dan saldo yang dapat ditransfer |
+
+`queryAccount` Kueri akun margin platform pedagang, bukan dompet pengguna pedagang. Antarmuka ini tidak memiliki parameter `environment` dan tidak dapat ditanyakan sebagai aset pengguna yang disimulasikan.
+
+Kueri dua dompet platform pengguna yang disimulasikan:
+
+```java
+QueryUserAssetsResponse assets = client.queryUserAssets(
+        QueryUserAssetsRequest.of(platformUserId)
+                .withFunding()
+                .withEnvironment(ExecutionEnvironment.SIMULATED));
+```
+
+Antarmuka: `POST /v1/agent/query-user-assets`. Pendanaan diminta hanya ketika `includeFunding=true`; semantik kueri aset kontrak asli digunakan secara default.
+
+| bidang respons | arti |
+| --- | --- |
+| `walletBalance`, `availableBalance`, `frozenMargin`, `usedMargin`, `isolatedMargin` | Jumlah terkait dompet kontrak |
+| `funding.assetCode` | Saat ini USDT |
+| `funding.availableAmount`, `heldAmount`, `totalAmount` | Pendanaan tersedia, ditempati dan jumlah total |
+| `funding.materialized` | Apakah akun Pendanaan telah terwujud? |
+| `environment` | Bidang ini digaungkan ketika lingkungan diteruskan secara eksplisit; permintaan lama yang menghilangkan lingkungan tidak mengembalikan bidang ini. |
+| `isSimulatedUser` | Klasifikasi akun; tidak dapat menggantikan pemilihan lingkungan perdagangan |
+
+Jumlah ditangani sebagai string atau `BigDecimal`, bukan `float`/`double`.
+
+<span id="funding-transfer-directions" data-sixmm-canonical-anchor="funding-transfer-directions" aria-hidden="true"></span>
+
+### Arah transfer dana
+
+Buat: `POST /v1/agent/wallet-transfer`, SDK `walletTransfer`.
+
+| `direction` | Aliran dana | `transferAll` |
+| --- | --- | --- |
+| `PARTNER_TO_FUNDING` | Pedagang → Pendanaan Platform | Jumlah tetap saja |
+| `FUNDING_TO_PARTNER` | Pendanaan Platform → Pedagang | Jumlah tetap saja |
+| `FUNDING_TO_CONTRACT` | Platform lingkungan yang sama Pendanaan → Kontrak | Mendukung jumlah tetap atau semua dana yang dapat ditarik |
+| `CONTRACT_TO_FUNDING` | Platform lingkungan yang sama Kontrak → Pendanaan | Mendukung jumlah tetap atau semua dana yang dapat ditarik |
+
+Mata uang saat ini hanya mendukung USDT. Jumlah tetap harus berupa string positif hingga 8 tempat desimal dan tidak boleh menggunakan notasi ilmiah. Ketika `transferAll=true`, hilangkan `amount` dan catat sebagai respon akhir `amount`; "semua" hanya mencakup dana yang dapat ditarik.
+
+Contoh: Merchant mentransfer 10 USDT ke Pendanaan simulasi. Pertama-tama simpan pesanan bisnis dan lingkungan di sistem pedagang, lalu kirim permintaan:
+
+```java
+String fundingOrderNo = "SIM-FUNDING-20261010-000001";
+WalletTransferResponse transfer = client.walletTransfer(
+        WalletTransferRequest.of(fundingOrderNo, "merchant-user-001",
+                "PARTNER_TO_FUNDING", "10.00000000", false)
+                .withEnvironment(ExecutionEnvironment.SIMULATED));
+```
+
+Pendanaan Transfer semua dana yang dapat ditransfer ke Kontrak simulasi:
+
+```java
+WalletTransferResponse move = client.walletTransfer(
+        WalletTransferRequest.of("SIM-F2C-20261010-000001", "merchant-user-001",
+                "FUNDING_TO_CONTRACT", null, true)
+                .withEnvironment(ExecutionEnvironment.SIMULATED));
+```
+
+Operasi yang sama harus terus menggunakan `agentOrderNo` yang asli; operasi yang berbeda dan lingkungan yang berbeda menggunakan nomor pesanan yang berbeda. Mengubah jumlah, pengguna, arah atau lingkungan dengan nomor pesanan yang sama akan ditolak. Transfer Pendanaan/Kontrak hanya dapat dilakukan dalam lingkungan yang sama, dan dana simulasi tidak dapat ditransfer ke dana nyata.
+
+<span id="result-confirmation-and-unknown-result-recovery" data-sixmm-canonical-anchor="result-confirmation-and-unknown-result-recovery" aria-hidden="true"></span>
+
+### Konfirmasi hasil dan pemulihan hasil yang tidak diketahui
+
+Respons pendanaan diwakili oleh `status`, `SUCCESS`, `PROCESSING`, atau `FAILED`, dan dikembalikan `orderNo`, `direction`, `currency`, `amount`, `resultCode`, dll. `code=0` hanya berarti permintaan berhasil diproses dan Anda harus terus menilai `status`.
+
+| hasil | Pemrosesan pedagang |
+| --- | --- |
+| `SUCCESS` | Selesaikan pemrosesan akuntansi lokal berdasarkan jumlah sebenarnya |
+| `PROCESSING` | Simpan secara lokal untuk konfirmasi dan periksa pesanan aslinya |
+| HTTP Batas waktu, kesalahan jaringan, hasil tidak dapat diuraikan | Hasilnya dianggap tidak diketahui dan urutan aslinya dipertanyakan; itu tidak bisa langsung ditentukan sebagai kegagalan atau membuat tatanan baru dan coba lagi. |
+| Teridentifikasi `FAILED` | Melepaskan reservasi lokal sesuai dengan hasil kegagalan yang jelas; membuat tatanan bisnis baru ketika bisnis perlu dimulai kembali |
+
+Kueri pendanaan menggunakan antarmuka khusus `POST /v1/agent/wallet-transfer-status`:
+
+```java
+WalletTransferResponse recovered = client.queryWalletTransfer(
+        WalletTransferQueryRequest.of(fundingOrderNo)
+                .withEnvironment(ExecutionEnvironment.SIMULATED));
+```
+
+Gunakan titik akhir khusus ini untuk memulihkan operasi Pendanaan asli; `queryOrder` tidak dapat menggantikannya. Simpan lingkungan asli dan teruskan secara eksplisit selama pemulihan. Jika `environment` dihilangkan dari `wallet-transfer-status`, server menggunakan lingkungan yang disimpan pada pesanan asli, termasuk pesanan simulasi. Lingkungan yang secara eksplisit bertentangan mengembalikan `102002` (`order environment mismatch`). Ketika pemanggil menghilangkan lingkungan, responsnya juga menghilangkan `environment`; ini tidak berarti pesanan asli adalah pesanan produksi.
+
+Setoran dan penarikan lokal pedagang bersifat idempoten; pesanan dan saldo yang persisten dicadangkan sebelum inisiasi, dan dicadangkan untuk konfirmasi ketika hasilnya tidak diketahui. Akses pendanaan menggunakan kueri khusus untuk mengonfirmasi status akhir; jangan berasumsi bahwa metode transfer kontrak lama Webhook atau pembalikan berlaku secara otomatis untuk Pendanaan.
+
+<span id="existing-contract-transfer-flow" data-sixmm-canonical-anchor="existing-contract-transfer-flow" aria-hidden="true"></span>
+
+### Alur transfer Kontrak yang ada
+
+`transfer`, `transferAllOut`, `reverse`, `queryOrder`, `listOrders` terus memproses proses transfer kontrak asli. `queryOrder` menanyakan perintah transfer dana, `listOrders` adalah daftar rekonsiliasi transfer; sebaliknya, enam jenis kueri di bagian berikutnya digunakan untuk pesanan perdagangan abadi.
+
+Respons pendanaan awal menggunakan `orderStatus`; respon Pendanaan menggunakan `status`, jangan dicampur. Transfer asli Webhook diverifikasi menggunakan `X-Agent-Timestamp`, `X-Agent-Nonce`, `X-Agent-Signature`, dan teks tanda tangan asli adalah `timestamp + nonce + rawBody`; badan permintaan asli diverifikasi terlebih dahulu, kemudian dideserialisasi dan idempoten. Notifikasi lingkungan simulasi eksplisit berisi `environment=SIMULATED`, notifikasi produksi tetap kompatibel dengan kolom lama. Jumlah, nomor pesanan, status dan lingkungan perlu diperiksa dengan pesanan bisnis lokal.
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Sumber dan panduan terkait
+
+- [Sumber resmi v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Ikhtisar kueri dan penomoran halaman](/id/sdk/agent-sdk/java/perpetual-queries)
+- [Dompet pendanaan](/id/sdk/agent-sdk/java/funding-wallet)
+- [Panduan peningkatan](/id/sdk/agent-sdk/java/upgrade)
+
+<span id="funding-request-fields" data-sixmm-canonical-anchor="funding-request-fields" aria-hidden="true"></span>
+
+## Bidang permintaan pendanaan
+
+| Bidang | Diperlukan | Arti |
+| --- | --- | --- |
+| `agentOrderNo` | Ya | Nomor pesanan mitra yang unik secara global; bertahan sebelum mengirim. |
+| `agentUserId / platformUserId` | Satu | Identifikasi pengguna terikat; jika keduanya disediakan, keduanya harus cocok. |
+| `direction` | Ya | Salah satu dari empat arah yang didokumentasikan di atas. |
+| `currency` | Bawaan USDT | Hanya USDT yang didukung. |
+| `transferAll` | Bawaan salah | Hanya transfer internal Pendanaan/Kontrak yang mendukung kebenaran. |
+| `amount` | Bersyarat | String desimal positif untuk transfer tetap; hilangkan untuk transferAll=true. |
+| `environment` | Opsional | Produksi bila dihilangkan untuk transfer baru; SIMULATED memilih dana simulasi. |
+
+<span id="funding-response-fields" data-sixmm-canonical-anchor="funding-response-fields" aria-hidden="true"></span>
+
+## Mendanai bidang respons
+
+| Bidang | Arti |
+| --- | --- |
+| `orderNo` | Pengidentifikasi operasi yang dikembalikan; simpan di samping nomor pesanan mitra asli. |
+| `status` | SUCCESS / PROCESSING / FAILED; menentukan penyelesaian bisnis. |
+| `direction / currency` | Arah transfer dan aset yang dikonfirmasi. |
+| `amount` | Jumlah aktual yang ditransfer sebagai string. |
+| `transferAll` | Apakah operasi ini meminta semua dana yang dapat ditarik. |
+| `agentUserId / platformUserId` | Identitas pengguna dikembalikan; bandingkan dengan pesanan yang disimpan. |
+| `resultCode` | Detail hasil operasi; simpan untuk rekonsiliasi dan dukungan. |
+| `environment` | Digaungkan ketika penelepon secara eksplisit memberikannya; ketidakhadiran bukan merupakan bukti produksi untuk kueri status pesanan asli. |

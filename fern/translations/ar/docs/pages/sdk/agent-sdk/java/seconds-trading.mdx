@@ -1,0 +1,165 @@
+---
+title: "التكامل التجاري للثواني"
+subtitle: "التكامل التجاري للثواني: Agent Java SDK التكامل v0.3.0 والأمثلة والمعلمات ودلالات الاستجابة."
+slug: sdk/agent-sdk/java/seconds-trading
+canonical-url: https://docs.6mm.com/ar/sdk/agent-sdk/java/seconds-trading
+---
+
+يستهدف هذا الدليل **Agent Java SDK `v0.3.0`** وJava 8+.
+
+<span id="prepare-identity-authentication-and-funds" data-sixmm-canonical-anchor="prepare-identity-authentication-and-funds" aria-hidden="true"></span>
+
+## إعداد الهوية والتوثيق والأموال
+
+يستخدم تداول الثواني نفس ربط المستخدم ومصادقة الدخول مثل التداول الدائم. ويستخدم أرصدة التمويل. يستخدم الهامش الدائم أرصدة العقد. قم بتكوين منتج/وضع الواجهة الأمامية وبيئة أموال الواجهة الخلفية بشكل منفصل.
+
+تهيئة `client` باستخدام [بداية سريعة](/ar/sdk/agent-sdk/java/quick-start). احفظ تعيين المستخدم المنضم واحصل على معرف المستخدم الشريك من جلسة الواجهة الخلفية التي تمت مصادقتها.
+
+<span id="redirect-entry" data-sixmm-canonical-anchor="redirect-entry" aria-hidden="true"></span>
+
+## إعادة توجيه الإدخال
+
+```java
+import com.sixmm.agent.model.CreateEntryUrlRequest;
+import com.sixmm.agent.model.CreateEntryUrlResponse;
+
+CreateEntryUrlResponse entry = client.createEntryUrl(
+        CreateEntryUrlRequest.of("merchant-user-001")
+                .withRedirectPath("/zh-CN/up-down?tradingMode=demo")
+                .withReturnUrl("https://merchant.example/markets"));
+String webUrl = entry.webUrl;
+```
+
+يستدعي SDK `POST /v1/agent/create-entry-url`. قم بإرجاع `webUrl` إلى الواجهة الأمامية للشريك وافتحها على الفور. `expireAt` يستخدم ثواني يونكس. التذكرة قصيرة الأجل ولمرة واحدة؛ الحصول على آخر بعد انتهاء الصلاحية أو الاستهلاك.
+
+| منتج | مثال لمسار الواجهة الأمامية | محفظة |
+| --- | --- | --- |
+| أعلى/أسفل | `/zh-CN/up-down?tradingMode=real` أو `demo` | التمويل |
+| مرتفع/منخفض | `/zh-CN/high-low?tradingMode=real` أو `demo` | التمويل |
+| شبكة | `/zh-CN/grid-prediction?tradingMode=real` أو `demo` | التمويل |
+| العقود الآجلة الدائمة | `/zh-CN/futures/BTCUSDT?tradingMode=real` أو `demo` | عقد |
+
+استخدم مسارات الواجهة الأمامية الفعلية التي يوفرها 6MM. `redirectPath` هو مسار منصة نسبي يبدأ بـ `/`؛ `returnUrl` شريك مطلق HTTP/HTTPS URL. تقوم تذكرة الدخول بتوثيق المستخدم ولا تنفذ عملية نقل.
+
+<span id="embedded-entry" data-sixmm-canonical-anchor="embedded-entry" aria-hidden="true"></span>
+
+## دخول مضمن
+
+استخدم التدفق الحالي `partner-token` و`tokenProvider`. لا يوجد رمز مميز للتنبؤ. قم بإنشاء الأداة باستخدام `page` و`tradingMode`، واستخدم `channelId` الحالية عند استدعاء الواجهة الخلفية للشريك.
+
+```java
+import com.sixmm.agent.model.CreateEmbedTokenRequest;
+import com.sixmm.agent.model.CreateEmbedTokenResponse;
+
+String channelId = "tw_example_channel";
+CreateEmbedTokenResponse auth = client.createEmbedToken(
+        CreateEmbedTokenRequest.of("merchant-user-001", channelId));
+String embedToken = auth.embedToken;
+long expireAt = auth.expireAt;
+```
+
+يستدعي SDK `POST /v1/agent/create-embed-token`. `symbol` اختياري؛ ولا يختار منتجًا للتداول بالثواني. اختيار المنتج ينتمي إلى الواجهة الأمامية. لا يحدد الرمز المميز بيئة الأموال أو يغير الأرصدة.
+
+<span id="complete-frontend-example" data-sixmm-canonical-anchor="complete-frontend-example" aria-hidden="true"></span>
+
+## مثال الواجهة الأمامية كاملة
+
+تم التحقق من هذه الخيارات مقابل وقت التشغيل العام Trading Widget `1.8.0` في 10-10-2026. إصدارات القطعة وAgent Java SDK مستقلة.
+
+```html
+<div id="seconds-widget" style="width: 100%; height: 720px"></div>
+<script src="https://app.6mm.com/sdk/trading-widget/v1/index.js"></script>
+<script>
+  const page = 'up-down';
+  const tradingMode = 'demo';
+  const capabilities = TradingWidget.capabilities;
+  if (!capabilities?.partnerToken ||
+      !capabilities.pages?.includes(page) ||
+      !capabilities.tradingModes?.includes(tradingMode)) {
+    throw new Error('Trading Widget SDK does not support the requested page or mode');
+  }
+
+  const widget = TradingWidget.create('#seconds-widget', {
+    baseUrl: 'https://app.6mm.com',
+    page,
+    tradingMode,
+    theme: 'dark',
+    locale: 'zh-CN',
+    auth: {
+      mode: 'partner-token',
+      tokenProvider: async ({ channelId }) => {
+        // Partner-owned endpoint; derive the user from the backend session.
+        const response = await fetch('/api/seconds/embed-token', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ channelId }),
+        });
+        if (!response.ok) {
+          throw new Error('Failed to request embed token');
+        }
+        const result = await response.json();
+        if (typeof result.embedToken !== 'string' || !result.embedToken.trim() ||
+            !Number.isFinite(result.expireAt) || result.channelId !== channelId) {
+          throw new Error('Invalid embed token response');
+        }
+        return {
+          embedToken: result.embedToken,
+          expireAt: result.expireAt,
+          channelId: result.channelId,
+        };
+      },
+    },
+    onReady() {
+      console.log('Trading widget ready');
+    },
+    onError(error) {
+      console.error('Trading widget error', error.code);
+    },
+  });
+  window.addEventListener('beforeunload', () => widget.destroy());
+</script>
+```
+
+| خيار | قيم | معنى |
+| --- | --- | --- |
+| `page` | `up-down`، `high-low`، `grid-prediction` | صفحة المنتج. |
+| `tradingMode` | `real`، `demo` | الافتراضي هو `real`؛ تعيين صراحة. |
+| `baseUrl` | `https://app.6mm.com` | أصل الواجهة الأمامية للمنصة؛ تقوم الأداة ببناء التضمين الخاص بها URL. |
+
+<span id="partner-backend-response" data-sixmm-canonical-anchor="partner-backend-response" aria-hidden="true"></span>
+
+## استجابة الواجهة الخلفية للشريك
+
+`/api/seconds/embed-token` هي نقطة نهاية مملوكة للشريك، وليست 6MM API. قم بتوثيق الجلسة، واستنتج `agentUserId` من جانب الخادم واتصل بـ `createEmbedToken`. قم بإرجاع بنية المستوى الأعلى هذه:
+
+```json
+{
+  "embedToken": "short-one-time-token",
+  "expireAt": 1791590700,
+  "channelId": "tw_xxx"
+}
+```
+
+استخدم `expireAt` الفعلية لاستجابة الوكيل، وليس القيمة التوضيحية. لا تحتوي استجابة الوكيل على `channelId`؛ الواجهة الخلفية الخاصة بك تعكس قيمة الطلب الحالي. إذا كانت التفافات API تؤدي إلى `data`، فقم بفك تلك الطبقة قبل العودة من tokenProvider. رفض فشل الأعمال بدلاً من إرجاع كائن نجاح غير صالح.
+
+تحصل كل تهيئة أو تجديد على رمز مميز جديد. لا تقم أبدًا بتخزين نفس الرمز المميز مرة أخرى أو استبداله مرة أخرى، أو وضعه في URL. إعادة استخدام نفس قناة المثيل أثناء التجديد؛ استخدم القناة الجديدة بعد إعادة إنشاء المثيل.
+
+<span id="match-the-funds-environment" data-sixmm-canonical-anchor="match-the-funds-environment" aria-hidden="true"></span>
+
+## تطابق بيئة الأموال
+
+تتطلب الواجهة الأمامية `demo` محاكاة طلبات الأموال باستخدام `environment=SIMULATED`. تتطلب الواجهة الأمامية `real` أموال الإنتاج. لا `tradingMode` ولا إنشاء الرمز المميز يغير هدف الأموال الخلفية.
+
+عند تبديل المستخدمين أو وضع التداول، قم بتدمير القطعة القديمة وإنشاء مثيل جديد. الاستعلام عن أرصدة التمويل، وتحويل الأموال وتأكيد النتيجة النهائية من خلال نقطة نهاية الحالة الخاصة بالتمويل قبل معاملة المستخدم على أنه ممول.
+
+يرى [محفظة التمويل](/ar/sdk/agent-sdk/java/funding-wallet) و [دليل البيئة](/ar/sdk/agent-sdk/java/environments).
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## المصدر والأدلة ذات الصلة
+
+- [المصدر الرسمي v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [نظرة عامة على الاستعلام وترقيم الصفحات](/ar/sdk/agent-sdk/java/perpetual-queries)
+- [محفظة التمويل](/ar/sdk/agent-sdk/java/funding-wallet)
+- [دليل الترقية](/ar/sdk/agent-sdk/java/upgrade)

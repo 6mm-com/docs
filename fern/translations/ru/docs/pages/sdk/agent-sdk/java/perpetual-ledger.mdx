@@ -1,0 +1,133 @@
+---
+title: "Книга контрактов"
+subtitle: "Книга контрактов: Интеграция с Agent Java SDK v0.3.0, примеры, параметры и семантика ответа."
+slug: sdk/agent-sdk/java/perpetual-ledger
+canonical-url: https://docs.6mm.com/ru/sdk/agent-sdk/java/perpetual-ledger
+---
+
+Это руководство предназначено для **Agent Java SDK `v0.3.0`**, Java 8+ и помеченного публичного контракта. Примеры выполняются в серверной части партнера после инициализации `client` в [Быстрый старт](/ru/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## Пример предварительных условий
+
+Фрагменты Java разделяют этот импорт. Инициализируйте `client` с помощью быстрого запуска и получите `platformUserId` из сохраненной привязки. Примеры идентификаторов пользователей/заказов необходимо заменить вашими собственными сохраненными значениями.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span data-sixmm-canonical-anchor="listperpetualledger" aria-hidden="true"></span>
+
+## `listPerpetualLedger`
+
+Модель запроса: `PerpetualLedgerRequest`.
+
+```java
+import com.sixmm.agent.model.PerpetualLedgerRequest;
+import com.sixmm.agent.model.PerpetualResponse;
+import java.util.Collections;
+
+PerpetualLedgerRequest request = new PerpetualLedgerRequest();
+request.platformUserIds = Collections.singletonList("1188041528");
+request.limit = 100;
+request.endTime = System.currentTimeMillis();
+request.startTime = request.endTime - 3_600_000L;
+PerpetualResponse response = client.listPerpetualLedger(request);
+System.out.println(response.data.items.size());
+System.out.println(response.data.hasMore);
+System.out.println(response.data.nextCursor);
+```
+
+<span id="request-fields" data-sixmm-canonical-anchor="request-fields" aria-hidden="true"></span>
+
+### Поля запроса
+
+| Поле | Java тип | Необходимый | Значение |
+| --- | --- | --- | --- |
+| `platformUserIds` | `java.util.List<String>` | Условный | 1–100 уникальных публичных идентификаторов; требуется для исполнения и условных ордеров. Опустить поддерживаемые запросы для прямой области действия игрока; [] недействительно. |
+| `assetType` | `String` | Нет | Классификация активов, возвращаемая реестром; не предполагайте USDT. |
+| `changeType` | `String` | Нет | Тип бизнес-изменения книги с сохранением исходных значений. |
+| `startTime` | `Long` | Нет | Включительно миллисекунды Unix; используйте фиксированное окно истории UTC. |
+| `endTime` | `Long` | Нет | Эксклюзивные миллисекунды Unix. |
+| `limit` | `Integer` | Нет | По умолчанию 500; 1–1000. |
+| `cursor` | `String` | Нет | Используйте возвращенный nextCursor с неизмененными фильтрами; остановитесь, когда hasMore имеет значение false. |
+
+Пример читает одну страницу. Для обязательных полей, области действия игрока, семантики фильтра, ограничения, курсора и ограниченных повторов следуйте инструкциям. [Обзор запроса](/ru/sdk/agent-sdk/java/perpetual-queries). Сохраняйте все фильтры неизменными при пейджинге; не интерпретируйте ошибку как пустой результат.
+
+<span id="contract-account-change-details" data-sixmm-canonical-anchor="contract-account-change-details" aria-hidden="true"></span>
+
+## Записи книги контрактов
+
+Интерфейс: `account/ledger`. Возвращенные данные содержат только следующие 11 бизнес-полей и не содержат логических флагов порядка.
+
+| Поле `data` | тип | значение |
+| --- | --- | --- |
+| `ledgerId` | string | Исходный реестр записывает идентификатор транзакции; одна и та же транзакция может быть разделена на несколько деталей |
+| `symbol` | string | Связанная торговая пара, может быть опущена, если не связана |
+| `assetType` | string | Тип актива, сохраненный по исходному значению; используется для классификации активов, не выводится по умолчанию USDT |
+| `changeType` | string | Тип бизнеса изменения счета, сохраненный в соответствии с исходным значением, например, комиссия за обработку, прибыль и убыток, перевод; можно фильтровать по тому же полю |
+| `amount` | string | Сумма изменения данной детали, положительное число указывает на увеличение, отрицательное число указывает на уменьшение; точность сохраняется |
+| `walletBalanceBefore` | string | Баланс кошелька до смены аккаунта, записанный в этой детали. |
+| `walletBalanceAfter` | string | Баланс кошелька после смены аккаунта, зафиксированный в этой детали. |
+| `frozenBalanceBefore` | string | В этой детали записывается замороженный баланс, зафиксированный до изменения счета. |
+| `frozenBalanceAfter` | string | Замороженный баланс, зафиксированный в этой детали после смены счета |
+| `referenceId` | string | Связанный бизнес-номер; интерпретируется как changeType и не может быть единообразно расценен как порядок orderId; «0» указывает, что источник не имеет действительного связанного номера. |
+| `createdAt` | integer | Время создания реквизитов изменения аккаунта, миллисекунды; это поле используется для фильтрации времени в этом интерфейсе |
+
+Используйте баланс до и после изменения учетной записи, возвращенного интерфейсом. Разные changeType имеют разную семантику, и нельзя предполагать, что каждая сумма равна walletBalanceAfter − walletBalanceBefore. Отображение/сводка записей книги должны сохранять тип и детализацию.
+
+Вот пример формата с использованием вымышленного идентификатора и суммы:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "items": [
+      {
+        "platformUserId": "1188041528",
+        "entityType": "ACCOUNT_LEDGER",
+        "entityId": "900001",
+        "data": {
+          "ledgerId": "ledger-example-001",
+          "symbol": "BTCUSDT",
+          "assetType": "USDT",
+          "changeType": "HANDLING_FEE",
+          "amount": "-0.10000000",
+          "walletBalanceBefore": "100.00000000",
+          "walletBalanceAfter": "99.90000000",
+          "frozenBalanceBefore": "0.00000000",
+          "frozenBalanceAfter": "0.00000000",
+          "referenceId": "800001",
+          "createdAt": 1791590400000
+        }
+      }
+    ],
+    "nextCursor": "",
+    "hasMore": false
+  }
+}
+```
+
+
+<span id="example-response-envelope" data-sixmm-canonical-anchor="example-response-envelope" aria-hidden="true"></span>
+
+## Пример конверта ответа
+
+Это иллюстративная пустая страница, а не образец завершенной сделки. В приведенных выше таблицах полей для конкретных ресурсов описываются заполненные `items[].data`.
+
+```json
+{"code":0,"message":"success","data":{"items":[],"nextCursor":"","hasMore":false}}
+```
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Источник и связанные руководства
+
+- [Официальный источник v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Обзор запроса и нумерация страниц](/ru/sdk/agent-sdk/java/perpetual-queries)
+- [Финансирование кошелька](/ru/sdk/agent-sdk/java/funding-wallet)
+- [Руководство по обновлению](/ru/sdk/agent-sdk/java/upgrade)

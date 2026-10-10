@@ -1,0 +1,133 @@
+---
+title: "계약 원장"
+subtitle: "계약 원장: Agent Java SDK v0.3.0 통합, 예시, 매개변수 및 응답 의미 체계."
+slug: sdk/agent-sdk/java/perpetual-ledger
+canonical-url: https://docs.6mm.com/ko/sdk/agent-sdk/java/perpetual-ledger
+---
+
+이 가이드는 **Agent Java SDK `v0.3.0`**, Java 8+ 및 태그된 공개 계약을 대상으로 합니다. 예제는 `client`를 초기화한 후 파트너 백엔드에서 실행됩니다. [빠른 시작](/ko/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## 예시 전제조건
+
+Java 조각은 이러한 가져오기를 공유합니다. 빠른 시작을 사용하여 `client`를 초기화하고 저장된 바인딩에서 `platformUserId`를 가져옵니다. 예시 사용자/주문 ID는 고유한 지속 값으로 대체되어야 합니다.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span data-sixmm-canonical-anchor="listperpetualledger" aria-hidden="true"></span>
+
+## `listPerpetualLedger`
+
+요청 모델: `PerpetualLedgerRequest`.
+
+```java
+import com.sixmm.agent.model.PerpetualLedgerRequest;
+import com.sixmm.agent.model.PerpetualResponse;
+import java.util.Collections;
+
+PerpetualLedgerRequest request = new PerpetualLedgerRequest();
+request.platformUserIds = Collections.singletonList("1188041528");
+request.limit = 100;
+request.endTime = System.currentTimeMillis();
+request.startTime = request.endTime - 3_600_000L;
+PerpetualResponse response = client.listPerpetualLedger(request);
+System.out.println(response.data.items.size());
+System.out.println(response.data.hasMore);
+System.out.println(response.data.nextCursor);
+```
+
+<span id="request-fields" data-sixmm-canonical-anchor="request-fields" aria-hidden="true"></span>
+
+### 요청 필드
+
+| 필드 | Java 유형 | 필수의 | 의미 |
+| --- | --- | --- | --- |
+| `platformUserIds` | `java.util.List<String>` | 가정 어구 | 1~100개의 고유한 공개 ID 채우기 및 조건부 주문에 필요합니다. 직접 플레이어 범위에 대해 지원되는 쿼리를 생략합니다. []는 유효하지 않습니다. |
+| `assetType` | `String` | 아니요 | 원장에 의해 반환된 자산 분류 USDT라고 가정하지 마세요. |
+| `changeType` | `String` | 아니요 | 원장 비즈니스 변경 유형, 소스 값 보존. |
+| `startTime` | `Long` | 아니요 | Unix 밀리초를 포함합니다. 고정된 UTC 기록 창을 사용합니다. |
+| `endTime` | `Long` | 아니요 | 독점 Unix 밀리초. |
+| `limit` | `Integer` | 아니요 | 기본 500; 1~1000. |
+| `cursor` | `String` | 아니요 | 변경되지 않은 필터와 함께 반환된 nextCursor를 사용합니다. hasMore가 false인 경우 중지합니다. |
+
+예제에서는 한 페이지를 읽습니다. 필수 필드, 플레이어 범위, 필터 의미, 제한, 커서 및 제한된 재시도에 대해서는 다음을 따르세요. [쿼리 개요](/ko/sdk/agent-sdk/java/perpetual-queries). 페이징하는 동안 모든 필터를 변경하지 않고 유지하세요. 오류를 빈 결과로 해석하지 마십시오.
+
+<span id="contract-account-change-details" data-sixmm-canonical-anchor="contract-account-change-details" aria-hidden="true"></span>
+
+## 계약 원장 기록
+
+인터페이스: `account/ledger`. 반환된 데이터에는 다음 11개 비즈니스 필드만 포함되며 주문 부울 플래그는 포함되지 않습니다.
+
+| `data` 필드 | 유형 | 의미 |
+| --- | --- | --- |
+| `ledgerId` | string | 소스 원장은 거래 ID를 기록합니다. 동일한 거래가 여러 세부정보로 분할될 수 있음 |
+| `symbol` | string | 관련 거래페어, 관련이 없는 경우 생략 가능 |
+| `assetType` | string | 자산 유형은 소스 값으로 저장됩니다. 자산 분류에 사용되며 기본적으로 추론되지 않음 USDT |
+| `changeType` | string | 취급수수료, 손익, 이체 등 원천가치에 따라 저장되는 계좌변경업종 동일한 필드로 필터링할 수 있습니다. |
+| `amount` | string | 이 세부 사항의 변화량입니다. 양수는 증가를 나타내고 음수는 감소를 나타냅니다. 정밀도가 유지됩니다 |
+| `walletBalanceBefore` | string | 이 세부정보에 기록되는 계정 변경 전 지갑 잔액 |
+| `walletBalanceAfter` | string | 이 세부정보에 기록되는 계정 변경 후 지갑 잔액 |
+| `frozenBalanceBefore` | string | 이 항목에는 계좌 변경 이전에 기록된 동결 잔액이 기록됩니다. |
+| `frozenBalanceAfter` | string | 계좌 변경 후 본 상세 내역에 기록된 동결 잔액 |
+| `referenceId` | string | 관련 사업자번호 changeType로 해석되며 orderId 순서로 균일하게 간주될 수 없습니다. "0"은 소스에 유효한 관련 번호가 없음을 나타냅니다. |
+| `createdAt` | integer | 계정 변경 세부사항 생성 시간(밀리초) 이 필드는 이 인터페이스에서 시간 필터링에 사용됩니다. |
+
+인터페이스에서 반환된 계정 변경 전후의 잔액을 사용하세요. 서로 다른 changeType는 서로 다른 의미를 가지며, 각 양이 walletBalanceAfter − walletBalanceBefore와 동일하다고 가정할 수 없습니다. 원장 기록의 표시/요약은 유형 및 세부 정보 ID를 유지해야 합니다.
+
+다음은 가상 ID와 금액을 사용하는 형식의 예입니다.
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "items": [
+      {
+        "platformUserId": "1188041528",
+        "entityType": "ACCOUNT_LEDGER",
+        "entityId": "900001",
+        "data": {
+          "ledgerId": "ledger-example-001",
+          "symbol": "BTCUSDT",
+          "assetType": "USDT",
+          "changeType": "HANDLING_FEE",
+          "amount": "-0.10000000",
+          "walletBalanceBefore": "100.00000000",
+          "walletBalanceAfter": "99.90000000",
+          "frozenBalanceBefore": "0.00000000",
+          "frozenBalanceAfter": "0.00000000",
+          "referenceId": "800001",
+          "createdAt": 1791590400000
+        }
+      }
+    ],
+    "nextCursor": "",
+    "hasMore": false
+  }
+}
+```
+
+
+<span id="example-response-envelope" data-sixmm-canonical-anchor="example-response-envelope" aria-hidden="true"></span>
+
+## 응답 봉투 예시
+
+이것은 완료된 거래의 샘플이 아닌 예시용 빈 페이지입니다. 위의 리소스별 필드 테이블은 채워진 `items[].data`에 대해 설명합니다.
+
+```json
+{"code":0,"message":"success","data":{"items":[],"nextCursor":"","hasMore":false}}
+```
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## 소스 및 관련 가이드
+
+- [공식 v0.3.0 소스](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [쿼리 개요 및 페이지 매김](/ko/sdk/agent-sdk/java/perpetual-queries)
+- [펀딩 지갑](/ko/sdk/agent-sdk/java/funding-wallet)
+- [업그레이드 가이드](/ko/sdk/agent-sdk/java/upgrade)

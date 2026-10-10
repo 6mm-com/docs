@@ -1,99 +1,109 @@
 ---
-title: "Xác minh chữ ký Webhook & Tính lũy đẳng"
-subtitle: "Xác minh webhook 6MM Agent với phần thân yêu cầu thô và xử lý thử lại, timeout, và sự kiện lặp lại mà không có các hành động kinh doanh trùng lặp."
+title: "Webhook Xác minh chữ ký & quyền sở hữu"
+subtitle: "Xác minh 6MM Tác nhân webhooks với nội dung yêu cầu thô và các lần thử lại quy trình, hết thời gian chờ và các sự kiện lặp lại mà không có hành động kinh doanh trùng lặp."
 slug: sdk/security/webhooks-idempotency
 canonical-url: https://docs.6mm.com/vi/sdk/security/webhooks-idempotency
 ---
 
-Webhook thông báo cho backend đối tác về các thay đổi trạng thái kinh doanh bất đồng bộ. Vì việc gửi có thể được thử lại, mỗi người nhận phải xác minh chữ ký trước khi phân tích dữ liệu đáng tin cậy và phải xử lý sự kiện một cách đồng nhất.
+Webhooks thông báo cho chương trình phụ trợ của đối tác về các thay đổi trạng thái doanh nghiệp không đồng bộ. Vì việc gửi có thể được thử lại nên mọi người nhận đều phải xác minh chữ ký trước khi phân tích cú pháp dữ liệu đáng tin cậy và phải xử lý sự kiện một cách bình thường.
 
 <span id="webhook-headers" data-sixmm-canonical-anchor="webhook-headers" aria-hidden="true"></span>
 
-## Tiêu đề Webhook
+## tiêu đề Webhook
 
-| Tiêu đề | Mô tả |
+| tiêu đề | Sự miêu tả |
 | --- | --- |
-| Dấu thời gian X-Agent | Thời gian Unix tính bằng giây. |
-| X-Agent-Nonce | Không có bảo vệ phát lại. |
-| chữ ký X-Agent | HMAC-SHA256 ký. |
+| X-Agent-Dấu thời gian | Dấu thời gian Unix tính bằng giây. |
+| Đặc vụ X-Nonce | Bảo vệ chống phát lại nonce. |
+| X-Agent-Chữ ký | HMAC-SHA256 chữ ký. |
 
 ```text
 timestamp + nonce + rawBody
 ```
 
-Sử dụng chính xác phần thân yêu cầu thô nhận được trên HTTP khi tái tạo giá trị đã ký. Phân tích cú pháp và tuần tự hóa lại JSON trước có thể thay đổi khoảng trắng hoặc lệnh trường và tạo ra một chữ ký khác.
+Sử dụng nội dung yêu cầu thô chính xác nhận được qua HTTP khi xây dựng lại giá trị đã ký. Trước tiên, việc phân tích cú pháp và sắp xếp lại JSON có thể thay đổi khoảng trắng hoặc lệnh trường và tạo ra một chữ ký khác.
 
 <span id="verification-flow" data-sixmm-canonical-anchor="verification-flow" aria-hidden="true"></span>
 
-## Quy trình xác minh
+## Luồng xác minh
 
-1. Đọc tiêu đề thời gian, nonce và chữ ký.
-2. Ghi lại nội dung yêu cầu thô chưa chỉnh sửa.
+1. Đọc tiêu đề dấu thời gian, nonce và chữ ký.
+2. Nắm bắt nội dung yêu cầu thô chưa sửa đổi.
 3. Xây dựng `timestamp + nonce + rawBody`.
-4. Tính HMAC-SHA256 với đối tác API bí mật.
-5. So sánh chữ ký đã tính toán và nhận được bằng cách so sánh thời gian hằng số.
-6. Áp dụng các kiểm tra thời gian tươi mới và không tái sử dụng đã được phê duyệt.
+4. Tính toán HMAC-SHA256 với đối tác API bí mật.
+5. So sánh các chữ ký được tính toán và nhận được bằng cách sử dụng so sánh theo thời gian không đổi.
+6. Áp dụng các kiểm tra về độ mới của dấu thời gian và mức độ không tái sử dụng đã được phê duyệt.
 7. Chỉ phân tích và xử lý sự kiện sau khi xác minh thành công.
 
 Khi có trình xác minh Agent SDK chính thức, hãy sử dụng nó thay vì duy trì mã ký độc lập.
 
 <span id="order-idempotency" data-sixmm-canonical-anchor="order-idempotency" aria-hidden="true"></span>
 
-## Tính đồng nhất của lệnh
+## Lệnh bình thường
 
-| Vụ án | Xử lý |
+| Trường hợp | Xử lý |
 | --- | --- |
-| Yêu cầu chuyển ban đầu | Tạo một agentOrderNoduy nhất toàn cầu. |
-| HTTP hội ý | Truy vấn agentOrderNo gốc trước khi tạo một  mới. |
-| Phản hồi PROCESSING | Chờ trạng thái webhook hoặc lệnh truy vấn. |
-| Webhook lặp lại | Loại bỏ trùng lặp bằng khóa đồng tính và trạng thái cuối cùng. |
+| Yêu cầu chuyển ban đầu | Tạo một agentOrderNo duy nhất trên toàn cầu. |
+| HTTP hết thời gian chờ | Truy vấn agentOrderNo ban đầu trước khi tạo một cái mới. |
+| PROCESSING phản hồi | Đợi webhook hoặc truy vấn trạng thái đơn hàng. |
+| Đã lặp lại webhook | Loại bỏ trùng lặp bằng khóa bình thường và trạng thái cuối cùng. |
 
 <span id="recommended-idempotency-record" data-sixmm-canonical-anchor="recommended-idempotency-record" aria-hidden="true"></span>
 
-## Bản ghi idempotency được khuyến nghị
+## Bản ghi bất lực được đề xuất
 
-Lưu trữ đủ thông tin để nhận biết một lần giao hàng lặp lại và phục hồi an toàn:
+Lưu trữ đủ thông tin để nhận biết việc giao hàng lặp lại và khôi phục một cách an toàn:
 
-| Lĩnh vực | Mục đích |
+| Cánh đồng | Mục đích |
 | --- | --- |
-| Khóa sự kiện hoặc khóa kinh doanh | Xác định duy nhất thông báo hoặc thao tác. |
-| Số đơn hàng đối tác | Kết nối sự kiện với yêu cầu ban đầu. |
+| Chìa khóa sự kiện hoặc doanh nghiệp | Xác định duy nhất thông báo hoặc hoạt động. |
+| Số đơn đặt hàng của đối tác | Kết nối sự kiện với yêu cầu ban đầu. |
 | Băm tải trọng | Giúp xác định các tải trọng lặp lại xung đột. |
-| Trạng thái xử lý hiện tại | Phân biệt công việc nhận được, xử lý, thành công và thất bại. |
-| Tình trạng kinh doanh cuối cùng | Ngăn một hành động cuối được áp dụng hai lần. |
-| Dấu thời gian đã xử lý | Hỗ trợ các chính sách điều tra và lưu trữ. |
+| Trạng thái xử lý hiện tại | Phân biệt công việc đã nhận, đang xử lý, thành công và thất bại. |
+| Tình trạng kinh doanh cuối cùng | Ngăn chặn một hành động đầu cuối được áp dụng hai lần. |
+| Dấu thời gian đã xử lý | Hỗ trợ các chính sách điều tra và lưu giữ. |
 
-Cam kết bản ghi thay đổi kinh doanh và bản ghi idempotency trong cùng một giao dịch nếu có thể. Một sự kiện lặp lại nên trả về kết quả đã biết thay vì áp dụng lại số dư, lệnh hoặc thay đổi người dùng.
+Cam kết thay đổi hoạt động kinh doanh và ghi lại quyền sở hữu trong cùng một giao dịch nếu có thể. Một sự kiện lặp lại sẽ trả về kết quả đã biết thay vì áp dụng lại số dư, lệnh hoặc thay đổi của người dùng.
 
 <span id="timeout-and-retry-rule" data-sixmm-canonical-anchor="timeout-and-retry-rule" aria-hidden="true"></span>
 
-## Quy tắc timeout và thử lại
+## Quy tắc hết thời gian chờ và thử lại
 
-Thời gian chờ HTTP không chứng minh rằng yêu cầu ban đầu đã thất bại. Truy vấn thao tác bằng `agentOrderNo`gốc, hoặc chờ webhook của nó, trước khi quyết định có cần hành động khác hay không. Tạo số lệnh doanh nghiệp mới sau mỗi lần timeout có thể gây ra các chuyển động quỹ trùng lặp.
+Thời gian chờ HTTP không chứng minh rằng yêu cầu ban đầu không thành công. Truy vấn thao tác bằng cách sử dụng `agentOrderNo` ban đầu hoặc đợi webhook của nó trước khi quyết định xem có cần thực hiện hành động khác hay không. Việc tạo số đơn đặt hàng kinh doanh mới sau mỗi lần hết thời gian chờ có thể gây ra sự chuyển động quỹ trùng lặp.
 
 <span id="production-checklist" data-sixmm-canonical-anchor="production-checklist" aria-hidden="true"></span>
 
 ## Danh sách kiểm tra sản xuất
 
-- Xác minh chữ ký trước khi JSON phân tích cú pháp hoặc xử lý kinh doanh.
-- Bảo toàn phần cơ thể thô độc lập với payload đã phân tích cú pháp.
-- Từ chối các yêu cầu cũ hoặc phát lại theo chính sách tích hợp đã được phê duyệt.
-- Đảm bảo xử lý sự kiện an toàn cho việc giao hàng lặp đi lặp lại hoặc giao hàng ngoài đơn hàng.
-- Ghi lại ID sự kiện, số đơn hàng đối tác, kết quả xử lý và thời gian yêu cầu.
-- Xóa các bí mật và giá trị chữ ký khỏi nhật ký và tệp đính kèm hỗ trợ.
+- Xác minh chữ ký trước khi phân tích cú pháp JSON hoặc xử lý công việc.
+- Bảo quản phần thân thô độc lập với tải trọng được phân tích cú pháp.
+- Từ chối các yêu cầu cũ hoặc được phát lại theo chính sách tích hợp đã được phê duyệt.
+- Giúp quá trình xử lý sự kiện trở nên an toàn đối với việc phân phối lặp lại và không theo lệnh.
+- Ghi lại ID sự kiện, số đơn đặt hàng của đối tác, kết quả xử lý và thời gian yêu cầu.
+- Biên tập lại các bí mật và giá trị chữ ký từ nhật ký và tệp đính kèm hỗ trợ.
 
 <span id="related-docs" data-sixmm-canonical-anchor="related-docs" aria-hidden="true"></span>
 
 ## Tài liệu liên quan
 
 <CardGroup cols={3}>
-<Card title="Bí mật & Ký HMAC" icon="fa-duotone fa-shield-keyhole" href="/vi/sdk/security/secrets-signing">
-Bảo vệ bí mật API được sử dụng để xác minh yêu cầu và webhook.
+<Card title="Bí mật & HMAC Ký kết" icon="fa-duotone fa-shield-keyhole" href="/vi/sdk/security/secrets-signing">
+Bảo vệ bí mật API được sử dụng để yêu cầu và xác minh webhook.
 </Card>
-<Card title="Tổng quan Agent SDK" icon="fa-duotone fa-server" href="/vi/sdk/agent-sdk/overview">
-Xem xét toàn bộ quy trình tích hợp backend.
+<Card title="Agent SDK Tổng quan" icon="fa-duotone fa-server" href="/vi/sdk/agent-sdk/overview">
+Xem lại quy trình tích hợp phụ trợ hoàn chỉnh.
 </Card>
 <Card title="SDK Khắc phục sự cố" icon="fa-duotone fa-screwdriver-wrench" href="/vi/sdk/security/troubleshooting">
-Điều tra các chữ ký bị từ chối, sự kiện lặp lại và các hoạt động đang chờ xử lý.
+Điều tra các chữ ký bị từ chối, các sự kiện lặp lại và các hoạt động đang chờ xử lý.
 </Card>
 </CardGroup>
+
+<span id="funding-and-environment-boundaries" data-sixmm-canonical-anchor="funding-and-environment-boundaries" aria-hidden="true"></span>
+
+## Ranh giới tài trợ và môi trường
+
+Luồng chuyển giao Hợp đồng ban đầu webhook và `queryOrder` không tự động áp dụng cho Tài trợ. Xác nhận hoạt động cấp vốn bằng cách sử dụng `queryWalletTransfer` và môi trường đặt hàng ban đầu. Nguồn tài trợ sử dụng `status`; Phản hồi chuyển nhượng hợp đồng ban đầu sử dụng `orderStatus`. Phản hồi HTTP thành công hoặc `code=0` bản thân nó không chứng minh được tiền đã được chuyển.
+
+Thông báo chuyển giao Hợp đồng được mô phỏng rõ ràng bao gồm `environment=SIMULATED`. Trước tiên, hãy xác minh nội dung thô, sau đó kiểm tra người dùng, số lượng, danh tính đơn hàng và môi trường đối với đơn hàng kinh doanh địa phương đã lưu.
+
+[Hướng dẫn thu hồi vốn](/vi/sdk/agent-sdk/java/funding-wallet) · [Hướng dẫn môi trường](/vi/sdk/agent-sdk/java/environments)

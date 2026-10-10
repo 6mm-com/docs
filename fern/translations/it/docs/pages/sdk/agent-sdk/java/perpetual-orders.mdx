@@ -1,0 +1,186 @@
+---
+title: "Ordini perpetui"
+subtitle: "Ordini perpetui: Agent Java SDK Integrazione v0.3.0, esempi, parametri e semantica della risposta."
+slug: sdk/agent-sdk/java/perpetual-orders
+canonical-url: https://docs.6mm.com/it/sdk/agent-sdk/java/perpetual-orders
+---
+
+Questa guida è rivolta a **Agent Java SDK `v0.3.0`**, Java 8+ e agli appalti pubblici contrassegnati. Gli esempi vengono eseguiti nel backend di un partner dopo aver inizializzato `client` in [Avvio rapido](/it/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## Prerequisiti di esempio
+
+Gli snippet Java condividono queste importazioni. Inizializza `client` utilizzando Quick Start e ottieni `platformUserId` dall'associazione salvata. Gli ID utente/ordine di esempio devono essere sostituiti con i tuoi valori persistenti.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span data-sixmm-canonical-anchor="listcurrentperpetualorders" aria-hidden="true"></span>
+
+## `listCurrentPerpetualOrders`
+
+Modello richiesto: `CurrentPerpetualOrdersRequest`.
+
+```java
+import com.sixmm.agent.model.CurrentPerpetualOrdersRequest;
+import com.sixmm.agent.model.PerpetualResponse;
+import java.util.Collections;
+
+CurrentPerpetualOrdersRequest request = new CurrentPerpetualOrdersRequest();
+request.platformUserIds = Collections.singletonList("1188041528");
+request.limit = 100;
+request.orderCategory = "NORMAL";
+request.symbol = "BTCUSDT";
+PerpetualResponse response = client.listCurrentPerpetualOrders(request);
+System.out.println(response.data.items.size());
+System.out.println(response.data.hasMore);
+System.out.println(response.data.nextCursor);
+```
+
+<span id="request-fields" data-sixmm-canonical-anchor="request-fields" aria-hidden="true"></span>
+
+### Campi richiesta
+
+| Campo | Tipo Java | Necessario | Senso |
+| --- | --- | --- | --- |
+| `orderCategory` | `String` | SÌ | NORMAL o CONDITIONAL; le query condizionali richiedono utenti espliciti. |
+| `platformUserIds` | `java.util.List<String>` | Condizionale | Da 1 a 100 ID pubblici univoci; richiesto per esecuzioni e ordini condizionati. Omettere le query supportate per l'ambito del player diretto; [] non è valido. |
+| `symbol` | `String` | NO | Filtro opzionale per le coppie di scambio. |
+| `limit` | `Integer` | NO | Predefinito 500; 1–1000. |
+| `cursor` | `String` | NO | Utilizza il nextCursor restituito con i filtri invariati; interrompere quando hasMore è falso. |
+
+L'esempio legge una pagina. Per i campi obbligatori, ambito del giocatore, semantica del filtro, limite, cursore e tentativi limitati, seguire [Panoramica delle query](/it/sdk/agent-sdk/java/perpetual-queries). Mantieni invariati tutti i filtri durante la paginazione; non interpretare un errore come un risultato vuoto.
+
+<span data-sixmm-canonical-anchor="listperpetualorderhistory" aria-hidden="true"></span>
+
+## `listPerpetualOrderHistory`
+
+Modello richiesto: `PerpetualOrderHistoryRequest`.
+
+```java
+import com.sixmm.agent.model.PerpetualOrderHistoryRequest;
+import com.sixmm.agent.model.PerpetualResponse;
+import java.util.Collections;
+
+PerpetualOrderHistoryRequest request = new PerpetualOrderHistoryRequest();
+request.platformUserIds = Collections.singletonList("1188041528");
+request.limit = 100;
+request.orderCategory = "NORMAL";
+request.symbol = "BTCUSDT";
+request.endTime = System.currentTimeMillis();
+request.startTime = request.endTime - 3_600_000L;
+PerpetualResponse response = client.listPerpetualOrderHistory(request);
+System.out.println(response.data.items.size());
+System.out.println(response.data.hasMore);
+System.out.println(response.data.nextCursor);
+```
+
+<span id="request-fields-1" data-sixmm-canonical-anchor="request-fields-1" aria-hidden="true"></span>
+
+### Campi richiesta
+
+| Campo | Tipo Java | Necessario | Senso |
+| --- | --- | --- | --- |
+| `orderCategory` | `String` | SÌ | NORMAL o CONDITIONAL; le query condizionali richiedono utenti espliciti. |
+| `platformUserIds` | `java.util.List<String>` | Condizionale | Da 1 a 100 ID pubblici univoci; richiesto per esecuzioni e ordini condizionati. Omettere le query supportate per l'ambito del player diretto; [] non è valido. |
+| `symbol` | `String` | NO | Filtro opzionale per le coppie di scambio. |
+| `orderId` | `String` | NO | ID dell'ordine ordinario; non un numero di ordine di trasferimento del partner. |
+| `conditionId` | `String` | NO | ID ordine condizionato; non mescolare con orderId. |
+| `clientOrderId` | `String` | NO | Riferimento dell'ordine del cliente di trading, non agentOrderNo. |
+| `side` | `String` | NO | Filtro BUY / SELL. |
+| `status` | `String` | NO | Stato specifico della risorsa; vedere il riferimento allo stato. |
+| `startTime` | `Long` | NO | Millisecondi Unix inclusi; utilizzare una finestra della cronologia UTC fissa. |
+| `endTime` | `Long` | NO | Millisecondi Unix esclusivi. |
+| `limit` | `Integer` | NO | Predefinito 500; 1–1000. |
+| `cursor` | `String` | NO | Utilizza il nextCursor restituito con i filtri invariati; interrompere quando hasMore è falso. |
+
+L'esempio legge una pagina. Per i campi obbligatori, ambito del giocatore, semantica del filtro, limite, cursore e tentativi limitati, seguire [Panoramica delle query](/it/sdk/agent-sdk/java/perpetual-queries). Mantieni invariati tutti i filtri durante la paginazione; non interpretare un errore come un risultato vuoto.
+
+<span id="ordinary-delegation-current-and-history" data-sixmm-canonical-anchor="ordinary-delegation-current-and-history" aria-hidden="true"></span>
+
+## Ordini ordinari: attualità e storia
+
+Corrente: `orders/current` + `orderCategory=NORMAL`; Cronologia: `orders/history` + `orderCategory=NORMAL`.
+
+| campo `data`. | tipo | Significato e ambito di applicazione |
+| --- | --- | --- |
+| `symbol` | string | Coppia di trading, come BTCUSDT |
+| `orderId` | string | ID ordine ordinario della piattaforma |
+| `orderCategory` | string | Risolto NORMAL |
+| `clientOrderId` | string | Numero dell'ordine del cliente fornito dalla fonte dell'ordine della transazione; non è lo stesso campo del trasferimento fondi commerciante agentOrderNo |
+| `orderType` | string | Tipo di delegato, ad esempio LIMIT, MARKET; prevarrà il valore di enumerazione effettivo |
+| `side` | string | Direzione di acquisto e vendita BUY / SELL |
+| `status` | string | Stato dell'ordine ordinario, vedere la panoramica delle query |
+| `timeInForce` | string | Periodo di validità/strategia di esecuzione dell'affare, ad esempio GTC, IOC, FOK; interpretato in base ai valori reali |
+| `price` | string | Prezzo affidato; può essere omesso quando non viene fornito alcun prezzo e il prezzo della transazione di mercato non verrà integrato da solo. |
+| `quantity` | string | Quantità dell'ordine originale |
+| `filledQuantity` | string | Quantità di transazione |
+| `remainingQuantity` | string | Quantità non negoziata; la query corrente prende la quantità - filledQuantity e la query storica prende il valore del record storico |
+| `avgFilledPrice` | string | Il prezzo medio della transazione della parte completata; potrebbe non esserci alcun valore quando non è completato |
+| `reduceOnly` | boolean | Se ridurre solo le posizioni |
+| `closeOnly` | boolean | Se viene utilizzato solo per chiudere le posizioni |
+| `makerOnly` | boolean | Se eseguire solo come Maker |
+| `leverage` | integer | Leva multipla; **L'ordine ordinario storico** ha una fonte e l'ordine ordinario corrente non crea questo valore |
+| `marginMode` | string | Modalità margine; **Ordine storico ordinario** attualmente restituisce una stringa di enumerazione numerica, come "1", "2"; non è previsto l'ordinamento ordinario attuale |
+| `createdAt` | integer | Tempo di creazione dell'ordine, millisecondi; utilizzare questo campo per filtrare il tempo storico dell'ordine |
+| `updatedAt` | integer | Tempo di aggiornamento del record delegato, millisecondi |
+
+La cronologia degli ordini include gli ordini ordinari terminati. Ogni record non può essere considerato completamente completato in base al solo nome dell'interfaccia. La pagina dell'ordine corrente è una query sullo stato corrente, non un flusso di eventi dell'ordine.
+
+
+<span id="conditional-delegation-current-and-history" data-sixmm-canonical-anchor="conditional-delegation-current-and-history" aria-hidden="true"></span>
+
+## Ordini condizionati: attualità e storia
+
+Corrente: `orders/current` + `orderCategory=CONDITIONAL`; Cronologia: `orders/history` + `orderCategory=CONDITIONAL`. Entrambi richiedono platformUserIds esplicito.
+
+| campo `data`. | tipo | Senso |
+| --- | --- | --- |
+| `symbol` | string | coppia commerciale |
+| `conditionId` | string | ID ordini condizionati, indipendenti da quelli ordinari orderId |
+| `orderCategory` | string | Risolto CONDITIONAL |
+| `generatedOrderId` | string | ID ordine ordinario generato dopo l'attivazione; può essere omesso se non generato |
+| `clientOrderId` | string | Il numero dell'ordine cliente degli ordini condizionati, restituito quando esiste |
+| `side` | string | BUY / SELL |
+| `orderType` | string | Tipo di ordine post-trigger, interpretato in base al valore effettivo |
+| `triggerType` | string | Tipo di regola di attivazione, spiegato dall'effettiva enumerazione dell'origine |
+| `workingType` | string | Tipo di lavoro/origine del prezzo che attiva il prezzo, interpretato come enumerazione effettiva |
+| `timeInForce` | string | Periodo di validità/strategia di esecuzione dell'ordine dopo l'attivazione |
+| `price` | string | Il prezzo dell'ordine dopo l'attivazione, viene restituito quando la fonte ha valore |
+| `quantity` | string | Quantità dell'ordine condizionato |
+| `triggerPrice` | string | prezzo di attivazione |
+| `reduceOnly` | boolean | Se ridurre solo le posizioni |
+| `closePosition` | boolean | Se utilizzare la semantica di chiusura della posizione completa, non può essere confuso con closeOnly come lo stesso campo |
+| `leverage` | integer | Leva multipla, output quando diverso da zero |
+| `marginMode` | string | Questa classe restituisce CROSS / ISOLATED, che è una stringa numerica diversa dagli ordini/posizioni storici ordinari |
+| `status` | string | Stato trigger singolo condizionale, vedere la panoramica delle query |
+| `triggerStatus` | string | L'implementazione corrente utilizza lo stesso valore di stato condizionale di status |
+| `createdAt` | integer | Tempo di creazione dell'ordine condizionato, millisecondi; le condizioni storiche sono filtrate da questo momento |
+| `updatedAt` | integer | Tempo di aggiornamento, output quando è presente un valore, millisecondi |
+| `deletedAt` | integer | Elimina il tempo di contrassegno, emette quando è presente un valore, millisecondi; non è un campo unificato per l'ora della transazione/annullamento |
+
+Gli ordini condizionati non prevedono filledQuantity, remainingQuantity, avgFilledPrice per gli ordini ordinari. Se hai bisogno dello stato della transazione degli ordini ordinari dopo l'attivazione, interroga gli ordini/transazioni ordinari tramite generatedOrderId e non dedurre il volume delle transazioni dallo stato dell'ordine condizionato.
+
+
+<span id="example-response-envelope" data-sixmm-canonical-anchor="example-response-envelope" aria-hidden="true"></span>
+
+## Busta di risposta di esempio
+
+Questa è una pagina vuota illustrativa, non un esempio di un'operazione completata. Le tabelle dei campi specifici della risorsa sopra descrivono il `items[].data` popolato.
+
+```json
+{"code":0,"message":"success","data":{"items":[],"nextCursor":"","hasMore":false}}
+```
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Fonte e guide correlate
+
+- [Fonte ufficiale v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Panoramica delle query e impaginazione](/it/sdk/agent-sdk/java/perpetual-queries)
+- [Portafoglio di finanziamento](/it/sdk/agent-sdk/java/funding-wallet)
+- [Guida all'aggiornamento](/it/sdk/agent-sdk/java/upgrade)

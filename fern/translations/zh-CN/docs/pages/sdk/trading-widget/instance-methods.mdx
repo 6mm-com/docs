@@ -159,3 +159,26 @@ off()
 - [参数与事件](/zh-CN/sdk/trading-widget/options-events)
 - [身份认证](/zh-CN/sdk/trading-widget/authentication)
 - [故障排查](/zh-CN/sdk/security/troubleshooting)
+
+<span data-sixmm-canonical-anchor="当前-v1-运行时的补充方法" aria-hidden="true"></span>
+
+## 当前 v1 运行时的补充方法
+
+| 方法 | 用途 |
+| --- | --- |
+| `whenRendered()` | 等待 iframe 的 rendered 通知，与 ready 分别处理。 |
+| `setPage(page)` | 请求当前实例进入支持的产品页面，不改变资金环境。 |
+| `prepareForRecreate()` | 请求已 ready 的 iframe 准备替换；返回 promise，未就绪、忙碌或超时时可能拒绝。 |
+| `cancelRecreate()` | 取消待处理或已准备的替换流程。 |
+| `TradingWidget.validateOptions(options)` | 创建实例前检查初始化参数。 |
+
+切换用户或实盘/模拟环境时，应销毁旧实例，按目标认证与模式创建新实例。不能用 `setPage` 代替环境切换。使用可选方法之前检查 capabilities。
+
+```js
+if (TradingWidget.capabilities.methods.includes('whenRendered')) {
+  await widget.whenRendered();
+}
+if (TradingWidget.capabilities.pages.includes('up-down')) {
+  widget.setPage('up-down');
+}
+```

@@ -1,99 +1,109 @@
 ---
-title: "Verificación e Idempotencia de la Firma de Webhook"
-subtitle: "Verifica 6MM webhooks del Agente con el cuerpo de la solicitud en bruto y procesa reintentos, tiempos de espera y eventos repetidos sin acciones comerciales duplicadas."
+title: "Webhook Verificación de firma e idempotencia"
+subtitle: "Verifique el 6MM Agente webhooks con el cuerpo de la solicitud sin procesar y procese reintentos, tiempos de espera y eventos repetidos sin acciones comerciales duplicadas."
 slug: sdk/security/webhooks-idempotency
 canonical-url: https://docs.6mm.com/es-419/sdk/security/webhooks-idempotency
 ---
 
-Los Webhooks notifican a un backend asociado sobre cambios asíncronos en el estado del negocio. Como la entrega puede intentarse de nuevo, cada receptor debe verificar la firma antes de analizar datos confiables y debe procesar el evento idempotentemente.
+Webhooks notifica a un socio backend sobre cambios asincrónicos en el estado del negocio. Debido a que se puede volver a intentar la entrega, cada receptor debe verificar la firma antes de analizar los datos confiables y debe procesar el evento de manera idempotente.
 
 <span id="webhook-headers" data-sixmm-canonical-anchor="webhook-headers" aria-hidden="true"></span>
 
-## Encabezados de Webhook
+## Webhook encabezados
 
-| Encabezado | Descripción |
+| Encabezamiento | Descripción |
 | --- | --- |
-| X-Agent-Timestamp | Marca de tiempo de Unix en segundos. |
-| X-Agente-Nonce | Protección contra repeticiones. |
-| X-Agent-Signature | HMAC-SHA256 firma. |
+| Marca de tiempo del Agente X | Marca de tiempo de Unix en segundos. |
+| Agente X-Nonce | Nonce de protección de reproducción. |
+| Firma del agente X | HMAC-SHA256 firma. |
 
 ```text
 timestamp + nonce + rawBody
 ```
 
-Usa el cuerpo exacto de la solicitud en bruto recibido en HTTP al reconstruir el valor firmado. Analizar y volver a serializar JSON primero puede cambiar el espacio en blanco o el orden de los campos y producir una firma diferente.
+Utilice el cuerpo exacto de la solicitud sin procesar recibido durante HTTP al reconstruir el valor firmado. Analizar y volver a serializar JSON primero puede cambiar los espacios en blanco o el orden de los campos y producir una firma diferente.
 
 <span id="verification-flow" data-sixmm-canonical-anchor="verification-flow" aria-hidden="true"></span>
 
 ## Flujo de verificación
 
-1. Lee los encabezados de la marca de tiempo, nonce y signature.
-2. Capturar el cuerpo de la solicitud sin modificar.
-3. Construye `timestamp + nonce + rawBody`.
-4. Calcular HMAC-SHA256 con el compañero API secreto.
-5. Comparar las firmas calculadas y recibidas usando una comparación en tiempo constante.
-6. Aplicar las verificaciones aprobadas de frescura y reutilización con marca de tiempo.
-7. Analizar y procesar el evento solo después de que la verificación tenga éxito.
+1. Lea los encabezados de marca de tiempo, nonce y firma.
+2. Capture el cuerpo de la solicitud sin modificar.
+3. Construya `timestamp + nonce + rawBody`.
+4. Calcula HMAC-SHA256 con el socio API secreto.
+5. Compare las firmas calculadas y recibidas mediante una comparación de tiempo constante.
+6. Aplique las comprobaciones aprobadas de frescura y no reutilización de la marca de tiempo.
+7. Analice y procese el evento solo después de que la verificación sea exitosa.
 
-Cuando haya un verificador oficial de Agent SDK disponible, úsalo en lugar de mantener un código de firma independiente.
+Cuando esté disponible un verificador oficial Agent SDK, utilícelo en lugar de mantener un código de firma independiente.
 
 <span id="order-idempotency" data-sixmm-canonical-anchor="order-idempotency" aria-hidden="true"></span>
 
-## Idempotencia de orden
+## Idempotencia del orden
 
 | Caso | Manejo |
 | --- | --- |
-| Solicitud inicial de transferencia | Crea una agentOrderNoúnica a nivel mundial. |
-| HTTP tiempo fuera | Consulta el agentOrderNo original antes de crear uno nuevo. |
-| PROCESSING respuesta | Espera el estado del webhook o de la consulta de la orden. |
-| Webhook repetido | Deduplicar por clave de idempotencia y estado final. |
+| Solicitud de transferencia inicial | Cree un agentOrderNo único a nivel mundial. |
+| HTTP tiempo de espera | Consulta el agentOrderNo original antes de crear uno nuevo. |
+| PROCESSING respuesta | Espere a webhook o consulte el estado del pedido. |
+| webhook repetido | Deduplicar por clave de idempotencia y estado final. |
 
 <span id="recommended-idempotency-record" data-sixmm-canonical-anchor="recommended-idempotency-record" aria-hidden="true"></span>
 
-## Registro recomendado de idempotencia
+## Registro de idempotencia recomendado
 
-Guarda suficiente información para reconocer una entrega repetida y recuperarla de manera segura:
+Almacene suficiente información para reconocer una entrega repetida y recuperarla de forma segura:
 
-| Campo | Propósito |
+| Campo | Objetivo |
 | --- | --- |
-| Clave de evento o negocio | Identifica de manera única la notificación u operación. |
-| Número de orden de socio | Conecta el evento con la solicitud original. |
-| Hash de carga útil | Ayuda a identificar cargas útiles repetidas en conflicto. |
-| Estado actual de procesamiento | Distingue trabajos recibidos, procesando, exitosos y fallidos. |
-| Estado final del negocio | Evita que una acción terminal se aplique dos veces. |
-| Marca de tiempo procesada | Apoya políticas de investigación y retención. |
+| Clave de evento o negocio | Identifica de forma única la notificación u operación. |
+| Número de pedido del socio | Conecta el evento a la solicitud original. |
+| hash de carga útil | Ayuda a identificar cargas útiles repetidas y conflictivas. |
+| Estado de procesamiento actual | Distingue el trabajo recibido, procesado, exitoso y fallido. |
+| Estado comercial final | Evita que una acción terminal se aplique dos veces. |
+| Marca de tiempo procesada | Apoya las políticas de investigación y retención. |
 
-Compromete el registro de cambio de negocio e idempotencia en la misma transacción cuando sea posible. Un evento repetido debería devolver el resultado ya conocido en lugar de aplicar nuevamente el saldo, orden o cambio de usuario.
+Confirme el cambio de negocio y el registro de idempotencia en la misma transacción cuando sea posible. Un evento repetido debería devolver el resultado ya conocido en lugar de aplicar nuevamente el saldo, el pedido o el cambio de usuario.
 
 <span id="timeout-and-retry-rule" data-sixmm-canonical-anchor="timeout-and-retry-rule" aria-hidden="true"></span>
 
-## Regla de tiempo fuera y reintento
+## Regla de tiempo de espera y reintento
 
-Un tiempo de espera HTTP no prueba que la solicitud original falló. Consulta la operación usando el `agentOrderNo`original, o espera su webhook antes de decidir si se requiere otra acción. Crear un nuevo número de orden de negocio después de cada tiempo de espera puede causar movimientos duplicados de fondos.
+Un tiempo de espera de HTTP no prueba que la solicitud original haya fallado. Consulte la operación utilizando el `agentOrderNo` original, o espere su webhook, antes de decidir si se requiere otra acción. Crear un nuevo número de orden comercial después de cada tiempo de espera puede provocar movimientos de fondos duplicados.
 
 <span id="production-checklist" data-sixmm-canonical-anchor="production-checklist" aria-hidden="true"></span>
 
 ## Lista de verificación de producción
 
-- Verificar la firma antes de JSON análisis o procesamiento empresarial.
-- Preservar el cuerpo bruto independientemente de la carga útil analizada.
-- Rechazar solicitudes obsoletas o repetidas según la política de integración aprobada.
-- Hacer que el procesamiento de eventos sea seguro para entregas repetidas y fuera de orden.
-- Registrar IDs de eventos, números de pedido de socios, resultados de procesamiento y tiempo de solicitud.
-- Redactar secretos y valores de firma de registros y adjuntos de soporte.
+- Verifique la firma antes de JSON análisis o procesamiento comercial.
+- Conserve el cuerpo sin procesar independientemente de la carga útil analizada.
+- Rechace solicitudes obsoletas o reproducidas de acuerdo con la política de integración aprobada.
+- Haga que el procesamiento de eventos sea seguro para entregas repetidas y fuera de orden.
+- Registre los ID de eventos, los números de pedidos de los socios, el resultado del procesamiento y la hora de la solicitud.
+- Redactar secretos y valores de firma de registros y archivos adjuntos de soporte.
 
 <span id="related-docs" data-sixmm-canonical-anchor="related-docs" aria-hidden="true"></span>
 
 ## Documentos relacionados
 
 <CardGroup cols={3}>
-<Card title="Secretos y firmas HMAC" icon="fa-duotone fa-shield-keyhole" href="/es-419/sdk/security/secrets-signing">
-Protege el API secreto usado para la verificación de solicitudes y webhooks.
+<Card title="Secretos y HMAC Firma" icon="fa-duotone fa-shield-keyhole" href="/es-419/sdk/security/secrets-signing">
+Proteja el secreto API utilizado para la solicitud y la verificación webhook.
 </Card>
-<Card title="Agent SDK Resumen" icon="fa-duotone fa-server" href="/es-419/sdk/agent-sdk/overview">
-Revisa todo el flujo de trabajo de integración del backend.
+<Card title="Agent SDK Descripción general" icon="fa-duotone fa-server" href="/es-419/sdk/agent-sdk/overview">
+Revise el flujo de trabajo completo de integración de backend.
 </Card>
 <Card title="SDK Solución de problemas" icon="fa-duotone fa-screwdriver-wrench" href="/es-419/sdk/security/troubleshooting">
-Investigar firmas rechazadas, eventos repetidos y operaciones pendientes.
+Investiga firmas rechazadas, eventos repetidos y operaciones pendientes.
 </Card>
 </CardGroup>
+
+<span id="funding-and-environment-boundaries" data-sixmm-canonical-anchor="funding-and-environment-boundaries" aria-hidden="true"></span>
+
+## Límites de financiación y medio ambiente
+
+El flujo de transferencia de contrato original webhook y `queryOrder` no se aplica automáticamente a la financiación. Confirme las operaciones de financiación utilizando `queryWalletTransfer` y el entorno de pedido original. Usos de la financiación `status`; Las respuestas originales de transferencia de contrato utilizan `orderStatus`. Una respuesta HTTP exitosa o `code=0` no prueba por sí sola que se hayan movido fondos.
+
+Las notificaciones explícitas de transferencia de contrato simuladas incluyen `environment=SIMULATED`. Primero verifique el cuerpo sin procesar, luego verifique el usuario, el monto, la identidad del pedido y el entorno con el pedido comercial local guardado.
+
+[Guía de recuperación de fondos](/es-419/sdk/agent-sdk/java/funding-wallet) · [guía medioambiental](/es-419/sdk/agent-sdk/java/environments)

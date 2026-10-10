@@ -1,0 +1,98 @@
+---
+title: "Production & Simulated Trading"
+subtitle: "Production & Simulated Trading: Agent Java SDK v0.3.0 integration, examples, parameters and response semantics."
+slug: sdk/agent-sdk/java/environments
+---
+
+This guide targets **Agent Java SDK `v0.3.0`** and Java 8+.
+
+<span data-sixmm-canonical-anchor="choose-both-the-frontend-mode-and-the-funds-environment" aria-hidden="true"></span>
+
+## Choose both the frontend mode and the funds environment
+
+Configure the partner backend's funds environment separately from the frontend trading mode. Binding and entry credentials are shared; issuing a ticket or token does not select a wallet or move funds.
+
+| Configuration | Production | Simulated |
+| --- | --- | --- |
+| Binding and authentication | Shared user binding and one-time credentials | Same identity and authentication |
+| New transfers and user balances | Omit `environment` or use `PRODUCTION` | Explicitly use `SIMULATED` |
+| Funding original-order recovery | Use the saved original environment | Use the saved original environment |
+| Widget trading mode | `tradingMode=real` | `tradingMode=demo` |
+| Frontend HTTP/WS target | Production target supplied by 6MM | Simulated target supplied by 6MM |
+| Six perpetual-data queries | Production data | No environment selector; these methods do not query simulated data |
+
+For `wallet-transfer-status`, omitting `environment` uses the original order's saved environment, including a simulated order. An explicitly conflicting environment is rejected. Prefer storing the environment and passing it explicitly when recovering an operation.
+
+`isSimulatedUser` describes the account. It does not route new requests to a simulated wallet. Omitting `environment` on a new funds request still selects production, even when the account flag is true.
+
+<span data-sixmm-canonical-anchor="supported-java-request-models" aria-hidden="true"></span>
+
+## Supported Java request models
+
+These requests support `withEnvironment(ExecutionEnvironment.SIMULATED)`:
+
+- `TransferRequest`, `TransferAllOutRequest`, `ReverseOrderRequest`.
+- `QueryOrderRequest`, `ListOrdersRequest`.
+- `QueryUserAssetsRequest`.
+- `WalletTransferRequest`, `WalletTransferQueryRequest`.
+
+`bind`, `queryAccount`, `createEntryUrl`, `createEmbedToken`, and the six perpetual query request models do not select a funds environment.
+
+```java
+import com.sixmm.agent.model.ExecutionEnvironment;
+import com.sixmm.agent.model.QueryUserAssetsRequest;
+import com.sixmm.agent.model.QueryUserAssetsResponse;
+
+QueryUserAssetsResponse assets = client.queryUserAssets(
+        QueryUserAssetsRequest.of("1188041528")
+                .withFunding()
+                .withEnvironment(ExecutionEnvironment.SIMULATED));
+```
+
+Initialize `client` using [Quick Start](/sdk/agent-sdk/java/quick-start) and use the public user ID from your saved binding.
+
+<span data-sixmm-canonical-anchor="preserve-the-original-environment" aria-hidden="true"></span>
+
+## Preserve the original environment
+
+Persist the interface type, `agentOrderNo`, user identity and environment before sending a funds request. Keep that environment during status queries, recovery, reconciliation and webhook processing. After a timeout, never retry by omitting the original environment or using a new order number.
+
+Funding/Contract transfers stay within one environment. Simulated funds cannot become production funds. Use separate partner-side simulated accounting and recognizable order prefixes such as `SIM-`.
+
+<span data-sixmm-canonical-anchor="simulated-integration-sequence" aria-hidden="true"></span>
+
+## Simulated integration sequence
+
+1. Bind the user and save the public platform user ID.
+2. Query balances with explicit `SIMULATED` and include Funding when needed.
+3. Create a small simulated Funding transfer and persist its original business order.
+4. Confirm the final result with the dedicated Funding status query.
+5. Open or embed the target seconds page in `demo` mode.
+6. Query the same simulated wallets and reconcile the actual transferred amount.
+7. To test perpetual trading, transfer simulated Funding to simulated Contract and use the simulated futures frontend. The six partner perpetual queries cannot validate simulated trading history.
+
+<span data-sixmm-canonical-anchor="acceptance-checklist" aria-hidden="true"></span>
+
+## Acceptance checklist
+
+| Scenario | Evidence to verify |
+| --- | --- |
+| Identity | Bound user mapping is saved; another partner's users cannot be queried. |
+| Authentication | Redirect and embed flows use fresh credentials; signing does not create funds orders. |
+| Funds | Both sides agree on the actual amount and final status. |
+| Unknown result | Recovery uses the original order without creating a second transfer. |
+| Environment isolation | Simulated backend and frontend targets agree; production balances are unaffected. |
+| Queries | Required user/category filters, millisecond windows, empty pages and cursors are handled. |
+| Rate limits | All query callers share throttling and retry the original failed page. |
+| Storage | Amounts and IDs remain strings; entity records are saved idempotently. |
+
+Before switching to production, change both the backend funds target and frontend mode. Pending orders continue to recover in their original environment.
+
+<span data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Source and related guides
+
+- [Official v0.3.0 source](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Query overview and pagination](/sdk/agent-sdk/java/perpetual-queries)
+- [Funding wallet](/sdk/agent-sdk/java/funding-wallet)
+- [Upgrade guide](/sdk/agent-sdk/java/upgrade)

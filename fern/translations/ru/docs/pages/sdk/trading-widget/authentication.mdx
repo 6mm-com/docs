@@ -1,15 +1,15 @@
 ---
 title: "Trading Widget Аутентификация"
-subtitle: "Используйте partner-token для новых встроенных торговых SSO интеграций."
+subtitle: "Используйте партнерский токен для новой встроенной торговой SSO интеграции."
 slug: sdk/trading-widget/authentication
 canonical-url: https://docs.6mm.com/ru/sdk/trading-widget/authentication
 ---
 
 <span id="recommended-mode-partner-token" data-sixmm-canonical-anchor="recommended-mode-partner-token" aria-hidden="true"></span>
 
-## Рекомендуемый режим: партнёрский токен
+## Рекомендуемый режим: партнерский токен
 
-Partner-token избегает размещения коротких токена в URL и держит apiSecret на партнёрском бэкенде.
+Partner-token избегает использования коротких токенов в URL-адресах и сохраняет apiSecret на серверной части партнера.
 
 ```js
 const widget = TradingWidget.create('#trading-widget', {
@@ -36,16 +36,16 @@ const widget = TradingWidget.create('#trading-widget', {
 
 <span id="related-documentation" data-sixmm-canonical-anchor="related-documentation" aria-hidden="true"></span>
 
-## Связанная документация
+## Сопутствующая документация
 
-- [Create Embed Token](/ru/sdk/agent-sdk/java/embed-token): пример выпуска токена на бэкенде.
-- [Trading Widget Быстрый старт](/ru/sdk/trading-widget/quick-start): полный процесс инициализации.
-- [Секреты и подписи](/ru/sdk/security/secrets-signing): сохранять привилегированные учетные данные Агента на сервере.
-- [Устранение неполадок](/ru/sdk/security/troubleshooting): диагностика сессий, токена, исходной и инициализации сбоев.
+- [Создать токен внедрения](/ru/sdk/agent-sdk/java/embed-token): пример выдачи внутреннего токена.
+- [Trading Widget Быстрый старт](/ru/sdk/trading-widget/quick-start): полный поток инициализации.
+- [Секреты и подписание](/ru/sdk/security/secrets-signing): сохранить учетные данные привилегированного агента на серверной стороне.
+- [Поиск неисправностей](/ru/sdk/security/troubleshooting): диагностика ошибок сеанса, токена, источника и инициализации.
 
 <span id="backend-flow" data-sixmm-canonical-anchor="backend-flow" aria-hidden="true"></span>
 
-## Бэкенд-поток
+## Внутренний поток
 
 ```text
 1. Partner frontend receives auth_request from the iframe.
@@ -62,30 +62,30 @@ const widget = TradingWidget.create('#trading-widget', {
 
 ## tokenProvider контракт
 
-| Поле | Режиссура | Описание |
+| Поле | Направление | Описание |
 | --- | --- | --- |
-| channelId | SDK -> Партнёрский бэкэнд | Уникальный идентификатор сессии виджета. Бэкенд должен передавать его createEmbedToken. |
-| Символ | SDK -> Партнёрский бэкэнд | Текущий запрошенный торговый символ. Используйте его для определения области токена при необходимости. |
-| Причина | SDK -> Партнёрский бэкэнд | Почему SDK запрашивает токен, например, начальную загрузку или обновление. |
-| embedToken | Партнёрский бэкенд -> SDK | Кратковременный токен, созданный Agent SDK или агентом API. |
-| expireAt | Партнёрский бэкенд -> SDK | Временная метка истечения токена возвращается 6MM. |
+| channelId | SDK -> Серверная часть партнера | Уникальный идентификатор сеанса виджета. Серверная часть должна передать его createEmbedToken. |
+| символ | SDK -> Серверная часть партнера | Текущий запрошенный торговый символ. Используйте его для определения области действия токена, когда это необходимо. |
+| причина | SDK -> Серверная часть партнера | Почему SDK запрашивает токен, например начальную загрузку или обновление. |
+| embedToken | Серверная часть партнера -> SDK | Кратковременный токен, созданный Agent SDK или агентом API. |
+| expireAt | Серверная часть партнера -> SDK | Временная метка истечения срока действия токена, возвращаемая 6MM. |
 
 <span id="failure-handling" data-sixmm-canonical-anchor="failure-handling" aria-hidden="true"></span>
 
-## Обработка отказов
+## Обработка сбоев
 
 | Состояние | Рекомендуемое обращение |
 | --- | --- |
-| Партнерская сессия закончилась | Верните 401 с партнёрской конечной точки и попросите пользователя войти снова. |
-| Создание токенов временно не получилось | Введите ошибку в tokenProvider и позвольте виджету выявить ошибку аутентификации. |
-| channelId несоответствие | Отклоните запрос и создайте экземпляр виджета заново. |
-| Пользователю запрещено торговать | Возвращайте ошибку, управляемую партнёром, и не создавайте встраиваемый токен. |
+| Срок партнерской сессии истек | Верните 401 из конечной точки партнера и попросите пользователя войти в систему еще раз. |
+| Создание токена временно не удалось | Выдайте ошибку в tokenProvider и позвольте виджету обнаружить ошибку аутентификации. |
+| channelId несоответствие | Отклоните запрос и заново создайте экземпляр виджета. |
+| Пользователю не разрешено торговать | Возвращайте ошибку, контролируемую партнером, и не создавайте токен внедрения. |
 
 <span id="compatibility-mode-agent-sso" data-sixmm-canonical-anchor="compatibility-mode-agent-sso" aria-hidden="true"></span>
 
-## Режим совместимости: agent-sso
+## Режим совместимости: агент-sso
 
-Agent-sso сохраняет старый поток /agent-entry тикетов. Предпочитайте партнёрский токен для новых интеграций.
+Agent-sso сохраняет старый поток билетов /agent-entry. Предпочитайте партнерский токен для новых интеграций.
 
 ```js
 const widget = TradingWidget.create('#trading-widget', {
@@ -105,3 +105,13 @@ const widget = TradingWidget.create('#trading-widget', {
   },
 })
 ```
+
+<span id="seconds-trading-and-environment-rules" data-sixmm-canonical-anchor="seconds-trading-and-environment-rules" aria-hidden="true"></span>
+
+## Торговля секундами и правила окружающей среды
+
+Для секундных страниц используйте ту же аутентификацию `partner-token` с `page` и `tradingMode`, настроенными в виджете. Отдельного токена предсказания не существует. Каждый вызов tokenProvider должен получить новый одноразовый токен от вашего бэкэнда.
+
+Верните `embedToken`, `expireAt` в секундах Unix и исходный `channelId` как объект верхнего уровня. Ответ токена Agent SDK не содержит `channelId`; ваш сервер повторяет текущий канал виджета. Если ваша конечная точка заключает ответы в `data`, разверните его перед возвратом из tokenProvider.
+
+[Полная интеграция секунд](/ru/sdk/agent-sdk/java/seconds-trading) · [Руководство по окружающей среде фондов](/ru/sdk/agent-sdk/java/environments)

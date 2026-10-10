@@ -1,57 +1,108 @@
 ---
 title: "Agent Java SDK"
-subtitle: "Install the 6MM Agent Java SDK and use signed backend APIs for user binding, transfers, entry credentials, and webhook verification."
+subtitle: "Agent Java SDK: Agent Java SDK v0.3.0 integration, examples, parameters and response semantics."
 slug: sdk/agent-sdk/java/overview
 ---
 
-<span data-sixmm-canonical-anchor="official-repository" aria-hidden="true"></span>
+This guide targets **Agent Java SDK `v0.3.0`**, Java 8+, and the tagged public contract. Examples run in a partner backend after initializing `client` in [Quick Start](/sdk/agent-sdk/java/quick-start).
 
-## Official repository
+<span data-sixmm-canonical-anchor="version-and-installation" aria-hidden="true"></span>
 
-The Java SDK repository is the source of truth for SDK source code, release notes, usage examples, and implementation details:
-
-[6mm-com/agent-java-sdk](https://github.com/6mm-com/agent-java-sdk)
-
-<span data-sixmm-canonical-anchor="runtime" aria-hidden="true"></span>
-
-## Runtime
+## Version and installation
 
 | Item | Value |
 | --- | --- |
-| Minimum Java version | Java 8+ |
-| Recommended build tool | Maven 3.9+ |
-| Maven group | `com.sixmm.exchange.sdk` |
-| Maven artifact | `agent` |
-| Documented source tag | `v0.1.1` |
+| Stable source tag | `v0.3.0` |
+| Java | Java 8+ |
+| Maven | Maven 3.9+ |
+| Coordinates | `com.sixmm.exchange.sdk:agent:0.3.0` |
 
-The public GitHub repository is source hosting, not a Maven dependency repository. Build and install the tagged source locally or publish the approved artifact to your organization's private Maven repository before using it in team builds.
+GitHub hosts source; it does not make these coordinates resolvable from Maven Central. Use the tagged local installation or your approved artifact repository.
 
-<span data-sixmm-canonical-anchor="typical-backend-responsibilities" aria-hidden="true"></span>
+<span data-sixmm-canonical-anchor="what-the-sdk-covers" aria-hidden="true"></span>
 
-## Typical backend responsibilities
+## What The SDK Covers
 
-- Validate the partner user session.
-- Map the partner user to agentUserId.
-- Call bind before first trading or transfer flows.
-- Call createEntryUrl for one-time full-site SSO.
-- Call createEmbedToken for Trading Widget partner-token mode.
-- Verify transfer webhooks and process them idempotently.
+| Category | Scenario | SDK API | Description |
+| --- | --- | --- | --- |
+| User binding | Bind user | `bind` | Create or fetch the binding between a partner user and a 6MM platform user |
+| Asset queries | Query partner account | `queryAccount` | Query the partner margin or funding account |
+| Asset queries | Query user assets | `queryUserAssets` | Query Contract assets; use `withFunding()` to include Funding balances |
+| Transfers | Fixed amount transfer | `transfer` | Transfer funds into or out of 6MM |
+| Transfers | Transfer all out | `transferAllOut` | Move all withdrawable user balance back to the partner platform |
+| Transfers | Reverse order | `reverse` | Reverse a successful transfer when the backend supports a compensation flow |
+| Transfers | Query order | `queryOrder` | Query one transfer order by partner order number |
+| Transfers | List orders | `listOrders` | Page through transfer orders for reconciliation |
+| Transfers | Webhook verification | `WebhookVerifier.verify` | Verify transfer final-state callbacks from 6MM |
+| Funding wallet | Funding transfer | `walletTransfer` | Partner ↔ Funding or Funding ↔ Contract; confirm the returned status |
+| Funding wallet | Funding transfer status | `queryWalletTransfer` | Recover a Funding operation using its original partner order number |
+| Trading entry | Direct entry URL | `createEntryUrl` | Create a one-time SSO URL for redirect mode |
+| Trading entry | Embed token | `createEmbedToken` | Create a short-lived token for Trading Widget `tokenProvider` mode |
+| Perpetual data | Current perpetual orders | `listCurrentPerpetualOrders` | Query current NORMAL or CONDITIONAL orders |
+| Perpetual data | Perpetual order history | `listPerpetualOrderHistory` | Query terminal NORMAL or CONDITIONAL orders |
+| Perpetual data | Perpetual trades | `listPerpetualTrades` | Query trade fills for an explicit public player list |
+| Perpetual data | Current perpetual positions | `listCurrentPerpetualPositions` | Query current positions |
+| Perpetual data | Perpetual position history | `listPerpetualPositionHistory` | Query closed positions |
+| Perpetual data | Perpetual account ledger | `listPerpetualLedger` | Query individual Contract balance-change records |
+| Fiat reference rates | List supported fiat currencies | `listSupportedFiatCurrencies` | List fiat currencies currently convertible to USDT |
+| Fiat reference rates | Query FX reference rates | `queryExchangeRates` | Query daily fiat-to-USDT reference ratios for all or selected currencies |
+| Service information | Service version | `version` | Query Agent service version information |
 
-<span data-sixmm-canonical-anchor="security-and-operational-rules" aria-hidden="true"></span>
 
-## Security and operational rules
+<span data-sixmm-canonical-anchor="configuration" aria-hidden="true"></span>
 
-- Store `apiSecret` only in a backend secret manager or protected environment variable.
-- Keep server time synchronized because signed requests contain timestamps.
-- Treat `agentOrderNo` as a durable idempotency key and keep it globally unique.
-- Store `platformUserId` as a string and persist its relationship to `agentUserId`.
-- Query the original transfer before retrying after a timeout or uncertain network result.
+## Configuration
 
-<span data-sixmm-canonical-anchor="next-steps" aria-hidden="true"></span>
+Obtain the following values from 6MM before
+integrating.
 
-## Next steps
+| Item | Example | Description |
+| --- | --- | --- |
+| `baseUrl` | `https://agent-api.6mm.com` | Agent API base URL, without a trailing slash |
+| `agentCode` | `AGENT001` | Partner code |
+| `apiSecret` | `your-api-secret` | API signing secret. Keep it on the backend only |
+| `defaultCurrency` | `USDT` | Default currency, usually `USDT` |
+| `webhookUrl` | `https://partner.example.com/6mm/webhook` | Partner endpoint for 6MM callbacks |
 
-- [Java Quick Start](/sdk/agent-sdk/java/quick-start): install the tagged source and initialize `AgentClient`.
-- [Create Embed Token](/sdk/agent-sdk/java/embed-token): issue short-lived credentials for Trading Widget.
-- [Secrets & Signing](/sdk/security/secrets-signing): understand automatic HMAC signing and secret handling.
-- [Webhooks & Idempotency](/sdk/security/webhooks-idempotency): verify callbacks and prevent duplicate processing.
+Production recommendations:
+
+- Use HTTPS for Agent API and webhook endpoints.
+- Store `apiSecret` in a secret manager, configuration center, or environment variable.
+- Keep server time synchronized, preferably with NTP.
+- Persist all partner order numbers and keep them globally unique.
+- Never send `apiSecret` to browsers, apps, mini programs, or frontend source code.
+
+
+<span data-sixmm-canonical-anchor="automatic-signing-fields" aria-hidden="true"></span>
+
+## Automatic Signing Fields
+
+For signed Agent API calls, the SDK automatically injects:
+
+| Field | Source | Description |
+| --- | --- | --- |
+| `agentCode` | `AgentClientConfig.agentCode` | Partner code |
+| `timestamp` | Current UTC Unix timestamp | Seconds |
+| `nonce` | Secure random generator | Replay protection |
+| `sign` | HMAC-SHA256 | Request signature |
+| `currency` | `defaultCurrency` | Filled when transfer/account requests omit currency |
+
+Signing rules:
+
+1. Exclude `sign`.
+2. Exclude empty values.
+3. Sort keys by ASCII order.
+4. Join as `k=v&k2=v2`.
+5. Calculate HMAC-SHA256 hex with `apiSecret`.
+
+Normal business code should not calculate signatures or manually set
+`agentCode`, `timestamp`, `nonce`, or `sign`.
+
+<span data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Source and related guides
+
+- [Official v0.3.0 source](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Query overview and pagination](/sdk/agent-sdk/java/perpetual-queries)
+- [Funding wallet](/sdk/agent-sdk/java/funding-wallet)
+- [Upgrade guide](/sdk/agent-sdk/java/upgrade)

@@ -1,0 +1,99 @@
+---
+title: "生產&模擬交易"
+subtitle: "生產和模擬交易：Agent Java SDK v0.3.0 集成、示例、參數和響應語義。"
+slug: sdk/agent-sdk/java/environments
+canonical-url: https://docs.6mm.com/zh-TW/sdk/agent-sdk/java/environments
+---
+
+本指南的目標用戶為 **Agent Java SDK `v0.3.0`** 和 Java 8+。
+
+<span id="choose-both-the-frontend-mode-and-the-funds-environment" data-sixmm-canonical-anchor="choose-both-the-frontend-mode-and-the-funds-environment" aria-hidden="true"></span>
+
+## 選擇前端模式和資金環境
+
+與前端交易模式分開配置合作伙伴後端的資金環境。綁定和進入憑據是共享的；發行票據或代幣不會選擇錢包或轉移資金。
+
+| 配置 | 生產 | 模擬 |
+| --- | --- | --- |
+| 綁定與認證 | 共享用戶綁定和一次性憑證 | 相同的身份和認證 |
+| 新轉賬和用戶餘額 | 省略 `environment` 或使用 `PRODUCTION` | 明確使用 `SIMULATED` |
+| 為原始訂單恢復提供資金 | 使用保存的原始環境 | 使用保存的原始環境 |
+| 小部件交易模式 | `tradingMode=real` | `tradingMode=demo` |
+| 前端 HTTP/WS 目標 | 生產目標由 6MM 提供 | 由 6MM 提供的模擬目標 |
+| 六個永久數據查詢 | 生產數據 | 沒有環境選擇器；這些方法不查詢模擬數據 |
+
+對於 `wallet-transfer-status`，省略 `environment` 將使用原始訂單的已保存環境，包括模擬訂單。明確衝突的環境將被拒絕。更喜歡存儲環境並在恢復操作時顯式傳遞它。
+
+`isSimulatedUser` 描述該帳戶。它不會將新請求路由到模擬錢包。即使帳戶標誌為 true，在新資金請求中省略 `environment` 仍會選擇生產。
+
+<span id="supported-java-request-models" data-sixmm-canonical-anchor="supported-java-request-models" aria-hidden="true"></span>
+
+## 支持的 Java 請求模型
+
+這些請求支持 `withEnvironment(ExecutionEnvironment.SIMULATED)`：
+
+- `TransferRequest`, `TransferAllOutRequest`, `ReverseOrderRequest`.
+- `QueryOrderRequest`, `ListOrdersRequest`.
+- `QueryUserAssetsRequest`.
+- `WalletTransferRequest`, `WalletTransferQueryRequest`.
+
+`bind`、`queryAccount`、`createEntryUrl`、`createEmbedToken`這六個永久查詢請求模型不選擇資金環境。
+
+```java
+import com.sixmm.agent.model.ExecutionEnvironment;
+import com.sixmm.agent.model.QueryUserAssetsRequest;
+import com.sixmm.agent.model.QueryUserAssetsResponse;
+
+QueryUserAssetsResponse assets = client.queryUserAssets(
+        QueryUserAssetsRequest.of("1188041528")
+                .withFunding()
+                .withEnvironment(ExecutionEnvironment.SIMULATED));
+```
+
+使用初始化 `client` [快速入門](/zh-TW/sdk/agent-sdk/java/quick-start) 並使用您保存的綁定中的公共用戶 ID。
+
+<span id="preserve-the-original-environment" data-sixmm-canonical-anchor="preserve-the-original-environment" aria-hidden="true"></span>
+
+## 保護原有環境
+
+在發送資金請求之前保留接口類型、`agentOrderNo`、用戶身份和環境。在狀態查詢、恢復、協調和 webhook 處理期間保持該環境。超時後，切勿通過忽略原始環境或使用新訂單號來重試。
+
+資金/合同轉移保持在一個環境中。模擬資金不能成為生產資金。使用單獨的合作伙伴端模擬會計和可識別的訂單前綴，例如 `SIM-`。
+
+<span id="simulated-integration-sequence" data-sixmm-canonical-anchor="simulated-integration-sequence" aria-hidden="true"></span>
+
+## 模擬積分序列
+
+1. 綁定用戶並保存公眾平臺用戶ID。
+2. 通過顯式 `SIMULATED` 查詢餘額，並在需要時包含資​​金。
+3. 創建一個小型模擬資金轉移並保留其原始業務訂單。
+4. 通過專用的資金狀態查詢確認最終結果。
+5. 以`demo`模式打開或嵌入目標秒頁面。
+6. 查詢相同的模擬錢包並核對實際轉賬金額。
+7. 要測試永續交易，請將模擬資金轉移到模擬合約並使用模擬期貨前端。六個合作夥​​伴永久查詢無法驗證模擬交易歷史。
+
+<span id="acceptance-checklist" data-sixmm-canonical-anchor="acceptance-checklist" aria-hidden="true"></span>
+
+## 驗收清單
+
+| 設想 | 有待核實的證據 |
+| --- | --- |
+| 身份 | 綁定的用戶映射被保存；無法查詢其他合作伙伴的用戶。 |
+| 驗證 | 重定向和嵌入流使用新的憑據；簽署並不創建資金訂單。 |
+| 資金 | 雙方就實際金額和最終狀態達成一致。 |
+| 結果未知 | 恢復使用原始訂單而不創建第二次傳輸。 |
+| 環境隔離 | 模擬的後端和前端目標一致；生產平衡不受影響。 |
+| 查詢 | 處理所需的用戶/類別過濾器、毫秒窗口、空頁和光標。 |
+| 速率限制 | 所有查詢調用者共享限制並重試原始失敗的頁面。 |
+| 貯存 | 金額和 ID 仍然是字符串；實體記錄以冪等方式保存。 |
+
+在切換到生產之前，更改後端資金目標和前端模式。待處理訂單繼續恢復到原來的環境中。
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## 來源及相關指南
+
+- [官方v0.3.0源碼](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [查詢概覽和分頁](/zh-TW/sdk/agent-sdk/java/perpetual-queries)
+- [資金錢包](/zh-TW/sdk/agent-sdk/java/funding-wallet)
+- [升級指南](/zh-TW/sdk/agent-sdk/java/upgrade)

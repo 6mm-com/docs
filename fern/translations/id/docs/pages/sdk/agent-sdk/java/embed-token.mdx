@@ -1,17 +1,36 @@
 ---
 title: "Buat Token Sematan"
-subtitle: "Mengeluarkan token senam yang berumur pendek untuk mode token mitra Trading Widget ."
+subtitle: "Buat Token Sematan: Agent Java SDK integrasi v0.3.0, contoh, parameter, dan semantik respons."
 slug: sdk/agent-sdk/java/embed-token
 canonical-url: https://docs.6mm.com/id/sdk/agent-sdk/java/embed-token
 ---
 
-<span id="sdk-call" data-sixmm-canonical-anchor="sdk-call" aria-hidden="true"></span>
+Panduan ini menargetkan **Agent Java SDK `v0.3.0`**, Java 8+, dan kontrak publik yang diberi tag. Contoh dijalankan di backend mitra setelah menginisialisasi `client` di [Mulai Cepat](/id/sdk/agent-sdk/java/quick-start).
 
-## SDK
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
 
-Buat token embed dari backend Anda setelah memvalidasi sesi pengguna mitra. Browser harus memanggil endpoint Anda, dan endpoint Anda harus memanggil 6MM melalui Agent SDK.
+## Contoh prasyarat
+
+Cuplikan Java membagikan impor ini. Inisialisasi `client` menggunakan Quick Start dan dapatkan `platformUserId` dari pengikatan yang disimpan. Contoh ID pengguna/pesanan harus diganti dengan nilai Anda yang tetap.
 
 ```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span id="trading-widget-embed-token" data-sixmm-canonical-anchor="trading-widget-embed-token" aria-hidden="true"></span>
+
+## Trading Widget Sematkan Token
+
+Token yang disematkan adalah untuk mode Trading Widget SDK `partner-token + tokenProvider`. Itu
+browser memanggil backend mitra, dan backend mitra memanggil ini Java SDK
+untuk membuat `embedToken`.
+
+```java
+import com.sixmm.agent.model.CreateEmbedTokenRequest;
+import com.sixmm.agent.model.CreateEmbedTokenResponse;
+
 CreateEmbedTokenResponse resp = client.createEmbedToken(
         CreateEmbedTokenRequest.of("agent-user-001", "tw_abc123")
                 .withSymbol("ETHUSDT"));
@@ -20,13 +39,15 @@ System.out.println(resp.embedToken);
 System.out.println(resp.expireAt);
 ```
 
-> **Kredensial sekali pakai**
->
-> embedToken bersifat singkat dan hanya digunakan sekali saja. Jangan menempatkannya dalam string kueri URL .
+Persyaratan integrasi:
 
-<span id="backend-endpoint-example" data-sixmm-canonical-anchor="backend-endpoint-example" aria-hidden="true"></span>
+- `channelId` harus menggunakan nilai yang diteruskan oleh Trading Widget SDK.
+- `symbol` bersifat opsional, tetapi disarankan untuk meneruskan simbol awal saat ini.
+- `embedToken` berumur pendek dan hanya sekali. Jangan memasukkannya ke dalam string kueri URL.
+- Frontend mitra tidak boleh menampung `apiSecret`.
+- `expireAt` adalah stempel waktu Unix dalam hitungan detik, bukan TTL.
 
-## Contoh endpoint backend
+Contoh titik akhir backend mitra:
 
 ```java
 @PostMapping("/api/trading/embed-token")
@@ -41,24 +62,20 @@ public EmbedTokenView createEmbedToken(@RequestBody EmbedTokenRequest request,
 }
 ```
 
-Kembalikan hanya bidang yang dibutuhkan oleh penyedia token Trading Widget . Jangan kembalikan apiSecret, field penandatanganan mentah, atau konfigurasi layanan internal.
 
-<span id="failure-handling" data-sixmm-canonical-anchor="failure-handling" aria-hidden="true"></span>
+<span id="partner-endpoint-contract" data-sixmm-canonical-anchor="partner-endpoint-contract" aria-hidden="true"></span>
 
-## Penanganan kegagalan
+## Kontrak titik akhir mitra
 
-| Kondisi | Penanganan yang direkomendasikan |
-| --- | --- |
-| Sesi pengguna hilang atau kedaluwarsa | Kembalikan 401 dari endpoint mitra dan minta pengguna untuk masuk lagi. |
-| Pengguna agen tidak terikat | Ikat pengguna terlebih dahulu, lalu coba ulang pembuatan token. |
-| 6MM mengembalikan kesalahan sementara | Kembalikan error yang dapat dicoba ulang ke frontend dan catat requestId untuk dukungan. |
-| channelId tidak cocok dengan instance widget | Tolak permintaan dan buat ulang sesi widget. |
+Otentikasi sesi mitra dan dapatkan `agentUserId` di sisi server. Terima Widget saat ini `channelId`; mengembalikan `embedToken`, `expireAt` (Unix detik), dan `channelId` tingkat atas. Respons agen tidak menyediakan `channelId`: backend Anda mengulanginya. Ambil token baru pada inisialisasi dan pembaruan; jangan pernah menggunakannya kembali. Pembuatan token tidak mentransfer dana atau memilih lingkungan dompet.
 
-<span id="related-documentation" data-sixmm-canonical-anchor="related-documentation" aria-hidden="true"></span>
+Melihat [Perdagangan detik](/id/sdk/agent-sdk/java/seconds-trading) untuk aliran frontend/backend lengkap.
 
-## Dokumentasi terkait
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
 
-- [Trading Widget Autentikasi](/id/sdk/trading-widget/authentication): hubungkan `tokenProvider` ke endpoint mitra.
-- [Java Quick Start](/id/sdk/agent-sdk/java/quick-start): instal dan inisialisasi `AgentClient`.
-- [Secrets & Signing](/id/sdk/security/secrets-signing): lindungi Agen API rahasia.
-- [Webhooks & Idempotensi](/id/sdk/security/webhooks-idempotency): amankan sisi callback dari integrasi.
+## Sumber dan panduan terkait
+
+- [Sumber resmi v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Ikhtisar kueri dan penomoran halaman](/id/sdk/agent-sdk/java/perpetual-queries)
+- [Dompet pendanaan](/id/sdk/agent-sdk/java/funding-wallet)
+- [Panduan peningkatan](/id/sdk/agent-sdk/java/upgrade)

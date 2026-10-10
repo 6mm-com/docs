@@ -1,7 +1,7 @@
 ---
 title: "Trading Widget SDK"
-headline: "Dokumentasi Integrasi 6MM Trading Widget SDK"
-description: "Pelajari cara menyematkan terminal perdagangan aset digital 6MM ke situs mitra, dengan autentikasi aman, kontrol tampilan, metode runtime, dan event siklus hidup."
+headline: "6MM Trading Widget SDK Dokumentasi Integrasi"
+description: "Pelajari cara menyematkan 6MM terminal perdagangan aset digital di situs web mitra, dengan autentikasi aman, kontrol tampilan, metode runtime, dan peristiwa siklus hidup."
 slug: sdk/trading-widget/overview
 canonical-url: https://docs.6mm.com/id/sdk/trading-widget/overview
 ---
@@ -10,20 +10,20 @@ canonical-url: https://docs.6mm.com/id/sdk/trading-widget/overview
 
 ## Pembagian tanggung jawab
 
-| Luas | Pemilik | Catatan |
+| Daerah | Pemilik | Catatan |
 | --- | --- | --- |
-| Pembuatan kontainer | Frontend mitra | Berikan elemen yang terlihat dengan lebar dan tinggi yang eksplisit. |
+| Pembuatan wadah | Bagian depan mitra | Sediakan elemen yang terlihat dengan lebar dan tinggi yang eksplisit. |
 | pembuatan iframe | Trading Widget SDK | SDK membuat dan mengelola iframe. |
-| Antarmuka Perdagangan | 6MM iframe | K-line, buku pesanan, formulir pesanan, posisi, pesanan, dan data akun dijalankan di dalam iframe. |
-| Kontrol tampilan | Trading Widget SDK + 6MM iframe | Header embed PC dan ticker bawah secara default tersembunyi. Mitra dapat menggunakan `display` untuk menampilkan area shell atau menyembunyikan kontainer trading tingkat tinggi. |
-| Pemeriksaan login mitra | Backend mitra | Validasi sesi pengguna mitra sebelum mengeluarkan kredensial autentikasi. |
-| Penerbitan token Embed | Backend mitra + Agent API | Direkomendasikan untuk mode token mitra. |
+| UI Perdagangan | 6MM iframe | K-line, buku pesanan, formulir pemesanan, posisi, pesanan, dan data akun dijalankan di dalam iframe. |
+| Kontrol tampilan | Trading Widget SDK + 6MM iframe | Header penyematan PC dan ticker bawah disembunyikan secara default. Mitra dapat menggunakan `display` untuk menampilkan area shell atau menyembunyikan kontainer perdagangan tingkat tinggi. |
+| Pemeriksaan login mitra | Bagian belakang mitra | Validasi sesi pengguna mitra sebelum mengeluarkan kredensial autentikasi. |
+| Sematkan penerbitan token | Backend mitra + Agen API | Direkomendasikan untuk mode token mitra. |
 
 <span id="versioning" data-sixmm-canonical-anchor="versioning" aria-hidden="true"></span>
 
-## Versi
+## Pembuatan versi
 
-Jalur integrasi publik tetap stabil di bawah skrip v1 URL. Set kemampuan v1 saat ini mencakup token-partner, tokenProvider, entryUrlProvider, kontrol tampilan, event siklus hidup, metode instance, dan event order.
+Jalur integrasi publik tetap stabil di bawah skrip v1 URL. Rangkaian kemampuan v1 saat ini mencakup token mitra, tokenProvider, entryUrlProvider, kontrol tampilan, peristiwa siklus hidup, metode instans, dan peristiwa pesanan.
 
 ```html
 <script src="https://app.6mm.com/sdk/trading-widget/v1/index.js"></script>
@@ -33,13 +33,21 @@ Jalur integrasi publik tetap stabil di bawah skrip v1 URL. Set kemampuan v1 saat
 
 ## Kapan menggunakan widget
 
-Pilih Trading Widget ketika mitra membutuhkan antarmuka trading lengkap di dalam produk web yang sudah ada. Gunakan dokumentasi REST API dan WebSocket saat membangun dan memelihara antarmuka trading yang sepenuhnya kustom.
+Pilih Trading Widget ketika mitra memerlukan antarmuka perdagangan lengkap di dalam produk web yang ada. Gunakan dokumentasi REST API dan WebSocket saat membangun dan memelihara antarmuka perdagangan yang sepenuhnya dapat disesuaikan.
 
 <span id="implementation-path" data-sixmm-canonical-anchor="implementation-path" aria-hidden="true"></span>
 
 ## Jalur implementasi
 
 1. Ikuti [Trading Widget Mulai Cepat](/id/sdk/trading-widget/quick-start) untuk memuat skrip dan membuat wadah yang terlihat.
-2. Konfigurasi [Otentikasi token mitra](/id/sdk/trading-widget/authentication) melalui backend mitra.
-3. Tambahkan yang diperlukan [Opsi dan acara](/id/sdk/trading-widget/options-events).
-4. Penggunaan [metode instance](/id/sdk/trading-widget/instance-methods) untuk kontrol siklus hidup dan runtime.
+2. Konfigurasikan [otentikasi token mitra](/id/sdk/trading-widget/authentication) melalui backend mitra.
+3. Tambahkan yang diperlukan [pilihan dan peristiwa](/id/sdk/trading-widget/options-events).
+4. Menggunakan [metode contoh](/id/sdk/trading-widget/instance-methods) untuk kontrol siklus hidup dan waktu proses.
+
+<span id="verified-public-runtime" data-sixmm-canonical-anchor="verified-public-runtime" aria-hidden="true"></span>
+
+## Waktu proses publik terverifikasi
+
+Versi laporan skrip `v1` publik `1.8.0` pada 10-10-2026. URL ini adalah titik masuk versi utama yang stabil, bukan versi yang disematkan. Baca `TradingWidget.version` dan `TradingWidget.capabilities` di runtime yang Anda muat sebelum menggunakan fitur opsional. Java Agent SDK `v0.3.0` adalah paket backend terpisah.
+
+Runtime mendukung satu instance aktif (`multiInstance=false`); membuat widget lain akan menghancurkan instance sebelumnya. Lokal yang didukungnya adalah `en`, `en-US`, dan `zh-CN`, terlepas dari 20 bahasa dokumentasi.

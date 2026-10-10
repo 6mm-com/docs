@@ -1,0 +1,72 @@
+---
+title: "Прямий вхід URL"
+subtitle: "Прямий вхід URL: Інтеграція Agent Java SDK v0.3.0, приклади, параметри та семантика відповіді."
+slug: sdk/agent-sdk/java/entry-url
+canonical-url: https://docs.6mm.com/uk/sdk/agent-sdk/java/entry-url
+---
+
+Цей посібник призначений для **Agent Java SDK `v0.3.0`**, Java 8+ і публічного контракту з тегами. Приклади виконуються в серверній частині партнера після ініціалізації `client` у [Швидкий старт](/uk/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## Приклад передумов
+
+Фрагменти Java поділяють ці імпортовані файли. Ініціалізуйте `client` за допомогою швидкого запуску та отримайте `platformUserId` із збереженого зв’язування. Приклади ідентифікаторів користувача/замовлення потрібно замінити вашими постійними значеннями.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span id="direct-entry-url" data-sixmm-canonical-anchor="direct-entry-url" aria-hidden="true"></span>
+
+## Прямий вхід URL
+
+Прямий запис URL призначений для режиму перенаправлення. Користувач-партнер натискає кнопку на
+сайт партнера, відкриває інтерфейс 6MM і виконує автоматичний вхід.
+
+```java
+import com.sixmm.agent.model.CreateEntryUrlRequest;
+import com.sixmm.agent.model.CreateEntryUrlResponse;
+
+CreateEntryUrlResponse resp = client.createEntryUrl(
+        CreateEntryUrlRequest.of("agent-user-001")
+                .withRedirectPath("/trade/BTCUSDT")
+                .withReturnUrl("https://partner.example.com/return#markets"));
+
+System.out.println(resp.webUrl);
+System.out.println(resp.expireAt);
+```
+
+Правила поля:
+
+| Поле | опис |
+| --- | --- |
+| `redirectPath` | 6MM інтерфейсний відносний шлях. Він має починатися з `/`, наприклад `/trade/BTCUSDT` |
+| `returnUrl` | Абсолютний партнер URL використовується, коли користувач виходить із зовнішнього інтерфейсу 6MM. Дозволено лише `http` і `https` |
+| `expireAt` | Термін дії вхідного квитка як мітка часу Unix у секундах |
+
+Вимоги безпеки:
+
+- `webUrl` містить одноразовий квиток. Використовуйте відразу і не зберігайте довго.
+- Якщо термін дії запису URL закінчився або був використаний, згенеруйте новий на сайті партнера.
+- `returnUrl` не має бути `javascript:`, відносним шляхом або URL з інформацією про користувача.
+
+
+<span id="product-and-mode-selection" data-sixmm-canonical-anchor="product-and-mode-selection" aria-hidden="true"></span>
+
+## Вибір продукту та режиму
+
+Використовуйте поточний інтерфейсний маршрут, наданий 6MM. Наприклад `/zh-CN/up-down?tradingMode=demo`, `/zh-CN/high-low?tradingMode=real`, `/zh-CN/grid-prediction?tradingMode=real` або `/zh-CN/futures/BTCUSDT?tradingMode=real`. Квиток аутентифікує користувача; він не обирає середовище фінансування та не переміщує кошти.
+
+див [Секундна торгівля](/uk/sdk/agent-sdk/java/seconds-trading) для перенаправлення та вбудованих прикладів.
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Джерело та відповідні посібники
+
+- [Офіційне джерело v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Огляд запиту та розбивка на сторінки](/uk/sdk/agent-sdk/java/perpetual-queries)
+- [Гаманець для фінансування](/uk/sdk/agent-sdk/java/funding-wallet)
+- [Посібник з оновлення](/uk/sdk/agent-sdk/java/upgrade)

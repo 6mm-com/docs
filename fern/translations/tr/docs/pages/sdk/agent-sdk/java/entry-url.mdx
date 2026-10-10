@@ -1,0 +1,72 @@
+---
+title: "Doğrudan Giriş URL"
+subtitle: "Doğrudan Giriş URL: Agent Java SDK v0.3.0 entegrasyonu, örnekler, parametreler ve yanıt semantiği."
+slug: sdk/agent-sdk/java/entry-url
+canonical-url: https://docs.6mm.com/tr/sdk/agent-sdk/java/entry-url
+---
+
+Bu kılavuz **Agent Java SDK `v0.3.0`**, Java 8+ ve etiketli kamu sözleşmesini hedefler. Örnekler, `client` başlatıldıktan sonra bir iş ortağı arka ucunda çalıştırılır. [Hızlı Başlangıç](/tr/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## Örnek önkoşullar
+
+Java parçacıkları bu içe aktarmaları paylaşır. Hızlı Başlangıç'ı kullanarak `client`'ı başlatın ve kaydedilen bağlamadan `platformUserId`'i edinin. Örnek kullanıcı/sipariş kimlikleri kendi kalıcı değerlerinizle değiştirilmelidir.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span id="direct-entry-url" data-sixmm-canonical-anchor="direct-entry-url" aria-hidden="true"></span>
+
+## Doğrudan Giriş URL
+
+Doğrudan giriş URL yönlendirme modu içindir. Bir iş ortağı kullanıcısı,
+ortak sitesi, 6MM ön ucunu açar ve otomatik olarak oturum açılır.
+
+```java
+import com.sixmm.agent.model.CreateEntryUrlRequest;
+import com.sixmm.agent.model.CreateEntryUrlResponse;
+
+CreateEntryUrlResponse resp = client.createEntryUrl(
+        CreateEntryUrlRequest.of("agent-user-001")
+                .withRedirectPath("/trade/BTCUSDT")
+                .withReturnUrl("https://partner.example.com/return#markets"));
+
+System.out.println(resp.webUrl);
+System.out.println(resp.expireAt);
+```
+
+Alan kuralları:
+
+| Alan | Tanım |
+| --- | --- |
+| `redirectPath` | 6MM ön uç göreli yolu. `/` ile başlamalıdır, örneğin `/trade/BTCUSDT` |
+| `returnUrl` | Kullanıcı 6MM ön uçtan çıktığında iş ortağı mutlak değeri URL kullanılır. Yalnızca `http` ve `https`'ye izin verilir |
+| `expireAt` | Saniye cinsinden Unix zaman damgası olarak giriş bileti son kullanma süresi |
+
+Güvenlik gereksinimleri:
+
+- `webUrl` tek seferlik bir bilet içerir. Hemen kullanın ve uzun süre saklamayın.
+- URL girişinin süresi dolarsa veya kullanılmışsa, ortak siteden yeni bir giriş oluşturun.
+- `returnUrl`, `javascript:`, göreceli bir yol veya kullanıcı bilgisi içeren bir URL olmamalıdır.
+
+
+<span id="product-and-mode-selection" data-sixmm-canonical-anchor="product-and-mode-selection" aria-hidden="true"></span>
+
+## Ürün ve mod seçimi
+
+6MM tarafından sağlanan mevcut ön uç rotasını kullanın. Örneğin `/zh-CN/up-down?tradingMode=demo`, `/zh-CN/high-low?tradingMode=real`, `/zh-CN/grid-prediction?tradingMode=real` veya `/zh-CN/futures/BTCUSDT?tradingMode=real`. Bilet kullanıcının kimliğini doğrular; bir finansman ortamı seçmez veya fonları taşımaz.
+
+Görmek [Saniye ticareti](/tr/sdk/agent-sdk/java/seconds-trading) yönlendirme ve gömülü örnekler için.
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Kaynak ve ilgili kılavuzlar
+
+- [Resmi v0.3.0 kaynağı](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Sorguya genel bakış ve sayfalandırma](/tr/sdk/agent-sdk/java/perpetual-queries)
+- [Finansman cüzdanı](/tr/sdk/agent-sdk/java/funding-wallet)
+- [Yükseltme kılavuzu](/tr/sdk/agent-sdk/java/upgrade)

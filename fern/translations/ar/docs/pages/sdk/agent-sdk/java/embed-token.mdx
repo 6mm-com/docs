@@ -1,17 +1,36 @@
 ---
 title: "إنشاء رمز التضمين"
-subtitle: "إصدار رموز مدمجة قصيرة العمر لوضع Trading Widget الشريك."
+subtitle: "إنشاء رمز التضمين: Agent Java SDK التكامل v0.3.0 والأمثلة والمعلمات ودلالات الاستجابة."
 slug: sdk/agent-sdk/java/embed-token
 canonical-url: https://docs.6mm.com/ar/sdk/agent-sdk/java/embed-token
 ---
 
-<span id="sdk-call" data-sixmm-canonical-anchor="sdk-call" aria-hidden="true"></span>
+يستهدف هذا الدليل **Agent Java SDK `v0.3.0`**، Java 8+، والعقد العام الموسوم. يتم تشغيل الأمثلة في الواجهة الخلفية للشريك بعد تهيئة `client` في [بداية سريعة](/ar/sdk/agent-sdk/java/quick-start).
 
-## SDK الاتصال
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
 
-أنشئ رموز تضمين من الخلفية بعد التحقق من جلسة المستخدم الشريك. يجب أن يستدعي المتصفح نقطة النهاية الخاصة بك، ويجب أن تتصل 6MM عبر Agent SDK.
+## مثال المتطلبات الأساسية
+
+تشترك مقتطفات Java في هذه الواردات. قم بتهيئة `client` باستخدام البدء السريع واحصل على `platformUserId` من الرابط المحفوظ. يجب استبدال معرفات المستخدم/الطلب بالقيم الثابتة الخاصة بك.
 
 ```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span id="trading-widget-embed-token" data-sixmm-canonical-anchor="trading-widget-embed-token" aria-hidden="true"></span>
+
+## Trading Widget تضمين الرمز المميز
+
+رمز التضمين مخصص لوضع Trading Widget SDK `partner-token + tokenProvider`. ال
+يستدعي المتصفح الواجهة الخلفية للشريك، وتستدعي الواجهة الخلفية للشريك هذا Java SDK
+لإنشاء `embedToken`.
+
+```java
+import com.sixmm.agent.model.CreateEmbedTokenRequest;
+import com.sixmm.agent.model.CreateEmbedTokenResponse;
+
 CreateEmbedTokenResponse resp = client.createEmbedToken(
         CreateEmbedTokenRequest.of("agent-user-001", "tw_abc123")
                 .withSymbol("ETHUSDT"));
@@ -20,13 +39,15 @@ System.out.println(resp.embedToken);
 System.out.println(resp.expireAt);
 ```
 
-> **شهادة لمرة واحدة**
->
-> embedToken قصير العمر ويستخدم مرة واحدة. لا تضعه في سلسلة استعلام URL .
+متطلبات التكامل:
 
-<span id="backend-endpoint-example" data-sixmm-canonical-anchor="backend-endpoint-example" aria-hidden="true"></span>
+- يجب أن يستخدم `channelId` القيمة التي تم تمريرها بواسطة Trading Widget SDK.
+- `symbol` اختياري، ولكن يوصى بتمرير الرمز الأولي الحالي.
+- `embedToken` قصير العمر ولمرة واحدة. لا تضعه في سلاسل الاستعلام URL.
+- يجب ألا تحتوي الواجهة الأمامية للشريك مطلقًا على `apiSecret`.
+- `expireAt` هو طابع زمني لنظام Unix بالثواني، وليس TTL.
 
-## مثال على نقطة نهاية خلفية
+مثال على نقطة نهاية الواجهة الخلفية للشريك:
 
 ```java
 @PostMapping("/api/trading/embed-token")
@@ -41,33 +62,20 @@ public EmbedTokenView createEmbedToken(@RequestBody EmbedTokenRequest request,
 }
 ```
 
-أعيد فقط الحقول التي يحتاجها مزود الرمز Trading Widget . لا تعيد apiSecretأو حقول التوقيع الخام أو تكوين الخدمة الداخلي.
 
-<span id="failure-handling" data-sixmm-canonical-anchor="failure-handling" aria-hidden="true"></span>
+<span id="partner-endpoint-contract" data-sixmm-canonical-anchor="partner-endpoint-contract" aria-hidden="true"></span>
 
-## التعامل مع الأعطال
+## عقد نقطة النهاية للشريك
 
-| الحالة | التعامل الموصى به |
-| --- | --- |
-| جلسة المستخدم مفقودة أو منتهية الصلاحية | أعد 401 من نقطة نهاية الشريك واطلب من المستخدم تسجيل الدخول مرة أخرى. |
-| مستخدم الوكيل غير مقيد | قم بربط المستخدم أولا، ثم أعد محاولة إنشاء الرمز. |
-| 6MM يعيد خطأ مؤقت | أعيد خطأ قابل للمحاولة إلى الواجهة الأمامية وسجل requestId للدعم. |
-| channelId لا يتطابق مع نسخة الويدجت | ارفض الطلب وأعد إنشاء جلسة الويدجت. |
+قم بتوثيق جلسة الشريك واشتقاق `agentUserId` من جانب الخادم. قبول القطعة الحالية `channelId`؛ إرجاع المستوى الأعلى `embedToken`، `expireAt` (ثواني Unix)، ونفس `channelId`. لا توفر استجابات الوكيل `channelId`: الواجهة الخلفية لديك تكررها. جلب رمز مميز جديد عند التهيئة والتجديد؛ لا تعيد استخدامه أبدًا. لا يؤدي إنشاء الرمز المميز إلى تحويل الأموال أو اختيار بيئة المحفظة.
 
-<span id="related-documentation" data-sixmm-canonical-anchor="related-documentation" aria-hidden="true"></span>
+يرى [تداول الثواني](/ar/sdk/agent-sdk/java/seconds-trading) لتدفق الواجهة الأمامية/الخلفية الكامل.
 
-## وثائق ذات صلة
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
 
-- [Trading Widget المصادقة ] (/sdk/trading-widget/authentication): ربط `tokenProvider` بنقطة نهاية الشريك.
-- [Java Quick Start] (/sdk/agent-sdk/java/quick-start): تثبيت وتهيئة `AgentClient`.
-- [أسرار وإشارة] (/sdk/security/secrets-signing): حماية العميل API السر.
-- [Webhooks & Idempotency](/ar/sdk/security/webhooks-idempotency): تأمين جانب الاستدعاء المجدد من التكامل.
-{/* sixmm-localized-link-repair:start */}
-<span id="localized-page-links" data-sixmm-canonical-anchor="localized-page-links" aria-hidden="true"></span>
+## المصدر والأدلة ذات الصلة
 
-## صفحات ذات صلة
-
-- [Trading Widget المصادقة](/ar/sdk/trading-widget/authentication)
-- [Java البداية السريعة](/ar/sdk/agent-sdk/java/quick-start)
-- [Agent SDK أسرار وتوقيع HMAC](/ar/sdk/security/secrets-signing)
-{/* sixmm-localized-link-repair:end */}
+- [المصدر الرسمي v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [نظرة عامة على الاستعلام وترقيم الصفحات](/ar/sdk/agent-sdk/java/perpetual-queries)
+- [محفظة التمويل](/ar/sdk/agent-sdk/java/funding-wallet)
+- [دليل الترقية](/ar/sdk/agent-sdk/java/upgrade)

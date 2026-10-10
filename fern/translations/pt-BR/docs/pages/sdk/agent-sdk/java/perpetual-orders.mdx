@@ -1,0 +1,186 @@
+---
+title: "Ordens Perpétuas"
+subtitle: "Ordens Perpétuas: Integração Agent Java SDK v0.3.0, exemplos, parâmetros e semântica de resposta."
+slug: sdk/agent-sdk/java/perpetual-orders
+canonical-url: https://docs.6mm.com/pt-BR/sdk/agent-sdk/java/perpetual-orders
+---
+
+Este guia é direcionado a **Agent Java SDK `v0.3.0`**, Java 8+ e ao contrato público marcado. Os exemplos são executados em um back-end de parceiro após a inicialização de `client` em [Início rápido](/pt-BR/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## Pré-requisitos de exemplo
+
+Os trechos Java compartilham essas importações. Inicialize `client` usando o Quick Start e obtenha `platformUserId` da ligação salva. Os exemplos de IDs de usuário/pedido devem ser substituídos por seus próprios valores persistentes.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span data-sixmm-canonical-anchor="listcurrentperpetualorders" aria-hidden="true"></span>
+
+## `listCurrentPerpetualOrders`
+
+Modelo de solicitação: `CurrentPerpetualOrdersRequest`.
+
+```java
+import com.sixmm.agent.model.CurrentPerpetualOrdersRequest;
+import com.sixmm.agent.model.PerpetualResponse;
+import java.util.Collections;
+
+CurrentPerpetualOrdersRequest request = new CurrentPerpetualOrdersRequest();
+request.platformUserIds = Collections.singletonList("1188041528");
+request.limit = 100;
+request.orderCategory = "NORMAL";
+request.symbol = "BTCUSDT";
+PerpetualResponse response = client.listCurrentPerpetualOrders(request);
+System.out.println(response.data.items.size());
+System.out.println(response.data.hasMore);
+System.out.println(response.data.nextCursor);
+```
+
+<span id="request-fields" data-sixmm-canonical-anchor="request-fields" aria-hidden="true"></span>
+
+### Campos de solicitação
+
+| Campo | Java tipo | Obrigatório | Significado |
+| --- | --- | --- | --- |
+| `orderCategory` | `String` | Sim | NORMAL ou CONDITIONAL; consultas condicionais requerem usuários explícitos. |
+| `platformUserIds` | `java.util.List<String>` | Condicional | 1–100 IDs públicos exclusivos; necessário para preenchimentos e pedidos condicionais. Omitir consultas suportadas para escopo de player direto; [] é inválido. |
+| `symbol` | `String` | Não | Filtro opcional de pares de negociação. |
+| `limit` | `Integer` | Não | Padrão 500; 1–1000. |
+| `cursor` | `String` | Não | Use o nextCursor retornado com filtros inalterados; pare quando hasMore for falso. |
+
+O exemplo lê uma página. Para campos obrigatórios, escopo do player, semântica de filtro, limite, cursor e novas tentativas limitadas, siga [Visão geral da consulta](/pt-BR/sdk/agent-sdk/java/perpetual-queries). Mantenha todos os filtros inalterados durante a paginação; não interprete um erro como um resultado vazio.
+
+<span data-sixmm-canonical-anchor="listperpetualorderhistory" aria-hidden="true"></span>
+
+## `listPerpetualOrderHistory`
+
+Modelo de solicitação: `PerpetualOrderHistoryRequest`.
+
+```java
+import com.sixmm.agent.model.PerpetualOrderHistoryRequest;
+import com.sixmm.agent.model.PerpetualResponse;
+import java.util.Collections;
+
+PerpetualOrderHistoryRequest request = new PerpetualOrderHistoryRequest();
+request.platformUserIds = Collections.singletonList("1188041528");
+request.limit = 100;
+request.orderCategory = "NORMAL";
+request.symbol = "BTCUSDT";
+request.endTime = System.currentTimeMillis();
+request.startTime = request.endTime - 3_600_000L;
+PerpetualResponse response = client.listPerpetualOrderHistory(request);
+System.out.println(response.data.items.size());
+System.out.println(response.data.hasMore);
+System.out.println(response.data.nextCursor);
+```
+
+<span id="request-fields-1" data-sixmm-canonical-anchor="request-fields-1" aria-hidden="true"></span>
+
+### Campos de solicitação
+
+| Campo | Java tipo | Obrigatório | Significado |
+| --- | --- | --- | --- |
+| `orderCategory` | `String` | Sim | NORMAL ou CONDITIONAL; consultas condicionais requerem usuários explícitos. |
+| `platformUserIds` | `java.util.List<String>` | Condicional | 1–100 IDs públicos exclusivos; necessário para preenchimentos e pedidos condicionais. Omitir consultas suportadas para escopo de player direto; [] é inválido. |
+| `symbol` | `String` | Não | Filtro opcional de pares de negociação. |
+| `orderId` | `String` | Não | ID de pedido normal; não é um número de ordem de transferência de parceiro. |
+| `conditionId` | `String` | Não | ID do pedido condicional; não misture com orderId. |
+| `clientOrderId` | `String` | Não | Referência de ordem do cliente de negociação, não agentOrderNo. |
+| `side` | `String` | Não | Filtro BUY / SELL. |
+| `status` | `String` | Não | Status específico do recurso; veja a referência de status. |
+| `startTime` | `Long` | Não | Milissegundos Unix inclusivos; use uma janela de histórico fixa UTC. |
+| `endTime` | `Long` | Não | Milissegundos Unix exclusivos. |
+| `limit` | `Integer` | Não | Padrão 500; 1–1000. |
+| `cursor` | `String` | Não | Use o nextCursor retornado com filtros inalterados; pare quando hasMore for falso. |
+
+O exemplo lê uma página. Para campos obrigatórios, escopo do player, semântica de filtro, limite, cursor e novas tentativas limitadas, siga [Visão geral da consulta](/pt-BR/sdk/agent-sdk/java/perpetual-queries). Mantenha todos os filtros inalterados durante a paginação; não interprete um erro como um resultado vazio.
+
+<span id="ordinary-delegation-current-and-history" data-sixmm-canonical-anchor="ordinary-delegation-current-and-history" aria-hidden="true"></span>
+
+## Pedidos normais: atuais e históricos
+
+Atual: `orders/current` + `orderCategory=NORMAL`; Histórico: `orders/history` + `orderCategory=NORMAL`.
+
+| Campo `data` | tipo | Significado e escopo de aplicativo |
+| --- | --- | --- |
+| `symbol` | string | Par de negociação, como BTCUSDT |
+| `orderId` | string | ID de pedido comum da plataforma |
+| `orderCategory` | string | Corrigido NORMAL |
+| `clientOrderId` | string | Número do pedido do cliente fornecido pela fonte do pedido de transação; não é o mesmo campo que transferência de fundos comerciais agentOrderNo |
+| `orderType` | string | Tipo de delegado, como LIMIT, MARKET; prevalecerá o valor real da enumeração |
+| `side` | string | Direção de compra e venda BUY / SELL |
+| `status` | string | Status normal do pedido, consulte a visão geral da consulta |
+| `timeInForce` | string | Período de validade/estratégia de execução de negócios, como GTC, IOC, FOK; interpretado de acordo com valores reais |
+| `price` | string | Preço confiado; pode ser omitido quando nenhum preço for fornecido, e o preço de transação de mercado não será complementado por si mesmo. |
+| `quantity` | string | Quantidade original do pedido |
+| `filledQuantity` | string | Quantidade de transação |
+| `remainingQuantity` | string | Quantidade não transacionada; a consulta atual leva quantidade - filledQuantity, e a consulta histórica leva o valor do registro histórico |
+| `avgFilledPrice` | string | O preço médio de transação da peça concluída; pode não haver valor quando não estiver concluído |
+| `reduceOnly` | boolean | Se deve apenas reduzir posições |
+| `closeOnly` | boolean | Se é usado apenas para fechar posições |
+| `makerOnly` | boolean | Se deve ser executado apenas como Maker |
+| `leverage` | integer | Aproveite vários; **A ordem ordinária histórica** tem uma origem e a ordem ordinária atual não cria esse valor |
+| `marginMode` | string | Modo margem; **Ordem ordinária histórica** atualmente retorna uma string de enumeração numérica, como "1", "2"; a ordem ordinária atual não é fornecida |
+| `createdAt` | integer | Tempo de criação do pedido, milissegundos; use este campo para filtrar o tempo histórico do pedido |
+| `updatedAt` | integer | Tempo de atualização do registro delegado, milissegundos |
+
+O histórico de pedidos inclui pedidos normais encerrados. Cada registro não pode ser considerado totalmente concluído apenas com base no nome da interface. A página do pedido atual é uma consulta de status atual, não um fluxo de eventos do pedido.
+
+
+<span id="conditional-delegation-current-and-history" data-sixmm-canonical-anchor="conditional-delegation-current-and-history" aria-hidden="true"></span>
+
+## Pedidos condicionais: atuais e históricos
+
+Atual: `orders/current` + `orderCategory=CONDITIONAL`; Histórico: `orders/history` + `orderCategory=CONDITIONAL`. Ambos requerem platformUserIds explícito.
+
+| Campo `data` | tipo | significado |
+| --- | --- | --- |
+| `symbol` | string | par de negociação |
+| `conditionId` | string | ID de pedidos condicionais, independente do normal orderId |
+| `orderCategory` | string | Corrigido CONDITIONAL |
+| `generatedOrderId` | string | ID do pedido comum gerado após o acionamento; pode ser omitido se não for gerado |
+| `clientOrderId` | string | O número do pedido do cliente de pedidos condicionais, exibido quando existir |
+| `side` | string | BUY / SELL |
+| `orderType` | string | Tipo de pedido pós-acionamento, interpretado de acordo com o valor real |
+| `triggerType` | string | Tipo de regra de gatilho, explicado pela enumeração de origem real |
+| `workingType` | string | Tipo de trabalho/fonte de preço que aciona o preço, interpretado como enumeração real |
+| `timeInForce` | string | Prazo de validade/estratégia de execução da ordem após acionamento |
+| `price` | string | O preço do pedido após o acionamento, gerado quando a fonte tem valor |
+| `quantity` | string | Quantidade condicional do pedido |
+| `triggerPrice` | string | preço de gatilho |
+| `reduceOnly` | boolean | Se deve apenas reduzir posições |
+| `closePosition` | boolean | Se deve usar a semântica completa de fechamento de posição, não pode ser confundido com closeOnly como o mesmo campo |
+| `leverage` | integer | Aproveite múltiplos, saída quando diferente de zero |
+| `marginMode` | string | Esta classe retorna CROSS / ISOLATED, que é uma string numérica diferente das ordens/posições históricas comuns |
+| `status` | string | Estado de gatilho único condicional, consulte a visão geral da consulta |
+| `triggerStatus` | string | A implementação atual usa o mesmo valor de status condicional que status |
+| `createdAt` | integer | Tempo de criação de pedido condicional, milissegundos; as condições históricas são filtradas por este tempo |
+| `updatedAt` | integer | Tempo de atualização, saída quando há um valor, milissegundos |
+| `deletedAt` | integer | Excluir tempo de marcação, saída quando houver um valor, milissegundos; não é um campo unificado de hora de transação/cancelamento |
+
+Pedidos condicionais não fornecem filledQuantity, remainingQuantity, avgFilledPrice para pedidos normais. Se você precisar do status da transação de pedidos comuns após o acionamento, consulte pedidos/transações comuns por meio de generatedOrderId e não infira o volume da transação a partir do status do pedido condicional.
+
+
+<span id="example-response-envelope" data-sixmm-canonical-anchor="example-response-envelope" aria-hidden="true"></span>
+
+## Exemplo de envelope de resposta
+
+Esta é uma página em branco ilustrativa, não uma amostra de uma negociação concluída. As tabelas de campos específicos de recursos acima descrevem `items[].data` preenchido.
+
+```json
+{"code":0,"message":"success","data":{"items":[],"nextCursor":"","hasMore":false}}
+```
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Fonte e guias relacionados
+
+- [Fonte oficial v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Visão geral da consulta e paginação](/pt-BR/sdk/agent-sdk/java/perpetual-queries)
+- [Carteira de financiamento](/pt-BR/sdk/agent-sdk/java/funding-wallet)
+- [Guia de atualização](/pt-BR/sdk/agent-sdk/java/upgrade)

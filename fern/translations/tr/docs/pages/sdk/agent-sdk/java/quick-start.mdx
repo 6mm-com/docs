@@ -1,53 +1,66 @@
 ---
 title: "Java Hızlı Başlangıç"
-subtitle: "Bir arka uç servisinden Java SDK kurup başlatın."
+subtitle: "Java Hızlı Başlangıç: Agent Java SDK v0.3.0 entegrasyonu, örnekler, parametreler ve yanıt semantiği."
 slug: sdk/agent-sdk/java/quick-start
 canonical-url: https://docs.6mm.com/tr/sdk/agent-sdk/java/quick-start
 ---
 
-<span id="install" data-sixmm-canonical-anchor="install" aria-hidden="true"></span>
+Bu kılavuz **Agent Java SDK `v0.3.0`**, Java 8+ ve etiketli kamu sözleşmesini hedefler. Örnekler, `client` başlatıldıktan sonra bir iş ortağı arka ucunda çalıştırılır. [Hızlı Başlangıç](/tr/sdk/agent-sdk/java/quick-start).
 
-## Kurulum
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
 
-Kamuya açık SDK kaynağı şu anda `v0.1.1` şu Maven koordinatlarıyla etiketlediğini belgeliyor:
+## Örnek önkoşullar
+
+Java parçacıkları bu içe aktarmaları paylaşır. Hızlı Başlangıç'ı kullanarak `client`'ı başlatın ve kaydedilen bağlamadan `platformUserId`'i edinin. Örnek kullanıcı/sipariş kimlikleri kendi kalıcı değerlerinizle değiştirilmelidir.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span id="maven-coordinates" data-sixmm-canonical-anchor="maven-coordinates" aria-hidden="true"></span>
+
+## Maven Koordinatları
+
+Mevcut kaynak koordinatları:
 
 ```xml
 <dependency>
     <groupId>com.sixmm.exchange.sdk</groupId>
     <artifactId>agent</artifactId>
-    <version>0.1.1</version>
+    <version>0.3.0</version>
 </dependency>
 ```
 
-GitHub, Maven bağımlılık deposu olarak işlev görmez. Etiketlenmiş kaynağı yerel olarak yükleyin, sonra bağımlılığı çözebilirsiniz:
+GitHub, bir Maven bağımlılık deposu değil, kaynak barındırmadır. Eğer SDK
+henüz bir Maven deposunda yayınlanmadıysa, bunu yerel Maven'inize yükleyin
+ilk önce depo:
 
 ```bash
 git clone https://github.com/6mm-com/agent-java-sdk.git
 cd agent-java-sdk
-git checkout v0.1.1
+git checkout v0.3.0
 mvn install
 ```
 
-> **Takım kurulumları**
->
-> Onaylanmış eseri kuruluşunuzun Maven deposuna CI, test ve üretim sürümleri için yayınlayın. Onaylanmış sürümü üretim dağıtımından önce 6MM ile onaylayın.
+Yerel kurulumdan sonra iş projeniz çözülebilir
+Yerel Maven deposundan `com.sixmm.exchange.sdk:agent:0.3.0`.
 
-Kaynak kodu ve kullanım örnekleri resmi Java SDK deposunda mevcuttur:
+Ekip oluşturma ve test ortamları için SDK dosyasını bir Maven deposunda yayınlayın
+Nexus, Artifactory, GitHub Paketleri, Maven Central gibi veya GitHub kullanın
+JitPack gibi tabanlı oluşturma hizmeti.
 
-[6mm-com/agent-java-sdk](https://github.com/6mm-com/agent-java-sdk)
+Mevcut bir entegrasyon için bkz. [SDK yükseltme kılavuzu](https://github.com/6mm-com/agent-java-sdk/blob/v0.3.0/docs/merchant-integration.md#8-旧-sdk-升级). SDK'i yüklemek için kararlı `v0.3.0` kaynak etiketini kullanın ve eşleşen entegrasyon belgelerini okuyun.
 
-<span id="before-you-start" data-sixmm-canonical-anchor="before-you-start" aria-hidden="true"></span>
 
-## Başlamadan önce
+<span id="client-initialization" data-sixmm-canonical-anchor="client-initialization" aria-hidden="true"></span>
 
-- Üretim ajanı API üs URL 6MM ekibiyle onaylayın.
-- apiSecret sadece arka uç gizli yönetiminde depolayın.
-- platformUserId ile agentUserIdarasında kararlı bir eşleme hazırla.
-- Bağlama, transfer, sipariş ve webhook akışları etrafında yapılandırılmış logları etkinleştirin.
+## İstemci Başlatma
 
-<span id="initialize-client" data-sixmm-canonical-anchor="initialize-client" aria-hidden="true"></span>
+<span id="plain-java" data-sixmm-canonical-anchor="plain-java" aria-hidden="true"></span>
 
-## İstemciyi başlat
+### Düz Java
 
 ```java
 import com.sixmm.agent.AgentClient;
@@ -61,32 +74,156 @@ AgentClient client = new AgentClient(AgentClientConfig.builder()
         .build());
 ```
 
-> **Sadece arka uç**
->
-> Agent SDK tarayıcı, mobil veya masaüstü istemci kodundan başlatmayın. SDK , ayrıcalıklı Ajan API taleplerini imzalar.
+<span id="spring-boot" data-sixmm-canonical-anchor="spring-boot" aria-hidden="true"></span>
 
-<span id="example-transfer-funds-in" data-sixmm-canonical-anchor="example-transfer-funds-in" aria-hidden="true"></span>
-
-## Örnek: fon transferi
+### Bahar Çizme
 
 ```java
-TransferResponse resp = client.transfer(TransferRequest.fixed(
-        "AGT-ORDER-1001",
-        "agent-user-001",
-        Direction.IN,
-        "USDT",
-        "10.00"));
+import com.sixmm.agent.AgentClient;
+import com.sixmm.agent.AgentClientConfig;
+import java.time.Duration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class AgentSdkConfig {
+
+    @Bean
+    public AgentClient agentClient(AgentSdkProperties props) {
+        return new AgentClient(AgentClientConfig.builder()
+                .baseUrl(props.getBaseUrl())
+                .agentCode(props.getAgentCode())
+                .apiSecret(props.getApiSecret())
+                .defaultCurrency("USDT")
+                .timeout(Duration.ofSeconds(10))
+                .build());
+    }
+}
 ```
 
-Her transfer talebi için benzersiz bir partner tarafı sipariş numarası kullanın. Bir istek zaman doluyorsa, yeni bir sipariş oluşturmadan önce orijinal siparişi sorgulayın.
+Örnek uygulama özellikleri:
 
-<span id="next-steps" data-sixmm-canonical-anchor="next-steps" aria-hidden="true"></span>
+```properties
+agent.sdk.base-url=https://agent-api.6mm.com
+agent.sdk.agent-code=AGENT001
+agent.sdk.api-secret=${AGENT_API_SECRET}
+```
 
-## Sonraki adımlar
 
-| İhtiyaç | Sonraki sayfa |
-| --- | --- |
-| Trading Widget kimlik belgesi verin | [Embed Token Oluştur](/tr/sdk/agent-sdk/java/embed-token) |
-| Geri dönüşleri doğrulayın 6MM | [Webhooks ve İdempotensi](/tr/sdk/security/webhooks-idempotency) |
-| İmza davranışını gözden geçir | [Sırlar ve İmza Alma](/tr/sdk/security/secrets-signing) |
-| Bir entegrasyon problemini teşhis et | [SDK Sorun Giderme](/tr/sdk/security/troubleshooting) |
+<span id="bind-user" data-sixmm-canonical-anchor="bind-user" aria-hidden="true"></span>
+
+## Kullanıcıyı Bağla
+
+Bind, bir iş ortağı kullanıcısı ile bir 6MM arasındaki ilişkiyi oluşturur veya getirir
+platformu kullanıcısı Kullanıcı işlem akışına ilk girdiğinde veya işlem yapılmadan önce bunu çağırın.
+6MM'a ilk transfer.
+
+```java
+import com.sixmm.agent.model.BindRequest;
+import com.sixmm.agent.model.BindResponse;
+
+BindResponse resp = client.bind(
+        BindRequest.of("agent-user-001")
+                .withUsername("alice")
+                .withExt("{\"source\":\"web\"}"));
+
+System.out.println(resp.platformUserId);
+System.out.println(resp.bindStatus);
+System.out.println(resp.isSimulatedUser);
+```
+
+Talep alanları:
+
+| Alan | Tip | Gerekli | Tanım |
+| --- | --- | --- | --- |
+| `agentUserId` | string | Evet | Benzersiz iş ortağı tarafı kullanıcı kimliği |
+| `username` | string | HAYIR | Platform kullanıcısının takma adı olarak kullanılan iş ortağı tarafında görünen ad |
+| `ext` | string | HAYIR | Uzatma alanı. JSON dizesi önerilir |
+
+Yanıt alanları:
+
+| Alan | Tip | Tanım |
+| --- | --- | --- |
+| `platformUserId` | string | 6MM harici kullanıcı kimliği |
+| `bindStatus` | string | Genellikle `BOUND` |
+| `isSimulatedUser` | boolean | Bunun simüle edilmiş bir kullanıcı olup olmadığı |
+
+
+<span id="recommended-business-flows" data-sixmm-canonical-anchor="recommended-business-flows" aria-hidden="true"></span>
+
+## Önerilen İş Akışları
+
+<span id="first-trading-entry" data-sixmm-canonical-anchor="first-trading-entry" aria-hidden="true"></span>
+
+### İlk Ticaret Girişi
+
+```text
+1. User logs in to the partner site.
+2. Partner backend calls bind with agentUserId.
+3. Partner stores the agentUserId and platformUserId relationship.
+4. User clicks the trading entry.
+5. Redirect mode: call createEntryUrl and open webUrl in the browser.
+6. Embed mode: Trading Widget calls tokenProvider, and partner backend calls createEmbedToken.
+```
+
+<span id="deposit-into-6mm" data-sixmm-canonical-anchor="deposit-into-6mm" aria-hidden="true"></span>
+
+### 6MM'a Para Yatırın
+
+```text
+1. Partner creates a unique agentOrderNo.
+2. Partner calls transfer(Direction.IN).
+3. If SUCCESS is returned, mark the local order as successful.
+4. If PROCESSING is returned, wait for webhook or poll queryOrder.
+5. If FAILED is returned or AgentApiException is thrown, handle it as failed.
+```
+
+<span id="withdraw-back-to-partner" data-sixmm-canonical-anchor="withdraw-back-to-partner" aria-hidden="true"></span>
+
+### Ortağa Geri Çekilme
+
+```text
+1. Partner creates a unique agentOrderNo.
+2. Fixed amount withdraw: call transfer(Direction.OUT).
+3. Full withdraw: call transferAllOut.
+4. Confirm the final result by orderStatus, webhook, or queryOrder.
+```
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Kaynak ve ilgili kılavuzlar
+
+- [Resmi v0.3.0 kaynağı](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Sorguya genel bakış ve sayfalandırma](/tr/sdk/agent-sdk/java/perpetual-queries)
+- [Finansman cüzdanı](/tr/sdk/agent-sdk/java/funding-wallet)
+- [Yükseltme kılavuzu](/tr/sdk/agent-sdk/java/upgrade)
+<span id="error-handling" data-sixmm-canonical-anchor="error-handling" aria-hidden="true"></span>
+
+## Hata İşleme
+
+SDK istisnalar iki kategoriye ayrılmıştır:
+
+| İstisna | Senaryo | Önerilen kullanım |
+| --- | --- | --- |
+| `AgentApiException` | HTTP durumu 2xx değil veya Temsilci yanıtı `code != 0` değil | `getHttpStatus()`, `getCode()` ve `getResponseBody()`'yi okuyun ve bunu bir iş/API hatası olarak değerlendirin |
+| `AgentSdkException` | Ağ, serileştirme, yapılandırma veya imzalama hatası | Günlüğe kaydedin ve sistem istisnası olarak değerlendirin |
+
+Örnek:
+
+```java
+import com.sixmm.agent.AgentApiException;
+import com.sixmm.agent.AgentSdkException;
+
+try {
+    TransferResponse resp = client.transfer(TransferRequest.fixed(
+            "AGT-ORDER-1001", "agent-user-001", Direction.IN, "USDT", "10.00"));
+    // Update the local order according to resp.orderStatus.
+} catch (AgentApiException e) {
+    // Business rejection or HTTP error.
+    log.warn("6mm agent api rejected request, httpStatus={}, code={}, body={}",
+            e.getHttpStatus(), e.getCode(), e.getResponseBody());
+} catch (AgentSdkException e) {
+    // Local SDK error or network error.
+    log.error("6mm agent sdk request failed", e);
+}
+```

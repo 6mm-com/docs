@@ -1,0 +1,142 @@
+---
+title: "영구 포지션"
+subtitle: "영구 포지션: Agent Java SDK v0.3.0 통합, 예시, 매개변수 및 응답 의미 체계."
+slug: sdk/agent-sdk/java/perpetual-positions
+canonical-url: https://docs.6mm.com/ko/sdk/agent-sdk/java/perpetual-positions
+---
+
+이 가이드는 **Agent Java SDK `v0.3.0`**, Java 8+ 및 태그된 공개 계약을 대상으로 합니다. 예제는 `client`를 초기화한 후 파트너 백엔드에서 실행됩니다. [빠른 시작](/ko/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## 예시 전제조건
+
+Java 조각은 이러한 가져오기를 공유합니다. 빠른 시작을 사용하여 `client`를 초기화하고 저장된 바인딩에서 `platformUserId`를 가져옵니다. 예시 사용자/주문 ID는 고유한 지속 값으로 대체되어야 합니다.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span data-sixmm-canonical-anchor="listcurrentperpetualpositions" aria-hidden="true"></span>
+
+## `listCurrentPerpetualPositions`
+
+요청 모델: `CurrentPerpetualPositionsRequest`.
+
+```java
+import com.sixmm.agent.model.CurrentPerpetualPositionsRequest;
+import com.sixmm.agent.model.PerpetualResponse;
+import java.util.Collections;
+
+CurrentPerpetualPositionsRequest request = new CurrentPerpetualPositionsRequest();
+request.platformUserIds = Collections.singletonList("1188041528");
+request.limit = 100;
+request.symbol = "BTCUSDT";
+PerpetualResponse response = client.listCurrentPerpetualPositions(request);
+System.out.println(response.data.items.size());
+System.out.println(response.data.hasMore);
+System.out.println(response.data.nextCursor);
+```
+
+<span id="request-fields" data-sixmm-canonical-anchor="request-fields" aria-hidden="true"></span>
+
+### 요청 필드
+
+| 필드 | Java 유형 | 필수의 | 의미 |
+| --- | --- | --- | --- |
+| `platformUserIds` | `java.util.List<String>` | 가정 어구 | 1~100개의 고유한 공개 ID 채우기 및 조건부 주문에 필요합니다. 직접 플레이어 범위에 대해 지원되는 쿼리를 생략합니다. []는 유효하지 않습니다. |
+| `symbol` | `String` | 아니요 | 선택적 거래 쌍 필터. |
+| `limit` | `Integer` | 아니요 | 기본 500; 1~1000. |
+| `cursor` | `String` | 아니요 | 변경되지 않은 필터와 함께 반환된 nextCursor를 사용합니다. hasMore가 false인 경우 중지합니다. |
+
+예제에서는 한 페이지를 읽습니다. 필수 필드, 플레이어 범위, 필터 의미, 제한, 커서 및 제한된 재시도에 대해서는 다음을 따르세요. [쿼리 개요](/ko/sdk/agent-sdk/java/perpetual-queries). 페이징하는 동안 모든 필터를 변경하지 않고 유지하세요. 오류를 빈 결과로 해석하지 마십시오.
+
+<span data-sixmm-canonical-anchor="listperpetualpositionhistory" aria-hidden="true"></span>
+
+## `listPerpetualPositionHistory`
+
+요청 모델: `PerpetualPositionHistoryRequest`.
+
+```java
+import com.sixmm.agent.model.PerpetualPositionHistoryRequest;
+import com.sixmm.agent.model.PerpetualResponse;
+import java.util.Collections;
+
+PerpetualPositionHistoryRequest request = new PerpetualPositionHistoryRequest();
+request.platformUserIds = Collections.singletonList("1188041528");
+request.limit = 100;
+request.symbol = "BTCUSDT";
+request.endTime = System.currentTimeMillis();
+request.startTime = request.endTime - 3_600_000L;
+PerpetualResponse response = client.listPerpetualPositionHistory(request);
+System.out.println(response.data.items.size());
+System.out.println(response.data.hasMore);
+System.out.println(response.data.nextCursor);
+```
+
+<span id="request-fields-1" data-sixmm-canonical-anchor="request-fields-1" aria-hidden="true"></span>
+
+### 요청 필드
+
+| 필드 | Java 유형 | 필수의 | 의미 |
+| --- | --- | --- | --- |
+| `platformUserIds` | `java.util.List<String>` | 가정 어구 | 1~100개의 고유한 공개 ID 채우기 및 조건부 주문에 필요합니다. 직접 플레이어 범위에 대해 지원되는 쿼리를 생략합니다. []는 유효하지 않습니다. |
+| `symbol` | `String` | 아니요 | 선택적 거래 쌍 필터. |
+| `positionSide` | `String` | 아니요 | 소스 위치 측 열거형을 사용하여 필터링합니다. |
+| `startTime` | `Long` | 아니요 | Unix 밀리초를 포함합니다. 고정된 UTC 기록 창을 사용합니다. |
+| `endTime` | `Long` | 아니요 | 독점 Unix 밀리초. |
+| `limit` | `Integer` | 아니요 | 기본 500; 1~1000. |
+| `cursor` | `String` | 아니요 | 변경되지 않은 필터와 함께 반환된 nextCursor를 사용합니다. hasMore가 false인 경우 중지합니다. |
+
+예제에서는 한 페이지를 읽습니다. 필수 필드, 플레이어 범위, 필터 의미, 제한, 커서 및 제한된 재시도에 대해서는 다음을 따르세요. [쿼리 개요](/ko/sdk/agent-sdk/java/perpetual-queries). 페이징하는 동안 모든 필터를 변경하지 않고 유지하세요. 오류를 빈 결과로 해석하지 마십시오.
+
+<span id="positions-current-and-historical" data-sixmm-canonical-anchor="positions-current-and-historical" aria-hidden="true"></span>
+
+## 직위: 현재 및 과거
+
+| `data` 필드 | 유형 | 현재 위치 | 역사적 위치 | 의미 |
+| --- | --- | --- | --- | --- |
+| `positionId` | string | 공급 | 공급 | entityId에 해당하는 위치 ID |
+| `symbol` | string | 공급 | 공급 | 거래쌍 |
+| `positionSide` | string | 공급 | 공급 | LONG / SHORT / BOTH 및 기타 위치 방향 |
+| `status` | string | 공급 | 공급 | 위치의 숫자 상태가 포함된 문자열, 쿼리 개요 참조 |
+| `leverage` | integer | 공급 | 공급 | 여러 가지 활용 |
+| `marginMode` | string | 공급 | 공급 | 전체 위치의 경우 숫자 열거 문자열 "1", 격리된 위치의 경우 "2" |
+| `quantity` | string | 공급 | 사용할 수 없음 | 현재 위치 수량 |
+| `entryPrice` | string | 공급 | 공급 | 저장된 포지션의 평균 개시 가격 |
+| `margin` | string | 공급 | 사용할 수 없음 | 사용자의 전체 계약 지갑 잔액이 아닌 현재 포지션 증거금 금액 |
+| `maxQuantity` | string | 사용할 수 없음 | 공급 | 이 역사적 위치에 기록된 최대 위치 수 |
+| `closeQuantity` | string | 사용할 수 없음 | 공급 | 과거 포지션 수명 주기 동안 청산된 누적 포지션 수 |
+| `closePrice` | string | 사용할 수 없음 | 공급 | 저장된 평균 종가 |
+| `pnl` | string | 사용할 수 없음 | 공급 | 역사적 위치 손익; 단순히 반복하고 축적하기 위해 거래 realizedPnl와 결합하지 마십시오. |
+| `roe` | string | 사용할 수 없음 | 공급 | 100을 곱하지 않은 역사적 위치 수익의 비례 값입니다. 예를 들어, `"0.043"`는 `4.3%`를 나타내고, `"-0.05"`는 `-5%`를 나타냅니다. |
+| `fundingFeeAccum` | string | 공급 | 공급 | 누적된 펀딩 수수료, 소스 기호 및 정확성 유지 |
+| `openedAt` | integer | 공급 | 공급 | 위치 개방 시간(밀리초) |
+| `updatedAt` | integer | 공급 | 사용할 수 없음 | 현재 위치 업데이트 시간(밀리초) |
+| `closedAt` | integer | 사용할 수 없음 | 공급 | 종료 시간(밀리초) 이 필드를 사용하여 과거 위치 시간을 필터링하세요. |
+
+이력 `roe`의 계산 구경은 `pnl / (entryPrice × maxQuantity / leverage)`이며 인터페이스는 저장된 비율 값을 직접 반환합니다. 백분율을 표시할 때는 소수 연산을 사용하고 100을 곱한 다음 `%`를 추가합니다. 분모는 계정 지갑 잔액이 아닌 과거 포지션 기록의 명목 마진을 사용합니다. 시가 또는 최대포지션수량이 0인 경우, 레버리지가 무효인 경우 등 계산할 수 없는 경우에는 소스가 0으로 저장됩니다. 따라서 `roe=0`만으로는 손익이 0이라고 유추할 수 없습니다.
+
+현재 포지션에는 실시간 표시가, 실시간 변동 손익, 실시간 ROE 또는 실시간 청산 가격이 없습니다. 저장된 포지션 상태를 반영하며 업데이트 시간 및 마진 필드를 사용하여 현재 실시간 리스크 통제 결과를 주장할 수 없습니다.
+
+
+<span id="example-response-envelope" data-sixmm-canonical-anchor="example-response-envelope" aria-hidden="true"></span>
+
+## 응답 봉투 예시
+
+이것은 완료된 거래의 샘플이 아닌 예시용 빈 페이지입니다. 위의 리소스별 필드 테이블은 채워진 `items[].data`에 대해 설명합니다.
+
+```json
+{"code":0,"message":"success","data":{"items":[],"nextCursor":"","hasMore":false}}
+```
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## 소스 및 관련 가이드
+
+- [공식 v0.3.0 소스](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [쿼리 개요 및 페이지 매김](/ko/sdk/agent-sdk/java/perpetual-queries)
+- [펀딩 지갑](/ko/sdk/agent-sdk/java/funding-wallet)
+- [업그레이드 가이드](/ko/sdk/agent-sdk/java/upgrade)

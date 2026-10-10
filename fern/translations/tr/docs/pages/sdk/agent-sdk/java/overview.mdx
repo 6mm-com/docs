@@ -1,58 +1,109 @@
 ---
 title: "Agent Java SDK"
-subtitle: "6MM Agent Java SDK kurun ve kullanıcı bağlama, transferler, giriş kimlik bilgileri ve webhook doğrulama için imzalı backend APIs kullanın."
+subtitle: "Agent Java SDK: Agent Java SDK v0.3.0 entegrasyonu, örnekler, parametreler ve yanıt semantiği."
 slug: sdk/agent-sdk/java/overview
 canonical-url: https://docs.6mm.com/tr/sdk/agent-sdk/java/overview
 ---
 
-<span id="official-repository" data-sixmm-canonical-anchor="official-repository" aria-hidden="true"></span>
+Bu kılavuz **Agent Java SDK `v0.3.0`**, Java 8+ ve etiketli kamu sözleşmesini hedefler. Örnekler, `client` başlatıldıktan sonra bir iş ortağı arka ucunda çalıştırılır. [Hızlı Başlangıç](/tr/sdk/agent-sdk/java/quick-start).
 
-## Resmi depo
+<span id="version-and-installation" data-sixmm-canonical-anchor="version-and-installation" aria-hidden="true"></span>
 
-Java SDK deposu, SDK kaynak kodu, sürüm notları, kullanım örnekleri ve uygulama detayları için gerçeğin kaynağıdır:
+## Sürüm ve kurulum
 
-[6mm-com/agent-java-sdk](https://github.com/6mm-com/agent-java-sdk)
-
-<span id="runtime" data-sixmm-canonical-anchor="runtime" aria-hidden="true"></span>
-
-## Çalışma süresi
-
-| Madde | Değer |
+| Öğe | Değer |
 | --- | --- |
-| Minimum Java versiyonu | Java 8+ |
-| Önerilen derleme aracı | Maven 3.9+ |
-| Maven grubu | `com.sixmm.exchange.sdk` |
-| Maven eseri | `agent` |
-| Belgelenmiş kaynak etiketi | `v0.1.1` |
+| Kararlı kaynak etiketi | `v0.3.0` |
+| Java | Java 8+ |
+| Maven | Maven 3.9+ |
+| Koordinatlar | `com.sixmm.exchange.sdk:agent:0.3.0` |
 
-Halka açık GitHub deposu kaynak barındırma yöntemidir, Maven bağımlılık deposu değil. Etiketlenmiş kaynağı yerel olarak oluşturup kurun veya onaylanmış eseri takım derlemelerinde kullanmadan önce kuruluşunuzun özel Maven deposunda yayınlayın.
+GitHub ana bilgisayar kaynağı; bu koordinatları Maven Central'dan çözülebilir hale getirmez. Etiketli yerel kurulumu veya onaylı yapı deponuzu kullanın.
 
-<span id="typical-backend-responsibilities" data-sixmm-canonical-anchor="typical-backend-responsibilities" aria-hidden="true"></span>
+<span id="what-the-sdk-covers" data-sixmm-canonical-anchor="what-the-sdk-covers" aria-hidden="true"></span>
 
-## Tipik arka uç sorumlulukları
+## SDK Neleri Kapsıyor
 
-- Ortak kullanıcı oturumunu doğrulayın.
-- Ortak kullanıcıyı agentUserIdile eşleyin.
-- İlk işlem veya transfer akışlarından önce call bind.
-- Tek seferlik tam saha SSOiçin createEntryUrl arayın.
-- createEmbedToken Trading Widget partner token modu için çağrılın.
-- Transfer webhooks doğrulayın ve onları aynı şekilde işleyin.
+| Kategori | Senaryo | SDK API | Tanım |
+| --- | --- | --- | --- |
+| Kullanıcı bağlama | Kullanıcıyı bağla | `bind` | Bir iş ortağı kullanıcısı ile 6MM platform kullanıcısı arasındaki bağlantıyı oluşturun veya getirin |
+| Varlık sorguları | İş ortağı hesabını sorgula | `queryAccount` | İş ortağı marjını veya finansman hesabını sorgulayın |
+| Varlık sorguları | Kullanıcı varlıklarını sorgula | `queryUserAssets` | Sözleşme varlıklarını sorgulayın; Finansman bakiyelerini dahil etmek için `withFunding()` kullanın |
+| Transferler | Sabit tutar transferi | `transfer` | 6MM içine veya dışına para aktarın |
+| Transferler | Hepsini aktar | `transferAllOut` | Tüm çekilebilir kullanıcı bakiyesini ortak platformuna geri taşıyın |
+| Transferler | Ters sıra | `reverse` | Arka uç bir telafi akışını desteklediğinde başarılı bir aktarımı tersine çevirin |
+| Transferler | Sorgu sırası | `queryOrder` | İş ortağı sipariş numarasına göre bir transfer emrini sorgulama |
+| Transferler | Siparişleri listele | `listOrders` | Mutabakat için transfer emirleri arasında geçiş yapın |
+| Transferler | Webhook doğrulama | `WebhookVerifier.verify` | 6MM adresinden transferin son durumu geri aramalarını doğrulayın |
+| Finansman cüzdanı | Finansman transferi | `walletTransfer` | Ortak ↔ Finansman veya Finansman ↔ Sözleşme; iade durumunu onayla |
+| Finansman cüzdanı | Finansman transferi durumu | `queryWalletTransfer` | Orijinal iş ortağı sipariş numarasını kullanarak bir Finansman işlemini kurtarma |
+| Ticaret girişi | Doğrudan giriş URL | `createEntryUrl` | Yönlendirme modu için bir kerelik SSO URL oluşturun |
+| Ticaret girişi | Belirteci yerleştir | `createEmbedToken` | Trading Widget `tokenProvider` modu için kısa ömürlü bir belirteç oluşturun |
+| Kalıcı veriler | Mevcut sürekli siparişler | `listCurrentPerpetualOrders` | Mevcut NORMAL veya CONDITIONAL siparişlerini sorgula |
+| Kalıcı veriler | Sürekli sipariş geçmişi | `listPerpetualOrderHistory` | Terminal NORMAL veya CONDITIONAL siparişlerini sorgula |
+| Kalıcı veriler | Sürekli işlemler | `listPerpetualTrades` | Açık bir genel oyuncu listesi için sorgu ticareti doldurmaları |
+| Kalıcı veriler | Mevcut kalıcı pozisyonlar | `listCurrentPerpetualPositions` | Mevcut pozisyonları sorgula |
+| Kalıcı veriler | Sürekli konum geçmişi | `listPerpetualPositionHistory` | Kapalı pozisyonları sorgula |
+| Kalıcı veriler | Sürekli hesap defteri | `listPerpetualLedger` | Bireysel Sözleşme bakiyesi değişiklik kayıtlarını sorgulama |
+| Fiat referans oranları | Desteklenen fiat para birimlerini listeleyin | `listSupportedFiatCurrencies` | Şu anda USDT'a dönüştürülebilen fiat para birimlerini listeleyin |
+| Fiat referans oranları | Döviz referans oranlarını sorgulama | `queryExchangeRates` | Tüm veya seçilen para birimleri için günlük fiat-USDT referans oranlarını sorgulayın |
+| Servis bilgileri | Hizmet sürümü | `version` | Aracı hizmeti sürüm bilgilerini sorgulama |
 
-<span id="security-and-operational-rules" data-sixmm-canonical-anchor="security-and-operational-rules" aria-hidden="true"></span>
 
-## Güvenlik ve operasyonel kurallar
+<span id="configuration" data-sixmm-canonical-anchor="configuration" aria-hidden="true"></span>
 
-- `apiSecret` yalnızca bir arka uç gizli yöneticisinde veya korunan ortam değişkeninde depolayın.
-- Sunucu zamanını senkronize tutmak, çünkü imzalanan istekler zaman damgaları içerir.
-- `agentOrderNo` dayanıklı bir ikamet anahtarı olarak ele alın ve küresel olarak benzersiz tutulur.
-- `platformUserId` bir dizi olarak depolayıp `agentUserId`ile ilişkisini sürdürebilir.
-- Zaman aşımından veya ağ sonucundan sonra tekrar denemeden önce orijinal transferi sorgulamak.
+## Yapılandırma
 
-<span id="next-steps" data-sixmm-canonical-anchor="next-steps" aria-hidden="true"></span>
+Aşağıdaki değerleri önce 6MM'den alın
+entegre.
 
-## Sonraki adımlar
+| Öğe | Örnek | Tanım |
+| --- | --- | --- |
+| `baseUrl` | `https://agent-api.6mm.com` | Ajan API tabanı URL, sonunda eğik çizgi olmadan |
+| `agentCode` | `AGENT001` | İş ortağı kodu |
+| `apiSecret` | `your-api-secret` | API imzalama sırrı. Yalnızca arka uçta tutun |
+| `defaultCurrency` | `USDT` | Varsayılan para birimi, genellikle `USDT` |
+| `webhookUrl` | `https://partner.example.com/6mm/webhook` | 6MM geri aramaları için iş ortağı uç noktası |
 
-- [Java Hızlı Başlangıç](/tr/sdk/agent-sdk/java/quick-start): etiketlenmiş kaynağı yükleyin ve `AgentClient`başlatın .
-- [Embed Token Oluştur](/tr/sdk/agent-sdk/java/embed-token): kısa ömürlü kimlik belgeleri Trading Widget.
-- [Sırlar ve İmza Alma](/tr/sdk/security/secrets-signing): otomatik HMAC imzalama ve gizli muamele yöntemini anlayın.
-- [Webhooks ve İdempotensi](/tr/sdk/security/webhooks-idempotency): geri çağrıları doğrulayabilir ve tekrarlanan işlemleri önler.
+Üretim önerileri:
+
+- Aracı API ve webhook uç noktaları için HTTPS kullanın.
+- `apiSecret`'ı bir gizli yöneticide, yapılandırma merkezinde veya ortam değişkeninde saklayın.
+- Sunucu zamanını tercihen NTP ile senkronize tutun.
+- Tüm iş ortağı sipariş numaralarını koruyun ve bunları dünya çapında benzersiz tutun.
+- Tarayıcılara, uygulamalara, mini programlara veya ön uç kaynak koduna asla `apiSecret` göndermeyin.
+
+
+<span id="automatic-signing-fields" data-sixmm-canonical-anchor="automatic-signing-fields" aria-hidden="true"></span>
+
+## Otomatik İmzalama Alanları
+
+İmzalı Temsilci API çağrıları için, SDK otomatik olarak şunu enjekte eder:
+
+| Alan | Kaynak | Tanım |
+| --- | --- | --- |
+| `agentCode` | `AgentClientConfig.agentCode` | İş ortağı kodu |
+| `timestamp` | Geçerli UTC Unix zaman damgası | Saniye |
+| `nonce` | Güvenli rastgele oluşturucu | Tekrar koruması |
+| `sign` | HMAC-SHA256 | İmza iste |
+| `currency` | `defaultCurrency` | Transfer/hesap isteklerinde para birimi çıkarıldığında doldurulur |
+
+İmza kuralları:
+
+1. `sign`'ı hariç tut.
+2. Boş değerleri hariç tutun.
+3. Anahtarları ASCII sırasına göre sıralayın.
+4. `k=v&k2=v2` olarak katılın.
+5. HMAC-SHA256 hex'i `apiSecret` ile hesaplayın.
+
+Normal iş kodu imzaları hesaplamamalı veya manuel olarak ayarlanmamalıdır
+`agentCode`, `timestamp`, `nonce` veya `sign`.
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Kaynak ve ilgili kılavuzlar
+
+- [Resmi v0.3.0 kaynağı](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Sorguya genel bakış ve sayfalandırma](/tr/sdk/agent-sdk/java/perpetual-queries)
+- [Finansman cüzdanı](/tr/sdk/agent-sdk/java/funding-wallet)
+- [Yükseltme kılavuzu](/tr/sdk/agent-sdk/java/upgrade)

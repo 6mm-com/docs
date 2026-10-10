@@ -1,67 +1,67 @@
 ---
-title: "Pemecahan Masalah Integrasi SDK"
-subtitle: "Diagnosis masalah Trading Widget, Agent SDK, penandatanganan, webhook, timeout, dan lingkungan sebelum mengeskalasi permintaan dukungan."
+title: "SDK Pemecahan Masalah Integrasi"
+subtitle: "Diagnosis masalah Trading Widget, Agent SDK, penandatanganan, webhook, batas waktu, dan lingkungan sebelum meneruskan permintaan dukungan."
 slug: sdk/security/troubleshooting
 canonical-url: https://docs.6mm.com/id/sdk/security/troubleshooting
 ---
 
-Mulailah dengan lingkungan, timestamp, dan pengenal bisnis untuk operasi yang gagal. Pemeriksaan terstruktur biasanya memisahkan masalah konfigurasi dari autentikasi, jaringan, dan masalah pemrosesan asinkron.
+Mulailah dengan lingkungan, stempel waktu, dan pengidentifikasi bisnis untuk operasi yang gagal. Pemeriksaan terstruktur biasanya memisahkan masalah konfigurasi dari masalah autentikasi, jaringan, dan pemrosesan asinkron.
 
 <span id="diagnostic-order" data-sixmm-canonical-anchor="diagnostic-order" aria-hidden="true"></span>
 
 ## Urutan diagnostik yang direkomendasikan
 
-1. Konfirmasi lingkungan yang terdampak dan URL dasar.
+1. Konfirmasikan lingkungan dan pangkalan yang terkena dampak URL.
 2. Catat rentang waktu UTC dan permintaan pertama yang gagal.
 3. Identifikasi modul: Trading Widget, Agent SDK, REST API, WebSocket, atau webhook.
-4. Tangkap ID permintaan, ID pengguna mitra, `agentOrderNo`, ID pesanan, atau ID event webhook.
-5. Periksa kode terbaru, kredensial, IP whitelist, atau perubahan deployment.
-6. Perbanyak dengan kasus uji aman terkecil.
+4. Catat ID permintaan, ID pengguna mitra, `agentOrderNo`, ID pesanan, atau webhook ID peristiwa.
+5. Periksa kode terbaru, kredensial, IP daftar putih, atau perubahan penerapan.
+6. Reproduksi dengan test case terkecil yang aman.
 
 <span id="trading-widget-issues" data-sixmm-canonical-anchor="trading-widget-issues" aria-hidden="true"></span>
 
 ## Trading Widget masalah
 
-| Gejala | Penyebab yang mungkin | Memperbaiki |
+| Gejala | Kemungkinan penyebabnya | Memperbaiki |
 | --- | --- | --- |
-| iframe meminta domain lokal mitra | baseUrl hilang | Pass baseUrl: 'https://app.6mm.com'. |
-| iframe tidak terlihat atau sangat pendek | Kontainer induk tidak memiliki tinggi | Atur tinggi wadah atau tinggi pass. |
-| token_provider_missing | mode token mitra tidak memiliki penyedia | Tambahkan autentikasitokenProvider. |
-| auth_exchange_failed | Token embed yang tidak valid, kedaluwarsa, atau tidak cocok | Periksa respons token backend dan channelId. |
+| iframe meminta domain lokal mitra | baseUrl tidak ada | Lulus baseUrl: 'https://app.6mm.com'. |
+| iframe tidak terlihat atau sangat pendek | Wadah induk tidak memiliki ketinggian | Tetapkan tinggi wadah atau tinggi lintasan. |
+| token_provider_missing | mode token mitra tidak memiliki penyedia | Tambahkan autentikasi.tokenProvider. |
+| auth_exchange_failed | Token penyematan tidak valid, kedaluwarsa, atau tidak cocok | Periksa respons token backend dan channelId. |
 
 <span id="agent-sdk-issues" data-sixmm-canonical-anchor="agent-sdk-issues" aria-hidden="true"></span>
 
 ## Agent SDK masalah
 
-| Gejala | Penyebab yang mungkin | Memperbaiki |
+| Gejala | Kemungkinan penyebabnya | Memperbaiki |
 | --- | --- | --- |
-| Tanda tangan ditolak | Rahasia yang salah, pergeseran jam, atau kolom bertanda yang diubah secara manual | Biarkan SDK menghasilkan bidang penandatanganan dan menyinkronkan waktu server. |
-| Risiko pergerakan dana duplikat | Nomor pesanan baru digunakan setelah timeout | Query berdasarkan agentOrderNo asli terlebih dahulu. |
-| PROCESSING diperlakukan sebagai kegagalan | Negara bagian yang sedang diproses disalahpahami | Tunggu webhook atau hubungi queryOrder. |
-| Webhook diproses beberapa kali | Perilaku coba ulang tanpa idempotency | Tambahkan kunci idempotensi dan pemeriksaan keadaan akhir. |
+| Tanda tangan ditolak | Rahasia salah, jam melayang, atau bidang yang ditandatangani diubah secara manual | Biarkan SDK menghasilkan bidang penandatanganan dan menyinkronkan waktu server. |
+| Risiko perpindahan dana duplikat | Nomor pesanan baru digunakan setelah batas waktu habis | Kueri berdasarkan agentOrderNo asli terlebih dahulu. |
+| PROCESSING dianggap gagal | Status yang tertunda disalahpahami | Tunggu webhook atau hubungi queryOrder. |
+| Webhook diproses beberapa kali | Coba lagi perilaku tanpa idempotensi | Tambahkan kunci idempotensi dan pemeriksaan keadaan akhir. |
 
 <span id="evidence-to-capture" data-sixmm-canonical-anchor="evidence-to-capture" aria-hidden="true"></span>
 
-## Bukti yang harus ditangkap
+## Bukti untuk ditangkap
 
-| Integrasi | Bukti berguna |
+| Integrasi | Bukti yang berguna |
 | --- | --- |
-| Trading Widget | Page URL, jalur versi SDK , konsol browser, permintaan jaringan yang gagal, payload `onError` , dan dimensi kontainer. |
-| Agent SDK | SDK bahasa/versi, URL dasar, timestamp UTC , ID permintaan, `agentOrderNo`, kode respons, dan log yang sudah disanitasi. |
-| Webhook | Waktu pengiriman, event atau kunci bisnis, hasil validasi tanda tangan, status pemrosesan, dan hash raw body yang telah disanitasi. |
-| REST API | Metode, jalur, lingkungan, ID permintaan, kode respons, dan parameter yang telah disanitasi. |
+| Trading Widget | Jalur versi halaman URL, SDK, konsol browser, permintaan jaringan yang gagal, `onError` payload, dan dimensi kontainer. |
+| Agent SDK | SDK bahasa/versi, basis URL, UTC stempel waktu, ID permintaan, `agentOrderNo`, kode respons, dan log yang dibersihkan. |
+| Webhook | Waktu pengiriman, peristiwa atau kunci bisnis, hasil validasi tanda tangan, status pemrosesan, dan hash tubuh mentah yang dibersihkan. |
+| REST API | Metode, jalur, lingkungan, ID permintaan, kode respons, dan parameter yang dibersihkan. |
 
-Jangan pernah menyertakan kata sandi, token akses, rahasia API , tanda tangan lengkap, kunci privat, atau data pribadi yang belum disunting dalam diagnostik.
+Jangan pernah menyertakan kata sandi, token akses, API rahasia, tanda tangan lengkap, kunci pribadi, atau data pribadi yang tidak disunting dalam diagnostik.
 
 <span id="before-escalating" data-sixmm-canonical-anchor="before-escalating" aria-hidden="true"></span>
 
-## Sebelum meningkatkan eskalasi
+## Sebelum meningkat
 
-- Coba ulang hanya ketika operasi terdokumentasi aman untuk dicoba ulang.
-- Setelah timeout, query pengenal bisnis asli daripada membuat yang baru.
-- Konfirmasi lingkungan clock sistem dan kredensial untuk kesalahan tanda tangan.
-- Menjaga kegagalan pertama dan hasil percobaan ulang berikutnya.
-- Gunakan [Support Request Template](/id/resources/support-request-template) untuk mengirim laporan lengkap yang telah disunting.
+- Coba lagi hanya ketika operasi didokumentasikan aman untuk dicoba lagi.
+- Setelah waktu habis, tanyakan pengidentifikasi bisnis asli alih-alih membuat yang baru.
+- Konfirmasikan jam sistem dan lingkungan kredensial untuk kesalahan tanda tangan.
+- Pertahankan kegagalan pertama dan hasil percobaan ulang selanjutnya.
+- Gunakan [Templat Permintaan Dukungan](/id/resources/support-request-template) untuk mengirimkan laporan yang lengkap dan telah disunting.
 
 <span id="related-docs" data-sixmm-canonical-anchor="related-docs" aria-hidden="true"></span>
 
@@ -69,12 +69,27 @@ Jangan pernah menyertakan kata sandi, token akses, rahasia API , tanda tangan le
 
 <CardGroup cols={3}>
 <Card title="Trading Widget Mulai Cepat" icon="fa-duotone fa-chart-line" href="/id/sdk/trading-widget/quick-start">
-Verifikasi pemuatan skrip, ukuran kontainer, konfigurasi, dan callback.
+Verifikasi pemuatan skrip, ukuran kontainer, konfigurasi, dan panggilan balik.
 </Card>
 <Card title="Rahasia & Penandatanganan" icon="fa-duotone fa-shield-keyhole" href="/id/sdk/security/secrets-signing">
-Periksa kredensial Agent SDK , jam, dan kolom yang ditandatangani.
+Periksa Agent SDK kredensial, jam, dan bidang yang ditandatangani.
 </Card>
-<Card title="Webhook & Idempotensi" icon="fa-duotone fa-webhook" href="/id/sdk/security/webhooks-idempotency">
-Tinjau verifikasi callback dan penanganan event duplikat.
+<Card title="Webhooks & Idempotensi" icon="fa-duotone fa-webhook" href="/id/sdk/security/webhooks-idempotency">
+Tinjau verifikasi panggilan balik dan penanganan peristiwa duplikat.
 </Card>
 </CardGroup>
+
+<span id="java-v030-diagnostics" data-sixmm-canonical-anchor="java-v030-diagnostics" aria-hidden="true"></span>
+
+## Java diagnostik v0.3.0
+
+| Gejala | Periksa dan pemulihan |
+| --- | --- |
+| Permintaan pendanaan memiliki hasil yang tidak diketahui | Simpan `agentOrderNo` yang asli; panggil `queryWalletTransfer` dengan lingkungan aslinya. Jangan gunakan `queryOrder`. |
+| Simulasi UI menunjukkan dana tak terduga | Periksa frontend `tradingMode` secara terpisah dari backend `environment`; akun `isSimulatedUser` tidak merutekan permintaan. |
+| Kesalahan kueri `6905` | Mundur menggunakan kuota mitra bersama, lalu coba lagi kursor yang sama dan filter melalui SDK. |
+| Kesalahan kueri `6904` | Kurangi kueri bersamaan dan persempit jangka waktu; hubungi dukungan jika terus-menerus. |
+| Kursor tidak valid atau kedaluwarsa | Mulai ulang jendela riwayat tetap yang sama dan hapus duplikat catatan yang disimpan. |
+| Metode Java baru tidak ada | Periksa artefak Maven yang terselesaikan terhadap tag publik `v0.3.0`; hapus dependensi yang bertentangan sesuai dengan kebijakan artefak Anda. |
+
+[Referensi kueri dan kesalahan](/id/sdk/agent-sdk/java/perpetual-queries) · [Panduan peningkatan](/id/sdk/agent-sdk/java/upgrade)

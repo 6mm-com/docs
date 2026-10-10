@@ -1,15 +1,15 @@
 ---
 title: "Trading Widget Έλεγχος ταυτότητας"
-subtitle: "Χρησιμοποιήστε το partner-token για νέες ενσωματωμένες ενσωματώσεις SSO συναλλαγών."
+subtitle: "Χρησιμοποιήστε διακριτικό συνεργάτη για νέες ενσωματωμένες συναλλαγές SSO."
 slug: sdk/trading-widget/authentication
 canonical-url: https://docs.6mm.com/el/sdk/trading-widget/authentication
 ---
 
 <span id="recommended-mode-partner-token" data-sixmm-canonical-anchor="recommended-mode-partner-token" aria-hidden="true"></span>
 
-## Προτεινόμενη λειτουργία: partner-token
+## Προτεινόμενη λειτουργία: διακριτικό συνεργάτη
 
-Το partner-token αποφεύγει την τοποθέτηση σύντομων διακριτικών σε διευθύνσεις URL και διατηρεί apiSecret στο backend του συνεργάτη.
+Partner-token αποφεύγει να τοποθετεί σύντομα διακριτικά σε URL και διατηρεί το apiSecret στο backend του συνεργάτη.
 
 ```js
 const widget = TradingWidget.create('#trading-widget', {
@@ -38,10 +38,10 @@ const widget = TradingWidget.create('#trading-widget', {
 
 ## Σχετική τεκμηρίωση
 
-- [Δημιουργία διακριτικού ενσωμάτωσης](/el/sdk/agent-sdk/java/embed-token): Παράδειγμα έκδοσης διακριτικού υποστήριξης.
-- [Trading Widget Γρήγορη εκκίνηση](/el/sdk/trading-widget/quick-start): Πλήρης ροή προετοιμασίας.
-- [Μυστικά & Υπογραφή](/el/sdk/security/secrets-signing): Διατηρήστε τα προνομιακά διαπιστευτήρια παράγοντα στο παρασκήνιο.
-- [Αντιμετώπιση προβλημάτων](/el/sdk/security/troubleshooting): Διάγνωση αποτυχιών περιόδου λειτουργίας, διακριτικού, προέλευσης και προετοιμασίας.
+- [Δημιουργία ενσωμάτωσης διακριτικού](/el/sdk/agent-sdk/java/embed-token): Παράδειγμα έκδοσης διακριτικού υποστήριξης.
+- [Trading Widget Γρήγορη εκκίνηση](/el/sdk/trading-widget/quick-start): πλήρης ροή αρχικοποίησης.
+- [Μυστικά & Υπογραφή](/el/sdk/security/secrets-signing): διατηρήστε τα προνομιακά διαπιστευτήρια Agent στο backend.
+- [Αντιμετώπιση προβλημάτων](/el/sdk/security/troubleshooting): διάγνωση αποτυχιών περιόδου λειτουργίας, διακριτικού, προέλευσης και αρχικοποίησης.
 
 <span id="backend-flow" data-sixmm-canonical-anchor="backend-flow" aria-hidden="true"></span>
 
@@ -64,28 +64,28 @@ const widget = TradingWidget.create('#trading-widget', {
 
 | Πεδίο | Κατεύθυνση | Περιγραφή |
 | --- | --- | --- |
-| channelId | SDK -> Υποστήριξη συνεργάτη | Μοναδικό αναγνωριστικό περιόδου λειτουργίας widget. Το backend πρέπει να το περάσει στο createEmbedToken. |
-| σύμβολο | SDK -> Υποστήριξη συνεργάτη | Τρέχον ζητούμενο σύμβολο συναλλαγών. Χρησιμοποιήστε το για να περιορίσετε το διακριτικό όταν χρειάζεται. |
-| Αιτιολογία | SDK -> Υποστήριξη συνεργάτη | Γιατί το SDK ζητά ένα διακριτικό, όπως αρχική φόρτωση ή ανανέωση. |
-| embedToken | Υποστήριξη συνεργάτη -> SDK | Βραχύβιο διακριτικό που δημιουργήθηκε από το Agent SDK ή το Agent API. |
-| expireAt | Υποστήριξη συνεργάτη -> SDK | Η χρονική σήμανση λήξης του διακριτικού επιστράφηκε από 6MM. |
+| channelId | SDK -> Backend συνεργάτη | Μοναδικό αναγνωριστικό περιόδου σύνδεσης widget. Το backend θα πρέπει να το μεταβιβάσει στο createEmbedToken. |
+| σύμβολο | SDK -> Backend συνεργάτη | Τρέχον ζητούμενο σύμβολο συναλλαγών. Χρησιμοποιήστε το για να καλύψετε το διακριτικό όταν χρειάζεται. |
+| λόγος | SDK -> Backend συνεργάτη | Γιατί το SDK ζητά ένα διακριτικό, όπως αρχική φόρτωση ή ανανέωση. |
+| embedToken | Partner backend -> SDK | Το διακριτικό μικρής διάρκειας που δημιουργήθηκε από τον Agent SDK ή τον Πράκτορα API. |
+| expireAt | Partner backend -> SDK | Η χρονική σήμανση λήξης διακριτικού επιστράφηκε από 6MM. |
 
 <span id="failure-handling" data-sixmm-canonical-anchor="failure-handling" aria-hidden="true"></span>
 
-## Χειρισμός βλαβών
+## Αντιμετώπιση αστοχίας
 
 | Κατάσταση | Συνιστώμενος χειρισμός |
 | --- | --- |
-| Η περίοδος λειτουργίας συνεργάτη έληξε | Επιστρέψτε το 401 από το τελικό σημείο συνεργάτη και ζητήστε από το χρήστη να εισέλθει ξανά. |
-| Η δημιουργία διακριτικού απέτυχε προσωρινά | Ρίξτε ένα σφάλμα στο tokenProvider και αφήστε το γραφικό στοιχείο να εμφανίσει ένα σφάλμα ελέγχου ταυτότητας. |
+| Η συνεδρία συνεργάτη έληξε | Επιστρέψτε το 401 από το τελικό σημείο συνεργάτη και ζητήστε από τον χρήστη να συνδεθεί ξανά. |
+| Η δημιουργία διακριτικού απέτυχε προσωρινά | Ρίξτε ένα σφάλμα στο tokenProvider και αφήστε το γραφικό στοιχείο να εμφανίσει ένα σφάλμα εξουσιοδότησης. |
 | channelId αναντιστοιχία | Απορρίψτε το αίτημα και δημιουργήστε ξανά την παρουσία του γραφικού στοιχείου. |
-| Ο χρήστης δεν επιτρέπεται να συναλλάσσεται | Επιστρέψτε ένα σφάλμα που ελέγχεται από τον συνεργάτη και μην δημιουργήσετε ένα διακριτικό ενσωμάτωσης. |
+| Ο χρήστης δεν επιτρέπεται να κάνει συναλλαγές | Επιστρέψτε ένα σφάλμα ελεγχόμενο από συνεργάτη και μην δημιουργήσετε διακριτικό ενσωμάτωσης. |
 
 <span id="compatibility-mode-agent-sso" data-sixmm-canonical-anchor="compatibility-mode-agent-sso" aria-hidden="true"></span>
 
 ## Λειτουργία συμβατότητας: agent-sso
 
-Το Agent-SSO διατηρεί τη ροή παλαιότερων εισιτηρίων /Agent-Entry. Προτιμήστε το partner-token για νέες ενσωματώσεις.
+Το agent-sso διατηρεί τη ροή του παλιότερου εισιτηρίου /agent-entry. Προτιμήστε το διακριτικό συνεργάτη για νέες ενσωματώσεις.
 
 ```js
 const widget = TradingWidget.create('#trading-widget', {
@@ -105,3 +105,13 @@ const widget = TradingWidget.create('#trading-widget', {
   },
 })
 ```
+
+<span id="seconds-trading-and-environment-rules" data-sixmm-canonical-anchor="seconds-trading-and-environment-rules" aria-hidden="true"></span>
+
+## Κανόνες συναλλαγών δευτερολέπτων και περιβάλλοντος
+
+Για σελίδες δευτερολέπτων, χρησιμοποιήστε τον ίδιο έλεγχο ταυτότητας `partner-token` με `page` και `tradingMode` που έχουν διαμορφωθεί στο Widget. Δεν υπάρχει ξεχωριστό διακριτικό πρόβλεψης. Κάθε κλήση tokenProvider πρέπει να λαμβάνει ένα νέο διακριτικό μίας χρήσης από το backend σας.
+
+Επιστρέψτε τα `embedToken`, `expireAt` σε δευτερόλεπτα Unix και το αρχικό `channelId` ως αντικείμενο ανώτατου επιπέδου. Η απάντηση διακριτικού Agent SDK δεν περιέχει `channelId`. Το backend σας αντηχεί το τρέχον κανάλι Widget. Εάν το τελικό σημείο σας αναδιπλώνει τις απαντήσεις σε `data`, ξεδιπλώστε το πριν επιστρέψετε από το tokenProvider.
+
+[Ενσωμάτωση πλήρους δευτερολέπτων](/el/sdk/agent-sdk/java/seconds-trading) · [Οδηγός περιβάλλοντος κεφαλαίων](/el/sdk/agent-sdk/java/environments)

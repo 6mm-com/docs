@@ -1,0 +1,83 @@
+---
+title: "Uaktualnij do wersji 0.3.0"
+subtitle: "Uaktualnij do wersji 0.3.0: Agent Java SDK Integracja v0.3.0, przykłady, parametry i semantyka odpowiedzi."
+slug: sdk/agent-sdk/java/upgrade
+canonical-url: https://docs.6mm.com/pl/sdk/agent-sdk/java/upgrade
+---
+
+Ten przewodnik jest przeznaczony dla **Agent Java SDK `v0.3.0`** i Java 8+.
+
+<span id="decide-what-needs-upgrading" data-sixmm-canonical-anchor="decide-what-needs-upgrading" aria-hidden="true"></span>
+
+## Zdecyduj, co wymaga modernizacji
+
+| Istniejąca integracja | Działanie |
+| --- | --- |
+| Istniejące funkcje produkcyjne z pominiętym środowiskiem | Istniejące kształty odpowiedzi pozostają kompatybilne; nowe zapytania nie wymuszają aktualizacji. |
+| Istniejące ogólne uwierzytelnianie osadzania dla handlu sekundowego | Ponowne wykorzystanie uwierzytelniania i odnawiania; wybierz żądaną stronę produktu. |
+| Salda finansowania, transfery i odzyskiwanie środków | Użyj modeli zawierających `withFunding`, `walletTransfer` i `queryWalletTransfer`. |
+| Wyraźne symulowane fundusze | Użyj modeli żądania/odpowiedzi obsługujących `environment`. |
+| Sześć zapytań o dane ciągłe | Użyj publicznych Java SDK `v0.3.0`, w tym sześciu metod i obsługi podpisywania tablic. |
+
+Zachowaj swoje aktualne `baseUrl`, `agentCode`, `apiSecret`, powiązania użytkowników i oryginalne zamówienia biznesowe.
+
+<span id="install-the-stable-public-tag" data-sixmm-canonical-anchor="install-the-stable-public-tag" aria-hidden="true"></span>
+
+## Zainstaluj stabilny tag publiczny
+
+Źródło hosta GitHub. Publikowanie tagu GitHub nie powoduje publikowania współrzędnych Mavena w Maven Central. Zainstaluj oznaczone źródło lokalnie lub opublikuj jego zweryfikowane JAR/POM w repozytorium artefaktów swojej organizacji.
+
+```bash
+git clone --branch v0.3.0 --single-branch https://github.com/6mm-com/agent-java-sdk.git agent-java-sdk-v0.3.0
+cd agent-java-sdk-v0.3.0
+git rev-parse HEAD
+git rev-parse 'v0.3.0^{commit}'
+mvn install
+```
+
+Obydwa identyfikatory zatwierdzeń muszą być zgodne. Zadeklaruj zależność w projekcie partnerskim:
+
+```xml
+<dependency>
+    <groupId>com.sixmm.exchange.sdk</groupId>
+    <artifactId>agent</artifactId>
+    <version>0.3.0</version>
+</dependency>
+```
+
+Sprawdź rozwiązaną zależność:
+
+```bash
+mvn dependency:tree -Dincludes=com.sixmm.exchange.sdk:agent
+```
+
+Instalacja lokalna udostępnia artefakt tylko na tym komputerze. Programiści CI i inni potrzebują tej samej oznakowanej instalacji lub zweryfikowanego repozytorium artefaktów. Jeśli masz już prywatny artefakt o nazwie `0.3.0`, sprawdź jego źródło i metody; nie nadpisuj po cichu udostępnionego artefaktu.
+
+<span id="required-integration-changes" data-sixmm-canonical-anchor="required-integration-changes" aria-hidden="true"></span>
+
+## Wymagane zmiany integracyjne
+
+1. Zaktualizuj modele żądań i odpowiedzi dla jawnych `environment`. Ścisłe starsze modele odpowiedzi mogą odrzucić dodatkowe pole.
+2. Użyj `withFunding()` przed przeczytaniem `funding`. Salda kontraktów nie są saldami w handlu sekundami.
+3. Użyj `/v1/agent/wallet-transfer` i `/v1/agent/wallet-transfer-status` do finansowania. Stara `queryOrder` nie może odzyskać operacji finansowania.
+4. Sześć zapytań używa `platformUserIds` jako tablicy ciągów. Znakuj tablice jako zwarte JSON; Java `List.toString()` nie jest kompatybilny.
+5. Przechowuj zlecenia przeniesienia, zwykłe zlecenia handlowe, zlecenia warunkowe i wypełnienia jako odrębne podmioty. Przeanalizuj `orderStatus` lub `status` zgodnie z operacją.
+6. Przed analizą sprawdź oryginalną treść webhook. Wyraźne symulowane powiadomienia obejmują `environment`; porównaj je z zapisanym zamówieniem.
+7. Niezależnie zarządzaj wersjami Java i widżetów. Aktualizacja backendu nie zmienia strony frontendowej ani trybu handlu, a handel sekundami nie wymaga nowego typu tokena.
+
+<span id="verify-the-upgrade" data-sixmm-canonical-anchor="verify-the-upgrade" aria-hidden="true"></span>
+
+## Sprawdź aktualizację
+
+Uruchom kompilację projektu partnerskiego i sprawdź jego drzewo zależności. Wiązanie testowe, oryginalny przepływ produkcji, jawne symulowane salda, odzyskiwanie wyników finansowania, wszystkie sześć zapytań, paginacja w stałym oknie, obsługa błędów i idempotentne wywołania zwrotne.
+
+W przypadku niestandardowego klienta HTTP postępuj zgodnie z oznakowanym żądaniem i umową podpisu, zamiast zakładać, że stare modele obejmują nowe pola. Widzieć [Przegląd zapytań](/pl/sdk/agent-sdk/java/perpetual-queries) I [Przewodnik po środowisku](/pl/sdk/agent-sdk/java/environments).
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Źródło i powiązane przewodniki
+
+- [Oficjalne źródło v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Przegląd zapytań i paginacja](/pl/sdk/agent-sdk/java/perpetual-queries)
+- [Portfel finansowania](/pl/sdk/agent-sdk/java/funding-wallet)
+- [Przewodnik po aktualizacji](/pl/sdk/agent-sdk/java/upgrade)

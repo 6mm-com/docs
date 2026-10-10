@@ -1,0 +1,104 @@
+---
+title: "Rellenos comerciales perpetuos"
+subtitle: "Rellenos comerciales perpetuos: Agent Java SDK v0.3.0 integración, ejemplos, parámetros y semántica de respuesta."
+slug: sdk/agent-sdk/java/perpetual-trades
+canonical-url: https://docs.6mm.com/es-ES/sdk/agent-sdk/java/perpetual-trades
+---
+
+Esta guía está dirigida a **Agent Java SDK `v0.3.0`**, Java 8+ y el contrato público etiquetado. Los ejemplos se ejecutan en un backend asociado después de inicializar `client` en [Inicio rápido](/es-ES/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## Requisitos previos de ejemplo
+
+Los fragmentos Java comparten estas importaciones. Inicialice `client` usando el Inicio rápido y obtenga `platformUserId` del enlace guardado. Los ID de usuario/pedido de ejemplo deben reemplazarse con sus propios valores persistentes.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span data-sixmm-canonical-anchor="listperpetualtrades" aria-hidden="true"></span>
+
+## `listPerpetualTrades`
+
+Modelo de solicitud: `PerpetualTradesRequest`.
+
+```java
+import com.sixmm.agent.model.PerpetualTradesRequest;
+import com.sixmm.agent.model.PerpetualResponse;
+import java.util.Collections;
+
+PerpetualTradesRequest request = new PerpetualTradesRequest();
+request.platformUserIds = Collections.singletonList("1188041528");
+request.limit = 100;
+request.symbol = "BTCUSDT";
+request.endTime = System.currentTimeMillis();
+request.startTime = request.endTime - 3_600_000L;
+PerpetualResponse response = client.listPerpetualTrades(request);
+System.out.println(response.data.items.size());
+System.out.println(response.data.hasMore);
+System.out.println(response.data.nextCursor);
+```
+
+<span id="request-fields" data-sixmm-canonical-anchor="request-fields" aria-hidden="true"></span>
+
+### Campos de solicitud
+
+| Campo | Java tipo | Requerido | Significado |
+| --- | --- | --- | --- |
+| `platformUserIds` | `java.util.List<String>` | Condicional | 1 a 100 identificaciones públicas únicas; requerido para rellenos y pedidos condicionales. Omitir consultas admitidas para el alcance del jugador directo; [] no es válido. |
+| `symbol` | `String` | No | Filtro de pares comerciales opcional. |
+| `orderId` | `String` | No | ID de pedido ordinario; no es un número de orden de transferencia de socio. |
+| `startTime` | `Long` | No | Milisegundos Unix inclusivos; utilice una ventana de historial fija UTC. |
+| `endTime` | `Long` | No | Milisegundos exclusivos de Unix. |
+| `limit` | `Integer` | No | Predeterminado 500; 1–1000. |
+| `cursor` | `String` | No | Utilice el nextCursor devuelto con filtros sin cambios; detenerse cuando hasMore sea falso. |
+
+El ejemplo lee una página. Para campos obligatorios, alcance del reproductor, semántica de filtro, límite, cursor y reintentos limitados, siga [Resumen de consultas](/es-ES/sdk/agent-sdk/java/perpetual-queries). Mantenga todos los filtros sin cambios mientras busca; no interprete un error como un resultado vacío.
+
+<span id="transaction-details" data-sixmm-canonical-anchor="transaction-details" aria-hidden="true"></span>
+
+## Detalles de llenado comercial
+
+Interfaz: `trades`. Requiere platformUserIds explícito.
+
+| `data` campo | tipo | significado |
+| --- | --- | --- |
+| `fillId` | string | ID de detalles de llenado comercial, correspondiente a este registro entityId |
+| `tradeId` | string | El ID de transacción coincidente asociado con la transacción; no reemplaza la identificación detallada |
+| `orderId` | string | El ID de pedido general al que pertenece este detalle. |
+| `positionId` | string | ID de posición asociada |
+| `symbol` | string | par comercial |
+| `side` | string | Dirección de compra y venta de este jugador BUY / SELL |
+| `roleType` | string | Carácter de transacción de este jugador MAKER / TAKER |
+| `positionSide` | string | Dirección de posición, explicada según el valor real LONG / SHORT / BOTH etc. |
+| `price` | string | Este precio de transacción |
+| `quantity` | string | La cantidad de esta transacción no es la cantidad total del pedido original. |
+| `tradeValue` | string | El valor nominal de esta transacción proviene del nocional de la transacción. |
+| `handlingFee` | string | La tarifa de transacción para esta transacción conserva el símbolo fuente y la precisión, y no toma el valor absoluto por sí misma. |
+| `realizedPnl` | string | Las ganancias y pérdidas realizadas correspondientes a esta transacción; no las ganancias y pérdidas flotantes en tiempo real de la posición actual |
+| `tradedAt` | integer | Tiempo de transacción, milisegundos; Utilice este campo para filtrar el tiempo. |
+
+Un pedido puede tener múltiples ejecuciones, las cuales deben guardarse en detalle. No combine registros de diferentes jugadores/cumple roles mediante tradeId y luego descarte sus identidades de registros.
+
+
+<span id="example-response-envelope" data-sixmm-canonical-anchor="example-response-envelope" aria-hidden="true"></span>
+
+## Ejemplo de sobre de respuesta
+
+Esta es una página vacía ilustrativa, no una muestra de una operación completada. Las tablas de campos específicos de recursos anteriores describen `items[].data`.
+
+```json
+{"code":0,"message":"success","data":{"items":[],"nextCursor":"","hasMore":false}}
+```
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Guías fuente y relacionadas
+
+- [Fuente oficial v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Descripción general de consultas y paginación](/es-ES/sdk/agent-sdk/java/perpetual-queries)
+- [Cartera de financiación](/es-ES/sdk/agent-sdk/java/funding-wallet)
+- [Guía de actualización](/es-ES/sdk/agent-sdk/java/upgrade)

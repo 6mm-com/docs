@@ -1,0 +1,133 @@
+---
+title: "Καθολικό Συμβάσεων"
+subtitle: "Καθολικό Συμβάσεων: Agent Java SDK Ενσωμάτωση v0.3.0, παραδείγματα, παράμετροι και σημασιολογία απόκρισης."
+slug: sdk/agent-sdk/java/perpetual-ledger
+canonical-url: https://docs.6mm.com/el/sdk/agent-sdk/java/perpetual-ledger
+---
+
+Αυτός ο οδηγός στοχεύει **Agent Java SDK `v0.3.0`**, Java 8+ και τη δημόσια σύμβαση με ετικέτα. Τα παραδείγματα εκτελούνται σε ένα backend συνεργάτη μετά την προετοιμασία του `client` στο [Γρήγορη εκκίνηση](/el/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## Παράδειγμα προαπαιτούμενα
+
+Τα αποσπάσματα Java μοιράζονται αυτές τις εισαγωγές. Αρχικοποιήστε το `client` χρησιμοποιώντας Γρήγορη εκκίνηση και αποκτήστε `platformUserId` από την αποθηκευμένη δέσμευση. Παραδείγματα αναγνωριστικών χρήστη/παραγγελιών πρέπει να αντικατασταθούν με τις δικές σας σταθερές τιμές.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span data-sixmm-canonical-anchor="listperpetualledger" aria-hidden="true"></span>
+
+## `listPerpetualLedger`
+
+Αίτημα μοντέλου: `PerpetualLedgerRequest`.
+
+```java
+import com.sixmm.agent.model.PerpetualLedgerRequest;
+import com.sixmm.agent.model.PerpetualResponse;
+import java.util.Collections;
+
+PerpetualLedgerRequest request = new PerpetualLedgerRequest();
+request.platformUserIds = Collections.singletonList("1188041528");
+request.limit = 100;
+request.endTime = System.currentTimeMillis();
+request.startTime = request.endTime - 3_600_000L;
+PerpetualResponse response = client.listPerpetualLedger(request);
+System.out.println(response.data.items.size());
+System.out.println(response.data.hasMore);
+System.out.println(response.data.nextCursor);
+```
+
+<span id="request-fields" data-sixmm-canonical-anchor="request-fields" aria-hidden="true"></span>
+
+### Πεδία αιτήματος
+
+| Πεδίο | Java τύπος | Υποχρεούμαι | Εννοια |
+| --- | --- | --- | --- |
+| `platformUserIds` | `java.util.List<String>` | Υποθετικός | 1–100 μοναδικά δημόσια αναγνωριστικά. απαιτείται για γεμίσεις και παραγγελίες υπό όρους. Παράλειψη υποστηριζόμενων ερωτημάτων για εύρος απευθείας παίκτη. Το [] δεν είναι έγκυρο. |
+| `assetType` | `String` | Οχι | Ταξινόμηση περιουσιακών στοιχείων όπως επιστρέφεται από το καθολικό. μην υποθέσετε USDT. |
+| `changeType` | `String` | Οχι | Ledger τύπος αλλαγής επιχείρησης, διατηρώντας τις τιμές πηγής. |
+| `startTime` | `Long` | Οχι | Συμπεριλαμβανόμενα χιλιοστά του δευτερολέπτου Unix. χρησιμοποιήστε ένα σταθερό παράθυρο ιστορικού UTC. |
+| `endTime` | `Long` | Οχι | Αποκλειστικά Unix χιλιοστά του δευτερολέπτου. |
+| `limit` | `Integer` | Οχι | Προεπιλογή 500; 1–1000. |
+| `cursor` | `String` | Οχι | Χρησιμοποιήστε το επιστρεφόμενο nextCursor με αμετάβλητα φίλτρα. σταματήστε όταν το hasMore είναι ψευδές. |
+
+Το παράδειγμα διαβάζει μια σελίδα. Για απαιτούμενα πεδία, εύρος προγράμματος αναπαραγωγής, σημασιολογία φίλτρου, όριο, δρομέα και περιορισμένες επαναλήψεις, ακολουθήστε [Επισκόπηση ερωτήματος](/el/sdk/agent-sdk/java/perpetual-queries). Διατηρήστε όλα τα φίλτρα αμετάβλητα κατά τη σελιδοποίηση. μην ερμηνεύσετε ένα σφάλμα ως κενό αποτέλεσμα.
+
+<span id="contract-account-change-details" data-sixmm-canonical-anchor="contract-account-change-details" aria-hidden="true"></span>
+
+## Αρχεία λογιστικού συμβολαίου
+
+Διεπαφή: `account/ledger`. Τα επιστρεφόμενα δεδομένα περιέχουν μόνο τα ακόλουθα 11 επιχειρηματικά πεδία και δεν φέρουν τις δυαδικές σημαίες παραγγελίας.
+
+| πεδίο `data` | τύπος | έννοια |
+| --- | --- | --- |
+| `ledgerId` | string | Το βιβλίο προέλευσης καταγράφει στο αναγνωριστικό συναλλαγής. η ίδια συναλλαγή μπορεί να χωριστεί σε πολλές λεπτομέρειες |
+| `symbol` | string | Σχετικό ζεύγος συναλλαγών, μπορεί να παραλειφθεί εάν δεν σχετίζεται |
+| `assetType` | string | Τύπος στοιχείου, αποθηκευμένο με βάση την τιμή πηγής. χρησιμοποιείται για την ταξινόμηση περιουσιακών στοιχείων, δεν συνάγεται από προεπιλογή USDT |
+| `changeType` | string | Αλλαγή λογαριασμού τύπου επιχείρησης, αποθηκευμένη σύμφωνα με την αξία πηγής, όπως αμοιβή χειρισμού, κέρδη και ζημίες, μεταφορά. μπορεί να φιλτραριστεί από το ίδιο πεδίο |
+| `amount` | string | Το ποσό αλλαγής αυτής της λεπτομέρειας, ένας θετικός αριθμός υποδηλώνει αύξηση, ένας αρνητικός αριθμός υποδηλώνει μείωση. η ακρίβεια διατηρείται |
+| `walletBalanceBefore` | string | Το υπόλοιπο του πορτοφολιού πριν από την αλλαγή λογαριασμού καταγράφεται με αυτήν τη λεπτομέρεια |
+| `walletBalanceAfter` | string | Το υπόλοιπο του πορτοφολιού μετά την αλλαγή λογαριασμού καταγράφεται με αυτήν τη λεπτομέρεια |
+| `frozenBalanceBefore` | string | Το δεσμευμένο υπόλοιπο που καταγράφηκε πριν από την αλλαγή λογαριασμού καταγράφεται με αυτή τη λεπτομέρεια |
+| `frozenBalanceAfter` | string | Το δεσμευμένο υπόλοιπο καταγράφηκε με αυτή τη λεπτομέρεια μετά την αλλαγή λογαριασμού |
+| `referenceId` | string | Σχετικός αριθμός επιχείρησης. ερμηνεύεται ως changeType και δεν μπορεί να θεωρηθεί ομοιόμορφα ως τάξη orderId. Το "0" υποδηλώνει ότι η πηγή δεν έχει έγκυρο συσχετισμένο αριθμό |
+| `createdAt` | integer | Χρόνος δημιουργίας στοιχείων αλλαγής λογαριασμού, χιλιοστά του δευτερολέπτου. αυτό το πεδίο χρησιμοποιείται για φιλτράρισμα χρόνου σε αυτήν τη διεπαφή |
+
+Χρησιμοποιήστε το υπόλοιπο πριν και μετά την αλλαγή λογαριασμού που επιστρέφεται από τη διεπαφή. Διαφορετικά changeType έχουν διαφορετική σημασιολογία και δεν μπορεί να θεωρηθεί ότι κάθε ποσό είναι ίσο με walletBalanceAfter − walletBalanceBefore. Η εμφάνιση/περίληψη των εγγραφών του καθολικού πρέπει να διατηρεί τον τύπο και την ταυτότητα των λεπτομερειών.
+
+Ακολουθεί ένα παράδειγμα της μορφής, χρησιμοποιώντας ένα εικονικό αναγνωριστικό και ένα ποσό:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "items": [
+      {
+        "platformUserId": "1188041528",
+        "entityType": "ACCOUNT_LEDGER",
+        "entityId": "900001",
+        "data": {
+          "ledgerId": "ledger-example-001",
+          "symbol": "BTCUSDT",
+          "assetType": "USDT",
+          "changeType": "HANDLING_FEE",
+          "amount": "-0.10000000",
+          "walletBalanceBefore": "100.00000000",
+          "walletBalanceAfter": "99.90000000",
+          "frozenBalanceBefore": "0.00000000",
+          "frozenBalanceAfter": "0.00000000",
+          "referenceId": "800001",
+          "createdAt": 1791590400000
+        }
+      }
+    ],
+    "nextCursor": "",
+    "hasMore": false
+  }
+}
+```
+
+
+<span id="example-response-envelope" data-sixmm-canonical-anchor="example-response-envelope" aria-hidden="true"></span>
+
+## Παράδειγμα φακέλου απάντησης
+
+Αυτή είναι μια ενδεικτική κενή σελίδα, όχι ένα δείγμα ολοκληρωμένης συναλλαγής. Οι παραπάνω πίνακες πεδίων για συγκεκριμένους πόρους περιγράφουν το συμπληρωμένο `items[].data`.
+
+```json
+{"code":0,"message":"success","data":{"items":[],"nextCursor":"","hasMore":false}}
+```
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Πηγή και σχετικοί οδηγοί
+
+- [Επίσημη πηγή έκδοσης 0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Επισκόπηση ερωτήματος και σελιδοποίηση](/el/sdk/agent-sdk/java/perpetual-queries)
+- [Πορτοφόλι χρηματοδότησης](/el/sdk/agent-sdk/java/funding-wallet)
+- [Οδηγός αναβάθμισης](/el/sdk/agent-sdk/java/upgrade)

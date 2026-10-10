@@ -1,0 +1,186 @@
+---
+title: "Διαρκείς Διαταγές"
+subtitle: "Διαρκείς Διαταγές: Agent Java SDK Ενσωμάτωση v0.3.0, παραδείγματα, παράμετροι και σημασιολογία απόκρισης."
+slug: sdk/agent-sdk/java/perpetual-orders
+canonical-url: https://docs.6mm.com/el/sdk/agent-sdk/java/perpetual-orders
+---
+
+Αυτός ο οδηγός στοχεύει **Agent Java SDK `v0.3.0`**, Java 8+ και τη δημόσια σύμβαση με ετικέτα. Τα παραδείγματα εκτελούνται σε ένα backend συνεργάτη μετά την προετοιμασία του `client` στο [Γρήγορη εκκίνηση](/el/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## Παράδειγμα προαπαιτούμενα
+
+Τα αποσπάσματα Java μοιράζονται αυτές τις εισαγωγές. Αρχικοποιήστε το `client` χρησιμοποιώντας Γρήγορη εκκίνηση και αποκτήστε `platformUserId` από την αποθηκευμένη δέσμευση. Παραδείγματα αναγνωριστικών χρήστη/παραγγελιών πρέπει να αντικατασταθούν με τις δικές σας σταθερές τιμές.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span data-sixmm-canonical-anchor="listcurrentperpetualorders" aria-hidden="true"></span>
+
+## `listCurrentPerpetualOrders`
+
+Αίτημα μοντέλου: `CurrentPerpetualOrdersRequest`.
+
+```java
+import com.sixmm.agent.model.CurrentPerpetualOrdersRequest;
+import com.sixmm.agent.model.PerpetualResponse;
+import java.util.Collections;
+
+CurrentPerpetualOrdersRequest request = new CurrentPerpetualOrdersRequest();
+request.platformUserIds = Collections.singletonList("1188041528");
+request.limit = 100;
+request.orderCategory = "NORMAL";
+request.symbol = "BTCUSDT";
+PerpetualResponse response = client.listCurrentPerpetualOrders(request);
+System.out.println(response.data.items.size());
+System.out.println(response.data.hasMore);
+System.out.println(response.data.nextCursor);
+```
+
+<span id="request-fields" data-sixmm-canonical-anchor="request-fields" aria-hidden="true"></span>
+
+### Πεδία αιτήματος
+
+| Πεδίο | Java τύπος | Υποχρεούμαι | Εννοια |
+| --- | --- | --- | --- |
+| `orderCategory` | `String` | Ναί | NORMAL ή CONDITIONAL; Τα ερωτήματα υπό όρους απαιτούν ρητούς χρήστες. |
+| `platformUserIds` | `java.util.List<String>` | Υποθετικός | 1–100 μοναδικά δημόσια αναγνωριστικά. απαιτείται για γεμίσεις και παραγγελίες υπό όρους. Παράλειψη υποστηριζόμενων ερωτημάτων για εύρος απευθείας παίκτη. Το [] δεν είναι έγκυρο. |
+| `symbol` | `String` | Οχι | Προαιρετικό φίλτρο ζεύγους συναλλαγών. |
+| `limit` | `Integer` | Οχι | Προεπιλογή 500; 1–1000. |
+| `cursor` | `String` | Οχι | Χρησιμοποιήστε το επιστρεφόμενο nextCursor με αμετάβλητα φίλτρα. σταματήστε όταν το hasMore είναι ψευδές. |
+
+Το παράδειγμα διαβάζει μια σελίδα. Για απαιτούμενα πεδία, εύρος προγράμματος αναπαραγωγής, σημασιολογία φίλτρου, όριο, δρομέα και περιορισμένες επαναλήψεις, ακολουθήστε [Επισκόπηση ερωτήματος](/el/sdk/agent-sdk/java/perpetual-queries). Διατηρήστε όλα τα φίλτρα αμετάβλητα κατά τη σελιδοποίηση. μην ερμηνεύσετε ένα σφάλμα ως κενό αποτέλεσμα.
+
+<span data-sixmm-canonical-anchor="listperpetualorderhistory" aria-hidden="true"></span>
+
+## `listPerpetualOrderHistory`
+
+Αίτημα μοντέλου: `PerpetualOrderHistoryRequest`.
+
+```java
+import com.sixmm.agent.model.PerpetualOrderHistoryRequest;
+import com.sixmm.agent.model.PerpetualResponse;
+import java.util.Collections;
+
+PerpetualOrderHistoryRequest request = new PerpetualOrderHistoryRequest();
+request.platformUserIds = Collections.singletonList("1188041528");
+request.limit = 100;
+request.orderCategory = "NORMAL";
+request.symbol = "BTCUSDT";
+request.endTime = System.currentTimeMillis();
+request.startTime = request.endTime - 3_600_000L;
+PerpetualResponse response = client.listPerpetualOrderHistory(request);
+System.out.println(response.data.items.size());
+System.out.println(response.data.hasMore);
+System.out.println(response.data.nextCursor);
+```
+
+<span id="request-fields-1" data-sixmm-canonical-anchor="request-fields-1" aria-hidden="true"></span>
+
+### Πεδία αιτήματος
+
+| Πεδίο | Java τύπος | Υποχρεούμαι | Εννοια |
+| --- | --- | --- | --- |
+| `orderCategory` | `String` | Ναί | NORMAL ή CONDITIONAL; Τα ερωτήματα υπό όρους απαιτούν ρητούς χρήστες. |
+| `platformUserIds` | `java.util.List<String>` | Υποθετικός | 1–100 μοναδικά δημόσια αναγνωριστικά. απαιτείται για γεμίσεις και παραγγελίες υπό όρους. Παράλειψη υποστηριζόμενων ερωτημάτων για εύρος απευθείας παίκτη. Το [] δεν είναι έγκυρο. |
+| `symbol` | `String` | Οχι | Προαιρετικό φίλτρο ζεύγους συναλλαγών. |
+| `orderId` | `String` | Οχι | Ταυτότητα παραγγελίας. δεν είναι αριθμός εντολής μεταφοράς συνεργάτη. |
+| `conditionId` | `String` | Οχι | Αναγνωριστικό παραγγελίας υπό όρους. μην αναμειγνύεται με orderId. |
+| `clientOrderId` | `String` | Οχι | Αναφορά παραγγελίας πελάτη συναλλαγών, όχι agentOrderNo. |
+| `side` | `String` | Οχι | BUY / SELL φίλτρο. |
+| `status` | `String` | Οχι | Κατάσταση συγκεκριμένων πόρων. δείτε την αναφορά κατάστασης. |
+| `startTime` | `Long` | Οχι | Συμπεριλαμβανόμενα χιλιοστά του δευτερολέπτου Unix. χρησιμοποιήστε ένα σταθερό παράθυρο ιστορικού UTC. |
+| `endTime` | `Long` | Οχι | Αποκλειστικά Unix χιλιοστά του δευτερολέπτου. |
+| `limit` | `Integer` | Οχι | Προεπιλογή 500; 1–1000. |
+| `cursor` | `String` | Οχι | Χρησιμοποιήστε το επιστρεφόμενο nextCursor με αμετάβλητα φίλτρα. σταματήστε όταν το hasMore είναι ψευδές. |
+
+Το παράδειγμα διαβάζει μια σελίδα. Για απαιτούμενα πεδία, εύρος προγράμματος αναπαραγωγής, σημασιολογία φίλτρου, όριο, δρομέα και περιορισμένες επαναλήψεις, ακολουθήστε [Επισκόπηση ερωτήματος](/el/sdk/agent-sdk/java/perpetual-queries). Διατηρήστε όλα τα φίλτρα αμετάβλητα κατά τη σελιδοποίηση. μην ερμηνεύσετε ένα σφάλμα ως κενό αποτέλεσμα.
+
+<span id="ordinary-delegation-current-and-history" data-sixmm-canonical-anchor="ordinary-delegation-current-and-history" aria-hidden="true"></span>
+
+## Συνήθεις παραγγελίες: τρέχουσα και ιστορία
+
+Τρέχον: `orders/current` + `orderCategory=NORMAL`; Ιστορικό: `orders/history` + `orderCategory=NORMAL`.
+
+| πεδίο `data` | τύπος | Έννοια και πεδίο εφαρμογής |
+| --- | --- | --- |
+| `symbol` | string | Ζεύγος συναλλαγών, όπως BTCUSDT |
+| `orderId` | string | Ταυτότητα κανονικής παραγγελίας πλατφόρμας |
+| `orderCategory` | string | Διορθώθηκε NORMAL |
+| `clientOrderId` | string | Αριθμός παραγγελίας πελάτη που παρέχεται από την πηγή εντολής συναλλαγής. δεν είναι το ίδιο πεδίο με τη μεταφορά κεφαλαίων εμπόρου agentOrderNo |
+| `orderType` | string | Τύπος πληρεξουσίου, όπως LIMIT, MARKET; υπερισχύει η πραγματική τιμή απαρίθμησης |
+| `side` | string | Κατεύθυνση αγοράς και πώλησης BUY / SELL |
+| `status` | string | Κατάσταση κανονικής παραγγελίας, δείτε την επισκόπηση ερωτήματος |
+| `timeInForce` | string | Περίοδος ισχύος/Στρατηγική εκτέλεσης συμφωνίας, όπως GTC, IOC, FOK; ερμηνεύεται σύμφωνα με τις πραγματικές τιμές |
+| `price` | string | Εμπιστευμένη τιμή? μπορεί να παραλειφθεί όταν δεν παρέχεται τιμή και η αγοραία τιμή συναλλαγής δεν θα συμπληρώνεται από τον ίδιο. |
+| `quantity` | string | Ποσότητα αρχικής παραγγελίας |
+| `filledQuantity` | string | Ποσότητα συναλλαγής |
+| `remainingQuantity` | string | Ποσότητα που δεν έχει συναλλαγεί. το τρέχον ερώτημα λαμβάνει την ποσότητα − filledQuantity και το ερώτημα ιστορικού παίρνει την τιμή ιστορικού εγγραφής |
+| `avgFilledPrice` | string | Η μέση τιμή συναλλαγής του ολοκληρωμένου μέρους. μπορεί να μην υπάρχει αξία όταν δεν έχει ολοκληρωθεί |
+| `reduceOnly` | boolean | Είτε θα μειωθούν μόνο θέσεις |
+| `closeOnly` | boolean | Είτε χρησιμοποιείται μόνο για το κλείσιμο θέσεων |
+| `makerOnly` | boolean | Εάν θα εκτελεστεί μόνο ως Δημιουργός |
+| `leverage` | integer | Πολλαπλή μόχλευση; **Η ιστορική συνηθισμένη παραγγελία** έχει μια πηγή και η τρέχουσα συνηθισμένη παραγγελία δεν δημιουργεί αυτήν την τιμή |
+| `marginMode` | string | Λειτουργία περιθωρίου; **Η ιστορική κανονική παραγγελία** επί του παρόντος επιστρέφει μια συμβολοσειρά αριθμητικής απαρίθμησης, όπως "1", "2". η τρέχουσα τακτική παραγγελία δεν παρέχεται |
+| `createdAt` | integer | Χρόνος δημιουργίας παραγγελίας, χιλιοστά του δευτερολέπτου. χρησιμοποιήστε αυτό το πεδίο για να φιλτράρετε τον ιστορικό χρόνο παραγγελίας |
+| `updatedAt` | integer | Ανάθεση χρόνου ενημέρωσης ρεκόρ, χιλιοστά του δευτερολέπτου |
+
+Το ιστορικό παραγγελιών περιλαμβάνει τις καταγγελθείσες συνήθεις παραγγελίες. Κάθε εγγραφή δεν μπορεί να θεωρηθεί ως πλήρως ολοκληρωμένη με βάση μόνο το όνομα της διεπαφής. Η τρέχουσα σελίδα παραγγελίας είναι ένα ερώτημα τρέχουσας κατάστασης, όχι μια ροή συμβάντων παραγγελίας.
+
+
+<span id="conditional-delegation-current-and-history" data-sixmm-canonical-anchor="conditional-delegation-current-and-history" aria-hidden="true"></span>
+
+## Παραγγελίες υπό όρους: τρέχουσα και ιστορία
+
+Τρέχον: `orders/current` + `orderCategory=CONDITIONAL`; Ιστορικό: `orders/history` + `orderCategory=CONDITIONAL`. Και τα δύο απαιτούν ρητή platformUserIds.
+
+| πεδίο `data` | τύπος | έννοια |
+| --- | --- | --- |
+| `symbol` | string | ζεύγος συναλλαγών |
+| `conditionId` | string | Αναγνωριστικό παραγγελιών υπό όρους, ανεξάρτητο από το συνηθισμένο orderId |
+| `orderCategory` | string | Διορθώθηκε CONDITIONAL |
+| `generatedOrderId` | string | Συνηθισμένο αναγνωριστικό παραγγελίας που δημιουργήθηκε μετά την ενεργοποίηση. μπορεί να παραλειφθεί εάν δεν δημιουργηθεί |
+| `clientOrderId` | string | Ο αριθμός παραγγελίας πελάτη των εντολών υπό όρους, εξάγεται όταν υπάρχει |
+| `side` | string | BUY / SELL |
+| `orderType` | string | Τύπος παραγγελίας μετά την ενεργοποίηση, που ερμηνεύεται σύμφωνα με την πραγματική αξία |
+| `triggerType` | string | Τύπος κανόνα ενεργοποίησης, που εξηγείται από την πραγματική απαρίθμηση της πηγής |
+| `workingType` | string | Τύπος εργασίας/πηγή τιμής που ενεργοποιεί την τιμή, που ερμηνεύεται ως πραγματική απαρίθμηση |
+| `timeInForce` | string | Περίοδος ισχύος/Στρατηγική εκτέλεσης της παραγγελίας μετά την ενεργοποίηση |
+| `price` | string | Η τιμή παραγγελίας μετά την ενεργοποίηση, βγαίνει όταν η πηγή έχει αξία |
+| `quantity` | string | Ποσότητα παραγγελίας υπό όρους |
+| `triggerPrice` | string | τιμή ενεργοποίησης |
+| `reduceOnly` | boolean | Είτε θα μειωθούν μόνο θέσεις |
+| `closePosition` | boolean | Το αν θα χρησιμοποιηθεί η σημασιολογία κλεισίματος πλήρους θέσης, δεν μπορεί να συγχέεται με το closeOnly ως το ίδιο πεδίο |
+| `leverage` | integer | Μόχλευση πολλαπλάσια, έξοδος όταν δεν είναι μηδενική |
+| `marginMode` | string | Αυτή η κλάση επιστρέφει CROSS / ISOLATED, η οποία είναι μια αριθμητική συμβολοσειρά που διαφέρει από τις συνηθισμένες ιστορικές εντολές/θέσεις |
+| `status` | string | Κατάσταση απλής ενεργοποίησης υπό όρους, δείτε την επισκόπηση ερωτήματος |
+| `triggerStatus` | string | Η τρέχουσα υλοποίηση χρησιμοποιεί την ίδια τιμή κατάστασης υπό όρους με την κατάσταση |
+| `createdAt` | integer | Χρόνος δημιουργίας παραγγελίας υπό όρους, χιλιοστά του δευτερολέπτου. Οι ιστορικές συνθήκες φιλτράρονται από αυτήν τη στιγμή |
+| `updatedAt` | integer | Χρόνος ενημέρωσης, έξοδος όταν υπάρχει τιμή, χιλιοστά του δευτερολέπτου |
+| `deletedAt` | integer | Διαγραφή χρόνου σήμανσης, έξοδος όταν υπάρχει τιμή, χιλιοστά του δευτερολέπτου. δεν είναι ένα ενοποιημένο πεδίο χρόνου συναλλαγής/ακύρωσης |
+
+Οι παραγγελίες υπό όρους δεν παρέχουν filledQuantity, remainingQuantity, avgFilledPrice για συνηθισμένες παραγγελίες. Εάν χρειάζεστε την κατάσταση συναλλαγής των συνηθισμένων εντολών μετά την ενεργοποίηση, υποβάλετε ερώτημα για συνηθισμένες εντολές/συναλλαγές μέσω του generatedOrderId και μην συνάγετε τον όγκο συναλλαγής από την κατάσταση εντολής υπό όρους.
+
+
+<span id="example-response-envelope" data-sixmm-canonical-anchor="example-response-envelope" aria-hidden="true"></span>
+
+## Παράδειγμα φακέλου απάντησης
+
+Αυτή είναι μια ενδεικτική κενή σελίδα, όχι ένα δείγμα ολοκληρωμένης συναλλαγής. Οι παραπάνω πίνακες πεδίων για συγκεκριμένους πόρους περιγράφουν το συμπληρωμένο `items[].data`.
+
+```json
+{"code":0,"message":"success","data":{"items":[],"nextCursor":"","hasMore":false}}
+```
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Πηγή και σχετικοί οδηγοί
+
+- [Επίσημη πηγή έκδοσης 0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Επισκόπηση ερωτήματος και σελιδοποίηση](/el/sdk/agent-sdk/java/perpetual-queries)
+- [Πορτοφόλι χρηματοδότησης](/el/sdk/agent-sdk/java/funding-wallet)
+- [Οδηγός αναβάθμισης](/el/sdk/agent-sdk/java/upgrade)

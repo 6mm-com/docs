@@ -1,17 +1,36 @@
 ---
-title: "Tạo Token Nhúng"
-subtitle: "Phát hành token nhúng ngắn hạn cho chế độ token đối tác Trading Widget ."
+title: "Tạo mã thông báo nhúng"
+subtitle: "Tạo mã thông báo nhúng: Agent Java SDK tích hợp v0.3.0, ví dụ, tham số và ngữ nghĩa phản hồi."
 slug: sdk/agent-sdk/java/embed-token
 canonical-url: https://docs.6mm.com/vi/sdk/agent-sdk/java/embed-token
 ---
 
-<span id="sdk-call" data-sixmm-canonical-anchor="sdk-call" aria-hidden="true"></span>
+Hướng dẫn này hướng tới **Agent Java SDK `v0.3.0`**, Java 8+ và hợp đồng công khai được gắn thẻ. Các ví dụ chạy trong phần phụ trợ của đối tác sau khi khởi tạo `client` trong [Bắt đầu nhanh](/vi/sdk/agent-sdk/java/quick-start).
 
-## cuộc gọi SDK
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
 
-Tạo token nhúng từ backend sau khi xác thực phiên người dùng đối tác. Trình duyệt nên gọi endpoint của bạn, và endpoint của bạn nên gọi 6MM qua Agent SDK.
+## Điều kiện tiên quyết mẫu
+
+Đoạn mã Java chia sẻ những nội dung nhập này. Khởi tạo `client` bằng cách sử dụng Bắt đầu nhanh và lấy `platformUserId` từ liên kết đã lưu. ID người dùng/đơn đặt hàng mẫu phải được thay thế bằng các giá trị cố định của riêng bạn.
 
 ```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span id="trading-widget-embed-token" data-sixmm-canonical-anchor="trading-widget-embed-token" aria-hidden="true"></span>
+
+## Trading Widget Mã thông báo nhúng
+
+Mã thông báo nhúng dành cho chế độ Trading Widget SDK `partner-token + tokenProvider`. các
+trình duyệt gọi phần phụ trợ của đối tác và phần phụ trợ của đối tác gọi đây là Java SDK
+để tạo một `embedToken`.
+
+```java
+import com.sixmm.agent.model.CreateEmbedTokenRequest;
+import com.sixmm.agent.model.CreateEmbedTokenResponse;
+
 CreateEmbedTokenResponse resp = client.createEmbedToken(
         CreateEmbedTokenRequest.of("agent-user-001", "tw_abc123")
                 .withSymbol("ETHUSDT"));
@@ -20,13 +39,15 @@ System.out.println(resp.embedToken);
 System.out.println(resp.expireAt);
 ```
 
-> **Thông tin đăng nhập một lần**
->
-> embedToken tồn tại ngắn hạn và chỉ dùng một lần. Không đặt nó vào chuỗi truy vấn URL .
+Yêu cầu tích hợp:
 
-<span id="backend-endpoint-example" data-sixmm-canonical-anchor="backend-endpoint-example" aria-hidden="true"></span>
+- `channelId` phải sử dụng giá trị được truyền bởi Trading Widget SDK.
+- `symbol` là tùy chọn, nhưng bạn nên chuyển ký hiệu ban đầu hiện tại.
+- `embedToken` chỉ tồn tại trong thời gian ngắn và một lần. Đừng đặt nó vào chuỗi truy vấn URL.
+- Giao diện đối tác không bao giờ được giữ `apiSecret`.
+- `expireAt` là dấu thời gian Unix tính bằng giây, không phải TTL.
 
-## Ví dụ về điểm cuối backend
+Ví dụ về điểm cuối phụ trợ của đối tác:
 
 ```java
 @PostMapping("/api/trading/embed-token")
@@ -41,24 +62,20 @@ public EmbedTokenView createEmbedToken(@RequestBody EmbedTokenRequest request,
 }
 ```
 
-Chỉ trả về các trường mà nhà cung cấp token Trading Widget cần thiết. Không trả về apiSecret, trường ký thô hoặc cấu hình dịch vụ nội bộ.
 
-<span id="failure-handling" data-sixmm-canonical-anchor="failure-handling" aria-hidden="true"></span>
+<span id="partner-endpoint-contract" data-sixmm-canonical-anchor="partner-endpoint-contract" aria-hidden="true"></span>
 
-## Xử lý lỗi
+## Hợp đồng điểm cuối của đối tác
 
-| Tình trạng | Khuyến nghị sử dụng |
-| --- | --- |
-| Phiên người dùng bị thiếu hoặc hết hạn | Trả về 401 từ điểm cuối đối tác và yêu cầu người dùng đăng nhập lại. |
-| Người dùng agent không bị ràng buộc | Ràng buộc người dùng trước, sau đó thử tạo token lại. |
-| 6MM trả về lỗi tạm thời | Trả về lỗi có thể thử lại về frontend và ghi lại requestId để được hỗ trợ. |
-| channelId không khớp với thể hiện widget | Từ chối yêu cầu và tạo lại phiên widget. |
+Xác thực phiên đối tác và lấy được `agentUserId` phía máy chủ. Chấp nhận Widget hiện tại `channelId`; trả về `embedToken`, `expireAt` (giây Unix) cấp cao nhất và `channelId`. Phản hồi của tác nhân không cung cấp `channelId`: chương trình phụ trợ của bạn phản ánh điều đó. Tìm nạp mã thông báo mới khi khởi tạo và gia hạn; không bao giờ sử dụng lại nó. Việc tạo mã thông báo không chuyển tiền hoặc chọn môi trường ví.
 
-<span id="related-documentation" data-sixmm-canonical-anchor="related-documentation" aria-hidden="true"></span>
+Nhìn thấy [Giao dịch giây](/vi/sdk/agent-sdk/java/seconds-trading) cho luồng giao diện người dùng/phụ trợ hoàn chỉnh.
 
-## Tài liệu liên quan
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
 
-- [Trading Widget Xác thực](/vi/sdk/trading-widget/authentication): kết nối `tokenProvider` với điểm cuối đối tác.
-- [Java Quick Start](/vi/sdk/agent-sdk/java/quick-start): cài đặt và khởi tạo `AgentClient`.
-- [Bí mật & Ký kết](/vi/sdk/security/secrets-signing): bảo vệ đặc vụ API bí mật.
-- [Webhooks & Idempotency](/vi/sdk/security/webhooks-idempotency): bảo mật phía callback của tích hợp.
+## Nguồn và hướng dẫn liên quan
+
+- [Nguồn v0.3.0 chính thức](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Tổng quan về truy vấn và phân trang](/vi/sdk/agent-sdk/java/perpetual-queries)
+- [Ví tiền tài trợ](/vi/sdk/agent-sdk/java/funding-wallet)
+- [Hướng dẫn nâng cấp](/vi/sdk/agent-sdk/java/upgrade)

@@ -1,15 +1,15 @@
 ---
 title: "Trading Widget Authentification"
-subtitle: "Utilisez partner-token pour de nouvelles intégrations de trading SSO intégrées."
+subtitle: "Utilisez le jeton de partenaire pour les nouvelles intégrations de trading intégrées SSO."
 slug: sdk/trading-widget/authentication
 canonical-url: https://docs.6mm.com/fr/sdk/trading-widget/authentication
 ---
 
 <span id="recommended-mode-partner-token" data-sixmm-canonical-anchor="recommended-mode-partner-token" aria-hidden="true"></span>
 
-## Mode recommandé : jeton partenaire
+## Mode recommandé : jeton partenaire
 
-partner-token évite de mettre des jetons courts dans les URL et conserve apiSecret sur le backend du partenaire.
+Partner-Token évite de mettre des jetons courts dans les URL et conserve apiSecret sur le backend du partenaire.
 
 ```js
 const widget = TradingWidget.create('#trading-widget', {
@@ -38,14 +38,14 @@ const widget = TradingWidget.create('#trading-widget', {
 
 ## Documentation associée
 
-- [Créer un jeton d’insertion](/fr/sdk/agent-sdk/java/embed-token) : exemple d’émission de jeton en arrière-plan.
-- [Trading Widget Démarrage rapide] (/sdk/trading-widget/quick-start) : flux d’initialisation complet.
-- [Secrets & Signature](/fr/sdk/security/secrets-signing) : gardez les identifiants d’agent privilégiés en arrière-plan.
-- [Dépannage](/fr/sdk/security/troubleshooting) : diagnostiquer les échecs de session, de jeton, d’origine et d’initialisation.
+- [Créer un jeton intégré](/fr/sdk/agent-sdk/java/embed-token): exemple d'émission de jeton backend.
+- [Trading Widget Démarrage rapide](/fr/sdk/trading-widget/quick-start): flux d'initialisation complet.
+- [Secrets et signature](/fr/sdk/security/secrets-signing) : conservez les informations d'identification privilégiées de l'agent sur le backend.
+- [Dépannage](/fr/sdk/security/troubleshooting): diagnostiquer les échecs de session, de jeton, d’origine et d’initialisation.
 
 <span id="backend-flow" data-sixmm-canonical-anchor="backend-flow" aria-hidden="true"></span>
 
-## Flux backend
+## Flux back-end
 
 ```text
 1. Partner frontend receives auth_request from the iframe.
@@ -60,32 +60,32 @@ const widget = TradingWidget.create('#trading-widget', {
 
 <span id="tokenprovider-contract" data-sixmm-canonical-anchor="tokenprovider-contract" aria-hidden="true"></span>
 
-## tokenProvider contrat
+## Contrat tokenProvider
 
-| Terrain | Réalisation | Description |
+| Champ | Direction | Description |
 | --- | --- | --- |
-| channelId | SDK -> Partenaire backend | Identifiant unique de session du widget. Le backend devrait le transmettre à createEmbedToken. |
-| Symbole | SDK -> Partenaire backend | Symbole de trading actuellement demandé. Utilisez-le pour lunôner le jeton quand c’est nécessaire. |
-| Raison | SDK -> Partenaire backend | Pourquoi le SDK demande un jeton, comme le chargement initial ou le rafraîchissement ? |
-| embedToken | Partenaire backend -> SDK | Jeton éphémère créé par le Agent SDK ou l’Agent API. |
-| expireAt | Partenaire backend -> SDK | L’horodatage d’expiration du jeton est retourné par 6MM. |
+| channelId | SDK -> Backend partenaire | Identificateur unique de session de widget. Le backend doit le transmettre à createEmbedToken. |
+| symbole | SDK -> Backend partenaire | Symbole commercial actuellement demandé. Utilisez-le pour définir la portée du jeton si nécessaire. |
+| raison | SDK -> Backend partenaire | Pourquoi le SDK demande un jeton, tel qu'un chargement initial ou une actualisation. |
+| embedToken | Backend partenaire -> SDK | Jeton de courte durée créé par le Agent SDK ou l'agent API. |
+| expireAt | Backend partenaire -> SDK | Horodatage d'expiration du jeton renvoyé par 6MM. |
 
 <span id="failure-handling" data-sixmm-canonical-anchor="failure-handling" aria-hidden="true"></span>
 
 ## Gestion des pannes
 
-| État | Manipulation recommandée |
+| Condition | Manipulation recommandée |
 | --- | --- |
-| Session partenaire expirée | Retournez le 401 depuis le point de terminaison partenaire et demandez à l’utilisateur de se reconnecter. |
-| Échec temporaire de la création de jeton | Ajoutez une erreur dans tokenProvider et laissez le widget afficher une erreur d’authentification. |
-| channelId décalage | Rejetez la requête et recréez l’instance du widget. |
-| L’utilisateur n’a pas le droit de trader | Retournez une erreur contrôlée par le partenaire et ne créez pas de jeton d’intégration. |
+| Session partenaire expirée | Renvoyez 401 depuis le point de terminaison partenaire et demandez à l’utilisateur de se reconnecter. |
+| La création du jeton a échoué temporairement | Génère une erreur dans tokenProvider et permet au widget de faire apparaître une erreur d'authentification. |
+| channelId incohérence | Rejetez la demande et recréez l'instance de widget. |
+| L'utilisateur n'est pas autorisé à échanger | Renvoie une erreur contrôlée par le partenaire et ne crée pas de jeton d'intégration. |
 
 <span id="compatibility-mode-agent-sso" data-sixmm-canonical-anchor="compatibility-mode-agent-sso" aria-hidden="true"></span>
 
-## Mode de compatibilité : agent-sso
+## Mode de compatibilité : agent-sso
 
-Agent-SSO conserve l’ancien flux de tickets /agent-entry. Privilégiez le partner-token pour les nouvelles intégrations.
+agent-sso conserve l'ancien flux de tickets /agent-entry. Préférez le jeton partenaire pour les nouvelles intégrations.
 
 ```js
 const widget = TradingWidget.create('#trading-widget', {
@@ -105,10 +105,13 @@ const widget = TradingWidget.create('#trading-widget', {
   },
 })
 ```
-{/* sixmm-localized-link-repair:start */}
-<span id="localized-page-links" data-sixmm-canonical-anchor="localized-page-links" aria-hidden="true"></span>
 
-## Pages associées
+<span id="seconds-trading-and-environment-rules" data-sixmm-canonical-anchor="seconds-trading-and-environment-rules" aria-hidden="true"></span>
 
-- [Intégrer le 6MM Trading Widget: Démarrage rapide](/fr/sdk/trading-widget/quick-start)
-{/* sixmm-localized-link-repair:end */}
+## Règles d'échange de secondes et d'environnement
+
+Pour les pages secondes, utilisez la même authentification `partner-token` avec `page` et `tradingMode` configurées sur le widget. Il n’existe pas de jeton de prédiction distinct. Chaque appel tokenProvider doit obtenir un nouveau jeton unique de votre backend.
+
+Renvoie `embedToken`, `expireAt` en secondes Unix et l'original `channelId` en tant qu'objet de niveau supérieur. La réponse du jeton Agent SDK ne contient pas `channelId` ; votre backend fait écho au canal Widget actuel. Si votre point de terminaison encapsule les réponses dans `data`, déballez-le avant de revenir de tokenProvider.
+
+[Intégration en secondes complètes](/fr/sdk/agent-sdk/java/seconds-trading) · [Guide de l'environnement des fonds](/fr/sdk/agent-sdk/java/environments)

@@ -1,88 +1,104 @@
 ---
 title: "6MM Agent SDK"
-headline: "Java 및 백엔드 통합PHP 6MM Agent SDK"
-description: "Java에서 6MM Agent SDK를 사용하는 방법을 배우고, 백엔드 서비스를 PHP하여 서명된 요청을 보내고, 사용자를 묶고, 자산을 이전하며, 항목 URL 생성, webhooks검증을 할 수 있습니다."
+headline: "6MM Agent SDK for Java 및 PHP 백엔드 통합"
+description: "6MM Agent SDK에서 Java 및 PHP 백엔드 서비스를 사용하여 서명된 요청을 보내고, 사용자를 바인딩하고, 자산을 전송하고, 항목 URL 을 생성하고, webhooks을 확인하는 방법을 알아보세요."
 slug: sdk/agent-sdk/overview
 canonical-url: https://docs.6mm.com/ko/sdk/agent-sdk/overview
 ---
 
-6MM Agent SDK은 서명 및 요청 처리를 처음부터 구현하지 않고 특권 에이전트 APIs을 호출해야 하는 파트너 백엔드 서비스입니다. 이 통합은 파트너 API 시크릿을 사용하기 때문에 브라우저, 모바일, 공개 데스크톱 코드에서 실행되어서는 안 됩니다.
+6MM Agent SDK는 서명 및 요청 처리를 처음부터 구현하지 않고 권한 있는 에이전트 APIs를 호출해야 하는 파트너 백엔드 서비스용입니다. 통합에서는 파트너 API 보안 비밀을 사용하므로 브라우저, 모바일 또는 공개 데스크톱 코드에서 실행하면 안 됩니다.
 
 <span id="when-to-use-the-agent-sdk" data-sixmm-canonical-anchor="when-to-use-the-agent-sdk" aria-hidden="true"></span>
 
-## 언제 Agent SDK를 사용해야 할까요
+## Agent SDK를 사용하는 경우
 
-백엔드에서 파트너 사용자를 바인딩하거나, 승인된 워크플로우로 자산을 이동하거나, 거래 기록을 조회하거나, 내장된 거래 입력 URL 을 만들거나, webhook 알림을 검증해야 할 때 Agent SDK을 사용하세요. 다음 기능을 사용하세요 [Trading Widget SDK](/ko/sdk/trading-widget/overview) 파트너 프론트엔드가 거래 인터페이스를 표시해야 할 때는 별도로 처리해야 합니다.
+백엔드가 파트너 사용자를 연결하고, 승인된 워크플로를 통해 자산을 이동하고, 거래 기록을 쿼리하고, 내장된 거래 항목 URL 을 생성하거나, webhook 알림을 확인해야 하는 경우 Agent SDK를 사용하세요. 사용 [Trading Widget SDK](/ko/sdk/trading-widget/overview) 파트너 프런트엔드가 거래 인터페이스를 표시해야 하는 경우 별도로.
 
 <span id="capabilities" data-sixmm-canonical-anchor="capabilities" aria-hidden="true"></span>
 
 ## 기능
 
-| 시나리오 | Java SDK | PHP SDK |
+| 대본 | Java SDK | PHP SDK |
 | --- | --- | --- |
-| 사용자 결속 | 지원 | 지원 |
-| 고정 금액 이체 | 지원 | 지원 |
-| 전부 전부 전해 | 지원 | 지원 |
-| 역전송 | 지원 | 지원 |
-| 쿼리 순서 | 지원 | 지원 |
-| 진입 URL | 지원 | 지원 |
-| Webhook 검증 | 지원 | 지원 |
+| 사용자 바인딩 | 지원됨 | 지원됨 |
+| 정액이체 | 지원됨 | 지원됨 |
+| 모두 전송 | 지원됨 | 지원됨 |
+| 역방향 전송 | 지원됨 | 지원됨 |
+| 이전 주문 쿼리 | 지원됨 | 지원됨 |
+| 항목 만들기 URL | 지원됨 | 지원됨 |
+| Webhook 확인 | 지원됨 | 지원됨 |
 
 <span id="common-configuration" data-sixmm-canonical-anchor="common-configuration" aria-hidden="true"></span>
 
 ## 공통 구성
 
-| 키 | 예시 | 설명 |
+| 열쇠 | 예 | 설명 |
 | --- | --- | --- |
-| baseUrl | `https://agent-api.6mm.com` | 6MM 에이전트는 트레일링 슬래시 없이 서비스 URL API. |
-| agentCode | AGENT001 | 파트너 요원 코드. |
-| apiSecret | your-api-secret | API 서명 비밀은 백엔드에만 저장됩니다. |
-| defaultCurrency | USDT | 송금 및 계좌 APIs기본 통화 |
-| webhookUrl | https://partner.example.com/6mm/webhook | 6MM webhook 알림을 위한 파트너 엔드포인트. |
+| baseUrl | `https://agent-api.6mm.com` | 6MM 에이전트 API 서비스 URL 뒤에 슬래시가 없습니다. |
+| agentCode | AGENT001 | 파트너 에이전트 코드. |
+| apiSecret | 귀하의 API 비밀 | API 서명 비밀은 백엔드에만 저장됩니다. |
+| defaultCurrency | USDT | 이체 및 계정의 기본 통화 APIs. |
+| webhookUrl | https://partner.example.com/6mm/webhook | 6MM webhook 알림에 대한 파트너 엔드포인트입니다. |
 
 <span id="typical-integration-flow" data-sixmm-canonical-anchor="typical-integration-flow" aria-hidden="true"></span>
 
-## 일반적인 적분 흐름
+## 일반적인 통합 흐름
 
-1. 파트너 프론트엔드는 파트너의 자체 계정 시스템을 통해 사용자를 인증합니다.
-2. 파트너 백엔드는 사용자를 안정적인 파트너 측 식별자로 매핑합니다.
-3. 백엔드는 `agentCode`와 보호된 API 비밀로 된 Agent SDK을 호출합니다.
-4. SDK 가 서명하고 에이전트에게 요청 API 보냅니다.
-5. 백엔드는 반환된 비즈니스 식별자와 프로세스를 나중에 멮등 webhooks 저장합니다.
-6. 프론트엔드는 필요한 단기간의 결과나 진입 자격증만 받습니다.
+1. 파트너 프런트엔드는 파트너의 자체 계정 시스템을 통해 사용자를 인증합니다.
+2. 파트너 백엔드는 사용자를 안정적인 파트너 측 식별자에 매핑합니다.
+3. 백엔드는 `agentCode` 및 보호된 API 보안 비밀을 사용하여 Agent SDK을 호출합니다.
+4. SDK는 에이전트 API 요청에 서명하고 보냅니다.
+5. 백엔드는 반환된 비즈니스 식별자를 저장하고 나중에 webhooks를 멱등적으로 처리합니다.
+6. 프런트엔드는 필요한 단기 결과 또는 항목 자격 증명만 받습니다.
 
 <span id="choose-an-sdk" data-sixmm-canonical-anchor="choose-an-sdk" aria-hidden="true"></span>
 
-## SDK를 선택하세요
+## SDK을 선택하세요.
 
-| 백엔드 스택 | 여기서 시작해 |
+| 백엔드 스택 | 여기서 시작하세요 |
 | --- | --- |
-| Java | [Java SDK 개요](/ko/sdk/agent-sdk/java/overview) 그리고 [Java 퀵 스타트](/ko/sdk/agent-sdk/java/quick-start) |
-| PHP | [PHP SDK 개요](/ko/sdk/agent-sdk/php/overview) 그리고 [PHP 퀵 스타트](/ko/sdk/agent-sdk/php/quick-start) |
+| Java | [Java SDK 개요](/ko/sdk/agent-sdk/java/overview) 그리고 [Java 빠른 시작](/ko/sdk/agent-sdk/java/quick-start) |
+| PHP | [PHP SDK 개요](/ko/sdk/agent-sdk/php/overview) 그리고 [PHP 빠른 시작](/ko/sdk/agent-sdk/php/quick-start) |
 
 <span id="production-checklist" data-sixmm-canonical-anchor="production-checklist" aria-hidden="true"></span>
 
 ## 생산 체크리스트
 
-- 소스 코드가 아닌 백엔드 시크릿 매니저에서 `apiSecret` 로드합니다.
-- 개발, 스테이징, 제작 자격을 분리하세요.
-- 안정적인 파트너 사용자 매핑과 고유 비즈니스 주문 식별자를 사용합니다.
-- 시간 초과 요청 상태를 확인할 때 원본 식별자를 보존합니다.
-- webhook 서명 검증 및 처리된 이벤트 ID를 저장합니다.
-- 로그에서 비밀 및 서명을 편집하면서 요청을 지원용 ID를 유지함.
+- 소스 코드가 아닌 백엔드 Secret Manager에서 `apiSecret`를 로드합니다.
+- 개발, 스테이징, 프로덕션 자격 증명을 별도로 유지하세요.
+- 안정적인 파트너 사용자 매핑과 고유한 비즈니스 주문 식별자를 사용하세요.
+- 시간 초과된 요청의 상태를 확인할 때 원래 식별자를 유지하세요.
+- webhook 서명을 확인하고 처리된 이벤트 ID를 저장합니다.
+- 지원 요청 ID를 유지하면서 로그에서 비밀과 서명을 수정하세요.
 
 <span id="next-steps" data-sixmm-canonical-anchor="next-steps" aria-hidden="true"></span>
 
 ## 다음 단계
 
 <CardGroup cols={3}>
-<Card title="Java 퀵 스타트" icon="fa-brands fa-java" href="/ko/sdk/agent-sdk/java/quick-start">
-Java 백엔드에서 Agent SDK를 설치하고 초기화하세요.
+<Card title="Java 빠른 시작" icon="fa-brands fa-java" href="/ko/sdk/agent-sdk/java/quick-start">
+Java 백엔드에 Agent SDK를 설치하고 초기화합니다.
 </Card>
-<Card title="PHP 퀵 스타트" icon="fa-brands fa-php" href="/ko/sdk/agent-sdk/php/quick-start">
-PHP 백엔드에서 Agent SDK를 설치하고 초기화하세요.
+<Card title="PHP 빠른 시작" icon="fa-brands fa-php" href="/ko/sdk/agent-sdk/php/quick-start">
+PHP 백엔드에 Agent SDK를 설치하고 초기화합니다.
 </Card>
-<Card title="Webhooks 및 등등성" icon="fa-duotone fa-webhook" href="/ko/sdk/security/webhooks-idempotency">
-콜백 확인을 하고 중복된 비즈니스 처리를 방지하세요.
+<Card title="Webhooks & 멱등성" icon="fa-duotone fa-webhook" href="/ko/sdk/security/webhooks-idempotency">
+콜백을 확인하고 중복 업무 처리를 방지합니다.
 </Card>
 </CardGroup>
+
+<span id="java-sdk-v030-capabilities" data-sixmm-canonical-anchor="java-sdk-v030-capabilities" aria-hidden="true"></span>
+
+## Java SDK v0.3.0 기능
+
+Java SDK에는 이제 자금 지갑, 명시적 자금 환경, 6개의 영구 데이터 쿼리 및 법정화폐 기준 금리가 포함됩니다. PHP 기능은 파트너가 제공한 패키지와 비교하여 확인해야 합니다. Java 추가는 PHP 메서드 일치를 의미하지 않습니다.
+
+| 비즈니스 워크플로 | Java v0.3.0 가이드 |
+| --- | --- |
+| 바인딩 및 계약/자금 자산 | [사용자 및 자산](/ko/sdk/agent-sdk/java/users-assets) |
+| 계약 이전 및 이전 주문 문의 | [계약 이전](/ko/sdk/agent-sdk/java/contract-transfers) |
+| 자금 이체 및 전용 복구 쿼리 | [펀딩 지갑](/ko/sdk/agent-sdk/java/funding-wallet) |
+| 현재/이력 주문, 채우기, 위치 및 원장 | [지속적인 쿼리](/ko/sdk/agent-sdk/java/perpetual-queries) |
+| 초 거래 리디렉션 및 삽입 | [초 거래](/ko/sdk/agent-sdk/java/seconds-trading) |
+| 생산 및 모의 자금 | [환경가이드](/ko/sdk/agent-sdk/java/environments) |
+| 기존 Java 통합 업데이트 | [v0.3.0으로 업그레이드](/ko/sdk/agent-sdk/java/upgrade) |

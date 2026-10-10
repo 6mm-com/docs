@@ -1,18 +1,18 @@
 ---
 title: "6MM Agent SDK"
-headline: "6MM Agent SDK Java ve PHP Backend Entegrasyonu"
-description: "Java ve PHP backend hizmetlerinde 6MM Agent SDK nasıl kullanılacağını öğrenin; imzalı talepler göndermek, kullanıcıları bağlamak, varlıkları aktarmak, giriş URL'leri oluşturmak ve webhooksdoğrulamak için nasıl kullanılacağını öğrenin."
+headline: "6MM Agent SDK Java ve PHP Arka Uç Entegrasyonu için"
+description: "İmzalı istekler göndermek, kullanıcıları bağlamak, varlıkları aktarmak, giriş URL'leri oluşturmak ve webhooks doğrulamak için Java ve PHP arka uç hizmetlerinde 6MM Agent SDK'in nasıl kullanılacağını öğrenin."
 slug: sdk/agent-sdk/overview
 canonical-url: https://docs.6mm.com/tr/sdk/agent-sdk/overview
 ---
 
-6MM Agent SDK, ayrıcalıklı Agent APIs'yi çağırmak zorunda olan ortak arka uç servisleri içindir; ancak sıfırdan imzalama ve talep işleme uygulamadan yapılır. Entegrasyon gizli bir partner API kullandığı için tarayıcı, mobil veya genel masaüstü kodunda çalışmamalıdır.
+6MM Agent SDK, imzalamayı ve sıfırdan istek işlemeyi uygulamadan ayrıcalıklı Aracıyı APIs araması gereken iş ortağı arka uç hizmetleri içindir. Entegrasyon bir iş ortağının API sırrını kullandığından tarayıcı, mobil veya genel masaüstü kodunda çalışmamalıdır.
 
 <span id="when-to-use-the-agent-sdk" data-sixmm-canonical-anchor="when-to-use-the-agent-sdk" aria-hidden="true"></span>
 
-## Ne zaman kullanılmalı Agent SDK
+## Agent SDK ne zaman kullanılmalı?
 
-Arka uçunuzda bir ortak kullanıcıyı bağlamak, varlıkları onaylı bir iş akışı üzerinden geçirmek, işlem kayıtlarını sorgulamak, gömülü bir işlem girişi oluşturmak URL veya bildirimleri doğrulamak webhook gerektiğinde bir Agent SDK kullanın. Kullan [Trading Widget SDK](/tr/sdk/trading-widget/overview) Ortak ön tarafın işlem arayüzünü göstermesi gerektiğinde ayrı ayrı bir şey var.
+Arka ucunuzun bir iş ortağı kullanıcısını bağlaması, varlıkları onaylanmış bir iş akışı üzerinden taşıması, alım satım kayıtlarını sorgulaması, yerleşik bir alım satım girişi oluşturması URL veya webhook bildirimlerini doğrulaması gerektiğinde bir Agent SDK kullanın. Kullan [Trading Widget SDK](/tr/sdk/trading-widget/overview) iş ortağı ön ucunun ticaret arayüzünü görüntülemesi gerektiğinde ayrı olarak.
 
 <span id="capabilities" data-sixmm-canonical-anchor="capabilities" aria-hidden="true"></span>
 
@@ -21,55 +21,55 @@ Arka uçunuzda bir ortak kullanıcıyı bağlamak, varlıkları onaylı bir iş 
 | Senaryo | Java SDK | PHP SDK |
 | --- | --- | --- |
 | Kullanıcıyı bağla | Destekleniyor | Destekleniyor |
-| Sabit miktar transferi | Destekleniyor | Destekleniyor |
-| Tamamını transfer et | Destekleniyor | Destekleniyor |
+| Sabit tutar transferi | Destekleniyor | Destekleniyor |
+| Hepsini aktar | Destekleniyor | Destekleniyor |
 | Ters aktarım | Destekleniyor | Destekleniyor |
-| Sorgulama emirleri | Destekleniyor | Destekleniyor |
-| Giriş URL oluşturun | Destekleniyor | Destekleniyor |
+| Transfer emirlerini sorgulama | Destekleniyor | Destekleniyor |
+| Giriş oluştur URL | Destekleniyor | Destekleniyor |
 | Webhook doğrulama | Destekleniyor | Destekleniyor |
 
 <span id="common-configuration" data-sixmm-canonical-anchor="common-configuration" aria-hidden="true"></span>
 
-## Yaygın yapılandırma
+## Ortak yapılandırma
 
 | Anahtar | Örnek | Tanım |
 | --- | --- | --- |
-| baseUrl | `https://agent-api.6mm.com` | 6MM Agent API servis URL geride slash olmadan kullanılır. |
-| agentCode | AGENT001 | Ortak temsilci kodu. |
-| apiSecret | Senin-sırrının-sırrın | API imza sırrı sadece arka uçta saklanıyor. |
+| baseUrl | `https://agent-api.6mm.com` | 6MM Aracı API hizmeti URL sonunda eğik çizgi olmadan. |
+| agentCode | AGENT001 | İş ortağı temsilcisi kodu. |
+| apiSecret | API-sırrınız | API imzalama sırrı yalnızca arka uçta depolanır. |
 | defaultCurrency | USDT | Transfer ve hesap için varsayılan para birimi APIs. |
-| webhookUrl | https://partner.example.com/6mm/webhook | 6MM webhook bildirimleri için partner uç noktası. |
+| webhookUrl | https://partner.example.com/6mm/webhook | 6MM webhook bildirimleri için iş ortağı uç noktası. |
 
 <span id="typical-integration-flow" data-sixmm-canonical-anchor="typical-integration-flow" aria-hidden="true"></span>
 
 ## Tipik entegrasyon akışı
 
-1. Ortak ön sendi, partnerin kendi hesap sistemi üzerinden kullanıcıyı doğrular.
-2. Partner backend, kullanıcıyı kararlı bir partner tarafı tanımlayıcıya eşlerler.
-3. Arka uç `agentCode` ile Agent SDK ve korunan API sırrını çağırır.
-4. SDK imzalar ve Ajana API talebini gönderir.
-5. Arka uç, iade edilen iş tanımlayıcısını saklar ve daha sonra webhooks aynı şekilde işlem yapar.
-6. Ön taraf yalnızca ihtiyaç duyduğu kısa ömürlü sonuç veya giriş kimliğini alır.
+1. İş ortağı ön ucu, kullanıcının kimliğini iş ortağının kendi hesap sistemi aracılığıyla doğrular.
+2. İş ortağı arka ucu, kullanıcıyı kararlı bir iş ortağı tarafı tanımlayıcıyla eşleştirir.
+3. Arka uç, `agentCode` ve korumalı API sırrıyla Agent SDK'i çağırır.
+4. SDK, Temsilcinin API isteğini imzalar ve gönderir.
+5. Arka uç, döndürülen iş tanımlayıcıyı saklar ve daha sonra webhooks işlemleri bağımsız olarak gerçekleştirir.
+6. Ön uç yalnızca kısa ömürlü sonucu veya ihtiyaç duyduğu giriş kimlik bilgilerini alır.
 
 <span id="choose-an-sdk" data-sixmm-canonical-anchor="choose-an-sdk" aria-hidden="true"></span>
 
 ## Bir SDK seçin
 
-| Backend yığını | Buradan başlayın |
+| Arka uç yığını | Buradan başlayın |
 | --- | --- |
-| Java | [Java SDK Genel Bakış](/tr/sdk/agent-sdk/java/overview) ve [Java Hızlı Başlangıç](/tr/sdk/agent-sdk/java/quick-start) |
-| PHP | [PHP SDK Genel Bakış](/tr/sdk/agent-sdk/php/overview) ve [PHP Hızlı Başlangıç](/tr/sdk/agent-sdk/php/quick-start) |
+| Java | [Java SDK Genel Bakış](/tr/sdk/agent-sdk/java/overview) Ve [Java Hızlı Başlangıç](/tr/sdk/agent-sdk/java/quick-start) |
+| PHP | [PHP SDK Genel Bakış](/tr/sdk/agent-sdk/php/overview) Ve [PHP Hızlı Başlangıç](/tr/sdk/agent-sdk/php/quick-start) |
 
 <span id="production-checklist" data-sixmm-canonical-anchor="production-checklist" aria-hidden="true"></span>
 
 ## Üretim kontrol listesi
 
-- `apiSecret` bir arka uç gizli yöneticisinden yüklenir, kaynak kodundan değil.
-- Geliştirme, sahneleme ve üretim sertifikalarını ayrı tutmak.
-- Kararlı bir ortak kullanıcı eşlemesi ve benzersiz iş siparişi tanımlayıcıları kullanın.
-- Zamanlama talebinin durumunu kontrol ederken orijinal tanımlayıcıyı koruyun.
-- webhook imzalarını doğrulamak ve işlenen olay kimliklerini saklayın.
-- Destek için istek kimliklerini koruyarak loglardan sırları ve imzaları mansürle geçirmek.
+- Kaynak kodundan değil, arka uç gizli yöneticisinden `apiSecret` dosyasını yükleyin.
+- Geliştirme, aşamalandırma ve üretim kimlik bilgilerini ayrı tutun.
+- İstikrarlı bir iş ortağı kullanıcı eşlemesi ve benzersiz iş emri tanımlayıcıları kullanın.
+- Zaman aşımına uğramış bir isteğin durumunu kontrol ederken orijinal tanımlayıcıyı koruyun.
+- webhook imzalarını doğrulayın ve işlenen olay kimliklerini saklayın.
+- Destek için istek kimliklerini korurken gizli bilgileri ve imzaları günlüklerden çıkarın.
 
 <span id="next-steps" data-sixmm-canonical-anchor="next-steps" aria-hidden="true"></span>
 
@@ -77,12 +77,28 @@ Arka uçunuzda bir ortak kullanıcıyı bağlamak, varlıkları onaylı bir iş 
 
 <CardGroup cols={3}>
 <Card title="Java Hızlı Başlangıç" icon="fa-brands fa-java" href="/tr/sdk/agent-sdk/java/quick-start">
-Agent SDK Java arka uçunda kurup başlatın.
+Agent SDK'i bir Java arka ucuna kurun ve başlatın.
 </Card>
 <Card title="PHP Hızlı Başlangıç" icon="fa-brands fa-php" href="/tr/sdk/agent-sdk/php/quick-start">
-Agent SDK PHP arka uçunda kurup başlatın.
+Agent SDK'i bir PHP arka ucuna kurun ve başlatın.
 </Card>
-<Card title="Webhooks ve İdempotensi" icon="fa-duotone fa-webhook" href="/tr/sdk/security/webhooks-idempotency">
-Geri dönüşleri doğrulayın ve iş işlemlerinin tekrarlanmasını önleyin.
+<Card title="Webhooks ve İdempotans" icon="fa-duotone fa-webhook" href="/tr/sdk/security/webhooks-idempotency">
+Geri aramaları doğrulayın ve mükerrer iş işlemlerini önleyin.
 </Card>
 </CardGroup>
+
+<span id="java-sdk-v030-capabilities" data-sixmm-canonical-anchor="java-sdk-v030-capabilities" aria-hidden="true"></span>
+
+## Java SDK v0.3.0 yetenekleri
+
+Java SDK artık Finansman cüzdanlarını, açık fon ortamlarını, altı kalıcı veri sorgusunu ve fiat referans oranlarını içeriyor. PHP yetenekleri iş ortağı tarafından sağlanan pakete göre kontrol edilmelidir; Java eklemeleri, PHP yöntemlerinin eşleştiği anlamına gelmez.
+
+| İş iş akışı | Java v0.3.0 kılavuzu |
+| --- | --- |
+| Bağlayıcı ve Sözleşme/Finansman varlıkları | [Kullanıcılar ve varlıklar](/tr/sdk/agent-sdk/java/users-assets) |
+| Sözleşme transferleri ve transfer emri sorguları | [Sözleşme transferleri](/tr/sdk/agent-sdk/java/contract-transfers) |
+| Finansman transferleri ve özel kurtarma sorguları | [Finansman cüzdanı](/tr/sdk/agent-sdk/java/funding-wallet) |
+| Mevcut/geçmiş siparişleri, doldurmalar, pozisyonlar ve defter | [Sürekli sorgular](/tr/sdk/agent-sdk/java/perpetual-queries) |
+| Saniye ticareti yönlendirme ve yerleştirme | [Saniye ticareti](/tr/sdk/agent-sdk/java/seconds-trading) |
+| Üretim ve simüle edilmiş fonlar | [Çevre kılavuzu](/tr/sdk/agent-sdk/java/environments) |
+| Mevcut bir Java entegrasyonunu güncelleme | [V0.3.0'a yükseltme](/tr/sdk/agent-sdk/java/upgrade) |

@@ -1,33 +1,33 @@
 ---
 title: "Instanzmethoden"
-subtitle: "Kontrolliere eine erstellte Widget-Instanz nach TradingWidget.create()."
+subtitle: "Steuern Sie eine erstellte Widget-Instanz nach TradingWidget.create()."
 slug: sdk/trading-widget/instance-methods
 canonical-url: https://docs.6mm.com/de/sdk/trading-widget/instance-methods
 ---
 
 <span id="method-summary" data-sixmm-canonical-anchor="method-summary" aria-hidden="true"></span>
 
-## Methodenzusammenfassung
+## Zusammenfassung der Methode
 
-| Methode | Zweck |
+| Verfahren | Zweck |
 | --- | --- |
-| destroy() | Entferne das iframe und lasse die Event-Listener frei. |
-| getState() | Lesen Sie den aktuellen Lebenszykluszustand SDK . |
-| whenReady() | Warte, bis der iframe die Initialisierung abgeschlossen hat. |
-| setSymbol(Symbol) | Tausche das Handelspaar innerhalb des iframes. |
-| setTheme(Thema) | Aktualisiere den iframe-Theme-Parameter. |
-| setLocale(Ort) | Wechsel die iframe-Sprache. |
-| setSize(Breite, Höhe) | Aktualisiere die iframe-Maße. |
-| Reload() | Lade den aktuellen iframe neu. |
-| refreshAuth(Grund) | Löse den Widget-Auth-Refresh-Flow aus. |
-| setTokenProvider(Anbieter) | Ersetzen Sie den Anbieter, der im Partner-Token-Modus verwendet wird. |
-| on(Event, Handler) | Abonnieren Sie Laufzeitereignisse und erhalten Sie eine Abmeldungsfunktion. |
+| zerstören() | Entfernen Sie den Iframe und geben Sie Ereignis-Listener frei. |
+| getState() | Lesen Sie den aktuellen Lebenszyklusstatus SDK. |
+| whenReady() | Warten Sie, bis der Iframe die Initialisierung abgeschlossen hat. |
+| setSymbol(Symbol) | Tauschen Sie das Handelspaar innerhalb des Iframes. |
+| setTheme(Thema) | Aktualisieren Sie den Iframe-Designparameter. |
+| setLocale(Gebietsschema) | Wechseln Sie die Iframe-Sprache. |
+| setSize(Breite, Höhe) | Iframe-Abmessungen aktualisieren. |
+| neu laden() | Laden Sie den aktuellen Iframe neu. |
+| refreshAuth(Grund) | Lösen Sie den Aktualisierungsfluss für die Widget-Authentifizierung aus. |
+| setTokenProvider(Anbieter) | Ersetzen Sie den verwendeten Anbieter durch den Partner-Token-Modus. |
+| on(Ereignis, Handler) | Abonnieren Sie Laufzeitereignisse und erhalten Sie eine Abmeldefunktion. |
 
-<span data-sixmm-canonical-anchor="destroy" aria-hidden="true"></span>
+<span id="destroy" data-sixmm-canonical-anchor="destroy" aria-hidden="true"></span>
 
-## destroy()
+## zerstören()
 
-Entferne das iframe, lösche die Hörer und emittiere einmal deaktiviert für die aktuelle Instanz.
+Entfernen Sie den Iframe, löschen Sie die Listener und geben Sie die Funktion „zerstört“ einmal für die aktuelle Instanz aus.
 
 ```js
 widget.destroy()
@@ -37,19 +37,19 @@ widget.destroy()
 
 ## getState()
 
-Lesen Sie den aktuellen Lebenszykluszustand der Widget-Instanz.
+Lesen Sie den aktuellen Lebenszyklusstatus der Widget-Instanz.
 
 ```js
 const state = widget.getState()
 ```
 
-Rückgabewerte umfassen Laden, Authentifizierung, Bereitschaft, Fehler und Zerstörung.
+Zu den Rückgabewerten gehören „Laden“, „Authentifizierung“, „Bereit“, „Fehler“ und „Zerstört“.
 
 <span data-sixmm-canonical-anchor="whenready" aria-hidden="true"></span>
 
 ## whenReady()
 
-Warte, bis der iFrame die Initialisierung abgeschlossen hat, bevor du abhängige UI-Logik ausführst.
+Warten Sie, bis der Iframe die Initialisierung abgeschlossen hat, bevor Sie die abhängige UI-Logik ausführen.
 
 ```js
 await widget.whenReady()
@@ -59,7 +59,7 @@ await widget.whenReady()
 
 ## setSymbol(Symbol)
 
-Tausche das Handelspaar innerhalb des iframes. Wenn der iframe noch initialisiert, stellt der SDK den Befehl in die Warteschlange und sendet ihn nach Ready.
+Tauschen Sie das Handelspaar innerhalb des Iframes. Wenn der Iframe noch initialisiert wird, stellt SDK den Befehl in die Warteschlange und sendet ihn nach der Fertigstellung.
 
 ```js
 widget.setSymbol('ETHUSDT')
@@ -69,7 +69,7 @@ widget.setSymbol('ETHUSDT')
 
 ## setTheme(Thema)
 
-Aktualisieren Sie den Theme-Parameter, der vom eingebetteten Handels-iframe verwendet wird.
+Aktualisieren Sie den Theme-Parameter, der vom eingebetteten Handels-Iframe verwendet wird.
 
 ```js
 widget.setTheme('dark')
@@ -78,9 +78,9 @@ widget.setTheme('light')
 
 <span id="setlocale-locale" data-sixmm-canonical-anchor="setlocale-locale" aria-hidden="true"></span>
 
-## setLocale(Ort)
+## setLocale(Gebietsschema)
 
-Wechsel die iframe-Sprache. Unterstützte Werte sind en, en-US und zh-CN.
+Wechseln Sie die Iframe-Sprache. Unterstützte Werte sind en, en-US und zh-CN.
 
 ```js
 widget.setLocale('en')
@@ -92,17 +92,17 @@ widget.setLocale('zh-CN')
 
 ## setSize(Breite, Höhe)
 
-Aktualisieren Sie die Größe DOM iframe und informieren Sie den iframe über die neue äußere Größe. Numerische Werte werden in px umgewandelt.
+Aktualisieren Sie die Iframe-Größe DOM und benachrichtigen Sie den Iframe über die neue äußere Größe. Numerische Werte werden in px umgewandelt.
 
 ```js
 widget.setSize('100%', 720)
 ```
 
-<span data-sixmm-canonical-anchor="reload" aria-hidden="true"></span>
+<span id="reload" data-sixmm-canonical-anchor="reload" aria-hidden="true"></span>
 
-## Reload()
+## neu laden()
 
-Lade den aktuellen iFrame neu und warte, bis er erneut initialisiert.
+Laden Sie den aktuellen Iframe neu und warten Sie, bis er erneut initialisiert wird.
 
 ```js
 widget.reload()
@@ -112,7 +112,7 @@ widget.reload()
 
 ## refreshAuth(Grund)
 
-Bitten Sie den iframe, den aktuellen Authentifizierungsfluss zu aktualisieren. Der optionale Begründungswert wird für Logging und Flusskontrolle weitergeleitet.
+Bitten Sie den Iframe, den aktuellen Authentifizierungsfluss zu aktualisieren. Der optionale Grundwert wird zur Protokollierung und Flusskontrolle weitergeleitet.
 
 ```js
 widget.refreshAuth('manual')
@@ -122,7 +122,7 @@ widget.refreshAuth('manual')
 
 ## setTokenProvider(Anbieter)
 
-Ersetzen Sie die tokenProvider im Partner-Token-Modus. Der SDK ruft den Anbieter auf, wenn der iframe ein frisches Einbettungstoken anfordert.
+Ersetzen Sie das vom Partner-Token-Modus verwendete tokenProvider. Der SDK ruft den Anbieter auf, wenn der Iframe ein neues Einbettungstoken anfordert.
 
 ```js
 widget.setTokenProvider(async ({ channelId, symbol, reason }) => {
@@ -139,9 +139,9 @@ widget.setTokenProvider(async ({ channelId, symbol, reason }) => {
 
 <span id="on-event-handler" data-sixmm-canonical-anchor="on-event-handler" aria-hidden="true"></span>
 
-## on(Event, Handler)
+## on(Ereignis, Handler)
 
-Abonnieren Sie ein Runtime-Event. Die zurückgegebene Funktion entfernt den Listener.
+Abonnieren Sie ein Laufzeitereignis. Die zurückgegebene Funktion entfernt den Listener.
 
 ```js
 const off = widget.on('order_created', (event) => {
@@ -156,6 +156,29 @@ off()
 ## Verwandte Widget-Anleitungen
 
 - [Trading Widget Schnellstart](/de/sdk/trading-widget/quick-start)
-- [Optionen & Events](/de/sdk/trading-widget/options-events)
+- [Optionen und Ereignisse](/de/sdk/trading-widget/options-events)
 - [Authentifizierung](/de/sdk/trading-widget/authentication)
-- [Fehlersuche](/de/sdk/security/troubleshooting)
+- [Fehlerbehebung](/de/sdk/security/troubleshooting)
+
+<span id="additional-methods-in-the-current-v1-runtime" data-sixmm-canonical-anchor="additional-methods-in-the-current-v1-runtime" aria-hidden="true"></span>
+
+## Zusätzliche Methoden in der aktuellen v1-Laufzeit
+
+| Verfahren | Zweck |
+| --- | --- |
+| `whenRendered()` | Warten Sie auf die gerenderte Benachrichtigung des Iframes. Dies ist von „ready“ zu unterscheiden. |
+| `setPage(page)` | Fordern Sie in der aktuellen Instanz eine unterstützte Produktseite an. Es ändert nichts an der Fondsumgebung. |
+| `prepareForRecreate()` | Bitten Sie einen fertigen Iframe, den Austausch vorzubereiten. gibt ein Versprechen zurück und kann es ablehnen, wenn es nicht verfügbar, ausgelastet oder abgelaufen ist. |
+| `cancelRecreate()` | Brechen Sie einen ausstehenden/vorbereiteten Ersatzfluss ab. |
+| `TradingWidget.validateOptions(options)` | Überprüfen Sie die Initialisierungsoptionen, bevor Sie eine Instanz erstellen. |
+
+Bei einer Änderung des Benutzers oder der realen/Demo-Umgebung zerstören Sie die alte Instanz und erstellen Sie eine neue mit der Zielauthentifizierung und dem Zielmodus. Verwenden Sie `setPage` nicht als Umgebungsschalter. Überprüfen Sie die Fähigkeiten, bevor Sie optionale Methoden verwenden.
+
+```js
+if (TradingWidget.capabilities.methods.includes('whenRendered')) {
+  await widget.whenRendered();
+}
+if (TradingWidget.capabilities.pages.includes('up-down')) {
+  widget.setPage('up-down');
+}
+```

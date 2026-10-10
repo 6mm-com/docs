@@ -1,0 +1,165 @@
+---
+title: "ファンディングウォレット"
+subtitle: "ファンディングウォレット: Agent Java SDK v0.3.0 の統合、例、パラメーター、および応答セマンティクス。"
+slug: sdk/agent-sdk/java/funding-wallet
+canonical-url: https://docs.6mm.com/ja/sdk/agent-sdk/java/funding-wallet
+---
+
+このガイドは、**Agent Java SDK `v0.3.0`**、Java 8 以降、およびタグ付けされたパブリック コントラクトを対象としています。例は `client` を初期化した後にパートナー バックエンドで実行されます。 [クイックスタート](/ja/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## 前提条件の例
+
+Java スニペットはこれらのインポートを共有します。クイック スタートを使用して `client` を初期化し、保存されたバインディングから `platformUserId` を取得します。ユーザー/オーダー ID の例は、独自の永続化された値に置き換える必要があります。
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span id="wallet-queries-and-transfers" data-sixmm-canonical-anchor="wallet-queries-and-transfers" aria-hidden="true"></span>
+
+## ウォレットのクエリと転送
+
+<span id="distinguish-the-three-wallets" data-sixmm-canonical-anchor="distinguish-the-three-wallets" aria-hidden="true"></span>
+
+### 3つの財布を区別する
+
+| 財布 | バランスソース | 使用 |
+| --- | --- | --- |
+| 販売者自身のユーザーウォレット | 加盟店独自の会計システム | ユーザーの加盟店側の利用可能残高 |
+| プラットフォームの資金調達 | `queryUserAssets`/`funding` | 秒取引資金と資金・契約の相互送金 |
+| プラットフォーム契約 | `queryUserAssets` の契約資産フィールド | 無期限契約証拠金と譲渡可能残高 |
+
+`queryAccount` 販売者ユーザーのウォレットではなく、販売者プラットフォームの証拠金口座をクエリします。このインターフェイスには `environment` パラメータがないため、シミュレートされたユーザー アセットとしてクエリを実行することはできません。
+
+シミュレートされたユーザーの 2 つのプラットフォーム ウォレットをクエリします。
+
+```java
+QueryUserAssetsResponse assets = client.queryUserAssets(
+        QueryUserAssetsRequest.of(platformUserId)
+                .withFunding()
+                .withEnvironment(ExecutionEnvironment.SIMULATED));
+```
+
+インターフェース: `POST /v1/agent/query-user-assets`。資金は `includeFunding=true` の場合にのみ要求されます。元の契約資産クエリ セマンティクスがデフォルトで使用されます。
+
+| 応答フィールド | 意味 |
+| --- | --- |
+| `walletBalance`、`availableBalance`、`frozenMargin`、`usedMargin`、`isolatedMargin` | 契約ウォレット関連金額 |
+| `funding.assetCode` | 現在USDT |
+| `funding.availableAmount`、`heldAmount`、`totalAmount` | 利用可能な資金、占有額、総額 |
+| `funding.materialized` | 資金口座が具体化されているかどうか? |
+| `environment` | このフィールドは、環境が明示的に渡されるときにエコーされます。環境を省略する古いリクエストは、このフィールドを返しません。 |
+| `isSimulatedUser` | アカウントの分類。取引環境の選択を置き換えることはできません |
+
+金額は、`float`/`double` ではなく、文字列または `BigDecimal` として処理されます。
+
+<span id="funding-transfer-directions" data-sixmm-canonical-anchor="funding-transfer-directions" aria-hidden="true"></span>
+
+### 資金移動の指示
+
+作成: `POST /v1/agent/wallet-transfer`、SDK `walletTransfer`。
+
+| `direction` | 資金の流れ | `transferAll` |
+| --- | --- | --- |
+| `PARTNER_TO_FUNDING` | 販売者 → プラットフォーム資金調達 | 定額のみ |
+| `FUNDING_TO_PARTNER` | プラットフォームの資金調達 → 販売者 | 定額のみ |
+| `FUNDING_TO_CONTRACT` | 同一環境プラットフォーム 資金調達→契約 | 固定金額または引き出し可能なすべての資金をサポート |
+| `CONTRACT_TO_FUNDING` | 同一環境プラットフォーム 契約→資金調達 | 固定金額または引き出し可能なすべての資金をサポート |
+
+現在の通貨は USDT のみをサポートしています。固定金額は、小数点以下 8 桁までの正の文字列である必要があり、科学表記法は使用できません。 `transferAll=true` の場合、`amount` を省略し、最終応答 `amount` として記録します。 「すべて」には引き出し可能な資金のみが含まれます。
+
+例: 販売者は 10 USDT をシミュレートされた資金に送金します。まずビジネスオーダーと環境を販売者システムに保存してから、リクエストを送信します。
+
+```java
+String fundingOrderNo = "SIM-FUNDING-20261010-000001";
+WalletTransferResponse transfer = client.walletTransfer(
+        WalletTransferRequest.of(fundingOrderNo, "merchant-user-001",
+                "PARTNER_TO_FUNDING", "10.00000000", false)
+                .withEnvironment(ExecutionEnvironment.SIMULATED));
+```
+
+資金 シミュレーションされた契約に転送できるすべての資金を転送します。
+
+```java
+WalletTransferResponse move = client.walletTransfer(
+        WalletTransferRequest.of("SIM-F2C-20261010-000001", "merchant-user-001",
+                "FUNDING_TO_CONTRACT", null, true)
+                .withEnvironment(ExecutionEnvironment.SIMULATED));
+```
+
+同じ操作では、元の `agentOrderNo` を引き続き使用する必要があります。操作や環境が異なれば、使用する注文番号も異なります。同一注文番号での数量、使用者、方向、環境の変更はお断りさせていただきます。資金/契約の転送は同じ環境内でのみ実行でき、シミュレートされた資金を実際の資金に転送することはできません。
+
+<span id="result-confirmation-and-unknown-result-recovery" data-sixmm-canonical-anchor="result-confirmation-and-unknown-result-recovery" aria-hidden="true"></span>
+
+### 結果の確認と不明な結果の回復
+
+資金提供応答は `status`、`SUCCESS`、`PROCESSING`、または `FAILED` で表され、`orderNo`、`direction`、`currency`、が返されます。 `amount`、`resultCode` など `code=0` は、リクエストが正常に処理され、引き続き `status` を判断する必要があることを意味します。
+
+| 結果 | 加盟店の処理 |
+| --- | --- |
+| `SUCCESS` | 実際の金額に基づいて現地会計処理を完了する |
+| `PROCESSING` | 確認のためにローカルに保管し、元の注文を確認してください |
+| HTTP タイムアウト、ネットワークエラー、結果を解析できません | 結果は不明とみなされ、元の順序が照会されます。直接失敗と判断したり、新しい注文を作成して再試行したりすることはできません。 |
+| 特定されました `FAILED` | 明らかな失敗結果に従ってローカル予約を解放します。ビジネスを再開する必要がある場合は、新しいビジネスオーダーを作成します。 |
+
+資金調達クエリは専用インターフェイス `POST /v1/agent/wallet-transfer-status` を使用します。
+
+```java
+WalletTransferResponse recovered = client.queryWalletTransfer(
+        WalletTransferQueryRequest.of(fundingOrderNo)
+                .withEnvironment(ExecutionEnvironment.SIMULATED));
+```
+
+この専用エンドポイントを使用して、元の資金調達操作を回復します。 `queryOrder` を置き換えることはできません。元の環境を保存し、リカバリ時に明示的に渡します。 `environment` が `wallet-transfer-status` から省略された場合、サーバーは、シミュレートされた注文を含む、元の注文に保存された環境を使用します。明示的に競合する環境は `102002` (`order environment mismatch`) を返します。呼び出し元が環境を省略すると、応答でも `environment` が省略されます。これは、元の注文が製造注文であることを意味するものではありません。
+
+販売者のローカル入金と引き出しは冪等です。永続的な注文と残高は開始前に予約され、結果が不明な場合の確認のために予約されます。ファンディング アクセスでは、専用のクエリを使用して最終ステータスを確認します。古い契約転送 Webhook または取り消し方法が資金調達に自動的に適用されるとは想定しないでください。
+
+<span id="existing-contract-transfer-flow" data-sixmm-canonical-anchor="existing-contract-transfer-flow" aria-hidden="true"></span>
+
+### 既存契約の移行フロー
+
+元の `transfer`、`transferAllOut`、`reverse`、`queryOrder`、`listOrders` は、元の契約転送プロセスの処理を継続します。 `queryOrder` は資金移動注文をクエリしており、`listOrders` は振替調整リストです。代わりに、次のセクションの 6 種類のクエリが永久取引注文に使用されます。
+
+元の資金調達応答では `orderStatus` が使用されます。 Funding 応答では `status` を使用します。これらを混合しないでください。元の転送 Webhook は `X-Agent-Timestamp`、`X-Agent-Nonce`、`X-Agent-Signature` を使用して検証され、元の署名テキストは `timestamp + nonce + rawBody` です。元のリクエスト本文が最初に検証され、次に逆シリアル化されて冪等になります。明示的なシミュレート環境通知には `environment=SIMULATED` が含まれますが、運用通知は古いフィールドとの互換性が残ります。金額、注文番号、ステータス、環境については、現地のビジネスオーダーで確認する必要があります。
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## ソースおよび関連ガイド
+
+- [公式 v0.3.0 ソース](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [クエリの概要とページネーション](/ja/sdk/agent-sdk/java/perpetual-queries)
+- [資金調達ウォレット](/ja/sdk/agent-sdk/java/funding-wallet)
+- [アップグレードガイド](/ja/sdk/agent-sdk/java/upgrade)
+
+<span id="funding-request-fields" data-sixmm-canonical-anchor="funding-request-fields" aria-hidden="true"></span>
+
+## 資金調達リクエストのフィールド
+
+| 分野 | 必須 | 意味 |
+| --- | --- | --- |
+| `agentOrderNo` | はい | 世界的に一意のパートナー注文番号。送信する前に永続化します。 |
+| `agentUserId / platformUserId` | 1つ | バインドされたユーザーを特定します。両方が指定されている場合は、それらが一致する必要があります。 |
+| `direction` | はい | 上記の 4 つの方向のうちの 1 つ。 |
+| `currency` | デフォルト USDT | USDT のみがサポートされています。 |
+| `transferAll` | デフォルトは false | 資金調達/契約内部送金のみが true をサポートします。 |
+| `amount` | 条件付き | 固定転送の場合は正の 10 進数文字列。 transferAll=true の場合は省略します。 |
+| `environment` | オプション | 新しい転送で省略された場合の生成。 SIMULATED はシミュレーション資金を選択します。 |
+
+<span id="funding-response-fields" data-sixmm-canonical-anchor="funding-response-fields" aria-hidden="true"></span>
+
+## 資金提供応答フィールド
+
+| 分野 | 意味 |
+| --- | --- |
+| `orderNo` | 返された操作識別子。元のパートナー注文番号と一緒に保管してください。 |
+| `status` | SUCCESS / PROCESSING / FAILED;事業の完了を決定します。 |
+| `direction / currency` | 転送方向と資産を確認しました。 |
+| `amount` | 実際の転送額を文字列として表示します。 |
+| `transferAll` | この操作で引き出し可能なすべての資金が要求されたかどうか。 |
+| `agentUserId / platformUserId` | 返されたユーザー ID。保存された順序と比較します。 |
+| `resultCode` | 操作結果の詳細。和解とサポートのために保持します。 |
+| `environment` | 呼び出し元が明示的に指定した場合にエコーされます。不在は、元の注文ステータスのクエリに対する製造の証拠にはなりません。 |

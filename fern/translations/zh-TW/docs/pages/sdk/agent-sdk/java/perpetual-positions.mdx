@@ -1,0 +1,142 @@
+---
+title: "永久頭寸"
+subtitle: "永久倉位：Agent Java SDK v0.3.0 集成、示例、參數和響應語義。"
+slug: sdk/agent-sdk/java/perpetual-positions
+canonical-url: https://docs.6mm.com/zh-TW/sdk/agent-sdk/java/perpetual-positions
+---
+
+本指南針對 **Agent Java SDK `v0.3.0`**、Java 8+ 以及標記的公共合約。初始化 `client` 後在合作伙伴後端運行示例 [快速入門](/zh-TW/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## 先決條件示例
+
+Java 片段共享這些導入。使用快速啟動初始化 `client` 並從保存的綁定中獲取 `platformUserId`。示例用戶/訂單 ID 必須替換為您自己的持久值。
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span data-sixmm-canonical-anchor="listcurrentperpetualpositions" aria-hidden="true"></span>
+
+## `listCurrentPerpetualPositions`
+
+請求模型：`CurrentPerpetualPositionsRequest`。
+
+```java
+import com.sixmm.agent.model.CurrentPerpetualPositionsRequest;
+import com.sixmm.agent.model.PerpetualResponse;
+import java.util.Collections;
+
+CurrentPerpetualPositionsRequest request = new CurrentPerpetualPositionsRequest();
+request.platformUserIds = Collections.singletonList("1188041528");
+request.limit = 100;
+request.symbol = "BTCUSDT";
+PerpetualResponse response = client.listCurrentPerpetualPositions(request);
+System.out.println(response.data.items.size());
+System.out.println(response.data.hasMore);
+System.out.println(response.data.nextCursor);
+```
+
+<span id="request-fields" data-sixmm-canonical-anchor="request-fields" aria-hidden="true"></span>
+
+### 請求字段
+
+| 場地 | Java 類型 | 必需的 | 意義 |
+| --- | --- | --- | --- |
+| `platformUserIds` | `java.util.List<String>` | 有條件的 | 1–100 個唯一的公共 ID；成交和有條件訂單所需。省略直接玩家範圍支持的查詢； []無效。 |
+| `symbol` | `String` | 不 | 可選的交易對過濾器。 |
+| `limit` | `Integer` | 不 | 默認500； 1–1000。 |
+| `cursor` | `String` | 不 | 使用返回的 nextCursor 和未更改的過濾器；當 hasMore 為 false 時停止。 |
+
+該示例讀取一頁。對於必填字段、播放器範圍、過濾器語義、限制、光標和有界重試，請遵循 [查詢概覽](/zh-TW/sdk/agent-sdk/java/perpetual-queries)。分頁時保持所有過濾器不變；不要將錯誤解釋為空結果。
+
+<span data-sixmm-canonical-anchor="listperpetualpositionhistory" aria-hidden="true"></span>
+
+## `listPerpetualPositionHistory`
+
+請求模型：`PerpetualPositionHistoryRequest`。
+
+```java
+import com.sixmm.agent.model.PerpetualPositionHistoryRequest;
+import com.sixmm.agent.model.PerpetualResponse;
+import java.util.Collections;
+
+PerpetualPositionHistoryRequest request = new PerpetualPositionHistoryRequest();
+request.platformUserIds = Collections.singletonList("1188041528");
+request.limit = 100;
+request.symbol = "BTCUSDT";
+request.endTime = System.currentTimeMillis();
+request.startTime = request.endTime - 3_600_000L;
+PerpetualResponse response = client.listPerpetualPositionHistory(request);
+System.out.println(response.data.items.size());
+System.out.println(response.data.hasMore);
+System.out.println(response.data.nextCursor);
+```
+
+<span id="request-fields-1" data-sixmm-canonical-anchor="request-fields-1" aria-hidden="true"></span>
+
+### 請求字段
+
+| 場地 | Java 類型 | 必需的 | 意義 |
+| --- | --- | --- | --- |
+| `platformUserIds` | `java.util.List<String>` | 有條件的 | 1–100 個唯一的公共 ID；成交和有條件訂單所需。省略直接玩家範圍支持的查詢； []無效。 |
+| `symbol` | `String` | 不 | 可選的交易對過濾器。 |
+| `positionSide` | `String` | 不 | 使用源位置端枚舉進行過濾。 |
+| `startTime` | `Long` | 不 | 包含 Unix 毫秒；使用固定的 UTC 歷史窗口。 |
+| `endTime` | `Long` | 不 | Unix 獨有的毫秒。 |
+| `limit` | `Integer` | 不 | 默認500； 1–1000。 |
+| `cursor` | `String` | 不 | 使用返回的 nextCursor 和未更改的過濾器；當 hasMore 為 false 時停止。 |
+
+該示例讀取一頁。對於必填字段、播放器範圍、過濾器語義、限制、光標和有界重試，請遵循 [查詢概覽](/zh-TW/sdk/agent-sdk/java/perpetual-queries)。分頁時保持所有過濾器不變；不要將錯誤解釋為空結果。
+
+<span id="positions-current-and-historical" data-sixmm-canonical-anchor="positions-current-and-historical" aria-hidden="true"></span>
+
+## 職位：當前和歷史
+
+| `data` 字段 | 類型 | 當前位置 | 歷史立場 | 意義 |
+| --- | --- | --- | --- | --- |
+| `positionId` | string | 供應 | 供應 | 位置ID，對應entityId |
+| `symbol` | string | 供應 | 供應 | 交易對 |
+| `positionSide` | string | 供應 | 供應 | LONG / SHORT / BOTH 等位置方向 |
+| `status` | string | 供應 | 供應 | 帶有職位數字狀態的字符串，請參閱查詢概述 |
+| `leverage` | integer | 供應 | 供應 | 多重槓桿 |
+| `marginMode` | string | 供應 | 供應 | 數字枚舉字符串“1”表示全位置，“2”表示隔離位置 |
+| `quantity` | string | 供應 | 無法使用 | 當前持倉數量 |
+| `entryPrice` | string | 供應 | 供應 | 持倉平均開倉價 |
+| `margin` | string | 供應 | 無法使用 | 當前持倉保證金金額，並非用戶整個合約錢包餘額 |
+| `maxQuantity` | string | 無法使用 | 供應 | 本次歷史持倉記錄最大持倉數 |
+| `closeQuantity` | string | 無法使用 | 供應 | 歷史持倉生命週期內累計平倉數量 |
+| `closePrice` | string | 無法使用 | 供應 | 存儲平均收盤價 |
+| `pnl` | string | 無法使用 | 供應 | 歷史持倉損益；不要將其與交易 realizedPnl 結合起來簡單​​地重複和累積 |
+| `roe` | string | 無法使用 | 供應 | 歷史倉位收益比例值，不乘以100；例如，`"0.043"`代表`4.3%`，`"-0.05"`代表`-5%` |
+| `fundingFeeAccum` | string | 供應 | 供應 | 累計資金費用，保留來源符號和準確性 |
+| `openedAt` | integer | 供應 | 供應 | 建倉時間，毫秒 |
+| `updatedAt` | integer | 供應 | 無法使用 | 當前位置更新時間，毫秒 |
+| `closedAt` | integer | 無法使用 | 供應 | 關閉時間，毫秒；使用該字段過濾歷史持倉時間 |
+
+歷史`roe`的計算口徑為`pnl / (entryPrice × maxQuantity / leverage)`，接口直接返回保存的比例值。顯示百分比時，使用小數運算，乘以100，然後加上`%`；分母使用歷史持倉記錄的名義保證金，而不是賬戶錢包餘額。當開倉價或最大持倉數量為0、槓桿無效等無法計算時，來源保存為0。因此，不能僅根據`roe=0`推斷盈虧為0。
+
+當前倉位沒有實時標記價格、實時浮動盈虧、實時ROE或實時強平價格。反映的是存儲的倉位狀態，無法通過更新時間和保證金字段來索取當前實時風控結果。
+
+
+<span id="example-response-envelope" data-sixmm-canonical-anchor="example-response-envelope" aria-hidden="true"></span>
+
+## 響應信封示例
+
+這是一個說明性的空白頁面，而不是已完成交易的示例。上面的資源特定字段表描述了填充的 `items[].data`。
+
+```json
+{"code":0,"message":"success","data":{"items":[],"nextCursor":"","hasMore":false}}
+```
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## 來源及相關指南
+
+- [官方v0.3.0源碼](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [查詢概覽和分頁](/zh-TW/sdk/agent-sdk/java/perpetual-queries)
+- [資金錢包](/zh-TW/sdk/agent-sdk/java/funding-wallet)
+- [升級指南](/zh-TW/sdk/agent-sdk/java/upgrade)

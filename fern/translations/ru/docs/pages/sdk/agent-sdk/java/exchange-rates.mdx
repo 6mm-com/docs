@@ -1,0 +1,87 @@
+---
+title: "Базовые курсы Fiat"
+subtitle: "Базовые курсы Fiat: Интеграция с Agent Java SDK v0.3.0, примеры, параметры и семантика ответа."
+slug: sdk/agent-sdk/java/exchange-rates
+canonical-url: https://docs.6mm.com/ru/sdk/agent-sdk/java/exchange-rates
+---
+
+Это руководство предназначено для **Agent Java SDK `v0.3.0`**, Java 8+ и помеченного публичного контракта. Примеры выполняются в серверной части партнера после инициализации `client` в [Быстрый старт](/ru/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## Пример предварительных условий
+
+Фрагменты Java разделяют этот импорт. Инициализируйте `client` с помощью быстрого запуска и получите `platformUserId` из сохраненной привязки. Примеры идентификаторов пользователей/заказов необходимо заменить вашими собственными сохраненными значениями.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span id="fx-reference-rates" data-sixmm-canonical-anchor="fx-reference-rates" aria-hidden="true"></span>
+
+## Справочные курсы валют
+
+Оба метода FX используют обычный подписанный поток агента API. Начните с открытия
+в настоящее время поддерживаются исходные валюты:
+
+```java
+import com.sixmm.agent.model.ListSupportedFiatCurrenciesResponse;
+
+ListSupportedFiatCurrenciesResponse supported = client.listSupportedFiatCurrencies();
+System.out.println(supported.targetCurrency);     // USDT
+System.out.println(supported.sourceCurrencies);  // AUD, BRL, CNY, EUR, USD, ...
+```
+
+Запросите все поддерживаемые эталонные курсы обмена фиатных денег на USDT:
+
+```java
+import com.sixmm.agent.model.ExchangeRateItem;
+import com.sixmm.agent.model.QueryExchangeRatesResponse;
+
+QueryExchangeRatesResponse rates = client.queryExchangeRates();
+for (ExchangeRateItem item : rates.rates) {
+    System.out.println("1 " + item.sourceCurrency + " = " + item.rate + " " + item.targetCurrency);
+}
+```
+
+Запрос выбранных валют:
+
+```java
+import com.sixmm.agent.model.QueryExchangeRatesRequest;
+
+QueryExchangeRatesResponse rates = client.queryExchangeRates(
+        QueryExchangeRatesRequest.of("CNY", "EUR", "USD"));
+```
+
+Фабрика запроса обрезает коды валют и записывает их в верхний регистр и сериализует их как
+разделенное запятыми значение `sourceCurrencies`, необходимое для API. Опуская
+запрос или все действующие значения валюты запрашивает каждую поддерживаемую валюту.
+
+| Поле ответа | Тип | Описание |
+| --- | --- | --- |
+| `snapshotVersion` | string | Стабильная версия моментального снимка для аудита и сверки |
+| `provider` | string | Восходящий провайдер, в настоящее время `ECB` |
+| `sourceDate` | string | Дата наблюдения вверх по течению в формате `yyyy-MM-dd` |
+| `fetchedAt` / `expiresAt` | int64 | Временные метки Unix в миллисекундах |
+| `pricingPolicy` | string | В настоящее время `FIXED_PEG` |
+| `usdtUsdRate` | string | Сумма USD за 1 USDT, в настоящее время зафиксирована на уровне `1` |
+| `rateType` | string | В настоящее время `INDICATIVE_DAILY` |
+| `usage` | string | В настоящее время `REFERENCE_ONLY` |
+| `rateMeaning` | string | `1 sourceCurrency = rate USDT` |
+| `rates[].rate` | string | USDT сумма, соответствующая одной единице исходного фиата |
+
+Эти значения являются ориентировочными для расчета партнерского мультивалютного кошелька.
+сумма USDT отправлена ​​на адрес 6MM. Они не являются исполняемыми ценами, фиксированными котировками или
+рыночные цены USDT в реальном времени. Используйте `BigDecimal` и строки для суммы.
+расчеты; не используйте `double` или `float`.
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Источник и связанные руководства
+
+- [Официальный источник v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Обзор запроса и нумерация страниц](/ru/sdk/agent-sdk/java/perpetual-queries)
+- [Финансирование кошелька](/ru/sdk/agent-sdk/java/funding-wallet)
+- [Руководство по обновлению](/ru/sdk/agent-sdk/java/upgrade)

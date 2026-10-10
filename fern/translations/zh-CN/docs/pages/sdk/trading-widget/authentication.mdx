@@ -105,3 +105,13 @@ const widget = TradingWidget.create('#trading-widget', {
   },
 })
 ```
+
+<span data-sixmm-canonical-anchor="秒合约与环境规则" aria-hidden="true"></span>
+
+## 秒合约与环境规则
+
+秒合约页面沿用相同的 `partner-token` 认证，在 Widget 上配置 `page` 与 `tradingMode`，不增加预测专用 token。每次调用 tokenProvider 都应从合作方后端取得新的短期一次性 token。
+
+返回顶层对象 `embedToken`、Unix 秒单位的 `expireAt` 及原样的 `channelId`。Agent SDK 的 token 响应没有 `channelId`，由合作方后端带回当前 Widget 通道。如果接口以 `data` 包装，tokenProvider 返回前先解包。
+
+[秒合约完整接入](/zh-CN/sdk/agent-sdk/java/seconds-trading) · [资金环境指南](/zh-CN/sdk/agent-sdk/java/environments)

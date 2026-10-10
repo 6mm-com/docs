@@ -1,15 +1,15 @@
 ---
-title: "Trading Widget Doğrulama"
-subtitle: "Yeni gömülü ticaret SSO entegrasyonlar için partner-token kullanın."
+title: "Trading Widget Kimlik Doğrulaması"
+subtitle: "Yeni yerleşik ticaret SSO entegrasyonları için partner-token'ı kullanın."
 slug: sdk/trading-widget/authentication
 canonical-url: https://docs.6mm.com/tr/sdk/trading-widget/authentication
 ---
 
 <span id="recommended-mode-partner-token" data-sixmm-canonical-anchor="recommended-mode-partner-token" aria-hidden="true"></span>
 
-## Önerilen mod: partner-token
+## Önerilen mod: iş ortağı belirteci
 
-partner-token, URL'lerde kısa tokenlar koymaktan kaçınır ve apiSecret partner backend'de tutar.
+partner-token, URL'lere kısa belirteçler koymaktan kaçınır ve apiSecret'yi iş ortağı arka ucunda tutar.
 
 ```js
 const widget = TradingWidget.create('#trading-widget', {
@@ -38,10 +38,10 @@ const widget = TradingWidget.create('#trading-widget', {
 
 ## İlgili belgeler
 
-- [Embed Token Oluştur](/tr/sdk/agent-sdk/java/embed-token): arka uç token ihracı örneği.
-- [Trading Widget Hızlı Başlangıç](/tr/sdk/trading-widget/quick-start): başlatma akışını tamamladı.
-- [Sırlar ve İmza Alma](/tr/sdk/security/secrets-signing): ayrıcalıklı Ajan kimlik bilgilerini arka planda tutun.
-- [Sorun Giderme](/tr/sdk/security/troubleshooting): oturum, token, başlangıç ve başlatma hatalarını teşhis edin.
+- [Yerleştirme Jetonu Oluştur](/tr/sdk/agent-sdk/java/embed-token): arka uç belirteci düzenleme örneği.
+- [Trading Widget Hızlı Başlangıç](/tr/sdk/trading-widget/quick-start): başlatma akışını tamamlayın.
+- [Sırlar ve İmzalama](/tr/sdk/security/secrets-signing): ayrıcalıklı Agent kimlik bilgilerini arka uçta tutun.
+- [Sorun giderme](/tr/sdk/security/troubleshooting): oturum, belirteç, kaynak ve başlatma hatalarını teşhis edin.
 
 <span id="backend-flow" data-sixmm-canonical-anchor="backend-flow" aria-hidden="true"></span>
 
@@ -60,15 +60,15 @@ const widget = TradingWidget.create('#trading-widget', {
 
 <span id="tokenprovider-contract" data-sixmm-canonical-anchor="tokenprovider-contract" aria-hidden="true"></span>
 
-## tokenProvider sözleşmesi
+## tokenProvider sözleşme
 
-| Saha | Yönetmen | Tanım |
+| Alan | Yön | Tanım |
 | --- | --- | --- |
-| channelId | SDK -> Partner backend | Benzersiz widget oturum tanımlayıcısı. Arka uç bunu createEmbedTokenile paylaşmalıdır. |
-| sembol | SDK -> Partner backend | Mevcut talep edilen işlem sembolü. Gerekirse tokenı kapsam alanı için kullanın. |
-| Sebep | SDK -> Partner backend | Neden SDK token talep ediyor, örneğin ilk yükleme veya yenileme gibi. |
-| embedToken | Partner backend -> SDK | Agent SDK veya Ajan tarafından oluşturulan kısa ömürlü tokenAPI. |
-| expireAt | Partner backend -> SDK | Token son kullanma zaman damgası 6MMtarafından döndürüldü. |
+| channelId | SDK -> İş ortağı arka ucu | Benzersiz widget oturum tanımlayıcısı. Arka uç bunu createEmbedToken'a aktarmalıdır. |
+| sembol | SDK -> İş ortağı arka ucu | Mevcut talep edilen ticaret sembolü. Gerektiğinde belirtecin kapsamını belirlemek için bunu kullanın. |
+| sebep | SDK -> İş ortağı arka ucu | SDK neden ilk yükleme veya yenileme gibi bir belirteç istiyor? |
+| embedToken | İş ortağı arka ucu -> SDK | Agent SDK veya Temsilci API tarafından oluşturulan kısa ömürlü belirteç. |
+| expireAt | İş ortağı arka ucu -> SDK | Belirteç son kullanma tarihi zaman damgası 6MM tarafından döndürüldü. |
 
 <span id="failure-handling" data-sixmm-canonical-anchor="failure-handling" aria-hidden="true"></span>
 
@@ -76,16 +76,16 @@ const widget = TradingWidget.create('#trading-widget', {
 
 | Durum | Önerilen kullanım |
 | --- | --- |
-| Partner oturumu sona erdi | Partner uç noktasından 401'i geri gönderin ve kullanıcıya tekrar giriş yapmasını isteyin. |
-| Token oluşturma geçici olarak başarısız oldu | tokenProvider içine bir hata atıp widget'ın kimlik doğrulama hatası ortaya çıkarmasına izin verin. |
+| İş ortağı oturumu sona erdi | İş ortağı uç noktasından 401'i döndürün ve kullanıcıdan tekrar oturum açmasını isteyin. |
+| Belirteç oluşturma işlemi geçici olarak başarısız oldu | tokenProvider'da bir hata atın ve widget'ın bir kimlik doğrulama hatası göstermesine izin verin. |
 | channelId uyumsuzluğu | İsteği reddedin ve widget örneğini yeniden oluşturun. |
-| Kullanıcının işlem yapmasına izin verilmez | Ortak kontrolündeki bir hata döndürün ve gömülü token oluşturmayın. |
+| Kullanıcının ticaret yapmasına izin verilmiyor | İş ortağı tarafından kontrol edilen bir hata döndürün ve yerleştirme jetonu oluşturmayın. |
 
 <span id="compatibility-mode-agent-sso" data-sixmm-canonical-anchor="compatibility-mode-agent-sso" aria-hidden="true"></span>
 
-## Uyumluluk modu: agent-sso
+## Uyumluluk modu: ajan-sso
 
-Agent-SSO eski /agent-entry bilet akışını korur. Yeni entegrasyonlar için partner-token tercih edin.
+Agent-sso eski /agent-giriş bilet akışını korur. Yeni entegrasyonlar için partner token'ı tercih edin.
 
 ```js
 const widget = TradingWidget.create('#trading-widget', {
@@ -105,3 +105,13 @@ const widget = TradingWidget.create('#trading-widget', {
   },
 })
 ```
+
+<span id="seconds-trading-and-environment-rules" data-sixmm-canonical-anchor="seconds-trading-and-environment-rules" aria-hidden="true"></span>
+
+## Saniye ticareti ve çevre kuralları
+
+Saniyelik sayfalar için, Widget'ta yapılandırılmış `page` ve `tradingMode` ile aynı `partner-token` kimlik doğrulamasını kullanın. Ayrı bir tahmin jetonu yoktur. Her tokenProvider çağrının arka uçtan yeni bir kerelik jeton alması gerekir.
+
+Unix saniyelerinde `embedToken`, `expireAt`'yi ve orijinal `channelId`'yi üst düzey bir nesne olarak döndürün. Agent SDK belirteç yanıtı `channelId` içermiyor; arka ucunuz mevcut Widget kanalını yansıtır. Uç noktanız yanıtları `data` içinde sarıyorsa, tokenProvider'dan dönmeden önce paketi açın.
+
+[Tam saniye entegrasyonu](/tr/sdk/agent-sdk/java/seconds-trading) · [Fon ortamı kılavuzu](/tr/sdk/agent-sdk/java/environments)

@@ -158,3 +158,26 @@ off()
 - [Options & Events](/sdk/trading-widget/options-events)
 - [Authentication](/sdk/trading-widget/authentication)
 - [Troubleshooting](/sdk/security/troubleshooting)
+
+<span data-sixmm-canonical-anchor="additional-methods-in-the-current-v1-runtime" aria-hidden="true"></span>
+
+## Additional methods in the current v1 runtime
+
+| Method | Purpose |
+| --- | --- |
+| `whenRendered()` | Wait for the iframe's rendered notification; this is separate from ready. |
+| `setPage(page)` | Request a supported product page in the current instance. It does not change funds environment. |
+| `prepareForRecreate()` | Ask a ready iframe to prepare for replacement; returns a promise and can reject if unavailable, busy or timed out. |
+| `cancelRecreate()` | Cancel a pending/prepared replacement flow. |
+| `TradingWidget.validateOptions(options)` | Validate initialization options before creating an instance. |
+
+For a user or real/demo environment change, destroy the old instance and create a new one with the target authentication and mode. Do not use `setPage` as an environment switch. Check capabilities before using optional methods.
+
+```js
+if (TradingWidget.capabilities.methods.includes('whenRendered')) {
+  await widget.whenRendered();
+}
+if (TradingWidget.capabilities.pages.includes('up-down')) {
+  widget.setPage('up-down');
+}
+```

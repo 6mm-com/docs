@@ -1,59 +1,100 @@
 ---
 title: "Agent Java SDK"
-headline: "6MM Agent Java SDK 接入指南"
-subtitle: "安装 6MM Agent Java SDK，通过后端签名接口完成用户绑定、资金划转、入口凭据和 Webhook 验签。"
+subtitle: "Agent Java SDK: Agent Java SDK v0.3.0 接入、示例、参数及响应说明。"
 slug: sdk/agent-sdk/java/overview
 canonical-url: https://docs.6mm.com/zh-CN/sdk/agent-sdk/java/overview
 ---
 
-<span id="official-repository" data-sixmm-canonical-anchor="official-repository" aria-hidden="true"></span>
+本文对应 **Agent Java SDK `v0.3.0`**、Java 8+ 与该标签的公开契约。示例在合作方后端运行；先按[快速开始](/zh-CN/sdk/agent-sdk/java/quick-start)初始化 `client`。
 
-## 官方仓库
+<span data-sixmm-canonical-anchor="版本与安装" aria-hidden="true"></span>
 
-Java SDK 仓库用于查看 SDK 源码、版本说明、使用示例和更完整的接入细节：
+## 版本与安装
 
-[6mm-com/agent-java-sdk](https://github.com/6mm-com/agent-java-sdk)
-
-<span id="runtime" data-sixmm-canonical-anchor="runtime" aria-hidden="true"></span>
-
-## 运行环境
-
-| 项 | 值 |
+| 项目 | 值 |
 | --- | --- |
-| 最低 Java 版本 | Java 8+ |
-| 推荐构建工具 | Maven 3.9+ |
-| Maven group | `com.sixmm.exchange.sdk` |
-| Maven artifact | `agent` |
-| 本文档对应源码标签 | `v0.1.1` |
+| 稳定源码标签 | `v0.3.0` |
+| Java | Java 8+ |
+| Maven | Maven 3.9+ |
+| 坐标 | `com.sixmm.exchange.sdk:agent:0.3.0` |
 
-公开 GitHub 仓库用于托管源码，不是 Maven 依赖仓库。团队构建前，应先在本地安装对应标签的源码，或把 6MM 确认的构件发布到组织内部 Maven 仓库。
+GitHub 托管源码，不代表这些坐标已发布到 Maven Central。使用指定标签本地安装，或使用已核对的制品仓库。
 
-<span id="typical-backend-responsibilities" data-sixmm-canonical-anchor="typical-backend-responsibilities" aria-hidden="true"></span>
+<span data-sixmm-canonical-anchor="典型接入场景" aria-hidden="true"></span>
 
-## 典型后端职责
+## 典型接入场景
 
-- 校验 Partner 用户登录态。
-- 将 Partner 用户映射为 agentUserId。
-- 用户首次交易或划转前调用 bind。
-- 调用 createEntryUrl 生成一次性完整站点 SSO 入口。
-- 调用 createEmbedToken 支持 Trading Widget partner-token 模式。
-- 校验 Webhook 并做幂等处理。
+| 分类 | 场景 | SDK 方法 | 说明 |
+| --- | --- | --- | --- |
+| 用户绑定 | 绑定用户 | `bind` | 为代理商用户创建或获取 6MM 平台用户绑定关系 |
+| 资产查询 | 查询代理商资金 | `queryAccount` | 查询代理商保证金账户 |
+| 资产查询 | 查询用户资产 | `queryUserAssets` | 查询合约资产；`withFunding()` 可同时查询 Funding 余额 |
+| 资金划转 | 固定金额划转 | `transfer` | 支持转入平台和转出平台 |
+| 资金划转 | 一键全部划出 | `transferAllOut` | 把用户在 6MM 侧可划出的余额划回代理商平台 |
+| 资金划转 | 冲正 | `reverse` | 对已成功的划转订单发起反向处理 |
+| 资金划转 | 查询订单 | `queryOrder` | 按代理商订单号查询单笔划转订单 |
+| 资金划转 | 查询订单列表 | `listOrders` | 分页查询划转订单 |
+| 资金划转 | Webhook 验签 | `WebhookVerifier.verify` | 校验 6MM 推送的划转终态通知 |
+| Funding 钱包 | Funding 划转 | `walletTransfer` | 商户与 Funding 增减，或 Funding 与 Contract 互转 |
+| Funding 钱包 | Funding 查单 | `queryWalletTransfer` | 按原商户单号恢复 Funding 操作结果 |
+| 交易入口 | 直接跳转入口 | `createEntryUrl` | 生成一次性 SSO 跳转链接 |
+| 交易入口 | 内嵌交易 token | `createEmbedToken` | 给 Trading Widget `tokenProvider` 模式签发短期 token |
+| 合约数据 | 当前合约委托 | `listCurrentPerpetualOrders` | 查询普通或条件委托当前状态 |
+| 合约数据 | 合约委托历史 | `listPerpetualOrderHistory` | 查询普通或条件委托终态 |
+| 合约数据 | 合约成交明细 | `listPerpetualTrades` | 按显式公开玩家列表查询成交 |
+| 合约数据 | 当前合约持仓 | `listCurrentPerpetualPositions` | 查询当前持仓 |
+| 合约数据 | 合约持仓历史 | `listPerpetualPositionHistory` | 查询已结束持仓 |
+| 合约数据 | 合约账变明细 | `listPerpetualLedger` | 查询逐条合约资金账变 |
+| 法币汇率 | 查询支持法币 | `listSupportedFiatCurrencies` | 查询当前支持换算为 USDT 的法币列表 |
+| 法币汇率 | 查询参考汇率 | `queryExchangeRates` | 查询全部或指定法币兑 USDT 的日级参考比例 |
+| 服务信息 | 服务版本 | `version` | 查询 agent 服务版本信息 |
 
-<span id="security-and-operational-rules" data-sixmm-canonical-anchor="security-and-operational-rules" aria-hidden="true"></span>
 
-## 安全与运行规则
+<span data-sixmm-canonical-anchor="接入前准备" aria-hidden="true"></span>
 
-- `apiSecret` 只保存在后端密钥管理系统或受保护的环境变量中。
-- 保持服务器时间同步，因为签名请求包含时间戳。
-- 把 `agentOrderNo` 作为持久幂等键，并保证全局唯一。
-- 把 `platformUserId` 按字符串保存，并持久化它与 `agentUserId` 的对应关系。
-- 请求超时或网络结果不确定时，先查询原划转订单，再决定是否重试。
+## 接入前准备
 
-<span id="next-steps" data-sixmm-canonical-anchor="next-steps" aria-hidden="true"></span>
+请先从 6MM 获取以下配置：
 
-## 下一步
+| 配置项 | 示例 | 说明 |
+| --- | --- | --- |
+| `baseUrl` | `https://agent-api.6mm.com` | Agent API 服务地址，不带末尾 `/` |
+| `agentCode` | `AGENT001` | 代理商编码 |
+| `apiSecret` | `your-api-secret` | API 签名密钥，只能保存在后端 |
+| `defaultCurrency` | `USDT` | 默认币种，通常为 `USDT` |
+| `webhookUrl` | `https://partner.example.com/6mm/webhook` | 代理商接收 6MM 回调的地址 |
 
-- [Java 快速开始](/zh-CN/sdk/agent-sdk/java/quick-start)：安装指定源码标签并初始化 `AgentClient`。
-- [创建 Embed Token](/zh-CN/sdk/agent-sdk/java/embed-token)：为 Trading Widget 签发短期凭据。
-- [密钥与签名](/zh-CN/sdk/security/secrets-signing)：了解自动 HMAC 签名和密钥管理。
-- [Webhook 与幂等](/zh-CN/sdk/security/webhooks-idempotency)：校验回调并防止重复处理。
+生产环境建议：
+
+- `baseUrl` 使用 HTTPS。
+- `apiSecret` 存放在配置中心或密钥管理系统，不写死到代码仓库。
+- 服务器时间保持同步，建议使用 NTP。
+- 所有订单号使用代理商侧全局唯一 ID，并持久化保存。
+
+
+<span data-sixmm-canonical-anchor="sdk-自动处理的字段" aria-hidden="true"></span>
+
+## SDK 自动处理的字段
+
+调用需要签名的 Agent API 时，SDK 会自动补充：
+
+| 字段 | 来源 | 说明 |
+| --- | --- | --- |
+| `agentCode` | `AgentClientConfig.agentCode` | 代理商编码 |
+| `timestamp` | 当前 UTC 秒级时间戳 | Unix 时间戳，单位：秒 |
+| `nonce` | 安全随机生成 | 防重放随机串 |
+| `sign` | HMAC-SHA256 | 请求签名 |
+| `currency` | `defaultCurrency` | 仅在划转、全部划出、代理商账户查询中空值时自动补齐 |
+
+签名规则由 SDK 内部实现。规则是：排除 `sign`，空值不参与，按 key ASCII 升序排序，拼接为 `k=v&k2=v2`，再使用 `apiSecret` 计算 HMAC-SHA256 hex。
+
+正常接入时不要自己计算签名，也不要手动设置 `agentCode`、`timestamp`、`nonce`、`sign`。
+
+<span data-sixmm-canonical-anchor="来源与相关指南" aria-hidden="true"></span>
+
+## 来源与相关指南
+
+- [官方 v0.3.0 源码](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [合约查询与分页](/zh-CN/sdk/agent-sdk/java/perpetual-queries)
+- [Funding 钱包](/zh-CN/sdk/agent-sdk/java/funding-wallet)
+- [升级指南](/zh-CN/sdk/agent-sdk/java/upgrade)

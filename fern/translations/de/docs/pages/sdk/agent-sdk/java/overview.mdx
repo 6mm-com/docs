@@ -1,58 +1,109 @@
 ---
 title: "Agent Java SDK"
-subtitle: "Installiere die 6MM Agent Java SDK und nutze signierte Backend- API für Benutzerbindungen, Übertragungen, Zugangsdaten und Webhook-Verifikation."
+subtitle: "Agent Java SDK: Agent Java SDK v0.3.0-Integration, Beispiele, Parameter und Antwortsemantik."
 slug: sdk/agent-sdk/java/overview
 canonical-url: https://docs.6mm.com/de/sdk/agent-sdk/java/overview
 ---
 
-<span id="official-repository" data-sixmm-canonical-anchor="official-repository" aria-hidden="true"></span>
+Dieser Leitfaden richtet sich an **Agent Java SDK `v0.3.0`**, Java 8+ und den getaggten öffentlichen Auftrag. Beispiele werden nach der Initialisierung von `client` in einem Partner-Backend ausgeführt [Schnellstart](/de/sdk/agent-sdk/java/quick-start).
 
-## Offizielles Archiv
+<span id="version-and-installation" data-sixmm-canonical-anchor="version-and-installation" aria-hidden="true"></span>
 
-Das Java SDK -Repository ist die Quelle der Wahrheit für SDK Quellcode, Release Notes, Anwendungsbeispiele und Implementierungsdetails:
+## Version und Installation
 
-[6mm-com/agent-java-sdk] (https://github.com/6mm-com/agent-java-sdk)
-
-<span id="runtime" data-sixmm-canonical-anchor="runtime" aria-hidden="true"></span>
-
-## Laufzeit
-
-| Gegenstand | Wert |
+| Artikel | Wert |
 | --- | --- |
-| Minimum Java Version | Java 8+ |
-| Empfohlenes Bauwerkzeug | Maven 3.9+ |
-| Maven-Gruppe | `com.sixmm.exchange.sdk` |
-| Maven-Artefakt | `agent` |
-| Dokumentiertes Quell-Tag | `v0.1.1` |
+| Stabiles Quell-Tag | `v0.3.0` |
+| Java | Java 8+ |
+| Maven | Maven 3.9+ |
+| Koordinaten | `com.sixmm.exchange.sdk:agent:0.3.0` |
 
-Das öffentliche GitHub-Repository ist Quellcode-Hosting, kein Maven-Abhängigkeitsrepository. Baue und installiere den getaggten Quellcode lokal oder veröffentliche das genehmigte Artefakt im privaten Maven-Repository deiner Organisation, bevor du es in Team-Builds verwendest.
+GitHub-Hosts-Quelle; Dadurch sind diese Koordinaten nicht von Maven Central aus auflösbar. Verwenden Sie die markierte lokale Installation oder Ihr genehmigtes Artefakt-Repository.
 
-<span id="typical-backend-responsibilities" data-sixmm-canonical-anchor="typical-backend-responsibilities" aria-hidden="true"></span>
+<span id="what-the-sdk-covers" data-sixmm-canonical-anchor="what-the-sdk-covers" aria-hidden="true"></span>
 
-## Typische Backend-Aufgaben
+## Was der SDK abdeckt
 
-- Validiere die Partnerbenutzersitzung.
-- Den Partnerbenutzer auf agentUserIdabbilden.
-- Call Bind vor den ersten Handels- oder Transferströmen.
-- Rufen Sie createEntryUrl für einmalige Vollstandort- SSOan.
-- Ruf createEmbedToken für Trading Widget Partner-Token-Modus an.
-- Verifizieren Sie Transfer-Webhooks und verarbeiten Sie sie idempotent.
+| Kategorie | Szenario | SDK API | Beschreibung |
+| --- | --- | --- | --- |
+| Benutzerbindung | Benutzer binden | `bind` | Erstellen oder rufen Sie die Bindung zwischen einem Partnerbenutzer und einem 6MM-Plattformbenutzer ab |
+| Asset-Abfragen | Partnerkonto abfragen | `queryAccount` | Fragen Sie die Partnermarge oder das Finanzierungskonto ab |
+| Asset-Abfragen | Benutzerressourcen abfragen | `queryUserAssets` | Vertragsvermögenswerte abfragen; Verwenden Sie `withFunding()`, um Finanzierungssalden einzubeziehen |
+| Überweisungen | Festbetragsüberweisung | `transfer` | Geld in oder aus 6MM überweisen |
+| Überweisungen | Übertragen Sie alles raus | `transferAllOut` | Verschieben Sie das gesamte auszahlbare Benutzerguthaben zurück auf die Partnerplattform |
+| Überweisungen | Umgekehrte Reihenfolge | `reverse` | Stornieren Sie eine erfolgreiche Übertragung, wenn das Backend einen Kompensationsfluss unterstützt |
+| Überweisungen | Reihenfolge abfragen | `queryOrder` | Fragen Sie einen Übertragungsauftrag nach Partnerauftragsnummer ab |
+| Überweisungen | Bestellungen auflisten | `listOrders` | Durchblättern Sie Übertragungsaufträge zum Abgleich |
+| Überweisungen | Webhook Verifizierung | `WebhookVerifier.verify` | Überprüfen Sie, ob Rückrufe im endgültigen Status von 6MM übertragen werden. |
+| Funding-Wallet | Fördermitteltransfer | `walletTransfer` | Partner ↔ Finanzierung oder Finanzierung ↔ Vertrag; Bestätigen Sie den zurückgegebenen Status |
+| Funding-Wallet | Status der Finanzierungsübertragung | `queryWalletTransfer` | Stellen Sie einen Finanzierungsvorgang unter Verwendung seiner ursprünglichen Partnerbestellnummer wieder her |
+| Handelseintrag | Direkteintrag URL | `createEntryUrl` | Erstellen Sie einen einmaligen SSO URL für den Weiterleitungsmodus |
+| Handelseintrag | Token einbetten | `createEmbedToken` | Erstellen Sie ein kurzlebiges Token für den Modus Trading Widget `tokenProvider`. |
+| Perpetuelle Daten | Aktuelle Daueraufträge | `listCurrentPerpetualOrders` | Fragen Sie aktuelle NORMAL- oder CONDITIONAL-Bestellungen ab |
+| Perpetuelle Daten | Ewige Bestellhistorie | `listPerpetualOrderHistory` | Fragen Sie die Bestellungen des Terminals NORMAL oder CONDITIONAL ab |
+| Perpetuelle Daten | Dauergeschäfte | `listPerpetualTrades` | Fragen Sie Handelsfüllungen nach einer expliziten öffentlichen Spielerliste ab |
+| Perpetuelle Daten | Aktuelle unbefristete Stellen | `listCurrentPerpetualPositions` | Aktuelle Positionen abfragen |
+| Perpetuelle Daten | Ewige Positionshistorie | `listPerpetualPositionHistory` | Geschlossene Positionen abfragen |
+| Perpetuelle Daten | Unbefristetes Kontobuch | `listPerpetualLedger` | Abfragen einzelner Vertragssaldo-Änderungsdatensätze |
+| Fiat-Referenzkurse | Listen Sie die unterstützten Fiat-Währungen auf | `listSupportedFiatCurrencies` | Fiat-Währungen auflisten, die derzeit in USDT konvertierbar sind |
+| Fiat-Referenzkurse | FX-Referenzkurse abfragen | `queryExchangeRates` | Fragen Sie tägliche Fiat-zu-USDT-Referenzverhältnisse für alle oder ausgewählte Währungen ab |
+| Serviceinformationen | Serviceversion | `version` | Informationen zur Version des Abfrage-Agent-Dienstes |
 
-<span id="security-and-operational-rules" data-sixmm-canonical-anchor="security-and-operational-rules" aria-hidden="true"></span>
 
-## Sicherheits- und Betriebsregeln
+<span id="configuration" data-sixmm-canonical-anchor="configuration" aria-hidden="true"></span>
 
-- Speichere `apiSecret` nur in einem Backend-Secret-Manager oder einer geschützten Umgebungsvariable.
-- Halten Sie die Serverzeit synchron, da signierte Anfragen Zeitstempel enthalten.
-- Behandle `agentOrderNo` als dauerhaften Idempotenzschlüssel und halte ihn global einzigartig.
-- Speichert `platformUserId` als Zeichenkette und bewahrt seine Beziehung zu `agentUserId`bei.
-- Abfrage des ursprünglichen Transfers, bevor man es nach einer Auszeit oder einem unsicheren Netzwerkergebnis erneut versucht.
+## Konfiguration
 
-<span id="next-steps" data-sixmm-canonical-anchor="next-steps" aria-hidden="true"></span>
+Besorgen Sie sich zuvor die folgenden Werte von 6MM.
+integrierend.
 
-## Nächste Schritte
+| Artikel | Beispiel | Beschreibung |
+| --- | --- | --- |
+| `baseUrl` | `https://agent-api.6mm.com` | Agent API Basis URL, ohne abschließenden Schrägstrich |
+| `agentCode` | `AGENT001` | Partnercode |
+| `apiSecret` | `your-api-secret` | API Signaturgeheimnis. Behalten Sie es nur im Backend |
+| `defaultCurrency` | `USDT` | Standardwährung, normalerweise `USDT` |
+| `webhookUrl` | `https://partner.example.com/6mm/webhook` | Partnerendpunkt für 6MM Rückrufe |
 
-- [Java Quick Start](/de/sdk/agent-sdk/java/quick-start): Installieren Sie die markierte Quellquelle und initialisieren Sie `AgentClient`.
-- [Create Embed Token](/de/sdk/agent-sdk/java/embed-token): Geben kurzlebige Zugangsdaten für Trading Widgetaus.
-- [Secrets & Signing](/de/sdk/security/secrets-signing): Verstehen Sie automatische HMAC Signieren und Geheimnishandhabung.
-- [Webhooks & Idempotency](/de/sdk/security/webhooks-idempotency): Verifizieren Rückrufe und verhindern doppelte Verarbeitung.
+Produktionsempfehlungen:
+
+- Verwenden Sie HTTPS für die Endpunkte Agent API und webhook.
+- Speichern Sie `apiSecret` in einem Secret Manager, einem Konfigurationscenter oder einer Umgebungsvariablen.
+- Halten Sie die Serverzeit synchronisiert, vorzugsweise mit NTP.
+- Behalten Sie alle Partner-Bestellnummern bei und sorgen Sie dafür, dass sie global eindeutig sind.
+- Senden Sie niemals `apiSecret` an Browser, Apps, Miniprogramme oder Frontend-Quellcode.
+
+
+<span id="automatic-signing-fields" data-sixmm-canonical-anchor="automatic-signing-fields" aria-hidden="true"></span>
+
+## Automatische Signaturfelder
+
+Bei signierten Agenten-Anrufen API fügt SDK automatisch Folgendes ein:
+
+| Feld | Quelle | Beschreibung |
+| --- | --- | --- |
+| `agentCode` | `AgentClientConfig.agentCode` | Partnercode |
+| `timestamp` | Aktueller UTC Unix-Zeitstempel | Sekunden |
+| `nonce` | Sicherer Zufallsgenerator | Wiedergabeschutz |
+| `sign` | HMAC-SHA256 | Unterschrift anfordern |
+| `currency` | `defaultCurrency` | Wird ausgefüllt, wenn bei Überweisungs-/Kontoanfragen die Währung fehlt |
+
+Signaturregeln:
+
+1. `sign` ausschließen.
+2. Leere Werte ausschließen.
+3. Sortieren Sie die Schlüssel nach der Reihenfolge ASCII.
+4. Treten Sie bei als `k=v&k2=v2`.
+5. Berechnen Sie HMAC-SHA256 hex mit `apiSecret`.
+
+Der normale Geschäftscode sollte keine Signaturen berechnen oder manuell festlegen
+`agentCode`, `timestamp`, `nonce` oder `sign`.
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Quelle und zugehörige Leitfäden
+
+- [Offizielle Quelle v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Abfrageübersicht und Paginierung](/de/sdk/agent-sdk/java/perpetual-queries)
+- [Funding-Wallet](/de/sdk/agent-sdk/java/funding-wallet)
+- [Upgrade-Anleitung](/de/sdk/agent-sdk/java/upgrade)

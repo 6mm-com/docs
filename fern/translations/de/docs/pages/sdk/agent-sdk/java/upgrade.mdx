@@ -1,0 +1,83 @@
+---
+title: "Upgrade auf v0.3.0"
+subtitle: "Upgrade auf v0.3.0: Agent Java SDK v0.3.0-Integration, Beispiele, Parameter und Antwortsemantik."
+slug: sdk/agent-sdk/java/upgrade
+canonical-url: https://docs.6mm.com/de/sdk/agent-sdk/java/upgrade
+---
+
+Dieser Leitfaden richtet sich an **Agent Java SDK `v0.3.0`** und Java 8+.
+
+<span id="decide-what-needs-upgrading" data-sixmm-canonical-anchor="decide-what-needs-upgrading" aria-hidden="true"></span>
+
+## Entscheiden Sie, was aktualisiert werden muss
+
+| Bestehende Integration | Aktion |
+| --- | --- |
+| Bestehende Produktionsfunktionen mit weggelassener Umgebung | Bestehende Antwortformen bleiben kompatibel; Die neuen Abfragen erzwingen kein Upgrade. |
+| Vorhandene generische Einbettungsauthentifizierung für Sekundenhandel | Authentifizierung und Erneuerung wiederverwenden; Wählen Sie die gewünschte Produktseite aus. |
+| Finanzierungssalden, Transfers und Einziehung | Verwenden Sie die Modelle, die `withFunding`, `walletTransfer` und `queryWalletTransfer` enthalten. |
+| Explizite simulierte Mittel | Verwenden Sie Anfrage-/Antwortmodelle, die `environment` unterstützen. |
+| Sechs Perpetual-Data-Abfragen | Verwenden Sie öffentliche Java SDK `v0.3.0`, einschließlich der sechs Methoden und der Unterstützung für Array-Signierung. |
+
+Behalten Sie Ihre aktuellen `baseUrl`, `agentCode`, `apiSecret`, Benutzerbindungen und ursprünglichen Geschäftsaufträge.
+
+<span id="install-the-stable-public-tag" data-sixmm-canonical-anchor="install-the-stable-public-tag" aria-hidden="true"></span>
+
+## Installieren Sie das stabile öffentliche Tag
+
+GitHub-Hostquelle. Durch die Veröffentlichung eines GitHub-Tags werden die Maven-Koordinaten nicht in Maven Central veröffentlicht. Installieren Sie die markierte Quelle lokal oder veröffentlichen Sie ihre verifizierten JAR/POM im Artefakt-Repository Ihrer Organisation.
+
+```bash
+git clone --branch v0.3.0 --single-branch https://github.com/6mm-com/agent-java-sdk.git agent-java-sdk-v0.3.0
+cd agent-java-sdk-v0.3.0
+git rev-parse HEAD
+git rev-parse 'v0.3.0^{commit}'
+mvn install
+```
+
+Die beiden Commit-IDs müssen übereinstimmen. Deklarieren Sie die Abhängigkeit im Partnerprojekt:
+
+```xml
+<dependency>
+    <groupId>com.sixmm.exchange.sdk</groupId>
+    <artifactId>agent</artifactId>
+    <version>0.3.0</version>
+</dependency>
+```
+
+Überprüfen Sie die aufgelöste Abhängigkeit:
+
+```bash
+mvn dependency:tree -Dincludes=com.sixmm.exchange.sdk:agent
+```
+
+Eine lokale Installation macht das Artefakt nur auf diesem Computer verfügbar. CI- und andere Entwickler benötigen dieselbe getaggte Installation oder Ihr verifiziertes Artefakt-Repository. Wenn Sie bereits über ein privates Artefakt mit dem Namen `0.3.0` verfügen, überprüfen Sie dessen Quelle und Methoden. Überschreiben Sie ein gemeinsam genutztes Artefakt nicht stillschweigend.
+
+<span id="required-integration-changes" data-sixmm-canonical-anchor="required-integration-changes" aria-hidden="true"></span>
+
+## Erforderliche Integrationsänderungen
+
+1. Aktualisieren Sie Anforderungs- und Antwortmodelle für explizite `environment`. Strenge ältere Antwortmodelle lehnen das zusätzliche Feld möglicherweise ab.
+2. Verwenden Sie `withFunding()`, bevor Sie `funding` lesen. Vertragssalden sind keine Second-Trading-Salden.
+3. Verwenden Sie `/v1/agent/wallet-transfer` und `/v1/agent/wallet-transfer-status` für die Finanzierung. Der alte `queryOrder` kann einen Finanzierungsvorgang nicht wiederherstellen.
+4. Die sechs Abfragen verwenden `platformUserIds` als String-Array. Signieren Sie Arrays als kompakt JSON; Java `List.toString()` ist nicht kompatibel.
+5. Speichern Sie Übertragungsaufträge, normale Handelsaufträge, bedingte Aufträge und Ausführungen als separate Einheiten. Analysieren Sie `orderStatus` oder `status` entsprechend der Operation.
+6. Überprüfen Sie den ursprünglichen webhook-Körper vor dem Parsen. Zu den expliziten simulierten Benachrichtigungen gehören `environment`; Vergleichen Sie diese mit der gespeicherten Bestellung.
+7. Verwalten Sie Java und Widget-Versionen unabhängig voneinander. Ein Backend-Upgrade ändert weder die Frontend-Seite noch den Handelsmodus, und für den Sekundenhandel ist kein neuer Token-Typ erforderlich.
+
+<span id="verify-the-upgrade" data-sixmm-canonical-anchor="verify-the-upgrade" aria-hidden="true"></span>
+
+## Überprüfen Sie das Upgrade
+
+Führen Sie den Build des Partnerprojekts aus und überprüfen Sie dessen Abhängigkeitsbaum. Testbindung, der ursprüngliche Produktionsfluss, explizite simulierte Salden, Wiederherstellung der Finanzierungsergebnisse, alle sechs Abfragen, Paginierung mit festem Fenster, Fehlerbehandlung und idempotente Rückrufe.
+
+Befolgen Sie für einen benutzerdefinierten HTTP-Client die getaggte Anfrage und den Signaturvertrag, anstatt davon auszugehen, dass die alten Modelle neue Felder abdecken. Sehen [Abfrageübersicht](/de/sdk/agent-sdk/java/perpetual-queries) Und [Umweltführer](/de/sdk/agent-sdk/java/environments).
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Quelle und zugehörige Leitfäden
+
+- [Offizielle Quelle v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Abfrageübersicht und Paginierung](/de/sdk/agent-sdk/java/perpetual-queries)
+- [Funding-Wallet](/de/sdk/agent-sdk/java/funding-wallet)
+- [Upgrade-Anleitung](/de/sdk/agent-sdk/java/upgrade)

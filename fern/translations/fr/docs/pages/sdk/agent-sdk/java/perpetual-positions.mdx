@@ -1,0 +1,142 @@
+---
+title: "Postes perpétuels"
+subtitle: "Postes perpétuels: Intégration Agent Java SDK v0.3.0, exemples, paramètres et sémantique de réponse."
+slug: sdk/agent-sdk/java/perpetual-positions
+canonical-url: https://docs.6mm.com/fr/sdk/agent-sdk/java/perpetual-positions
+---
+
+Ce guide cible **Agent Java SDK `v0.3.0`**, Java 8+ et le contrat public étiqueté. Exemples exécutés dans un backend partenaire après l'initialisation de `client` dans [Démarrage rapide](/fr/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## Exemples de prérequis
+
+Les extraits de code Java partagent ces importations. Initialisez `client` à l'aide de Quick Start et obtenez `platformUserId` à partir de la liaison enregistrée. Les exemples d’ID utilisateur/commande doivent être remplacés par vos propres valeurs persistantes.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span data-sixmm-canonical-anchor="listcurrentperpetualpositions" aria-hidden="true"></span>
+
+## `listCurrentPerpetualPositions`
+
+Modèle de demande : `CurrentPerpetualPositionsRequest`.
+
+```java
+import com.sixmm.agent.model.CurrentPerpetualPositionsRequest;
+import com.sixmm.agent.model.PerpetualResponse;
+import java.util.Collections;
+
+CurrentPerpetualPositionsRequest request = new CurrentPerpetualPositionsRequest();
+request.platformUserIds = Collections.singletonList("1188041528");
+request.limit = 100;
+request.symbol = "BTCUSDT";
+PerpetualResponse response = client.listCurrentPerpetualPositions(request);
+System.out.println(response.data.items.size());
+System.out.println(response.data.hasMore);
+System.out.println(response.data.nextCursor);
+```
+
+<span id="request-fields" data-sixmm-canonical-anchor="request-fields" aria-hidden="true"></span>
+
+### Champs de requête
+
+| Champ | Java tapez | Requis | Signification |
+| --- | --- | --- | --- |
+| `platformUserIds` | `java.util.List<String>` | Conditionnel | 1 à 100 identifiants publics uniques ; requis pour les exécutions et les commandes conditionnelles. Omettre les requêtes prises en charge pour la portée directe du lecteur ; [] n'est pas valide. |
+| `symbol` | `String` | Non | Filtre de paire de trading en option. |
+| `limit` | `Integer` | Non | Par défaut 500 ; 1 à 1000. |
+| `cursor` | `String` | Non | Utilisez le nextCursor renvoyé avec des filtres inchangés ; arrêter lorsque hasMore est faux. |
+
+L'exemple lit une page. Pour les champs obligatoires, la portée du joueur, la sémantique du filtre, la limite, le curseur et les tentatives limitées, suivez [Présentation de la requête](/fr/sdk/agent-sdk/java/perpetual-queries). Gardez tous les filtres inchangés pendant la pagination ; n’interprètez pas une erreur comme un résultat vide.
+
+<span data-sixmm-canonical-anchor="listperpetualpositionhistory" aria-hidden="true"></span>
+
+## `listPerpetualPositionHistory`
+
+Modèle de demande : `PerpetualPositionHistoryRequest`.
+
+```java
+import com.sixmm.agent.model.PerpetualPositionHistoryRequest;
+import com.sixmm.agent.model.PerpetualResponse;
+import java.util.Collections;
+
+PerpetualPositionHistoryRequest request = new PerpetualPositionHistoryRequest();
+request.platformUserIds = Collections.singletonList("1188041528");
+request.limit = 100;
+request.symbol = "BTCUSDT";
+request.endTime = System.currentTimeMillis();
+request.startTime = request.endTime - 3_600_000L;
+PerpetualResponse response = client.listPerpetualPositionHistory(request);
+System.out.println(response.data.items.size());
+System.out.println(response.data.hasMore);
+System.out.println(response.data.nextCursor);
+```
+
+<span id="request-fields-1" data-sixmm-canonical-anchor="request-fields-1" aria-hidden="true"></span>
+
+### Champs de requête
+
+| Champ | Java tapez | Requis | Signification |
+| --- | --- | --- | --- |
+| `platformUserIds` | `java.util.List<String>` | Conditionnel | 1 à 100 identifiants publics uniques ; requis pour les exécutions et les commandes conditionnelles. Omettre les requêtes prises en charge pour la portée directe du lecteur ; [] n'est pas valide. |
+| `symbol` | `String` | Non | Filtre de paire de trading en option. |
+| `positionSide` | `String` | Non | Filtrez à l’aide de l’énumération côté position source. |
+| `startTime` | `Long` | Non | Millisecondes Unix incluses ; utilisez une fenêtre d'historique UTC fixe. |
+| `endTime` | `Long` | Non | Millisecondes Unix exclusives. |
+| `limit` | `Integer` | Non | Par défaut 500 ; 1 à 1000. |
+| `cursor` | `String` | Non | Utilisez le nextCursor renvoyé avec des filtres inchangés ; arrêter lorsque hasMore est faux. |
+
+L'exemple lit une page. Pour les champs obligatoires, la portée du joueur, la sémantique du filtre, la limite, le curseur et les tentatives limitées, suivez [Présentation de la requête](/fr/sdk/agent-sdk/java/perpetual-queries). Gardez tous les filtres inchangés pendant la pagination ; n’interprètez pas une erreur comme un résultat vide.
+
+<span id="positions-current-and-historical" data-sixmm-canonical-anchor="positions-current-and-historical" aria-hidden="true"></span>
+
+## Postes : actuels et historiques
+
+| Champ `data` | taper | Poste actuel | Positions historiques | signification |
+| --- | --- | --- | --- | --- |
+| `positionId` | string | fournir | fournir | ID de position, correspondant à entityId |
+| `symbol` | string | fournir | fournir | paire de trading |
+| `positionSide` | string | fournir | fournir | LONG / SHORT / BOTH et autres directions de position |
+| `status` | string | fournir | fournir | Chaîne avec le statut numérique du poste, voir l'aperçu de la requête |
+| `leverage` | integer | fournir | fournir | Tirer parti de plusieurs |
+| `marginMode` | string | fournir | fournir | Chaîne d'énumération numérique "1" pour une position complète, "2" pour une position isolée |
+| `quantity` | string | fournir | Pas disponible | Quantité de position actuelle |
+| `entryPrice` | string | fournir | fournir | Prix ​​d'ouverture moyen des positions stockées |
+| `margin` | string | fournir | Pas disponible | Le montant de la marge de la position actuelle, et non le solde total du portefeuille de contrat de l'utilisateur. |
+| `maxQuantity` | string | Pas disponible | fournir | Le nombre maximum de positions enregistrées dans cette position historique |
+| `closeQuantity` | string | Pas disponible | fournir | Le nombre cumulé de positions fermées au cours du cycle de vie historique de la position |
+| `closePrice` | string | Pas disponible | fournir | Cours de clôture moyen stocké |
+| `pnl` | string | Pas disponible | fournir | Profits et pertes de position historiques ; ne le combinez pas avec la transaction realizedPnl pour simplement répéter et accumuler |
+| `roe` | string | Pas disponible | fournir | La valeur proportionnelle du rendement historique de la position, non multipliée par 100 ; par exemple, `"0.043"` représente `4.3%`, `"-0.05"` représente `-5%` |
+| `fundingFeeAccum` | string | fournir | fournir | Frais de financement accumulés, conservation du symbole de la source et de l'exactitude |
+| `openedAt` | integer | fournir | fournir | Temps d'ouverture de la position, millisecondes |
+| `updatedAt` | integer | fournir | Pas disponible | Temps de mise à jour de la position actuelle, millisecondes |
+| `closedAt` | integer | Pas disponible | fournir | Temps de fermeture, millisecondes ; utilisez ce champ pour filtrer l'heure de position historique |
+
+Le calibre de calcul de l'historique `roe` est `pnl / (entryPrice × maxQuantity / leverage)`, et l'interface renvoie directement la valeur de proportion enregistrée. Lors de l'affichage du pourcentage, utilisez l'opération décimale et multipliez par 100, puis ajoutez `%` ; le dénominateur utilise la marge nominale de l'enregistrement de position historique, et non le solde du portefeuille du compte. Lorsque le prix d'ouverture ou la quantité maximale de position est de 0, l'effet de levier n'est pas valide, etc. et ne peut pas être calculé, la source est enregistrée sous 0. Par conséquent, on ne peut pas en déduire que le profit ou la perte est de 0 uniquement sur la base de `roe=0`.
+
+La position actuelle n'a pas de prix de marque en temps réel, de profits et pertes flottants en temps réel, de ROE en temps réel ou de prix de liquidation en temps réel. Il reflète l'état de la position stockée et ne peut pas utiliser les champs d'heure de mise à jour et de marge pour réclamer les résultats actuels du contrôle des risques en temps réel.
+
+
+<span id="example-response-envelope" data-sixmm-canonical-anchor="example-response-envelope" aria-hidden="true"></span>
+
+## Exemple d'enveloppe de réponse
+
+Il s'agit d'une page vide illustrative, et non d'un échantillon d'une transaction terminée. Les tableaux de champs spécifiques aux ressources ci-dessus décrivent les `items[].data` renseignés.
+
+```json
+{"code":0,"message":"success","data":{"items":[],"nextCursor":"","hasMore":false}}
+```
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Source et guides associés
+
+- [Source officielle v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Présentation et pagination des requêtes](/fr/sdk/agent-sdk/java/perpetual-queries)
+- [Portefeuille de financement](/fr/sdk/agent-sdk/java/funding-wallet)
+- [Guide de mise à niveau](/fr/sdk/agent-sdk/java/upgrade)

@@ -1,0 +1,164 @@
+---
+title: "Funding Wallet"
+subtitle: "Funding Wallet: Agent Java SDK v0.3.0 integration, examples, parameters and response semantics."
+slug: sdk/agent-sdk/java/funding-wallet
+---
+
+This guide targets **Agent Java SDK `v0.3.0`**, Java 8+, and the tagged public contract. Examples run in a partner backend after initializing `client` in [Quick Start](/sdk/agent-sdk/java/quick-start).
+
+<span data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## Example prerequisites
+
+The Java snippets share these imports. Initialize `client` using Quick Start and obtain `platformUserId` from the saved binding. Example user/order IDs must be replaced with your own persisted values.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span data-sixmm-canonical-anchor="wallet-queries-and-transfers" aria-hidden="true"></span>
+
+## Wallet queries and transfers
+
+<span data-sixmm-canonical-anchor="distinguish-the-three-wallets" aria-hidden="true"></span>
+
+### Distinguish the three wallets
+
+| wallet | Balance source | use |
+| --- | --- | --- |
+| Merchant’s own user wallet | Merchant’s own accounting system | The user’s available balance on the merchant side |
+| Platform Funding | `queryUserAssets` of `funding` | Seconds trading funds and Funding/Contract mutual transfer |
+| Platform Contract | The contract asset field of `queryUserAssets` | Perpetual contract margin and transferable balance |
+
+`queryAccount` Query the merchant platform margin account, not the merchant user wallet. This interface does not have `environment` parameters and cannot be queried as a simulated user asset.
+
+Query the two platform wallets of simulated users:
+
+```java
+QueryUserAssetsResponse assets = client.queryUserAssets(
+        QueryUserAssetsRequest.of(platformUserId)
+                .withFunding()
+                .withEnvironment(ExecutionEnvironment.SIMULATED));
+```
+
+Interface: `POST /v1/agent/query-user-assets`. Funding is requested only when `includeFunding=true`; the original contract asset query semantics are used by default.
+
+| response fields | meaning |
+| --- | --- |
+| `walletBalance`, `availableBalance`, `frozenMargin`, `usedMargin`, `isolatedMargin` | Contract wallet related amounts |
+| `funding.assetCode` | Currently USDT |
+| `funding.availableAmount`, `heldAmount`, `totalAmount` | Funding available, occupied and total amount |
+| `funding.materialized` | Whether the Funding account has been materialized? |
+| `environment` | This field is echoed when the environment is passed explicitly; old requests that omit the environment do not return this field. |
+| `isSimulatedUser` | Account classification; cannot replace trading environment selection |
+
+Amounts are handled as strings or `BigDecimal`, not `float`/`double`.
+
+<span data-sixmm-canonical-anchor="funding-transfer-directions" aria-hidden="true"></span>
+
+### Funding transfer directions
+
+Create: `POST /v1/agent/wallet-transfer`, SDK `walletTransfer`.
+
+| `direction` | Fund flow | `transferAll` |
+| --- | --- | --- |
+| `PARTNER_TO_FUNDING` | Merchant → Platform Funding | Fixed amount only |
+| `FUNDING_TO_PARTNER` | Platform Funding → Merchant | Fixed amount only |
+| `FUNDING_TO_CONTRACT` | Same environment platform Funding → Contract | Supports fixed amount or all withdrawable funds |
+| `CONTRACT_TO_FUNDING` | Same environment platform Contract → Funding | Supports fixed amount or all withdrawable funds |
+
+The current currency only supports USDT. The fixed amount must be a positive string with up to 8 decimal places and cannot use scientific notation. When `transferAll=true`, omit `amount` and record it as the final response `amount`; "all" only includes the withdrawable funds.
+
+Example: Merchant transfers 10 USDT to simulated Funding. First save the business order and environment in the merchant system, and then send the request:
+
+```java
+String fundingOrderNo = "SIM-FUNDING-20261010-000001";
+WalletTransferResponse transfer = client.walletTransfer(
+        WalletTransferRequest.of(fundingOrderNo, "merchant-user-001",
+                "PARTNER_TO_FUNDING", "10.00000000", false)
+                .withEnvironment(ExecutionEnvironment.SIMULATED));
+```
+
+Funding Transfer all funds that can be transferred to the simulated Contract:
+
+```java
+WalletTransferResponse move = client.walletTransfer(
+        WalletTransferRequest.of("SIM-F2C-20261010-000001", "merchant-user-001",
+                "FUNDING_TO_CONTRACT", null, true)
+                .withEnvironment(ExecutionEnvironment.SIMULATED));
+```
+
+The same operation must continue to use the original `agentOrderNo`; different operations and different environments use different order numbers. Changing the amount, user, direction or environment with the same order number will be rejected. Funding/Contract transfers can only be performed within the same environment, and simulated funds cannot be transferred to real funds.
+
+<span data-sixmm-canonical-anchor="result-confirmation-and-unknown-result-recovery" aria-hidden="true"></span>
+
+### Result confirmation and unknown result recovery
+
+Funding responses are represented by `status`, `SUCCESS`, `PROCESSING`, or `FAILED`, and are returned `orderNo`, `direction`, `currency`, `amount`, `resultCode`, etc. `code=0` only means that the request is processed successfully and you need to continue to judge `status`.
+
+| result | Merchant processing |
+| --- | --- |
+| `SUCCESS` | Complete local accounting processing based on actual amount |
+| `PROCESSING` | Keep it local for confirmation and check the original order |
+| HTTP Timeout, network error, result cannot be parsed | The result is considered unknown and the original order is queried; it cannot be directly determined as a failure or create a new order and try again. |
+| Identified `FAILED` | Release the local reservation according to the clear failure result; create a new business order when the business needs to be initiated again |
+
+Funding query uses the dedicated interface `POST /v1/agent/wallet-transfer-status`:
+
+```java
+WalletTransferResponse recovered = client.queryWalletTransfer(
+        WalletTransferQueryRequest.of(fundingOrderNo)
+                .withEnvironment(ExecutionEnvironment.SIMULATED));
+```
+
+Use this dedicated endpoint to recover the original Funding operation; `queryOrder` cannot replace it. Save the original environment and pass it explicitly during recovery. If `environment` is omitted from `wallet-transfer-status`, the server uses the environment saved on the original order, including simulated orders. An explicitly conflicting environment returns `102002` (`order environment mismatch`). When the caller omits the environment, the response omits `environment` too; this does not mean the original order is a production order.
+
+Merchants' local deposits and withdrawals are idempotent; persistent orders and balances are reserved before initiation, and are reserved for confirmation when the result is unknown. Funding access uses a dedicated query to confirm the final status; do not assume that old contract transfer Webhook or reversal methods are automatically applicable to Funding.
+
+<span data-sixmm-canonical-anchor="existing-contract-transfer-flow" aria-hidden="true"></span>
+
+### Existing Contract transfer flow
+
+The original `transfer`, `transferAllOut`, `reverse`, `queryOrder`, `listOrders` continue to process the original contract transfer process. `queryOrder` is querying fund transfer orders, `listOrders` is a transfer reconciliation list; instead, the six types of queries in the next section are used for perpetual trading orders.
+
+The original funding response uses `orderStatus`; the Funding response uses `status`, do not mix them. The original transfer Webhook is verified using `X-Agent-Timestamp`, `X-Agent-Nonce`, `X-Agent-Signature`, and the original signature text is `timestamp + nonce + rawBody`; the original request body is first verified, then deserialized and idempotent. Explicit simulated environment notifications contain `environment=SIMULATED`, production notifications remain compatible with old fields. The amount, order number, status and environment need to be checked with the local business order.
+
+<span data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Source and related guides
+
+- [Official v0.3.0 source](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Query overview and pagination](/sdk/agent-sdk/java/perpetual-queries)
+- [Funding wallet](/sdk/agent-sdk/java/funding-wallet)
+- [Upgrade guide](/sdk/agent-sdk/java/upgrade)
+
+<span data-sixmm-canonical-anchor="funding-request-fields" aria-hidden="true"></span>
+
+## Funding request fields
+
+| Field | Required | Meaning |
+| --- | --- | --- |
+| `agentOrderNo` | Yes | Globally unique partner order number; persist before sending. |
+| `agentUserId / platformUserId` | One | Identify the bound user; if both are supplied they must match. |
+| `direction` | Yes | One of the four directions documented above. |
+| `currency` | Default USDT | Only USDT is supported. |
+| `transferAll` | Default false | Only Funding/Contract internal transfers support true. |
+| `amount` | Conditional | Positive decimal string for a fixed transfer; omit for transferAll=true. |
+| `environment` | Optional | Production when omitted for a new transfer; SIMULATED selects simulated funds. |
+
+<span data-sixmm-canonical-anchor="funding-response-fields" aria-hidden="true"></span>
+
+## Funding response fields
+
+| Field | Meaning |
+| --- | --- |
+| `orderNo` | Returned operation identifier; retain alongside the original partner order number. |
+| `status` | SUCCESS / PROCESSING / FAILED; determines business completion. |
+| `direction / currency` | Confirmed transfer direction and asset. |
+| `amount` | Actual transferred amount as a string. |
+| `transferAll` | Whether this operation requested all withdrawable funds. |
+| `agentUserId / platformUserId` | Returned user identity; compare with the saved order. |
+| `resultCode` | Operation result detail; retain for reconciliation and support. |
+| `environment` | Echoed when the caller explicitly supplied it; absence is not proof of production for an original-order status query. |

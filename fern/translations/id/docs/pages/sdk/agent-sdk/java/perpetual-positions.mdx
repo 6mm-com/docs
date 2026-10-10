@@ -1,0 +1,142 @@
+---
+title: "Posisi Abadi"
+subtitle: "Posisi Abadi: Agent Java SDK integrasi v0.3.0, contoh, parameter, dan semantik respons."
+slug: sdk/agent-sdk/java/perpetual-positions
+canonical-url: https://docs.6mm.com/id/sdk/agent-sdk/java/perpetual-positions
+---
+
+Panduan ini menargetkan **Agent Java SDK `v0.3.0`**, Java 8+, dan kontrak publik yang diberi tag. Contoh dijalankan di backend mitra setelah menginisialisasi `client` di [Mulai Cepat](/id/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## Contoh prasyarat
+
+Cuplikan Java membagikan impor ini. Inisialisasi `client` menggunakan Quick Start dan dapatkan `platformUserId` dari pengikatan yang disimpan. Contoh ID pengguna/pesanan harus diganti dengan nilai Anda yang tetap.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span data-sixmm-canonical-anchor="listcurrentperpetualpositions" aria-hidden="true"></span>
+
+## `listCurrentPerpetualPositions`
+
+Model permintaan: `CurrentPerpetualPositionsRequest`.
+
+```java
+import com.sixmm.agent.model.CurrentPerpetualPositionsRequest;
+import com.sixmm.agent.model.PerpetualResponse;
+import java.util.Collections;
+
+CurrentPerpetualPositionsRequest request = new CurrentPerpetualPositionsRequest();
+request.platformUserIds = Collections.singletonList("1188041528");
+request.limit = 100;
+request.symbol = "BTCUSDT";
+PerpetualResponse response = client.listCurrentPerpetualPositions(request);
+System.out.println(response.data.items.size());
+System.out.println(response.data.hasMore);
+System.out.println(response.data.nextCursor);
+```
+
+<span id="request-fields" data-sixmm-canonical-anchor="request-fields" aria-hidden="true"></span>
+
+### Bidang permintaan
+
+| Bidang | Java ketik | Diperlukan | Arti |
+| --- | --- | --- | --- |
+| `platformUserIds` | `java.util.List<String>` | Bersyarat | 1–100 ID publik unik; diperlukan untuk pengisian dan pesanan bersyarat. Hilangkan kueri yang didukung untuk cakupan pemain langsung; [] tidak valid. |
+| `symbol` | `String` | TIDAK | Filter pasangan dagang opsional. |
+| `limit` | `Integer` | TIDAK | Bawaan 500; 1–1000. |
+| `cursor` | `String` | TIDAK | Gunakan nextCursor yang dikembalikan dengan filter yang tidak berubah; berhenti ketika hasMore salah. |
+
+Contohnya berbunyi satu halaman. Untuk bidang yang wajib diisi, cakupan pemain, semantik filter, batas, kursor, dan percobaan ulang terbatas, ikuti [Ikhtisar kueri](/id/sdk/agent-sdk/java/perpetual-queries). Biarkan semua filter tidak berubah saat melakukan paging; jangan menafsirkan kesalahan sebagai hasil kosong.
+
+<span data-sixmm-canonical-anchor="listperpetualpositionhistory" aria-hidden="true"></span>
+
+## `listPerpetualPositionHistory`
+
+Model permintaan: `PerpetualPositionHistoryRequest`.
+
+```java
+import com.sixmm.agent.model.PerpetualPositionHistoryRequest;
+import com.sixmm.agent.model.PerpetualResponse;
+import java.util.Collections;
+
+PerpetualPositionHistoryRequest request = new PerpetualPositionHistoryRequest();
+request.platformUserIds = Collections.singletonList("1188041528");
+request.limit = 100;
+request.symbol = "BTCUSDT";
+request.endTime = System.currentTimeMillis();
+request.startTime = request.endTime - 3_600_000L;
+PerpetualResponse response = client.listPerpetualPositionHistory(request);
+System.out.println(response.data.items.size());
+System.out.println(response.data.hasMore);
+System.out.println(response.data.nextCursor);
+```
+
+<span id="request-fields-1" data-sixmm-canonical-anchor="request-fields-1" aria-hidden="true"></span>
+
+### Bidang permintaan
+
+| Bidang | Java ketik | Diperlukan | Arti |
+| --- | --- | --- | --- |
+| `platformUserIds` | `java.util.List<String>` | Bersyarat | 1–100 ID publik unik; diperlukan untuk pengisian dan pesanan bersyarat. Hilangkan kueri yang didukung untuk cakupan pemain langsung; [] tidak valid. |
+| `symbol` | `String` | TIDAK | Filter pasangan dagang opsional. |
+| `positionSide` | `String` | TIDAK | Filter menggunakan enum sisi posisi sumber. |
+| `startTime` | `Long` | TIDAK | Milidetik Unix inklusif; gunakan jendela riwayat UTC yang tetap. |
+| `endTime` | `Long` | TIDAK | Milidetik Unix eksklusif. |
+| `limit` | `Integer` | TIDAK | Bawaan 500; 1–1000. |
+| `cursor` | `String` | TIDAK | Gunakan nextCursor yang dikembalikan dengan filter yang tidak berubah; berhenti ketika hasMore salah. |
+
+Contohnya berbunyi satu halaman. Untuk bidang yang wajib diisi, cakupan pemain, semantik filter, batas, kursor, dan percobaan ulang terbatas, ikuti [Ikhtisar kueri](/id/sdk/agent-sdk/java/perpetual-queries). Biarkan semua filter tidak berubah saat melakukan paging; jangan menafsirkan kesalahan sebagai hasil kosong.
+
+<span id="positions-current-and-historical" data-sixmm-canonical-anchor="positions-current-and-historical" aria-hidden="true"></span>
+
+## Posisi: Saat Ini dan Historis
+
+| `data` bidang | jenis | Posisi saat ini | Posisi bersejarah | arti |
+| --- | --- | --- | --- | --- |
+| `positionId` | string | memasok | memasok | ID Posisi, sesuai dengan entityId |
+| `symbol` | string | memasok | memasok | pasangan perdagangan |
+| `positionSide` | string | memasok | memasok | LONG / SHORT / BOTH dan arah posisi lainnya |
+| `status` | string | memasok | memasok | String dengan status numerik posisi, lihat ikhtisar kueri |
+| `leverage` | integer | memasok | memasok | Manfaatkan banyak |
+| `marginMode` | string | memasok | memasok | String enumerasi numerik "1" untuk posisi penuh, "2" untuk posisi terisolasi |
+| `quantity` | string | memasok | Tidak tersedia | Kuantitas posisi saat ini |
+| `entryPrice` | string | memasok | memasok | Harga pembukaan rata-rata dari posisi tersimpan |
+| `margin` | string | memasok | Tidak tersedia | Jumlah margin posisi saat ini, bukan seluruh saldo dompet kontrak pengguna |
+| `maxQuantity` | string | Tidak tersedia | memasok | Jumlah maksimum posisi yang tercatat dalam posisi historis ini |
+| `closeQuantity` | string | Tidak tersedia | memasok | Jumlah kumulatif posisi yang ditutup selama siklus hidup posisi historis |
+| `closePrice` | string | Tidak tersedia | memasok | Harga penutupan rata-rata yang disimpan |
+| `pnl` | string | Tidak tersedia | memasok | Posisi historis untung dan rugi; jangan digabungkan dengan transaksi realizedPnl untuk sekedar mengulang dan menumpuk |
+| `roe` | string | Tidak tersedia | memasok | Nilai proporsional pengembalian posisi historis, tidak dikalikan 100; misalnya, `"0.043"` mewakili `4.3%`, `"-0.05"` mewakili `-5%` |
+| `fundingFeeAccum` | string | memasok | memasok | Akumulasi biaya pendanaan, mempertahankan simbol dan keakuratan sumber |
+| `openedAt` | integer | memasok | memasok | Waktu pembukaan posisi, milidetik |
+| `updatedAt` | integer | memasok | Tidak tersedia | Waktu pembaruan posisi saat ini, milidetik |
+| `closedAt` | integer | Tidak tersedia | memasok | Waktu penutupan, milidetik; gunakan bidang ini untuk memfilter waktu posisi historis |
+
+Kaliber penghitungan riwayat `roe` adalah `pnl / (entryPrice × maxQuantity / leverage)`, dan antarmuka secara langsung mengembalikan nilai proporsi yang disimpan. Saat menampilkan persentase, gunakan operasi desimal dan kalikan dengan 100, lalu tambahkan `%`; penyebutnya menggunakan margin nominal dari catatan posisi historis, bukan saldo dompet akun. Ketika harga pembukaan atau jumlah posisi maksimum adalah 0, leverage tidak valid, dll. dan tidak dapat dihitung, sumbernya disimpan sebagai 0. Oleh karena itu, tidak dapat disimpulkan bahwa untung atau rugi adalah 0 hanya berdasarkan `roe=0`.
+
+Posisi saat ini tidak memiliki harga tanda waktu nyata, keuntungan dan kerugian mengambang waktu nyata, ROE waktu nyata, atau harga likuidasi waktu nyata. Ini mencerminkan status posisi yang disimpan dan tidak dapat menggunakan waktu pembaruan dan bidang margin untuk mengklaim hasil pengendalian risiko real-time saat ini.
+
+
+<span id="example-response-envelope" data-sixmm-canonical-anchor="example-response-envelope" aria-hidden="true"></span>
+
+## Contoh amplop tanggapan
+
+Ini adalah halaman kosong ilustrasi, bukan contoh perdagangan yang telah selesai. Tabel bidang khusus sumber daya di atas menjelaskan `items[].data` yang terisi.
+
+```json
+{"code":0,"message":"success","data":{"items":[],"nextCursor":"","hasMore":false}}
+```
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Sumber dan panduan terkait
+
+- [Sumber resmi v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Ikhtisar kueri dan penomoran halaman](/id/sdk/agent-sdk/java/perpetual-queries)
+- [Dompet pendanaan](/id/sdk/agent-sdk/java/funding-wallet)
+- [Panduan peningkatan](/id/sdk/agent-sdk/java/upgrade)

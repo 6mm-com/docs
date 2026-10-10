@@ -1,15 +1,15 @@
 ---
-title: "Trading Widget 認證"
-subtitle: "使用 Partner-Token 進行新的嵌入式交易 SSO 整合。"
+title: "Trading Widget 身份驗證"
+subtitle: "使用合作伙伴令牌進行新的嵌入式交易 SSO 集成。"
 slug: sdk/trading-widget/authentication
 canonical-url: https://docs.6mm.com/zh-TW/sdk/trading-widget/authentication
 ---
 
 <span id="recommended-mode-partner-token" data-sixmm-canonical-anchor="recommended-mode-partner-token" aria-hidden="true"></span>
 
-## 推薦模式：夥伴代幣
+## 推薦模式：合作伙伴代幣
 
-Partner-Token 避免在 URL 中放置短令牌，並將 apiSecret 留在 Partner 後端。
+Partner-token 避免在 URL 中放置短令牌，並將 apiSecret 保留在合作伙伴後端。
 
 ```js
 const widget = TradingWidget.create('#trading-widget', {
@@ -36,12 +36,12 @@ const widget = TradingWidget.create('#trading-widget', {
 
 <span id="related-documentation" data-sixmm-canonical-anchor="related-documentation" aria-hidden="true"></span>
 
-## 相關文件
+## 相關文檔
 
-- [建立嵌入令牌]（/sdk/agent-sdk/java/embed-token）：後端令牌發行範例。
-- [Trading Widget 快速啟動]（/sdk/trading-widget/quick-start）：完成初始化流程。
-- [秘密與簽署]（/sdk/security/secrets-signing）：將特權代理憑證保留在後端。
-- [故障排除]（/sdk/security/troubleshooting）：診斷會話、標記、起源及初始化失敗。
+- [創建嵌入令牌](/zh-TW/sdk/agent-sdk/java/embed-token)：後端代幣發行示例。
+- [Trading Widget 快速入門](/zh-TW/sdk/trading-widget/quick-start)：完成初始化流程。
+- [秘密與簽名](/zh-TW/sdk/security/secrets-signing)：在後端保留特權代理憑據。
+- [故障排除](/zh-TW/sdk/security/troubleshooting)：診斷會話、令牌、來源和初始化失敗。
 
 <span id="backend-flow" data-sixmm-canonical-anchor="backend-flow" aria-hidden="true"></span>
 
@@ -60,32 +60,32 @@ const widget = TradingWidget.create('#trading-widget', {
 
 <span id="tokenprovider-contract" data-sixmm-canonical-anchor="tokenprovider-contract" aria-hidden="true"></span>
 
-## tokenProvider 合約
+## tokenProvider合同
 
-| 場地 | 導演 | 描述 |
+| 場地 | 方向 | 描述 |
 | --- | --- | --- |
-| channelId | SDK -> 合作夥伴後端 | 唯一的小工具會話識別碼。後端應該會把它傳給 createEmbedToken。 |
-| 象徵 | SDK -> 合作夥伴後端 | 目前請求的交易代碼。必要時用它來定位代幣。 |
-| 原因 | SDK -> 合作夥伴後端 | 為什麼 SDK 會請求一個代幣，例如初始載入或刷新。 |
-| embedToken | 合作夥伴後端 -> SDK | 由 Agent SDK 或代理人 API 產生的短暫代幣。 |
-| expireAt | 合作夥伴後端 -> SDK | 代幣過期時間戳由 6MM返回。 |
+| channelId | SDK -> 合作伙伴後端 | 唯一的小部件會話標識符。後端應將其傳遞給 createEmbedToken。 |
+| 象徵 | SDK -> 合作伙伴後端 | 當前請求的交易代碼。需要時使用它來確定令牌的範圍。 |
+| 原因 | SDK -> 合作伙伴後端 | 為什麼 SDK 正在請求令牌，例如初始加載或刷新。 |
+| embedToken | 合作伙伴後端 -> SDK | 由 Agent SDK 或代理 API 創建的短期令牌。 |
+| expireAt | 合作伙伴後端 -> SDK | 6MM 返回的令牌過期時間戳。 |
 
 <span id="failure-handling" data-sixmm-canonical-anchor="failure-handling" aria-hidden="true"></span>
 
 ## 故障處理
 
-| 狀況 | 建議操作方法 |
+| 健康）狀況 | 推薦處理方式 |
 | --- | --- |
-| 夥伴會議結束 | 從合作夥伴端點回傳 401 並要求使用者重新登入。 |
-| 代幣創建暫時失敗 | 在 tokenProvider 丟出錯誤，讓小工具顯示認證錯誤。 |
-| channelId 不匹配 | 拒絕請求並重新建立小工具實例。 |
-| 用戶不得進行交易 | 回傳由夥伴控制的錯誤，且不建立嵌入標記。 |
+| 合作伙伴會話已過期 | 從合作伙伴端點返回 401 並要求用戶再次登錄。 |
+| 令牌創建暫時失敗 | 在 tokenProvider 中拋出錯誤並允許小部件顯示身份驗證錯誤。 |
+| channelId 不匹配 | 拒絕請求並重新創建小部件實例。 |
+| 用戶不允許交易 | 返回合作伙伴控制的錯誤，並且不創建嵌入令牌。 |
 
 <span id="compatibility-mode-agent-sso" data-sixmm-canonical-anchor="compatibility-mode-agent-sso" aria-hidden="true"></span>
 
-## 相容模式：agent-sso
+## 兼容模式：代理-sso
 
-agent-SSO 保留舊版的 /agent-entry 工單流程。新整合時偏好 partner-token 。
+agent-sso 保留舊的 /agent-entry 票證流程。首選合作伙伴令牌進行新集成。
 
 ```js
 const widget = TradingWidget.create('#trading-widget', {
@@ -105,13 +105,13 @@ const widget = TradingWidget.create('#trading-widget', {
   },
 })
 ```
-{/* sixmm-localized-link-repair:start */}
-<span id="localized-page-links" data-sixmm-canonical-anchor="localized-page-links" aria-hidden="true"></span>
 
-## 相關頁面
+<span id="seconds-trading-and-environment-rules" data-sixmm-canonical-anchor="seconds-trading-and-environment-rules" aria-hidden="true"></span>
 
-- [建立嵌入令牌](/zh-TW/sdk/agent-sdk/java/embed-token)
-- [嵌入 6MM Trading Widget：快速開始](/zh-TW/sdk/trading-widget/quick-start)
-- [Agent SDK 祕密與 HMAC 手語](/zh-TW/sdk/security/secrets-signing)
-- [SDK 整合故障排除](/zh-TW/sdk/security/troubleshooting)
-{/* sixmm-localized-link-repair:end */}
+## 秒數交易及環境規則
+
+對於秒頁面，請使用與小部件上配置的 `page` 和 `tradingMode` 相同的 `partner-token` 身份驗證。沒有單獨的預測令牌。每個 tokenProvider 調用都必須從後端獲取一個新的一次性令牌。
+
+以 Unix 秒為單位返回 `embedToken`、`expireAt`，並將原始 `channelId` 作為頂級對象。 Agent SDK令牌響應不包含`channelId`；您的後端會回顯當前的 Widget 頻道。如果您的端點將響應包裝在 `data` 中，請在從 tokenProvider 返回之前將其解開。
+
+[全秒整合](/zh-TW/sdk/agent-sdk/java/seconds-trading) · [資金環境指南](/zh-TW/sdk/agent-sdk/java/environments)

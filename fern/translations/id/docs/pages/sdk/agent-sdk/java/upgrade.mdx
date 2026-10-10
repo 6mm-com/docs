@@ -1,0 +1,83 @@
+---
+title: "Tingkatkan ke v0.3.0"
+subtitle: "Tingkatkan ke v0.3.0: Agent Java SDK integrasi v0.3.0, contoh, parameter, dan semantik respons."
+slug: sdk/agent-sdk/java/upgrade
+canonical-url: https://docs.6mm.com/id/sdk/agent-sdk/java/upgrade
+---
+
+Panduan ini menargetkan **Agent Java SDK `v0.3.0`** dan Java 8+.
+
+<span id="decide-what-needs-upgrading" data-sixmm-canonical-anchor="decide-what-needs-upgrading" aria-hidden="true"></span>
+
+## Putuskan apa yang perlu ditingkatkan
+
+| Integrasi yang ada | Tindakan |
+| --- | --- |
+| Fungsi produksi yang ada dengan lingkungan yang dihilangkan | Bentuk respons yang ada tetap kompatibel; pertanyaan baru tidak memaksa peningkatan. |
+| Otentikasi penyematan umum yang ada untuk perdagangan detik | Gunakan kembali otentikasi dan pembaruan; pilih halaman produk yang diperlukan. |
+| Saldo pendanaan, transfer dan pemulihan | Gunakan model yang berisi `withFunding`, `walletTransfer` dan `queryWalletTransfer`. |
+| Dana simulasi eksplisit | Gunakan model permintaan/respons yang mendukung `environment`. |
+| Enam kueri data abadi | Gunakan Java SDK `v0.3.0` publik, termasuk enam metode dan dukungan penandatanganan array. |
+
+Pertahankan `baseUrl`, `agentCode`, `apiSecret`, pengikatan pengguna, dan pesanan bisnis asli Anda saat ini.
+
+<span id="install-the-stable-public-tag" data-sixmm-canonical-anchor="install-the-stable-public-tag" aria-hidden="true"></span>
+
+## Instal tag publik yang stabil
+
+Sumber host GitHub. Menerbitkan tag GitHub tidak menerbitkan koordinat Maven ke Maven Central. Instal sumber yang diberi tag secara lokal atau publikasikan JAR/POM yang terverifikasi ke repositori artefak organisasi Anda.
+
+```bash
+git clone --branch v0.3.0 --single-branch https://github.com/6mm-com/agent-java-sdk.git agent-java-sdk-v0.3.0
+cd agent-java-sdk-v0.3.0
+git rev-parse HEAD
+git rev-parse 'v0.3.0^{commit}'
+mvn install
+```
+
+Kedua ID komit harus cocok. Deklarasikan ketergantungan pada proyek mitra:
+
+```xml
+<dependency>
+    <groupId>com.sixmm.exchange.sdk</groupId>
+    <artifactId>agent</artifactId>
+    <version>0.3.0</version>
+</dependency>
+```
+
+Verifikasi ketergantungan yang teratasi:
+
+```bash
+mvn dependency:tree -Dincludes=com.sixmm.exchange.sdk:agent
+```
+
+Instalasi lokal hanya membuat artefak tersedia di mesin itu. CI dan pengembang lain memerlukan instalasi yang diberi tag yang sama atau repositori artefak terverifikasi Anda. Jika Anda sudah memiliki artefak pribadi bernama `0.3.0`, verifikasi sumber dan metodenya; jangan diam-diam menimpa artefak bersama.
+
+<span id="required-integration-changes" data-sixmm-canonical-anchor="required-integration-changes" aria-hidden="true"></span>
+
+## Perubahan integrasi yang diperlukan
+
+1. Perbarui model permintaan dan respons untuk `environment` eksplisit. Model respons lama yang ketat mungkin menolak kolom tambahan.
+2. Gunakan `withFunding()` sebelum membaca `funding`. Saldo kontrak bukanlah saldo perdagangan detik.
+3. Gunakan `/v1/agent/wallet-transfer` dan `/v1/agent/wallet-transfer-status` untuk Pendanaan. `queryOrder` yang lama tidak dapat memulihkan operasi Pendanaan.
+4. Enam kueri menggunakan `platformUserIds` sebagai array string. Menandatangani array sebagai kompak JSON; Java `List.toString()` tidak kompatibel.
+5. Simpan pesanan transfer, pesanan perdagangan biasa, pesanan bersyarat, dan pengisian sebagai entitas yang berbeda. Parsing `orderStatus` atau `status` sesuai dengan operasinya.
+6. Verifikasi isi webhook asli sebelum penguraian. Notifikasi simulasi eksplisit mencakup `environment`; bandingkan dengan pesanan yang disimpan.
+7. Kelola versi Java dan Widget secara mandiri. Peningkatan backend tidak mengubah halaman frontend atau mode perdagangan, dan perdagangan detik tidak memerlukan jenis token baru.
+
+<span id="verify-the-upgrade" data-sixmm-canonical-anchor="verify-the-upgrade" aria-hidden="true"></span>
+
+## Verifikasi peningkatan
+
+Jalankan pembangunan proyek mitra dan periksa pohon ketergantungannya. Pengikatan pengujian, alur produksi asli, saldo simulasi eksplisit, Pemulihan hasil pendanaan, keenam kueri, penomoran halaman jendela tetap, penanganan kesalahan, dan panggilan balik idempoten.
+
+Untuk klien HTTP khusus, ikuti permintaan yang diberi tag dan kontrak tanda tangan alih-alih berasumsi model lama mencakup bidang baru. Melihat [Ikhtisar kueri](/id/sdk/agent-sdk/java/perpetual-queries) Dan [Panduan lingkungan](/id/sdk/agent-sdk/java/environments).
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Sumber dan panduan terkait
+
+- [Sumber resmi v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Ikhtisar kueri dan penomoran halaman](/id/sdk/agent-sdk/java/perpetual-queries)
+- [Dompet pendanaan](/id/sdk/agent-sdk/java/funding-wallet)
+- [Panduan peningkatan](/id/sdk/agent-sdk/java/upgrade)

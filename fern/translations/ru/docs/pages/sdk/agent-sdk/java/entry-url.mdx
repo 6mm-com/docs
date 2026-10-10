@@ -1,0 +1,72 @@
+---
+title: "Прямой вход URL"
+subtitle: "Прямой вход URL: Интеграция с Agent Java SDK v0.3.0, примеры, параметры и семантика ответа."
+slug: sdk/agent-sdk/java/entry-url
+canonical-url: https://docs.6mm.com/ru/sdk/agent-sdk/java/entry-url
+---
+
+Это руководство предназначено для **Agent Java SDK `v0.3.0`**, Java 8+ и помеченного публичного контракта. Примеры выполняются в серверной части партнера после инициализации `client` в [Быстрый старт](/ru/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## Пример предварительных условий
+
+Фрагменты Java разделяют этот импорт. Инициализируйте `client` с помощью быстрого запуска и получите `platformUserId` из сохраненной привязки. Примеры идентификаторов пользователей/заказов необходимо заменить вашими собственными сохраненными значениями.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span id="direct-entry-url" data-sixmm-canonical-anchor="direct-entry-url" aria-hidden="true"></span>
+
+## Прямой вход URL
+
+Прямая запись URL предназначена для режима перенаправления. Пользователь-партнер нажимает кнопку на
+партнерский сайт, открывает интерфейс 6MM и автоматически входит в систему.
+
+```java
+import com.sixmm.agent.model.CreateEntryUrlRequest;
+import com.sixmm.agent.model.CreateEntryUrlResponse;
+
+CreateEntryUrlResponse resp = client.createEntryUrl(
+        CreateEntryUrlRequest.of("agent-user-001")
+                .withRedirectPath("/trade/BTCUSDT")
+                .withReturnUrl("https://partner.example.com/return#markets"));
+
+System.out.println(resp.webUrl);
+System.out.println(resp.expireAt);
+```
+
+Правила поля:
+
+| Поле | Описание |
+| --- | --- |
+| `redirectPath` | 6MM относительный путь интерфейса. Он должен начинаться с `/`, например `/trade/BTCUSDT` |
+| `returnUrl` | Абсолютный партнер URL используется, когда пользователь выходит из 6MM интерфейса. Разрешены только `http` и `https` |
+| `expireAt` | Срок действия входного билета в виде временной метки Unix в секундах. |
+
+Требования безопасности:
+
+- `webUrl` содержит одноразовый билет. Используйте его немедленно и не храните его в течение длительного времени.
+- Если срок действия записи URL истек или она уже использовалась, создайте новую на партнерском сайте.
+- `returnUrl` не должен быть `javascript:`, относительным путем или URL с информацией о пользователе.
+
+
+<span id="product-and-mode-selection" data-sixmm-canonical-anchor="product-and-mode-selection" aria-hidden="true"></span>
+
+## Выбор продукта и режима
+
+Используйте текущий маршрут интерфейса, предоставленный 6MM. Например, `/zh-CN/up-down?tradingMode=demo`, `/zh-CN/high-low?tradingMode=real`, `/zh-CN/grid-prediction?tradingMode=real` или `/zh-CN/futures/BTCUSDT?tradingMode=real`. Билет аутентифицирует пользователя; он не выбирает среду финансирования и не перемещает средства.
+
+Видеть [Торговля секундами](/ru/sdk/agent-sdk/java/seconds-trading) для перенаправления и встроенных примеров.
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Источник и связанные руководства
+
+- [Официальный источник v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Обзор запроса и нумерация страниц](/ru/sdk/agent-sdk/java/perpetual-queries)
+- [Финансирование кошелька](/ru/sdk/agent-sdk/java/funding-wallet)
+- [Руководство по обновлению](/ru/sdk/agent-sdk/java/upgrade)

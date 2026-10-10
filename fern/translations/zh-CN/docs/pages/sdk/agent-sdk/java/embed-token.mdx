@@ -1,17 +1,34 @@
 ---
 title: "创建 Embed Token"
-subtitle: "为 Trading Widget partner-token 模式签发短期 embedToken。"
+subtitle: "创建 Embed Token: Agent Java SDK v0.3.0 接入、示例、参数及响应说明。"
 slug: sdk/agent-sdk/java/embed-token
 canonical-url: https://docs.6mm.com/zh-CN/sdk/agent-sdk/java/embed-token
 ---
 
-<span id="sdk-call" data-sixmm-canonical-anchor="sdk-call" aria-hidden="true"></span>
+本文对应 **Agent Java SDK `v0.3.0`**、Java 8+ 与该标签的公开契约。示例在合作方后端运行；先按[快速开始](/zh-CN/sdk/agent-sdk/java/quick-start)初始化 `client`。
 
-## SDK 调用
+<span data-sixmm-canonical-anchor="示例前提" aria-hidden="true"></span>
 
-Embed Token 必须由 Partner 后端在校验用户登录态之后创建。浏览器只调用 Partner 自己的接口，Partner 后端再通过 Agent SDK 调用 6MM。
+## 示例前提
+
+Java 示例共用以下导入。按快速开始初始化 `client`，从已保存的绑定取得 `platformUserId`。示例用户和订单 ID 必须替换为实际持久化值。
 
 ```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span data-sixmm-canonical-anchor="内嵌交易-token" aria-hidden="true"></span>
+
+## 内嵌交易 token
+
+内嵌交易适用于 Trading Widget SDK 的 `partner-token + tokenProvider` 模式。浏览器端调用代理商自己的后端，代理商后端再调用 Java SDK 创建 `embedToken`。
+
+```java
+import com.sixmm.agent.model.CreateEmbedTokenRequest;
+import com.sixmm.agent.model.CreateEmbedTokenResponse;
+
 CreateEmbedTokenResponse resp = client.createEmbedToken(
         CreateEmbedTokenRequest.of("agent-user-001", "tw_abc123")
                 .withSymbol("ETHUSDT"));
@@ -20,13 +37,15 @@ System.out.println(resp.embedToken);
 System.out.println(resp.expireAt);
 ```
 
-> **一次性凭据**
->
-> embedToken 是短期一次性 token，不能放到 URL query 中。
+对接要求：
 
-<span id="backend-endpoint-example" data-sixmm-canonical-anchor="backend-endpoint-example" aria-hidden="true"></span>
+- `channelId` 必须使用 Trading Widget SDK 传给代理商前端的值。
+- `symbol` 可选，建议传当前 iframe 初始交易对。
+- `embedToken` 是短期一次性 token，不能放到 URL query 中。
+- 代理商前端不能持有 `apiSecret`，只能请求代理商后端。
+- `expireAt` 是 Unix 秒级时间戳，不是 TTL。
 
-## 后端接口示例
+代理商后端接口示例：
 
 ```java
 @PostMapping("/api/trading/embed-token")
@@ -41,24 +60,20 @@ public EmbedTokenView createEmbedToken(@RequestBody EmbedTokenRequest request,
 }
 ```
 
-只向前端返回 Trading Widget tokenProvider 需要的字段。不要返回 apiSecret、原始签名字段或内部服务配置。
 
-<span id="failure-handling" data-sixmm-canonical-anchor="failure-handling" aria-hidden="true"></span>
+<span data-sixmm-canonical-anchor="合作方接口约定" aria-hidden="true"></span>
 
-## 失败处理
+## 合作方接口约定
 
-| 情况 | 建议处理 |
-| --- | --- |
-| 用户会话不存在或已过期 | Partner 接口返回 401，并要求用户重新登录。 |
-| Agent 用户尚未绑定 | 先绑定用户，再重试创建 token。 |
-| 6MM 返回临时错误 | 向前端返回可重试错误，并记录 requestId 便于支持排查。 |
-| channelId 与 Widget 实例不匹配 | 拒绝请求并重新创建 Widget 会话。 |
+校验合作方登录会话，并在后端取得 `agentUserId`。接收当前 Widget 的 `channelId`，返回顶层 `embedToken`、`expireAt`（Unix 秒）及原样的 `channelId`。Agent 响应没有 `channelId`，由合作方后端带回。初始化和续签每次请求新 token，不能重复使用。签发 token 不划转资金，也不选择钱包环境。
 
-<span id="related-documentation" data-sixmm-canonical-anchor="related-documentation" aria-hidden="true"></span>
+完整前后端流程见[秒合约接入](/zh-CN/sdk/agent-sdk/java/seconds-trading)。
 
-## 相关文档
+<span data-sixmm-canonical-anchor="来源与相关指南" aria-hidden="true"></span>
 
-- [Trading Widget 身份认证](/zh-CN/sdk/trading-widget/authentication)：把 `tokenProvider` 接入合作方后端接口。
-- [Java 快速开始](/zh-CN/sdk/agent-sdk/java/quick-start)：安装并初始化 `AgentClient`。
-- [密钥与签名](/zh-CN/sdk/security/secrets-signing)：保护 Agent API 密钥。
-- [Webhook 与幂等](/zh-CN/sdk/security/webhooks-idempotency)：保护接入流程的回调端。
+## 来源与相关指南
+
+- [官方 v0.3.0 源码](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [合约查询与分页](/zh-CN/sdk/agent-sdk/java/perpetual-queries)
+- [Funding 钱包](/zh-CN/sdk/agent-sdk/java/funding-wallet)
+- [升级指南](/zh-CN/sdk/agent-sdk/java/upgrade)

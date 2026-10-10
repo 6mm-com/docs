@@ -1,0 +1,104 @@
+---
+title: "永久取引約定"
+subtitle: "永久取引約定: Agent Java SDK v0.3.0 の統合、例、パラメーター、および応答セマンティクス。"
+slug: sdk/agent-sdk/java/perpetual-trades
+canonical-url: https://docs.6mm.com/ja/sdk/agent-sdk/java/perpetual-trades
+---
+
+このガイドは、**Agent Java SDK `v0.3.0`**、Java 8 以降、およびタグ付けされたパブリック コントラクトを対象としています。例は `client` を初期化した後にパートナー バックエンドで実行されます。 [クイックスタート](/ja/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## 前提条件の例
+
+Java スニペットはこれらのインポートを共有します。クイック スタートを使用して `client` を初期化し、保存されたバインディングから `platformUserId` を取得します。ユーザー/オーダー ID の例は、独自の永続化された値に置き換える必要があります。
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span data-sixmm-canonical-anchor="listperpetualtrades" aria-hidden="true"></span>
+
+## `listPerpetualTrades`
+
+リクエストモデル: `PerpetualTradesRequest`。
+
+```java
+import com.sixmm.agent.model.PerpetualTradesRequest;
+import com.sixmm.agent.model.PerpetualResponse;
+import java.util.Collections;
+
+PerpetualTradesRequest request = new PerpetualTradesRequest();
+request.platformUserIds = Collections.singletonList("1188041528");
+request.limit = 100;
+request.symbol = "BTCUSDT";
+request.endTime = System.currentTimeMillis();
+request.startTime = request.endTime - 3_600_000L;
+PerpetualResponse response = client.listPerpetualTrades(request);
+System.out.println(response.data.items.size());
+System.out.println(response.data.hasMore);
+System.out.println(response.data.nextCursor);
+```
+
+<span id="request-fields" data-sixmm-canonical-anchor="request-fields" aria-hidden="true"></span>
+
+### リクエストフィールド
+
+| 分野 | Java タイプ | 必須 | 意味 |
+| --- | --- | --- | --- |
+| `platformUserIds` | `java.util.List<String>` | 条件付き | 1 ～ 100 個の一意のパブリック ID。約定および条件付き注文に必要です。ダイレクトプレイヤースコープでサポートされているクエリを省略します。 []は無効です。 |
+| `symbol` | `String` | いいえ | オプションの取引ペアフィルター。 |
+| `orderId` | `String` | いいえ | 通常の注文ID。パートナー転送注文番号ではありません。 |
+| `startTime` | `Long` | いいえ | Unix ミリ秒を含みます。固定の UTC 履歴ウィンドウを使用します。 |
+| `endTime` | `Long` | いいえ | 排他的な Unix ミリ秒。 |
+| `limit` | `Integer` | いいえ | デフォルトは 500。 1 ～ 1000。 |
+| `cursor` | `String` | いいえ | 返された nextCursor をフィルターを変更せずに使用します。 hasMore が false の場合に停止します。 |
+
+この例では 1 ページを読み取ります。必須フィールド、プレーヤーのスコープ、フィルター セマンティクス、制限、カーソル、制限された再試行については、次のとおりです。 [クエリの概要](/ja/sdk/agent-sdk/java/perpetual-queries)。ページング中はすべてのフィルターを変更しないでください。エラーを空の結果として解釈しないでください。
+
+<span id="transaction-details" data-sixmm-canonical-anchor="transaction-details" aria-hidden="true"></span>
+
+## 取引約定の詳細
+
+インターフェース: `trades`。明示的な platformUserIds が必要です。
+
+| `data` フィールド | タイプ | 意味 |
+| --- | --- | --- |
+| `fillId` | string | このレコード entityId に対応する取引約定詳細 ID |
+| `tradeId` | string | トランザクションに関連付けられた一致するトランザクション ID。詳細 ID に代わるものではありません |
+| `orderId` | string | この詳細が属する一般注文 ID |
+| `positionId` | string | 関連付けられた位置ID |
+| `symbol` | string | 取引ペア |
+| `side` | string | このプレイヤーの売買方向 BUY / SELL |
+| `roleType` | string | このプレイヤーの取引キャラクター MAKER / TAKER |
+| `positionSide` | string | 位置の方向。実際の値 LONG / SHORT / BOTH などに従って説明されます。 |
+| `price` | string | 今回の取引価格は |
+| `quantity` | string | このトランザクションの数量は、元の注文の合計数量ではありません。 |
+| `tradeValue` | string | この取引の名目価値は取引の想定元本から得られます。 |
+| `handlingFee` | string | この取引の取引手数料は、ソースシンボルと精度を保持し、それ自体で絶対値を取得しません。 |
+| `realizedPnl` | string | この取引に対応する実現損益。現在のポジションのリアルタイム変動損益ではありません |
+| `tradedAt` | integer | トランザクション時間、ミリ秒。このフィールドを時間フィルタリングに使用します |
+
+注文には複数の約定が含まれる場合があるため、詳細に保存する必要があります。 tradeId によって異なるプレーヤー/フィルロールのレコードをマージし、レコード ID を破棄しないでください。
+
+
+<span id="example-response-envelope" data-sixmm-canonical-anchor="example-response-envelope" aria-hidden="true"></span>
+
+## 応答エンベロープの例
+
+これは空のページの例であり、完了した取引のサンプルではありません。上記のリソース固有のフィールド テーブルは、設定された `items[].data` について説明しています。
+
+```json
+{"code":0,"message":"success","data":{"items":[],"nextCursor":"","hasMore":false}}
+```
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## ソースおよび関連ガイド
+
+- [公式 v0.3.0 ソース](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [クエリの概要とページネーション](/ja/sdk/agent-sdk/java/perpetual-queries)
+- [資金調達ウォレット](/ja/sdk/agent-sdk/java/funding-wallet)
+- [アップグレードガイド](/ja/sdk/agent-sdk/java/upgrade)

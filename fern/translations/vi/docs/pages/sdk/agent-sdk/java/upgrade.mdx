@@ -1,0 +1,83 @@
+---
+title: "Nâng cấp lên v0.3.0"
+subtitle: "Nâng cấp lên v0.3.0: Agent Java SDK tích hợp v0.3.0, ví dụ, tham số và ngữ nghĩa phản hồi."
+slug: sdk/agent-sdk/java/upgrade
+canonical-url: https://docs.6mm.com/vi/sdk/agent-sdk/java/upgrade
+---
+
+Hướng dẫn này hướng đến **Agent Java SDK `v0.3.0`** và Java 8+.
+
+<span id="decide-what-needs-upgrading" data-sixmm-canonical-anchor="decide-what-needs-upgrading" aria-hidden="true"></span>
+
+## Quyết định những gì cần nâng cấp
+
+| Tích hợp hiện có | Hoạt động |
+| --- | --- |
+| Chức năng sản xuất hiện tại với môi trường bị bỏ qua | Các hình dạng phản hồi hiện tại vẫn tương thích; các truy vấn mới không buộc phải nâng cấp. |
+| Xác thực nhúng chung hiện có cho giao dịch giây | Tái sử dụng xác thực và gia hạn; chọn trang sản phẩm cần thiết. |
+| Số dư tài trợ, chuyển giao và thu hồi | Sử dụng các mô hình chứa `withFunding`, `walletTransfer` và `queryWalletTransfer`. |
+| Quỹ mô phỏng rõ ràng | Sử dụng các mô hình yêu cầu/phản hồi hỗ trợ `environment`. |
+| Sáu truy vấn dữ liệu vĩnh viễn | Sử dụng Java SDK `v0.3.0` công khai, bao gồm sáu phương thức và hỗ trợ ký mảng. |
+
+Giữ nguyên `baseUrl`, `agentCode`, `apiSecret`, ràng buộc người dùng và đơn đặt hàng kinh doanh ban đầu hiện tại của bạn.
+
+<span id="install-the-stable-public-tag" data-sixmm-canonical-anchor="install-the-stable-public-tag" aria-hidden="true"></span>
+
+## Cài đặt thẻ công khai ổn định
+
+Nguồn máy chủ GitHub. Xuất bản thẻ GitHub không xuất bản tọa độ Maven lên Maven Central. Cài đặt nguồn được gắn thẻ cục bộ hoặc xuất bản JAR/POM đã được xác minh của nó lên kho lưu trữ tạo tác của tổ chức bạn.
+
+```bash
+git clone --branch v0.3.0 --single-branch https://github.com/6mm-com/agent-java-sdk.git agent-java-sdk-v0.3.0
+cd agent-java-sdk-v0.3.0
+git rev-parse HEAD
+git rev-parse 'v0.3.0^{commit}'
+mvn install
+```
+
+Hai ID cam kết phải khớp nhau. Khai báo sự phụ thuộc trong dự án đối tác:
+
+```xml
+<dependency>
+    <groupId>com.sixmm.exchange.sdk</groupId>
+    <artifactId>agent</artifactId>
+    <version>0.3.0</version>
+</dependency>
+```
+
+Xác minh sự phụ thuộc đã giải quyết:
+
+```bash
+mvn dependency:tree -Dincludes=com.sixmm.exchange.sdk:agent
+```
+
+Cài đặt cục bộ chỉ làm cho tạo phẩm có sẵn trên máy đó. CI và các nhà phát triển khác cần cài đặt được gắn thẻ tương tự hoặc kho lưu trữ tạo phẩm đã được xác minh của bạn. Nếu bạn đã có một tạo phẩm riêng có tên `0.3.0`, hãy xác minh nguồn và phương thức của nó; không âm thầm ghi đè lên một tạo phẩm được chia sẻ.
+
+<span id="required-integration-changes" data-sixmm-canonical-anchor="required-integration-changes" aria-hidden="true"></span>
+
+## Những thay đổi tích hợp bắt buộc
+
+1. Cập nhật các mô hình yêu cầu và phản hồi cho `environment` rõ ràng. Các mô hình phản hồi cũ hơn có thể từ chối trường bổ sung.
+2. Sử dụng `withFunding()` trước khi đọc `funding`. Số dư hợp đồng không phải là số dư giao dịch theo giây.
+3. Sử dụng `/v1/agent/wallet-transfer` và `/v1/agent/wallet-transfer-status` để cấp vốn. `queryOrder` cũ không thể khôi phục hoạt động Cấp vốn.
+4. Sáu truy vấn sử dụng `platformUserIds` làm một mảng chuỗi. Ký hiệu mảng dưới dạng thu gọn JSON; Java `List.toString()` không tương thích.
+5. Lưu trữ các lệnh chuyển nhượng, lệnh giao dịch thông thường, lệnh có điều kiện và điền lệnh dưới dạng các thực thể riêng biệt. Phân tích cú pháp `orderStatus` hoặc `status` theo thao tác.
+6. Xác minh phần nội dung webhook ban đầu trước khi phân tích cú pháp. Thông báo mô phỏng rõ ràng bao gồm `environment`; so sánh nó với thứ tự đã lưu.
+7. Quản lý độc lập các phiên bản Java và Widget. Nâng cấp phụ trợ không thay đổi trang giao diện người dùng hoặc chế độ giao dịch và giao dịch theo giây không yêu cầu loại mã thông báo mới.
+
+<span id="verify-the-upgrade" data-sixmm-canonical-anchor="verify-the-upgrade" aria-hidden="true"></span>
+
+## Xác minh nâng cấp
+
+Chạy bản dựng của dự án đối tác và kiểm tra cây phụ thuộc của nó. Ràng buộc thử nghiệm, quy trình sản xuất ban đầu, số dư mô phỏng rõ ràng, Khôi phục kết quả cấp vốn, tất cả sáu truy vấn, phân trang theo cửa sổ cố định, xử lý lỗi và gọi lại tạm thời.
+
+Đối với ứng dụng khách HTTP tùy chỉnh, hãy làm theo yêu cầu được gắn thẻ và ký hợp đồng thay vì giả sử các mô hình cũ bao gồm các trường mới. Nhìn thấy [Tổng quan về truy vấn](/vi/sdk/agent-sdk/java/perpetual-queries) Và [Hướng dẫn môi trường](/vi/sdk/agent-sdk/java/environments).
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Nguồn và hướng dẫn liên quan
+
+- [Nguồn v0.3.0 chính thức](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Tổng quan về truy vấn và phân trang](/vi/sdk/agent-sdk/java/perpetual-queries)
+- [Ví tiền tài trợ](/vi/sdk/agent-sdk/java/funding-wallet)
+- [Hướng dẫn nâng cấp](/vi/sdk/agent-sdk/java/upgrade)

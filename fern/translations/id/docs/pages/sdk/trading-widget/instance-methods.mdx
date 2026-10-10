@@ -1,5 +1,5 @@
 ---
-title: "Metode Instance"
+title: "Metode Instans"
 subtitle: "Kontrol instance widget yang dibuat setelah TradingWidget.create()."
 slug: sdk/trading-widget/instance-methods
 canonical-url: https://docs.6mm.com/id/sdk/trading-widget/instance-methods
@@ -11,23 +11,23 @@ canonical-url: https://docs.6mm.com/id/sdk/trading-widget/instance-methods
 
 | Metode | Tujuan |
 | --- | --- |
-| hancurkan() | Lepaskan pendengar iframe dan rilis event. |
+| menghancurkan() | Hapus iframe dan lepaskan pendengar acara. |
 | getState() | Baca status siklus hidup SDK saat ini. |
-| whenReady() | Tunggu sampai iframe selesai inisialisasi. |
-| setSymbol(simbol) | Tukar pasangan trading di dalam iframe. |
+| whenReady() | Tunggu hingga iframe selesai inisialisasi. |
+| setSymbol(simbol) | Ganti pasangan perdagangan di dalam iframe. |
 | setTheme(tema) | Perbarui parameter tema iframe. |
-| setLocale(lokasi) | Ganti bahasa iframe. |
+| setLocale(lokal) | Ganti bahasa iframe. |
 | setSize(lebar, tinggi) | Perbarui dimensi iframe. |
-| reload() | Muat ulang iframe saat ini. |
-| refreshAuth(alasan) | Aktifkan alur pembaruan otentikasi widget. |
-| setTokenProvider(penyedia) | Ganti penyedia yang digunakan oleh mode token mitra. |
-| on(event, handler) | Berlangganan acara runtime dan terima fungsi berhenti berlangganan. |
+| memuat ulang() | Muat ulang iframe saat ini. |
+| refreshAuth(alasan) | Memicu aliran penyegaran autentikasi widget. |
+| setTokenProvider(penyedia) | Ganti penyedia yang digunakan dengan mode token mitra. |
+| aktif (acara, pengendali) | Berlangganan acara runtime dan terima fungsi berhenti berlangganan. |
 
 <span id="destroy" data-sixmm-canonical-anchor="destroy" aria-hidden="true"></span>
 
-## hancurkan()
+## menghancurkan()
 
-Lepaskan iframe, hapus listener, dan emit destroyed sekali untuk instance saat ini.
+Hapus iframe, hapus pendengar, dan emit yang dimusnahkan satu kali untuk instance saat ini.
 
 ```js
 widget.destroy()
@@ -37,19 +37,19 @@ widget.destroy()
 
 ## getState()
 
-Baca status siklus hidup saat ini dari instance widget.
+Baca status siklus hidup instance widget saat ini.
 
 ```js
 const state = widget.getState()
 ```
 
-Nilai pengembalian meliputi loading, authenticating, ready, error, dan destroyed.
+Nilai yang dikembalikan mencakup memuat, mengautentikasi, siap, kesalahan, dan dimusnahkan.
 
 <span data-sixmm-canonical-anchor="whenready" aria-hidden="true"></span>
 
 ## whenReady()
 
-Tunggu hingga iframe selesai inisialisasi sebelum menjalankan logika UI yang bergantung.
+Tunggu hingga iframe menyelesaikan inisialisasi sebelum menjalankan logika UI dependen.
 
 ```js
 await widget.whenReady()
@@ -59,7 +59,7 @@ await widget.whenReady()
 
 ## setSymbol(simbol)
 
-Alihkan pasangan trading di dalam iframe. Jika iframe masih dalam inisialisasi, SDK mengantrikan perintah dan mengirimkannya setelah siap.
+Ganti pasangan perdagangan di dalam iframe. Jika iframe masih melakukan inisialisasi, SDK mengantri perintah dan mengirimkannya setelah siap.
 
 ```js
 widget.setSymbol('ETHUSDT')
@@ -69,7 +69,7 @@ widget.setSymbol('ETHUSDT')
 
 ## setTheme(tema)
 
-Perbarui parameter tema yang digunakan oleh iframe trading tertanam.
+Perbarui parameter tema yang digunakan oleh iframe perdagangan yang disematkan.
 
 ```js
 widget.setTheme('dark')
@@ -78,7 +78,7 @@ widget.setTheme('light')
 
 <span id="setlocale-locale" data-sixmm-canonical-anchor="setlocale-locale" aria-hidden="true"></span>
 
-## setLocale(lokasi)
+## setLocale(lokal)
 
 Ganti bahasa iframe. Nilai yang didukung adalah en, en-US, dan zh-CN.
 
@@ -92,15 +92,15 @@ widget.setLocale('zh-CN')
 
 ## setSize(lebar, tinggi)
 
-Perbarui ukuran DOM iframe dan beri tahu iframe tentang ukuran luar baru. Nilai numerik dikonversi ke px.
+Perbarui ukuran iframe DOM dan beri tahu iframe tentang ukuran luar yang baru. Nilai numerik dikonversi ke px.
 
 ```js
 widget.setSize('100%', 720)
 ```
 
-<span data-sixmm-canonical-anchor="reload" aria-hidden="true"></span>
+<span id="reload" data-sixmm-canonical-anchor="reload" aria-hidden="true"></span>
 
-## reload()
+## memuat ulang()
 
 Muat ulang iframe saat ini dan tunggu hingga diinisialisasi lagi.
 
@@ -122,7 +122,7 @@ widget.refreshAuth('manual')
 
 ## setTokenProvider(penyedia)
 
-Ganti tokenProvider yang digunakan oleh mode token mitra. SDK memanggil penyedia saat iframe meminta token embed baru.
+Ganti tokenProvider yang digunakan oleh mode token mitra. SDK memanggil penyedia ketika iframe meminta token penyematan baru.
 
 ```js
 widget.setTokenProvider(async ({ channelId, symbol, reason }) => {
@@ -139,9 +139,9 @@ widget.setTokenProvider(async ({ channelId, symbol, reason }) => {
 
 <span id="on-event-handler" data-sixmm-canonical-anchor="on-event-handler" aria-hidden="true"></span>
 
-## on(event, handler)
+## aktif (acara, pengendali)
 
-Berlangganan ke acara runtime. Fungsi yang dikembalikan akan menghapus listener.
+Berlangganan ke acara runtime. Fungsi yang dikembalikan menghapus pendengar.
 
 ```js
 const off = widget.on('order_created', (event) => {
@@ -155,7 +155,30 @@ off()
 
 ## Panduan Widget Terkait
 
-- [Trading Widget Quick Start](/id/sdk/trading-widget/quick-start)
-- [Opsi & Acara](/id/sdk/trading-widget/options-events)
-- [Autentikasi](/id/sdk/trading-widget/authentication)
-- [Pemecahan Masalah](/id/sdk/security/troubleshooting)
+- [Trading Widget Mulai Cepat](/id/sdk/trading-widget/quick-start)
+- [Pilihan & Acara](/id/sdk/trading-widget/options-events)
+- [Otentikasi](/id/sdk/trading-widget/authentication)
+- [Pemecahan masalah](/id/sdk/security/troubleshooting)
+
+<span id="additional-methods-in-the-current-v1-runtime" data-sixmm-canonical-anchor="additional-methods-in-the-current-v1-runtime" aria-hidden="true"></span>
+
+## Metode tambahan dalam runtime v1 saat ini
+
+| Metode | Tujuan |
+| --- | --- |
+| `whenRendered()` | Tunggu notifikasi yang diberikan iframe; ini terpisah dari siap. |
+| `setPage(page)` | Minta halaman produk yang didukung dalam contoh saat ini. Itu tidak mengubah lingkungan dana. |
+| `prepareForRecreate()` | Minta iframe yang sudah siap untuk mempersiapkan penggantian; mengembalikan janji dan dapat menolak jika tidak tersedia, sibuk, atau waktu habis. |
+| `cancelRecreate()` | Membatalkan aliran penggantian yang tertunda/disiapkan. |
+| `TradingWidget.validateOptions(options)` | Validasi opsi inisialisasi sebelum membuat instance. |
+
+Untuk perubahan lingkungan pengguna atau nyata/demo, hancurkan instance lama dan buat yang baru dengan otentikasi dan mode target. Jangan gunakan `setPage` sebagai pengalih lingkungan. Periksa kemampuan sebelum menggunakan metode opsional.
+
+```js
+if (TradingWidget.capabilities.methods.includes('whenRendered')) {
+  await widget.whenRendered();
+}
+if (TradingWidget.capabilities.pages.includes('up-down')) {
+  widget.setPage('up-down');
+}
+```

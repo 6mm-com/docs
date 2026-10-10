@@ -1,0 +1,71 @@
+---
+title: "跳转入口"
+subtitle: "跳转入口: Agent Java SDK v0.3.0 接入、示例、参数及响应说明。"
+slug: sdk/agent-sdk/java/entry-url
+canonical-url: https://docs.6mm.com/zh-CN/sdk/agent-sdk/java/entry-url
+---
+
+本文对应 **Agent Java SDK `v0.3.0`**、Java 8+ 与该标签的公开契约。示例在合作方后端运行；先按[快速开始](/zh-CN/sdk/agent-sdk/java/quick-start)初始化 `client`。
+
+<span data-sixmm-canonical-anchor="示例前提" aria-hidden="true"></span>
+
+## 示例前提
+
+Java 示例共用以下导入。按快速开始初始化 `client`，从已保存的绑定取得 `platformUserId`。示例用户和订单 ID 必须替换为实际持久化值。
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span data-sixmm-canonical-anchor="直接跳转入口" aria-hidden="true"></span>
+
+## 直接跳转入口
+
+直接跳转入口适合用户从代理商站点点击按钮后，打开 6MM 前端并自动登录。
+
+```java
+import com.sixmm.agent.model.CreateEntryUrlRequest;
+import com.sixmm.agent.model.CreateEntryUrlResponse;
+
+CreateEntryUrlResponse resp = client.createEntryUrl(
+        CreateEntryUrlRequest.of("agent-user-001")
+                .withRedirectPath("/trade/BTCUSDT")
+                .withReturnUrl("https://partner.example.com/return#markets"));
+
+System.out.println(resp.webUrl);
+System.out.println(resp.expireAt);
+```
+
+字段规则：
+
+| 字段 | 说明 |
+| --- | --- |
+| `redirectPath` | 6MM 前端内部相对路径，必须以 `/` 开头，例如 `/trade/BTCUSDT` |
+| `returnUrl` | 用户在 6MM 前端退出时回跳的代理商绝对 URL，只允许 `http` 或 `https` |
+| `expireAt` | 入口 ticket 过期时间，Unix 秒级时间戳 |
+
+安全要求：
+
+- `webUrl` 内含一次性 ticket，建议立即使用，不要长期存储。
+- 入口链接过期或已使用后，用户需要重新从代理商站点发起。
+- `returnUrl` 不允许使用 `javascript:`、相对路径或带 userinfo 的 URL。
+
+
+<span data-sixmm-canonical-anchor="产品与模式选择" aria-hidden="true"></span>
+
+## 产品与模式选择
+
+使用 6MM 提供的当前交易前端路径。例如 `/zh-CN/up-down?tradingMode=demo`、`/zh-CN/high-low?tradingMode=real`、`/zh-CN/grid-prediction?tradingMode=real` 或 `/zh-CN/futures/BTCUSDT?tradingMode=real`。票据只用于用户认证，不选择资金环境，也不执行划转。
+
+跳转和内嵌完整示例见[秒合约接入](/zh-CN/sdk/agent-sdk/java/seconds-trading)。
+
+<span data-sixmm-canonical-anchor="来源与相关指南" aria-hidden="true"></span>
+
+## 来源与相关指南
+
+- [官方 v0.3.0 源码](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [合约查询与分页](/zh-CN/sdk/agent-sdk/java/perpetual-queries)
+- [Funding 钱包](/zh-CN/sdk/agent-sdk/java/funding-wallet)
+- [升级指南](/zh-CN/sdk/agent-sdk/java/upgrade)

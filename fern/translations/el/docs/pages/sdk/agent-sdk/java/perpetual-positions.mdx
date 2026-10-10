@@ -1,0 +1,142 @@
+---
+title: "Διαρκείς θέσεις"
+subtitle: "Διαρκείς θέσεις: Agent Java SDK Ενσωμάτωση v0.3.0, παραδείγματα, παράμετροι και σημασιολογία απόκρισης."
+slug: sdk/agent-sdk/java/perpetual-positions
+canonical-url: https://docs.6mm.com/el/sdk/agent-sdk/java/perpetual-positions
+---
+
+Αυτός ο οδηγός στοχεύει **Agent Java SDK `v0.3.0`**, Java 8+ και τη δημόσια σύμβαση με ετικέτα. Τα παραδείγματα εκτελούνται σε ένα backend συνεργάτη μετά την προετοιμασία του `client` στο [Γρήγορη εκκίνηση](/el/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## Παράδειγμα προαπαιτούμενα
+
+Τα αποσπάσματα Java μοιράζονται αυτές τις εισαγωγές. Αρχικοποιήστε το `client` χρησιμοποιώντας Γρήγορη εκκίνηση και αποκτήστε `platformUserId` από την αποθηκευμένη δέσμευση. Παραδείγματα αναγνωριστικών χρήστη/παραγγελιών πρέπει να αντικατασταθούν με τις δικές σας σταθερές τιμές.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span data-sixmm-canonical-anchor="listcurrentperpetualpositions" aria-hidden="true"></span>
+
+## `listCurrentPerpetualPositions`
+
+Αίτημα μοντέλου: `CurrentPerpetualPositionsRequest`.
+
+```java
+import com.sixmm.agent.model.CurrentPerpetualPositionsRequest;
+import com.sixmm.agent.model.PerpetualResponse;
+import java.util.Collections;
+
+CurrentPerpetualPositionsRequest request = new CurrentPerpetualPositionsRequest();
+request.platformUserIds = Collections.singletonList("1188041528");
+request.limit = 100;
+request.symbol = "BTCUSDT";
+PerpetualResponse response = client.listCurrentPerpetualPositions(request);
+System.out.println(response.data.items.size());
+System.out.println(response.data.hasMore);
+System.out.println(response.data.nextCursor);
+```
+
+<span id="request-fields" data-sixmm-canonical-anchor="request-fields" aria-hidden="true"></span>
+
+### Πεδία αιτήματος
+
+| Πεδίο | Java τύπος | Υποχρεούμαι | Εννοια |
+| --- | --- | --- | --- |
+| `platformUserIds` | `java.util.List<String>` | Υποθετικός | 1–100 μοναδικά δημόσια αναγνωριστικά. απαιτείται για γεμίσεις και παραγγελίες υπό όρους. Παράλειψη υποστηριζόμενων ερωτημάτων για εύρος απευθείας παίκτη. Το [] δεν είναι έγκυρο. |
+| `symbol` | `String` | Οχι | Προαιρετικό φίλτρο ζεύγους συναλλαγών. |
+| `limit` | `Integer` | Οχι | Προεπιλογή 500; 1–1000. |
+| `cursor` | `String` | Οχι | Χρησιμοποιήστε το επιστρεφόμενο nextCursor με αμετάβλητα φίλτρα. σταματήστε όταν το hasMore είναι ψευδές. |
+
+Το παράδειγμα διαβάζει μια σελίδα. Για απαιτούμενα πεδία, εύρος προγράμματος αναπαραγωγής, σημασιολογία φίλτρου, όριο, δρομέα και περιορισμένες επαναλήψεις, ακολουθήστε [Επισκόπηση ερωτήματος](/el/sdk/agent-sdk/java/perpetual-queries). Διατηρήστε όλα τα φίλτρα αμετάβλητα κατά τη σελιδοποίηση. μην ερμηνεύσετε ένα σφάλμα ως κενό αποτέλεσμα.
+
+<span data-sixmm-canonical-anchor="listperpetualpositionhistory" aria-hidden="true"></span>
+
+## `listPerpetualPositionHistory`
+
+Αίτημα μοντέλου: `PerpetualPositionHistoryRequest`.
+
+```java
+import com.sixmm.agent.model.PerpetualPositionHistoryRequest;
+import com.sixmm.agent.model.PerpetualResponse;
+import java.util.Collections;
+
+PerpetualPositionHistoryRequest request = new PerpetualPositionHistoryRequest();
+request.platformUserIds = Collections.singletonList("1188041528");
+request.limit = 100;
+request.symbol = "BTCUSDT";
+request.endTime = System.currentTimeMillis();
+request.startTime = request.endTime - 3_600_000L;
+PerpetualResponse response = client.listPerpetualPositionHistory(request);
+System.out.println(response.data.items.size());
+System.out.println(response.data.hasMore);
+System.out.println(response.data.nextCursor);
+```
+
+<span id="request-fields-1" data-sixmm-canonical-anchor="request-fields-1" aria-hidden="true"></span>
+
+### Πεδία αιτήματος
+
+| Πεδίο | Java τύπος | Υποχρεούμαι | Εννοια |
+| --- | --- | --- | --- |
+| `platformUserIds` | `java.util.List<String>` | Υποθετικός | 1–100 μοναδικά δημόσια αναγνωριστικά. απαιτείται για γεμίσεις και παραγγελίες υπό όρους. Παράλειψη υποστηριζόμενων ερωτημάτων για εύρος απευθείας παίκτη. Το [] δεν είναι έγκυρο. |
+| `symbol` | `String` | Οχι | Προαιρετικό φίλτρο ζεύγους συναλλαγών. |
+| `positionSide` | `String` | Οχι | Φιλτράρετε χρησιμοποιώντας τον αριθμό θέσης πηγής. |
+| `startTime` | `Long` | Οχι | Συμπεριλαμβανόμενα χιλιοστά του δευτερολέπτου Unix. χρησιμοποιήστε ένα σταθερό παράθυρο ιστορικού UTC. |
+| `endTime` | `Long` | Οχι | Αποκλειστικά Unix χιλιοστά του δευτερολέπτου. |
+| `limit` | `Integer` | Οχι | Προεπιλογή 500; 1–1000. |
+| `cursor` | `String` | Οχι | Χρησιμοποιήστε το επιστρεφόμενο nextCursor με αμετάβλητα φίλτρα. σταματήστε όταν το hasMore είναι ψευδές. |
+
+Το παράδειγμα διαβάζει μια σελίδα. Για απαιτούμενα πεδία, εύρος προγράμματος αναπαραγωγής, σημασιολογία φίλτρου, όριο, δρομέα και περιορισμένες επαναλήψεις, ακολουθήστε [Επισκόπηση ερωτήματος](/el/sdk/agent-sdk/java/perpetual-queries). Διατηρήστε όλα τα φίλτρα αμετάβλητα κατά τη σελιδοποίηση. μην ερμηνεύσετε ένα σφάλμα ως κενό αποτέλεσμα.
+
+<span id="positions-current-and-historical" data-sixmm-canonical-anchor="positions-current-and-historical" aria-hidden="true"></span>
+
+## Θέσεις: Επίκαιρες και Ιστορικές
+
+| πεδίο `data` | τύπος | Τρέχουσα θέση | Ιστορικές θέσεις | έννοια |
+| --- | --- | --- | --- | --- |
+| `positionId` | string | προμήθεια | προμήθεια | Αναγνωριστικό θέσης, που αντιστοιχεί σε entityId |
+| `symbol` | string | προμήθεια | προμήθεια | ζεύγος συναλλαγών |
+| `positionSide` | string | προμήθεια | προμήθεια | LONG / SHORT / BOTH και άλλες οδηγίες θέσης |
+| `status` | string | προμήθεια | προμήθεια | Συμβολοσειρά με την αριθμητική κατάσταση της θέσης, δείτε την επισκόπηση ερωτήματος |
+| `leverage` | integer | προμήθεια | προμήθεια | Μόχλευση πολλαπλάσια |
+| `marginMode` | string | προμήθεια | προμήθεια | Αριθμητική συμβολοσειρά απαρίθμησης "1" για πλήρη θέση, "2" για απομονωμένη θέση |
+| `quantity` | string | προμήθεια | Μη διαθέσιμο | Ποσότητα τρέχουσας θέσης |
+| `entryPrice` | string | προμήθεια | προμήθεια | Μέση τιμή ανοίγματος αποθηκευμένων θέσεων |
+| `margin` | string | προμήθεια | Μη διαθέσιμο | Το ποσό περιθωρίου τρέχουσας θέσης, όχι ολόκληρο το υπόλοιπο του πορτοφολιού συμβολαίου του χρήστη |
+| `maxQuantity` | string | Μη διαθέσιμο | προμήθεια | Ο μέγιστος αριθμός θέσεων που καταγράφηκαν σε αυτήν την ιστορική θέση |
+| `closeQuantity` | string | Μη διαθέσιμο | προμήθεια | Ο αθροιστικός αριθμός θέσεων που έκλεισαν κατά τη διάρκεια του ιστορικού κύκλου ζωής θέσης |
+| `closePrice` | string | Μη διαθέσιμο | προμήθεια | Αποθηκευμένη μέση τιμή κλεισίματος |
+| `pnl` | string | Μη διαθέσιμο | προμήθεια | Κέρδη και ζημία ιστορικής θέσης. μην το συνδυάσετε με τη συναλλαγή realizedPnl για απλώς επανάληψη και συσσώρευση |
+| `roe` | string | Μη διαθέσιμο | προμήθεια | Η αναλογική τιμή της απόδοσης ιστορικής θέσης, δεν πολλαπλασιάζεται επί 100. για παράδειγμα, το `"0.043"` αντιπροσωπεύει το `4.3%`, το `"-0.05"` αντιπροσωπεύει το `-5%` |
+| `fundingFeeAccum` | string | προμήθεια | προμήθεια | Συσσωρευμένη αμοιβή χρηματοδότησης, διατήρηση σύμβολο πηγής και ακρίβεια |
+| `openedAt` | integer | προμήθεια | προμήθεια | Χρόνος ανοίγματος θέσης, χιλιοστά του δευτερολέπτου |
+| `updatedAt` | integer | προμήθεια | Μη διαθέσιμο | Χρόνος ενημέρωσης τρέχουσας θέσης, χιλιοστά του δευτερολέπτου |
+| `closedAt` | integer | Μη διαθέσιμο | προμήθεια | Χρόνος κλεισίματος, χιλιοστά του δευτερολέπτου. χρησιμοποιήστε αυτό το πεδίο για να φιλτράρετε τον χρόνο ιστορικής θέσης |
+
+Το διαμέτρημα υπολογισμού του ιστορικού `roe` είναι `pnl / (entryPrice × maxQuantity / leverage)` και η διεπαφή επιστρέφει απευθείας την αποθηκευμένη τιμή αναλογίας. Όταν εμφανίζετε το ποσοστό, χρησιμοποιήστε δεκαδική λειτουργία και πολλαπλασιάστε με το 100 και, στη συνέχεια, προσθέστε `%`. ο παρονομαστής χρησιμοποιεί το ονομαστικό περιθώριο της εγγραφής ιστορικής θέσης, όχι το υπόλοιπο του πορτοφολιού του λογαριασμού. Όταν η τιμή ανοίγματος ή η μέγιστη ποσότητα θέσης είναι 0, η μόχλευση είναι άκυρη κ.λπ. και δεν μπορεί να υπολογιστεί, η πηγή αποθηκεύεται ως 0. Επομένως, δεν μπορεί να συναχθεί ότι το κέρδος ή η ζημία είναι 0 μόνο με βάση το `roe=0`.
+
+Η τρέχουσα θέση δεν έχει τιμή σήμανσης σε πραγματικό χρόνο, κυμαινόμενα κέρδη και ζημίες σε πραγματικό χρόνο, ROE σε πραγματικό χρόνο ή τιμή ρευστοποίησης σε πραγματικό χρόνο. Αντικατοπτρίζει την κατάσταση της αποθηκευμένης θέσης και δεν μπορεί να χρησιμοποιήσει τα πεδία χρόνου ενημέρωσης και περιθωρίου για να διεκδικήσει τα τρέχοντα αποτελέσματα ελέγχου κινδύνου σε πραγματικό χρόνο.
+
+
+<span id="example-response-envelope" data-sixmm-canonical-anchor="example-response-envelope" aria-hidden="true"></span>
+
+## Παράδειγμα φακέλου απάντησης
+
+Αυτή είναι μια ενδεικτική κενή σελίδα, όχι ένα δείγμα ολοκληρωμένης συναλλαγής. Οι παραπάνω πίνακες πεδίων για συγκεκριμένους πόρους περιγράφουν το συμπληρωμένο `items[].data`.
+
+```json
+{"code":0,"message":"success","data":{"items":[],"nextCursor":"","hasMore":false}}
+```
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Πηγή και σχετικοί οδηγοί
+
+- [Επίσημη πηγή έκδοσης 0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Επισκόπηση ερωτήματος και σελιδοποίηση](/el/sdk/agent-sdk/java/perpetual-queries)
+- [Πορτοφόλι χρηματοδότησης](/el/sdk/agent-sdk/java/funding-wallet)
+- [Οδηγός αναβάθμισης](/el/sdk/agent-sdk/java/upgrade)

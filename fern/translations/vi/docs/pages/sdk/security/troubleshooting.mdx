@@ -1,80 +1,95 @@
 ---
 title: "SDK Khắc phục sự cố tích hợp"
-subtitle: "Chẩn đoán các vấn đề Trading Widget, Agent SDK, ký, webhook, timeout và môi trường trước khi chuyển yêu cầu hỗ trợ."
+subtitle: "Chẩn đoán Trading Widget, Agent SDK, ký, webhook, thời gian chờ và các vấn đề về môi trường trước khi gửi yêu cầu hỗ trợ."
 slug: sdk/security/troubleshooting
 canonical-url: https://docs.6mm.com/vi/sdk/security/troubleshooting
 ---
 
-Bắt đầu với môi trường, dấu thời gian và định danh doanh nghiệp cho thao tác thất bại. Kiểm tra có cấu trúc thường tách biệt các vấn đề cấu hình khỏi các vấn đề xác thực, mạng và xử lý bất đồng bộ.
+Bắt đầu với môi trường, dấu thời gian và mã định danh doanh nghiệp cho hoạt động không thành công. Kiểm tra có cấu trúc thường tách các vấn đề về cấu hình khỏi các vấn đề về xác thực, mạng và xử lý không đồng bộ.
 
 <span id="diagnostic-order" data-sixmm-canonical-anchor="diagnostic-order" aria-hidden="true"></span>
 
-## Thứ tự chẩn đoán được khuyến nghị
+## Thứ tự chẩn đoán được đề xuất
 
-1. Xác nhận môi trường bị ảnh hưởng và URL cơ sở.
-2. Ghi lại khoảng thời gian UTC và yêu cầu thất bại đầu tiên.
-3. Xác định module: Trading Widget, Agent SDK, REST API, WebSockethoặc webhook.
-4. Ghi lại ID yêu cầu, ID người dùng đối tác, `agentOrderNo`, ID đơn hàng hoặc ID sự kiện webhook.
-5. Kiểm tra mã nguồn gần đây, thông tin đăng nhập, danh sách trắng IP hoặc thay đổi triển khai.
-6. Tái tạo bằng hộp thử nhỏ nhất an toàn.
+1. Xác nhận môi trường và cơ sở bị ảnh hưởng URL.
+2. Ghi lại phạm vi thời gian UTC và yêu cầu không thành công đầu tiên.
+3. Xác định mô-đun: Trading Widget, Agent SDK, REST API, WebSocket hoặc webhook.
+4. Ghi lại ID yêu cầu, ID người dùng đối tác, `agentOrderNo`, ID đơn đặt hàng hoặc ID sự kiện webhook.
+5. Kiểm tra mã, thông tin xác thực, danh sách trắng IP gần đây hoặc các thay đổi về triển khai.
+6. Tái tạo với trường hợp thử nghiệm an toàn nhỏ nhất.
 
 <span id="trading-widget-issues" data-sixmm-canonical-anchor="trading-widget-issues" aria-hidden="true"></span>
 
-## Vấn đề Trading Widget
+## Trading Widget vấn đề
 
-| Triệu chứng | Nguyên nhân có thể xảy ra | Sửa lỗi |
+| triệu chứng | Có khả năng gây ra | Sửa chữa |
 | --- | --- | --- |
-| miền cục bộ đối tác yêu cầu iframe | baseUrl bị thiếu | Pass baseUrl: 'https://app.6mm.com'. |
-| iframe không hiển thị hoặc rất ngắn | Container cha không có chiều cao | Thiết lập chiều cao container hoặc chiều cao qua. |
-| token_provider_missing | chế độ partner-token không có nhà cung cấp | Thêm xác thực.tokenProvider. |
-| auth_exchange_failed | Mã nhúng không hợp lệ, hết hạn hoặc không khớp | Kiểm tra phản hồi token backend và channelId. |
+| iframe yêu cầu tên miền địa phương của đối tác | baseUrl bị thiếu | Vượt qua baseUrl: 'https://app.6mm.com'. |
+| iframe không hiển thị hoặc rất ngắn | Vùng chứa chính không có chiều cao | Đặt chiều cao vùng chứa hoặc chiều cao vượt qua. |
+| token_provider_missing | chế độ mã thông báo đối tác không có nhà cung cấp | Thêm xác thực.tokenProvider. |
+| auth_exchange_fail | Mã thông báo nhúng không hợp lệ, hết hạn hoặc không khớp | Kiểm tra phản hồi mã thông báo phụ trợ và channelId. |
 
 <span id="agent-sdk-issues" data-sixmm-canonical-anchor="agent-sdk-issues" aria-hidden="true"></span>
 
-## Vấn đề Agent SDK
+## Agent SDK vấn đề
 
-| Triệu chứng | Nguyên nhân có thể xảy ra | Sửa lỗi |
+| triệu chứng | Có khả năng gây ra | Sửa chữa |
 | --- | --- | --- |
-| Chữ ký bị từ chối | Sai bí mật, lệch đồng hồ hoặc thay đổi thủ công các trường đã ký | Cho phép SDK tạo trường ký và đồng bộ thời gian máy chủ. |
-| Rủi ro di chuyển quỹ trùng lặp | Số đơn hàng mới được sử dụng sau khi hết thời gian chờ | Truy vấn theo agentOrderNo gốc trước. |
-| PROCESSING bị coi là thất bại | Tình trạng đang chờ xử lý bị hiểu nhầm | Chờ webhook hoặc gọi queryOrder. |
-| Webhook đã được xử lý nhiều lần | Hành vi thử lại mà không có idempotency | Thêm khóa bất lực và kiểm tra trạng thái cuối cùng. |
+| Chữ ký bị từ chối | Sai bí mật, trôi đồng hồ hoặc thay đổi các trường đã ký theo cách thủ công | Hãy để SDK tạo các trường ký và đồng bộ hóa thời gian của máy chủ. |
+| Rủi ro chuyển động quỹ trùng lặp | Số đơn đặt hàng mới được sử dụng sau khi hết thời gian | Truy vấn theo agentOrderNo gốc trước tiên. |
+| PROCESSING được coi là lỗi | Trạng thái chờ xử lý bị hiểu nhầm | Đợi webhook hoặc gọi queryOrder. |
+| Webhook được xử lý nhiều lần | Thử lại hành vi mà không có sự bình thường | Thêm khóa tạm thời và kiểm tra trạng thái cuối cùng. |
 
 <span id="evidence-to-capture" data-sixmm-canonical-anchor="evidence-to-capture" aria-hidden="true"></span>
 
-## Bằng chứng cần bắt giữ
+## Bằng chứng cần nắm bắt
 
 | Tích hợp | Bằng chứng hữu ích |
 | --- | --- |
-| Trading Widget | Trang URL, đường dẫn phiên bản SDK , bảng điều khiển trình duyệt, các yêu cầu mạng thất bại, payload `onError` và kích thước container. |
-| Agent SDK | SDK ngôn ngữ/phiên bản, URL cơ bản, dấu thời gian UTC , ID yêu cầu, `agentOrderNo`, mã phản hồi và nhật ký đã được làm sạch. |
-| Webhook | Thời gian gửi, khóa sự kiện hoặc khóa kinh doanh, kết quả xác thực chữ ký, trạng thái xử lý và hàm băm cơ thể thô đã được làm sạch. |
-| REST API | Phương thức, đường dẫn, môi trường, ID yêu cầu, mã phản hồi và các tham số đã được làm sạch. |
+| Trading Widget | Đường dẫn phiên bản trang URL, SDK, bảng điều khiển trình duyệt, yêu cầu mạng không thành công, tải trọng `onError` và kích thước vùng chứa. |
+| Agent SDK | SDK ngôn ngữ/phiên bản, cơ sở URL, UTC dấu thời gian, ID yêu cầu, `agentOrderNo`, mã phản hồi và nhật ký đã được lọc. |
+| Webhook | Thời gian giao hàng, sự kiện hoặc khóa kinh doanh, kết quả xác thực chữ ký, trạng thái xử lý và hàm băm nội dung thô đã được khử trùng. |
+| REST API | Phương thức, đường dẫn, môi trường, ID yêu cầu, mã phản hồi và các tham số đã được vệ sinh. |
 
-Không bao giờ đưa mật khẩu, mã truy cập, bí mật API , chữ ký đầy đủ, khóa riêng tư hoặc dữ liệu cá nhân không bị che giấu trong chẩn đoán.
+Không bao giờ đưa mật khẩu, mã thông báo truy cập, bí mật API, chữ ký đầy đủ, khóa riêng tư hoặc dữ liệu cá nhân chưa được xử lý vào chẩn đoán.
 
 <span id="before-escalating" data-sixmm-canonical-anchor="before-escalating" aria-hidden="true"></span>
 
 ## Trước khi leo thang
 
-- Chỉ thử lại khi thao tác được ghi nhận là an toàn để thử lại.
-- Sau một thời gian chờ, hãy truy vấn định danh doanh nghiệp gốc thay vì tạo mới.
-- Xác nhận môi trường đồng hồ hệ thống và thông tin đăng nhập để phát hiện lỗi chữ ký.
-- Giữ nguyên thất bại đầu tiên và bất kỳ kết quả thử lại nào sau đó.
-- Sử dụng [Mẫu Yêu Cầu Hỗ Trợ](/vi/resources/support-request-template) để gửi báo cáo đầy đủ, đã được bôi đen.
+- Chỉ thử lại khi thao tác được ghi lại là an toàn để thử lại.
+- Sau khi hết thời gian, hãy truy vấn mã định danh doanh nghiệp ban đầu thay vì tạo mã mới.
+- Xác nhận đồng hồ hệ thống và môi trường xác thực để tìm lỗi chữ ký.
+- Giữ nguyên lần thất bại đầu tiên và mọi kết quả thử lại sau đó.
+- Sử dụng [Mẫu yêu cầu hỗ trợ](/vi/resources/support-request-template) để gửi một báo cáo hoàn chỉnh, được biên tập lại.
 
 <span id="related-docs" data-sixmm-canonical-anchor="related-docs" aria-hidden="true"></span>
 
 ## Tài liệu liên quan
 
 <CardGroup cols={3}>
-<Card title="Trading Widget Khởi Đầu Nhanh" icon="fa-duotone fa-chart-line" href="/vi/sdk/trading-widget/quick-start">
-Xác minh việc tải script, kích thước container, cấu hình và callback.
+<Card title="Trading Widget Bắt đầu nhanh" icon="fa-duotone fa-chart-line" href="/vi/sdk/trading-widget/quick-start">
+Xác minh việc tải tập lệnh, kích thước vùng chứa, cấu hình và lệnh gọi lại.
 </Card>
 <Card title="Bí mật & Ký kết" icon="fa-duotone fa-shield-keyhole" href="/vi/sdk/security/secrets-signing">
-Kiểm tra thông tin đăng nhập Agent SDK , đồng hồ và các trường đã ký.
+Kiểm tra thông tin xác thực, đồng hồ và trường đã ký Agent SDK.
 </Card>
-<Card title="Webhooks & Idmpotency" icon="fa-duotone fa-webhook" href="/vi/sdk/security/webhooks-idempotency">
-Xem xét xác minh callback và xử lý sự kiện trùng lặp.
+<Card title="Webhooks & Sự bình thường" icon="fa-duotone fa-webhook" href="/vi/sdk/security/webhooks-idempotency">
+Xem lại xác minh cuộc gọi lại và xử lý sự kiện trùng lặp.
 </Card>
 </CardGroup>
+
+<span id="java-v030-diagnostics" data-sixmm-canonical-anchor="java-v030-diagnostics" aria-hidden="true"></span>
+
+## Java chẩn đoán v0.3.0
+
+| triệu chứng | Kiểm tra và phục hồi |
+| --- | --- |
+| Yêu cầu tài trợ có kết quả không xác định | Giữ nguyên `agentOrderNo`; gọi `queryWalletTransfer` với môi trường ban đầu. Không sử dụng `queryOrder`. |
+| Giao diện người dùng mô phỏng hiển thị số tiền bất ngờ | Kiểm tra giao diện người dùng `tradingMode` riêng biệt với phần phụ trợ `environment`; tài khoản `isSimulatedUser` không định tuyến yêu cầu. |
+| Lỗi truy vấn `6905` | Quay lại sử dụng hạn ngạch đối tác được chia sẻ, sau đó thử lại con trỏ tương tự và lọc qua SDK. |
+| Lỗi truy vấn `6904` | Giảm các truy vấn đồng thời và thu hẹp khoảng thời gian; liên hệ với bộ phận hỗ trợ nếu vẫn tiếp tục. |
+| Con trỏ không hợp lệ hoặc đã hết hạn | Khởi động lại cùng một cửa sổ lịch sử cố định và loại bỏ các bản ghi đã lưu trùng lặp. |
+| Thiếu phương thức Java mới | Kiểm tra tạo phẩm Maven đã giải quyết dựa trên thẻ công khai `v0.3.0`; loại bỏ các phụ thuộc xung đột theo chính sách tạo tác của bạn. |
+
+[Truy vấn và tham chiếu lỗi](/vi/sdk/agent-sdk/java/perpetual-queries) · [Hướng dẫn nâng cấp](/vi/sdk/agent-sdk/java/upgrade)

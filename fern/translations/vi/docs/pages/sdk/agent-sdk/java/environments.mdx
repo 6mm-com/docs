@@ -1,0 +1,99 @@
+---
+title: "Sản xuất & Thương mại mô phỏng"
+subtitle: "Sản xuất & Thương mại mô phỏng: Agent Java SDK tích hợp v0.3.0, ví dụ, tham số và ngữ nghĩa phản hồi."
+slug: sdk/agent-sdk/java/environments
+canonical-url: https://docs.6mm.com/vi/sdk/agent-sdk/java/environments
+---
+
+Hướng dẫn này hướng đến **Agent Java SDK `v0.3.0`** và Java 8+.
+
+<span id="choose-both-the-frontend-mode-and-the-funds-environment" data-sixmm-canonical-anchor="choose-both-the-frontend-mode-and-the-funds-environment" aria-hidden="true"></span>
+
+## Chọn cả chế độ giao diện người dùng và môi trường tiền
+
+Định cấu hình môi trường quỹ phụ trợ của đối tác tách biệt với chế độ giao dịch giao diện người dùng. Thông tin xác thực ràng buộc và nhập cảnh được chia sẻ; việc phát hành vé hoặc mã thông báo không chọn ví hoặc chuyển tiền.
+
+| Cấu hình | Sản xuất | mô phỏng |
+| --- | --- | --- |
+| Ràng buộc và xác thực | Ràng buộc người dùng được chia sẻ và thông tin xác thực một lần | Nhận dạng và xác thực giống nhau |
+| Chuyển khoản mới và số dư người dùng | Bỏ qua `environment` hoặc sử dụng `PRODUCTION` | Sử dụng rõ ràng `SIMULATED` |
+| Cấp kinh phí phục hồi đơn hàng ban đầu | Sử dụng môi trường gốc đã lưu | Sử dụng môi trường gốc đã lưu |
+| Chế độ giao dịch widget | `tradingMode=real` | `tradingMode=demo` |
+| Mục tiêu giao diện người dùng HTTP/WS | Mục tiêu sản xuất được cung cấp bởi 6MM | Mục tiêu mô phỏng được cung cấp bởi 6MM |
+| Sáu truy vấn dữ liệu vĩnh viễn | Dữ liệu sản xuất | Không có bộ chọn môi trường; các phương pháp này không truy vấn dữ liệu mô phỏng |
+
+Đối với `wallet-transfer-status`, việc bỏ qua `environment` sẽ sử dụng môi trường đã lưu của đơn hàng ban đầu, bao gồm cả đơn hàng mô phỏng. Một môi trường xung đột rõ ràng bị từ chối. Thích lưu trữ môi trường và chuyển nó một cách rõ ràng khi khôi phục một thao tác.
+
+`isSimulatedUser` mô tả tài khoản. Nó không định tuyến các yêu cầu mới đến ví mô phỏng. Việc bỏ qua `environment` trong yêu cầu cấp vốn mới vẫn chọn sản xuất, ngay cả khi cờ tài khoản là đúng.
+
+<span id="supported-java-request-models" data-sixmm-canonical-anchor="supported-java-request-models" aria-hidden="true"></span>
+
+## Các mô hình yêu cầu Java được hỗ trợ
+
+Những yêu cầu này hỗ trợ `withEnvironment(ExecutionEnvironment.SIMULATED)`:
+
+- `TransferRequest`, `TransferAllOutRequest`, `ReverseOrderRequest`.
+- `QueryOrderRequest`, `ListOrdersRequest`.
+- `QueryUserAssetsRequest`.
+- `WalletTransferRequest`, `WalletTransferQueryRequest`.
+
+`bind`, `queryAccount`, `createEntryUrl`, `createEmbedToken` và sáu mô hình yêu cầu truy vấn vĩnh viễn không chọn môi trường quỹ.
+
+```java
+import com.sixmm.agent.model.ExecutionEnvironment;
+import com.sixmm.agent.model.QueryUserAssetsRequest;
+import com.sixmm.agent.model.QueryUserAssetsResponse;
+
+QueryUserAssetsResponse assets = client.queryUserAssets(
+        QueryUserAssetsRequest.of("1188041528")
+                .withFunding()
+                .withEnvironment(ExecutionEnvironment.SIMULATED));
+```
+
+Khởi tạo `client` bằng cách sử dụng [Bắt đầu nhanh](/vi/sdk/agent-sdk/java/quick-start) và sử dụng ID người dùng công khai từ liên kết đã lưu của bạn.
+
+<span id="preserve-the-original-environment" data-sixmm-canonical-anchor="preserve-the-original-environment" aria-hidden="true"></span>
+
+## Bảo tồn môi trường ban đầu
+
+Duy trì loại giao diện, `agentOrderNo`, danh tính người dùng và môi trường trước khi gửi yêu cầu cấp tiền. Giữ môi trường đó trong quá trình truy vấn trạng thái, khôi phục, đối chiếu và xử lý webhook. Sau thời gian chờ, đừng bao giờ thử lại bằng cách bỏ qua môi trường ban đầu hoặc sử dụng số đơn hàng mới.
+
+Chuyển khoản tài trợ/hợp đồng nằm trong một môi trường. Quỹ mô phỏng không thể trở thành quỹ sản xuất. Sử dụng kế toán mô phỏng phía đối tác riêng biệt và tiền tố đặt hàng có thể nhận biết, chẳng hạn như `SIM-`.
+
+<span id="simulated-integration-sequence" data-sixmm-canonical-anchor="simulated-integration-sequence" aria-hidden="true"></span>
+
+## Trình tự tích hợp mô phỏng
+
+1. Liên kết người dùng và lưu ID người dùng nền tảng công cộng.
+2. Truy vấn số dư với `SIMULATED` rõ ràng và bao gồm Tài trợ khi cần.
+3. Tạo một khoản chuyển tiền mô phỏng nhỏ và duy trì lệnh kinh doanh ban đầu của nó.
+4. Xác nhận kết quả cuối cùng bằng truy vấn trạng thái Tài trợ chuyên dụng.
+5. Mở hoặc nhúng trang giây mục tiêu ở chế độ `demo`.
+6. Truy vấn các ví mô phỏng tương tự và đối chiếu số tiền thực tế được chuyển.
+7. Để thử nghiệm giao dịch vĩnh viễn, hãy chuyển Nguồn vốn mô phỏng sang Hợp đồng mô phỏng và sử dụng giao diện tương lai được mô phỏng. Sáu truy vấn vĩnh viễn của đối tác không thể xác thực lịch sử giao dịch mô phỏng.
+
+<span id="acceptance-checklist" data-sixmm-canonical-anchor="acceptance-checklist" aria-hidden="true"></span>
+
+## Danh sách kiểm tra chấp nhận
+
+| Kịch bản | Bằng chứng để xác minh |
+| --- | --- |
+| Danh tính | Ánh xạ người dùng bị ràng buộc được lưu; không thể truy vấn người dùng của đối tác khác. |
+| Xác thực | Các luồng chuyển hướng và nhúng sử dụng thông tin xác thực mới; việc ký kết không tạo ra lệnh chuyển tiền. |
+| Quỹ | Cả hai bên đều thống nhất về số tiền thực tế và tình trạng cuối cùng. |
+| Kết quả không xác định | Recovery sử dụng lệnh ban đầu mà không tạo lần chuyển thứ hai. |
+| Cách ly môi trường | Các mục tiêu phụ trợ và giao diện người dùng mô phỏng đồng ý; cân bằng sản xuất không bị ảnh hưởng. |
+| Truy vấn | Bộ lọc người dùng/danh mục bắt buộc, cửa sổ mili giây, trang trống và con trỏ đều được xử lý. |
+| Giới hạn tỷ lệ | Tất cả người gọi truy vấn đều chia sẻ việc điều chỉnh và thử lại trang bị lỗi ban đầu. |
+| Kho | Số tiền và ID vẫn là chuỗi; hồ sơ thực thể được lưu tạm thời. |
+
+Trước khi chuyển sang sản xuất, hãy thay đổi cả mục tiêu quỹ phụ trợ và chế độ giao diện người dùng. Các lệnh đang chờ xử lý tiếp tục phục hồi trong môi trường ban đầu.
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Nguồn và hướng dẫn liên quan
+
+- [Nguồn v0.3.0 chính thức](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Tổng quan về truy vấn và phân trang](/vi/sdk/agent-sdk/java/perpetual-queries)
+- [Ví tiền tài trợ](/vi/sdk/agent-sdk/java/funding-wallet)
+- [Hướng dẫn nâng cấp](/vi/sdk/agent-sdk/java/upgrade)

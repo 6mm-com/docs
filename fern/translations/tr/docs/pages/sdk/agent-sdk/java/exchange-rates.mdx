@@ -1,0 +1,87 @@
+---
+title: "Fiat Referans Oranları"
+subtitle: "Fiat Referans Oranları: Agent Java SDK v0.3.0 entegrasyonu, örnekler, parametreler ve yanıt semantiği."
+slug: sdk/agent-sdk/java/exchange-rates
+canonical-url: https://docs.6mm.com/tr/sdk/agent-sdk/java/exchange-rates
+---
+
+Bu kılavuz **Agent Java SDK `v0.3.0`**, Java 8+ ve etiketli kamu sözleşmesini hedefler. Örnekler, `client` başlatıldıktan sonra bir iş ortağı arka ucunda çalıştırılır. [Hızlı Başlangıç](/tr/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## Örnek önkoşullar
+
+Java parçacıkları bu içe aktarmaları paylaşır. Hızlı Başlangıç'ı kullanarak `client`'ı başlatın ve kaydedilen bağlamadan `platformUserId`'i edinin. Örnek kullanıcı/sipariş kimlikleri kendi kalıcı değerlerinizle değiştirilmelidir.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span id="fx-reference-rates" data-sixmm-canonical-anchor="fx-reference-rates" aria-hidden="true"></span>
+
+## Döviz Referans Oranları
+
+Her iki FX yöntemi de normal imzalı Aracı API akışını kullanır. Keşfeterek başlayın
+şu anda desteklenen kaynak para birimleri:
+
+```java
+import com.sixmm.agent.model.ListSupportedFiatCurrenciesResponse;
+
+ListSupportedFiatCurrenciesResponse supported = client.listSupportedFiatCurrencies();
+System.out.println(supported.targetCurrency);     // USDT
+System.out.println(supported.sourceCurrencies);  // AUD, BRL, CNY, EUR, USD, ...
+```
+
+Desteklenen tüm fiat-to-USDT referans oranlarını sorgulayın:
+
+```java
+import com.sixmm.agent.model.ExchangeRateItem;
+import com.sixmm.agent.model.QueryExchangeRatesResponse;
+
+QueryExchangeRatesResponse rates = client.queryExchangeRates();
+for (ExchangeRateItem item : rates.rates) {
+    System.out.println("1 " + item.sourceCurrency + " = " + item.rate + " " + item.targetCurrency);
+}
+```
+
+Seçilen para birimlerini sorgula:
+
+```java
+import com.sixmm.agent.model.QueryExchangeRatesRequest;
+
+QueryExchangeRatesResponse rates = client.queryExchangeRates(
+        QueryExchangeRatesRequest.of("CNY", "EUR", "USD"));
+```
+
+İstek fabrikası para birimi kodlarını kırpar ve büyük harfle yazar ve bunları şu şekilde serileştirir:
+API tarafından gereken virgülle ayrılmış `sourceCurrencies` değeri. Atlamak
+istek veya tüm geçerli para birimi değerleri, desteklenen her para birimini sorgular.
+
+| Yanıt alanı | Tip | Tanım |
+| --- | --- | --- |
+| `snapshotVersion` | string | Denetim ve mutabakat için kararlı anlık görüntü sürümü |
+| `provider` | string | Yukarı akış sağlayıcısı, şu anda `ECB` |
+| `sourceDate` | string | `yyyy-MM-dd` formatında yukarı akış gözlem tarihi |
+| `fetchedAt` / `expiresAt` | int64 | Milisaniye cinsinden Unix zaman damgaları |
+| `pricingPolicy` | string | Şu anda `FIXED_PEG` |
+| `usdtUsdRate` | string | 1 USDT başına USD miktarı, şu anda `1` olarak sabitlenmiştir |
+| `rateType` | string | Şu anda `INDICATIVE_DAILY` |
+| `usage` | string | Şu anda `REFERENCE_ONLY` |
+| `rateMeaning` | string | `1 sourceCurrency = rate USDT` |
+| `rates[].rate` | string | Bir birim kaynak itibari paraya karşılık gelen USDT miktarı |
+
+Bu değerler iş ortağının çoklu para birimi cüzdanının hesaplaması için referanslardır.
+6MM'e gönderilen USDT miktarı. Bunlar yürütülebilir fiyatlar, kilitli teklifler veya
+gerçek zamanlı USDT piyasa fiyatları. Tutar için `BigDecimal` ve dizeleri kullanın
+hesaplamalar; `double` veya `float` kullanmayın.
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Kaynak ve ilgili kılavuzlar
+
+- [Resmi v0.3.0 kaynağı](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Sorguya genel bakış ve sayfalandırma](/tr/sdk/agent-sdk/java/perpetual-queries)
+- [Finansman cüzdanı](/tr/sdk/agent-sdk/java/funding-wallet)
+- [Yükseltme kılavuzu](/tr/sdk/agent-sdk/java/upgrade)

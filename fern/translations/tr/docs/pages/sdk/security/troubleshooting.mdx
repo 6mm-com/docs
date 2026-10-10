@@ -1,80 +1,95 @@
 ---
-title: "SDK Entegrasyon Sorun Giderme"
-subtitle: "Destek talebini yükseltmeden önce Trading Widget, Agent SDK, imza, webhook, zaman aşımı ve çevre sorunlarını teşhis edin."
+title: "SDK Entegrasyon Sorunlarını Giderme"
+subtitle: "Bir destek talebini iletmeden önce Trading Widget, Agent SDK, imzalama, webhook, zaman aşımı ve çevre sorunlarını teşhis edin."
 slug: sdk/security/troubleshooting
 canonical-url: https://docs.6mm.com/tr/sdk/security/troubleshooting
 ---
 
-Başarısız işlemin ortamı, zaman damgası ve iş tanımlayıcısı ile başlayın. Yapılandırılmış bir kontrol genellikle yapılandırma sorunlarını kimlik doğrulama, ağ ve asenkron işleme sorunlarından ayırır.
+Başarısız işlemin ortamı, zaman damgası ve iş tanımlayıcısıyla başlayın. Yapılandırılmış bir kontrol genellikle yapılandırma sorunlarını kimlik doğrulama, ağ ve eşzamansız işleme sorunlarından ayırır.
 
 <span id="diagnostic-order" data-sixmm-canonical-anchor="diagnostic-order" aria-hidden="true"></span>
 
-## Önerilen tanı sırası
+## Önerilen teşhis sırası
 
-1. Etkilenen ortamı ve temel URL doğrulayın.
-2. UTC zaman aralığını ve ilk başarısız talebi kaydedin.
-3. Modülü tanımlayın: Trading Widget, Agent SDK, REST API, WebSocket, veya webhook.
-4. İstek ID'sini, ortak kullanıcı kimliğini, `agentOrderNo`, sipariş kimliğini veya webhook etkinlik kimliğini yakalayın.
-5. Son kodu, kimlik bilgilerini, IP beyaz listesini veya dağıtım değişikliklerini kontrol edin.
-6. En küçük güvenli test vakasıyla çoğaltın.
+1. Etkilenen ortamı ve tabanı URL doğrulayın.
+2. UTC zaman aralığını ve ilk başarısız isteği kaydedin.
+3. Modülü tanımlayın: Trading Widget, Agent SDK, REST API, WebSocket veya webhook.
+4. İstek kimliğini, iş ortağı kullanıcı kimliğini, `agentOrderNo`, sipariş kimliğini veya webhook olay kimliğini yakalayın.
+5. En son kodu, kimlik bilgilerini, IP beyaz listeyi veya dağıtım değişikliklerini kontrol edin.
+6. En küçük güvenli test durumuyla çoğaltın.
 
 <span id="trading-widget-issues" data-sixmm-canonical-anchor="trading-widget-issues" aria-hidden="true"></span>
 
 ## Trading Widget sorunlar
 
-| Semptom | Muhtemel neden | Düzeltme |
+| Belirti | Muhtemel sebep | Düzeltmek |
 | --- | --- | --- |
-| iframe partner yerel alan adresi talep ediyor | baseUrl eksik | Pas baseUrl: 'https://app.6mm.com'. |
-| iframe görünmez veya çok kısa | Ebeveyn kabın yüksekliği yoktur | Konteyner yüksekliği veya geçiş yüksekliği belirleyin. |
-| token_provider_missing | partner-token modunun sağlayıcısı yoktur | Onay ekleyin.tokenProvider. |
-| auth_exchange_failed | Geçersiz, süresi dolmuş veya uyumsuz gömülü belirteç | Arka uç token yanıtını kontrol edin ve channelId. |
+| iframe, iş ortağının yerel alan adını ister | baseUrl eksik | baseUrl iletin: 'https://app.6mm.com'. |
+| iframe görünmez veya çok kısa | Ana kabın yüksekliği yok | Konteyner yüksekliğini veya geçiş yüksekliğini ayarlayın. |
+| token_provider_missing | iş ortağı belirteci modunun sağlayıcısı yok | Kimlik doğrulama ekletokenProvider. |
+| auth_exchange_failed | Geçersiz, süresi dolmuş veya eşleşmeyen yerleştirme jetonu | Arka uç jeton yanıtını ve channelId kontrol edin. |
 
 <span id="agent-sdk-issues" data-sixmm-canonical-anchor="agent-sdk-issues" aria-hidden="true"></span>
 
 ## Agent SDK sorunlar
 
-| Semptom | Muhtemel neden | Düzeltme |
+| Belirti | Muhtemel sebep | Düzeltmek |
 | --- | --- | --- |
-| İmza reddedildi | Yanlış sır, saat kayması veya elle değiştirilmiş işaret alanları | İmza alanları oluştur SDK sunucu zamanını senkronize et. |
-| Tekrarlanan fon hareketi riski | Mola sonrası kullanılan yeni sipariş numarası | Orijinal agentOrderNo tarafından sorgu yapılıyor. |
-| PROCESSING başarısızlık olarak ele alındı | Bekleyen devlet yanlış anlaşılması | webhook bekle ya da queryOrderarayın. |
-| Webhook birden fazla kez işlendi | Idempotency olmadan davranışı tekrar deneme | İdempotency anahtarı ve nihai durum kontrolleri ekleyin. |
+| İmza reddedildi | Yanlış sır, saat kayması veya imzalı alanların manuel olarak değiştirilmesi | SDK'in imzalama alanları oluşturmasına ve sunucu zamanını senkronize etmesine izin verin. |
+| Yinelenen fon hareketi riski | Zaman aşımından sonra kullanılan yeni sipariş numarası | Önce orijinal agentOrderNo ile sorgulayın. |
+| PROCESSING başarısızlık olarak değerlendirildi | Bekleme durumu yanlış anlaşıldı | webhook bekleyin veya queryOrder'i arayın. |
+| Webhook birden çok kez işlendi | İdempotans olmadan davranışı yeniden dene | Bağımsızlık anahtarı ve son durum kontrollerini ekleyin. |
 
 <span id="evidence-to-capture" data-sixmm-canonical-anchor="evidence-to-capture" aria-hidden="true"></span>
 
-## Yakalanması gereken kanıtlar
+## Yakalanacak kanıt
 
-| Entegrasyon | Faydalı kanıtlar |
+| Entegrasyon | Yararlı kanıtlar |
 | --- | --- |
-| Trading Widget | Sayfa URL, SDK sürüm yolu, tarayıcı konsolu, başarısız ağ istekleri, `onError` yükü ve konteyner boyutları. |
-| Agent SDK | SDK dil/sürüm, temel URL, UTC zaman damgası, istek kimliği, `agentOrderNo`, yanıt kodu ve temizlenmiş kayıtlar. |
-| Webhook | Teslimat süresi, etkinlik veya iş anahtarı, imza doğrulama sonucu, işlem durumu ve dezenfekte edilmiş ham gövde hash. |
-| REST API | Yöntem, yol, ortam, istek kimliği, yanıt kodu ve temizlenmiş parametreler. |
+| Trading Widget | Sayfa URL, SDK sürüm yolu, tarayıcı konsolu, başarısız ağ istekleri, `onError` yükü ve kapsayıcı boyutları. |
+| Agent SDK | SDK dil/sürüm, temel URL, UTC zaman damgası, istek kimliği, `agentOrderNo`, yanıt kodu ve temizlenmiş günlükler. |
+| Webhook | Teslim süresi, olay veya iş anahtarı, imza doğrulama sonucu, işleme durumu ve sterilize edilmiş ham gövde karması. |
+| REST API | Yöntem, yol, ortam, istek kimliği, yanıt kodu ve arındırılmış parametreler. |
 
-Tanı koymaya şifreleri, erişim tokenlarını, API sırları, tam imzaları, özel anahtarları veya sansürlenmemiş kişisel verileri asla dahil etmeyin.
+Tanılamaya hiçbir zaman parolaları, erişim belirteçlerini, API sırları, tam imzaları, özel anahtarları veya düzenlenmemiş kişisel verileri dahil etmeyin.
 
 <span id="before-escalating" data-sixmm-canonical-anchor="before-escalating" aria-hidden="true"></span>
 
-## Tırmanmadan önce
+## Sorunu tırmandırmadan önce
 
-- İşlemin tekrar denemesi güvenli olduğu belgelendiğinde tekrar deneme.
-- Bir zaman aşımı sonrası, yeni bir tanım oluşturmak yerine orijinal iş tanımlayıcısını sorgulayın.
-- İmza hataları için sistem saati ve kimlik bilgileri ortamını onaylayın.
-- İlk başarısızlığı ve sonraki tekrar deneme sonuçlarını koruyun.
-- Kullan [Destek Talebi Şablonu](/tr/resources/support-request-template) tam, sansürlenmiş bir rapor göndermek için.
+- Yalnızca işlemin yeniden denemenin güvenli olduğu belgelendiğinde yeniden deneyin.
+- Zaman aşımından sonra yeni bir işletme tanımlayıcısı oluşturmak yerine orijinal işletme tanımlayıcısını sorgulayın.
+- İmza hataları için sistem saatini ve kimlik bilgisi ortamını doğrulayın.
+- İlk başarısızlığı ve daha sonraki yeniden deneme sonuçlarını koruyun.
+- Kullan [Destek Talebi Şablonu](/tr/resources/support-request-template) Tam, düzeltilmiş bir rapor göndermek için.
 
 <span id="related-docs" data-sixmm-canonical-anchor="related-docs" aria-hidden="true"></span>
 
-## İlgili belgeler
+## İlgili dokümanlar
 
 <CardGroup cols={3}>
 <Card title="Trading Widget Hızlı Başlangıç" icon="fa-duotone fa-chart-line" href="/tr/sdk/trading-widget/quick-start">
-Script yüklemesini, konteyner boyutunu, yapılandırmayı ve geri çağrıları doğrulayın.
+Komut dosyası yüklemesini, kapsayıcı boyutunu, yapılandırmayı ve geri aramaları doğrulayın.
 </Card>
-<Card title="Sırlar ve İmza Alma" icon="fa-duotone fa-shield-keyhole" href="/tr/sdk/security/secrets-signing">
-Agent SDK kimlik bilgilerini, saatleri ve imzalanmış alanları kontrol edin.
+<Card title="Sırlar ve İmzalama" icon="fa-duotone fa-shield-keyhole" href="/tr/sdk/security/secrets-signing">
+Agent SDK kimlik bilgilerini, saatleri ve imzalı alanları kontrol edin.
 </Card>
-<Card title="Webhooks ve İdempotensi" icon="fa-duotone fa-webhook" href="/tr/sdk/security/webhooks-idempotency">
-Geri dönüş doğrulamasını ve tekrarlanan etkinlik yönetimini gözden geçirin.
+<Card title="Webhooks ve İdempotans" icon="fa-duotone fa-webhook" href="/tr/sdk/security/webhooks-idempotency">
+Geri arama doğrulamasını ve yinelenen olay işlemeyi gözden geçirin.
 </Card>
 </CardGroup>
+
+<span id="java-v030-diagnostics" data-sixmm-canonical-anchor="java-v030-diagnostics" aria-hidden="true"></span>
+
+## Java v0.3.0 teşhisi
+
+| Belirti | Kontrol ve kurtarma |
+| --- | --- |
+| Finansman isteğinin bilinmeyen bir sonucu var | Orijinali saklayın `agentOrderNo`; orijinal ortamla `queryWalletTransfer`'i arayın. `queryOrder` kullanmayın. |
+| Simülasyon kullanıcı arayüzü beklenmedik fonları gösteriyor | Ön ucu `tradingMode` arka uçtan `environment` ayrı olarak kontrol edin; `isSimulatedUser` hesabı istekleri yönlendirmiyor. |
+| Sorgu hatası `6905` | Paylaşılan ortak kotasını kullanarak geri çekilin, ardından aynı imleci yeniden deneyin ve SDK üzerinden filtreleyin. |
+| Sorgu hatası `6904` | Eş zamanlı sorguları azaltın ve zaman penceresini daraltın; ısrar ederse desteğe başvurun. |
+| Geçersiz veya süresi dolmuş imleç | Aynı sabit geçmiş penceresini yeniden başlatın ve kayıtlı kayıtları tekilleştirin. |
+| Yeni Java yöntemi eksik | Çözülmüş Maven yapıtını genel etiket `v0.3.0` ile karşılaştırarak kontrol edin; yapı politikanıza göre çakışan bağımlılıkları kaldırın. |
+
+[Sorgu ve hata referansı](/tr/sdk/agent-sdk/java/perpetual-queries) · [Yükseltme kılavuzu](/tr/sdk/agent-sdk/java/upgrade)

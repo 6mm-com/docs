@@ -1,5 +1,5 @@
 ---
-title: "Métodos de Instância"
+title: "Métodos de instância"
 subtitle: "Controle uma instância de widget criada após TradingWidget.create()."
 slug: sdk/trading-widget/instance-methods
 canonical-url: https://docs.6mm.com/pt-BR/sdk/trading-widget/instance-methods
@@ -7,21 +7,21 @@ canonical-url: https://docs.6mm.com/pt-BR/sdk/trading-widget/instance-methods
 
 <span id="method-summary" data-sixmm-canonical-anchor="method-summary" aria-hidden="true"></span>
 
-## Resumo do Método
+## Resumo do método
 
 | Método | Propósito |
 | --- | --- |
-| destruir() | Remova o iframe e libere os ouvintes do evento. |
-| getState() | Leia o estado atual do ciclo de vida SDK . |
-| whenReady() | Espere até o iframe terminar de inicializar. |
+| destruir() | Remova o iframe e libere ouvintes de eventos. |
+| getState() | Leia o estado atual do ciclo de vida SDK. |
+| whenReady() | Aguarde até que o iframe termine a inicialização. |
 | setSymbol(símbolo) | Troque o par de negociação dentro do iframe. |
-| setTheme(tema) | Atualize o parâmetro do tema do iframe. |
-| setLocale(localidade) | Troque o idioma do iframe. |
+| setTheme(tema) | Atualize o parâmetro do tema iframe. |
+| setLocale(localidade) | Mude o idioma do iframe. |
 | setSize(largura, altura) | Atualize as dimensões do iframe. |
-| reload() | Recarregue o iframe atual. |
+| recarregar() | Recarregue o iframe atual. |
 | refreshAuth(motivo) | Acione o fluxo de atualização de autenticação do widget. |
-| setTokenProvider(provedor) | Substitua o provedor usado pelo modo partner-token. |
-| ligado (evento, manipulador) | Assine eventos em tempo real e receba uma função de cancelamento da inscrição. |
+| setTokenProvider(provedor) | Substitua o provedor usado pelo modo token de parceiro. |
+| on(evento, manipulador) | Assine eventos de tempo de execução e receba uma função de cancelamento de assinatura. |
 
 <span id="destroy" data-sixmm-canonical-anchor="destroy" aria-hidden="true"></span>
 
@@ -43,13 +43,13 @@ Leia o estado atual do ciclo de vida da instância do widget.
 const state = widget.getState()
 ```
 
-Valores de retorno incluem carregamento, autenticação, pronto, erro e destruido.
+Os valores de retorno incluem carregamento, autenticação, pronto, erro e destruído.
 
 <span data-sixmm-canonical-anchor="whenready" aria-hidden="true"></span>
 
 ## whenReady()
 
-Espere o iframe terminar a inicialização antes de executar a lógica dependente da interface.
+Aguarde até que o iframe termine a inicialização antes de executar a lógica da UI dependente.
 
 ```js
 await widget.whenReady()
@@ -59,7 +59,7 @@ await widget.whenReady()
 
 ## setSymbol(símbolo)
 
-Troque o par de negociação dentro do iframe. Se o iframe ainda estiver inicializando, o SDK coloca o comando em fila e o envia após ready.
+Troque o par de negociação dentro do iframe. Se o iframe ainda estiver inicializando, o SDK coloca o comando na fila e o envia depois de pronto.
 
 ```js
 widget.setSymbol('ETHUSDT')
@@ -69,7 +69,7 @@ widget.setSymbol('ETHUSDT')
 
 ## setTheme(tema)
 
-Atualize o parâmetro de tema usado pelo iframe de negociação embutido.
+Atualize o parâmetro do tema usado pelo iframe de negociação incorporado.
 
 ```js
 widget.setTheme('dark')
@@ -80,7 +80,7 @@ widget.setTheme('light')
 
 ## setLocale(localidade)
 
-Troque o idioma do iframe. Os valores suportados são en, en-US e zh-CN.
+Mude o idioma do iframe. Os valores suportados são en, en-US e zh-CN.
 
 ```js
 widget.setLocale('en')
@@ -92,17 +92,17 @@ widget.setLocale('zh-CN')
 
 ## setSize(largura, altura)
 
-Atualize o tamanho do iframe DOM e avise o iframe sobre o novo tamanho externo. Os valores numéricos são convertidos para px.
+Atualize o tamanho do iframe DOM e notifique o iframe sobre o novo tamanho externo. Os valores numéricos são convertidos em px.
 
 ```js
 widget.setSize('100%', 720)
 ```
 
-<span data-sixmm-canonical-anchor="reload" aria-hidden="true"></span>
+<span id="reload" data-sixmm-canonical-anchor="reload" aria-hidden="true"></span>
 
-## reload()
+## recarregar()
 
-Recarregue o iframe atual e espere ele inicializar novamente.
+Recarregue o iframe atual e espere que ele seja inicializado novamente.
 
 ```js
 widget.reload()
@@ -112,7 +112,7 @@ widget.reload()
 
 ## refreshAuth(motivo)
 
-Peça ao iframe para atualizar o fluxo de autenticação atual. O valor opcional da razão é encaminhado para registro e controle de fluxo.
+Peça ao iframe para atualizar o fluxo de autenticação atual. O valor de motivo opcional é encaminhado para registro e controle de fluxo.
 
 ```js
 widget.refreshAuth('manual')
@@ -122,7 +122,7 @@ widget.refreshAuth('manual')
 
 ## setTokenProvider(provedor)
 
-Substitua o tokenProvider usado pelo modo partner-token. O SDK chama o provedor quando o iframe solicita um token de embed novo.
+Substitua o tokenProvider usado pelo modo token de parceiro. O SDK chama o provedor quando o iframe solicita um novo token incorporado.
 
 ```js
 widget.setTokenProvider(async ({ channelId, symbol, reason }) => {
@@ -139,9 +139,9 @@ widget.setTokenProvider(async ({ channelId, symbol, reason }) => {
 
 <span id="on-event-handler" data-sixmm-canonical-anchor="on-event-handler" aria-hidden="true"></span>
 
-## ligado (evento, manipulador)
+## on(evento, manipulador)
 
-Assine um evento em tempo real. A função retornada remove o ouvinte.
+Inscreva-se em um evento de tempo de execução. A função retornada remove o ouvinte.
 
 ```js
 const off = widget.on('order_created', (event) => {
@@ -153,16 +153,32 @@ off()
 
 <span id="related-widget-guides" data-sixmm-canonical-anchor="related-widget-guides" aria-hidden="true"></span>
 
-## Guias relacionados de widgets
+## Guias de widgets relacionados
 
-- [Trading Widget Início Rápido] (/sdk/trading-widget/quick-start)
-- [Opções & Eventos](/pt-BR/sdk/trading-widget/options-events)
+- [Trading Widget Início rápido](/pt-BR/sdk/trading-widget/quick-start)
+- [Opções e eventos](/pt-BR/sdk/trading-widget/options-events)
 - [Autenticação](/pt-BR/sdk/trading-widget/authentication)
-- [Solução de Problemas](/pt-BR/sdk/security/troubleshooting)
-{/* sixmm-localized-link-repair:start */}
-<span id="localized-page-links" data-sixmm-canonical-anchor="localized-page-links" aria-hidden="true"></span>
+- [Solução de problemas](/pt-BR/sdk/security/troubleshooting)
 
-## Páginas relacionadas
+<span id="additional-methods-in-the-current-v1-runtime" data-sixmm-canonical-anchor="additional-methods-in-the-current-v1-runtime" aria-hidden="true"></span>
 
-- [Incorpore o 6MM Trading Widget: Início Rápido](/pt-BR/sdk/trading-widget/quick-start)
-{/* sixmm-localized-link-repair:end */}
+## Métodos adicionais no tempo de execução v1 atual
+
+| Método | Propósito |
+| --- | --- |
+| `whenRendered()` | Aguarde a notificação renderizada do iframe; isso é separado do pronto. |
+| `setPage(page)` | Solicite uma página de produto compatível na instância atual. Não altera o ambiente dos fundos. |
+| `prepareForRecreate()` | Peça um iframe pronto para se preparar para substituição; retorna uma promessa e pode rejeitar se estiver indisponível, ocupado ou expirado. |
+| `cancelRecreate()` | Cancele um fluxo de substituição pendente/preparado. |
+| `TradingWidget.validateOptions(options)` | Valide as opções de inicialização antes de criar uma instância. |
+
+Para uma alteração de usuário ou de ambiente real/de demonstração, destrua a instância antiga e crie uma nova com a autenticação e o modo de destino. Não use `setPage` como uma opção de ambiente. Verifique os recursos antes de usar métodos opcionais.
+
+```js
+if (TradingWidget.capabilities.methods.includes('whenRendered')) {
+  await widget.whenRendered();
+}
+if (TradingWidget.capabilities.pages.includes('up-down')) {
+  widget.setPage('up-down');
+}
+```

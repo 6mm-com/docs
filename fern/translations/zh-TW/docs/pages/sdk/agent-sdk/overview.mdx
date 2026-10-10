@@ -6,83 +6,99 @@ slug: sdk/agent-sdk/overview
 canonical-url: https://docs.6mm.com/zh-TW/sdk/agent-sdk/overview
 ---
 
-6MM Agent SDK 是針對需要呼叫特權代理API，卻無法從零實作簽署與請求處理的合作夥伴後端服務。該服務不得在瀏覽器、行動裝置或公共桌面程式碼中執行，因為整合使用合作夥伴API 秘密。
+6MM Agent SDK 用於需要調用特權代理 APIs 的合作伙伴後端服務，而無需從頭開始實施簽名和請求處理。它不得在瀏覽器、移動設備或公共桌面代碼中運行，因為集成使用合作伙伴 API 機密。
 
 <span id="when-to-use-the-agent-sdk" data-sixmm-canonical-anchor="when-to-use-the-agent-sdk" aria-hidden="true"></span>
 
 ## 何時使用 Agent SDK
 
-當你的後端需要綁定合作夥伴使用者、透過核准的工作流程移動資產、查詢交易紀錄、建立嵌入的交易條目URL，或驗證 webhook 通知時，可以使用 Agent SDK。使用 [Trading Widget SDK](/zh-TW/sdk/trading-widget/overview) 當合作夥伴前端需要顯示交易介面時，則會另外處理。
+當您的後端需要綁定合作伙伴用戶、通過批准的工作流移動資產、查詢交易記錄、創建嵌入式交易條目URL或驗證webhook通知時，請使用Agent SDK。使用 [Trading Widget SDK](/zh-TW/sdk/trading-widget/overview) 當合作夥伴前端需要顯示交易界面時單獨進行。
 
 <span id="capabilities" data-sixmm-canonical-anchor="capabilities" aria-hidden="true"></span>
 
 ## 能力
 
-| 劇本 | Java SDK | PHP SDK |
+| 設想 | Java SDK | PHP SDK |
 | --- | --- | --- |
-| 綁定使用者 | 支援 | 支援 |
-| 固定金額轉移 | 支援 | 支援 |
-| 全部轉交 | 支援 | 支援 |
-| 反向轉移 | 支援 | 支援 |
-| 查詢順序 | 支援 | 支援 |
-| 建立入口 URL | 支援 | 支援 |
-| Webhook 驗證 | 支援 | 支援 |
+| 綁定用戶 | 支持 | 支持 |
+| 固定金額轉賬 | 支持 | 支持 |
+| 全部轉出 | 支持 | 支持 |
+| 反向傳輸 | 支持 | 支持 |
+| 查詢調撥訂單 | 支持 | 支持 |
+| 創建條目 URL | 支持 | 支持 |
+| Webhook驗證 | 支持 | 支持 |
 
 <span id="common-configuration" data-sixmm-canonical-anchor="common-configuration" aria-hidden="true"></span>
 
-## 常見配置
+## 常用配置
 
-| 說明 | 範例 | 描述 |
+| 鑰匙 | 例子 | 描述 |
 | --- | --- | --- |
-| baseUrl | `https://agent-api.6mm.com` | 6MM 代理人 API 服務 URL ，沒有尾部斜線。 |
-| agentCode | AGENT001 | 夥伴特工代碼。 |
-| apiSecret | 你的 API 秘密 | API 簽署秘密只會儲存在後端。 |
-| defaultCurrency | USDT | 轉帳和帳戶的預設貨幣 API。 |
-| webhookUrl | https://partner.example.com/6mm/webhook | 合作夥伴端點用於 6MM webhook 通知。 |
+| baseUrl | `https://agent-api.6mm.com` | 6MM 代理 API 服務 URL 不帶尾部斜槓。 |
+| agentCode | AGENT001 | 合作伙伴代理代碼。 |
+| apiSecret | 你的 api 秘密 | API 簽名秘密僅存儲在後端。 |
+| defaultCurrency | USDT | 轉賬和賬戶的默認貨幣APIs。 |
+| webhookUrl | https://partner.example.com/6mm/webhook | 6MM webhook 通知的合作伙伴端點。 |
 
 <span id="typical-integration-flow" data-sixmm-canonical-anchor="typical-integration-flow" aria-hidden="true"></span>
 
-## 典型積分流程
+## 典型集成流程
 
-1. 合作夥伴前端透過合作夥伴自己的帳號系統驗證使用者。
-2. 合作夥伴後端將使用者映射到穩定的合作夥伴端識別碼。
-3. 後端呼叫 Agent SDK ， `agentCode` 且受保護的 API 秘密。
-4. SDK 簽署並向代理人發送 API 請求。
-5. 後端儲存回傳的商業識別碼，並以冪等方式處理後續的 webhooks。
+1. 合作伙伴前端通過合作伙伴自己的賬戶系統對用戶進行身份驗證。
+2. 合作伙伴後端將用戶映射到穩定的合作伙伴端標識符。
+3. 後端使用 `agentCode` 和受保護的 API 秘密調用 Agent SDK。
+4. SDK 簽署併發送代理 API 請求。
+5. 後端存儲返回的業務標識符並稍後進行冪等處理webhooks。
 6. 前端僅接收其所需的短暫結果或進入憑證。
 
 <span id="choose-an-sdk" data-sixmm-canonical-anchor="choose-an-sdk" aria-hidden="true"></span>
 
 ## 選擇一個 SDK
 
-| 後端堆疊 | 從這裡開始 |
+| 後端棧 | 從這裡開始 |
 | --- | --- |
-| Java | [Java SDK 概述](/zh-TW/sdk/agent-sdk/java/overview) 以及 [Java 快速入門](/zh-TW/sdk/agent-sdk/java/quick-start) |
-| PHP | [PHP SDK 概述](/zh-TW/sdk/agent-sdk/php/overview) 以及 [PHP 快速入門](/zh-TW/sdk/agent-sdk/php/quick-start) |
+| Java | [Java SDK 概述](/zh-TW/sdk/agent-sdk/java/overview) 和 [Java 快速入門](/zh-TW/sdk/agent-sdk/java/quick-start) |
+| PHP | [PHP SDK 概述](/zh-TW/sdk/agent-sdk/php/overview) 和 [PHP 快速入門](/zh-TW/sdk/agent-sdk/php/quick-start) |
 
 <span id="production-checklist" data-sixmm-canonical-anchor="production-checklist" aria-hidden="true"></span>
 
-## 製作檢查清單
+## 生產清單
 
-- 從後端秘密管理器載入 `apiSecret` ，而非原始碼。
-- 將開發、舞台設計與製作資格分開。
-- 使用穩定的合作夥伴使用者映射及獨特的商業訂單識別碼。
-- 在檢查逾時請求狀態時保留原始識別碼。
-- 驗證 webhook 簽名並儲存處理中的事件 ID。
-- 從日誌中刪除秘密與簽章，同時保留請求 ID 以供支援。
+- 從後端秘密管理器加載 `apiSecret`，而不是源代碼。
+- 將開發、登臺和生產憑證分開。
+- 使用穩定的合作伙伴用戶映射和唯一的業務訂單標識符。
+- 檢查超時請求的狀態時保留原始標識符。
+- 驗證 webhook 簽名並存儲已處理的事件 ID。
+- 編輯日誌中的機密和簽名，同時保留請求 ID 以獲取支持。
 
 <span id="next-steps" data-sixmm-canonical-anchor="next-steps" aria-hidden="true"></span>
 
-## 下一步
+## 後續步驟
 
 <CardGroup cols={3}>
 <Card title="Java 快速入門" icon="fa-brands fa-java" href="/zh-TW/sdk/agent-sdk/java/quick-start">
-在Java後端安裝並初始化Agent SDK。
+在 Java 後端安裝並初始化 Agent SDK。
 </Card>
 <Card title="PHP 快速入門" icon="fa-brands fa-php" href="/zh-TW/sdk/agent-sdk/php/quick-start">
-在PHP後端安裝並初始化Agent SDK。
+在 PHP 後端安裝並初始化 Agent SDK。
 </Card>
-<Card title="Webhook 與冪等性" icon="fa-duotone fa-webhook" href="/zh-TW/sdk/security/webhooks-idempotency">
-確認回電並避免重複的業務處理。
+<Card title="Webhooks & 冪等性" icon="fa-duotone fa-webhook" href="/zh-TW/sdk/security/webhooks-idempotency">
+驗證回調並防止重複的業務處理。
 </Card>
 </CardGroup>
+
+<span id="java-sdk-v030-capabilities" data-sixmm-canonical-anchor="java-sdk-v030-capabilities" aria-hidden="true"></span>
+
+## Java SDK v0.3.0 功能
+
+Java SDK 現在包括資金錢包、顯式資金環境、六個永久數據查詢和法定參考利率。 PHP 功能必須根據合作伙伴提供的包進行檢查； Java 添加並不意味著匹配 PHP 方法。
+
+| 業務流程 | Java v0.3.0 指南 |
+| --- | --- |
+| 綁定和合同/融資資產 | [用戶和資產](/zh-TW/sdk/agent-sdk/java/users-assets) |
+| 合同轉移和轉移單查詢 | [合同轉讓](/zh-TW/sdk/agent-sdk/java/contract-transfers) |
+| 資金轉移和專門的追償查詢 | [資金錢包](/zh-TW/sdk/agent-sdk/java/funding-wallet) |
+| 當前/歷史訂單、成交、持倉和分類賬 | [永久查詢](/zh-TW/sdk/agent-sdk/java/perpetual-queries) |
+| 秒交易重定向和嵌入 | [秒交易](/zh-TW/sdk/agent-sdk/java/seconds-trading) |
+| 生產和模擬資金 | [環境指南](/zh-TW/sdk/agent-sdk/java/environments) |
+| 更新現有的 Java 集成 | [升級到v0.3.0](/zh-TW/sdk/agent-sdk/java/upgrade) |

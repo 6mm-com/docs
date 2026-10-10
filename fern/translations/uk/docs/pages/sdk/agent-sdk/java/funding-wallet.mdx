@@ -1,0 +1,165 @@
+---
+title: "Гаманець фінансування"
+subtitle: "Гаманець фінансування: Інтеграція Agent Java SDK v0.3.0, приклади, параметри та семантика відповіді."
+slug: sdk/agent-sdk/java/funding-wallet
+canonical-url: https://docs.6mm.com/uk/sdk/agent-sdk/java/funding-wallet
+---
+
+Цей посібник призначений для **Agent Java SDK `v0.3.0`**, Java 8+ і публічного контракту з тегами. Приклади виконуються в серверній частині партнера після ініціалізації `client` у [Швидкий старт](/uk/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## Приклад передумов
+
+Фрагменти Java поділяють ці імпортовані файли. Ініціалізуйте `client` за допомогою швидкого запуску та отримайте `platformUserId` із збереженого зв’язування. Приклади ідентифікаторів користувача/замовлення потрібно замінити вашими постійними значеннями.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span id="wallet-queries-and-transfers" data-sixmm-canonical-anchor="wallet-queries-and-transfers" aria-hidden="true"></span>
+
+## Запити та перекази гаманця
+
+<span id="distinguish-the-three-wallets" data-sixmm-canonical-anchor="distinguish-the-three-wallets" aria-hidden="true"></span>
+
+### Розрізняють три гаманці
+
+| гаманець | Джерело балансу | використовувати |
+| --- | --- | --- |
+| Власний гаманець користувача продавця | Власна система обліку продавця | Доступний баланс користувача на стороні продавця |
+| Фінансування платформи | `queryUserAssets` з `funding` | Секундні торгові кошти та взаємний переказ фінансування/контракту |
+| Договір платформи | Поле активу контракту `queryUserAssets` | Безстрокова контрактна маржа та переказний залишок |
+
+`queryAccount` Запитуйте маржинальний рахунок платформи торговця, а не гаманець користувача торговця. Цей інтерфейс не має параметрів `environment` і не може запитуватися як імітований актив користувача.
+
+Запит двох гаманців платформи імітованих користувачів:
+
+```java
+QueryUserAssetsResponse assets = client.queryUserAssets(
+        QueryUserAssetsRequest.of(platformUserId)
+                .withFunding()
+                .withEnvironment(ExecutionEnvironment.SIMULATED));
+```
+
+Інтерфейс: `POST /v1/agent/query-user-assets`. Фінансування запитується лише тоді, коли `includeFunding=true`; за замовчуванням використовується оригінальна семантика запиту активу контракту.
+
+| поля відповідей | значення |
+| --- | --- |
+| `walletBalance`, `availableBalance`, `frozenMargin`, `usedMargin`, `isolatedMargin` | Контрактні суми гаманця |
+| `funding.assetCode` | Зараз USDT |
+| `funding.availableAmount`, `heldAmount`, `totalAmount` | Наявне фінансування, зайнятість і загальна сума |
+| `funding.materialized` | Чи був матеріалізований рахунок фінансування? |
+| `environment` | Це поле повторюється, коли середовище передається явно; старі запити, які пропускають середовище, не повертають це поле. |
+| `isSimulatedUser` | Класифікація рахунків; не може замінити вибір торгового середовища |
+
+Суми обробляються як рядки або `BigDecimal`, а не `float`/`double`.
+
+<span id="funding-transfer-directions" data-sixmm-canonical-anchor="funding-transfer-directions" aria-hidden="true"></span>
+
+### Напрямки перерахування коштів
+
+Створити: `POST /v1/agent/wallet-transfer`, SDK `walletTransfer`.
+
+| `direction` | Рух коштів | `transferAll` |
+| --- | --- | --- |
+| `PARTNER_TO_FUNDING` | Продавець → Фінансування платформи | Тільки фіксована сума |
+| `FUNDING_TO_PARTNER` | Фінансування платформи → Торговець | Тільки фіксована сума |
+| `FUNDING_TO_CONTRACT` | Платформа того самого середовища. Фінансування → Контракт | Підтримує фіксовану суму або всі кошти, що знімаються |
+| `CONTRACT_TO_FUNDING` | Платформа того самого середовища Контракт → Фінансування | Підтримує фіксовану суму або всі кошти, що знімаються |
+
+Поточна валюта підтримує лише USDT. Фіксована сума має бути позитивним рядком із 8 знаками після коми та не може використовувати наукову нотацію. Коли `transferAll=true`, пропустіть `amount` і запишіть його як остаточну відповідь `amount`; "усі" включає лише кошти, які можна вивести.
+
+Приклад: Продавець переказує 10 USDT на імітаційне фінансування. Спочатку збережіть бізнес-замовлення та середовище в системі продавця, а потім надішліть запит:
+
+```java
+String fundingOrderNo = "SIM-FUNDING-20261010-000001";
+WalletTransferResponse transfer = client.walletTransfer(
+        WalletTransferRequest.of(fundingOrderNo, "merchant-user-001",
+                "PARTNER_TO_FUNDING", "10.00000000", false)
+                .withEnvironment(ExecutionEnvironment.SIMULATED));
+```
+
+Переказ фінансування: усі кошти, які можна перерахувати в імітований контракт:
+
+```java
+WalletTransferResponse move = client.walletTransfer(
+        WalletTransferRequest.of("SIM-F2C-20261010-000001", "merchant-user-001",
+                "FUNDING_TO_CONTRACT", null, true)
+                .withEnvironment(ExecutionEnvironment.SIMULATED));
+```
+
+Ця сама операція повинна продовжувати використовувати оригінальний `agentOrderNo`; різні операції та різні середовища використовують різні номери замовлення. Зміна суми, користувача, напрямку або середовища з тим самим номером замовлення буде відхилена. Перекази фінансування/контрактів можна виконувати лише в тому самому середовищі, а змодельовані кошти не можна перевести в реальні кошти.
+
+<span id="result-confirmation-and-unknown-result-recovery" data-sixmm-canonical-anchor="result-confirmation-and-unknown-result-recovery" aria-hidden="true"></span>
+
+### Підтвердження результату та відновлення невідомого результату
+
+Відповіді про фінансування позначаються `status`, `SUCCESS`, `PROCESSING` або `FAILED` і повертаються `orderNo`, `direction`, `currency`, `amount`, `resultCode` тощо. `code=0` лише означає, що запит успішно оброблено, і вам потрібно продовжувати оцінювати `status`.
+
+| результат | Торгова обробка |
+| --- | --- |
+| `SUCCESS` | Завершіть локальну бухгалтерську обробку на основі фактичної суми |
+| `PROCESSING` | Збережіть його на місці для підтвердження та перевірте оригінальне замовлення |
+| HTTP Час очікування, помилка мережі, результат неможливо проаналізувати | Результат вважається невідомим і запитується вихідний порядок; це не можна безпосередньо визначити як помилку або створити нове замовлення та повторити спробу. |
+| Ідентифіковано `FAILED` | Звільнити локальне резервування відповідно до чіткого результату помилки; створити нове бізнес-замовлення, коли бізнес потрібно розпочати знову |
+
+Запит на фінансування використовує спеціальний інтерфейс `POST /v1/agent/wallet-transfer-status`:
+
+```java
+WalletTransferResponse recovered = client.queryWalletTransfer(
+        WalletTransferQueryRequest.of(fundingOrderNo)
+                .withEnvironment(ExecutionEnvironment.SIMULATED));
+```
+
+Використовуйте цю виділену кінцеву точку, щоб відновити початкову операцію фінансування; `queryOrder` не може замінити його. Збережіть оригінальне середовище та передайте його явно під час відновлення. Якщо `environment` пропущено в `wallet-transfer-status`, сервер використовує середовище, збережене в оригінальному замовленні, включаючи змодельовані замовлення. Явно конфліктне середовище повертає `102002` (`order environment mismatch`). Коли абонент пропускає середовище, відповідь також пропускає `environment`; це не означає, що вихідне замовлення є виробничим замовленням.
+
+Місцеві депозити та зняття коштів торговців є ідемпотентними; постійні замовлення та баланси резервуються перед ініціацією та резервуються для підтвердження, коли результат невідомий. Доступ до фінансування використовує спеціальний запит для підтвердження остаточного статусу; не припускайте, що старі методи передачі контракту Webhook або сторнування автоматично застосовуються до фінансування.
+
+<span id="existing-contract-transfer-flow" data-sixmm-canonical-anchor="existing-contract-transfer-flow" aria-hidden="true"></span>
+
+### Існуючий потік передачі контракту
+
+Початкові `transfer`, `transferAllOut`, `reverse`, `queryOrder`, `listOrders` продовжують обробляти початковий процес передачі контракту. `queryOrder` запитує замовлення на переказ коштів, `listOrders` — це список узгодження переказів; натомість шість типів запитів у наступному розділі використовуються для безстрокових торгових ордерів.
+
+У вихідній відповіді про фінансування використовується `orderStatus`; у відповіді на фінансування використовується `status`, не змішуйте їх. Оригінальна передача Webhook перевіряється за допомогою `X-Agent-Timestamp`, `X-Agent-Nonce`, `X-Agent-Signature`, а оригінальний текст підпису — `timestamp + nonce + rawBody`; початкове тіло запиту спочатку перевіряється, потім десеріалізується та стає ідемпотентним. Явні сповіщення про змодельоване середовище містять `environment=SIMULATED`, сповіщення про виробництво залишаються сумісними зі старими полями. Суму, номер замовлення, статус і середовище потрібно перевірити в місцевому бізнес-замовленні.
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Джерело та відповідні посібники
+
+- [Офіційне джерело v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Огляд запиту та розбивка на сторінки](/uk/sdk/agent-sdk/java/perpetual-queries)
+- [Гаманець для фінансування](/uk/sdk/agent-sdk/java/funding-wallet)
+- [Посібник з оновлення](/uk/sdk/agent-sdk/java/upgrade)
+
+<span id="funding-request-fields" data-sixmm-canonical-anchor="funding-request-fields" aria-hidden="true"></span>
+
+## Поля запиту на фінансування
+
+| Поле | Обов'язковий | Значення |
+| --- | --- | --- |
+| `agentOrderNo` | так | Глобально унікальний номер замовлення партнера; перед надсиланням. |
+| `agentUserId / platformUserId` | Один | Визначте прив'язаного користувача; якщо подано обидва, вони мають збігатися. |
+| `direction` | так | Один із чотирьох напрямків, задокументованих вище. |
+| `currency` | За замовчуванням USDT | Підтримується лише USDT. |
+| `transferAll` | За замовчуванням false | Лише внутрішні перекази фінансування/контракту підтримують значення true. |
+| `amount` | Умовний | Позитивний десятковий рядок для фіксованого перенесення; опустити для transferAll=true. |
+| `environment` | Додатково | Виробництво, коли пропускається для нової передачі; SIMULATED вибирає змодельовані кошти. |
+
+<span id="funding-response-fields" data-sixmm-canonical-anchor="funding-response-fields" aria-hidden="true"></span>
+
+## Поля відповіді щодо фінансування
+
+| Поле | Значення |
+| --- | --- |
+| `orderNo` | Повернений ідентифікатор операції; зберігати разом із оригінальним номером замовлення партнера. |
+| `status` | SUCCESS / PROCESSING / FAILED; визначає завершення бізнесу. |
+| `direction / currency` | Підтверджено напрямок передачі та актив. |
+| `amount` | Фактична сума переказу у вигляді рядка. |
+| `transferAll` | Чи запитувалась ця операція всі кошти, які можна зняти. |
+| `agentUserId / platformUserId` | Повернена ідентифікація користувача; порівняти зі збереженим замовленням. |
+| `resultCode` | Деталь результату операції; зберегти для примирення та підтримки. |
+| `environment` | Відтворюється, коли абонент явно вказав це; відсутність не є доказом виробництва для запиту статусу оригінального замовлення. |

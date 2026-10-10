@@ -1,6 +1,6 @@
 ---
 title: "Trading Widget Authentifizierung"
-subtitle: "Verwenden Sie Partner-Token für neue eingebettete Handels- SSO Integrationsmöglichkeiten."
+subtitle: "Verwenden Sie Partner-Token für neue eingebettete Handelsintegrationen SSO."
 slug: sdk/trading-widget/authentication
 canonical-url: https://docs.6mm.com/de/sdk/trading-widget/authentication
 ---
@@ -9,7 +9,7 @@ canonical-url: https://docs.6mm.com/de/sdk/trading-widget/authentication
 
 ## Empfohlener Modus: Partner-Token
 
-Partner-Token vermeidet es, kurze Tokens in URLs einzufügen und hält apiSecret im Partner-Backend.
+Partner-Token vermeidet das Einfügen kurzer Token in URLs und behält apiSecret im Partner-Backend.
 
 ```js
 const widget = TradingWidget.create('#trading-widget', {
@@ -36,16 +36,16 @@ const widget = TradingWidget.create('#trading-widget', {
 
 <span id="related-documentation" data-sixmm-canonical-anchor="related-documentation" aria-hidden="true"></span>
 
-## Verwandte Dokumentation
+## Zugehörige Dokumentation
 
-- [Create Embed Token](/de/sdk/agent-sdk/java/embed-token): Beispiel für die Ausgabe von Backend-Tokens.
-- [Trading Widget Quick Start](/de/sdk/trading-widget/quick-start): vollständiger Initialisierungsfluss.
-- [Secrets & Signing](/de/sdk/security/secrets-signing): bewahren Sie privilegierte Agenten-Zugangsdaten im Backend auf.
-- [Fehlerbehebung](/de/sdk/security/troubleshooting): Diagnosefehler bei Sitzungen, Token, Ursprung und Initialisierung.
+- [Einbettungstoken erstellen](/de/sdk/agent-sdk/java/embed-token): Beispiel für die Ausgabe eines Backend-Tokens.
+- [Trading Widget Schnellstart](/de/sdk/trading-widget/quick-start): vollständiger Initialisierungsablauf.
+- [Geheimnisse & Signieren](/de/sdk/security/secrets-signing): Behalten Sie die Anmeldeinformationen des privilegierten Agenten im Backend bei.
+- [Fehlerbehebung](/de/sdk/security/troubleshooting): Diagnose von Sitzungs-, Token-, Ursprungs- und Initialisierungsfehlern.
 
-<span id="backend-flow" data-sixmm-canonical-anchor="backend-flow" aria-hidden="true"></span>
+<span data-sixmm-canonical-anchor="backend-flow" aria-hidden="true"></span>
 
-## Backend-Fluss
+## Backend-Flow
 
 ```text
 1. Partner frontend receives auth_request from the iframe.
@@ -62,30 +62,30 @@ const widget = TradingWidget.create('#trading-widget', {
 
 ## tokenProvider Vertrag
 
-| Spielfeld | Regie | Beschreibung |
+| Feld | Richtung | Beschreibung |
 | --- | --- | --- |
-| channelId | SDK -> Partner-Backend | Eindeutige Widget-Sessions-Kennung. Das Backend sollte es an createEmbedTokenweitergeben. |
-| Symbol | SDK -> Partner-Backend | Aktuelles angefordertes Handelssymbol. Nutze es, um das Token bei Bedarf zu scopen. |
-| Grund | SDK -> Partner-Backend | Warum die SDK ein Token anfordert, wie zum Beispiel eine Erstladung oder Aktualisierung. |
-| embedToken | Partner-Backend -> SDK | Kurzlebiger Token, der vom Agent SDK oder Agent API erstellt wird. |
-| expireAt | Partner-Backend -> SDK | Token-Ablaufzeitstempel zurückgegeben von 6MM. |
+| channelId | SDK -> Partner-Backend | Eindeutige Widget-Sitzungskennung. Das Backend sollte es an createEmbedToken weiterleiten. |
+| Symbol | SDK -> Partner-Backend | Aktuell gewünschtes Handelssymbol. Verwenden Sie es bei Bedarf, um den Gültigkeitsbereich des Tokens festzulegen. |
+| Grund | SDK -> Partner-Backend | Warum SDK ein Token anfordert, z. B. Erstladevorgang oder Aktualisierung. |
+| embedToken | Partner-Backend -> SDK | Kurzlebiges Token, das vom Agent SDK oder dem Agenten API erstellt wurde. |
+| expireAt | Partner-Backend -> SDK | Zeitstempel des Token-Ablaufs, zurückgegeben von 6MM. |
 
 <span id="failure-handling" data-sixmm-canonical-anchor="failure-handling" aria-hidden="true"></span>
 
-## Fehlerhandhabung
+## Fehlerbehandlung
 
-| Zustand | Empfohlenes Handling |
+| Zustand | Empfohlene Handhabung |
 | --- | --- |
 | Partnersitzung abgelaufen | Geben Sie 401 vom Partnerendpunkt zurück und bitten Sie den Benutzer, sich erneut anzumelden. |
-| Die Token-Erstellung scheiterte vorübergehend | Wirf einen Fehler in tokenProvider und lass das Widget einen Authentifizierungsfehler anzeigen. |
-| channelId Mismatch | Lehne die Anfrage ab und erstelle die Widget-Instanz neu. |
-| Der Nutzer darf nicht handeln | Geben Sie einen vom Partner gesteuerten Fehler zurück und erstellen Sie kein Einbettungstoken. |
+| Die Tokenerstellung ist vorübergehend fehlgeschlagen | Geben Sie einen Fehler in tokenProvider aus und lassen Sie zu, dass das Widget einen Authentifizierungsfehler anzeigt. |
+| channelId Nichtübereinstimmung | Lehnen Sie die Anfrage ab und erstellen Sie die Widget-Instanz neu. |
+| Der Benutzer darf nicht handeln | Geben Sie einen vom Partner gesteuerten Fehler zurück und erstellen Sie kein Einbettungstoken. |
 
 <span id="compatibility-mode-agent-sso" data-sixmm-canonical-anchor="compatibility-mode-agent-sso" aria-hidden="true"></span>
 
 ## Kompatibilitätsmodus: agent-sso
 
-Agent-SSO behält den älteren /Agent-Entry-Ticket-Fluss aufrecht. Bevorzuge Partner-Token für neue Integrationen.
+agent-sso behält den älteren /agent-entry-Ticketfluss bei. Bevorzugen Sie Partner-Token für neue Integrationen.
 
 ```js
 const widget = TradingWidget.create('#trading-widget', {
@@ -105,3 +105,13 @@ const widget = TradingWidget.create('#trading-widget', {
   },
 })
 ```
+
+<span id="seconds-trading-and-environment-rules" data-sixmm-canonical-anchor="seconds-trading-and-environment-rules" aria-hidden="true"></span>
+
+## Sekundenhandel und Umweltregeln
+
+Verwenden Sie für Sekundenseiten dieselbe `partner-token`-Authentifizierung mit `page` und `tradingMode`, die im Widget konfiguriert sind. Es gibt kein separates Vorhersage-Token. Jeder tokenProvider-Aufruf muss ein neues einmaliges Token von Ihrem Backend erhalten.
+
+Geben Sie `embedToken`, `expireAt` in Unix-Sekunden und das Original `channelId` als Objekt der obersten Ebene zurück. Die Agent SDK-Token-Antwort enthält nicht `channelId`; Ihr Backend spiegelt den aktuellen Widget-Kanal wider. Wenn Ihr Endpunkt Antworten in `data` umschließt, entpacken Sie sie, bevor Sie von tokenProvider zurückkehren.
+
+[Vollständige Sekundenintegration](/de/sdk/agent-sdk/java/seconds-trading) · [Leitfaden zur Fondsumgebung](/de/sdk/agent-sdk/java/environments)

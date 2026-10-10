@@ -1,6 +1,6 @@
 ---
 title: "옵션 및 이벤트"
-subtitle: "초기화 옵션, 런타임 이벤트, 그리고 일반적인 오류 코드."
+subtitle: "초기화 옵션, 런타임 이벤트 및 일반적인 오류 코드."
 slug: sdk/trading-widget/options-events
 canonical-url: https://docs.6mm.com/ko/sdk/trading-widget/options-events
 ---
@@ -9,21 +9,21 @@ canonical-url: https://docs.6mm.com/ko/sdk/trading-widget/options-events
 
 ## 옵션
 
-| 필드 | 유형 | 기본 설정 | 주석 |
+| 필드 | 유형 | 기본 | 메모 |
 | --- | --- | --- | --- |
-| baseUrl | string | SDK 문자 기원 | iframe 도메인. 파트너 페이지에 명시적으로 패스하세요. |
-| 상징 | string | BTCUSDT | 대문자와 스트립으로 정규화됨 - / _. |
-| 주제 | 어둡고 \| 빛 | 어두운 | 초기 테마 파라미터. |
-| 위치 | 엔 \| 미국 \| Z-CN | 브라우저/기본 | 영어와 간체 중국어가 지원됩니다. |
-| 배치 | 기본 \| 컴팩트 | 기본 설정 | 예약된 레이아웃 옵션. |
-| 전시 | object | `showHeader: false`, `showTicker: false`, `hidden: []` | 컨트롤은 쉘 구역과 고급 거래 컨테이너를 내장합니다. |
-| 인증 | object | 전혀 없습니다 | 새로운 SSO 통합을 위해 파트너 토큰을 사용하세요. |
+| baseUrl | string | SDK 스크립트 출처 | iframe 도메인. 파트너 페이지에서 명시적으로 전달합니다. |
+| 상징 | string | BTCUSDT | 대문자 및 스트립으로 정규화됨 - / _. |
+| 주제 | 어두운 \| 빛 | 어두운 | 초기 테마 매개변수. |
+| 장소 | ko \| en-US \| zh-CN | 브라우저/기본 | 영어와 중국어 간체가 지원됩니다. |
+| 공들여 나열한 것 | 기본 \| 콤팩트 | 기본 | 예약된 레이아웃 옵션입니다. |
+| 표시하다 | object | `showHeader: false`, `showTicker: false`, `hidden: []` | 포함된 쉘 영역과 상위 수준의 거래 컨테이너를 제어합니다. |
+| 인증 | object | 없음 | 새로운 SSO 통합을 위해 파트너 토큰을 사용하세요. |
 
 <span id="display-controls" data-sixmm-canonical-anchor="display-controls" aria-hidden="true"></span>
 
-## 디스플레이 제어
+## 디스플레이 컨트롤
 
-`display` 내장된 거래 페이지 셸과 고급 컨테이너를 제어합니다. 파트너 임베드에서는 PC 헤더와 하단 시장 티커가 기본적으로 숨겨져 있습니다.
+`display`는 내장된 거래 페이지 셸과 상위 수준 컨테이너를 제어합니다. 파트너 삽입에서는 PC 헤더와 하단 시장 티커가 기본적으로 숨겨져 있습니다.
 
 ```js
 display: {
@@ -33,45 +33,74 @@ display: {
 }
 ```
 
-| 필드 | 유형 | 기본 설정 | 주석 |
+| 필드 | 유형 | 기본 | 메모 |
 | --- | --- | --- | --- |
-| showHeader | boolean | 거짓 | iframe 안에 PC 임베드 헤더를 보여줄지 여부에 대해서요. |
-| showTicker | boolean | 거짓 | 임베드 케이스에 하위 시장 티커를 보여줄지 여부. |
-| 숨겨진 | 스트링[] | [] | 거래 페이지에 고레벨 컨테이너를 숨깁니다. |
+| showHeader | boolean | 거짓 | iframe 내부에 PC 포함 헤더를 표시할지 여부입니다. |
+| showTicker | boolean | 거짓 | 임베드 셸에 하단 시장 티커를 표시할지 여부입니다. |
+| 숨겨진 | 끈[] | [] | 거래 페이지에서 상위 수준 컨테이너를 숨깁니다. |
 
-지지 `display.hidden` 가치:
+지원되는 `display.hidden` 값:
 
-| 가치 | 컨테이너 |
+| 값 | 컨테이너 |
 | --- | --- |
 | 차트 | 차트 컨테이너 |
-| orderBook | 주문서장 컨테이너 |
-| orderForm | 주문서 패널 |
-| 직책 | 하위 위치와 오픈 오더 패널 |
-| 계정 | 계좌 자산 컨테이너 |
+| orderBook | 주문서 컨테이너 |
+| orderForm | 주문 양식 패널 |
+| 위치 | 하단 위치 및 공개 주문 패널 |
+| 계정 | 계정 자산 컨테이너 |
 
-`display.hidden` 전체 컨테이너만 숨깁니다. 컨테이너 안에 개별 버튼, 필드, 도구를 숨기지 않습니다. 현재 뷰포트에 매핑되지 않는 값은 무시됩니다.
+`display.hidden` 전체 컨테이너만 숨깁니다. 컨테이너 내부의 개별 버튼, 필드 또는 도구를 숨기지 않습니다. 현재 뷰포트에 매핑되지 않는 값은 무시됩니다.
 
 <span id="events" data-sixmm-canonical-anchor="events" aria-hidden="true"></span>
 
-## 행사
+## 이벤트
 
-| 행사 | 트리거 |
+| 이벤트 | 방아쇠 |
 | --- | --- |
-| 준비됐어 | iFrame 초기화 완료. |
-| 오류 | SDK, iframe, 또는 인증 오류가 발생합니다. |
-| state_changed | SDK 생명주기 상태가 변했습니다. |
-| auth_state_changed | 파트너 토큰 인증 상태가 변경되었습니다. |
-| symbol_changed | 실제 iframe 심볼이 바뀌었습니다. |
-| locale_changed | 실제 iframe 위치가 변경되었습니다. |
-| order_created | 사용자가 iframe 내에서 주문을 생성했습니다. |
-| order_failed | 주문 제출 실패. |
-| 파괴됨 | SDK 인스턴스가 파괴되었습니다. |
+| 준비가 된 | iframe 초기화가 완료되었습니다. |
+| 오류 | SDK, iframe 또는 인증 오류입니다. |
+| 상태_변경됨 | SDK 수명 주기 상태가 변경되었습니다. |
+| 인증_상태_변경됨 | 파트너 토큰 인증 상태가 변경되었습니다. |
+| 기호_변경됨 | 실제 iframe 기호가 변경되었습니다. |
+| 로케일_변경됨 | 실제 iframe 로케일이 변경되었습니다. |
+| 주문_생성됨 | 사용자가 iframe 내에서 주문을 생성했습니다. |
+| 주문_실패 | 주문 제출에 실패했습니다. |
+| 의해 파괴됨 | SDK 인스턴스가 파괴되었습니다. |
 
 <span id="related-widget-guides" data-sixmm-canonical-anchor="related-widget-guides" aria-hidden="true"></span>
 
 ## 관련 위젯 가이드
 
-- [Trading Widget 퀵 스타트](/ko/sdk/trading-widget/quick-start)
-- [인증](/ko/sdk/trading-widget/authentication)
-- [인스턴스 메서드](/ko/sdk/trading-widget/instance-methods)
+- [Trading Widget 빠른 시작](/ko/sdk/trading-widget/quick-start)
+- [입증](/ko/sdk/trading-widget/authentication)
+- [인스턴스 메소드](/ko/sdk/trading-widget/instance-methods)
 - [문제 해결](/ko/sdk/security/troubleshooting)
+
+<span id="product-pages-and-trading-mode" data-sixmm-canonical-anchor="product-pages-and-trading-mode" aria-hidden="true"></span>
+
+## 제품 페이지 및 거래 모드
+
+Java Agent SDK 및 브라우저 Trading Widget SDK는 독립적으로 버전이 관리됩니다. 초 거래의 경우 현재 위젯 기능을 사용하고 페이지와 거래 모드를 명시적으로 선택하십시오.
+
+| 옵션 | 가치 | 의미 |
+| --- | --- | --- |
+| `page` | `up-down`, `high-low`, `grid-prediction` | 초 거래를 위한 제품 페이지입니다. |
+| `tradingMode` | `real`, `demo` | 기본값은 `real`입니다. 백엔드 자금 환경과 명시적으로 일치합니다. |
+
+초기화하기 전에 `TradingWidget.capabilities.pages`, `TradingWidget.capabilities.tradingModes`, `TradingWidget.capabilities.partnerToken`를 확인하세요. 토큰 생성은 자금 환경을 선택하지 않습니다. 사용자 또는 리얼/데모 모드를 변경하려면 이전 인스턴스를 삭제하고 새 인스턴스를 생성하세요.
+
+보다 [완전한 초 거래 예시](/ko/sdk/agent-sdk/java/seconds-trading) 그리고 [생산/시뮬레이션 구성](/ko/sdk/agent-sdk/java/environments).
+
+<span id="additional-display-targets-and-events" data-sixmm-canonical-anchor="additional-display-targets-and-events" aria-hidden="true"></span>
+
+## 추가 표시 대상 및 이벤트
+
+현재 런타임에서는 `display.hidden`에서 `symbolFavorites` 및 `symbolTicker`도 허용합니다. 항상 `TradingWidget.capabilities.displayTargets`를 확인하세요. 대상은 상위 수준 컨테이너를 제어하며 필드 수준 권한 설정이 아닙니다.
+
+| 이벤트 | 의미 |
+| --- | --- |
+| `rendered` | iframe은 렌더링된 알림을 보냅니다. |
+| `theme_changed` | iframe은 실제 테마를 보고합니다. |
+| `page_changed` | iframe은 실제 제품 페이지를 보고합니다. |
+
+초기화와 별도로 렌더링을 처리하려면 `onRendered` 또는 `widget.on('rendered', handler)`를 사용하세요. 현재 지원되는 페이지는 `TradingWidget.capabilities.pages`에 게시되어 있습니다. 경로를 추측하는 대신 요청된 페이지의 유효성을 검사합니다.

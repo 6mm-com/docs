@@ -1,6 +1,6 @@
 ---
-title: "인스턴스 메서드"
-subtitle: "TradingWidget.create( 이후에 생성된 위젯 인스턴스를 제어합니다)."
+title: "인스턴스 메소드"
+subtitle: "TradingWidget.create() 이후 생성된 위젯 인스턴스를 제어합니다."
 slug: sdk/trading-widget/instance-methods
 canonical-url: https://docs.6mm.com/ko/sdk/trading-widget/instance-methods
 ---
@@ -11,23 +11,23 @@ canonical-url: https://docs.6mm.com/ko/sdk/trading-widget/instance-methods
 
 | 방법 | 목적 |
 | --- | --- |
-| 파괴() | iframe을 제거하고 이벤트 청취자를 해제하세요. |
-| getState() | 현재 SDK 라이프사이클 상태를 읽어보세요. |
-| whenReady() | iframe이 초기화를 마칠 때까지 기다리세요. |
-| setSymbol(상징) | iframe 내에서 거래 쌍을 바꿔보세요. |
-| setTheme(테마) | iframe 테마 파라미터를 업데이트하세요. |
-| setLocale(지역) | iframe 언어를 전환하세요. |
+| 파괴하다() | iframe 및 릴리스 이벤트 리스너를 제거합니다. |
+| getState() | 현재 SDK 수명 주기 상태를 읽습니다. |
+| whenReady() | iframe 초기화가 완료될 때까지 기다리세요. |
+| setSymbol(기호) | iframe 내에서 거래 쌍을 전환하세요. |
+| setTheme(테마) | iframe 테마 매개변수를 업데이트합니다. |
+| setLocale(로케일) | iframe 언어를 전환하세요. |
 | setSize(너비, 높이) | iframe 크기를 업데이트하세요. |
-| 재장전() | 현재 iframe을 다시 불러오세요. |
-| refreshAuth(이유) | 위젯 인증 새로고침 흐름을 트리거하세요. |
-| setTokenProvider(제공자) | 파트너 토큰 모드에서 사용하는 공급자를 교체하세요. |
-| 온(이벤트, 핸들러) | 런타임 이벤트에 구독하면 구독 취소 기능을 받아야 합니다. |
+| 다시 로드() | 현재 iframe을 다시 로드합니다. |
+| refreshAuth(이유) | 위젯 인증 새로 고침 흐름을 트리거합니다. |
+| setTokenProvider(공급자) | 파트너 토큰 모드에서 사용되는 공급자를 교체합니다. |
+| on(이벤트, 핸들러) | 런타임 이벤트를 구독하고 구독 취소 기능을 받으세요. |
 
 <span id="destroy" data-sixmm-canonical-anchor="destroy" aria-hidden="true"></span>
 
-## 파괴()
+## 파괴하다()
 
-iframe을 제거하고, 리스너를 정리한 뒤, 현재 인스턴스에 대해 한 번 파괴된 것을 방출하세요.
+iframe을 제거하고, 리스너를 지우고, 현재 인스턴스에 대해 한 번 파괴된 항목을 내보냅니다.
 
 ```js
 widget.destroy()
@@ -37,19 +37,19 @@ widget.destroy()
 
 ## getState()
 
-위젯 인스턴스의 현재 라이프사이클 상태를 읽으세요.
+위젯 인스턴스의 현재 수명 주기 상태를 읽습니다.
 
 ```js
 const state = widget.getState()
 ```
 
-반환 값에는 loading, authenticating, ready, error, destroyed 등이 포함됩니다.
+반환 값에는 로드, 인증, 준비, 오류 및 삭제가 포함됩니다.
 
 <span data-sixmm-canonical-anchor="whenready" aria-hidden="true"></span>
 
 ## whenReady()
 
-iframe이 초기화를 마칠 때까지 기다린 후 의존형 UI 로직을 실행하세요.
+종속 UI 로직을 실행하기 전에 iframe이 초기화를 완료할 때까지 기다립니다.
 
 ```js
 await widget.whenReady()
@@ -57,9 +57,9 @@ await widget.whenReady()
 
 <span id="setsymbol-symbol" data-sixmm-canonical-anchor="setsymbol-symbol" aria-hidden="true"></span>
 
-## setSymbol(상징)
+## setSymbol(기호)
 
-iframe 내에서 거래 쌍을 바꿔보세요. iframe이 아직 초기화 중이라면, SDK 명령을 큐에 넣고 준비 후에 전송합니다.
+iframe 내에서 거래 쌍을 전환하세요. iframe이 아직 초기화 중인 경우 SDK는 명령을 대기열에 추가하고 준비된 후 전송합니다.
 
 ```js
 widget.setSymbol('ETHUSDT')
@@ -69,7 +69,7 @@ widget.setSymbol('ETHUSDT')
 
 ## setTheme(테마)
 
-임베디드 트레이딩 iframe에서 사용하는 테마 파라미터를 업데이트하세요.
+포함된 거래 iframe에서 사용되는 테마 매개변수를 업데이트합니다.
 
 ```js
 widget.setTheme('dark')
@@ -78,9 +78,9 @@ widget.setTheme('light')
 
 <span id="setlocale-locale" data-sixmm-canonical-anchor="setlocale-locale" aria-hidden="true"></span>
 
-## setLocale(지역)
+## setLocale(로케일)
 
-iframe 언어를 전환하세요. 지원되는 값은 en, en-US, zh-CN입니다.
+iframe 언어를 전환하세요. 지원되는 값은 en, en-US 및 zh-CN입니다.
 
 ```js
 widget.setLocale('en')
@@ -92,7 +92,7 @@ widget.setLocale('zh-CN')
 
 ## setSize(너비, 높이)
 
-iframe DOM 크기를 업데이트하고 새로운 외부 크기를 iframe에 알리세요. 수치 값은 px로 변환됩니다.
+iframe DOM 크기를 업데이트하고 iframe에 새로운 외부 크기를 알립니다. 숫자 값은 px로 변환됩니다.
 
 ```js
 widget.setSize('100%', 720)
@@ -100,9 +100,9 @@ widget.setSize('100%', 720)
 
 <span id="reload" data-sixmm-canonical-anchor="reload" aria-hidden="true"></span>
 
-## 재장전()
+## 다시 로드()
 
-현재 iframe을 다시 불러오고 다시 초기화될 때까지 기다리세요.
+현재 iframe을 다시 로드하고 다시 초기화될 때까지 기다립니다.
 
 ```js
 widget.reload()
@@ -112,7 +112,7 @@ widget.reload()
 
 ## refreshAuth(이유)
 
-iframe에 현재 인증 흐름을 새로고침해 달라고 요청하세요. 선택적 이유 값은 로깅과 흐름 제어를 위해 전달됩니다.
+iframe에 현재 인증 흐름을 새로 고치도록 요청하세요. 선택적 이유 값은 로깅 및 흐름 제어를 위해 전달됩니다.
 
 ```js
 widget.refreshAuth('manual')
@@ -120,9 +120,9 @@ widget.refreshAuth('manual')
 
 <span id="settokenprovider-provider" data-sixmm-canonical-anchor="settokenprovider-provider" aria-hidden="true"></span>
 
-## setTokenProvider(제공자)
+## setTokenProvider(공급자)
 
-파트너 토큰 모드에서 사용된 tokenProvider 를 대체합니다. iframe이 새 임베드 토큰을 요청하면 SDK 제공자에게 호출합니다.
+파트너 토큰 모드에서 사용되는 tokenProvider를 교체합니다. SDK는 iframe이 새로운 포함 토큰을 요청할 때 공급자를 호출합니다.
 
 ```js
 widget.setTokenProvider(async ({ channelId, symbol, reason }) => {
@@ -139,9 +139,9 @@ widget.setTokenProvider(async ({ channelId, symbol, reason }) => {
 
 <span id="on-event-handler" data-sixmm-canonical-anchor="on-event-handler" aria-hidden="true"></span>
 
-## 온(이벤트, 핸들러)
+## on(이벤트, 핸들러)
 
-런타임 이벤트에 구독하세요. 반환된 함수는 리스너를 제거합니다.
+런타임 이벤트를 구독합니다. 반환된 함수는 리스너를 제거합니다.
 
 ```js
 const off = widget.on('order_created', (event) => {
@@ -155,7 +155,30 @@ off()
 
 ## 관련 위젯 가이드
 
-- [Trading Widget 퀵 스타트](/ko/sdk/trading-widget/quick-start)
+- [Trading Widget 빠른 시작](/ko/sdk/trading-widget/quick-start)
 - [옵션 및 이벤트](/ko/sdk/trading-widget/options-events)
-- [인증](/ko/sdk/trading-widget/authentication)
+- [입증](/ko/sdk/trading-widget/authentication)
 - [문제 해결](/ko/sdk/security/troubleshooting)
+
+<span id="additional-methods-in-the-current-v1-runtime" data-sixmm-canonical-anchor="additional-methods-in-the-current-v1-runtime" aria-hidden="true"></span>
+
+## 현재 v1 런타임의 추가 메서드
+
+| 방법 | 목적 |
+| --- | --- |
+| `whenRendered()` | iframe의 렌더링된 알림을 기다립니다. 이것은 준비와 별개입니다. |
+| `setPage(page)` | 현재 인스턴스에서 지원되는 제품 페이지를 요청하세요. 자금환경은 바뀌지 않습니다. |
+| `prepareForRecreate()` | 교체 준비를 위해 준비된 iframe을 요청하세요. Promise를 반환하고 사용할 수 없거나 통화 중이거나 시간 초과된 경우 거부할 수 있습니다. |
+| `cancelRecreate()` | 보류 중/준비된 교체 흐름을 취소합니다. |
+| `TradingWidget.validateOptions(options)` | 인스턴스를 생성하기 전에 초기화 옵션을 검증하세요. |
+
+사용자 또는 실제/데모 환경 변경의 경우 기존 인스턴스를 삭제하고 대상 인증 및 모드를 사용하여 새 인스턴스를 생성합니다. `setPage`을 환경 스위치로 사용하지 마십시오. 선택적 방법을 사용하기 전에 기능을 확인하십시오.
+
+```js
+if (TradingWidget.capabilities.methods.includes('whenRendered')) {
+  await widget.whenRendered();
+}
+if (TradingWidget.capabilities.pages.includes('up-down')) {
+  widget.setPage('up-down');
+}
+```

@@ -1,0 +1,165 @@
+---
+title: "Intégration du trading de secondes"
+subtitle: "Intégration du trading de secondes: Intégration Agent Java SDK v0.3.0, exemples, paramètres et sémantique de réponse."
+slug: sdk/agent-sdk/java/seconds-trading
+canonical-url: https://docs.6mm.com/fr/sdk/agent-sdk/java/seconds-trading
+---
+
+Ce guide cible **Agent Java SDK `v0.3.0`** et Java 8+.
+
+<span id="prepare-identity-authentication-and-funds" data-sixmm-canonical-anchor="prepare-identity-authentication-and-funds" aria-hidden="true"></span>
+
+## Préparer l'identité, l'authentification et les fonds
+
+Le trading en secondes utilise la même liaison utilisateur et la même authentification d'entrée que le trading perpétuel. Il utilise les soldes de financement ; la marge perpétuelle utilise les soldes des contrats. Configurez séparément le produit/mode frontend et l’environnement des fonds backend.
+
+Initialisez `client` en utilisant [Démarrage rapide](/fr/sdk/agent-sdk/java/quick-start). Enregistrez le mappage utilisateur lié et obtenez l’ID utilisateur partenaire de la session backend authentifiée.
+
+<span id="redirect-entry" data-sixmm-canonical-anchor="redirect-entry" aria-hidden="true"></span>
+
+## Rediriger l'entrée
+
+```java
+import com.sixmm.agent.model.CreateEntryUrlRequest;
+import com.sixmm.agent.model.CreateEntryUrlResponse;
+
+CreateEntryUrlResponse entry = client.createEntryUrl(
+        CreateEntryUrlRequest.of("merchant-user-001")
+                .withRedirectPath("/zh-CN/up-down?tradingMode=demo")
+                .withReturnUrl("https://merchant.example/markets"));
+String webUrl = entry.webUrl;
+```
+
+Le SDK appelle `POST /v1/agent/create-entry-url`. Renvoyez `webUrl` à l'interface du partenaire et ouvrez-le immédiatement. `expireAt` utilise les secondes Unix. Un ticket est de courte durée et unique ; en obtenir un autre après péremption ou consommation.
+
+| Produit | Exemple de chemin d'accès au frontend | Portefeuille |
+| --- | --- | --- |
+| Haut/Bas | `/zh-CN/up-down?tradingMode=real` ou `demo` | Financement |
+| Haut/Bas | `/zh-CN/high-low?tradingMode=real` ou `demo` | Financement |
+| Grille | `/zh-CN/grid-prediction?tradingMode=real` ou `demo` | Financement |
+| Futures perpétuelles | `/zh-CN/futures/BTCUSDT?tradingMode=real` ou `demo` | Contracter |
+
+Utilisez les routes frontales réelles fournies par 6MM. `redirectPath` est un chemin de plateforme relatif commençant par `/` ; `returnUrl` est un partenaire absolu HTTP/HTTPS URL. Un ticket d'entrée authentifie l'utilisateur et n'exécute pas de transfert.
+
+<span id="embedded-entry" data-sixmm-canonical-anchor="embedded-entry" aria-hidden="true"></span>
+
+## Entrée intégrée
+
+Utilisez les flux `partner-token` et `tokenProvider` existants. Il n’existe aucun jeton spécifique à la prédiction. Créez le widget avec les `page` et `tradingMode` souhaités, et utilisez son `channelId` actuel lors de l'appel du backend partenaire.
+
+```java
+import com.sixmm.agent.model.CreateEmbedTokenRequest;
+import com.sixmm.agent.model.CreateEmbedTokenResponse;
+
+String channelId = "tw_example_channel";
+CreateEmbedTokenResponse auth = client.createEmbedToken(
+        CreateEmbedTokenRequest.of("merchant-user-001", channelId));
+String embedToken = auth.embedToken;
+long expireAt = auth.expireAt;
+```
+
+Le SDK appelle `POST /v1/agent/create-embed-token`. `symbol` est facultatif ; il ne choisit pas un produit de seconde zone. La sélection de produits appartient au frontend. Le jeton ne sélectionne pas un environnement de fonds et ne modifie pas les soldes.
+
+<span id="complete-frontend-example" data-sixmm-canonical-anchor="complete-frontend-example" aria-hidden="true"></span>
+
+## Exemple d'interface complet
+
+Ces options ont été vérifiées par rapport au runtime public Trading Widget `1.8.0` le 10/10/2026. Les versions Widget et Agent Java SDK sont indépendantes.
+
+```html
+<div id="seconds-widget" style="width: 100%; height: 720px"></div>
+<script src="https://app.6mm.com/sdk/trading-widget/v1/index.js"></script>
+<script>
+  const page = 'up-down';
+  const tradingMode = 'demo';
+  const capabilities = TradingWidget.capabilities;
+  if (!capabilities?.partnerToken ||
+      !capabilities.pages?.includes(page) ||
+      !capabilities.tradingModes?.includes(tradingMode)) {
+    throw new Error('Trading Widget SDK does not support the requested page or mode');
+  }
+
+  const widget = TradingWidget.create('#seconds-widget', {
+    baseUrl: 'https://app.6mm.com',
+    page,
+    tradingMode,
+    theme: 'dark',
+    locale: 'zh-CN',
+    auth: {
+      mode: 'partner-token',
+      tokenProvider: async ({ channelId }) => {
+        // Partner-owned endpoint; derive the user from the backend session.
+        const response = await fetch('/api/seconds/embed-token', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ channelId }),
+        });
+        if (!response.ok) {
+          throw new Error('Failed to request embed token');
+        }
+        const result = await response.json();
+        if (typeof result.embedToken !== 'string' || !result.embedToken.trim() ||
+            !Number.isFinite(result.expireAt) || result.channelId !== channelId) {
+          throw new Error('Invalid embed token response');
+        }
+        return {
+          embedToken: result.embedToken,
+          expireAt: result.expireAt,
+          channelId: result.channelId,
+        };
+      },
+    },
+    onReady() {
+      console.log('Trading widget ready');
+    },
+    onError(error) {
+      console.error('Trading widget error', error.code);
+    },
+  });
+  window.addEventListener('beforeunload', () => widget.destroy());
+</script>
+```
+
+| Option | Valeurs | Signification |
+| --- | --- | --- |
+| `page` | `up-down`, `high-low`, `grid-prediction` | Page produit. |
+| `tradingMode` | `real`, `demo` | La valeur par défaut est `real` ; définir explicitement. |
+| `baseUrl` | `https://app.6mm.com` | Origine de l’interface de la plateforme ; le widget crée son intégration URL. |
+
+<span id="partner-backend-response" data-sixmm-canonical-anchor="partner-backend-response" aria-hidden="true"></span>
+
+## Réponse backend du partenaire
+
+`/api/seconds/embed-token` est un point de terminaison appartenant à un partenaire, et non un nouveau 6MM API. Authentifiez la session, dérivez `agentUserId` côté serveur et appelez `createEmbedToken`. Renvoyez cette structure de niveau supérieur :
+
+```json
+{
+  "embedToken": "short-one-time-token",
+  "expireAt": 1791590700,
+  "channelId": "tw_xxx"
+}
+```
+
+Utilisez la valeur réelle `expireAt` de la réponse de l'agent, et non la valeur illustrative. La réponse de l'agent ne contient pas `channelId` ; votre backend fait écho à la valeur de la requête actuelle. Si votre API encapsule les résultats dans `data`, déballez ce calque avant de revenir de tokenProvider. Rejetez les échecs commerciaux plutôt que de renvoyer un objet de réussite non valide.
+
+Chaque initialisation ou renouvellement obtient un nouveau jeton. Ne cachez et n'échangez plus jamais le même jeton, ni ne le placez dans un URL. Réutilisez le même canal d'instance lors du renouvellement ; utilisez le nouveau canal après avoir recréé l'instance.
+
+<span id="match-the-funds-environment" data-sixmm-canonical-anchor="match-the-funds-environment" aria-hidden="true"></span>
+
+## Correspondre à l'environnement des fonds
+
+Une interface `demo` nécessite des demandes de fonds simulées avec `environment=SIMULATED`. Une interface `real` nécessite des fonds de production. Ni `tradingMode` ni la création de jetons ne modifient l'objectif des fonds backend.
+
+Lorsque vous changez d'utilisateur ou de mode de trading, détruisez l'ancien widget et créez une nouvelle instance. Recherchez les soldes de financement, transférez les fonds et confirmez le résultat final via le point de terminaison du statut spécifique au financement avant de traiter l'utilisateur comme financé.
+
+Voir [Portefeuille de financement](/fr/sdk/agent-sdk/java/funding-wallet) et [Guide environnement](/fr/sdk/agent-sdk/java/environments).
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Source et guides associés
+
+- [Source officielle v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Présentation et pagination des requêtes](/fr/sdk/agent-sdk/java/perpetual-queries)
+- [Portefeuille de financement](/fr/sdk/agent-sdk/java/funding-wallet)
+- [Guide de mise à niveau](/fr/sdk/agent-sdk/java/upgrade)

@@ -1,0 +1,165 @@
+---
+title: "Saniye Ticaret Entegrasyonu"
+subtitle: "Saniye Ticaret Entegrasyonu: Agent Java SDK v0.3.0 entegrasyonu, örnekler, parametreler ve yanıt semantiği."
+slug: sdk/agent-sdk/java/seconds-trading
+canonical-url: https://docs.6mm.com/tr/sdk/agent-sdk/java/seconds-trading
+---
+
+Bu kılavuz **Agent Java SDK `v0.3.0`** ve Java 8+'yi hedefler.
+
+<span id="prepare-identity-authentication-and-funds" data-sixmm-canonical-anchor="prepare-identity-authentication-and-funds" aria-hidden="true"></span>
+
+## Kimlik, kimlik doğrulama ve fonları hazırlayın
+
+Saniyelik ticaret, sürekli ticaretle aynı kullanıcı bağlama ve giriş kimlik doğrulamasını kullanır. Fonlama bakiyelerini kullanır; sürekli marj, Sözleşme bakiyelerini kullanır. Ön uç ürünü/modunu ve arka uç fon ortamını ayrı ayrı yapılandırın.
+
+Kullanarak `client`'ı başlat [Hızlı Başlangıç](/tr/sdk/agent-sdk/java/quick-start). Bağlı kullanıcı eşlemesini kaydedin ve kimliği doğrulanmış arka uç oturumundan ortak kullanıcı kimliğini alın.
+
+<span id="redirect-entry" data-sixmm-canonical-anchor="redirect-entry" aria-hidden="true"></span>
+
+## Girişi yönlendir
+
+```java
+import com.sixmm.agent.model.CreateEntryUrlRequest;
+import com.sixmm.agent.model.CreateEntryUrlResponse;
+
+CreateEntryUrlResponse entry = client.createEntryUrl(
+        CreateEntryUrlRequest.of("merchant-user-001")
+                .withRedirectPath("/zh-CN/up-down?tradingMode=demo")
+                .withReturnUrl("https://merchant.example/markets"));
+String webUrl = entry.webUrl;
+```
+
+SDK, `POST /v1/agent/create-entry-url`'ı çağırır. `webUrl`'i iş ortağı ön ucuna döndürün ve hemen açın. `expireAt` Unix saniyelerini kullanır. Bilet kısa ömürlüdür ve tek seferliktir; Son kullanma tarihi geçtikten veya tüketildikten sonra başka bir tane edinin.
+
+| Ürün | Örnek ön uç yolu | Cüzdan |
+| --- | --- | --- |
+| Yukarı/Aşağı | `/zh-CN/up-down?tradingMode=real` veya `demo` | Finansman |
+| Yüksek/Düşük | `/zh-CN/high-low?tradingMode=real` veya `demo` | Finansman |
+| Izgara | `/zh-CN/grid-prediction?tradingMode=real` veya `demo` | Finansman |
+| Sürekli vadeli işlemler | `/zh-CN/futures/BTCUSDT?tradingMode=real` veya `demo` | Sözleşme |
+
+6MM tarafından sağlanan gerçek ön uç rotalarını kullanın. `redirectPath`, `/` ile başlayan göreceli bir platform yoludur; `returnUrl` mutlak bir ortaktır HTTP/HTTPS URL. Giriş bileti kullanıcının kimliğini doğrular ve bir aktarım gerçekleştirmez.
+
+<span id="embedded-entry" data-sixmm-canonical-anchor="embedded-entry" aria-hidden="true"></span>
+
+## Gömülü giriş
+
+Mevcut `partner-token` ve `tokenProvider` akışını kullanın. Tahmine özgü bir belirteç yoktur. İstediğiniz `page` ve `tradingMode` ile Widget'ı oluşturun ve iş ortağı arka ucunu çağırırken mevcut `channelId` öğesini kullanın.
+
+```java
+import com.sixmm.agent.model.CreateEmbedTokenRequest;
+import com.sixmm.agent.model.CreateEmbedTokenResponse;
+
+String channelId = "tw_example_channel";
+CreateEmbedTokenResponse auth = client.createEmbedToken(
+        CreateEmbedTokenRequest.of("merchant-user-001", channelId));
+String embedToken = auth.embedToken;
+long expireAt = auth.expireAt;
+```
+
+SDK, `POST /v1/agent/create-embed-token`'ı çağırır. `symbol` isteğe bağlıdır; saniye ticareti yapan bir ürün seçmez. Ürün seçimi ön uca aittir. Token bir fon ortamı seçmez veya bakiyeleri değiştirmez.
+
+<span id="complete-frontend-example" data-sixmm-canonical-anchor="complete-frontend-example" aria-hidden="true"></span>
+
+## Tam ön uç örneği
+
+Bu seçenekler, 2026-10-10 tarihinde genel Trading Widget `1.8.0` çalışma zamanına göre doğrulandı. Widget ve Agent Java SDK sürümleri bağımsızdır.
+
+```html
+<div id="seconds-widget" style="width: 100%; height: 720px"></div>
+<script src="https://app.6mm.com/sdk/trading-widget/v1/index.js"></script>
+<script>
+  const page = 'up-down';
+  const tradingMode = 'demo';
+  const capabilities = TradingWidget.capabilities;
+  if (!capabilities?.partnerToken ||
+      !capabilities.pages?.includes(page) ||
+      !capabilities.tradingModes?.includes(tradingMode)) {
+    throw new Error('Trading Widget SDK does not support the requested page or mode');
+  }
+
+  const widget = TradingWidget.create('#seconds-widget', {
+    baseUrl: 'https://app.6mm.com',
+    page,
+    tradingMode,
+    theme: 'dark',
+    locale: 'zh-CN',
+    auth: {
+      mode: 'partner-token',
+      tokenProvider: async ({ channelId }) => {
+        // Partner-owned endpoint; derive the user from the backend session.
+        const response = await fetch('/api/seconds/embed-token', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ channelId }),
+        });
+        if (!response.ok) {
+          throw new Error('Failed to request embed token');
+        }
+        const result = await response.json();
+        if (typeof result.embedToken !== 'string' || !result.embedToken.trim() ||
+            !Number.isFinite(result.expireAt) || result.channelId !== channelId) {
+          throw new Error('Invalid embed token response');
+        }
+        return {
+          embedToken: result.embedToken,
+          expireAt: result.expireAt,
+          channelId: result.channelId,
+        };
+      },
+    },
+    onReady() {
+      console.log('Trading widget ready');
+    },
+    onError(error) {
+      console.error('Trading widget error', error.code);
+    },
+  });
+  window.addEventListener('beforeunload', () => widget.destroy());
+</script>
+```
+
+| Seçenek | Değerler | Anlam |
+| --- | --- | --- |
+| `page` | `up-down`, `high-low`, `grid-prediction` | Ürün sayfası. |
+| `tradingMode` | `real`, `demo` | Varsayılan olarak `real`; açıkça ayarlayın. |
+| `baseUrl` | `https://app.6mm.com` | Platform ön uç kökeni; Widget kendi yerleştirmesini URL oluşturur. |
+
+<span id="partner-backend-response" data-sixmm-canonical-anchor="partner-backend-response" aria-hidden="true"></span>
+
+## İş ortağı arka uç yanıtı
+
+`/api/seconds/embed-token` iş ortağına ait bir uç noktadır, yeni bir 6MM API değildir. Oturumun kimliğini doğrulayın, `agentUserId` sunucu tarafını türetin ve `createEmbedToken` çağrısını yapın. Bu üst düzey yapıyı döndürün:
+
+```json
+{
+  "embedToken": "short-one-time-token",
+  "expireAt": 1791590700,
+  "channelId": "tw_xxx"
+}
+```
+
+Açıklayıcı değeri değil, Temsilci yanıtının gerçek `expireAt` değerini kullanın. Aracı yanıtı `channelId` içermiyor; arka ucunuz mevcut isteğin değerini yansıtır. Eğer API'iniz sonuçları `data` ile sarıyorsa, tokenProvider'den dönmeden önce o katmanın paketini açın. Geçersiz bir başarı nesnesi döndürmek yerine iş başarısızlıklarını reddedin.
+
+Her başlatma veya yenileme, yeni bir belirteç elde eder. Aynı jetonu bir daha asla önbelleğe alıp değiştirmeyin veya URL içine yerleştirmeyin. Yenileme sırasında aynı örnek kanalını yeniden kullanın; örneği yeniden oluşturduktan sonra yeni kanalı kullanın.
+
+<span id="match-the-funds-environment" data-sixmm-canonical-anchor="match-the-funds-environment" aria-hidden="true"></span>
+
+## Fon ortamını eşleştirin
+
+Bir `demo` ön uç, `environment=SIMULATED` ile simüle edilmiş fon talepleri gerektirir. Bir `real` ön uç, üretim fonları gerektirir. Ne `tradingMode` ne de token oluşturma, arka uç fon hedefini değiştirmez.
+
+Kullanıcıları veya ticaret modunu değiştirirken eski Widget'ı yok edin ve yeni bir örnek oluşturun. Kullanıcıyı fonlanmış olarak değerlendirmeden önce Fonlama bakiyelerini sorgulayın, fonları aktarın ve Finansmana özgü durum uç noktası aracılığıyla nihai sonucu onaylayın.
+
+Görmek [Finansman cüzdanı](/tr/sdk/agent-sdk/java/funding-wallet) Ve [Çevre kılavuzu](/tr/sdk/agent-sdk/java/environments).
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Kaynak ve ilgili kılavuzlar
+
+- [Resmi v0.3.0 kaynağı](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Sorguya genel bakış ve sayfalandırma](/tr/sdk/agent-sdk/java/perpetual-queries)
+- [Finansman cüzdanı](/tr/sdk/agent-sdk/java/funding-wallet)
+- [Yükseltme kılavuzu](/tr/sdk/agent-sdk/java/upgrade)

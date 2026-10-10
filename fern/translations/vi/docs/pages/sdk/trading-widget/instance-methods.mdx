@@ -1,6 +1,6 @@
 ---
-title: "Phương thức thể hiện"
-subtitle: "Điều khiển một phiên bản widget đã tạo sau TradingWidget.create()."
+title: "Phương thức sơ thẩm"
+subtitle: "Kiểm soát phiên bản tiện ích đã tạo sau TradingWidget.create()."
 slug: sdk/trading-widget/instance-methods
 canonical-url: https://docs.6mm.com/vi/sdk/trading-widget/instance-methods
 ---
@@ -11,23 +11,23 @@ canonical-url: https://docs.6mm.com/vi/sdk/trading-widget/instance-methods
 
 | Phương pháp | Mục đích |
 | --- | --- |
-| destroy() | Gỡ bỏ iframe và thả các trình lắng nghe sự kiện. |
+| hủy hoại() | Xóa iframe và giải phóng trình xử lý sự kiện. |
 | getState() | Đọc trạng thái vòng đời SDK hiện tại. |
-| whenReady() | Chờ đến khi iframe hoàn tất khởi tạo. |
-| setSymbol(biểu tượng) | Chuyển đổi cặp giao dịch bên trong iframe. |
+| whenReady() | Đợi cho đến khi iframe hoàn tất quá trình khởi tạo. |
+| setSymbol(ký hiệu) | Chuyển đổi cặp giao dịch bên trong iframe. |
 | setTheme(chủ đề) | Cập nhật tham số chủ đề iframe. |
-| setLocale(địa phương) | Chuyển đổi ngôn ngữ iframe. |
+| setLocale(ngôn ngữ) | Chuyển đổi ngôn ngữ iframe. |
 | setSize(chiều rộng, chiều cao) | Cập nhật kích thước iframe. |
-| reload() | Tải lại iframe hiện tại. |
-| refreshAuth(lý do) | Kích hoạt luồng làm mới xác thực widget. |
-| setTokenProvider(nhà cung cấp) | Thay thế nhà cung cấp được sử dụng bởi chế độ token đối tác. |
-| on(event, handler) | Đăng ký nhận các sự kiện thời gian chạy và nhận chức năng hủy đăng ký. |
+| tải lại() | Tải lại iframe hiện tại. |
+| refreshAuth(lý do) | Kích hoạt luồng làm mới xác thực tiện ích. |
+| setTokenProvider(nhà cung cấp) | Thay thế nhà cung cấp được sử dụng bởi chế độ mã thông báo đối tác. |
+| on(sự kiện, trình xử lý) | Đăng ký các sự kiện thời gian chạy và nhận chức năng hủy đăng ký. |
 
-<span data-sixmm-canonical-anchor="destroy" aria-hidden="true"></span>
+<span id="destroy" data-sixmm-canonical-anchor="destroy" aria-hidden="true"></span>
 
-## destroy()
+## hủy hoại()
 
-Gỡ bỏ iframe, xóa listener và phát hành đã hủy một lần cho phiên bản hiện tại.
+Xóa iframe, xóa trình nghe và phát ra bị hủy một lần cho phiên bản hiện tại.
 
 ```js
 widget.destroy()
@@ -37,19 +37,19 @@ widget.destroy()
 
 ## getState()
 
-Đọc trạng thái vòng đời hiện tại của thể hiện widget.
+Đọc trạng thái vòng đời hiện tại của phiên bản widget.
 
 ```js
 const state = widget.getState()
 ```
 
-Các giá trị trả về bao gồm loading, authenticating, ready, error và destroyed.
+Các giá trị trả về bao gồm tải, xác thực, sẵn sàng, lỗi và bị hủy.
 
 <span data-sixmm-canonical-anchor="whenready" aria-hidden="true"></span>
 
 ## whenReady()
 
-Chờ iframe hoàn tất khởi tạo trước khi chạy logic giao diện phụ thuộc.
+Đợi iframe hoàn tất quá trình khởi tạo trước khi chạy logic giao diện người dùng phụ thuộc.
 
 ```js
 await widget.whenReady()
@@ -57,9 +57,9 @@ await widget.whenReady()
 
 <span id="setsymbol-symbol" data-sixmm-canonical-anchor="setsymbol-symbol" aria-hidden="true"></span>
 
-## setSymbol(biểu tượng)
+## setSymbol(ký hiệu)
 
-Chuyển đổi cặp giao dịch bên trong iframe. Nếu iframe vẫn đang khởi tạo, SDK sẽ xếp hàng lệnh và gửi sau khi đã sẵn sàng.
+Chuyển đổi cặp giao dịch bên trong iframe. Nếu iframe vẫn đang khởi tạo, SDK sẽ xếp hàng lệnh và gửi nó sau khi sẵn sàng.
 
 ```js
 widget.setSymbol('ETHUSDT')
@@ -69,7 +69,7 @@ widget.setSymbol('ETHUSDT')
 
 ## setTheme(chủ đề)
 
-Cập nhật tham số chủ đề được sử dụng bởi iframe giao dịch nhúng.
+Cập nhật tham số chủ đề được sử dụng bởi iframe giao dịch được nhúng.
 
 ```js
 widget.setTheme('dark')
@@ -78,7 +78,7 @@ widget.setTheme('light')
 
 <span id="setlocale-locale" data-sixmm-canonical-anchor="setlocale-locale" aria-hidden="true"></span>
 
-## setLocale(địa phương)
+## setLocale(ngôn ngữ)
 
 Chuyển đổi ngôn ngữ iframe. Các giá trị được hỗ trợ là en, en-US và zh-CN.
 
@@ -92,17 +92,17 @@ widget.setLocale('zh-CN')
 
 ## setSize(chiều rộng, chiều cao)
 
-Cập nhật kích thước DOM iframe và thông báo cho iframe về kích thước ngoài mới. Giá trị số được chuyển đổi thành px.
+Cập nhật kích thước iframe DOM và thông báo cho iframe về kích thước bên ngoài mới. Giá trị số được chuyển đổi thành px.
 
 ```js
 widget.setSize('100%', 720)
 ```
 
-<span data-sixmm-canonical-anchor="reload" aria-hidden="true"></span>
+<span id="reload" data-sixmm-canonical-anchor="reload" aria-hidden="true"></span>
 
-## reload()
+## tải lại()
 
-Tải lại iframe hiện tại và chờ nó khởi tạo lại.
+Tải lại iframe hiện tại và đợi nó khởi chạy lại.
 
 ```js
 widget.reload()
@@ -112,7 +112,7 @@ widget.reload()
 
 ## refreshAuth(lý do)
 
-Yêu cầu iframe làm mới luồng xác thực hiện tại. Giá trị lý do tùy chọn được chuyển tiếp cho ghi nhật ký và kiểm soát luồng.
+Yêu cầu iframe làm mới luồng xác thực hiện tại. Giá trị lý do tùy chọn được chuyển tiếp để ghi nhật ký và kiểm soát luồng.
 
 ```js
 widget.refreshAuth('manual')
@@ -122,7 +122,7 @@ widget.refreshAuth('manual')
 
 ## setTokenProvider(nhà cung cấp)
 
-Thay thế tokenProvider được sử dụng bởi chế độ token đối tác. SDK gọi nhà cung cấp khi iframe yêu cầu token nhúng mới.
+Thay thế tokenProvider được sử dụng bởi chế độ mã thông báo đối tác. SDK gọi nhà cung cấp khi iframe yêu cầu mã thông báo nhúng mới.
 
 ```js
 widget.setTokenProvider(async ({ channelId, symbol, reason }) => {
@@ -139,9 +139,9 @@ widget.setTokenProvider(async ({ channelId, symbol, reason }) => {
 
 <span id="on-event-handler" data-sixmm-canonical-anchor="on-event-handler" aria-hidden="true"></span>
 
-## on(event, handler)
+## on(sự kiện, trình xử lý)
 
-Đăng ký một sự kiện thời gian chạy. Hàm trả về sẽ xóa trình lắng nghe.
+Đăng ký một sự kiện thời gian chạy. Hàm trả về sẽ loại bỏ trình nghe.
 
 ```js
 const off = widget.on('order_created', (event) => {
@@ -155,7 +155,30 @@ off()
 
 ## Hướng dẫn Widget liên quan
 
-- [Trading Widget Khởi Đầu Nhanh](/vi/sdk/trading-widget/quick-start)
+- [Trading Widget Bắt đầu nhanh](/vi/sdk/trading-widget/quick-start)
 - [Tùy chọn & Sự kiện](/vi/sdk/trading-widget/options-events)
 - [Xác thực](/vi/sdk/trading-widget/authentication)
 - [Khắc phục sự cố](/vi/sdk/security/troubleshooting)
+
+<span id="additional-methods-in-the-current-v1-runtime" data-sixmm-canonical-anchor="additional-methods-in-the-current-v1-runtime" aria-hidden="true"></span>
+
+## Các phương thức bổ sung trong thời gian chạy v1 hiện tại
+
+| Phương pháp | Mục đích |
+| --- | --- |
+| `whenRendered()` | Đợi thông báo được hiển thị của iframe; cái này tách biệt với sẵn sàng. |
+| `setPage(page)` | Yêu cầu trang sản phẩm được hỗ trợ trong phiên bản hiện tại. Nó không thay đổi môi trường quỹ. |
+| `prepareForRecreate()` | Yêu cầu iframe sẵn sàng để chuẩn bị thay thế; trả lại một lời hứa và có thể từ chối nếu không có mặt, bận hoặc hết thời gian. |
+| `cancelRecreate()` | Hủy luồng thay thế đang chờ xử lý/chuẩn bị. |
+| `TradingWidget.validateOptions(options)` | Xác thực các tùy chọn khởi tạo trước khi tạo một phiên bản. |
+
+Để thay đổi môi trường người dùng hoặc môi trường thực/demo, hãy hủy phiên bản cũ và tạo một phiên bản mới với chế độ và xác thực đích. Không sử dụng `setPage` làm công tắc môi trường. Kiểm tra khả năng trước khi sử dụng các phương pháp tùy chọn.
+
+```js
+if (TradingWidget.capabilities.methods.includes('whenRendered')) {
+  await widget.whenRendered();
+}
+if (TradingWidget.capabilities.pages.includes('up-down')) {
+  widget.setPage('up-down');
+}
+```

@@ -1,0 +1,83 @@
+---
+title: "升級到v0.3.0"
+subtitle: "升級到 v0.3.0：Agent Java SDK v0.3.0 集成、示例、參數和響應語義。"
+slug: sdk/agent-sdk/java/upgrade
+canonical-url: https://docs.6mm.com/zh-TW/sdk/agent-sdk/java/upgrade
+---
+
+本指南的目標用戶為 **Agent Java SDK `v0.3.0`** 和 Java 8+。
+
+<span id="decide-what-needs-upgrading" data-sixmm-canonical-anchor="decide-what-needs-upgrading" aria-hidden="true"></span>
+
+## 確定需要升級的內容
+
+| 現有集成 | 行動 |
+| --- | --- |
+| 省略環境的現有生產功能 | 現有的響應形狀保持兼容；新查詢不會強制升級。 |
+| 現有的用於秒交易的通用嵌入身份驗證 | 重用認證和續訂；選擇所需的產品頁面。 |
+| 資金餘額、轉移和回收 | 使用包含 `withFunding`、`walletTransfer` 和 `queryWalletTransfer` 的模型。 |
+| 顯式模擬資金 | 使用支持 `environment` 的請求/響應模型。 |
+| 六個永久數據查詢 | 使用公共 Java SDK `v0.3.0`，包括六種方法和數組簽名支持。 |
+
+保留您當前的 `baseUrl`、`agentCode`、`apiSecret`、用戶綁定和原始業務訂單。
+
+<span id="install-the-stable-public-tag" data-sixmm-canonical-anchor="install-the-stable-public-tag" aria-hidden="true"></span>
+
+## 安裝穩定的公共標籤
+
+GitHub 託管源代碼。發佈 GitHub 標籤不會將 Maven 座標發佈到 Maven Central。在本地安裝標記的源或將其經過驗證的 JAR/POM 發佈到組織的工件存儲庫。
+
+```bash
+git clone --branch v0.3.0 --single-branch https://github.com/6mm-com/agent-java-sdk.git agent-java-sdk-v0.3.0
+cd agent-java-sdk-v0.3.0
+git rev-parse HEAD
+git rev-parse 'v0.3.0^{commit}'
+mvn install
+```
+
+兩個提交 ID 必須匹配。在合作伙伴項目中聲明依賴：
+
+```xml
+<dependency>
+    <groupId>com.sixmm.exchange.sdk</groupId>
+    <artifactId>agent</artifactId>
+    <version>0.3.0</version>
+</dependency>
+```
+
+驗證已解決的依賴關係：
+
+```bash
+mvn dependency:tree -Dincludes=com.sixmm.exchange.sdk:agent
+```
+
+本地安裝僅使工件在該計算機上可用。 CI 和其他開發人員需要相同的標記安裝或經過驗證的工件存儲庫。如果您已經有一個名為 `0.3.0` 的私有工件，請驗證其來源和方法；不要默默地覆蓋共享工件。
+
+<span id="required-integration-changes" data-sixmm-canonical-anchor="required-integration-changes" aria-hidden="true"></span>
+
+## 所需的集成更改
+
+1. 更新顯式 `environment` 的請求和響應模型。嚴格的舊響應模型可能會拒絕附加字段。
+2. 在讀取 `funding` 之前使用 `withFunding()`。合約餘額不是秒交易餘額。
+3. 使用 `/v1/agent/wallet-transfer` 和 `/v1/agent/wallet-transfer-status` 進行資助。舊的 `queryOrder` 無法恢復資金操作。
+4. 這六個查詢使用 `platformUserIds` 作為字符串數組。將數組標記為緊湊的 JSON； Java `List.toString()` 不兼容。
+5. 將轉移訂單、普通交易訂單、條件訂單和成交訂單存儲為不同的實體。根據運算解析`orderStatus`或`status`。
+6. 在解析之前驗證原始的 webhook 正文。顯式模擬通知包括`environment`；將其與保存的訂單進行比較。
+7. 獨立管理 Java 和 Widget 版本。後端升級不會改變前端頁面或交易模式，秒交易不需要新的幣種。
+
+<span id="verify-the-upgrade" data-sixmm-canonical-anchor="verify-the-upgrade" aria-hidden="true"></span>
+
+## 驗證升級
+
+運行合作伙伴項目的構建並檢查其依賴關係樹。測試綁定、原始生產流程、顯式模擬餘額、資金結果恢復、所有六個查詢、固定窗口分頁、錯誤處理和冪等回調。
+
+對於自定義 HTTP 客戶端，請遵循標記的請求和簽名合同，而不是假設舊模型覆蓋新字段。看 [查詢概覽](/zh-TW/sdk/agent-sdk/java/perpetual-queries) 和 [環境指南](/zh-TW/sdk/agent-sdk/java/environments).
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## 來源及相關指南
+
+- [官方v0.3.0源碼](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [查詢概覽和分頁](/zh-TW/sdk/agent-sdk/java/perpetual-queries)
+- [資金錢包](/zh-TW/sdk/agent-sdk/java/funding-wallet)
+- [升級指南](/zh-TW/sdk/agent-sdk/java/upgrade)

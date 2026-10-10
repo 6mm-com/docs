@@ -1,0 +1,165 @@
+---
+title: "Finansman Cüzdanı"
+subtitle: "Finansman Cüzdanı: Agent Java SDK v0.3.0 entegrasyonu, örnekler, parametreler ve yanıt semantiği."
+slug: sdk/agent-sdk/java/funding-wallet
+canonical-url: https://docs.6mm.com/tr/sdk/agent-sdk/java/funding-wallet
+---
+
+Bu kılavuz **Agent Java SDK `v0.3.0`**, Java 8+ ve etiketli kamu sözleşmesini hedefler. Örnekler, `client` başlatıldıktan sonra bir iş ortağı arka ucunda çalıştırılır. [Hızlı Başlangıç](/tr/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## Örnek önkoşullar
+
+Java parçacıkları bu içe aktarmaları paylaşır. Hızlı Başlangıç'ı kullanarak `client`'ı başlatın ve kaydedilen bağlamadan `platformUserId`'i edinin. Örnek kullanıcı/sipariş kimlikleri kendi kalıcı değerlerinizle değiştirilmelidir.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span id="wallet-queries-and-transfers" data-sixmm-canonical-anchor="wallet-queries-and-transfers" aria-hidden="true"></span>
+
+## Cüzdan sorguları ve transferleri
+
+<span id="distinguish-the-three-wallets" data-sixmm-canonical-anchor="distinguish-the-three-wallets" aria-hidden="true"></span>
+
+### Üç cüzdanı ayırt edin
+
+| cüzdan | Denge kaynağı | kullanmak |
+| --- | --- | --- |
+| Satıcının kendi kullanıcı cüzdanı | Satıcının kendi muhasebe sistemi | Kullanıcının satıcı tarafındaki mevcut bakiyesi |
+| Platform Finansmanı | `queryUserAssets` / `funding` | Saniye alım satım fonları ve Finansman/Sözleşme karşılıklı transferi |
+| Platform Sözleşmesi | `queryUserAssets` sözleşme varlığı alanı | Sürekli sözleşme marjı ve devredilebilir bakiye |
+
+`queryAccount` Satıcı kullanıcı cüzdanını değil, satıcı platformu marj hesabını sorgulayın. Bu arayüzde `environment` parametreler yoktur ve simüle edilmiş bir kullanıcı varlığı olarak sorgulanamaz.
+
+Simüle edilmiş kullanıcıların iki platform cüzdanını sorgulayın:
+
+```java
+QueryUserAssetsResponse assets = client.queryUserAssets(
+        QueryUserAssetsRequest.of(platformUserId)
+                .withFunding()
+                .withEnvironment(ExecutionEnvironment.SIMULATED));
+```
+
+Arayüz: `POST /v1/agent/query-user-assets`. Finansman yalnızca `includeFunding=true` olduğunda talep edilir; orijinal sözleşme varlığı sorgu semantiği varsayılan olarak kullanılır.
+
+| yanıt alanları | Anlam |
+| --- | --- |
+| `walletBalance`, `availableBalance`, `frozenMargin`, `usedMargin`, `isolatedMargin` | Sözleşme cüzdanıyla ilgili tutarlar |
+| `funding.assetCode` | Şu anda USDT |
+| `funding.availableAmount`, `heldAmount`, `totalAmount` | Mevcut fon, dolu ve toplam tutar |
+| `funding.materialized` | Finansman hesabının hayata geçirilip geçirilmediği? |
+| `environment` | Bu alan, ortam açıkça iletildiğinde yankılanır; ortamı atlayan eski istekler bu alanı döndürmez. |
+| `isSimulatedUser` | Hesap sınıflandırması; ticaret ortamı seçiminin yerini alamaz |
+
+Tutarlar, `float`/`double` olarak değil, dizeler veya `BigDecimal` olarak işlenir.
+
+<span id="funding-transfer-directions" data-sixmm-canonical-anchor="funding-transfer-directions" aria-hidden="true"></span>
+
+### Finansman transferi talimatları
+
+Oluşturun: `POST /v1/agent/wallet-transfer`, SDK `walletTransfer`.
+
+| `direction` | Fon akışı | `transferAll` |
+| --- | --- | --- |
+| `PARTNER_TO_FUNDING` | Tüccar → Platform Finansmanı | Yalnızca sabit tutar |
+| `FUNDING_TO_PARTNER` | Platform Finansmanı → Satıcı | Yalnızca sabit tutar |
+| `FUNDING_TO_CONTRACT` | Aynı ortam platformu Finansman → Sözleşme | Sabit tutarı veya çekilebilir tüm fonları destekler |
+| `CONTRACT_TO_FUNDING` | Aynı ortam platformu Sözleşme → Finansman | Sabit tutarı veya çekilebilir tüm fonları destekler |
+
+Mevcut para birimi yalnızca USDT'ı desteklemektedir. Sabit tutar, en fazla 8 ondalık basamağa sahip pozitif bir dize olmalıdır ve bilimsel gösterim kullanılmamalıdır. `transferAll=true` olduğunda, `amount`'yi atlayın ve bunu son yanıt olarak kaydedin `amount`; "tümü" yalnızca çekilebilir fonları içerir.
+
+Örnek: Satıcı, simüle edilmiş Finansmana 10 USDT aktarır. Öncelikle iş emrini ve ortamı üye işyeri sistemine kaydedin ve ardından talebi gönderin:
+
+```java
+String fundingOrderNo = "SIM-FUNDING-20261010-000001";
+WalletTransferResponse transfer = client.walletTransfer(
+        WalletTransferRequest.of(fundingOrderNo, "merchant-user-001",
+                "PARTNER_TO_FUNDING", "10.00000000", false)
+                .withEnvironment(ExecutionEnvironment.SIMULATED));
+```
+
+Finansman Simüle edilmiş Sözleşmeye aktarılabilecek tüm fonları aktarın:
+
+```java
+WalletTransferResponse move = client.walletTransfer(
+        WalletTransferRequest.of("SIM-F2C-20261010-000001", "merchant-user-001",
+                "FUNDING_TO_CONTRACT", null, true)
+                .withEnvironment(ExecutionEnvironment.SIMULATED));
+```
+
+Aynı işlem orijinal `agentOrderNo` kullanmaya devam etmelidir; farklı işlemler ve farklı ortamlar farklı sipariş numaraları kullanır. Aynı sipariş numarası ile miktar, kullanıcı, yön veya ortam değişikliği yapılması reddedilecektir. Fon/Sözleşme transferleri yalnızca aynı ortamda gerçekleştirilebilir, simüle fonlar gerçek fonlara aktarılamaz.
+
+<span id="result-confirmation-and-unknown-result-recovery" data-sixmm-canonical-anchor="result-confirmation-and-unknown-result-recovery" aria-hidden="true"></span>
+
+### Sonuç onayı ve bilinmeyen sonuç kurtarma
+
+Finansman yanıtları `status`, `SUCCESS`, `PROCESSING` veya `FAILED` ile temsil edilir ve `orderNo`, `direction`, `currency` döndürülür, `amount`, `resultCode`, vb. `code=0` yalnızca isteğin başarıyla işlendiği ve `status` yargılamasına devam etmeniz gerektiği anlamına gelir.
+
+| sonuç | Satıcı işlemleri |
+| --- | --- |
+| `SUCCESS` | Gerçek tutara dayalı olarak yerel muhasebe işlemlerini tamamlayın |
+| `PROCESSING` | Onay için yerel tutun ve orijinal siparişi kontrol edin |
+| HTTP Zaman aşımı, ağ hatası, sonuç ayrıştırılamıyor | Sonuç bilinmiyor olarak kabul edilir ve orijinal sıra sorgulanır; doğrudan arıza olarak belirlenemez veya yeni bir sipariş oluşturulup tekrar denenemez. |
+| Tanımlandı `FAILED` | Net arıza sonucuna göre yerel rezervasyonu iptal edin; işin yeniden başlatılması gerektiğinde yeni bir iş emri oluşturmak |
+
+Finansman sorgusu özel arayüzü `POST /v1/agent/wallet-transfer-status` kullanır:
+
+```java
+WalletTransferResponse recovered = client.queryWalletTransfer(
+        WalletTransferQueryRequest.of(fundingOrderNo)
+                .withEnvironment(ExecutionEnvironment.SIMULATED));
+```
+
+Orijinal Finansman işlemini kurtarmak için bu özel uç noktayı kullanın; `queryOrder` onun yerini alamaz. Orijinal ortamı kaydedin ve kurtarma sırasında açıkça iletin. `environment`, `wallet-transfer-status`'den çıkarılırsa, sunucu, simüle edilmiş siparişler de dahil olmak üzere orijinal siparişte kaydedilen ortamı kullanır. Açıkça çakışan bir ortam, `102002` (`order environment mismatch` değerini döndürür. Arayan kişi ortamı atladığında, yanıt da `environment` atlar; bu, orijinal siparişin bir üretim siparişi olduğu anlamına gelmez.
+
+Tüccarların yerel para yatırma ve çekme işlemleri değişmez; Kalıcı emirler ve bakiyeler, başlatmadan önce rezerve edilir ve sonuç bilinmediğinde onay için rezerve edilir. Finansman erişimi, nihai durumu doğrulamak için özel bir sorgu kullanır; eski sözleşme transferi Webhook veya iptal yöntemlerinin Finansmana otomatik olarak uygulanacağını varsaymayın.
+
+<span id="existing-contract-transfer-flow" data-sixmm-canonical-anchor="existing-contract-transfer-flow" aria-hidden="true"></span>
+
+### Mevcut Sözleşme aktarım akışı
+
+Orijinal `transfer`, `transferAllOut`, `reverse`, `queryOrder`, `listOrders` orijinal sözleşme aktarım sürecini işlemeye devam eder. `queryOrder` fon transferi emirlerini sorguluyor, `listOrders` bir transfer mutabakatı listesi; bunun yerine, bir sonraki bölümdeki altı sorgu türü, sürekli alım satım emirleri için kullanılır.
+
+Orijinal finansman yanıtında `orderStatus` kullanılır; Finansman yanıtında `status` kullanılıyor, bunları karıştırmayın. Orijinal aktarım Webhook, `X-Agent-Timestamp`, `X-Agent-Nonce`, `X-Agent-Signature` kullanılarak doğrulanır ve orijinal imza metni `timestamp + nonce + rawBody` olur; orijinal istek gövdesi önce doğrulanır, ardından seri durumdan çıkarılır ve bağımsız hale getirilir. Açık simüle edilmiş ortam bildirimleri `environment=SIMULATED` içerir; üretim bildirimleri eski alanlarla uyumlu kalır. Yerel iş emriyle miktar, sipariş numarası, durum ve ortamın kontrol edilmesi gerekir.
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Kaynak ve ilgili kılavuzlar
+
+- [Resmi v0.3.0 kaynağı](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Sorguya genel bakış ve sayfalandırma](/tr/sdk/agent-sdk/java/perpetual-queries)
+- [Finansman cüzdanı](/tr/sdk/agent-sdk/java/funding-wallet)
+- [Yükseltme kılavuzu](/tr/sdk/agent-sdk/java/upgrade)
+
+<span id="funding-request-fields" data-sixmm-canonical-anchor="funding-request-fields" aria-hidden="true"></span>
+
+## Finansman talebi alanları
+
+| Alan | Gerekli | Anlam |
+| --- | --- | --- |
+| `agentOrderNo` | Evet | Global olarak benzersiz iş ortağı sipariş numarası; Göndermeden önce ısrar edin. |
+| `agentUserId / platformUserId` | Bir | Bağlı kullanıcıyı tanımlayın; her ikisi de sağlanırsa eşleşmeleri gerekir. |
+| `direction` | Evet | Yukarıda belgelenen dört yönden biri. |
+| `currency` | Varsayılan USDT | Yalnızca USDT desteklenir. |
+| `transferAll` | Varsayılan yanlış | Yalnızca Finansman/Sözleşme dahili transferleri true'yu destekler. |
+| `amount` | Koşullu | Sabit bir aktarım için pozitif ondalık dize; transferAll=true için atlayın. |
+| `environment` | İsteğe bağlı | Yeni bir transfer için ihmal edildiğinde üretim; SIMULATED simüle edilmiş fonları seçer. |
+
+<span id="funding-response-fields" data-sixmm-canonical-anchor="funding-response-fields" aria-hidden="true"></span>
+
+## Finansman yanıt alanları
+
+| Alan | Anlam |
+| --- | --- |
+| `orderNo` | Döndürülen işlem tanımlayıcısı; Orijinal ortak sipariş numarasının yanında saklayın. |
+| `status` | SUCCESS / PROCESSING / FAILED; işin tamamlanmasını belirler. |
+| `direction / currency` | Onaylanmış transfer yönü ve varlık. |
+| `amount` | Bir dize olarak aktarılan gerçek tutar. |
+| `transferAll` | Bu operasyonun çekilebilir fonların tamamını talep edip etmediği. |
+| `agentUserId / platformUserId` | Döndürülen kullanıcı kimliği; kaydedilen siparişle karşılaştırın. |
+| `resultCode` | İşlem sonucu detayı; Uzlaşma ve destek için saklayın. |
+| `environment` | Arayan kişi bunu açıkça belirttiğinde yankılandı; yokluk, orijinal sipariş durumu sorgusu için üretimin kanıtı değildir. |

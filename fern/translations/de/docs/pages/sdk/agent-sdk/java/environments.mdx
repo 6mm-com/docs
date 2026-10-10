@@ -1,0 +1,99 @@
+---
+title: "Produktion und simulierter Handel"
+subtitle: "Produktion und simulierter Handel: Agent Java SDK v0.3.0-Integration, Beispiele, Parameter und Antwortsemantik."
+slug: sdk/agent-sdk/java/environments
+canonical-url: https://docs.6mm.com/de/sdk/agent-sdk/java/environments
+---
+
+Dieser Leitfaden richtet sich an **Agent Java SDK `v0.3.0`** und Java 8+.
+
+<span id="choose-both-the-frontend-mode-and-the-funds-environment" data-sixmm-canonical-anchor="choose-both-the-frontend-mode-and-the-funds-environment" aria-hidden="true"></span>
+
+## Wählen Sie sowohl den Frontend-Modus als auch die Fondsumgebung
+
+Konfigurieren Sie die Fondsumgebung des Partner-Backends getrennt vom Frontend-Handelsmodus. Bindungs- und Zugangsdaten werden gemeinsam genutzt; Durch die Ausstellung eines Tickets oder Tokens wird weder eine Wallet ausgewählt noch Geld bewegt.
+
+| Konfiguration | Produktion | Simuliert |
+| --- | --- | --- |
+| Bindung und Authentifizierung | Gemeinsame Benutzerbindung und einmalige Anmeldeinformationen | Gleiche Identität und Authentifizierung |
+| Neue Transfers und Benutzerguthaben | Lassen Sie `environment` weg oder verwenden Sie `PRODUCTION` | Verwenden Sie explizit `SIMULATED` |
+| Finanzierung der Wiederherstellung der ursprünglichen Ordnung | Verwenden Sie die gespeicherte Originalumgebung | Verwenden Sie die gespeicherte Originalumgebung |
+| Widget-Handelsmodus | `tradingMode=real` | `tradingMode=demo` |
+| Frontend HTTP/WS-Ziel | Produktionsziel bereitgestellt von 6MM | Simuliertes Ziel bereitgestellt von 6MM |
+| Sechs Perpetual-Data-Abfragen | Produktionsdaten | Keine Umgebungsauswahl; Diese Methoden fragen keine simulierten Daten ab |
+
+Für `wallet-transfer-status` wird durch Weglassen von `environment` die gespeicherte Umgebung der ursprünglichen Bestellung verwendet, einschließlich einer simulierten Bestellung. Ein explizit widersprüchliches Umfeld wird abgelehnt. Bevorzugen Sie das Speichern der Umgebung und die explizite Übergabe bei der Wiederherstellung eines Vorgangs.
+
+`isSimulatedUser` beschreibt das Konto. Neue Anfragen werden nicht an eine simulierte Wallet weitergeleitet. Wenn Sie `environment` bei einer neuen Geldanforderung weglassen, wird weiterhin die Produktion ausgewählt, selbst wenn die Kontokennzeichnung „true“ ist.
+
+<span id="supported-java-request-models" data-sixmm-canonical-anchor="supported-java-request-models" aria-hidden="true"></span>
+
+## Unterstützte Java-Anfragemodelle
+
+Diese Anfragen unterstützen `withEnvironment(ExecutionEnvironment.SIMULATED)`:
+
+- `TransferRequest`, `TransferAllOutRequest`, `ReverseOrderRequest`.
+- `QueryOrderRequest`, `ListOrdersRequest`.
+- `QueryUserAssetsRequest`.
+- `WalletTransferRequest`, `WalletTransferQueryRequest`.
+
+`bind`, `queryAccount`, `createEntryUrl`, `createEmbedToken` und die sechs permanenten Abfrageanforderungsmodelle wählen keine Fondsumgebung aus.
+
+```java
+import com.sixmm.agent.model.ExecutionEnvironment;
+import com.sixmm.agent.model.QueryUserAssetsRequest;
+import com.sixmm.agent.model.QueryUserAssetsResponse;
+
+QueryUserAssetsResponse assets = client.queryUserAssets(
+        QueryUserAssetsRequest.of("1188041528")
+                .withFunding()
+                .withEnvironment(ExecutionEnvironment.SIMULATED));
+```
+
+Initialisieren Sie `client` mit [Schnellstart](/de/sdk/agent-sdk/java/quick-start) und verwenden Sie die öffentliche Benutzer-ID aus Ihrer gespeicherten Bindung.
+
+<span id="preserve-the-original-environment" data-sixmm-canonical-anchor="preserve-the-original-environment" aria-hidden="true"></span>
+
+## Bewahren Sie die ursprüngliche Umgebung
+
+Behalten Sie den Schnittstellentyp `agentOrderNo`, die Benutzeridentität und die Umgebung bei, bevor Sie eine Geldanforderung senden. Behalten Sie diese Umgebung während Statusabfragen, Wiederherstellung, Abgleich und webhook-Verarbeitung bei. Versuchen Sie es nach einer Zeitüberschreitung niemals erneut, indem Sie die ursprüngliche Umgebung weglassen oder eine neue Bestellnummer verwenden.
+
+Finanzierungs-/Vertragsübertragungen bleiben in einer Umgebung. Scheinfonds können nicht zu Produktionsfonds werden. Verwenden Sie separate, partnerseitig simulierte Abrechnungen und erkennbare Bestellpräfixe wie `SIM-`.
+
+<span id="simulated-integration-sequence" data-sixmm-canonical-anchor="simulated-integration-sequence" aria-hidden="true"></span>
+
+## Simulierte Integrationssequenz
+
+1. Binden Sie den Benutzer und speichern Sie die Benutzer-ID der öffentlichen Plattform.
+2. Fragen Sie Salden mit explizitem `SIMULATED` ab und schließen Sie bei Bedarf die Finanzierung ein.
+3. Erstellen Sie eine kleine simulierte Finanzierungsübertragung und behalten Sie den ursprünglichen Geschäftsauftrag bei.
+4. Bestätigen Sie das Endergebnis mit der speziellen Abfrage zum Finanzierungsstatus.
+5. Öffnen oder betten Sie die Zielsekundenseite im Modus `demo` ein.
+6. Fragen Sie dieselben simulierten Wallets ab und gleichen Sie den tatsächlich übertragenen Betrag ab.
+7. Um den ewigen Handel zu testen, übertragen Sie die simulierte Finanzierung auf den simulierten Vertrag und verwenden Sie das simulierte Futures-Frontend. Die sechs ständigen Partnerabfragen können den simulierten Handelsverlauf nicht validieren.
+
+<span id="acceptance-checklist" data-sixmm-canonical-anchor="acceptance-checklist" aria-hidden="true"></span>
+
+## Checkliste für die Abnahme
+
+| Szenario | Beweise zur Überprüfung |
+| --- | --- |
+| Identität | Die gebundene Benutzerzuordnung wird gespeichert; Benutzer anderer Partner können nicht abgefragt werden. |
+| Authentifizierung | Umleitungs- und Einbettungsflüsse verwenden neue Anmeldeinformationen. Durch die Unterzeichnung werden keine Zahlungsaufträge erstellt. |
+| Mittel | Über den tatsächlichen Betrag und den Endstatus einigen sich beide Seiten. |
+| Unbekanntes Ergebnis | Bei der Wiederherstellung wird die ursprüngliche Bestellung verwendet, ohne dass eine zweite Überweisung erstellt wird. |
+| Umgebungsisolation | Simulierte Backend- und Frontend-Ziele stimmen überein; Produktionsbilanzen bleiben davon unberührt. |
+| Abfragen | Erforderliche Benutzer-/Kategoriefilter, Millisekundenfenster, leere Seiten und Cursor werden behandelt. |
+| Tarifbegrenzungen | Alle Abfrageaufrufer teilen sich die Drosselung und versuchen erneut, die ursprünglich fehlgeschlagene Seite aufzurufen. |
+| Lagerung | Beträge und IDs bleiben Zeichenfolgen; Entitätsdatensätze werden idempotent gespeichert. |
+
+Ändern Sie vor dem Wechsel zur Produktion sowohl das Backend-Fondsziel als auch den Frontend-Modus. Ausstehende Aufträge erholen sich weiterhin in ihrem ursprünglichen Umfeld.
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Quelle und zugehörige Leitfäden
+
+- [Offizielle Quelle v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Abfrageübersicht und Paginierung](/de/sdk/agent-sdk/java/perpetual-queries)
+- [Funding-Wallet](/de/sdk/agent-sdk/java/funding-wallet)
+- [Upgrade-Anleitung](/de/sdk/agent-sdk/java/upgrade)

@@ -1,0 +1,82 @@
+---
+title: "Upgrade to v0.3.0"
+subtitle: "Upgrade to v0.3.0: Agent Java SDK v0.3.0 integration, examples, parameters and response semantics."
+slug: sdk/agent-sdk/java/upgrade
+---
+
+This guide targets **Agent Java SDK `v0.3.0`** and Java 8+.
+
+<span data-sixmm-canonical-anchor="decide-what-needs-upgrading" aria-hidden="true"></span>
+
+## Decide what needs upgrading
+
+| Existing integration | Action |
+| --- | --- |
+| Existing production functions with omitted environment | Existing response shapes remain compatible; the new queries do not force an upgrade. |
+| Existing generic embed authentication for seconds trading | Reuse authentication and renewal; select the required product page. |
+| Funding balances, transfers and recovery | Use the models containing `withFunding`, `walletTransfer` and `queryWalletTransfer`. |
+| Explicit simulated funds | Use request/response models supporting `environment`. |
+| Six perpetual-data queries | Use public Java SDK `v0.3.0`, including the six methods and array-signing support. |
+
+Preserve your current `baseUrl`, `agentCode`, `apiSecret`, user bindings and original business orders.
+
+<span data-sixmm-canonical-anchor="install-the-stable-public-tag" aria-hidden="true"></span>
+
+## Install the stable public tag
+
+GitHub hosts source. Publishing a GitHub tag does not publish the Maven coordinates to Maven Central. Install the tagged source locally or publish its verified JAR/POM to your organization's artifact repository.
+
+```bash
+git clone --branch v0.3.0 --single-branch https://github.com/6mm-com/agent-java-sdk.git agent-java-sdk-v0.3.0
+cd agent-java-sdk-v0.3.0
+git rev-parse HEAD
+git rev-parse 'v0.3.0^{commit}'
+mvn install
+```
+
+The two commit IDs must match. Declare the dependency in the partner project:
+
+```xml
+<dependency>
+    <groupId>com.sixmm.exchange.sdk</groupId>
+    <artifactId>agent</artifactId>
+    <version>0.3.0</version>
+</dependency>
+```
+
+Verify the resolved dependency:
+
+```bash
+mvn dependency:tree -Dincludes=com.sixmm.exchange.sdk:agent
+```
+
+A local installation only makes the artifact available on that machine. CI and other developers need the same tagged installation or your verified artifact repository. If you already have a private artifact named `0.3.0`, verify its source and methods; do not silently overwrite a shared artifact.
+
+<span data-sixmm-canonical-anchor="required-integration-changes" aria-hidden="true"></span>
+
+## Required integration changes
+
+1. Update request and response models for explicit `environment`. Strict older response models may reject the additional field.
+2. Use `withFunding()` before reading `funding`. Contract balances are not seconds-trading balances.
+3. Use `/v1/agent/wallet-transfer` and `/v1/agent/wallet-transfer-status` for Funding. The old `queryOrder` cannot recover a Funding operation.
+4. The six queries use `platformUserIds` as a string array. Sign arrays as compact JSON; Java `List.toString()` is not compatible.
+5. Store transfer orders, ordinary trading orders, conditional orders and fills as distinct entities. Parse `orderStatus` or `status` according to the operation.
+6. Verify the original webhook body before parsing. Explicit simulated notifications include `environment`; compare it with the saved order.
+7. Manage Java and Widget versions independently. A backend upgrade does not change the frontend page or trading mode, and seconds trading does not require a new token type.
+
+<span data-sixmm-canonical-anchor="verify-the-upgrade" aria-hidden="true"></span>
+
+## Verify the upgrade
+
+Run the partner project's build and inspect its dependency tree. Test binding, the original production flow, explicit simulated balances, Funding result recovery, all six queries, fixed-window pagination, error handling and idempotent callbacks.
+
+For a custom HTTP client, follow the tagged request and signature contract instead of assuming the old models cover new fields. See [Query overview](/sdk/agent-sdk/java/perpetual-queries) and [Environment guide](/sdk/agent-sdk/java/environments).
+
+<span data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Source and related guides
+
+- [Official v0.3.0 source](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Query overview and pagination](/sdk/agent-sdk/java/perpetual-queries)
+- [Funding wallet](/sdk/agent-sdk/java/funding-wallet)
+- [Upgrade guide](/sdk/agent-sdk/java/upgrade)

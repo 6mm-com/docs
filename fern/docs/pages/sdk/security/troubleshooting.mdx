@@ -77,3 +77,18 @@ Check Agent SDK credentials, clocks, and signed fields.
 Review callback verification and duplicate-event handling.
 </Card>
 </CardGroup>
+
+<span data-sixmm-canonical-anchor="java-v030-diagnostics" aria-hidden="true"></span>
+
+## Java v0.3.0 diagnostics
+
+| Symptom | Check and recovery |
+| --- | --- |
+| Funding request has an unknown result | Keep the original `agentOrderNo`; call `queryWalletTransfer` with the original environment. Do not use `queryOrder`. |
+| Simulation UI shows unexpected funds | Check frontend `tradingMode` separately from backend `environment`; account `isSimulatedUser` does not route requests. |
+| Query error `6905` | Back off using the shared partner quota, then retry the same cursor and filters through the SDK. |
+| Query error `6904` | Reduce concurrent queries and narrow the time window; contact support if persistent. |
+| Invalid or expired cursor | Restart the same fixed history window and deduplicate saved records. |
+| Missing new Java method | Check the resolved Maven artifact against public tag `v0.3.0`; remove conflicting dependencies according to your artifact policy. |
+
+[Query and error reference](/sdk/agent-sdk/java/perpetual-queries) · [Upgrade guide](/sdk/agent-sdk/java/upgrade)

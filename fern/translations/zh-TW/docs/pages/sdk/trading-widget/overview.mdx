@@ -1,29 +1,29 @@
 ---
 title: "Trading Widget SDK"
-headline: "6MM Trading Widget SDK 整合文件"
-description: "學習如何將 6MM 數位資產交易終端嵌入合作夥伴網站，具備安全認證、顯示控制、執行時方法及生命週期事件。"
+headline: "6MM Trading Widget SDK 集成文檔"
+description: "瞭解如何將 6MM 數字資產交易終端嵌入到合作伙伴網站中，並具有安全身份驗證、顯示控件、運行時方法和生命週期事件。"
 slug: sdk/trading-widget/overview
 canonical-url: https://docs.6mm.com/zh-TW/sdk/trading-widget/overview
 ---
 
 <span id="responsibility-split" data-sixmm-canonical-anchor="responsibility-split" aria-hidden="true"></span>
 
-## 責任分工
+## 責任劃分
 
-| 面積 | 擁有者 | 註釋 |
+| 區域 | 所有者 | 筆記 |
 | --- | --- | --- |
-| 容器建立 | 合作夥伴前端 | 提供一個明顯且寬度與高度的可見元素。 |
-| iframe 創建 | Trading Widget SDK | SDK 負責建立並管理 iframe。 |
-| 交易使用者介面 | 6MM iframe | K-line、訂單簿、訂單表、持倉、訂單及帳戶資料皆在 iframe 內運行。 |
-| 顯示控制 | Trading Widget SDK + 6MM iframe | PC 嵌入標頭和底部股票碼預設是隱藏的。合作夥伴可以使用 `display` 顯示 shell 區域或隱藏高階交易容器。 |
-| 合作夥伴登入檢查 | 合作夥伴後端 | 在發出認證憑證前，請驗證合作夥伴使用者會話。 |
-| 嵌入代幣發行 | 合作夥伴後端 + 代理 API | 推薦用於夥伴代幣模式。 |
+| 容器創建 | 合作伙伴前端 | 提供具有明確寬度和高度的可見元素。 |
+| iframe 創建 | Trading Widget SDK | SDK 創建並管理 iframe。 |
+| 交易界面 | 6MM iframe | K線、訂單簿、訂單表格、倉位、訂單和賬戶數據在iframe內部運行。 |
+| 顯示控制 | Trading Widget SDK + 6MM iframe | 默認情況下，PC 嵌入標題和底部代碼是隱藏的。合作伙伴可以使用`display`顯示外殼區域或隱藏高級交易容器。 |
+| 合作伙伴登錄檢查 | 合作伙伴後臺 | 在發出身份驗證憑據之前驗證合作伙伴用戶會話。 |
+| 嵌入代幣發行 | 合作伙伴後端+代理API | 推薦用於合作伙伴令牌模式。 |
 
 <span id="versioning" data-sixmm-canonical-anchor="versioning" aria-hidden="true"></span>
 
 ## 版本控制
 
-公開整合路徑在 v1 腳本 URL下保持穩定。目前 v1 能力集包含夥伴標記、 tokenProvider、 entryUrlProvider、顯示控制、生命週期事件、實例方法及訂單事件。
+公共集成路徑在 v1 腳本 URL 下保持穩定。當前的 v1 功能集包括合作伙伴令牌、tokenProvider、entryUrlProvider、顯示控件、生命週期事件、實例方法和訂單事件。
 
 ```html
 <script src="https://app.6mm.com/sdk/trading-widget/v1/index.js"></script>
@@ -31,15 +31,23 @@ canonical-url: https://docs.6mm.com/zh-TW/sdk/trading-widget/overview
 
 <span id="when-to-use-the-widget" data-sixmm-canonical-anchor="when-to-use-the-widget" aria-hidden="true"></span>
 
-## 何時使用小工具
+## 何時使用小部件
 
-當合作夥伴需要在現有網路產品內建立完整交易介面時，選擇 Trading Widget 。在建立與維護完全客製化的交易介面時，請使用 REST API 與 WebSocket 文件。
+當合作夥伴需要在現有網絡產品中提供完整的交易界面時，請選擇 Trading Widget。在構建和維護完全自定義的交易界面時，請使用 REST API 和 WebSocket 文檔。
 
 <span id="implementation-path" data-sixmm-canonical-anchor="implementation-path" aria-hidden="true"></span>
 
-## 實作路徑
+## 實施路徑
 
-1. 跟隨 [Trading Widget 快速入門](/zh-TW/sdk/trading-widget/quick-start) 載入腳本並建立可見容器。
-2. 配置 [夥伴令牌認證](/zh-TW/sdk/trading-widget/authentication) 透過合作夥伴的後端。
-3. 新增所需 [選項與事件](/zh-TW/sdk/trading-widget/options-events).
-4. 使用 [實例方法](/zh-TW/sdk/trading-widget/instance-methods) 用於生命週期與執行時控制。
+1. 遵循 [Trading Widget 快速入門](/zh-TW/sdk/trading-widget/quick-start) 加載腳本並創建可見容器。
+2. 配置 [合作伙伴令牌身份驗證](/zh-TW/sdk/trading-widget/authentication) 通過合作伙伴後端。
+3. 添加所需的 [選項和事件](/zh-TW/sdk/trading-widget/options-events).
+4. 使用 [實例方法](/zh-TW/sdk/trading-widget/instance-methods) 用於生命週期和運行時控制。
+
+<span id="verified-public-runtime" data-sixmm-canonical-anchor="verified-public-runtime" aria-hidden="true"></span>
+
+## 經過驗證的公共運行時
+
+截至 2026 年 10 月 10 日，公共 `v1` 腳本報告版本 `1.8.0`。此 URL 是一個穩定的主要版本入口點，而不是固定版本。在使用可選功能之前，請在加載的運行時中讀取 `TradingWidget.version` 和 `TradingWidget.capabilities`。 Java Agent SDK `v0.3.0` 是一個單獨的後端包。
+
+運行時支持單個活動實例（`multiInstance=false`）；創建另一個小部件會破壞前一個實例。其支持的區域設置為 `en`、`en-US` 和 `zh-CN`，獨立於 20 種文檔語言。

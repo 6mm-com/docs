@@ -1,58 +1,109 @@
 ---
 title: "Agent Java SDK"
-subtitle: "6MM Agent Java SDK をインストールし、ユーザーのバインディング、転送、エントリー認証情報、ウェブフックの認証に署名付きバックエンドAPI を使用します。"
+subtitle: "Agent Java SDK: Agent Java SDK v0.3.0 の統合、例、パラメーター、および応答セマンティクス。"
 slug: sdk/agent-sdk/java/overview
 canonical-url: https://docs.6mm.com/ja/sdk/agent-sdk/java/overview
 ---
 
-<span id="official-repository" data-sixmm-canonical-anchor="official-repository" aria-hidden="true"></span>
+このガイドは、**Agent Java SDK `v0.3.0`**、Java 8 以降、およびタグ付けされたパブリック コントラクトを対象としています。例は `client` を初期化した後にパートナー バックエンドで実行されます。 [クイックスタート](/ja/sdk/agent-sdk/java/quick-start).
 
-## 公式リポジトリ
+<span id="version-and-installation" data-sixmm-canonical-anchor="version-and-installation" aria-hidden="true"></span>
 
-Java SDK リポジトリは、SDK ソースコード、リリースノート、使用例、実装詳細の真実の情報源です。
-
-[6mm-com/agent-java-sdk](https://github.com/6mm-com/agent-java-sdk)
-
-<span id="runtime" data-sixmm-canonical-anchor="runtime" aria-hidden="true"></span>
-
-## ランタイム
+## バージョンとインストール
 
 | アイテム | 価値 |
 | --- | --- |
-| 最小 Java バージョン | Java 8+ |
-| おすすめビルドツール | メイヴン 3.9+ |
-| メイヴン群 | `com.sixmm.exchange.sdk` |
-| メイヴン遺物 | `agent` |
-| ドキュメントドソースタグ | `v0.1.1` |
+| 安定したソースタグ | `v0.3.0` |
+| Java | Java 8+ |
+| メイビン | メイブン 3.9+ |
+| 座標 | `com.sixmm.exchange.sdk:agent:0.3.0` |
 
-公開のGitHubリポジトリはソースホスティングであり、Maven依存関係のリポジトリではありません。タグ付けされたソースをローカルでビルド・インストールするか、承認されたアーティファクトを組織のプライベートMavenリポジトリに公開してから、チームビルドで使用してください。
+GitHub ホストのソース。これらの座標を Maven Central から解決できるようにするものではありません。タグ付けされたローカル インストールまたは承認されたアーティファクト リポジトリを使用します。
 
-<span id="typical-backend-responsibilities" data-sixmm-canonical-anchor="typical-backend-responsibilities" aria-hidden="true"></span>
+<span id="what-the-sdk-covers" data-sixmm-canonical-anchor="what-the-sdk-covers" aria-hidden="true"></span>
 
-## 典型的なバックエンドの責任
+## SDK の内容
 
-- パートナーユーザーセッションの検証。
-- パートナーユーザーを agentUserIdにマッピングする。
-- ファーストトレードまたはトランスファーフローの前にコールバインド。
-- 一度限りのフルサイトでのご連絡SSOcreateEntryUrl
-- パートナートークンモードTrading Widget createEmbedTokenを呼びます。
-- 転送ウェブフックの検証と冪等処理。
+| カテゴリ | シナリオ | SDK API | 説明 |
+| --- | --- | --- | --- |
+| ユーザーバインディング | バインドユーザー | `bind` | パートナー ユーザーと 6MM プラットフォーム ユーザー間のバインディングを作成または取得します |
+| アセットのクエリ | パートナーアカウントのクエリ | `queryAccount` | パートナーマージンまたは資金口座を照会する |
+| アセットのクエリ | ユーザー資産のクエリ | `queryUserAssets` | 契約資産のクエリ。 `withFunding()` を使用して資金残高を含めます |
+| 転送 | 定額振込 | `transfer` | 6MM との間で資金を送金する |
+| 転送 | 全力で転送 | `transferAllOut` | 出金可能なユーザー残高をすべてパートナー プラットフォームに移動します |
+| 転送 | 逆順 | `reverse` | バックエンドが補償フローをサポートしている場合、成功した転送を元に戻す |
+| 転送 | クエリの順序 | `queryOrder` | パートナー注文番号による 1 つの転送注文のクエリ |
+| 転送 | 注文をリストアップする | `listOrders` | 調整のための転送オーダーのページング |
+| 転送 | Webhook 検証 | `WebhookVerifier.verify` | 6MM からの最終状態コールバックの転送を確認する |
+| 資金調達ウォレット | 資金移動 | `walletTransfer` | パートナー ↔ 資金調達または資金調達 ↔ 契約。返品ステータスを確認する |
+| 資金調達ウォレット | 資金移動状況 | `queryWalletTransfer` | 元のパートナー注文番号を使用して資金調達オペレーションを回復する |
+| 取引エントリー | 直接入力 URL | `createEntryUrl` | リダイレクト モード用のワンタイム SSO URL を作成する |
+| 取引エントリー | 埋め込みトークン | `createEmbedToken` | Trading Widget `tokenProvider` モードの有効期間の短いトークンを作成する |
+| 永続的なデータ | 現在の永久注文 | `listCurrentPerpetualOrders` | 現在の NORMAL または CONDITIONAL の注文をクエリする |
+| 永続的なデータ | 永久的な注文履歴 | `listPerpetualOrderHistory` | 端末 NORMAL または CONDITIONAL の注文をクエリします |
+| 永続的なデータ | 永久取引 | `listPerpetualTrades` | 明示的な公開プレーヤーリストのトレード約定をクエリする |
+| 永続的なデータ | 現在の永久ポジション | `listCurrentPerpetualPositions` | 現在位置を問い合わせる |
+| 永続的なデータ | 永久的なポジション履歴 | `listPerpetualPositionHistory` | クローズされたポジションのクエリ |
+| 永続的なデータ | 永久口座台帳 | `listPerpetualLedger` | 個々の契約残高変更レコードのクエリ |
+| 法定基準レート | サポートされている法定通貨のリスト | `listSupportedFiatCurrencies` | 現在 USDT に交換可能な法定通貨をリストします |
+| 法定基準レート | FXリファレンスレートのクエリ | `queryExchangeRates` | すべてまたは選択した通貨の日次法定通貨対USDT参照比率をクエリします |
+| サービス情報 | サービスバージョン | `version` | クエリエージェントサービスのバージョン情報 |
 
-<span id="security-and-operational-rules" data-sixmm-canonical-anchor="security-and-operational-rules" aria-hidden="true"></span>
 
-## セキュリティおよび運用規則
+<span id="configuration" data-sixmm-canonical-anchor="configuration" aria-hidden="true"></span>
 
-- `apiSecret` をバックエンドのシークレットマネージャまたは保護環境変数にのみ保存する。
-- 署名されたリクエストにはタイムスタンプが含まれているため、サーバーの時間同期を保持すること。
-- `agentOrderNo` を持続性冪等キーとして扱い、グローバルに一意に保つこと。
-- `platformUserId` を文字列として保存し、 `agentUserId`との関係を永続させる。
-- タイムアウトや不確実なネットワーク結果の後に再試行する前に、元の転送をクエリします。
+## 構成
 
-<span id="next-steps" data-sixmm-canonical-anchor="next-steps" aria-hidden="true"></span>
+前に 6MM から次の値を取得します。
+統合しています。
 
-## 今後のステップ
+| アイテム | 例 | 説明 |
+| --- | --- | --- |
+| `baseUrl` | `https://agent-api.6mm.com` | エージェント API ベース URL、末尾のスラッシュなし |
+| `agentCode` | `AGENT001` | パートナーコード |
+| `apiSecret` | `your-api-secret` | API の署名秘密。バックエンドのみに保持してください |
+| `defaultCurrency` | `USDT` | デフォルトの通貨、通常は `USDT` |
+| `webhookUrl` | `https://partner.example.com/6mm/webhook` | 6MM コールバックのパートナー エンドポイント |
 
-- [Java クイックスタート](/ja/sdk/agent-sdk/java/quick-start)タグ付けされたソースをインストールし、 `AgentClient`を初期化します。
-- [埋め込みトークンの作成](/ja/sdk/agent-sdk/java/embed-token): Trading Widgetの短命な資格証明書を発行。
-- [秘密と署名](/ja/sdk/security/secrets-signing):自動 HMAC 署名と秘密処理を理解すること。
-- [ウェブフックと冪等性](/ja/sdk/security/webhooks-idempotency): コールバックの検証と重複処理の防止。
+制作上の推奨事項:
+
+- エージェント API および webhook エンドポイントには HTTPS を使用します。
+- `apiSecret` をシークレット マネージャー、構成センター、または環境変数に保存します。
+- できれば NTP とサーバー時刻を同期させてください。
+- すべてのパートナーの注文番号を保持し、グローバルに一意に保ちます。
+- `apiSecret` をブラウザ、アプリ、ミニ プログラム、またはフロントエンドのソース コードに送信しないでください。
+
+
+<span id="automatic-signing-fields" data-sixmm-canonical-anchor="automatic-signing-fields" aria-hidden="true"></span>
+
+## 自動署名フィールド
+
+署名されたエージェント API 呼び出しの場合、SDK は自動的に以下を挿入します。
+
+| 分野 | ソース | 説明 |
+| --- | --- | --- |
+| `agentCode` | `AgentClientConfig.agentCode` | パートナーコード |
+| `timestamp` | 現在の UTC Unix タイムスタンプ | 秒 |
+| `nonce` | 安全なランダムジェネレータ | リプレイ保護 |
+| `sign` | HMAC-SHA256 | 署名を要求する |
+| `currency` | `defaultCurrency` | 送金/口座リクエストで通貨が省略されている場合に記入されます |
+
+署名ルール:
+
+1. `sign` を除外します。
+2. 空の値を除外します。
+3. キーを ASCII 順に並べ替えます。
+4. `k=v&k2=v2` として参加します。
+5. `apiSecret` を使用して HMAC-SHA256 16 進数を計算します。
+
+通常のビジネス コードでは、署名を計算したり、手動で設定したりする必要はありません。
+`agentCode`、`timestamp`、`nonce`、または `sign`。
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## ソースおよび関連ガイド
+
+- [公式 v0.3.0 ソース](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [クエリの概要とページネーション](/ja/sdk/agent-sdk/java/perpetual-queries)
+- [資金調達ウォレット](/ja/sdk/agent-sdk/java/funding-wallet)
+- [アップグレードガイド](/ja/sdk/agent-sdk/java/upgrade)

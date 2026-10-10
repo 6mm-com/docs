@@ -1,0 +1,83 @@
+---
+title: "الترقية إلى v0.3.0"
+subtitle: "الترقية إلى v0.3.0: Agent Java SDK التكامل v0.3.0 والأمثلة والمعلمات ودلالات الاستجابة."
+slug: sdk/agent-sdk/java/upgrade
+canonical-url: https://docs.6mm.com/ar/sdk/agent-sdk/java/upgrade
+---
+
+يستهدف هذا الدليل **Agent Java SDK `v0.3.0`** وJava 8+.
+
+<span id="decide-what-needs-upgrading" data-sixmm-canonical-anchor="decide-what-needs-upgrading" aria-hidden="true"></span>
+
+## قرر ما الذي يحتاج إلى الترقية
+
+| التكامل القائم | فعل |
+| --- | --- |
+| وظائف الإنتاج الحالية مع البيئة المحذوفة | تظل أشكال الاستجابة الحالية متوافقة؛ الاستعلامات الجديدة لا تفرض الترقية. |
+| توجد مصادقة تضمين عامة لتداول الثواني | إعادة استخدام المصادقة والتجديد؛ حدد صفحة المنتج المطلوبة. |
+| أرصدة التمويل والتحويلات والاسترداد | استخدم النماذج التي تحتوي على `withFunding`، `walletTransfer` و `queryWalletTransfer`. |
+| أموال محاكاة صريحة | استخدم نماذج الطلب/الاستجابة التي تدعم `environment`. |
+| ستة استعلامات البيانات الدائمة | استخدم Java SDK `v0.3.0` العامة، بما في ذلك الطرق الستة ودعم توقيع المصفوفة. |
+
+احتفظ بارتباطات المستخدم الحالية `baseUrl`، `agentCode`، `apiSecret`، وأوامر العمل الأصلية.
+
+<span id="install-the-stable-public-tag" data-sixmm-canonical-anchor="install-the-stable-public-tag" aria-hidden="true"></span>
+
+## قم بتثبيت العلامة العامة الثابتة
+
+يستضيف GitHub المصدر. لا يؤدي نشر علامة GitHub إلى نشر إحداثيات Maven إلى Maven Central. قم بتثبيت المصدر المميز محليًا أو انشر JAR/POM الذي تم التحقق منه إلى مستودع العناصر الخاص بمؤسستك.
+
+```bash
+git clone --branch v0.3.0 --single-branch https://github.com/6mm-com/agent-java-sdk.git agent-java-sdk-v0.3.0
+cd agent-java-sdk-v0.3.0
+git rev-parse HEAD
+git rev-parse 'v0.3.0^{commit}'
+mvn install
+```
+
+يجب أن يتطابق معرفا الالتزام. أعلن التبعية في المشروع الشريك:
+
+```xml
+<dependency>
+    <groupId>com.sixmm.exchange.sdk</groupId>
+    <artifactId>agent</artifactId>
+    <version>0.3.0</version>
+</dependency>
+```
+
+التحقق من التبعية التي تم حلها:
+
+```bash
+mvn dependency:tree -Dincludes=com.sixmm.exchange.sdk:agent
+```
+
+التثبيت المحلي يجعل القطعة الأثرية متاحة على هذا الجهاز فقط. يحتاج CI والمطورون الآخرون إلى نفس التثبيت الموسوم أو مستودع العناصر الذي تم التحقق منه. إذا كان لديك بالفعل قطعة أثرية خاصة باسم `0.3.0`، فتحقق من مصدرها وطرقها؛ لا تقم بالكتابة بصمت فوق قطعة أثرية مشتركة.
+
+<span id="required-integration-changes" data-sixmm-canonical-anchor="required-integration-changes" aria-hidden="true"></span>
+
+## تغييرات التكامل المطلوبة
+
+1. تحديث نماذج الطلب والاستجابة الصريحة `environment`. قد ترفض نماذج الاستجابة القديمة الصارمة الحقل الإضافي.
+2. استخدم `withFunding()` قبل قراءة `funding`. أرصدة العقود ليست أرصدة تداول ثانية.
+3. استخدم `/v1/agent/wallet-transfer` و`/v1/agent/wallet-transfer-status` للتمويل. لا يمكن لـ `queryOrder` القديم استرداد عملية التمويل.
+4. تستخدم الاستعلامات الستة `platformUserIds` كمصفوفة سلسلة. قم بتوقيع المصفوفات على أنها مضغوطة JSON؛ Java `List.toString()` غير متوافق.
+5. قم بتخزين أوامر النقل وأوامر التداول العادية والأوامر المشروطة والتنفيذات ككيانات متميزة. قم بتحليل `orderStatus` أو `status` وفقًا للعملية.
+6. تحقق من النص الأصلي webhook قبل التحليل. تتضمن الإشعارات المحاكاة الصريحة `environment`؛ قارنه بالأمر المحفوظ.
+7. إدارة إصدارات Java والأدوات بشكل مستقل. لا تؤدي ترقية الواجهة الخلفية إلى تغيير الصفحة الأمامية أو وضع التداول، ولا يتطلب تداول الثواني نوع رمز مميز جديد.
+
+<span id="verify-the-upgrade" data-sixmm-canonical-anchor="verify-the-upgrade" aria-hidden="true"></span>
+
+## التحقق من الترقية
+
+قم بتشغيل بناء المشروع الشريك وتفقد شجرة التبعية الخاصة به. ربط الاختبار، وتدفق الإنتاج الأصلي، والأرصدة المحاكاة الصريحة، واسترداد نتائج التمويل، وجميع الاستعلامات الستة، وترقيم الصفحات ذات النافذة الثابتة، ومعالجة الأخطاء وعمليات الاسترجاعات غير الفعالة.
+
+بالنسبة لعميل HTTP المخصص، اتبع الطلب الموسوم وعقد التوقيع بدلاً من افتراض أن النماذج القديمة تغطي الحقول الجديدة. يرى [نظرة عامة على الاستعلام](/ar/sdk/agent-sdk/java/perpetual-queries) و [دليل البيئة](/ar/sdk/agent-sdk/java/environments).
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## المصدر والأدلة ذات الصلة
+
+- [المصدر الرسمي v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [نظرة عامة على الاستعلام وترقيم الصفحات](/ar/sdk/agent-sdk/java/perpetual-queries)
+- [محفظة التمويل](/ar/sdk/agent-sdk/java/funding-wallet)
+- [دليل الترقية](/ar/sdk/agent-sdk/java/upgrade)

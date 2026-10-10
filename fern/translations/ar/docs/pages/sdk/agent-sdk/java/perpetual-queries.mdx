@@ -1,0 +1,238 @@
+---
+title: "الاستعلامات الدائمة وترقيم الصفحات"
+subtitle: "الاستعلامات الدائمة وترقيم الصفحات: Agent Java SDK التكامل v0.3.0 والأمثلة والمعلمات ودلالات الاستجابة."
+slug: sdk/agent-sdk/java/perpetual-queries
+canonical-url: https://docs.6mm.com/ar/sdk/agent-sdk/java/perpetual-queries
+---
+
+يستهدف هذا الدليل **Agent Java SDK `v0.3.0`**، Java 8+، والعقد العام الموسوم. يتم تشغيل الأمثلة في الواجهة الخلفية للشريك بعد تهيئة `client` في [بداية سريعة](/ar/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## مثال المتطلبات الأساسية
+
+تشترك مقتطفات Java في هذه الواردات. قم بتهيئة `client` باستخدام البدء السريع واحصل على `platformUserId` من الرابط المحفوظ. يجب استبدال معرفات المستخدم/الطلب بالقيم الثابتة الخاصة بك.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span id="query-perpetual-contract-data" data-sixmm-canonical-anchor="query-perpetual-contract-data" aria-hidden="true"></span>
+
+## الاستعلام عن بيانات العقد الدائم
+
+<span id="six-types-of-interfaces-and-java-methods" data-sixmm-canonical-anchor="six-types-of-interfaces-and-java-methods" aria-hidden="true"></span>
+
+### ستة أنواع من الواجهات وطرق Java
+
+يتم توقيع جميع الطلبات POST ببادئة مشتركة هي `/v1/agent/perpetual`.
+
+| لاحقة المسار | Java الطريقة/نوع الطلب | نطاق اللاعب |
+| --- | --- | --- |
+| `/orders/current` | `listCurrentPerpetualOrders(CurrentPerpetualOrdersRequest)` | NORMAL يمكن حذف اللاعب؛ CONDITIONAL يجب تحديد اللاعب |
+| `/orders/history` | `listPerpetualOrderHistory(PerpetualOrderHistoryRequest)` | نفس ما ورد أعلاه |
+| `/trades` | `listPerpetualTrades(PerpetualTradesRequest)` | يجب تحديد اللاعب |
+| `/positions/current` | `listCurrentPerpetualPositions(CurrentPerpetualPositionsRequest)` | يمكن الاستغناء عن اللاعبين |
+| `/positions/history` | `listPerpetualPositionHistory(PerpetualPositionHistoryRequest)` | يمكن الاستغناء عن اللاعبين |
+| `/account/ledger` | `listPerpetualLedger(PerpetualLedgerRequest)` | يمكن الاستغناء عن اللاعبين |
+
+`platformUserIds` عبارة عن مجموعة من معرفات النظام الأساسي العام. عند التحديد، يلزم وجود من 1 إلى 100 لاعب فريد لديهم حق الوصول؛ عند حذفها، يتم الاستعلام فقط عن نطاق اللاعبين المباشرين الذين يمكن للتاجر الحالي الوصول إليهم. الإغفال لا يعادل `[]`، والمصفوفات الفارغة غير قانونية. يتم تحديد النطاق بواسطة التاجر الموقّع، ولا يمكن تمرير معرفات التجار الأخرى لتوسيع النطاق.
+
+يجب أن يمر استعلام الطلب `orderCategory=NORMAL` أو `CONDITIONAL`. استخدم `orderId` للأوامر العادية و`conditionId` للأوامر المشروطة. ولا يمكن الخلط بينها عبر الفئات. تتم معالجة الأوامر المشروطة والأوامر العادية الناتجة عن تشغيلها بشكل منفصل ككيانات.
+
+<span id="filter-conditions" data-sixmm-canonical-anchor="filter-conditions" aria-hidden="true"></span>
+
+### شروط التصفية
+
+| استفسار | مرشحات الأعمال المتاحة |
+| --- | --- |
+| النظام الحالي | `orderCategory`، `symbol` |
+| النظام التاريخي | `orderCategory`، `symbol`، `startTime`، `endTime`، `orderId`، `conditionId`، `clientOrderId`، `side`، `status` |
+| عقد صفقة | `symbol`، `startTime`، `endTime`، `orderId` |
+| الوضع الحالي | `symbol` |
+| مواقف تاريخية | `symbol`، `startTime`، `endTime`، `positionSide` |
+| تغييرات العقد | `startTime`، `endTime`، `assetType`، `changeType` |
+
+وقت الاستعلام التاريخي هو Unix **ملي ثانية**، والفاصل الزمني هو `[startTime, endTime)`؛ وقت طلب التوقيع هو `timestamp` هو يونكس **ثانية**. يوصى بإصلاح نافذة الوقت والاستعلام UTC في المقاطع؛ استخدم UTC للتسوية اليومية. تستخدم الحالة والنوع تعداد عقد المنصة ولا تتم ترجمتهما إلى سلاسل صينية من تلقاء نفسها.
+
+`limit` الافتراضي هو 500، النطاق هو 1 ~ 1000؛ لا يضمن حجم الصفحة إرجاع نفس الرقم في كل مرة. تشترك الواجهات الستة حاليًا في حصة استعلام تبلغ مرتين في الثانية و4 دفعات لكل تاجر، والحد الأقصى للتزامن لكل تاجر داخل المثيل هو 2. يستخدم جانب التاجر قائمة انتظار موحدة، ومن المستحسن البدء بالترحيل المتسلسل ونافذة سجل أصغر.
+
+<span id="java-query-examples" data-sixmm-canonical-anchor="java-query-examples" aria-hidden="true"></span>
+
+### Java أمثلة الاستعلام
+
+الاستعلام عن الترتيب العادي الحالي للاعب:
+
+```java
+CurrentPerpetualOrdersRequest current = new CurrentPerpetualOrdersRequest();
+current.orderCategory = "NORMAL";
+current.platformUserIds = Collections.singletonList(platformUserId);
+current.symbol = "BTCUSDT";
+current.limit = 100;
+PerpetualResponse currentPage = client.listCurrentPerpetualOrders(current);
+```
+
+الاستعلام عن تغييرات العقد في الساعة الأخيرة ومعالجة المؤشر. المثال التالي لا يقوم بإعادة المحاولة تلقائياً؛ عندما يواجه التطبيق الفعلي قيودًا حالية أو فشلًا مؤقتًا، اتبع الدليل المرتبط ذي الصلة لاستعادة نفس الصفحة.
+
+```java
+PerpetualLedgerRequest ledger = new PerpetualLedgerRequest();
+ledger.platformUserIds = Collections.singletonList(platformUserId);
+ledger.endTime = System.currentTimeMillis();
+ledger.startTime = ledger.endTime - 3_600_000L;
+ledger.limit = 100;
+Set<String> seenCursors = new HashSet<>();
+
+while (true) {
+    PerpetualResponse page = client.listPerpetualLedger(ledger);
+    for (PerpetualRecord row : page.data.items) {
+        // Persist records idempotently by platformUserId, entityType and entityId.
+    }
+    if (!page.data.hasMore) {
+        break;
+    }
+    String next = page.data.nextCursor;
+    if (next == null || next.isEmpty() || !seenCursors.add(next)) {
+        throw new IllegalStateException("游标未推进，停止查询并排查");
+    }
+    ledger.cursor = next;
+    Thread.sleep(650L); // Other queries must share the same partner rate-limit queue.
+}
+```
+
+<span id="return-structure-and-saving-rules" data-sixmm-canonical-anchor="return-structure-and-saving-rules" aria-hidden="true"></span>
+
+### هيكل العودة وقواعد الحفظ
+
+للحصول على وصف كامل لكل حقل، راجع [وصف حقل إرجاع استعلام العقد](/ar/sdk/agent-sdk/java/perpetual-queries)، بما في ذلك أنواع ومعاني ونطاق تطبيق ترقيم الصفحات العامة، والأوامر العادية/المشروطة، والمعاملات، والمواقف الحالية/التاريخية، وتغييرات العقود.
+
+تقوم الواجهات الستة بإرجاع `PerpetualResponse` بشكل موحد:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "items": [],
+    "nextCursor": "",
+    "hasMore": false
+  }
+}
+```
+
+يحتوي كل `items` على `platformUserId`، `entityType`، `entityId`، `data`. تتضمن أنواع الكيانات `ORDER`، `CONDITION_ORDER`، `TRADE_FILL`، `POSITION`، `ACCOUNT_LEDGER`. استخدم حقول الهوية الثلاثة هذه لإنشاء مفتاح غير فعال؛ لا تتعامل مع معرف الطلب المشروط ومعرف الطلب ومعرف التعبئة بنفس الرقم.
+
+`data` يوفر حقول مثل السعر أو الكمية أو الحالة أو النفقات أو الربح والخسارة أو تغيير الرصيد حسب المورد. يتم التعامل مع المبلغ والسعر والكمية ومعرف الكيان كسلاسل؛ وقت العمل بالمللي ثانية. لا يتم ملء الحقول المفقودة إلى 0 ولا يتم استنتاجها من الكيانات الأخرى.
+
+المؤشر هو موضع الترحيل للاستعلام، وليس اشتراكًا تزايديًا موثوقًا به، ولا لقطة ذرية مضمونة عبر الصفحات. المؤشر الحالي صالح لمدة 24 ساعة من الجولة الأولى من الجيل؛ تحتفظ الترحيل اللاحق بنفس التجار والموارد ومجموعات اللاعبين وشروط التصفية. النافذة الثابتة للسحب التاريخي تصبح عاجزة عند سحبها بشكل متكرر؛ يتم تحديث حالة الطلب/الموضع الحالي بعد إعادة الاستعلام. عندما تكون هناك حاجة إلى واجهة في الوقت الفعلي، يتم استخدام آلية البيانات الخاصة بالواجهة الأمامية للنظام الأساسي، ولا يمكن اعتبار واجهة الاقتراع الستة بمثابة واجهة سوق عالية التردد.
+
+<span id="errors-and-recovery" data-sixmm-canonical-anchor="errors-and-recovery" aria-hidden="true"></span>
+
+### الأخطاء والاسترداد
+
+HTTP النجاح لا يعني نجاح الأعمال، يجب عليك التحقق من `code`. Java SDK سوف يؤدي إلى حدوث خطأ تجاري كـ `AgentApiException`.
+
+| رمز الأعمال | معنى نموذجي | المناولة |
+| --- | --- | --- |
+| `102001` | المعلمات المطلوبة مفقودة، على سبيل المثال، استعلام الأمر الشرطي يفتقد اللاعبين. | توفير المعلمات المفقودة |
+| `102002` | معلمات غير قانونية، أو صفيف فارغ، أو مؤشر غير متطابق، أو منتهية الصلاحية | تصحيح المعلمات. أعد فحص النافذة الثابتة بعد مسح المؤشر منتهي الصلاحية واحفظه بشكل غير فعال. |
+| `102003` | حد غير قانوني، عدد اللاعبين، أو النطاق الزمني | النطاق الضيق أو الصحيح |
+| `6001` | خطأ في التوقيع | تحقق من حقول المفتاح وتسلسل الصفيف والتوقيع |
+| `6009` | طريقة وصول التاجر أو نطاق الوصول غير مسموح بها | تحقق من أذونات التاجر وملكية اللاعب |
+| `6904` | الخدمة غير متاحة مؤقتًا أو حماية موارد التزامن أو الاستعلام | تقليل التزامن وتقليص النوافذ؛ اتصل بالدعم إذا استمر الخطأ |
+| `6905` | تم استنفاد الحصة المشتركة لستة أنواع من الاستعلامات | تراجع، ثم أعد محاولة الصفحة الفاشلة الأصلية |
+
+سيتم الاحتفاظ بـ `cursor` وجميع شروط التصفية الخاصة بالصفحة الفاشلة الأصلية بعد التقييد الحالي أو انتهاء المهلة أو الفشل المؤقت؛ في كل مرة تتم إعادة استدعاء SDK، سيتم إنشاء `timestamp`، `nonce`، `sign` جديدة. لا يمكنك الانتقال مباشرة إلى الصفحة التالية، ولا يمكنك التعامل مع حالات الفشل على أنها نتائج فارغة. SDK ليس مسؤولاً عن إعادة محاولة المعاملات المالية تلقائيًا.
+
+
+<span id="common-response-and-pagination" data-sixmm-canonical-anchor="common-response-and-pagination" aria-hidden="true"></span>
+
+## الاستجابة المشتركة وترقيم الصفحات
+
+| مجال | JSON النوع | يوضح |
+| --- | --- | --- |
+| `code` | integer | رمز العمل، 0 يعني النجاح؛ إذا لم تكن 0، فسيتم التعامل معها على أنها خطأ، ولن يتم التعامل مع الفشل على أنه صفحة فارغة. |
+| `message` | string | إن وصف النتائج ليس هو الأساس الوحيد للحكم التجاري. |
+| `data` | object | نتائج مرقّمة على النجاح |
+| `data.items` | array | السجلات في هذه الصفحة؛ الصفحة القانونية الفارغة هي `[]` |
+| `data.nextCursor` | string | مؤشر الصفحة التالية؛ عادة ما تكون سلسلة فارغة إذا لم تكن هناك صفحات لاحقة |
+| `data.hasMore` | boolean | ما إذا كانت هناك صفحات لاحقة؛ عندما يكون صحيحًا، استخدم nextCursor لمتابعة نفس الاستعلام |
+
+هيكل كل `data.items[]`:
+
+| مجال | JSON النوع | يوضح |
+| --- | --- | --- |
+| `platformUserId` | string | معرف المستخدم العام للمنصة، محفوظ كسلسلة؛ ليس معرف مستخدم قاعدة البيانات الداخلية |
+| `entityType` | string | نوع الكيان الذي ينتمي إليه السجل، راجع الجدول أدناه |
+| `entityId` | string | يتم دمج معرف الكيان الحالي مع مستخدم النظام الأساسي ونوع الكيان لإنشاء مفتاح محلي غير فعال. |
+| `data` | object | مجالات عمل هذه الجهة؛ مجالات الموارد المختلفة مختلفة |
+
+| موارد الاستعلام | `entityType` | `entityId` المراسلات |
+| --- | --- | --- |
+| أمر عادي | `ORDER` | `data.orderId` |
+| أوامر مشروطة | `CONDITION_ORDER` | `data.conditionId` |
+| تفاصيل تعبئة التجارة | `TRADE_FILL` | `data.fillId`، وليس tradeId |
+| المواقف الحالية / التاريخية | `POSITION` | `data.positionId` |
+| سجلات العقود | `ACCOUNT_LEDGER` | تعريف تفصيلي لتغيير حساب واحد، ** ليس بيانات.ledgerId** |
+
+يمكن لنفس `ledgerId` فصل تفاصيل متعددة مثل رسوم المناولة والأرباح والخسائر وما إلى ذلك؛ سيؤدي الضغط على ledgerId لإزالة التكرارات إلى فقدان البيانات. لا يمكن خلط المعرفات من موارد مختلفة. راجع الدليل المرتبط بدليل الوصول للتعرف على قواعد حفظ الصفحات وحفظ الحقول.
+
+
+<span id="types-units-and-omitted-fields" data-sixmm-canonical-anchor="types-units-and-omitted-fields" aria-hidden="true"></span>
+
+## الأنواع والوحدات والحقول المحذوفة
+
+- يستخدم المبلغ والسعر والكمية ومعرف الكيان؛ استخدم العلامة العشرية لمعالجة المبالغ، ولا يمكن استخدام أرقام الفاصلة العائمة أو تحويل المعرفات الطويلة إلى أرقام JavaScript. يتم شرح عملة المبلغ ووحدة الكمية وفقًا لمواصفات زوج التداول/العقد.
+- يستخدم وقت العمل عددًا صحيحًا (int64)، وكلاهما ميلي ثانية من Unix؛ يستخدم الطابع الزمني للمصادقة وبيانات اعتماد الإدخال expireAt الثواني ولا يمكن الخلط بينها.
+- عادةً لا يتم إخراج حقول الأعمال المتسلسلة عندما تكون فارغة، وسيتم حذف بعضها عندما تكون الحقول الرقمية 0. **لا يعني الحقل المفقود أن قيمة الأعمال هي 0**.
+- `reduceOnly`، `closeOnly`، `makerOnly` في نموذج السجل العام لا تحذف خطأ، لذلك قد تظهر هذه الأخطاء الثلاثة أيضًا في المعاملات أو المراكز. يتم شرحها فقط في موارد الطلب؛ لا يمكن اعتبار أن المعاملة/المركز نفذ قواعد الأمر المقابلة.
+- `closePosition` هو قيمة منطقية اختيارية: يتم توفيرها بواسطة أوامر مشروطة، ويتم حذفها عادةً للموارد الأخرى. المفقود له معنى مختلف عن الكذب.
+- الجدول أدناه "المقدم حاليًا" يعني أن منطق القراءة له مصدر حقل؛ من الممكن أن يتم حذف الحقول الاختيارية لأنها لا تحتوي على قيمة. لا يمكن ضمان ملء الحقول الموجودة في النموذج في كل واجهة.
+
+
+<span id="the-difference-between-status-and-margin-mode" data-sixmm-canonical-anchor="the-difference-between-status-and-margin-mode" aria-hidden="true"></span>
+
+## الفرق بين الحالة ووضع الهامش
+
+| الموارد | قيمة الإرجاع الحالية |
+| --- | --- |
+| حالة الطلب العادي الحالي | NEW، PENDING، PARTIALLY_FILLED |
+| حالة الطلب العادي التاريخية | FILLED، CANCELED، REJECTED، PARTIAL_FILLED_CANCELED، أو PARTIALLY_FILLED_CANCELED؛ احتفظ بتهجئة المصدر الفعلي |
+| حالة الطلب الحالية / triggerStatus | PENDING_ACTIVATION، PENDING، TRIGGERING |
+| حالة أمر الحالة التاريخية / triggerStatus | TRIGGERED، CANCELLED، REJECTED، FIRED |
+| حالة الموقف الحالي | السلسلة الرقمية "1" في موضعها، و"3" قيد التصفية |
+| حالة الموقف التاريخي | قامت السلسلة الرقمية "2" بإغلاق الصفقة، بينما أدى الرقم "4" إلى التصفية القسرية |
+
+يختلف تهجئة CANCELED للأمر العادي عن تهجئة CANCELLED للأمر الشرطي؛ إن إطلاق أمر مشروط لا يعني أن الأمر العادي الذي تم إنشاؤه قد تم تنفيذه. لا تقم بإعادة استخدام نفس مجموعة جداول ترجمة الحالة لجميع الموارد.
+
+الترتيب الشرطي marginMode يُرجع CROSS / ISOLATED; تُرجع الأوامر والصفقات العادية التاريخية حاليًا "1" / "2"، وهي عبارة عن هامش متقاطع/معزول على التوالي. marginMode غير متوفر حاليًا للطلبات العادية. يمكن للتجار التطبيع حسب المورد في طبقة العرض الخاصة بهم، ولا تزال القيم الأصلية بحاجة إلى حفظها.
+
+
+<span id="fields-declared-in-the-model-but-not-provided-in-this-query" data-sixmm-canonical-anchor="fields-declared-in-the-model-but-not-provided-in-this-query" aria-hidden="true"></span>
+
+## الحقول المعلنة في النموذج ولكنها غير متوفرة في هذا الاستعلام
+
+Generic RecordData / Java يعلن نموذج PerpetualData أيضًا عن الحقول التالية، لكن منطق قراءة الإنتاج الحالي المكون من ست فئات لا يملأها. **لا ينبغي إدراجها كبيانات أعمال متاحة، ولا ينبغي استبدال الإعدادات الافتراضية للحقول بنتائج حقيقية. **
+
+| مجال | نوع النموذج | الحدود الحالية |
+| --- | --- | --- |
+| `closeReason` | string | لم يتم توفير أسباب إغلاق المراكز التاريخية |
+| `walletDelta` | string | لا تقوم واجهة تغيير الحساب بإرجاع دلتا المحفظة |
+| `frozenDelta` | string | لا تقوم واجهة تغيير الحساب بإرجاع الدلتا المجمدة |
+| `usedDelta` | string | لا تقوم واجهة تغيير الحساب بإرجاع دلتا الهامش المستخدم |
+| `feeDelta` | string | لا تقوم واجهة تغيير الحساب بإرجاع دلتا الرسوم |
+| `pnlDelta` | string | لا تقوم واجهة تغيير الحساب بإرجاع دلتا الأرباح والخسائر |
+| `accountVersion` | string | لا تقوم واجهة تغيير الحساب بإرجاع إصدار الحساب ولا يمكن استخدامها لإجراء مزامنة تزايدية موثوقة. |
+| `occurredAt` | integer | تستخدم واجهة تغيير الحساب createdAt ولا توفر مجموعة أخرى من أوقات حدوث الأحداث. |
+
+يخضع نطاق التطبيق الميداني الفعلي لجداول الموارد المذكورة أعلاه؛ عندما تقوم المنصة بتحديث الحقول أو التعدادات، يجب تكييفها وفقًا لوصف الواجهة الجديدة وإصدار SDK.
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## المصدر والأدلة ذات الصلة
+
+- [المصدر الرسمي v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [نظرة عامة على الاستعلام وترقيم الصفحات](/ar/sdk/agent-sdk/java/perpetual-queries)
+- [محفظة التمويل](/ar/sdk/agent-sdk/java/funding-wallet)
+- [دليل الترقية](/ar/sdk/agent-sdk/java/upgrade)

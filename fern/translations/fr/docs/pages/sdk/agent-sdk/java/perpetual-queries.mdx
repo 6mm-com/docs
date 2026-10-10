@@ -1,0 +1,238 @@
+---
+title: "Requêtes perpétuelles et pagination"
+subtitle: "Requêtes perpétuelles et pagination: Intégration Agent Java SDK v0.3.0, exemples, paramètres et sémantique de réponse."
+slug: sdk/agent-sdk/java/perpetual-queries
+canonical-url: https://docs.6mm.com/fr/sdk/agent-sdk/java/perpetual-queries
+---
+
+Ce guide cible **Agent Java SDK `v0.3.0`**, Java 8+ et le contrat public étiqueté. Exemples exécutés dans un backend partenaire après l'initialisation de `client` dans [Démarrage rapide](/fr/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## Exemples de prérequis
+
+Les extraits de code Java partagent ces importations. Initialisez `client` à l'aide de Quick Start et obtenez `platformUserId` à partir de la liaison enregistrée. Les exemples d’ID utilisateur/commande doivent être remplacés par vos propres valeurs persistantes.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span id="query-perpetual-contract-data" data-sixmm-canonical-anchor="query-perpetual-contract-data" aria-hidden="true"></span>
+
+## Interroger les données du contrat perpétuel
+
+<span id="six-types-of-interfaces-and-java-methods" data-sixmm-canonical-anchor="six-types-of-interfaces-and-java-methods" aria-hidden="true"></span>
+
+### Six types d'interfaces et de méthodes Java
+
+Toutes les demandes sont signées POST avec un préfixe commun de `/v1/agent/perpetual`.
+
+| suffixe de chemin | Java Méthode/Type de demande | gamme de joueurs |
+| --- | --- | --- |
+| `/orders/current` | `listCurrentPerpetualOrders(CurrentPerpetualOrdersRequest)` | NORMAL Le joueur peut être omis ; CONDITIONAL Le joueur doit être spécifié |
+| `/orders/history` | `listPerpetualOrderHistory(PerpetualOrderHistoryRequest)` | Idem que ci-dessus |
+| `/trades` | `listPerpetualTrades(PerpetualTradesRequest)` | Le joueur doit être spécifié |
+| `/positions/current` | `listCurrentPerpetualPositions(CurrentPerpetualPositionsRequest)` | Les joueurs peuvent être omis |
+| `/positions/history` | `listPerpetualPositionHistory(PerpetualPositionHistoryRequest)` | Les joueurs peuvent être omis |
+| `/account/ledger` | `listPerpetualLedger(PerpetualLedgerRequest)` | Les joueurs peuvent être omis |
+
+`platformUserIds` est un tableau de chaînes d'ID de plate-forme publique. Lorsque spécifié, 1 à 100 joueurs uniques ayant accès sont requis ; en cas d'omission, seule la gamme de joueurs directs à laquelle le commerçant actuel a accès est interrogée. L'omission n'est pas équivalente à `[]` et les tableaux vides sont illégaux. La portée est déterminée par le commerçant signataire, et d'autres identifiants de commerçant ne peuvent pas être transmis pour étendre la portée.
+
+La requête de commande doit transmettre `orderCategory=NORMAL` ou `CONDITIONAL`. Utilisez `orderId` pour les commandes ordinaires et `conditionId` pour les commandes conditionnelles. Ils ne peuvent pas être mélangés entre catégories. Les ordres conditionnels et les ordres ordinaires générés par leur déclenchement sont traités séparément en tant qu'entités.
+
+<span id="filter-conditions" data-sixmm-canonical-anchor="filter-conditions" aria-hidden="true"></span>
+
+### Conditions de filtrage
+
+| Requête | Filtres d'entreprise disponibles |
+| --- | --- |
+| Commande en cours | `orderCategory`, `symbol` |
+| ordre historique | `orderCategory`, `symbol`, `startTime`, `endTime`, `orderId`, `conditionId`, `clientOrderId`, `side`, `status` |
+| faire un marché | `symbol`, `startTime`, `endTime`, `orderId` |
+| Poste actuel | `symbol` |
+| Positions historiques | `symbol`, `startTime`, `endTime`, `positionSide` |
+| Modifications du contrat | `startTime`, `endTime`, `assetType`, `changeType` |
+
+L'heure de la requête historique est Unix **millisecondes** et l'intervalle est `[startTime, endTime)` ; l'heure de la demande de signature est `timestamp` soit Unix **secondes**. Il est recommandé de corriger la fenêtre horaire et la requête UTC par segments ; utilisez UTC pour le rapprochement quotidien. Le statut et le type utilisent l'énumération du contrat de la plate-forme et ne sont pas traduits eux-mêmes en chaînes chinoises.
+
+`limit` La valeur par défaut est 500, la plage est de 1 à 1 000 ; la taille de la page ne garantit pas que le même numéro sera renvoyé à chaque fois. Les six interfaces partagent actuellement un quota de requêtes de 2 fois par seconde et 4 rafales par commerçant, et la limite maximale de simultanéité pour chaque commerçant au sein de l'instance est de 2. Le côté commerçant utilise une file d'attente unifiée, et il est recommandé de commencer par une pagination séquentielle et une fenêtre d'historique plus petite.
+
+<span id="java-query-examples" data-sixmm-canonical-anchor="java-query-examples" aria-hidden="true"></span>
+
+### Java exemples de requêtes
+
+Interrogez l'ordre ordinaire actuel d'un joueur :
+
+```java
+CurrentPerpetualOrdersRequest current = new CurrentPerpetualOrdersRequest();
+current.orderCategory = "NORMAL";
+current.platformUserIds = Collections.singletonList(platformUserId);
+current.symbol = "BTCUSDT";
+current.limit = 100;
+PerpetualResponse currentPage = client.listCurrentPerpetualOrders(current);
+```
+
+Recherchez les modifications du contrat au cours de la dernière heure et traitez le curseur. L'exemple suivant ne réessaye pas automatiquement ; lorsque l'application réelle rencontre une limitation actuelle ou une panne temporaire, suivez le guide associé lié pour restaurer la même page.
+
+```java
+PerpetualLedgerRequest ledger = new PerpetualLedgerRequest();
+ledger.platformUserIds = Collections.singletonList(platformUserId);
+ledger.endTime = System.currentTimeMillis();
+ledger.startTime = ledger.endTime - 3_600_000L;
+ledger.limit = 100;
+Set<String> seenCursors = new HashSet<>();
+
+while (true) {
+    PerpetualResponse page = client.listPerpetualLedger(ledger);
+    for (PerpetualRecord row : page.data.items) {
+        // Persist records idempotently by platformUserId, entityType and entityId.
+    }
+    if (!page.data.hasMore) {
+        break;
+    }
+    String next = page.data.nextCursor;
+    if (next == null || next.isEmpty() || !seenCursors.add(next)) {
+        throw new IllegalStateException("游标未推进，停止查询并排查");
+    }
+    ledger.cursor = next;
+    Thread.sleep(650L); // Other queries must share the same partner rate-limit queue.
+}
+```
+
+<span id="return-structure-and-saving-rules" data-sixmm-canonical-anchor="return-structure-and-saving-rules" aria-hidden="true"></span>
+
+### Structure de retour et règles d’épargne
+
+Pour une description complète champ par champ, voir [Description du champ de retour de la requête de contrat](/fr/sdk/agent-sdk/java/perpetual-queries), y compris les types, les significations et le champ d'application de la pagination publique, des commandes ordinaires/conditionnelles, des transactions, des positions actuelles/historiques et des modifications contractuelles.
+
+Les six interfaces renvoient uniformément `PerpetualResponse` :
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "items": [],
+    "nextCursor": "",
+    "hasMore": false
+  }
+}
+```
+
+Chaque `items` contient `platformUserId`, `entityType`, `entityId`, `data`. Les types d'entités incluent `ORDER`, `CONDITION_ORDER`, `TRADE_FILL`, `POSITION`, `ACCOUNT_LEDGER`. Utilisez ces trois champs d'identité pour créer une clé idempotente ; ne traitez pas l'ID de commande conditionnel, l'ID de commande et l'ID de remplissage comme le même numéro.
+
+`data` Fournit des champs tels que le prix, la quantité, le statut, les dépenses, les profits et pertes ou la modification du solde par ressource. Le montant, le prix, la quantité et l'ID d'entité sont traités comme des chaînes ; le temps de travail est en millisecondes. Les champs manquants ne sont pas remplis à 0 et ne sont pas déduits d'autres entités.
+
+Le curseur est la position de pagination d'une requête, pas un abonnement incrémentiel fiable, ni un instantané atomique garanti sur plusieurs pages. Le curseur actuel est valable 24 heures à compter du premier tour de génération ; la pagination ultérieure conserve les mêmes marchands, ressources, collections de joueurs et conditions de filtrage. La fenêtre fixe pour l’extraction historique est idempotente lorsqu’elle est tirée à plusieurs reprises ; le statut de la commande/position actuelle est actualisé après une nouvelle requête. Lorsqu'une interface en temps réel est nécessaire, le mécanisme de données de l'interface de la plate-forme est utilisé et l'interface de sondage six ne peut pas être considérée comme une interface de marché à haute fréquence.
+
+<span id="errors-and-recovery" data-sixmm-canonical-anchor="errors-and-recovery" aria-hidden="true"></span>
+
+### Erreurs et récupération
+
+Le succès de HTTP ne signifie pas le succès commercial, vous devez cocher `code`. Java SDK générera une erreur commerciale sous la forme `AgentApiException`.
+
+| Code d'entreprise | Signification typique | Manutention |
+| --- | --- | --- |
+| `102001` | Les paramètres requis sont manquants, par exemple, la requête d'ordre conditionnel manque de joueurs. | Fournissez les paramètres manquants |
+| `102002` | Paramètres illégaux, tableau vide, curseur incompatible ou expiré | Corrigez les paramètres ; revérifiez la fenêtre fixe après avoir effacé le curseur expiré et enregistrez-la de manière idempotente. |
+| `102003` | Limite, nombre de joueurs ou plage horaire illégale | Portée étroite ou correcte |
+| `6001` | Erreur de signature | Vérifiez les champs de clé, de sérialisation du tableau et de signature |
+| `6009` | La méthode d'accès du commerçant ou la portée de l'accès ne sont pas autorisées | Vérifiez les autorisations des marchands et la propriété des joueurs |
+| `6904` | Le service est temporairement indisponible, concurrence ou protection des ressources de requête | Réduire la concurrence et réduire les fenêtres ; contactez le support si l'erreur persiste |
+| `6905` | Le quota partagé pour six types de requêtes a été épuisé | Reculez, puis réessayez la page d'origine ayant échoué |
+
+Le `cursor` et toutes les conditions de filtre de la page d'origine ayant échoué seront conservés après une limitation de courant, un délai d'attente ou un échec temporaire ; chaque fois que SDK est rappelé, de nouveaux `timestamp`, `nonce`, `sign` seront générés. Vous ne pouvez pas passer directement à la page suivante et vous ne pouvez pas traiter les échecs comme des résultats vides. SDK n'est pas responsable de la nouvelle tentative automatique de transactions de fonds.
+
+
+<span id="common-response-and-pagination" data-sixmm-canonical-anchor="common-response-and-pagination" aria-hidden="true"></span>
+
+## Réponse et pagination communes
+
+| Champ | JSON tapez | illustrer |
+| --- | --- | --- |
+| `code` | integer | Code commercial, 0 signifie succès ; s'il n'est pas 0, cela sera traité comme une erreur, et l'échec ne sera pas traité comme une page vide. |
+| `message` | string | La description des résultats ne constitue pas la seule base du jugement commercial. |
+| `data` | object | Résultats paginés en cas de réussite |
+| `data.items` | array | Enregistrements sur cette page ; la page vide légale est `[]` |
+| `data.nextCursor` | string | Curseur de la page suivante ; généralement une chaîne vide s'il n'y a pas de pages suivantes |
+| `data.hasMore` | boolean | S'il y a des pages suivantes ; lorsque c'est vrai, utilisez nextCursor pour continuer la même requête |
+
+La structure de chaque `data.items[]` :
+
+| Champ | JSON tapez | illustrer |
+| --- | --- | --- |
+| `platformUserId` | string | ID utilisateur public de la plateforme, enregistré sous forme de chaîne ; pas d'ID utilisateur de base de données interne |
+| `entityType` | string | Le type d'entité auquel appartient l'enregistrement, voir le tableau ci-dessous |
+| `entityId` | string | L'identifiant de l'entité actuelle est combiné avec l'utilisateur de la plateforme et le type d'entité pour construire une clé idempotente locale. |
+| `data` | object | Les domaines d'activité de cette entité ; différents champs de ressources sont différents |
+
+| Ressources de requête | `entityType` | `entityId` Correspondance |
+| --- | --- | --- |
+| Ordre ordinaire | `ORDER` | `data.orderId` |
+| ordonnances conditionnelles | `CONDITION_ORDER` | `data.conditionId` |
+| Détails du remplissage des échanges | `TRADE_FILL` | `data.fillId`, et non tradeId |
+| Postes actuels/historiques | `POSITION` | `data.positionId` |
+| Registres du grand livre des contrats | `ACCOUNT_LEDGER` | Identification détaillée du changement de compte unique, ** ne constitue pas une donnée.ledgerId** |
+
+Le même `ledgerId` peut séparer plusieurs détails tels que les frais de traitement, les profits et les pertes, etc. ; appuyer sur ledgerId pour supprimer les doublons entraînera une perte de données. Les identifiants de différentes ressources ne peuvent pas être mélangés. Consultez le guide connexe du Guide d’accès pour connaître les règles de pagination et d’enregistrement des champs.
+
+
+<span id="types-units-and-omitted-fields" data-sixmm-canonical-anchor="types-units-and-omitted-fields" aria-hidden="true"></span>
+
+## Types, unités et champs omis
+
+- Le montant, le prix, la quantité et l'ID d'entité utilisent la chaîne ; utilisez le mode décimal pour traiter les montants et ne pouvez pas utiliser de nombres à virgule flottante ni convertir des identifiants longs en nombres JavaScript. La devise du montant et l'unité de quantité sont expliquées en fonction des spécifications de la paire commerciale/du contrat.
+- Le temps professionnel utilise un nombre entier (int64), les deux sont des millisecondes Unix ; demander l'horodatage d'authentification et les informations d'identification d'entrée expireAt utilisent des secondes et ne peuvent pas être confondus.
+- Les champs métier de chaîne ne sont généralement pas affichés lorsqu'ils sont vides, et certains seront omis lorsque les champs numériques sont 0. **Le champ manquant ne signifie pas que la valeur métier est 0**.
+- `reduceOnly`, `closeOnly`, `makerOnly` dans le modèle d'enregistrement général n'omettent pas faux, donc ces trois faux peuvent également apparaître dans les transactions ou les positions. Ils sont uniquement expliqués dans les ressources de la commande ; on ne peut pas considérer que la transaction/position a exécuté les règles d'ordre correspondantes.
+- `closePosition` est un booléen facultatif : fourni par des commandes conditionnelles, généralement omis pour d'autres ressources. Manquant a une signification différente de faux.
+- Le tableau ci-dessous « actuellement fourni » signifie que la logique de lecture possède un champ source ; les champs facultatifs peuvent toujours être omis car ils n’ont aucune valeur. Il n'est pas garanti que les champs qui existent dans le modèle soient remplis dans chaque interface.
+
+
+<span id="the-difference-between-status-and-margin-mode" data-sixmm-canonical-anchor="the-difference-between-status-and-margin-mode" aria-hidden="true"></span>
+
+## La différence entre le mode statut et le mode marge
+
+| ressource | valeur de retour actuelle |
+| --- | --- |
+| Statut actuel de la commande ordinaire | NEW, PENDING, PARTIALLY_FILLED |
+| Statut historique des commandes ordinaires | FILLED, CANCELED, REJECTED, PARTIAL_FILLED_CANCELED ou PARTIALLY_FILLED_CANCELED ; conserver l'orthographe réelle de la source |
+| État actuel de la commande / triggerStatus | PENDING_ACTIVATION, PENDING, TRIGGERING |
+| État de la commande de condition historique / triggerStatus | TRIGGERED, CANCELLED, REJECTED, FIRED |
+| Statut du poste actuel | La chaîne numérique "1" est en position, "3" est en liquidation |
+| Statut historique de la position | La chaîne numérique "2" a clôturé la position, "4" a forcé la liquidation |
+
+L'orthographe de CANCELED pour une commande ordinaire est différente de celle de CANCELLED pour une commande conditionnelle ; le déclenchement d'un ordre conditionnel ne signifie pas que l'ordre ordinaire généré a été exécuté. Ne réutilisez pas le même ensemble de tables de conversion de statut pour toutes les ressources.
+
+L'ordre conditionnel marginMode renvoie CROSS / ISOLATED ; Les ordres et positions ordinaires historiques renvoient actuellement « 1 » / « 2 », qui sont respectivement des marges croisées/isolées. marginMode n'est actuellement pas disponible pour les commandes ordinaires. Les commerçants peuvent normaliser par ressource dans leur propre couche d'affichage, et les valeurs d'origine doivent toujours être enregistrées.
+
+
+<span id="fields-declared-in-the-model-but-not-provided-in-this-query" data-sixmm-canonical-anchor="fields-declared-in-the-model-but-not-provided-in-this-query" aria-hidden="true"></span>
+
+## Champs déclarés dans le modèle mais non fournis dans cette requête
+
+Generic RecordData / Java Le modèle PerpetualData déclare également les champs suivants, mais la logique de lecture de production actuelle à six catégories ne les remplit pas. **Ne doivent pas être répertoriés comme données commerciales disponibles, et les valeurs par défaut des champs ne doivent pas non plus être remplacées par des résultats réels. **
+
+| Champ | Type de modèle | limite actuelle |
+| --- | --- | --- |
+| `closeReason` | string | Les raisons de la clôture des positions historiques ne sont pas fournies |
+| `walletDelta` | string | L'interface de changement de compte ne renvoie pas le delta du portefeuille |
+| `frozenDelta` | string | L'interface de changement de compte ne renvoie pas de delta gelé |
+| `usedDelta` | string | L'interface de changement de compte ne renvoie pas le delta de marge utilisé |
+| `feeDelta` | string | L'interface de changement de compte ne renvoie pas le delta des frais |
+| `pnlDelta` | string | L'interface de changement de compte ne renvoie pas de delta de profits et de pertes |
+| `accountVersion` | string | L'interface de changement de compte ne renvoie pas la version du compte et ne peut pas être utilisée pour une synchronisation incrémentielle fiable. |
+| `occurredAt` | integer | L'interface de changement de compte utilise createdAt et ne fournit pas un autre ensemble d'heures d'occurrence des événements. |
+
+La portée réelle de l'application sur le terrain est soumise aux tableaux de ressources ci-dessus ; lorsque la plateforme met à jour des champs ou des énumérations, elle sera adaptée en fonction de la nouvelle description de l'interface et de la version de SDK.
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Source et guides associés
+
+- [Source officielle v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Présentation et pagination des requêtes](/fr/sdk/agent-sdk/java/perpetual-queries)
+- [Portefeuille de financement](/fr/sdk/agent-sdk/java/funding-wallet)
+- [Guide de mise à niveau](/fr/sdk/agent-sdk/java/upgrade)

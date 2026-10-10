@@ -1,0 +1,238 @@
+---
+title: "永久查詢和分頁"
+subtitle: "永久查詢和分頁：Agent Java SDK v0.3.0 集成、示例、參數和響應語義。"
+slug: sdk/agent-sdk/java/perpetual-queries
+canonical-url: https://docs.6mm.com/zh-TW/sdk/agent-sdk/java/perpetual-queries
+---
+
+本指南針對 **Agent Java SDK `v0.3.0`**、Java 8+ 以及標記的公共合約。初始化 `client` 後在合作伙伴後端運行示例 [快速入門](/zh-TW/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## 先決條件示例
+
+Java 片段共享這些導入。使用快速啟動初始化 `client` 並從保存的綁定中獲取 `platformUserId`。示例用戶/訂單 ID 必須替換為您自己的持久值。
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span id="query-perpetual-contract-data" data-sixmm-canonical-anchor="query-perpetual-contract-data" aria-hidden="true"></span>
+
+## 查詢永續合約數據
+
+<span id="six-types-of-interfaces-and-java-methods" data-sixmm-canonical-anchor="six-types-of-interfaces-and-java-methods" aria-hidden="true"></span>
+
+### 六種接口和Java方法
+
+所有請求均使用公共前綴 `/v1/agent/perpetual` 進行簽名 POST。
+
+| 路徑後綴 | Java 方法/請求類型 | 玩家範圍 |
+| --- | --- | --- |
+| `/orders/current` | `listCurrentPerpetualOrders(CurrentPerpetualOrdersRequest)` | NORMAL 玩家可以省略； CONDITIONAL 必須指定玩家 |
+| `/orders/history` | `listPerpetualOrderHistory(PerpetualOrderHistoryRequest)` | 與上面相同 |
+| `/trades` | `listPerpetualTrades(PerpetualTradesRequest)` | 必須指定玩家 |
+| `/positions/current` | `listCurrentPerpetualPositions(CurrentPerpetualPositionsRequest)` | 玩家可以省略 |
+| `/positions/history` | `listPerpetualPositionHistory(PerpetualPositionHistoryRequest)` | 玩家可以省略 |
+| `/account/ledger` | `listPerpetualLedger(PerpetualLedgerRequest)` | 玩家可以省略 |
+
+`platformUserIds` 是公共平臺 ID 的字符串數組。如果指定，則需要 1 到 100 名具有訪問權限的唯一玩家；省略時，僅查詢當前商戶可以訪問的直接玩家範圍。省略不等於`[]`，空數組是非法的。範圍由簽約商戶決定，不能通過其他商戶ID來擴大範圍。
+
+訂單查詢必須通過`orderCategory=NORMAL`或`CONDITIONAL`。普通訂單使用 `orderId`，條件訂單使用 `conditionId`。它們不能跨類別混合。條件訂單和觸發條件訂單生成的普通訂單作為實體單獨處理。
+
+<span id="filter-conditions" data-sixmm-canonical-anchor="filter-conditions" aria-hidden="true"></span>
+
+### 過濾條件
+
+| 詢問 | 可用的業務過濾器 |
+| --- | --- |
+| 當前訂單 | `orderCategory`，`symbol` |
+| 歷史秩序 | `orderCategory`、`symbol`、`startTime`、`endTime`、`orderId`、`conditionId`、`clientOrderId`、`side`、 `status` |
+| 達成協議 | `symbol`、`startTime`、`endTime`、`orderId` |
+| 當前位置 | `symbol` |
+| 歷史立場 | `symbol`、`startTime`、`endTime`、`positionSide` |
+| 合同變更 | `startTime`、`endTime`、`assetType`、`changeType` |
+
+歷史查詢的時間為Unix**毫秒**，間隔為`[startTime, endTime)`；請求籤名的時間是 `timestamp` 是 Unix **秒**。建議固定UTC時間窗口，分段查詢；使用 UTC 進行日常核對。狀態和類型使用平臺合約枚舉，不會自行翻譯成中文字符串。
+
+`limit` 默認為 500，範圍為 1~1000；頁面大小不保證每次都會返回相同的數字。目前6個接口共享每個商戶每秒2次、4個突發的查詢配額，實例內每個商戶最大併發數限制為2。商戶側採用統一隊列，建議從順序分頁和較小的歷史窗口開始。
+
+<span id="java-query-examples" data-sixmm-canonical-anchor="java-query-examples" aria-hidden="true"></span>
+
+### Java 查詢示例
+
+查詢玩家當前的普通訂單：
+
+```java
+CurrentPerpetualOrdersRequest current = new CurrentPerpetualOrdersRequest();
+current.orderCategory = "NORMAL";
+current.platformUserIds = Collections.singletonList(platformUserId);
+current.symbol = "BTCUSDT";
+current.limit = 100;
+PerpetualResponse currentPage = client.listCurrentPerpetualOrders(current);
+```
+
+查詢最近一小時的合約變動情況並處理游標。以下示例不會自動重試；當實際應用遇到電流限制或暫時故障時，請按照鏈接的相關指南恢復相同頁面。
+
+```java
+PerpetualLedgerRequest ledger = new PerpetualLedgerRequest();
+ledger.platformUserIds = Collections.singletonList(platformUserId);
+ledger.endTime = System.currentTimeMillis();
+ledger.startTime = ledger.endTime - 3_600_000L;
+ledger.limit = 100;
+Set<String> seenCursors = new HashSet<>();
+
+while (true) {
+    PerpetualResponse page = client.listPerpetualLedger(ledger);
+    for (PerpetualRecord row : page.data.items) {
+        // Persist records idempotently by platformUserId, entityType and entityId.
+    }
+    if (!page.data.hasMore) {
+        break;
+    }
+    String next = page.data.nextCursor;
+    if (next == null || next.isEmpty() || !seenCursors.add(next)) {
+        throw new IllegalStateException("游标未推进，停止查询并排查");
+    }
+    ledger.cursor = next;
+    Thread.sleep(650L); // Other queries must share the same partner rate-limit queue.
+}
+```
+
+<span id="return-structure-and-saving-rules" data-sixmm-canonical-anchor="return-structure-and-saving-rules" aria-hidden="true"></span>
+
+### 返回結構和保存規則
+
+有關完整的逐字段描述，請參閱 [合約查詢返回字段說明](/zh-TW/sdk/agent-sdk/java/perpetual-queries)，包括公共分頁、普通/條件訂單、交易、當前/歷史倉位、合約變更的類型、含義和適用範圍。
+
+六個接口統一返回`PerpetualResponse`：
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "items": [],
+    "nextCursor": "",
+    "hasMore": false
+  }
+}
+```
+
+每個 `items` 包含 `platformUserId`、`entityType`、`entityId`、`data`。實體類型包括 `ORDER`、`CONDITION_ORDER`、`TRADE_FILL`、`POSITION`、`ACCOUNT_LEDGER`。使用這三個身份字段構建冪等密鑰；請勿將條件訂單 ID、訂單 ID 和填寫 ID 視為相同的數字。
+
+`data` 提供價格、數量、狀態、費用、損益或按資源的餘額變化等字段。金額、價格、數量、實體ID作為字符串處理；業務時間以毫秒為單位。缺失的字段不會填充為 0，也不會從其他實體推斷出來。
+
+游標是查詢的分頁位置，不是可靠的增量訂閱，也不是有保證的跨頁原子快照。當前光標自第一輪生成起24小時內有效；後續分頁保留相同的商家、資源、玩家收藏和過濾條件。歷史拉取固定窗口，重複拉取時冪等；重新查詢後刷新當前訂單/持倉狀態。當需要實時接口時，採用平臺前端的數據機制，輪詢六接口不能視為高頻行情接口。
+
+<span id="errors-and-recovery" data-sixmm-canonical-anchor="errors-and-recovery" aria-hidden="true"></span>
+
+### 錯誤和恢復
+
+HTTP成功並不代表事業成功，您必須勾選`code`。 Java SDK 將引發業務錯誤，如 `AgentApiException`。
+
+| 業務代碼 | 典型含義 | 處理 |
+| --- | --- | --- |
+| `102001` | 缺少必需的參數，例如條件訂單查詢缺少玩家。 | 提供缺少的參數 |
+| `102002` | 非法參數、空數組、游標不匹配或過期 | 修正參數；清除過期游標後重新檢查固定窗口並冪等保存。 |
+| `102003` | 非法限制、玩家數量或時間範圍 | 縮小或正確的範圍 |
+| `6001` | 簽名錯誤 | 檢查密鑰、數組序列化和簽名字段 |
+| `6009` | 商戶訪問方式或訪問範圍不允許 | 檢查商家權限和玩家所有權 |
+| `6904` | 服務暫時不可用、併發或查詢資源保護 | 減少併發並縮小窗口；如果錯誤仍然存​​在，請聯繫支持人員 |
+| `6905` | 六種查詢的共享配額已用完 | 退出，然後重試最初的失敗頁面 |
+
+限流、超時或臨時失效後，`cursor`及原失效頁面的所有過濾條件將被保留；每次重新調用 SDK 時，都會生成新的 `timestamp`、`nonce`、`sign`。不能直接跳轉到下一頁，也不能將失敗視為空結果。 SDK 不負責自動重試資金交易。
+
+
+<span id="common-response-and-pagination" data-sixmm-canonical-anchor="common-response-and-pagination" aria-hidden="true"></span>
+
+## 通用響應和分頁
+
+| 場地 | JSON 類型 | 闡明 |
+| --- | --- | --- |
+| `code` | integer | 業務代碼，0表示成功；如果不為0，則會被視為錯誤，失敗不會被視為空頁。 |
+| `message` | string | 結果的描述並不是商業判斷的唯一依據。 |
+| `data` | object | 成功的分頁結果 |
+| `data.items` | array | 本頁記錄；合法的空白頁是 `[]` |
+| `data.nextCursor` | string | 下一頁光標；如果沒有後續頁面，通常為空字符串 |
+| `data.hasMore` | boolean | 是否有後續頁面；當 true 時，使用 nextCursor 繼續相同的查詢 |
+
+每個`data.items[]`的結構：
+
+| 場地 | JSON 類型 | 闡明 |
+| --- | --- | --- |
+| `platformUserId` | string | 平臺公共用戶ID，保存為字符串；不是內部數據庫用戶 ID |
+| `entityType` | string | 記錄所屬的實體類型，見下表 |
+| `entityId` | string | 當前實體的標識符與平臺用戶和實體類型相結合，構造本地冪等密鑰。 |
+| `data` | object | 該實體的業務領域；不同的資源領域不同 |
+
+| 查詢資源 | `entityType` | `entityId` 通訊 |
+| --- | --- | --- |
+| 普通訂單 | `ORDER` | `data.orderId` |
+| 有條件命令 | `CONDITION_ORDER` | `data.conditionId` |
+| 交易填寫詳細信息 | `TRADE_FILL` | `data.fillId`，而不是 tradeId |
+| 當前/歷史位置 | `POSITION` | `data.positionId` |
+| 合同賬簿記錄 | `ACCOUNT_LEDGER` | 單賬戶變更明細標識，**不是數據。ledgerId** |
+
+同一個`ledgerId`可以分離出手續費、盈虧等多個明細；按 ledgerId 刪除重複項將導致數據丟失。來自不同資源的 ID 不能混合。分頁和字段保存規則請參見《接入指南》鏈接相關指南。
+
+
+<span id="types-units-and-omitted-fields" data-sixmm-canonical-anchor="types-units-and-omitted-fields" aria-hidden="true"></span>
+
+## 類型、單位和省略字段
+
+- 金額、價格、數量、實體ID使用字符串；使用十進制來處理金額，並且不能使用浮點數或將長 ID 轉換為 JavaScript 數字。金額幣種和數量單位根據交易對/合約規格說明。
+- 業務時間使用整數（int64），均為Unix毫秒；請求認證時間戳和進入憑證expireAt使用秒，不能混淆。
+- 字符串業務字段通常為空時不輸出，而數值字段為0時會省略一些。**缺失字段並不代表業務值為0**。
+- 一般記錄模型中的 `reduceOnly`、`closeOnly`、`makerOnly` 不會省略 false，因此這三個 false 也可能出現在交易或持倉中。它們僅在訂單資源中進行說明；不能認為該筆交易/持倉已執行相應的訂單規則。
+- `closePosition` 是一個可選的布爾值：由條件訂單提供，通常對於其他資源被省略。 Missing 與 false 有著不同的含義。
+- 下表“當前提供”表示讀取邏輯有字段源；可選字段仍然可以被省略，因為它們沒有值。模型中存在的字段不保證在每個接口中都被填充。
+
+
+<span id="the-difference-between-status-and-margin-mode" data-sixmm-canonical-anchor="the-difference-between-status-and-margin-mode" aria-hidden="true"></span>
+
+## 狀態和保證金模式的區別
+
+| 資源 | 當前返回值 |
+| --- | --- |
+| 目前普通訂單狀態 | NEW，PENDING，PARTIALLY_FILLED |
+| 歷史普通訂單狀態 | FILLED、CANCELED、REJECTED、PARTIAL_FILLED_CANCELED或PARTIALLY_FILLED_CANCELED；保留實際來源拼寫 |
+| 當前條件訂單狀態 / triggerStatus | PENDING_ACTIVATION，PENDING，TRIGGERING |
+| 歷史條件訂單狀態 / triggerStatus | TRIGGERED、CANCELLED、REJECTED、FIRED |
+| 當前位置狀態 | 數字串“1”處於平倉狀態，“3”處於平倉狀態 |
+| 歷史倉位狀況 | 數字串“2”已平倉，“4”已強制平倉 |
+
+普通訂單的CANCELED的拼寫與條件訂單的CANCELLED的拼寫不同；觸發條件訂單並不意味著生成的普通訂單已被成交。不要對所有資源重複使用同一組狀態轉換表。
+
+條件訂單 marginMode 返回 CROSS / ISOLATED;歷史普通訂單和倉位目前返回“1”/“2”，分別為全倉/逐倉保證金。 marginMode目前不適用於普通訂單。商家可以在自己的展示層按資源進行歸一化，原始值仍需保存。
+
+
+<span id="fields-declared-in-the-model-but-not-provided-in-this-query" data-sixmm-canonical-anchor="fields-declared-in-the-model-but-not-provided-in-this-query" aria-hidden="true"></span>
+
+## 模型中聲明但未在此查詢中提供的字段
+
+Generic RecordData / Java PerpetualData 模型還聲明瞭以下字段，但當前的六類生產讀取邏輯不會填充它們。 **不應列為可用業務數據，也不應使用字段默認值來替代實際結果。 **
+
+| 場地 | 型號類型 | 當前邊界 |
+| --- | --- | --- |
+| `closeReason` | string | 未提供歷史平倉原因 |
+| `walletDelta` | string | 賬戶變更接口不返回錢包Delta |
+| `frozenDelta` | string | 賬戶變更接口不返回凍結Delta |
+| `usedDelta` | string | 賬戶變更接口不返回已用保證金Delta |
+| `feeDelta` | string | 賬戶變更接口不返回手續費增量 |
+| `pnlDelta` | string | 賬戶變更接口不返回盈虧Delta |
+| `accountVersion` | string | 賬戶變更接口不會返回賬戶版本，無法進行可靠的增量同步。 |
+| `occurredAt` | integer | 賬戶變更接口使用createdAt，並且不提供另一組事件發生時間。 |
+
+實際現場應用範圍以上述資源表為準；當平臺更新字段或枚舉時，應根據新的接口描述和SDK版本進行適配。
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## 來源及相關指南
+
+- [官方v0.3.0源碼](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [查詢概覽和分頁](/zh-TW/sdk/agent-sdk/java/perpetual-queries)
+- [資金錢包](/zh-TW/sdk/agent-sdk/java/funding-wallet)
+- [升級指南](/zh-TW/sdk/agent-sdk/java/upgrade)

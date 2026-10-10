@@ -95,7 +95,7 @@ duplicate translation directories.
 
 Before publishing, clean the source documents:
 
-- Normalize Trading Widget version language: public docs should say `Trading Widget SDK v1`, current capability version `1.3.0`.
+- Normalize Trading Widget version language: public docs should say `Trading Widget SDK v1`, verified public runtime `1.8.0` (2026-10-10); inspect `TradingWidget.capabilities` for the loaded build.
 - Fix heading numbering in the Trading Widget document where section 5 contains `3.1` and `3.2`.
 - Move shared concepts such as signing, webhook verification, idempotency, and secret handling into common Security pages.
 - Keep Java and PHP pages language-specific only where API usage differs.

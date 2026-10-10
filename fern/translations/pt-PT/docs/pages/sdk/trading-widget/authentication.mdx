@@ -1,15 +1,15 @@
 ---
 title: "Trading Widget Autenticação"
-subtitle: "Use o partner-token para novas integrações de negociação SSO integrações."
+subtitle: "Utilize token de parceiro para novas integrações comerciais incorporadas SSO."
 slug: sdk/trading-widget/authentication
 canonical-url: https://docs.6mm.com/pt-PT/sdk/trading-widget/authentication
 ---
 
 <span id="recommended-mode-partner-token" data-sixmm-canonical-anchor="recommended-mode-partner-token" aria-hidden="true"></span>
 
-## Modo recomendado: partner-token
+## Modo recomendado: token de parceiro
 
-O partner-token evita colocar tokens curtos nas URLs e mantém apiSecret no backend do parceiro.
+Partner-token evita colocar tokens curtos em URLs e mantém apiSecret no back-end do parceiro.
 
 ```js
 const widget = TradingWidget.create('#trading-widget', {
@@ -38,14 +38,14 @@ const widget = TradingWidget.create('#trading-widget', {
 
 ## Documentação relacionada
 
-- [Criar Token de Incorporação](/pt-PT/sdk/agent-sdk/java/embed-token): exemplo de emissão de token backend.
-- [Trading Widget Início Rápido](/pt-PT/sdk/trading-widget/quick-start): fluxo de inicialização completo.
-- [Segredos e Assinatura](/pt-PT/sdk/security/secrets-signing): mantenha as credenciais privilegiadas do Agente no backend.
-- [Resolução de problemas](/pt-PT/sdk/security/troubleshooting): diagnosticar falhas de sessão, token, origem e inicialização.
+- [Criar token incorporado](/pt-PT/sdk/agent-sdk/java/embed-token): exemplo de emissão de token de back-end.
+- [Trading Widget Início rápido](/pt-PT/sdk/trading-widget/quick-start): fluxo de arranque completo.
+- [Segredos e assinatura](/pt-PT/sdk/security/secrets-signing): mantenha credenciais privilegiadas do agente no back-end.
+- [Solução de problemas](/pt-PT/sdk/security/troubleshooting): diagnosticar falhas de sessão, token, origem e inicialização.
 
 <span id="backend-flow" data-sixmm-canonical-anchor="backend-flow" aria-hidden="true"></span>
 
-## Fluxo backend
+## Fluxo de back-end
 
 ```text
 1. Partner frontend receives auth_request from the iframe.
@@ -62,30 +62,30 @@ const widget = TradingWidget.create('#trading-widget', {
 
 ## tokenProvider contrato
 
-| Campo | Realização | Descrição |
+| Campo | Direção | Descrição |
 | --- | --- | --- |
-| channelId | SDK -> Backend parceiro | Identificador único de sessão de widget. O backend deve passá-lo para createEmbedToken. |
-| Símbolo | SDK -> Backend parceiro | Símbolo de troca solicitado atualmente. Usa-o para usar o escopo do token quando necessário. |
-| Razão | SDK -> Backend parceiro | Porque é que o SDK está a pedir um token, como carregamento inicial ou atualização. |
-| embedToken | Backend parceiro -> SDK | Token de curta duração criado pelo Agent SDK ou Agente API. |
-| expireAt | Backend parceiro -> SDK | O carimbo temporal de expiração do token devolvido por 6MM. |
+| channelId | SDK -> Back-end do parceiro | Identificador único da sessão do widget. O backend deve passá-lo para createEmbedToken. |
+| símbolo | SDK -> Back-end do parceiro | Símbolo de negociação atualmente solicitado. Utilize-o para definir o âmbito do token quando necessário. |
+| razão | SDK -> Back-end do parceiro | Porque é que o SDK está a solicitar um token, como o carregamento inicial ou a atualização. |
+| embedToken | Back-end do parceiro -> SDK | Token de curta duração criado pelo Agent SDK ou Agente API. |
+| expireAt | Back-end do parceiro -> SDK | Carimbo de data e hora de expiração do token devolvido por 6MM. |
 
 <span id="failure-handling" data-sixmm-canonical-anchor="failure-handling" aria-hidden="true"></span>
 
-## Gestão de falhas
+## Tratamento de falhas
 
-| Condição | Manuseamento recomendado |
+| Estado | Manuseamento recomendado |
 | --- | --- |
-| Sessão de parceiros expirada | Devolva o 401 do endpoint parceiro e peça ao utilizador para iniciar sessão novamente. |
-| A criação do token falhou temporariamente | Coloque um erro no tokenProvider e permita que o widget mostre um erro de autenticação. |
-| channelId desajuste | Rejeita o pedido e recria a instância do widget. |
-| O utilizador não pode negociar | Devolva um erro controlado pelo parceiro e não crie um token de incorporação. |
+| A sessão do parceiro expirou | Devolver 401 do endpoint do parceiro e pedir ao utilizador para entrar novamente. |
+| A criação do token falhou temporariamente | Lance um erro em tokenProvider e permita que o widget apresente um erro de autenticação. |
+| channelId incompatibilidade | Rejeite o pedido e recrie a instância do widget. |
+| O utilizador não tem permissão para negociar | Devolver um erro controlado pelo parceiro e não criar um token incorporado. |
 
 <span id="compatibility-mode-agent-sso" data-sixmm-canonical-anchor="compatibility-mode-agent-sso" aria-hidden="true"></span>
 
 ## Modo de compatibilidade: agente-sso
 
-Agent-SSO mantém o fluxo antigo de bilhetes /agent-entry. Prefiro partner-token para novas integrações.
+agent-sso mantém o fluxo de tickets mais antigo /agent-entry. Prefira token de parceiro para novas integrações.
 
 ```js
 const widget = TradingWidget.create('#trading-widget', {
@@ -105,3 +105,13 @@ const widget = TradingWidget.create('#trading-widget', {
   },
 })
 ```
+
+<span id="seconds-trading-and-environment-rules" data-sixmm-canonical-anchor="seconds-trading-and-environment-rules" aria-hidden="true"></span>
+
+## Regras ambientais e de negociação de segundos
+
+Para páginas de segundos, utilize a mesma autenticação `partner-token` com `page` e `tradingMode` configuradas no Widget. Não existe um token de previsão separado. Cada chamada tokenProvider deve obter um novo token único do seu back-end.
+
+Devolver `embedToken`, `expireAt` em segundos Unix e o `channelId` original como um objeto de nível superior. A resposta do token Agent SDK não contém `channelId`; o seu backend ecoa o canal Widget atual. Se o seu endpoint agrupar as respostas em `data`, desembrulhe-o antes de retornar de tokenProvider.
+
+[Integração completa de segundos](/pt-PT/sdk/agent-sdk/java/seconds-trading) · [Guia ambiental de fundos](/pt-PT/sdk/agent-sdk/java/environments)

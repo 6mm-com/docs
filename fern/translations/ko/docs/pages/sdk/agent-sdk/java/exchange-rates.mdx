@@ -1,0 +1,87 @@
+---
+title: "법정화폐 참조 환율"
+subtitle: "법정화폐 참조 환율: Agent Java SDK v0.3.0 통합, 예시, 매개변수 및 응답 의미 체계."
+slug: sdk/agent-sdk/java/exchange-rates
+canonical-url: https://docs.6mm.com/ko/sdk/agent-sdk/java/exchange-rates
+---
+
+이 가이드는 **Agent Java SDK `v0.3.0`**, Java 8+ 및 태그된 공개 계약을 대상으로 합니다. 예제는 `client`를 초기화한 후 파트너 백엔드에서 실행됩니다. [빠른 시작](/ko/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## 예시 전제조건
+
+Java 조각은 이러한 가져오기를 공유합니다. 빠른 시작을 사용하여 `client`를 초기화하고 저장된 바인딩에서 `platformUserId`를 가져옵니다. 예시 사용자/주문 ID는 고유한 지속 값으로 대체되어야 합니다.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span id="fx-reference-rates" data-sixmm-canonical-anchor="fx-reference-rates" aria-hidden="true"></span>
+
+## FX 기준금리
+
+두 FX 방법 모두 일반 서명된 에이전트 API 흐름을 사용합니다. 발견하는 것부터 시작하세요.
+현재 지원되는 소스 통화:
+
+```java
+import com.sixmm.agent.model.ListSupportedFiatCurrenciesResponse;
+
+ListSupportedFiatCurrenciesResponse supported = client.listSupportedFiatCurrencies();
+System.out.println(supported.targetCurrency);     // USDT
+System.out.println(supported.sourceCurrencies);  // AUD, BRL, CNY, EUR, USD, ...
+```
+
+지원되는 모든 법정화폐-USDT 참조 요율을 쿼리합니다.
+
+```java
+import com.sixmm.agent.model.ExchangeRateItem;
+import com.sixmm.agent.model.QueryExchangeRatesResponse;
+
+QueryExchangeRatesResponse rates = client.queryExchangeRates();
+for (ExchangeRateItem item : rates.rates) {
+    System.out.println("1 " + item.sourceCurrency + " = " + item.rate + " " + item.targetCurrency);
+}
+```
+
+선택한 통화 쿼리:
+
+```java
+import com.sixmm.agent.model.QueryExchangeRatesRequest;
+
+QueryExchangeRatesResponse rates = client.queryExchangeRates(
+        QueryExchangeRatesRequest.of("CNY", "EUR", "USD"));
+```
+
+요청 팩토리는 통화 코드를 잘라내어 대문자로 표시하고 다음과 같이 직렬화합니다.
+API에 필요한 쉼표로 구분된 `sourceCurrencies` 값입니다. 생략
+요청 또는 모든 유효 통화 값은 지원되는 모든 통화를 쿼리합니다.
+
+| 응답 필드 | 유형 | 설명 |
+| --- | --- | --- |
+| `snapshotVersion` | string | 감사 및 조정을 위한 안정적인 스냅샷 버전 |
+| `provider` | string | 업스트림 공급자, 현재 `ECB` |
+| `sourceDate` | string | `yyyy-MM-dd` 형식의 상류 관찰 날짜 |
+| `fetchedAt` / `expiresAt` | int64 | 밀리초 단위의 Unix 타임스탬프 |
+| `pricingPolicy` | string | 현재 `FIXED_PEG` |
+| `usdtUsdRate` | string | USD 1개당 금액 USDT, 현재 `1`로 고정됨 |
+| `rateType` | string | 현재 `INDICATIVE_DAILY` |
+| `usage` | string | 현재 `REFERENCE_ONLY` |
+| `rateMeaning` | string | `1 sourceCurrency = rate USDT` |
+| `rates[].rate` | string | USDT 소스 법정화폐 1단위에 해당하는 금액 |
+
+이 값은 파트너 다중 통화 지갑이 계산할 참조입니다.
+USDT 금액이 6MM로 전송되었습니다. 실행 가능한 가격, 잠긴 견적 또는
+실시간 USDT 시장 가격. 금액에는 `BigDecimal` 및 문자열을 사용하세요.
+계산; `double` 또는 `float`를 사용하지 마세요.
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## 소스 및 관련 가이드
+
+- [공식 v0.3.0 소스](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [쿼리 개요 및 페이지 매김](/ko/sdk/agent-sdk/java/perpetual-queries)
+- [펀딩 지갑](/ko/sdk/agent-sdk/java/funding-wallet)
+- [업그레이드 가이드](/ko/sdk/agent-sdk/java/upgrade)

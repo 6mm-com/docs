@@ -1,0 +1,171 @@
+---
+title: "المستخدمون والأصول"
+subtitle: "المستخدمون والأصول: Agent Java SDK التكامل v0.3.0 والأمثلة والمعلمات ودلالات الاستجابة."
+slug: sdk/agent-sdk/java/users-assets
+canonical-url: https://docs.6mm.com/ar/sdk/agent-sdk/java/users-assets
+---
+
+يستهدف هذا الدليل **Agent Java SDK `v0.3.0`**، Java 8+، والعقد العام الموسوم. يتم تشغيل الأمثلة في الواجهة الخلفية للشريك بعد تهيئة `client` في [بداية سريعة](/ar/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## مثال المتطلبات الأساسية
+
+تشترك مقتطفات Java في هذه الواردات. قم بتهيئة `client` باستخدام البدء السريع واحصل على `platformUserId` من الرابط المحفوظ. يجب استبدال معرفات المستخدم/الطلب بالقيم الثابتة الخاصة بك.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span id="user-id-rules" data-sixmm-canonical-anchor="user-id-rules" aria-hidden="true"></span>
+
+## قواعد معرف المستخدم
+
+`platformUserId` هو 6MM معرف المستخدم الخارجي. وهو حاليًا رقم رقمي مكون من 10 أرقام
+سلسلة، على سبيل المثال:
+
+```text
+1188041528
+```
+
+قواعد:
+
+- قم بتخزينها كسلسلة، وليس كعدد صحيح.
+- ولا تولد منه أو تفك تشفيره أو تستنتج معنى منه.
+- استخدم معرف المستخدم الخاص بك من جانب الشريك كـ `agentUserId`.
+- استمر في العلاقة بين `agentUserId` و`platformUserId` و`agentOrderNo`.
+
+
+<span id="bind-user" data-sixmm-canonical-anchor="bind-user" aria-hidden="true"></span>
+
+## ربط المستخدم
+
+يقوم Bind بإنشاء أو جلب العلاقة بين مستخدم شريك و6MM
+مستخدم المنصة. يطلق عليه عندما يدخل المستخدم لأول مرة في تدفق التداول أو قبل
+النقل الأول إلى 6MM.
+
+```java
+import com.sixmm.agent.model.BindRequest;
+import com.sixmm.agent.model.BindResponse;
+
+BindResponse resp = client.bind(
+        BindRequest.of("agent-user-001")
+                .withUsername("alice")
+                .withExt("{\"source\":\"web\"}"));
+
+System.out.println(resp.platformUserId);
+System.out.println(resp.bindStatus);
+System.out.println(resp.isSimulatedUser);
+```
+
+حقول الطلب:
+
+| مجال | يكتب | مطلوب | وصف |
+| --- | --- | --- | --- |
+| `agentUserId` | string | نعم | معرف مستخدم فريد من جانب الشريك |
+| `username` | string | لا | اسم العرض من جانب الشريك يُستخدم كاسم مستخدم النظام الأساسي |
+| `ext` | string | لا | مجال التمديد. يوصى باستخدام سلسلة JSON |
+
+حقول الاستجابة:
+
+| مجال | يكتب | وصف |
+| --- | --- | --- |
+| `platformUserId` | string | 6MM معرف المستخدم الخارجي |
+| `bindStatus` | string | عادة `BOUND` |
+| `isSimulatedUser` | boolean | ما إذا كان هذا مستخدمًا محاكيًا |
+
+
+<span id="query-partner-account" data-sixmm-canonical-anchor="query-partner-account" aria-hidden="true"></span>
+
+## الاستعلام عن حساب الشريك
+
+```java
+import com.sixmm.agent.model.QueryAccountRequest;
+import com.sixmm.agent.model.QueryAccountResponse;
+
+QueryAccountResponse resp = client.queryAccount(QueryAccountRequest.of("USDT"));
+
+System.out.println(resp.agentCode);
+System.out.println(resp.agentStatus);
+resp.assets.forEach(asset -> {
+    System.out.println(asset.currency);
+    System.out.println(asset.depositBalance);
+});
+```
+
+عند غياب `currency`، يستخدم SDK `defaultCurrency`.
+
+
+<span id="query-user-assets" data-sixmm-canonical-anchor="query-user-assets" aria-hidden="true"></span>
+
+## الاستعلام عن أصول المستخدم
+
+```java
+import com.sixmm.agent.model.QueryUserAssetsRequest;
+import com.sixmm.agent.model.QueryUserAssetsResponse;
+
+QueryUserAssetsResponse resp = client.queryUserAssets(
+        QueryUserAssetsRequest.of("1188041528"));
+
+System.out.println(resp.walletBalance);
+System.out.println(resp.availableBalance);
+System.out.println(resp.version);
+```
+
+الحقول:
+
+| مجال | يكتب | وصف |
+| --- | --- | --- |
+| `walletBalance` | string | رصيد المحفظة |
+| `frozenMargin` | string | هامش متجمد |
+| `usedMargin` | string | الهامش المستخدم |
+| `availableBalance` | string | الرصيد المتاح |
+| `isolatedMargin` | string | هامش معزول |
+| `version` | int64 | نسخة الأصول |
+| `isSimulatedUser` | boolean | ما إذا كان هذا مستخدمًا محاكيًا |
+
+
+<span id="distinguish-the-three-wallets" data-sixmm-canonical-anchor="distinguish-the-three-wallets" aria-hidden="true"></span>
+
+### التمييز بين المحافظ الثلاث
+
+| محفظة | مصدر الرصيد | يستخدم |
+| --- | --- | --- |
+| محفظة المستخدم الخاصة بالتاجر | النظام المحاسبي الخاص بالتاجر | الرصيد المتاح للمستخدم على جانب التاجر |
+| تمويل المنصة | `queryUserAssets` من `funding` | أموال تداول الثواني والتحويل المتبادل للتمويل/العقد |
+| عقد المنصة | حقل أصول العقد `queryUserAssets` | هامش العقد الدائم والرصيد القابل للتحويل |
+
+`queryAccount` الاستعلام عن حساب هامش منصة التاجر، وليس محفظة مستخدم التاجر. لا تحتوي هذه الواجهة على معلمات `environment` ولا يمكن الاستعلام عنها كأصل مستخدم تمت محاكاته.
+
+الاستعلام عن محفظتي النظام الأساسي للمستخدمين المحاكيين:
+
+```java
+QueryUserAssetsResponse assets = client.queryUserAssets(
+        QueryUserAssetsRequest.of(platformUserId)
+                .withFunding()
+                .withEnvironment(ExecutionEnvironment.SIMULATED));
+```
+
+الواجهة: `POST /v1/agent/query-user-assets`. يتم طلب التمويل فقط عندما `includeFunding=true`; يتم استخدام دلالات الاستعلام عن أصول العقد الأصلي بشكل افتراضي.
+
+| مجالات الاستجابة | معنى |
+| --- | --- |
+| `walletBalance`، `availableBalance`، `frozenMargin`، `usedMargin`، `isolatedMargin` | المبالغ المتعلقة بمحفظة العقد |
+| `funding.assetCode` | حاليا USDT |
+| `funding.availableAmount`، `heldAmount`، `totalAmount` | التمويل المتاح والمشغول والمبلغ الإجمالي |
+| `funding.materialized` | هل تم تحقيق حساب التمويل؟ |
+| `environment` | يتم تكرار هذا الحقل عندما يتم تمرير البيئة بشكل صريح؛ الطلبات القديمة التي تحذف البيئة لا تُرجع هذا الحقل. |
+| `isSimulatedUser` | تصنيف الحساب؛ لا يمكن أن يحل محل اختيار بيئة التداول |
+
+يتم التعامل مع المبالغ كسلاسل أو `BigDecimal`، وليس `float`/`double`.
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## المصدر والأدلة ذات الصلة
+
+- [المصدر الرسمي v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [نظرة عامة على الاستعلام وترقيم الصفحات](/ar/sdk/agent-sdk/java/perpetual-queries)
+- [محفظة التمويل](/ar/sdk/agent-sdk/java/funding-wallet)
+- [دليل الترقية](/ar/sdk/agent-sdk/java/upgrade)

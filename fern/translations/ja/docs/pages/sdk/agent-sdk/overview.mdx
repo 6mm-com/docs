@@ -6,83 +6,99 @@ slug: sdk/agent-sdk/overview
 canonical-url: https://docs.6mm.com/ja/sdk/agent-sdk/overview
 ---
 
-この 6MM Agent SDK は、署名やリクエスト処理を一から実装せずに特権エージェント API を呼び出す必要があるパートナーバックエンドサービス向けです。統合はパートナー API シークレットを使用するため、ブラウザ、モバイル、公開デスクトップコードで動作してはなりません。
+6MM Agent SDK は、署名と要求処理を最初から実装せずに特権エージェント APIs を呼び出す必要があるパートナー バックエンド サービス用です。統合ではパートナー API のシークレットが使用されるため、ブラウザー、モバイル、またはパブリック デスクトップ コードで実行しないでください。
 
 <span id="when-to-use-the-agent-sdk" data-sixmm-canonical-anchor="when-to-use-the-agent-sdk" aria-hidden="true"></span>
 
-## いつAgent SDK を使うべきか
+## Agent SDK を使用する場合
 
-バックエンドがパートナーユーザーのバインド、承認されたワークフローを通じて資産を移動する、取引記録の照会、埋め込み取引エントリーURLの作成、ウェブフック通知の検証などが必要なときにAgent SDK を活用しましょう。以下の [Trading Widget SDK](/ja/sdk/trading-widget/overview) パートナーフロントエンドが取引インターフェースを表示する必要がある場合は別々に。
+バックエンドでパートナー ユーザーのバインド、承認されたワークフローによる資産の移動、取引記録のクエリ、埋め込み取引エントリ URL の作成、または webhook 通知の確認が必要な場合は、Agent SDK を使用します。を使用します。 [Trading Widget SDK](/ja/sdk/trading-widget/overview) パートナーのフロントエンドが取引インターフェイスを表示する必要がある場合は別途に。
 
 <span id="capabilities" data-sixmm-canonical-anchor="capabilities" aria-hidden="true"></span>
 
-## 機能
+## 能力
 
 | シナリオ | Java SDK | PHP SDK |
 | --- | --- | --- |
-| バインドユーザー | サポート | サポート |
-| 固定額の移転 | サポート | サポート |
-| 全員転送 | サポート | サポート |
-| 逆転送 | サポート | サポート |
-| クエリの順序 | サポート | サポート |
-| エントリーURL作成 | サポート | サポート |
-| ウェブフック検証 | サポート | サポート |
+| バインドユーザー | サポートされています | サポートされています |
+| 定額振込 | サポートされています | サポートされています |
+| 全力で転送 | サポートされています | サポートされています |
+| 逆転送 | サポートされています | サポートされています |
+| 転送オーダーのクエリ | サポートされています | サポートされています |
+| エントリを作成 URL | サポートされています | サポートされています |
+| Webhook 検証 | サポートされています | サポートされています |
 
 <span id="common-configuration" data-sixmm-canonical-anchor="common-configuration" aria-hidden="true"></span>
 
-## 一般的な構成
+## 共通構成
 
-| キー | 例 | 概要 |
+| 鍵 | 例 | 説明 |
 | --- | --- | --- |
-| baseUrl | `https://agent-api.6mm.com` | 6MM エージェント API サービス URL トレーリングスラッシュなしで。 |
+| baseUrl | `https://agent-api.6mm.com` | 6MM エージェント API サービス URL 末尾のスラッシュなし。 |
 | agentCode | AGENT001 | パートナーエージェントコード。 |
-| apiSecret | your-api-secret | API 署名の秘密はバックエンドにのみ保存されます。 |
-| defaultCurrency | USDT | 送金および口座 API のデフォルト通貨。 |
-| webhookUrl | https://partner.example.com/6mm/webhook | 6MMウェブフック通知のためのパートナーエンドポイント。 |
+| apiSecret | あなたの API シークレット | API 署名シークレットはバックエンドにのみ保存されます。 |
+| defaultCurrency | USDT | 送金とアカウントのデフォルト通貨 APIs。 |
+| webhookUrl | https://partner.example.com/6mm/webhook | 6MM webhook 通知のパートナー エンドポイント。 |
 
 <span id="typical-integration-flow" data-sixmm-canonical-anchor="typical-integration-flow" aria-hidden="true"></span>
 
-## 典型的な積分フロー
+## 一般的な統合フロー
 
-1. パートナーのフロントエンドがパートナー自身のアカウントシステムを通じてユーザーを認証します。
-2. パートナーバックエンドはユーザーを安定したパートナー側識別子にマッピングします。
-3. バックエンドは、`agentCode`と保護されたAPI を秘密にするAgent SDK を呼び出します。
-4. SDK が署名し、エージェントにリクエスト API 送る。
-5. バックエンドは返還されたビジネス識別子を保存し、後でウェブフックを冪等的に処理します。
-6. フロントエンドは必要な短命な結果またはエントリー認証のみを受け取ります。
+1. パートナー フロントエンドは、パートナー独自のアカウント システムを通じてユーザーを認証します。
+2. パートナー バックエンドは、ユーザーを安定したパートナー側の識別子にマップします。
+3. バックエンドは、`agentCode` と保護された API シークレットを使用して Agent SDK を呼び出します。
+4. SDK はエージェント API リクエストに署名して送信します。
+5. バックエンドは返されたビジネス識別子を保存し、後で webhooks 冪等に処理します。
+6. フロントエンドは、必要な有効期間の短い結果またはエントリ資格情報のみを受け取ります。
 
 <span id="choose-an-sdk" data-sixmm-canonical-anchor="choose-an-sdk" aria-hidden="true"></span>
 
-## SDK を選んでください
+## SDK を選択してください
 
 | バックエンドスタック | ここから始めましょう |
 | --- | --- |
-| Java | [Java SDK 概要](/ja/sdk/agent-sdk/java/overview) および [Java クイックスタート](/ja/sdk/agent-sdk/java/quick-start) |
-| PHP | [PHP SDK 概要](/ja/sdk/agent-sdk/php/overview) および [PHP クイックスタート](/ja/sdk/agent-sdk/php/quick-start) |
+| Java | [Java SDK 概要](/ja/sdk/agent-sdk/java/overview) そして [Java クイックスタート](/ja/sdk/agent-sdk/java/quick-start) |
+| PHP | [PHP SDK 概要](/ja/sdk/agent-sdk/php/overview) そして [PHP クイックスタート](/ja/sdk/agent-sdk/php/quick-start) |
 
 <span id="production-checklist" data-sixmm-canonical-anchor="production-checklist" aria-hidden="true"></span>
 
-## 生産チェックリスト
+## 製作チェックリスト
 
-- `apiSecret` をソースコードではなくバックエンドのシークレットマネージャから読み込む。
-- 開発、ステージング、制作の資格を分けておくこと。
-- 安定したパートナーユーザーマッピングと一意のビジネスオーダー識別子を使用すること。
-- タイムアウトリクエストのステータスを確認する際に元の識別子を保持すること。
-- ウェブフック署名の検証と処理済みイベントIDの保存。
-- ログからの秘密情報や署名を黒塗りしつつ、サポートのためにリクエストIDを保持すること。
+- ソース コードではなく、バックエンド シークレット マネージャーから `apiSecret` をロードします。
+- 開発、ステージング、実稼働の認証情報を分離してください。
+- 安定したパートナー ユーザー マッピングと一意の業務注文 ID を使用します。
+- タイムアウトしたリクエストのステータスを確認するときに、元の識別子を保持します。
+- webhook の署名を検証し、処理されたイベント ID を保存します。
+- サポート用のリクエスト ID を保持しながら、ログからシークレットと署名を編集します。
 
 <span id="next-steps" data-sixmm-canonical-anchor="next-steps" aria-hidden="true"></span>
 
-## 今後のステップ
+## 次のステップ
 
 <CardGroup cols={3}>
 <Card title="Java クイックスタート" icon="fa-brands fa-java" href="/ja/sdk/agent-sdk/java/quick-start">
-JavaバックエンドでAgent SDK をインストールして初期化してください。
+Java バックエンドに Agent SDK をインストールして初期化します。
 </Card>
 <Card title="PHP クイックスタート" icon="fa-brands fa-php" href="/ja/sdk/agent-sdk/php/quick-start">
-PHPバックエンドでAgent SDK をインストールして初期化してください。
+PHP バックエンドに Agent SDK をインストールして初期化します。
 </Card>
-<Card title="ウェブフックと冪等性" icon="fa-duotone fa-webhook" href="/ja/sdk/security/webhooks-idempotency">
-コールバックを確認し、重複したビジネス処理を防いでいます。
+<Card title="Webhooks & べき等性" icon="fa-duotone fa-webhook" href="/ja/sdk/security/webhooks-idempotency">
+コールバックを検証し、重複した業務処理を防止します。
 </Card>
 </CardGroup>
+
+<span id="java-sdk-v030-capabilities" data-sixmm-canonical-anchor="java-sdk-v030-capabilities" aria-hidden="true"></span>
+
+## Java SDK v0.3.0 の機能
+
+Java SDK には、ファンディング ウォレット、明示的な資金環境、6 つの永久データ クエリ、および法定基準レートが含まれるようになりました。 PHP の機能は、パートナーが提供するパッケージと比較してチェックする必要があります。 Java の追加は、PHP メソッドの一致を意味しません。
+
+| ビジネスワークフロー | Java v0.3.0 ガイド |
+| --- | --- |
+| 拘束力と契約/資金調達資産 | [ユーザーと資産](/ja/sdk/agent-sdk/java/users-assets) |
+| 契約の移転と移転命令の問い合わせ | [契約の移転](/ja/sdk/agent-sdk/java/contract-transfers) |
+| 資金送金と専用の回収クエリ | [資金調達ウォレット](/ja/sdk/agent-sdk/java/funding-wallet) |
+| 現在/過去の注文、約定、ポジション、元帳 | [永続的なクエリ](/ja/sdk/agent-sdk/java/perpetual-queries) |
+| 秒取引のリダイレクトと埋め込み | [秒取引](/ja/sdk/agent-sdk/java/seconds-trading) |
+| 生産と模擬資金 | [環境ガイド](/ja/sdk/agent-sdk/java/environments) |
+| 既存の Java 統合を更新しています | [v0.3.0 にアップグレードする](/ja/sdk/agent-sdk/java/upgrade) |

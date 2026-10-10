@@ -1,0 +1,171 @@
+---
+title: "用戶和資產"
+subtitle: "用戶和資產：Agent Java SDK v0.3.0 集成、示例、參數和響應語義。"
+slug: sdk/agent-sdk/java/users-assets
+canonical-url: https://docs.6mm.com/zh-TW/sdk/agent-sdk/java/users-assets
+---
+
+本指南針對 **Agent Java SDK `v0.3.0`**、Java 8+ 以及標記的公共合約。初始化 `client` 後在合作伙伴後端運行示例 [快速入門](/zh-TW/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## 先決條件示例
+
+Java 片段共享這些導入。使用快速啟動初始化 `client` 並從保存的綁定中獲取 `platformUserId`。示例用戶/訂單 ID 必須替換為您自己的持久值。
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span id="user-id-rules" data-sixmm-canonical-anchor="user-id-rules" aria-hidden="true"></span>
+
+## 用戶ID規則
+
+`platformUserId` 是 6MM 外部用戶 ID。目前它是一個 10 位數字
+字符串，例如：
+
+```text
+1188041528
+```
+
+規則：
+
+- 將其存儲為字符串，而不是整數。
+- 不要生成、解碼或從中推斷含義。
+- 使用您自己的合作伙伴端用戶 ID 作為 `agentUserId`。
+- 保留 `agentUserId`、`platformUserId` 和 `agentOrderNo` 之間的關係。
+
+
+<span id="bind-user" data-sixmm-canonical-anchor="bind-user" aria-hidden="true"></span>
+
+## 綁定用戶
+
+綁定創建或獲取合作伙伴用戶和 6MM 之間的關係
+平臺用戶。當用戶第一次進入交易流程時或交易結束之前調用它
+首先轉入6MM。
+
+```java
+import com.sixmm.agent.model.BindRequest;
+import com.sixmm.agent.model.BindResponse;
+
+BindResponse resp = client.bind(
+        BindRequest.of("agent-user-001")
+                .withUsername("alice")
+                .withExt("{\"source\":\"web\"}"));
+
+System.out.println(resp.platformUserId);
+System.out.println(resp.bindStatus);
+System.out.println(resp.isSimulatedUser);
+```
+
+請求字段：
+
+| 場地 | 類型 | 必需的 | 描述 |
+| --- | --- | --- | --- |
+| `agentUserId` | string | 是的 | 合作伙伴端唯一用戶ID |
+| `username` | string | 不 | 合作伙伴端顯示名稱用作平臺用戶的暱稱 |
+| `ext` | string | 不 | 擴展字段。推薦使用 JSON 字符串 |
+
+響應字段：
+
+| 場地 | 類型 | 描述 |
+| --- | --- | --- |
+| `platformUserId` | string | 6MM 外部用戶 ID |
+| `bindStatus` | string | 通常 `BOUND` |
+| `isSimulatedUser` | boolean | 這是否是模擬用戶 |
+
+
+<span id="query-partner-account" data-sixmm-canonical-anchor="query-partner-account" aria-hidden="true"></span>
+
+## 查詢合作伙伴賬戶
+
+```java
+import com.sixmm.agent.model.QueryAccountRequest;
+import com.sixmm.agent.model.QueryAccountResponse;
+
+QueryAccountResponse resp = client.queryAccount(QueryAccountRequest.of("USDT"));
+
+System.out.println(resp.agentCode);
+System.out.println(resp.agentStatus);
+resp.assets.forEach(asset -> {
+    System.out.println(asset.currency);
+    System.out.println(asset.depositBalance);
+});
+```
+
+當 `currency` 不存在時，SDK 使用 `defaultCurrency`。
+
+
+<span id="query-user-assets" data-sixmm-canonical-anchor="query-user-assets" aria-hidden="true"></span>
+
+## 查詢用戶資產
+
+```java
+import com.sixmm.agent.model.QueryUserAssetsRequest;
+import com.sixmm.agent.model.QueryUserAssetsResponse;
+
+QueryUserAssetsResponse resp = client.queryUserAssets(
+        QueryUserAssetsRequest.of("1188041528"));
+
+System.out.println(resp.walletBalance);
+System.out.println(resp.availableBalance);
+System.out.println(resp.version);
+```
+
+領域：
+
+| 場地 | 類型 | 描述 |
+| --- | --- | --- |
+| `walletBalance` | string | 錢包餘額 |
+| `frozenMargin` | string | 凍結保證金 |
+| `usedMargin` | string | 已用保證金 |
+| `availableBalance` | string | 可用餘額 |
+| `isolatedMargin` | string | 逐倉保證金 |
+| `version` | int64 | 資產版本 |
+| `isSimulatedUser` | boolean | 這是否是模擬用戶 |
+
+
+<span id="distinguish-the-three-wallets" data-sixmm-canonical-anchor="distinguish-the-three-wallets" aria-hidden="true"></span>
+
+### 區分三種錢包
+
+| 錢包 | 平衡源 | 使用 |
+| --- | --- | --- |
+| 商戶自己的用戶錢包 | 商戶自己的會計系統 | 用戶在商戶側的可用餘額 |
+| 平臺資金 | `queryUserAssets` `funding` | 秒交易資金及資金/合約相互轉賬 |
+| 平臺合約 | `queryUserAssets`的合約資產字段 | 永續合約保證金及可轉讓餘額 |
+
+`queryAccount`查詢的是商戶平臺保證金賬戶，不是商戶用戶錢包。該接口沒有`environment`參數，無法作為模擬用戶資產進行查詢。
+
+查詢模擬用戶的兩個平臺錢包：
+
+```java
+QueryUserAssetsResponse assets = client.queryUserAssets(
+        QueryUserAssetsRequest.of(platformUserId)
+                .withFunding()
+                .withEnvironment(ExecutionEnvironment.SIMULATED));
+```
+
+接口：`POST /v1/agent/query-user-assets`。僅在 `includeFunding=true` 時請求資金；默認使用原始合約資產查詢語義。
+
+| 響應字段 | 意義 |
+| --- | --- |
+| `walletBalance`、`availableBalance`、`frozenMargin`、`usedMargin`、`isolatedMargin` | 合約錢包相關金額 |
+| `funding.assetCode` | 目前 USDT |
+| `funding.availableAmount`，`heldAmount`，`totalAmount` | 可用資金、已佔用資金及總額 |
+| `funding.materialized` | 資金賬戶是否已經落實？ |
+| `environment` | 當顯式傳遞環境時，會回顯該字段；忽略環境的舊請求不會返回此字段。 |
+| `isSimulatedUser` | 賬戶分類；無法替代交易環境選擇 |
+
+金額按字符串或 `BigDecimal` 處理，而不是 `float`/`double`。
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## 來源及相關指南
+
+- [官方v0.3.0源碼](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [查詢概覽和分頁](/zh-TW/sdk/agent-sdk/java/perpetual-queries)
+- [資金錢包](/zh-TW/sdk/agent-sdk/java/funding-wallet)
+- [升級指南](/zh-TW/sdk/agent-sdk/java/upgrade)

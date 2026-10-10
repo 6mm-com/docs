@@ -1,0 +1,165 @@
+---
+title: "Integrasi Perdagangan Detik"
+subtitle: "Integrasi Perdagangan Detik: Agent Java SDK integrasi v0.3.0, contoh, parameter, dan semantik respons."
+slug: sdk/agent-sdk/java/seconds-trading
+canonical-url: https://docs.6mm.com/id/sdk/agent-sdk/java/seconds-trading
+---
+
+Panduan ini menargetkan **Agent Java SDK `v0.3.0`** dan Java 8+.
+
+<span id="prepare-identity-authentication-and-funds" data-sixmm-canonical-anchor="prepare-identity-authentication-and-funds" aria-hidden="true"></span>
+
+## Siapkan identitas, otentikasi dan dana
+
+Perdagangan detik menggunakan pengikatan pengguna dan otentikasi entri yang sama seperti perdagangan abadi. Ini menggunakan saldo Pendanaan; margin abadi menggunakan saldo Kontrak. Konfigurasikan produk/mode frontend dan lingkungan dana backend secara terpisah.
+
+Inisialisasi `client` menggunakan [Mulai Cepat](/id/sdk/agent-sdk/java/quick-start). Simpan pemetaan pengguna terikat dan dapatkan ID pengguna mitra dari sesi backend yang diautentikasi.
+
+<span id="redirect-entry" data-sixmm-canonical-anchor="redirect-entry" aria-hidden="true"></span>
+
+## Arahkan ulang entri
+
+```java
+import com.sixmm.agent.model.CreateEntryUrlRequest;
+import com.sixmm.agent.model.CreateEntryUrlResponse;
+
+CreateEntryUrlResponse entry = client.createEntryUrl(
+        CreateEntryUrlRequest.of("merchant-user-001")
+                .withRedirectPath("/zh-CN/up-down?tradingMode=demo")
+                .withReturnUrl("https://merchant.example/markets"));
+String webUrl = entry.webUrl;
+```
+
+SDK memanggil `POST /v1/agent/create-entry-url`. Kembalikan `webUrl` ke antarmuka mitra dan segera buka. `expireAt` menggunakan detik Unix. Tiket berumur pendek dan hanya sekali; memperoleh yang lain setelah habis masa berlakunya atau dikonsumsi.
+
+| Produk | Contoh jalur frontend | Dompet |
+| --- | --- | --- |
+| Atas/Bawah | `/zh-CN/up-down?tradingMode=real` atau `demo` | Pendanaan |
+| Tinggi/Rendah | `/zh-CN/high-low?tradingMode=real` atau `demo` | Pendanaan |
+| jaringan | `/zh-CN/grid-prediction?tradingMode=real` atau `demo` | Pendanaan |
+| Masa depan yang abadi | `/zh-CN/futures/BTCUSDT?tradingMode=real` atau `demo` | Kontrak |
+
+Gunakan rute frontend aktual yang disediakan oleh 6MM. `redirectPath` adalah jalur platform relatif yang dimulai dengan `/`; `returnUrl` adalah mitra mutlak HTTP/HTTPS URL. Tiket masuk mengautentikasi pengguna dan tidak melakukan transfer.
+
+<span id="embedded-entry" data-sixmm-canonical-anchor="embedded-entry" aria-hidden="true"></span>
+
+## Entri tertanam
+
+Gunakan aliran `partner-token` dan `tokenProvider` yang ada. Tidak ada token khusus prediksi. Buat Widget dengan `page` dan `tradingMode` yang diinginkan, dan gunakan `channelId` saat memanggil backend mitra.
+
+```java
+import com.sixmm.agent.model.CreateEmbedTokenRequest;
+import com.sixmm.agent.model.CreateEmbedTokenResponse;
+
+String channelId = "tw_example_channel";
+CreateEmbedTokenResponse auth = client.createEmbedToken(
+        CreateEmbedTokenRequest.of("merchant-user-001", channelId));
+String embedToken = auth.embedToken;
+long expireAt = auth.expireAt;
+```
+
+SDK memanggil `POST /v1/agent/create-embed-token`. `symbol` bersifat opsional; ia tidak memilih produk perdagangan detik. Pemilihan produk milik frontend. Token tidak memilih lingkungan dana atau mengubah saldo.
+
+<span id="complete-frontend-example" data-sixmm-canonical-anchor="complete-frontend-example" aria-hidden="true"></span>
+
+## Contoh frontend lengkap
+
+Opsi ini diverifikasi terhadap runtime publik Trading Widget `1.8.0` pada 10-10-2026. Versi widget dan Agent Java SDK bersifat independen.
+
+```html
+<div id="seconds-widget" style="width: 100%; height: 720px"></div>
+<script src="https://app.6mm.com/sdk/trading-widget/v1/index.js"></script>
+<script>
+  const page = 'up-down';
+  const tradingMode = 'demo';
+  const capabilities = TradingWidget.capabilities;
+  if (!capabilities?.partnerToken ||
+      !capabilities.pages?.includes(page) ||
+      !capabilities.tradingModes?.includes(tradingMode)) {
+    throw new Error('Trading Widget SDK does not support the requested page or mode');
+  }
+
+  const widget = TradingWidget.create('#seconds-widget', {
+    baseUrl: 'https://app.6mm.com',
+    page,
+    tradingMode,
+    theme: 'dark',
+    locale: 'zh-CN',
+    auth: {
+      mode: 'partner-token',
+      tokenProvider: async ({ channelId }) => {
+        // Partner-owned endpoint; derive the user from the backend session.
+        const response = await fetch('/api/seconds/embed-token', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ channelId }),
+        });
+        if (!response.ok) {
+          throw new Error('Failed to request embed token');
+        }
+        const result = await response.json();
+        if (typeof result.embedToken !== 'string' || !result.embedToken.trim() ||
+            !Number.isFinite(result.expireAt) || result.channelId !== channelId) {
+          throw new Error('Invalid embed token response');
+        }
+        return {
+          embedToken: result.embedToken,
+          expireAt: result.expireAt,
+          channelId: result.channelId,
+        };
+      },
+    },
+    onReady() {
+      console.log('Trading widget ready');
+    },
+    onError(error) {
+      console.error('Trading widget error', error.code);
+    },
+  });
+  window.addEventListener('beforeunload', () => widget.destroy());
+</script>
+```
+
+| Pilihan | Nilai-nilai | Arti |
+| --- | --- | --- |
+| `page` | `up-down`, `high-low`, `grid-prediction` | Halaman produk. |
+| `tradingMode` | `real`, `demo` | Defaultnya adalah `real`; ditetapkan secara eksplisit. |
+| `baseUrl` | `https://app.6mm.com` | Asal antarmuka platform; Widget membuat penyematannya URL. |
+
+<span id="partner-backend-response" data-sixmm-canonical-anchor="partner-backend-response" aria-hidden="true"></span>
+
+## Respons backend mitra
+
+`/api/seconds/embed-token` adalah titik akhir milik mitra, bukan 6MM API. Otentikasi sesi, turunkan `agentUserId` di sisi server dan panggil `createEmbedToken`. Kembalikan struktur tingkat atas ini:
+
+```json
+{
+  "embedToken": "short-one-time-token",
+  "expireAt": 1791590700,
+  "channelId": "tw_xxx"
+}
+```
+
+Gunakan `expireAt` respons Agen yang sebenarnya, bukan nilai ilustratif. Respons Agen tidak mengandung `channelId`; backend Anda menggemakan nilai permintaan saat ini. Jika API hasil pembungkus Anda adalah `data`, buka lapisan tersebut sebelum kembali dari tokenProvider. Tolak kegagalan bisnis daripada mengembalikan objek sukses yang tidak valid.
+
+Setiap inisialisasi atau pembaruan memperoleh token baru. Jangan pernah melakukan cache dan menukar token yang sama lagi, atau menempatkannya di URL. Gunakan kembali saluran instance yang sama selama perpanjangan; gunakan saluran baru setelah membuat ulang instance.
+
+<span id="match-the-funds-environment" data-sixmm-canonical-anchor="match-the-funds-environment" aria-hidden="true"></span>
+
+## Sesuaikan dengan lingkungan dana
+
+Frontend `demo` memerlukan simulasi permintaan dana dengan `environment=SIMULATED`. Frontend `real` memerlukan dana produksi. Baik `tradingMode` maupun pembuatan token tidak mengubah target dana backend.
+
+Saat berpindah pengguna atau mode perdagangan, hancurkan Widget lama dan buat instance baru. Kueri saldo Pendanaan, transfer dana, dan konfirmasikan hasil akhir melalui titik akhir status khusus Pendanaan sebelum memperlakukan pengguna sebagai didanai.
+
+Melihat [Dompet pendanaan](/id/sdk/agent-sdk/java/funding-wallet) Dan [Panduan lingkungan](/id/sdk/agent-sdk/java/environments).
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Sumber dan panduan terkait
+
+- [Sumber resmi v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Ikhtisar kueri dan penomoran halaman](/id/sdk/agent-sdk/java/perpetual-queries)
+- [Dompet pendanaan](/id/sdk/agent-sdk/java/funding-wallet)
+- [Panduan peningkatan](/id/sdk/agent-sdk/java/upgrade)

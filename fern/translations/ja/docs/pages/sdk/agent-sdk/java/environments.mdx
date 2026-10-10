@@ -1,0 +1,99 @@
+---
+title: "本番取引と模擬取引"
+subtitle: "本番取引と模擬取引: Agent Java SDK v0.3.0 の統合、例、パラメーター、および応答セマンティクス。"
+slug: sdk/agent-sdk/java/environments
+canonical-url: https://docs.6mm.com/ja/sdk/agent-sdk/java/environments
+---
+
+このガイドは、**Agent Java SDK `v0.3.0`** および Java 8 以降を対象としています。
+
+<span id="choose-both-the-frontend-mode-and-the-funds-environment" data-sixmm-canonical-anchor="choose-both-the-frontend-mode-and-the-funds-environment" aria-hidden="true"></span>
+
+## フロントエンドモードとファンド環境の両方を選択してください
+
+パートナー バックエンドの資金環境をフロントエンド取引モードとは別に設定します。バインディングおよびエントリ資格情報は共有されます。チケットやトークンの発行では、ウォレットの選択や資金の移動は行われません。
+
+| 構成 | 生産 | シミュレートされた |
+| --- | --- | --- |
+| バインディングと認証 | 共有ユーザー バインディングとワンタイム認証情報 | 同じ ID と認証 |
+| 新規送金とユーザー残高 | `environment` を省略するか、`PRODUCTION` を使用してください | 明示的に `SIMULATED` を使用してください |
+| 元の注文の回収に資金を提供する | 保存した元の環境を使用する | 保存した元の環境を使用する |
+| ウィジェット取引モード | `tradingMode=real` | `tradingMode=demo` |
+| フロントエンド HTTP/WS ターゲット | 6MM によって提供される生産ターゲット | 6MM によって提供されるシミュレートされたターゲット |
+| 6 つの永続データ クエリ | 生産データ | 環境セレクターはありません。これらのメソッドはシミュレートされたデータをクエリしません |
+
+`wallet-transfer-status` の場合、`environment` を省略すると、シミュレートされた注文を含む元の注文の保存された環境が使用されます。明示的に競合する環境は拒否されます。環境を保存し、操作を回復するときにそれを明示的に渡すことを好みます。
+
+`isSimulatedUser` はアカウントを説明します。新しいリクエストをシミュレートされたウォレットにルーティングしません。新しい資金リクエストで `environment` を省略しても、アカウント フラグが true の場合でも、プロダクションが選択されます。
+
+<span id="supported-java-request-models" data-sixmm-canonical-anchor="supported-java-request-models" aria-hidden="true"></span>
+
+## サポートされている Java リクエスト モデル
+
+これらのリクエストは `withEnvironment(ExecutionEnvironment.SIMULATED)` をサポートします:
+
+- `TransferRequest`, `TransferAllOutRequest`, `ReverseOrderRequest`.
+- `QueryOrderRequest`, `ListOrdersRequest`.
+- `QueryUserAssetsRequest`.
+- `WalletTransferRequest`, `WalletTransferQueryRequest`.
+
+`bind`、`queryAccount`、`createEntryUrl`、`createEmbedToken`、および 6 つの永続クエリ リクエスト モデルは、ファンド環境を選択しません。
+
+```java
+import com.sixmm.agent.model.ExecutionEnvironment;
+import com.sixmm.agent.model.QueryUserAssetsRequest;
+import com.sixmm.agent.model.QueryUserAssetsResponse;
+
+QueryUserAssetsResponse assets = client.queryUserAssets(
+        QueryUserAssetsRequest.of("1188041528")
+                .withFunding()
+                .withEnvironment(ExecutionEnvironment.SIMULATED));
+```
+
+を使用して `client` を初期化します [クイックスタート](/ja/sdk/agent-sdk/java/quick-start) 保存したバインディングのパブリック ユーザー ID を使用します。
+
+<span id="preserve-the-original-environment" data-sixmm-canonical-anchor="preserve-the-original-environment" aria-hidden="true"></span>
+
+## 元の環境を維持する
+
+資金リクエストを送信する前に、インターフェイス タイプ `agentOrderNo`、ユーザー ID および環境を保持します。ステータスのクエリ、リカバリ、調整、および webhook の処理中にその環境を維持します。タイムアウト後は、元の環境を省略したり、新しい注文番号を使用して再試行しないでください。
+
+資金調達/契約の転送は 1 つの環境内で行われます。模擬資金は生産資金にはなりません。別のパートナー側のシミュレートされたアカウンティングと、`SIM-` などの認識可能な注文プレフィックスを使用します。
+
+<span id="simulated-integration-sequence" data-sixmm-canonical-anchor="simulated-integration-sequence" aria-hidden="true"></span>
+
+## シミュレートされた統合シーケンス
+
+1. ユーザーをバインドし、パブリック プラットフォームのユーザー ID を保存します。
+2. クエリは明示的な `SIMULATED` でバランスをとり、必要に応じて Funding を含めます。
+3. 小規模のシミュレートされた資金移動を作成し、元の業務命令を永続化します。
+4. 専用の資金調達ステータス クエリで最終結果を確認します。
+5. `demo` モードでターゲット秒ページを開くか埋め込みます。
+6. 同じシミュレートされたウォレットにクエリを実行し、実際の送金額を調整します。
+7. 永久取引をテストするには、シミュレートされた資金をシミュレートされた契約に転送し、シミュレートされた先物フロントエンドを使用します。 6 つのパートナーの永続クエリでは、シミュレートされた取引履歴を検証できません。
+
+<span id="acceptance-checklist" data-sixmm-canonical-anchor="acceptance-checklist" aria-hidden="true"></span>
+
+## 受け入れチェックリスト
+
+| シナリオ | 検証すべき証拠 |
+| --- | --- |
+| 身元 | バインドされたユーザー マッピングが保存されます。別のパートナーのユーザーを照会することはできません。 |
+| 認証 | リダイレクトおよび埋め込みフローでは新しい認証情報が使用されます。署名してもファンド注文は作成されません。 |
+| 資金 | 双方は実際の金額と最終ステータスについて合意します。 |
+| 不明な結果 | リカバリでは、2 番目の転送を作成せずに元の注文が使用されます。 |
+| 環境隔離 | シミュレートされたバックエンドとフロントエンドのターゲットは一致します。生産バランスは影響を受けません。 |
+| クエリ | 必要なユーザー/カテゴリ フィルター、ミリ秒ウィンドウ、空のページ、カーソルが処理されます。 |
+| レート制限 | すべてのクエリ呼び出し元はスロットリングを共有し、失敗した元のページを再試行します。 |
+| ストレージ | 金額と ID は文字列のままです。エンティティ レコードはべき等に保存されます。 |
+
+運用に切り替える前に、バックエンドの資金目標とフロントエンド モードの両方を変更します。保留中の注文は元の環境で回復し続けます。
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## ソースおよび関連ガイド
+
+- [公式 v0.3.0 ソース](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [クエリの概要とページネーション](/ja/sdk/agent-sdk/java/perpetual-queries)
+- [資金調達ウォレット](/ja/sdk/agent-sdk/java/funding-wallet)
+- [アップグレードガイド](/ja/sdk/agent-sdk/java/upgrade)

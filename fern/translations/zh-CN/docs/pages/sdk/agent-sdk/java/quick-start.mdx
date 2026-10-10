@@ -1,53 +1,71 @@
 ---
 title: "Java 快速开始"
-subtitle: "在后端服务中安装并初始化 Java SDK。"
+subtitle: "Java 快速开始: Agent Java SDK v0.3.0 接入、示例、参数及响应说明。"
 slug: sdk/agent-sdk/java/quick-start
 canonical-url: https://docs.6mm.com/zh-CN/sdk/agent-sdk/java/quick-start
 ---
 
-<span id="install" data-sixmm-canonical-anchor="install" aria-hidden="true"></span>
+本文对应 **Agent Java SDK `v0.3.0`**、Java 8+ 与该标签的公开契约。示例在合作方后端运行；先按[快速开始](/zh-CN/sdk/agent-sdk/java/quick-start)初始化 `client`。
 
-## 安装
+<span data-sixmm-canonical-anchor="示例前提" aria-hidden="true"></span>
 
-公开 SDK 源码当前使用 `v0.1.1` 标签，对应 Maven 坐标如下：
+## 示例前提
+
+Java 示例共用以下导入。按快速开始初始化 `client`，从已保存的绑定取得 `platformUserId`。示例用户和订单 ID 必须替换为实际持久化值。
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span data-sixmm-canonical-anchor="依赖引入" aria-hidden="true"></span>
+
+## 依赖引入
+
+<span data-sixmm-canonical-anchor="maven-坐标" aria-hidden="true"></span>
+
+### Maven 坐标
+
+当前源码中的 Maven 坐标如下：
 
 ```xml
 <dependency>
     <groupId>com.sixmm.exchange.sdk</groupId>
     <artifactId>agent</artifactId>
-    <version>0.1.1</version>
+    <version>0.3.0</version>
 </dependency>
 ```
 
-GitHub 不是 Maven 依赖仓库。引用依赖前，先在本地安装对应标签的源码：
+<span data-sixmm-canonical-anchor="未发布到-maven-仓库时如何使用" aria-hidden="true"></span>
+
+### 未发布到 Maven 仓库时如何使用
+
+当前 GitHub 仓库只提供源码托管。接入方可以先通过 tag 安装到自己的本地 Maven 仓库：
 
 ```bash
 git clone https://github.com/6mm-com/agent-java-sdk.git
 cd agent-java-sdk
-git checkout v0.1.1
+git checkout v0.3.0
 mvn install
 ```
 
-> **团队构建**
->
-> CI、测试和生产构建应把确认后的构件发布到组织内部 Maven 仓库。生产上线前向 6MM 确认批准使用的版本。
+说明：GitHub 仓库只提供源码托管。仓库公开后，接入方可以 clone 源码并执行
+`git checkout v0.3.0 && mvn install` 安装到自己的本地 Maven 仓库，但不能仅凭 GitHub 仓库地址在
+`pom.xml` 中直接引用上面的依赖坐标。要让外部项目直接通过 Maven 引入，需要
+额外发布到 Maven 仓库，例如公司私服、Maven Central、GitHub Packages，或接入
+JitPack 这类基于 GitHub 构建的服务。
 
-源码和使用示例可在官方 Java SDK 仓库查看：
+已有项目参见 [旧 SDK 升级指南](https://github.com/6mm-com/agent-java-sdk/blob/v0.3.0/docs/merchant-integration.md#8-旧-sdk-升级)。安装与查阅接入说明均可使用稳定源码标签 `v0.3.0`。
 
-[6mm-com/agent-java-sdk](https://github.com/6mm-com/agent-java-sdk)
 
-<span id="before-you-start" data-sixmm-canonical-anchor="before-you-start" aria-hidden="true"></span>
-
-## 开始前准备
-
-- 向 6MM 确认生产 Agent API base URL。
-- apiSecret 只保存在后端密钥管理中。
-- 准备 platformUserId 与 agentUserId 的稳定映射。
-- 为 bind、transfer、order 和 webhook 流程开启结构化日志。
-
-<span id="initialize-client" data-sixmm-canonical-anchor="initialize-client" aria-hidden="true"></span>
+<span data-sixmm-canonical-anchor="初始化客户端" aria-hidden="true"></span>
 
 ## 初始化客户端
+
+<span data-sixmm-canonical-anchor="普通-java-项目" aria-hidden="true"></span>
+
+### 普通 Java 项目
 
 ```java
 import com.sixmm.agent.AgentClient;
@@ -61,32 +79,158 @@ AgentClient client = new AgentClient(AgentClientConfig.builder()
         .build());
 ```
 
-> **仅后端使用**
->
-> 不要在浏览器、移动端或桌面客户端中初始化 Agent SDK。Agent SDK 会签名高权限 Agent API 请求。
+<span data-sixmm-canonical-anchor="spring-boot-示例" aria-hidden="true"></span>
 
-<span id="example-transfer-funds-in" data-sixmm-canonical-anchor="example-transfer-funds-in" aria-hidden="true"></span>
-
-## 资金划入示例
+### Spring Boot 示例
 
 ```java
-TransferResponse resp = client.transfer(TransferRequest.fixed(
-        "AGT-ORDER-1001",
-        "agent-user-001",
-        Direction.IN,
-        "USDT",
-        "10.00"));
+import com.sixmm.agent.AgentClient;
+import com.sixmm.agent.AgentClientConfig;
+import java.time.Duration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class AgentSdkConfig {
+
+    @Bean
+    public AgentClient agentClient(AgentSdkProperties props) {
+        return new AgentClient(AgentClientConfig.builder()
+                .baseUrl(props.getBaseUrl())
+                .agentCode(props.getAgentCode())
+                .apiSecret(props.getApiSecret())
+                .defaultCurrency("USDT")
+                .timeout(Duration.ofSeconds(10))
+                .build());
+    }
+}
 ```
 
-每次划转请求都应使用唯一的合作方订单号。如果请求超时，请先查询原订单状态，再决定是否重试。
+建议业务项目通过环境变量或配置中心注入：
 
-<span id="next-steps" data-sixmm-canonical-anchor="next-steps" aria-hidden="true"></span>
+```properties
+agent.sdk.base-url=https://agent-api.6mm.com
+agent.sdk.agent-code=AGENT001
+agent.sdk.api-secret=${AGENT_API_SECRET}
+```
 
-## 下一步
 
-| 需求 | 下一页 |
-| --- | --- |
-| 签发 Trading Widget 凭据 | [创建 Embed Token](/zh-CN/sdk/agent-sdk/java/embed-token) |
-| 验证 6MM 回调 | [Webhook 与幂等](/zh-CN/sdk/security/webhooks-idempotency) |
-| 查看签名行为 | [密钥与签名](/zh-CN/sdk/security/secrets-signing) |
-| 排查接入问题 | [SDK 故障排查](/zh-CN/sdk/security/troubleshooting) |
+<span data-sixmm-canonical-anchor="绑定用户" aria-hidden="true"></span>
+
+## 绑定用户
+
+绑定用于建立代理商用户和 6MM 平台用户之间的关系。推荐在用户第一次进入交易场景或第一次充值到 6MM 前调用。
+
+```java
+import com.sixmm.agent.model.BindRequest;
+import com.sixmm.agent.model.BindResponse;
+
+BindResponse resp = client.bind(
+        BindRequest.of("agent-user-001")
+                .withUsername("alice")
+                .withExt("{\"source\":\"web\"}"));
+
+System.out.println(resp.platformUserId);
+System.out.println(resp.bindStatus);
+System.out.println(resp.isSimulatedUser);
+```
+
+<span data-sixmm-canonical-anchor="请求字段" aria-hidden="true"></span>
+
+### 请求字段
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `agentUserId` | string | 是 | 代理商侧用户唯一标识 |
+| `username` | string | 否 | 代理商侧用户展示名称，用作平台用户昵称 |
+| `ext` | string | 否 | 扩展信息，建议传 JSON 字符串 |
+
+<span data-sixmm-canonical-anchor="响应字段" aria-hidden="true"></span>
+
+### 响应字段
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `platformUserId` | string | 6MM 对外用户 ID |
+| `bindStatus` | string | 绑定状态，通常为 `BOUND` |
+| `isSimulatedUser` | boolean | 是否模拟用户 |
+
+
+<span data-sixmm-canonical-anchor="推荐业务流程" aria-hidden="true"></span>
+
+## 推荐业务流程
+
+<span data-sixmm-canonical-anchor="用户首次进入交易" aria-hidden="true"></span>
+
+### 用户首次进入交易
+
+```text
+1. 用户登录代理商站点
+2. 代理商后端用 agentUserId 调 bind
+3. 保存 agentUserId 与 platformUserId 绑定关系
+4. 用户点击进入交易
+5. 直接跳转：调用 createEntryUrl，浏览器打开 webUrl
+6. 内嵌交易：前端 Trading Widget 触发 tokenProvider，后端调用 createEmbedToken
+```
+
+<span data-sixmm-canonical-anchor="用户充值到-6mm" aria-hidden="true"></span>
+
+### 用户充值到 6MM
+
+```text
+1. 代理商生成唯一 agentOrderNo
+2. 调 transfer(Direction.IN)
+3. 如果返回 SUCCESS，更新订单成功
+4. 如果返回 PROCESSING，等待 Webhook 或轮询 queryOrder
+5. 如果返回 FAILED 或抛 AgentApiException，按失败处理
+```
+
+<span data-sixmm-canonical-anchor="用户从-6mm-提回代理商" aria-hidden="true"></span>
+
+### 用户从 6MM 提回代理商
+
+```text
+1. 代理商生成唯一 agentOrderNo
+2. 固定金额提回：transfer(Direction.OUT)
+3. 全部提回：transferAllOut
+4. 按 orderStatus、Webhook、queryOrder 确认最终状态
+```
+
+<span data-sixmm-canonical-anchor="来源与相关指南" aria-hidden="true"></span>
+
+## 来源与相关指南
+
+- [官方 v0.3.0 源码](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [合约查询与分页](/zh-CN/sdk/agent-sdk/java/perpetual-queries)
+- [Funding 钱包](/zh-CN/sdk/agent-sdk/java/funding-wallet)
+- [升级指南](/zh-CN/sdk/agent-sdk/java/upgrade)
+<span data-sixmm-canonical-anchor="21-异常处理" aria-hidden="true"></span>
+
+## 21. 异常处理
+
+SDK 异常分为两类：
+
+| 异常 | 场景 | 处理建议 |
+| --- | --- | --- |
+| `AgentApiException` | HTTP 非 2xx，或 agent 响应 `code != 0` | 读取 `getHttpStatus()`、`getCode()`、`getResponseBody()`，按业务失败处理 |
+| `AgentSdkException` | 网络、序列化、配置、签名计算异常 | 记录日志并按系统异常处理 |
+
+示例：
+
+```java
+import com.sixmm.agent.AgentApiException;
+import com.sixmm.agent.AgentSdkException;
+
+try {
+    TransferResponse resp = client.transfer(TransferRequest.fixed(
+            "AGT-ORDER-1001", "agent-user-001", Direction.IN, "USDT", "10.00"));
+    // 根据 resp.orderStatus 更新本地订单
+} catch (AgentApiException e) {
+    // 业务失败或 HTTP 错误
+    log.warn("6mm agent api rejected request, httpStatus={}, code={}, body={}",
+            e.getHttpStatus(), e.getCode(), e.getResponseBody());
+} catch (AgentSdkException e) {
+    // SDK 本地错误或网络错误
+    log.error("6mm agent sdk request failed", e);
+}
+```

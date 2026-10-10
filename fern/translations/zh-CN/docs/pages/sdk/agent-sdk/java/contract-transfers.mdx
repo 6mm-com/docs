@@ -1,0 +1,255 @@
+---
+title: "合约资金划转与对账"
+subtitle: "合约资金划转与对账: Agent Java SDK v0.3.0 接入、示例、参数及响应说明。"
+slug: sdk/agent-sdk/java/contract-transfers
+canonical-url: https://docs.6mm.com/zh-CN/sdk/agent-sdk/java/contract-transfers
+---
+
+本文对应 **Agent Java SDK `v0.3.0`**、Java 8+ 与该标签的公开契约。示例在合作方后端运行；先按[快速开始](/zh-CN/sdk/agent-sdk/java/quick-start)初始化 `client`。
+
+<span data-sixmm-canonical-anchor="示例前提" aria-hidden="true"></span>
+
+## 示例前提
+
+Java 示例共用以下导入。按快速开始初始化 `client`，从已保存的绑定取得 `platformUserId`。示例用户和订单 ID 必须替换为实际持久化值。
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span data-sixmm-canonical-anchor="固定金额划转" aria-hidden="true"></span>
+
+## 固定金额划转
+
+固定金额划转使用 `transfer`。`Direction.IN` 表示从代理商侧转入 6MM，`Direction.OUT` 表示从 6MM 转出到代理商侧。
+
+金额必须使用字符串或 `BigDecimal`，不要使用 `double` 或 `float`。
+
+<span data-sixmm-canonical-anchor="使用-agentuserid-划转" aria-hidden="true"></span>
+
+### 使用 agentUserId 划转
+
+```java
+import com.sixmm.agent.model.Direction;
+import com.sixmm.agent.model.TransferRequest;
+import com.sixmm.agent.model.TransferResponse;
+
+TransferResponse resp = client.transfer(TransferRequest.fixed(
+        "AGT-ORDER-1001",
+        "agent-user-001",
+        Direction.IN,
+        "USDT",
+        "10.00"));
+
+System.out.println(resp.orderNo);
+System.out.println(resp.orderStatus);
+System.out.println(resp.agentUserId);
+System.out.println(resp.platformUserId);
+```
+
+<span data-sixmm-canonical-anchor="使用-platformuserid-划转" aria-hidden="true"></span>
+
+### 使用 platformUserId 划转
+
+```java
+TransferResponse resp = client.transfer(TransferRequest.fixedByPlatformUserId(
+        "AGT-ORDER-1002",
+        "1188041528",
+        Direction.OUT,
+        "USDT",
+        "5.00"));
+```
+
+<span data-sixmm-canonical-anchor="同时传-agentuserid-和-platformuserid" aria-hidden="true"></span>
+
+### 同时传 agentUserId 和 platformUserId
+
+如果同时传两个 ID，服务端会校验它们必须指向同一个绑定用户。
+
+```java
+TransferRequest req = TransferRequest
+        .fixed("AGT-ORDER-1003", "agent-user-001", Direction.IN, "USDT", "20.00")
+        .withPlatformUserId("1188041528");
+
+TransferResponse resp = client.transfer(req);
+```
+
+<span data-sixmm-canonical-anchor="请求字段" aria-hidden="true"></span>
+
+### 请求字段
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `agentOrderNo` | string | 是 | 代理商侧订单号，必须全局唯一 |
+| `agentUserId` | string | 条件必填 | 与 `platformUserId` 二选一 |
+| `platformUserId` | string | 条件必填 | 与 `agentUserId` 二选一 |
+| `direction` | enum | 是 | `IN` 或 `OUT` |
+| `currency` | string | 否 | 空值时使用 `defaultCurrency` |
+| `amount` | string | 是 | 金额字符串 |
+
+<span data-sixmm-canonical-anchor="响应字段" aria-hidden="true"></span>
+
+### 响应字段
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `orderNo` | string | 平台返回的订单号 |
+| `orderStatus` | string | `SUCCESS` / `FAILED` / `PROCESSING` 等 |
+| `agentUserId` | string | 代理商用户 ID |
+| `platformUserId` | string | 6MM 对外用户 ID |
+
+
+<span data-sixmm-canonical-anchor="订单确认与幂等" aria-hidden="true"></span>
+
+## 订单确认与幂等
+
+SDK 调用 `transfer` 后，agent 服务会在主路径同步调用交易核心。大多数情况下，接口返回时已经拿到交易核心的同步结果。
+
+| 返回结果 | 含义 | 代理商处理建议 |
+| --- | --- | --- |
+| `SUCCESS` | 划转已成功 | 更新本地订单为成功 |
+| `FAILED` | 划转被拒绝或失败 | 保存失败原因，必要时展示给用户 |
+| `PROCESSING` | 交易核心超时或网络异常，结果待确认 | 不要重复换订单号重试，使用 Webhook 或 `queryOrder` 查询最终状态 |
+
+幂等要求：
+
+- 同一笔业务只使用一个 `agentOrderNo`。
+- 如果 HTTP 超时或网络异常，优先用相同 `agentOrderNo` 查询订单，不要直接生成新订单号重复提交。
+- Webhook 可能因重试被推送多次，代理商侧必须按幂等键去重。
+
+
+<span data-sixmm-canonical-anchor="一键全部划出" aria-hidden="true"></span>
+
+## 一键全部划出
+
+一键全部划出用于把用户在 6MM 侧可划出的余额全部转回代理商侧。
+
+```java
+import com.sixmm.agent.model.TransferAllOutRequest;
+import com.sixmm.agent.model.TransferAllOutResponse;
+
+TransferAllOutResponse resp = client.transferAllOut(
+        TransferAllOutRequest.of("AGT-ORDER-2001", "agent-user-001", "USDT"));
+
+System.out.println(resp.orderStatus);
+System.out.println(resp.amount);
+```
+
+使用 `platformUserId`：
+
+```java
+TransferAllOutResponse resp = client.transferAllOut(
+        TransferAllOutRequest.byPlatformUserId("AGT-ORDER-2002", "1188041528", "USDT"));
+```
+
+响应里的 `amount` 是实际划出金额。
+
+
+<span data-sixmm-canonical-anchor="冲正" aria-hidden="true"></span>
+
+## 冲正
+
+冲正用于对已成功的划转订单发起反向处理。常见场景包括代理商本地订单异常、人工对账需要回滚等。
+
+```java
+import com.sixmm.agent.model.ReverseOrderRequest;
+import com.sixmm.agent.model.ReverseOrderResponse;
+
+ReverseOrderResponse resp = client.reverse(ReverseOrderRequest.of(
+        "AGT-ORDER-1001",
+        "REV-ORDER-1001",
+        "partner order rollback"));
+
+System.out.println(resp.orderStatus);
+```
+
+字段说明：
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `origOrderNo` | string | 是 | 原始划转订单号 |
+| `reverseOrderNo` | string | 是 | 冲正订单号，必须全局唯一 |
+| `reverseReason` | string | 是 | 冲正原因 |
+
+注意：
+
+- 冲正不是普通取消订单，只适用于服务端支持的反向处理场景。
+- 冲正也应按订单号做幂等。
+- 原订单被冲正后，Webhook 可能推送原订单的 `REVERSED` 终态。
+
+
+<span data-sixmm-canonical-anchor="查单" aria-hidden="true"></span>
+
+## 查单
+
+```java
+import com.sixmm.agent.model.OrderQueryType;
+import com.sixmm.agent.model.QueryOrderRequest;
+import com.sixmm.agent.model.QueryOrderResponse;
+
+QueryOrderResponse resp = client.queryOrder(
+        QueryOrderRequest.of("AGT-ORDER-1001", OrderQueryType.TRANSFER_IN));
+
+System.out.println(resp.status);
+System.out.println(resp.failReason);
+```
+
+`orderType` 支持：
+
+- `TRANSFER_IN`
+- `TRANSFER_OUT`
+
+响应字段：
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `orderType` | string | 订单类型 |
+| `orderNo` | string | 代理商订单号 |
+| `status` | string | 订单状态 |
+| `direction` | string | `IN` / `OUT` |
+| `transferMode` | string | `FIXED_AMOUNT` / `ALL_OUT` |
+| `currency` | string | 币种 |
+| `amount` | string | 金额 |
+| `agentUserId` | string | 代理商用户 ID |
+| `platformUserId` | string | 6MM 对外用户 ID |
+| `failReason` | string | 失败原因 |
+| `createdAt` | string | 创建时间 |
+| `completedAt` | string | 完成时间 |
+
+
+<span data-sixmm-canonical-anchor="订单列表" aria-hidden="true"></span>
+
+## 订单列表
+
+```java
+import com.sixmm.agent.model.ListOrdersRequest;
+import com.sixmm.agent.model.ListOrdersResponse;
+
+ListOrdersRequest req = ListOrdersRequest.page(1, 20);
+req.orderType = "TRANSFER_IN";
+req.status = "SUCCESS";
+req.startTime = "2026-06-01T00:00:00Z";
+req.endTime = "2026-06-16T00:00:00Z";
+
+ListOrdersResponse resp = client.listOrders(req);
+
+System.out.println(resp.total);
+resp.orders.forEach(order -> System.out.println(order.orderNo));
+```
+
+分页建议：
+
+- `page` 从 1 开始。
+- `pageSize` 建议不超过 100。
+- 对账任务建议按时间窗口分页拉取，并以 `orderNo` 去重。
+
+<span data-sixmm-canonical-anchor="来源与相关指南" aria-hidden="true"></span>
+
+## 来源与相关指南
+
+- [官方 v0.3.0 源码](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [合约查询与分页](/zh-CN/sdk/agent-sdk/java/perpetual-queries)
+- [Funding 钱包](/zh-CN/sdk/agent-sdk/java/funding-wallet)
+- [升级指南](/zh-CN/sdk/agent-sdk/java/upgrade)

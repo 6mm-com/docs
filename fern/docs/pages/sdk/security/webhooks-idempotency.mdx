@@ -96,3 +96,13 @@ Review the complete backend integration workflow.
 Investigate rejected signatures, repeated events, and pending operations.
 </Card>
 </CardGroup>
+
+<span data-sixmm-canonical-anchor="funding-and-environment-boundaries" aria-hidden="true"></span>
+
+## Funding and environment boundaries
+
+The original Contract transfer webhook and `queryOrder` flow do not automatically apply to Funding. Confirm Funding operations using `queryWalletTransfer` and the original order environment. Funding uses `status`; original Contract transfer responses use `orderStatus`. A successful HTTP response or `code=0` does not by itself prove funds moved.
+
+Explicit simulated Contract transfer notifications include `environment=SIMULATED`. Verify the raw body first, then check the user, amount, order identity and environment against the saved local business order.
+
+[Funding recovery guide](/sdk/agent-sdk/java/funding-wallet) · [Environment guide](/sdk/agent-sdk/java/environments)

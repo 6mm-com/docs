@@ -1,80 +1,95 @@
 ---
 title: "SDK 통합 문제 해결"
-subtitle: "지원 요청을 진행하기 전에 반드시 Trading Widget, Agent SDK, 서명, webhook, 타임아웃, 환경 문제를 진단하세요."
+subtitle: "지원 요청을 에스컬레이션하기 전에 Trading Widget, Agent SDK, 서명, webhook, 시간 초과 및 환경 문제를 진단하세요."
 slug: sdk/security/troubleshooting
 canonical-url: https://docs.6mm.com/ko/sdk/security/troubleshooting
 ---
 
-실패한 작업의 환경, 타임스탬프, 비즈니스 식별자부터 시작하세요. 구조화된 검사는 보통 구성 문제와 인증, 네트워크, 비동기 처리 문제를 분리합니다.
+실패한 작업에 대한 환경, 타임스탬프, 비즈니스 식별자로 시작하세요. 구조화된 검사는 일반적으로 구성 문제를 인증, 네트워크 및 비동기 처리 문제와 분리합니다.
 
 <span id="diagnostic-order" data-sixmm-canonical-anchor="diagnostic-order" aria-hidden="true"></span>
 
 ## 권장 진단 순서
 
-1. 영향을 받은 환경과 기본 URL 확인.
-2. UTC 시간 범위와 첫 번째 실패 요청을 기록합니다.
-3. 모듈을 식별합니다: Trading Widget, Agent SDK, REST API, WebSocket, 또는 webhook.
-4. 요청 ID, 파트너 사용자 ID, `agentOrderNo`, 주문 ID, webhook 이벤트 ID를 캡처합니다.
+1. 영향을 받는 환경과 베이스 URL 를 확인하세요.
+2. UTC 시간 범위와 첫 번째 실패한 요청을 기록합니다.
+3. 모듈을 식별합니다: Trading Widget, Agent SDK, REST API, WebSocket 또는 webhook.
+4. 요청 ID, 파트너 사용자 ID, `agentOrderNo`, 주문 ID 또는 webhook 이벤트 ID를 캡처합니다.
 5. 최근 코드, 자격 증명, IP 화이트리스트 또는 배포 변경 사항을 확인하세요.
-6. 가장 작은 안전한 테스트 케이스로 번식한다.
+6. 가장 작은 안전 테스트 케이스로 재현합니다.
 
 <span id="trading-widget-issues" data-sixmm-canonical-anchor="trading-widget-issues" aria-hidden="true"></span>
 
-## Trading Widget 문제점
+## Trading Widget 문제
 
-| 증상 | 원인 중 유력한 | 수정 |
+| 징후 | 가능한 원인 | 고치다 |
 | --- | --- | --- |
-| iFrame이 파트너 로컬 도메인을 요청합니다 | baseUrl 없어졌어 | 패스 baseUrl: 'https://app.6mm.com'. |
-| 아이프레임은 보이지 않거나 매우 짧습니다 | 부모 컨테이너는 높이가 없습니다 | 용기 높이나 패스 높이를 설정하세요. |
-| token_provider_missing | 파트너 토큰 모드에는 제공자가 없습니다 | 권한을 추가하세요.tokenProvider. |
-| auth_exchange_failed | 유효하지 않거나, 만료되었거나, 맞지 않는 임베드 토큰 | 백엔드 토큰 응답과 channelId확인해 보세요. |
+| iframe은 파트너 로컬 도메인을 요청합니다. | baseUrl이 누락되었습니다. | baseUrl: 'https://app.6mm.com'를 전달합니다. |
+| iframe이 보이지 않거나 매우 짧습니다. | 상위 컨테이너에는 높이가 없습니다. | 컨테이너 높이 또는 통과 높이를 설정합니다. |
+| token_provider_missing | 파트너 토큰 모드에는 공급자가 없습니다. | 인증을 추가합니다.tokenProvider. |
+| 인증 교환 실패 | 유효하지 않거나 만료되었거나 일치하지 않는 삽입 토큰 | 백엔드 토큰 응답과 channelId을 확인하세요. |
 
 <span id="agent-sdk-issues" data-sixmm-canonical-anchor="agent-sdk-issues" aria-hidden="true"></span>
 
-## Agent SDK 문제점
+## Agent SDK 문제
 
-| 증상 | 원인 중 유력한 | 수정 |
+| 징후 | 가능한 원인 | 고치다 |
 | --- | --- | --- |
-| 서명 거부됨 | 잘못된 비밀, 시계 지연, 또는 수동으로 서명된 필드를 변경한 경우입니다 | 서명 필드를 생성하고 서버 시간을 동기화하는 SDK |
-| 중복 자금 이동 위험 | 타임아웃 후 새 주문 번호 사용 | 먼저 원본 agentOrderNo 로 쿼리하세요. |
-| PROCESSING 실패로 취급받는다 | 대기 중인 주 오해가 | webhook 기다리거나 queryOrder에게 전화하세요. |
-| Webhook 여러 번 처리되었습니다 | 놔등성 없는 재시도 행동 | 딙등성 키와 최종 상태 검사를 추가하세요. |
+| 서명이 거부됨 | 잘못된 비밀, 시계 드리프트 또는 수동으로 변경된 서명된 필드 | SDK가 서명 필드를 생성하고 서버 시간을 동기화하도록 합니다. |
+| 중복 자금 이동 위험 | 시간 초과 후 사용된 새 주문 번호 | 먼저 원본 agentOrderNo으로 쿼리하세요. |
+| PROCESSING 실패로 처리됨 | 보류 상태를 잘못 이해함 | webhook을 기다리거나 queryOrder에 전화하세요. |
+| Webhook가 여러 번 처리되었습니다. | 멱등성 없는 재시도 동작 | 멱등성 키 및 최종 상태 확인을 추가합니다. |
 
 <span id="evidence-to-capture" data-sixmm-canonical-anchor="evidence-to-capture" aria-hidden="true"></span>
 
-## 증거 수집
+## 캡처할 증거
 
-| 통합 | 유용한 증거 |
+| 완성 | 유용한 증거 |
 | --- | --- |
-| Trading Widget | 페이지 URL, SDK 버전 경로, 브라우저 콘솔, 실패한 네트워크 요청, `onError` 페이로드, 컨테이너 크기 등이 포함됩니다. |
-| Agent SDK | SDK 언어/버전, 기본 URL, UTC 타임스탬프, 요청 ID, `agentOrderNo`, 응답 코드, 그리고 정제된 로그를 포함합니다. |
-| Webhook | 전달 시간, 이벤트 또는 비즈니스 키, 서명 검증 결과, 처리 상태, 그리고 정제된 원시 해시. |
-| REST API | 메서드, 경로, 환경, 요청 ID, 응답 코드, 그리고 정제된 매개변수. |
+| Trading Widget | 페이지 URL, SDK 버전 경로, 브라우저 콘솔, 실패한 네트워크 요청, `onError` 페이로드 및 컨테이너 크기. |
+| Agent SDK | SDK 언어/버전, 기본 URL, UTC 타임스탬프, 요청 ID, `agentOrderNo`, 응답 코드 및 삭제된 로그입니다. |
+| Webhook | 배달 시간, 이벤트 또는 비즈니스 키, 서명 유효성 검사 결과, 처리 상태 및 삭제된 원시 본문 해시입니다. |
+| REST API | 메서드, 경로, 환경, 요청 ID, 응답 코드 및 삭제된 매개변수입니다. |
 
-진단 검사에 비밀번호, 접근 토큰, API 비밀, 완전한 서명, 개인 키, 또는 편집되지 않은 개인 데이터를 절대 포함하지 마세요.
+비밀번호, 액세스 토큰, API 비밀, 전체 서명, 개인 키 또는 수정되지 않은 개인 데이터를 진단에 포함하지 마세요.
 
 <span id="before-escalating" data-sixmm-canonical-anchor="before-escalating" aria-hidden="true"></span>
 
-## 상황을 악화시키기 전
+## 에스컬레이션하기 전에
 
-- 작업이 안전하다고 문서화되어 있을 때만 재시도합니다.
-- 타임아웃 후에는 새 식별자를 생성하지 않고 원래 비즈니스 식별자를 쿼리합니다.
-- 시스템 클럭 및 자격 증명 환경에서 서명 오류를 확인한다.
-- 첫 번째 실패와 이후 재시도 결과를 보존합니다.
-- 다음 [지원 요청 템플릿](/ko/resources/support-request-template) 완전하고 검열된 보고서를 보내기 위해서였다.
+- 작업이 재시도해도 안전하다고 문서화된 경우에만 재시도하세요.
+- 시간 초과 후에는 새 식별자를 만드는 대신 원래 비즈니스 식별자를 쿼리하세요.
+- 서명 오류가 있는지 시스템 시계와 자격 증명 환경을 확인하세요.
+- 첫 번째 실패와 이후의 재시도 결과를 유지합니다.
+- 사용 [지원 요청 템플릿](/ko/resources/support-request-template) 완전하고 수정된 보고서를 보내려면
 
 <span id="related-docs" data-sixmm-canonical-anchor="related-docs" aria-hidden="true"></span>
 
 ## 관련 문서
 
 <CardGroup cols={3}>
-<Card title="Trading Widget 퀵 스타트" icon="fa-duotone fa-chart-line" href="/ko/sdk/trading-widget/quick-start">
-스크립트 로딩, 컨테이너 크기, 구성, 콜백 여부를 확인하세요.
+<Card title="Trading Widget 빠른 시작" icon="fa-duotone fa-chart-line" href="/ko/sdk/trading-widget/quick-start">
+스크립트 로딩, 컨테이너 크기, 구성 및 콜백을 확인합니다.
 </Card>
-<Card title="비밀과 서명" icon="fa-duotone fa-shield-keyhole" href="/ko/sdk/security/secrets-signing">
-Agent SDK 신원 정보, 시계, 서명된 필드를 확인하세요.
+<Card title="비밀 및 서명" icon="fa-duotone fa-shield-keyhole" href="/ko/sdk/security/secrets-signing">
+Agent SDK 자격 증명, 시계 및 서명된 필드를 확인하세요.
 </Card>
-<Card title="Webhooks 및 등등성" icon="fa-duotone fa-webhook" href="/ko/sdk/security/webhooks-idempotency">
-콜백 검증과 중복 이벤트 처리를 검토하세요.
+<Card title="Webhooks & 멱등성" icon="fa-duotone fa-webhook" href="/ko/sdk/security/webhooks-idempotency">
+콜백 확인 및 중복 이벤트 처리를 검토하세요.
 </Card>
 </CardGroup>
+
+<span id="java-v030-diagnostics" data-sixmm-canonical-anchor="java-v030-diagnostics" aria-hidden="true"></span>
+
+## Java v0.3.0 진단
+
+| 징후 | 확인 및 복구 |
+| --- | --- |
+| 자금 요청에 알 수 없는 결과가 있습니다. | 원본 `agentOrderNo`을 유지하세요. 원래 환경에서 `queryWalletTransfer`를 호출하세요. `queryOrder`를 사용하지 마세요. |
+| 시뮬레이션 UI에 예상치 못한 자금이 표시됨 | 백엔드 `environment`와 별도로 프런트엔드 `tradingMode`를 확인하세요. 계정 `isSimulatedUser`는 요청을 라우팅하지 않습니다. |
+| 쿼리 오류 `6905` | 공유 파트너 할당량 사용을 중단한 다음 동일한 커서를 다시 시도하고 SDK을 통해 필터링합니다. |
+| 쿼리 오류 `6904` | 동시 쿼리를 줄이고 시간 창을 좁힙니다. 지속되는 경우 지원팀에 문의하세요. |
+| 유효하지 않거나 만료된 커서 | 동일한 고정 기록 창을 다시 시작하고 저장된 기록을 중복 제거합니다. |
+| 새로운 Java 메서드가 누락되었습니다. | 공개 태그 `v0.3.0`와 비교하여 해결된 Maven 아티팩트를 확인하세요. 아티팩트 정책에 따라 충돌하는 종속성을 제거합니다. |
+
+[쿼리 및 오류 참조](/ko/sdk/agent-sdk/java/perpetual-queries) · [업그레이드 가이드](/ko/sdk/agent-sdk/java/upgrade)

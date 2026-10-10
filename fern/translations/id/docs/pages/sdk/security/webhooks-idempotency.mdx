@@ -1,99 +1,109 @@
 ---
-title: "Verifikasi & Idempotensi Tanda Tangan Webhook"
-subtitle: "Verifikasi webhook Agen 6MM dengan badan permintaan mentah dan proses retry, timeout, serta event berulang tanpa tindakan bisnis yang duplikat."
+title: "Webhook Verifikasi & Idempotensi Tanda Tangan"
+subtitle: "Verifikasi 6MM Agen webhooks dengan isi permintaan mentah dan proses percobaan ulang, batas waktu, dan kejadian berulang tanpa tindakan bisnis duplikat."
 slug: sdk/security/webhooks-idempotency
 canonical-url: https://docs.6mm.com/id/sdk/security/webhooks-idempotency
 ---
 
-Webhook memberi tahu backend mitra tentang perubahan status bisnis asinkron. Karena pengiriman dapat dicoba ulang, setiap penerima harus memverifikasi tanda tangan sebelum mem-parse data tepercaya dan harus memproses peristiwa secara idempotensial.
+Webhooks memberi tahu backend mitra tentang perubahan status bisnis asinkron. Karena pengiriman dapat dicoba ulang, setiap penerima harus memverifikasi tanda tangan sebelum menguraikan data tepercaya dan harus memproses peristiwa tersebut secara idempoten.
 
 <span id="webhook-headers" data-sixmm-canonical-anchor="webhook-headers" aria-hidden="true"></span>
 
-## Header Webhook
+## Webhook header
 
-| Header | Deskripsi |
+| Tajuk | Keterangan |
 | --- | --- |
-| X-Agent-Timestamp | Timestamp Unix dalam hitungan detik. |
-| X-Agent-Nonce | Perlindungan tayangan ulang nonce. |
-| tanda tangan agen x | HMAC- tanda tanganSHA256 . |
+| X-Agen-Stempel Waktu | Stempel waktu Unix dalam hitungan detik. |
+| X-Agen-Nonce | Nonce perlindungan pemutaran ulang. |
+| X-Agen-Tanda Tangan | HMAC-SHA256 tanda tangan. |
 
 ```text
 timestamp + nonce + rawBody
 ```
 
-Gunakan body permintaan mentah yang diterima secara tepat selama HTTP saat merekonstruksi nilai yang ditandatangani. Mengurai dan menyeriakan ulang JSON terlebih dahulu dapat mengubah urutan ruang kosong atau field dan menghasilkan tanda tangan yang berbeda.
+Gunakan isi permintaan mentah persis yang diterima lebih dari HTTP saat merekonstruksi nilai yang ditandatangani. Mengurai dan membuat serial ulang JSON terlebih dahulu dapat mengubah spasi atau urutan bidang dan menghasilkan tanda tangan yang berbeda.
 
 <span id="verification-flow" data-sixmm-canonical-anchor="verification-flow" aria-hidden="true"></span>
 
 ## Alur verifikasi
 
-1. Baca timestamp, nonce, dan header tanda tangan.
-2. Tangkap badan permintaan mentah yang tidak dimodifikasi.
+1. Baca stempel waktu, nonce, dan header tanda tangan.
+2. Tangkap isi permintaan mentah yang tidak dimodifikasi.
 3. Bangun `timestamp + nonce + rawBody`.
-4. Hitung HMAC-SHA256 dengan mitra API rahasia.
-5. Bandingkan tanda tangan yang dihitung dan diterima menggunakan perbandingan waktu konstan.
-6. Terapkan timestamp-freshness dan nonce-reuse yang disetujui.
-7. Analisis dan proses event hanya setelah verifikasi berhasil.
+4. Hitung HMAC-SHA256 dengan rahasia API mitra.
+5. Bandingkan tanda tangan yang dihitung dan diterima menggunakan perbandingan waktu yang konstan.
+6. Terapkan pemeriksaan kesegaran stempel waktu dan nonce-reuse yang disetujui.
+7. Parsing dan proses acara hanya setelah verifikasi berhasil.
 
-Ketika verifikator Agent SDK resmi tersedia, gunakan itu daripada mempertahankan kode penandatanganan independen.
+Jika pemverifikasi Agent SDK resmi tersedia, gunakanlah pemverifikasi tersebut alih-alih mempertahankan kode penandatanganan independen.
 
 <span id="order-idempotency" data-sixmm-canonical-anchor="order-idempotency" aria-hidden="true"></span>
 
-## Idempotensi urutan
+## Idempotensi tatanan
 
 | Kasus | Penanganan |
 | --- | --- |
-| Permintaan transfer awal | Buat satu agentOrderNoyang unik secara global. |
-| HTTP timeout | Query agentOrderNo asli sebelum membuat yang baru. |
-| Respons PROCESSING | Tunggu status webhook atau urutan kueri. |
-| Webhook berulang | Deduplikasi berdasarkan kunci idempotensi dan status akhir. |
+| Permintaan transfer awal | Buat satu agentOrderNo yang unik secara global. |
+| HTTP batas waktu habis | Kueri agentOrderNo asli sebelum membuat yang baru. |
+| PROCESSING tanggapan | Tunggu webhook atau menanyakan status pesanan. |
+| Berulang webhook | Hapus duplikat berdasarkan kunci idempotensi dan status akhir. |
 
 <span id="recommended-idempotency-record" data-sixmm-canonical-anchor="recommended-idempotency-record" aria-hidden="true"></span>
 
 ## Catatan idempotensi yang direkomendasikan
 
-Simpan cukup informasi untuk mengenali pengiriman berulang dan pulihkan dengan aman:
+Simpan informasi yang cukup untuk mengenali pengiriman berulang dan memulihkan dengan aman:
 
-| Lapangan | Tujuan |
+| Bidang | Tujuan |
 | --- | --- |
-| Kunci acara atau bisnis | Mengidentifikasi notifikasi atau operasi secara unik. |
-| Nomor pesanan mitra | Menghubungkan event ke permintaan asli. |
-| Hash payload | Membantu mengidentifikasi muatan berulang yang bertentangan. |
-| Status pemrosesan saat ini | Distinguishes yang diterima, diproses, berhasil, dan gagal dalam pekerjaan. |
-| Status bisnis akhir | Mencegah aksi terminal diterapkan dua kali. |
-| Timestamp yang diproses | Mendukung kebijakan investigasi dan retensi. |
+| Kunci acara atau bisnis | Secara unik mengidentifikasi notifikasi atau operasi. |
+| Nomor pesanan mitra | Menghubungkan acara ke permintaan awal. |
+| Hash muatan | Membantu mengidentifikasi muatan berulang yang saling bertentangan. |
+| Status pemrosesan saat ini | Membedakan pekerjaan yang diterima, diproses, berhasil, dan gagal. |
+| Status bisnis akhir | Mencegah tindakan terminal diterapkan dua kali. |
+| Stempel waktu yang diproses | Mendukung kebijakan investigasi dan penyimpanan. |
 
-Commit catatan perubahan bisnis dan idempotensi dalam transaksi yang sama jika memungkinkan. Peristiwa berulang harus mengembalikan hasil yang sudah diketahui, bukan menerapkan saldo, pesanan, atau perubahan pengguna lagi.
+Komit perubahan bisnis dan catatan idempotensi dalam transaksi yang sama jika memungkinkan. Peristiwa yang berulang harus mengembalikan hasil yang sudah diketahui alih-alih menerapkan kembali saldo, pesanan, atau perubahan pengguna.
 
 <span id="timeout-and-retry-rule" data-sixmm-canonical-anchor="timeout-and-retry-rule" aria-hidden="true"></span>
 
-## Aturan timeout dan percobaan ulang
+## Aturan batas waktu dan coba lagi
 
-Timeout HTTP tidak membuktikan bahwa permintaan asli gagal. Query operasi menggunakan `agentOrderNo`asli, atau tunggu webhook-nya, sebelum memutuskan apakah tindakan lain diperlukan. Membuat nomor order bisnis baru setelah setiap timeout dapat menyebabkan pergerakan dana duplikat.
+Batas waktu HTTP tidak membuktikan bahwa permintaan awal gagal. Kueri operasi menggunakan `agentOrderNo` asli, atau tunggu webhook, sebelum memutuskan apakah tindakan lain diperlukan. Membuat nomor pesanan bisnis baru setiap kali habis dapat menyebabkan pergerakan dana duplikat.
 
 <span id="production-checklist" data-sixmm-canonical-anchor="production-checklist" aria-hidden="true"></span>
 
 ## Daftar periksa produksi
 
-- Verifikasi tanda tangan sebelum JSON parsing atau pemrosesan bisnis.
-- Menjaga badan mentah secara independen dari muatan yang telah diparse.
-- Tolak permintaan yang sudah usang atau diputar ulang sesuai dengan kebijakan integrasi yang telah disetujui.
-- Membuat pemrosesan acara aman untuk pengiriman berulang maupun di luar urutan.
-- Catat event ID, nomor pesanan mitra, hasil pemrosesan, dan waktu permintaan.
-- Menyusun rahasia dan nilai tanda tangan dari log dan lampiran dukungan.
+- Verifikasi tanda tangan sebelum JSON penguraian atau pemrosesan bisnis.
+- Pertahankan tubuh mentah secara terpisah dari muatan yang diurai.
+- Tolak permintaan yang sudah usang atau diputar ulang sesuai dengan kebijakan integrasi yang disetujui.
+- Jadikan pemrosesan acara aman untuk pengiriman berulang dan tidak sesuai pesanan.
+- Catat ID peristiwa, nomor pesanan mitra, hasil pemrosesan, dan waktu permintaan.
+- Redaksikan rahasia dan nilai tanda tangan dari log dan lampiran dukungan.
 
 <span id="related-docs" data-sixmm-canonical-anchor="related-docs" aria-hidden="true"></span>
 
 ## Dokumen terkait
 
 <CardGroup cols={3}>
-<Card title="Rahasia & Penandatanganan HMAC" icon="fa-duotone fa-shield-keyhole" href="/id/sdk/security/secrets-signing">
-Lindungi rahasia API yang digunakan untuk verifikasi permintaan dan webhook.
+<Card title="Rahasia & HMAC Penandatanganan" icon="fa-duotone fa-shield-keyhole" href="/id/sdk/security/secrets-signing">
+Lindungi rahasia API yang digunakan untuk permintaan dan webhook verifikasi.
 </Card>
 <Card title="Agent SDK Ikhtisar" icon="fa-duotone fa-server" href="/id/sdk/agent-sdk/overview">
 Tinjau alur kerja integrasi backend secara lengkap.
 </Card>
-<Card title="SDK Pemecahan Masalah" icon="fa-duotone fa-screwdriver-wrench" href="/id/sdk/security/troubleshooting">
+<Card title="SDK Pemecahan masalah" icon="fa-duotone fa-screwdriver-wrench" href="/id/sdk/security/troubleshooting">
 Selidiki tanda tangan yang ditolak, kejadian berulang, dan operasi yang tertunda.
 </Card>
 </CardGroup>
+
+<span id="funding-and-environment-boundaries" data-sixmm-canonical-anchor="funding-and-environment-boundaries" aria-hidden="true"></span>
+
+## Batasan pendanaan dan lingkungan
+
+Alur transfer Kontrak asli webhook dan `queryOrder` tidak secara otomatis berlaku untuk Pendanaan. Konfirmasikan operasi Pendanaan menggunakan `queryWalletTransfer` dan lingkungan pesanan asli. Pendanaan menggunakan `status`; tanggapan transfer kontrak asli menggunakan `orderStatus`. Respons HTTP yang berhasil atau `code=0` tidak dengan sendirinya membuktikan dana telah dipindahkan.
+
+Pemberitahuan transfer Kontrak yang disimulasikan secara eksplisit mencakup `environment=SIMULATED`. Verifikasi isi mentahnya terlebih dahulu, lalu periksa pengguna, jumlah, identitas pesanan, dan lingkungan terhadap pesanan bisnis lokal yang disimpan.
+
+[Panduan pemulihan pendanaan](/id/sdk/agent-sdk/java/funding-wallet) · [Panduan lingkungan](/id/sdk/agent-sdk/java/environments)

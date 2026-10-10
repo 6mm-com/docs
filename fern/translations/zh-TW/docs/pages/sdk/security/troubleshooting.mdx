@@ -1,87 +1,95 @@
 ---
-title: "SDK 整合故障排除"
-subtitle: "在升級支援請求前，先診斷 Trading Widget、 Agent SDK、簽署、webhook、逾時及環境問題。"
+title: "SDK 集成故障排除"
+subtitle: "在升級支持請求之前診斷 Trading Widget、Agent SDK、簽名、webhook、超時和環境問題。"
 slug: sdk/security/troubleshooting
 canonical-url: https://docs.6mm.com/zh-TW/sdk/security/troubleshooting
 ---
 
-從失敗操作的環境、時間戳及商業識別碼開始。結構化檢查通常能將配置問題與認證、網路及非同步處理問題區分開來。
+從失敗操作的環境、時間戳和業務標識符開始。結構化檢查通常將配置問題與身份驗證、網絡和異步處理問題分開。
 
 <span id="diagnostic-order" data-sixmm-canonical-anchor="diagnostic-order" aria-hidden="true"></span>
 
-## 建議診斷順序
+## 推薦的診斷順序
 
-1. 確認受影響的環境與基地 URL。
-2. 記錄 UTC 時間範圍及第一次失敗的請求。
-3. 識別模組： Trading Widget、 Agent SDK、 REST API、 WebSocket或webhook。
-4. 擷取請求ID、合作夥伴用戶ID、 `agentOrderNo`、訂單ID或Webhook事件ID。
-5. 檢查近期程式碼、憑證、 IP 白名單或部署變更。
-6. 以最小安全測試案例繁殖。
+1. 確認受影響的環境和基地URL。
+2. 記錄 UTC 時間範圍和第一個失敗的請求。
+3. 識別模塊：Trading Widget、Agent SDK、REST API、WebSocket 或 webhook。
+4. 捕獲請求 ID、合作伙伴用戶 ID、`agentOrderNo`、訂單 ID 或 webhook 事件 ID。
+5. 檢查最近的代碼、憑據、IP 白名單或部署更改。
+6. 使用最小的安全測試用例進行重現。
 
 <span id="trading-widget-issues" data-sixmm-canonical-anchor="trading-widget-issues" aria-hidden="true"></span>
 
 ## Trading Widget 問題
 
-| 症狀 | 可能的原因 | 修正 |
+| 症狀 | 可能的原因 | 使固定 |
 | --- | --- | --- |
-| iframe 請求合作夥伴本地網域 | baseUrl 不見了 | 傳 baseUrl：「https://app.6mm.com」。 |
-| iframe 是隱形或非常短的 | 母容器沒有高度 | 設定容器高度或通道高度。 |
-| token_provider_missing | 夥伴標記模式沒有提供者 | 新增授權。tokenProvider。 |
-| auth_exchange_failed | 無效、過期或不匹配的嵌入令牌 | 請檢查後端的 token 回應和 channelId。 |
+| iframe 請求合作伙伴本地域 | baseUrl 缺失 | 通過baseUrl：'https://app.6mm.com'。 |
+| iframe 不可見或非常短 | 父容器沒有高度 | 設置容器高度或通道高度。 |
+| token_provider_missing | 合作伙伴令牌模式沒有提供商 | 添加授權。tokenProvider。 |
+| auth_exchange_failed | 嵌入令牌無效、過期或不匹配 | 檢查後端令牌響應和 channelId。 |
 
 <span id="agent-sdk-issues" data-sixmm-canonical-anchor="agent-sdk-issues" aria-hidden="true"></span>
 
 ## Agent SDK 問題
 
-| 症狀 | 可能的原因 | 修正 |
+| 症狀 | 可能的原因 | 使固定 |
 | --- | --- | --- |
-| 簽名被拒絕 | 錯誤的秘密、時鐘漂移，或是手動更改簽名欄位 | 讓 SDK 產生簽名欄位並同步伺服器時間。 |
-| 重複資金流動風險 | 超時後使用新訂單號碼 | 請先按原始 agentOrderNo 查詢。 |
-| PROCESSING 被視為失敗 | 待審狀態被誤解 | 等 webhook 或打電話給 queryOrder。 |
-| Webhook 處理了多次 | 無冪等性重試行為 | 新增冪等性鍵與最終狀態檢查。 |
+| 簽名被拒絕 | 錯誤的秘密、時鐘漂移或手動更改的簽名字段 | 讓 SDK 生成簽名字段並同步服務器時間。 |
+| 資金重複流動風險 | 超時後使用新訂單號 | 先按原文agentOrderNo查詢。 |
+| PROCESSING 被視為失敗 | 待處理狀態被誤解 | 等待webhook或致電queryOrder。 |
+| Webhook 已處理多次 | 無冪等性的重試行為 | 添加冪等性密鑰和最終狀態檢查。 |
 
 <span id="evidence-to-capture" data-sixmm-canonical-anchor="evidence-to-capture" aria-hidden="true"></span>
 
-## 要捕捉的證據
+## 需要捕捉的證據
 
-| 整合 | 有用的證據 |
+| 一體化 | 有用的證據 |
 | --- | --- |
-| Trading Widget | 頁面 URL、 SDK 版本路徑、瀏覽器主控台、失敗的網路請求、 `onError` 有效載荷，以及容器尺寸。 |
-| Agent SDK | SDK 語言/版本、基礎 URL、 UTC 時間戳、請求 ID、 `agentOrderNo`、回應代碼，以及經過消毒的日誌。 |
-| Webhook | 交付時間、事件或商業金鑰、簽章驗證結果、處理狀態，以及經過消毒的原始雜湊。 |
-| REST API | 方法、路徑、環境、請求ID、回應代碼及淨化參數。 |
+| Trading Widget | 頁面 URL、SDK 版本路徑、瀏覽器控制台、失敗的網絡請求、`onError` 負載和容器尺寸。 |
+| Agent SDK | SDK 語言/版本、基本 URL、UTC 時間戳、請求 ID、`agentOrderNo`、響應代碼和清理日誌。 |
+| Webhook | 交付時間、事件或業務密鑰、簽名驗證結果、處理狀態和經過淨化的原始主體哈希。 |
+| REST API | 方法、路徑、環境、請求 ID、響應代碼和已清理的參數。 |
 
-診斷中切勿包含密碼、存取權杖、 API 秘密、完整簽名、私鑰或未經遮蔽的個人資料。
+切勿在診斷中包含密碼、訪問令牌、API 機密、完整簽名、私鑰或未經編輯的個人數據。
 
 <span id="before-escalating" data-sixmm-canonical-anchor="before-escalating" aria-hidden="true"></span>
 
-## 在升級之前
+## 升級之前
 
-- 只有當操作被記錄為安全可重試時才可重試。
-- 逾時後，查詢原始商業識別碼，而非建立新的。
-- 確認系統時鐘與憑證環境是否有簽章錯誤。
-- 保留第一次失敗及後續重試結果。
-- 使用[支援請求模板]（/resources/support-request-template）傳送完整且已塗黑的報告。
+- 僅當該操作被記錄為可以安全重試時才重試。
+- 超時後，查詢原始業務標識符而不是創建新業務標識符。
+- 確認系統時鐘和憑證環境是否存在簽名錯誤。
+- 保留第一次失敗和任何以後重試的結果。
+- 使用 [支持請求模板](/zh-TW/resources/support-request-template) 發送完整的、經過編輯的報告。
 
 <span id="related-docs" data-sixmm-canonical-anchor="related-docs" aria-hidden="true"></span>
 
-## 相關文件
+## 相關文檔
 
 <CardGroup cols={3}>
 <Card title="Trading Widget 快速入門" icon="fa-duotone fa-chart-line" href="/zh-TW/sdk/trading-widget/quick-start">
-檢查腳本載入、容器大小、設定及回調。
+驗證腳本加載、容器大小、配置和回調。
 </Card>
 <Card title="秘密與簽名" icon="fa-duotone fa-shield-keyhole" href="/zh-TW/sdk/security/secrets-signing">
-檢查 Agent SDK 憑證、時鐘和簽名欄位。
+檢查 Agent SDK 憑據、時鐘和簽名字段。
 </Card>
-<Card title="Webhook 與冪等性" icon="fa-duotone fa-webhook" href="/zh-TW/sdk/security/webhooks-idempotency">
-檢視回撥驗證與重複事件處理。
+<Card title="Webhooks & 冪等性" icon="fa-duotone fa-webhook" href="/zh-TW/sdk/security/webhooks-idempotency">
+檢查回調驗證和重複事件處理。
 </Card>
 </CardGroup>
-{/* sixmm-localized-link-repair:start */}
-<span id="localized-page-links" data-sixmm-canonical-anchor="localized-page-links" aria-hidden="true"></span>
 
-## 相關頁面
+<span id="java-v030-diagnostics" data-sixmm-canonical-anchor="java-v030-diagnostics" aria-hidden="true"></span>
 
-- [技術支援申請範本](/zh-TW/resources/support-request-template)
-{/* sixmm-localized-link-repair:end */}
+## Java v0.3.0 診斷
+
+| 症狀 | 檢查與恢復 |
+| --- | --- |
+| 資金請求結果未知 | 保留原來的`agentOrderNo`；使用原始環境調用 `queryWalletTransfer`。不要使用`queryOrder`。 |
+| 模擬 UI 顯示意外資金 | 與後端 `environment` 分開檢查前端 `tradingMode`；帳戶 `isSimulatedUser` 不路由請求。 |
+| 查詢錯誤`6905` | 停止使用共享合作伙伴配額，然後重試相同的游標並通過 SDK 進行篩選。 |
+| 查詢錯誤`6904` | 減少併發查詢，縮小時間窗口；如果持續存在，請聯繫支持人員。 |
+| 游標無效或過期 | 重新啟動相同的固定歷史窗口並刪除重複的保存記錄。 |
+| 缺少新的 Java 方法 | 根據公共標籤 `v0.3.0` 檢查已解析的 Maven 工件；根據您的工件策略刪除衝突的依賴項。 |
+
+[查詢及錯誤參考](/zh-TW/sdk/agent-sdk/java/perpetual-queries) · [升級指南](/zh-TW/sdk/agent-sdk/java/upgrade)

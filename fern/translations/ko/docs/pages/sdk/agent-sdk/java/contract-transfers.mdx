@@ -1,0 +1,260 @@
+---
+title: "계약 이전 및 조정"
+subtitle: "계약 이전 및 조정: Agent Java SDK v0.3.0 통합, 예시, 매개변수 및 응답 의미 체계."
+slug: sdk/agent-sdk/java/contract-transfers
+canonical-url: https://docs.6mm.com/ko/sdk/agent-sdk/java/contract-transfers
+---
+
+이 가이드는 **Agent Java SDK `v0.3.0`**, Java 8+ 및 태그된 공개 계약을 대상으로 합니다. 예제는 `client`를 초기화한 후 파트너 백엔드에서 실행됩니다. [빠른 시작](/ko/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## 예시 전제조건
+
+Java 조각은 이러한 가져오기를 공유합니다. 빠른 시작을 사용하여 `client`를 초기화하고 저장된 바인딩에서 `platformUserId`를 가져옵니다. 예시 사용자/주문 ID는 고유한 지속 값으로 대체되어야 합니다.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span id="fixed-amount-transfer" data-sixmm-canonical-anchor="fixed-amount-transfer" aria-hidden="true"></span>
+
+## 고정금액 이체
+
+고정 금액 이체에는 `transfer`을 사용하세요. `Direction.IN`는 전송을 의미합니다.
+파트너 플랫폼에서 6MM로 이동합니다. `Direction.OUT`는 6MM에서 전송을 의미합니다.
+파트너 플랫폼으로 돌아갑니다.
+
+금액에는 문자열이나 `BigDecimal`를 사용하세요. `double` 또는 `float`를 사용하지 마세요.
+
+<span id="transfer-by-agentuserid" data-sixmm-canonical-anchor="transfer-by-agentuserid" aria-hidden="true"></span>
+
+### `agentUserId`로 전송
+
+```java
+import com.sixmm.agent.model.Direction;
+import com.sixmm.agent.model.TransferRequest;
+import com.sixmm.agent.model.TransferResponse;
+
+TransferResponse resp = client.transfer(TransferRequest.fixed(
+        "AGT-ORDER-1001",
+        "agent-user-001",
+        Direction.IN,
+        "USDT",
+        "10.00"));
+
+System.out.println(resp.orderNo);
+System.out.println(resp.orderStatus);
+System.out.println(resp.agentUserId);
+System.out.println(resp.platformUserId);
+```
+
+<span id="transfer-by-platformuserid" data-sixmm-canonical-anchor="transfer-by-platformuserid" aria-hidden="true"></span>
+
+### `platformUserId`로 전송
+
+```java
+TransferResponse resp = client.transfer(TransferRequest.fixedByPlatformUserId(
+        "AGT-ORDER-1002",
+        "1188041528",
+        Direction.OUT,
+        "USDT",
+        "5.00"));
+```
+
+<span id="provide-both-ids" data-sixmm-canonical-anchor="provide-both-ids" aria-hidden="true"></span>
+
+### 두 ID 모두 제공
+
+두 ID가 모두 제공되면 서비스는 두 ID가 동일한 ID를 가리키는지 확인합니다.
+바인딩된 사용자.
+
+```java
+TransferRequest req = TransferRequest
+        .fixed("AGT-ORDER-1003", "agent-user-001", Direction.IN, "USDT", "20.00")
+        .withPlatformUserId("1188041528");
+
+TransferResponse resp = client.transfer(req);
+```
+
+요청 필드:
+
+| 필드 | 유형 | 필수의 | 설명 |
+| --- | --- | --- | --- |
+| `agentOrderNo` | string | 예 | 전 세계적으로 고유한 파트너 주문 번호 |
+| `agentUserId` | string | 조건부로 | `platformUserId`가 없는 경우 필수 |
+| `platformUserId` | string | 조건부로 | `agentUserId`가 없는 경우 필수 |
+| `direction` | 열거형 | 예 | `IN` 또는 `OUT` |
+| `currency` | string | 아니요 | 부재 시 `defaultCurrency`부터 채워짐 |
+| `amount` | string | 예 | 소수점 문자열 |
+
+응답 필드:
+
+| 필드 | 유형 | 설명 |
+| --- | --- | --- |
+| `orderNo` | string | 플랫폼 주문 번호 |
+| `orderStatus` | string | `SUCCESS`, `FAILED`, `PROCESSING` 등 |
+| `agentUserId` | string | 파트너 측 사용자 ID |
+| `platformUserId` | string | 6MM 외부 사용자 ID |
+
+
+<span id="order-confirmation-and-idempotency" data-sixmm-canonical-anchor="order-confirmation-and-idempotency" aria-hidden="true"></span>
+
+## 주문 확인 및 멱등성
+
+`transfer`이 호출된 후 에이전트 서비스는 동기적으로 거래를 호출합니다.
+메인 경로에 코어가 있습니다. 대부분의 경우 API 응답에는 이미
+동기식 거래 핵심 결과.
+
+| 결과 | 의미 | 파트너 활동 |
+| --- | --- | --- |
+| `SUCCESS` | 전송 성공 | 지역 주문을 성공으로 표시 |
+| `FAILED` | 전송이 거부되었거나 실패했습니다. | 실패 이유를 저장하고 적절한 경우 표시 |
+| `PROCESSING` | 트레이딩 코어 시간 초과 또는 네트워크 불확실성 | 새로운 주문 번호로 재시도하지 마세요. webhook을 기다리거나 `queryOrder`에 전화하세요. |
+
+멱등성 요구 사항:
+
+- 하나의 비즈니스 트랜잭션에 하나의 `agentOrderNo`을 사용합니다.
+- HTTP 시간이 초과되거나 네트워크에 장애가 발생하면 먼저 동일한 `agentOrderNo`를 쿼리하세요.
+- Webhooks을(를) 다시 시도할 수 있습니다. 멱등성 키로 중복을 제거합니다.
+
+
+<span id="transfer-all-out" data-sixmm-canonical-anchor="transfer-all-out" aria-hidden="true"></span>
+
+## 모두 밖으로 전송
+
+`transferAllOut`는 사용자의 출금 가능한 6MM측 잔액을 다시
+파트너 플랫폼.
+
+```java
+import com.sixmm.agent.model.TransferAllOutRequest;
+import com.sixmm.agent.model.TransferAllOutResponse;
+
+TransferAllOutResponse resp = client.transferAllOut(
+        TransferAllOutRequest.of("AGT-ORDER-2001", "agent-user-001", "USDT"));
+
+System.out.println(resp.orderStatus);
+System.out.println(resp.amount);
+```
+
+`platformUserId` 작성자:
+
+```java
+TransferAllOutResponse resp = client.transferAllOut(
+        TransferAllOutRequest.byPlatformUserId("AGT-ORDER-2002", "1188041528", "USDT"));
+```
+
+응답의 `amount`은 실제 전송된 금액입니다.
+
+
+<span id="reverse-order" data-sixmm-canonical-anchor="reverse-order" aria-hidden="true"></span>
+
+## 역순
+
+Reverse는 백엔드가 성공할 때 성공적인 전송 주문을 보상하는 데 사용됩니다.
+역방향 흐름을 지원합니다. 일반적인 사례에는 파트너 현지 주문 예외가 포함됩니다.
+또는 수동 조정 롤백.
+
+```java
+import com.sixmm.agent.model.ReverseOrderRequest;
+import com.sixmm.agent.model.ReverseOrderResponse;
+
+ReverseOrderResponse resp = client.reverse(ReverseOrderRequest.of(
+        "AGT-ORDER-1001",
+        "REV-ORDER-1001",
+        "partner order rollback"));
+
+System.out.println(resp.orderStatus);
+```
+
+전지:
+
+| 필드 | 유형 | 필수의 | 설명 |
+| --- | --- | --- | --- |
+| `origOrderNo` | string | 예 | 원본 이전 주문 번호 |
+| `reverseOrderNo` | string | 예 | 전역적으로 고유한 역순 번호 |
+| `reverseReason` | string | 예 | 반대 이유 |
+
+참고:
+
+- 역방향은 일반적인 취소 작업이 아닙니다.
+- 역순 주문도 주문 번호별로 멱등성이 있어야 합니다.
+- 원래 주문이 취소된 후 webhook는 원래 주문의
+`REVERSED` 최종 상태입니다.
+
+
+<span id="query-order" data-sixmm-canonical-anchor="query-order" aria-hidden="true"></span>
+
+## 쿼리 순서
+
+```java
+import com.sixmm.agent.model.OrderQueryType;
+import com.sixmm.agent.model.QueryOrderRequest;
+import com.sixmm.agent.model.QueryOrderResponse;
+
+QueryOrderResponse resp = client.queryOrder(
+        QueryOrderRequest.of("AGT-ORDER-1001", OrderQueryType.TRANSFER_IN));
+
+System.out.println(resp.status);
+System.out.println(resp.failReason);
+```
+
+지원되는 `orderType` 값:
+
+- `TRANSFER_IN`
+- `TRANSFER_OUT`
+
+일반적인 응답 필드:
+
+| 필드 | 유형 | 설명 |
+| --- | --- | --- |
+| `orderType` | string | 주문 유형 |
+| `orderNo` | string | 파트너 주문 번호 |
+| `status` | string | 주문 상태 |
+| `direction` | string | `IN` 또는 `OUT` |
+| `transferMode` | string | `FIXED_AMOUNT` 또는 `ALL_OUT` |
+| `currency` | string | 통화 |
+| `amount` | string | 양 |
+| `agentUserId` | string | 파트너 측 사용자 ID |
+| `platformUserId` | string | 6MM 외부 사용자 ID |
+| `failReason` | string | 실패 이유 |
+| `createdAt` | string | 생성시간 |
+| `completedAt` | string | 완료 시간 |
+
+
+<span id="list-orders" data-sixmm-canonical-anchor="list-orders" aria-hidden="true"></span>
+
+## 주문 나열
+
+```java
+import com.sixmm.agent.model.ListOrdersRequest;
+import com.sixmm.agent.model.ListOrdersResponse;
+
+ListOrdersRequest req = ListOrdersRequest.page(1, 20);
+req.orderType = "TRANSFER_IN";
+req.status = "SUCCESS";
+req.startTime = "2026-06-01T00:00:00Z";
+req.endTime = "2026-06-16T00:00:00Z";
+
+ListOrdersResponse resp = client.listOrders(req);
+
+System.out.println(resp.total);
+resp.orders.forEach(order -> System.out.println(order.orderNo));
+```
+
+페이지 매김 권장사항:
+
+- `page` 1부터 시작합니다.
+- `pageSize`를 100 이하로 유지하세요.
+- 조정 작업의 경우 기간별로 페이지를 지정하고 `orderNo`별로 중복을 제거합니다.
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## 소스 및 관련 가이드
+
+- [공식 v0.3.0 소스](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [쿼리 개요 및 페이지 매김](/ko/sdk/agent-sdk/java/perpetual-queries)
+- [펀딩 지갑](/ko/sdk/agent-sdk/java/funding-wallet)
+- [업그레이드 가이드](/ko/sdk/agent-sdk/java/upgrade)

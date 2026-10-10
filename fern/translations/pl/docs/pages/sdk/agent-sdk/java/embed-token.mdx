@@ -1,17 +1,36 @@
 ---
-title: "Stwórz token osadzenia"
-subtitle: "Wydanie krótkotrwałych tokenów embedowych dla Trading Widget trybu tokenów partnera."
+title: "Utwórz token osadzania"
+subtitle: "Utwórz token osadzania: Agent Java SDK Integracja v0.3.0, przykłady, parametry i semantyka odpowiedzi."
 slug: sdk/agent-sdk/java/embed-token
 canonical-url: https://docs.6mm.com/pl/sdk/agent-sdk/java/embed-token
 ---
 
-<span id="sdk-call" data-sixmm-canonical-anchor="sdk-call" aria-hidden="true"></span>
+Ten przewodnik jest przeznaczony dla **Agent Java SDK `v0.3.0`**, Java 8+ i oznaczonych zamówień publicznych. Przykłady działają w zapleczu partnera po inicjalizacji `client` w [Szybki start](/pl/sdk/agent-sdk/java/quick-start).
 
-## SDK telefon
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
 
-Stwórz tokeny embed z backendu po zweryfikowaniu sesji użytkownika partnera. Przeglądarka powinna wywołać Twój punkt końcowy, a punkt końcowy powinien wywołać 6MM przez Agent SDK.
+## Przykładowe wymagania wstępne
+
+Fragmenty Java dzielą ten import. Zainicjuj `client` za pomocą Szybki start i uzyskaj `platformUserId` z zapisanego powiązania. Przykładowe identyfikatory użytkowników/zamówień należy zastąpić własnymi, utrwalonymi wartościami.
 
 ```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span id="trading-widget-embed-token" data-sixmm-canonical-anchor="trading-widget-embed-token" aria-hidden="true"></span>
+
+## Trading Widget Token osadzania
+
+Token osadzania przeznaczony jest dla trybu Trading Widget SDK `partner-token + tokenProvider`. The
+przeglądarka wywołuje backend partnera, a backend partnera wywołuje to Java SDK
+aby utworzyć `embedToken`.
+
+```java
+import com.sixmm.agent.model.CreateEmbedTokenRequest;
+import com.sixmm.agent.model.CreateEmbedTokenResponse;
+
 CreateEmbedTokenResponse resp = client.createEmbedToken(
         CreateEmbedTokenRequest.of("agent-user-001", "tw_abc123")
                 .withSymbol("ETHUSDT"));
@@ -20,13 +39,15 @@ System.out.println(resp.embedToken);
 System.out.println(resp.expireAt);
 ```
 
-> **Jednorazowe uprawnienia**
->
-> embedToken jest krótkotrwały i jednorazowy. Nie umieszczaj go w ciągu zapytania URL .
+Wymagania dotyczące integracji:
 
-<span id="backend-endpoint-example" data-sixmm-canonical-anchor="backend-endpoint-example" aria-hidden="true"></span>
+- `channelId` musi używać wartości przekazanej przez Trading Widget SDK.
+- `symbol` jest opcjonalne, ale zaleca się przekazanie bieżącego symbolu początkowego.
+- `embedToken` jest krótkotrwałe i jednorazowe. Nie umieszczaj go w ciągach zapytania URL.
+- Interfejs partnera nigdy nie może zawierać `apiSecret`.
+- `expireAt` to uniksowy znacznik czasu w sekundach, a nie TTL.
 
-## Przykład endpointu backendowego
+Przykład punktu końcowego zaplecza partnera:
 
 ```java
 @PostMapping("/api/trading/embed-token")
@@ -41,24 +62,20 @@ public EmbedTokenView createEmbedToken(@RequestBody EmbedTokenRequest request,
 }
 ```
 
-Zwracaj tylko pola potrzebne dostawcy tokena Trading Widget . Nie zwracaj apiSecret, surowych pól podpisu ani wewnętrznej konfiguracji usługi.
 
-<span id="failure-handling" data-sixmm-canonical-anchor="failure-handling" aria-hidden="true"></span>
+<span id="partner-endpoint-contract" data-sixmm-canonical-anchor="partner-endpoint-contract" aria-hidden="true"></span>
 
-## Obsługa awarii
+## Umowa dotycząca punktu końcowego partnera
 
-| Stan | Zalecane prowadzenie |
-| --- | --- |
-| Sesja użytkownika jest brakująca lub wygasła | Zwróć 401 z punktu końcowego partnera i poproś użytkownika o ponowne zalogowanie. |
-| Użytkownik agenta nie jest związany | Najpierw przypisz użytkownika, a potem spróbuj ponownie utworzyć token. |
-| 6MM zwraca tymczasowy błąd | Zwróć błąd do ponownego spróbowania do frontendu i loguj requestId wsparcia. |
-| channelId nie pasuje do instancji widżetu | Odrzuć żądanie i odtworzyć sesję widżetów. |
+Uwierzytelnij sesję partnera i uzyskaj `agentUserId` po stronie serwera. Zaakceptuj bieżący widget `channelId`; zwróć najwyższy poziom `embedToken`, `expireAt` (sekundy Unixowe) i to samo `channelId`. Odpowiedzi agentów nie dostarczają `channelId`: Twój backend powtarza to. Pobierz nowy token podczas inicjalizacji i odnowienia; nigdy go nie używaj ponownie. Utworzenie tokena nie powoduje transferu środków ani wyboru środowiska portfela.
 
-<span id="related-documentation" data-sixmm-canonical-anchor="related-documentation" aria-hidden="true"></span>
+Widzieć [Handel sekundami](/pl/sdk/agent-sdk/java/seconds-trading) dla pełnego przepływu frontendu/backendu.
 
-## Powiązana dokumentacja
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
 
-- [Trading Widget Uwierzytelnianie](/pl/sdk/trading-widget/authentication): połącz `tokenProvider` z punktem końcowym partnera.
-- [Java Quick Start](/pl/sdk/agent-sdk/java/quick-start): instalować i inicjalizować `AgentClient`.
-- [Sekrety i Podpisy](/pl/sdk/security/secrets-signing): chroń Agenta API tajemnicą.
-- [Webhooks & Idempotency](/pl/sdk/security/webhooks-idempotency): zabezpiecz stronę callback integracji.
+## Źródło i powiązane przewodniki
+
+- [Oficjalne źródło v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Przegląd zapytań i paginacja](/pl/sdk/agent-sdk/java/perpetual-queries)
+- [Portfel finansowania](/pl/sdk/agent-sdk/java/funding-wallet)
+- [Przewodnik po aktualizacji](/pl/sdk/agent-sdk/java/upgrade)

@@ -1,0 +1,104 @@
+---
+title: "Perpetual Trade Fills"
+subtitle: "Perpetual Trade Fills: Agent Java SDK v0.3.0-Integration, Beispiele, Parameter und Antwortsemantik."
+slug: sdk/agent-sdk/java/perpetual-trades
+canonical-url: https://docs.6mm.com/de/sdk/agent-sdk/java/perpetual-trades
+---
+
+Dieser Leitfaden richtet sich an **Agent Java SDK `v0.3.0`**, Java 8+ und den getaggten öffentlichen Auftrag. Beispiele werden nach der Initialisierung von `client` in einem Partner-Backend ausgeführt [Schnellstart](/de/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## Beispielvoraussetzungen
+
+Die Java-Snippets teilen diese Importe. Initialisieren Sie `client` mit Quick Start und rufen Sie `platformUserId` aus der gespeicherten Bindung ab. Beispiel-Benutzer-/Bestell-IDs müssen durch Ihre eigenen persistenten Werte ersetzt werden.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span data-sixmm-canonical-anchor="listperpetualtrades" aria-hidden="true"></span>
+
+## `listPerpetualTrades`
+
+Anforderungsmodell: `PerpetualTradesRequest`.
+
+```java
+import com.sixmm.agent.model.PerpetualTradesRequest;
+import com.sixmm.agent.model.PerpetualResponse;
+import java.util.Collections;
+
+PerpetualTradesRequest request = new PerpetualTradesRequest();
+request.platformUserIds = Collections.singletonList("1188041528");
+request.limit = 100;
+request.symbol = "BTCUSDT";
+request.endTime = System.currentTimeMillis();
+request.startTime = request.endTime - 3_600_000L;
+PerpetualResponse response = client.listPerpetualTrades(request);
+System.out.println(response.data.items.size());
+System.out.println(response.data.hasMore);
+System.out.println(response.data.nextCursor);
+```
+
+<span id="request-fields" data-sixmm-canonical-anchor="request-fields" aria-hidden="true"></span>
+
+### Anforderungsfelder
+
+| Feld | Java Typ | Erforderlich | Bedeutung |
+| --- | --- | --- | --- |
+| `platformUserIds` | `java.util.List<String>` | Bedingt | 1–100 eindeutige öffentliche IDs; erforderlich für Ausführungen und bedingte Bestellungen. Bei unterstützten Abfragen für den Direktspielerbereich weglassen; [] ist ungültig. |
+| `symbol` | `String` | NEIN | Optionaler Handelspaarfilter. |
+| `orderId` | `String` | NEIN | Gewöhnliche Bestell-ID; keine Partnerübertragungsauftragsnummer. |
+| `startTime` | `Long` | NEIN | Inklusive Unix-Millisekunden; Verwenden Sie ein festes UTC-Verlaufsfenster. |
+| `endTime` | `Long` | NEIN | Exklusive Unix-Millisekunden. |
+| `limit` | `Integer` | NEIN | Standard 500; 1–1000. |
+| `cursor` | `String` | NEIN | Verwenden Sie den zurückgegebenen nextCursor mit unveränderten Filtern. stoppen, wenn hasMore falsch ist. |
+
+Das Beispiel liest eine Seite. Informationen zu erforderlichen Feldern, Player-Bereich, Filtersemantik, Limit, Cursor und begrenzten Wiederholungsversuchen finden Sie hier [Abfrageübersicht](/de/sdk/agent-sdk/java/perpetual-queries). Lassen Sie beim Blättern alle Filter unverändert; Interpretieren Sie einen Fehler nicht als leeres Ergebnis.
+
+<span id="transaction-details" data-sixmm-canonical-anchor="transaction-details" aria-hidden="true"></span>
+
+## Details zur Handelsfüllung
+
+Schnittstelle: `trades`. Erfordert explizites platformUserIds.
+
+| `data` Feld | Typ | Bedeutung |
+| --- | --- | --- |
+| `fillId` | string | ID der Handelsabwicklungsdetails, die diesem Datensatz entspricht entityId |
+| `tradeId` | string | Die mit der Transaktion verknüpfte übereinstimmende Transaktions-ID; ersetzt nicht die detaillierte ID |
+| `orderId` | string | Die allgemeine Bestell-ID, zu der dieses Detail gehört |
+| `positionId` | string | Zugehörige Positions-ID |
+| `symbol` | string | Handelspaar |
+| `side` | string | Die Kauf- und Verkaufsrichtung dieses Spielers BUY / SELL |
+| `roleType` | string | Der Transaktionscharakter dieses Spielers MAKER / TAKER |
+| `positionSide` | string | Positionsrichtung, erklärt nach Istwert LONG / SHORT / BOTH usw. |
+| `price` | string | Dieser Transaktionspreis |
+| `quantity` | string | Die Menge dieser Transaktion entspricht nicht der Gesamtmenge der ursprünglichen Bestellung. |
+| `tradeValue` | string | Der Nominalwert dieser Transaktion ergibt sich aus dem Nominalwert der Transaktion |
+| `handlingFee` | string | Die Transaktionsgebühr für diese Transaktion behält das Quellsymbol und die Genauigkeit bei und nimmt nicht den absoluten Wert an. |
+| `realizedPnl` | string | Der dieser Transaktion entsprechende realisierte Gewinn und Verlust; nicht der Echtzeit-Floating-Gewinn und -Verlust der aktuellen Position |
+| `tradedAt` | integer | Transaktionszeit, Millisekunden; Verwenden Sie dieses Feld zur Zeitfilterung |
+
+Eine Bestellung kann mehrere Ausführungen haben, die im Detail gespeichert werden sollten. Führen Sie Datensätze verschiedener Spieler/Besetzungsrollen nicht nach tradeId zusammen und verwerfen Sie dann deren Datensatzidentitäten.
+
+
+<span id="example-response-envelope" data-sixmm-canonical-anchor="example-response-envelope" aria-hidden="true"></span>
+
+## Beispiel eines Antwortumschlags
+
+Dies ist eine leere Seite zur Veranschaulichung, kein Beispiel eines abgeschlossenen Handels. Die obigen ressourcenspezifischen Feldtabellen beschreiben ausgefüllte `items[].data`.
+
+```json
+{"code":0,"message":"success","data":{"items":[],"nextCursor":"","hasMore":false}}
+```
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Quelle und zugehörige Leitfäden
+
+- [Offizielle Quelle v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Abfrageübersicht und Paginierung](/de/sdk/agent-sdk/java/perpetual-queries)
+- [Funding-Wallet](/de/sdk/agent-sdk/java/funding-wallet)
+- [Upgrade-Anleitung](/de/sdk/agent-sdk/java/upgrade)

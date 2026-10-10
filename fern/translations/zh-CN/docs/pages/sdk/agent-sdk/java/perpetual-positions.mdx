@@ -1,0 +1,142 @@
+---
+title: "当前持仓与持仓历史"
+subtitle: "当前持仓与持仓历史: Agent Java SDK v0.3.0 接入、示例、参数及响应说明。"
+slug: sdk/agent-sdk/java/perpetual-positions
+canonical-url: https://docs.6mm.com/zh-CN/sdk/agent-sdk/java/perpetual-positions
+---
+
+本文对应 **Agent Java SDK `v0.3.0`**、Java 8+ 与该标签的公开契约。示例在合作方后端运行；先按[快速开始](/zh-CN/sdk/agent-sdk/java/quick-start)初始化 `client`。
+
+<span data-sixmm-canonical-anchor="示例前提" aria-hidden="true"></span>
+
+## 示例前提
+
+Java 示例共用以下导入。按快速开始初始化 `client`，从已保存的绑定取得 `platformUserId`。示例用户和订单 ID 必须替换为实际持久化值。
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span data-sixmm-canonical-anchor="listcurrentperpetualpositions" aria-hidden="true"></span>
+
+## `listCurrentPerpetualPositions`
+
+请求模型: `CurrentPerpetualPositionsRequest`.
+
+```java
+import com.sixmm.agent.model.CurrentPerpetualPositionsRequest;
+import com.sixmm.agent.model.PerpetualResponse;
+import java.util.Collections;
+
+CurrentPerpetualPositionsRequest request = new CurrentPerpetualPositionsRequest();
+request.platformUserIds = Collections.singletonList("1188041528");
+request.limit = 100;
+request.symbol = "BTCUSDT";
+PerpetualResponse response = client.listCurrentPerpetualPositions(request);
+System.out.println(response.data.items.size());
+System.out.println(response.data.hasMore);
+System.out.println(response.data.nextCursor);
+```
+
+<span data-sixmm-canonical-anchor="请求字段" aria-hidden="true"></span>
+
+### 请求字段
+
+| 字段 | Java 类型 | 必填 | 含义 |
+| --- | --- | --- | --- |
+| `platformUserIds` | `java.util.List<String>` | 条件必填 | 1～100 个不重复公开 ID；成交及条件委托必填。支持省略的查询使用直属玩家范围；[] 非法。 |
+| `symbol` | `String` | 否 | 可选交易对筛选。 |
+| `limit` | `Integer` | 否 | 默认 500，范围 1～1000。 |
+| `cursor` | `String` | 否 | 保持筛选条件，用 nextCursor 续页；hasMore=false 时结束。 |
+
+示例仅读取一页。必填条件、玩家范围、筛选语义、limit、cursor 与有限重试见[查询概览](/zh-CN/sdk/agent-sdk/java/perpetual-queries)。翻页保持全部筛选条件不变；不能把错误当作空结果。
+
+<span data-sixmm-canonical-anchor="listperpetualpositionhistory" aria-hidden="true"></span>
+
+## `listPerpetualPositionHistory`
+
+请求模型: `PerpetualPositionHistoryRequest`.
+
+```java
+import com.sixmm.agent.model.PerpetualPositionHistoryRequest;
+import com.sixmm.agent.model.PerpetualResponse;
+import java.util.Collections;
+
+PerpetualPositionHistoryRequest request = new PerpetualPositionHistoryRequest();
+request.platformUserIds = Collections.singletonList("1188041528");
+request.limit = 100;
+request.symbol = "BTCUSDT";
+request.endTime = System.currentTimeMillis();
+request.startTime = request.endTime - 3_600_000L;
+PerpetualResponse response = client.listPerpetualPositionHistory(request);
+System.out.println(response.data.items.size());
+System.out.println(response.data.hasMore);
+System.out.println(response.data.nextCursor);
+```
+
+<span data-sixmm-canonical-anchor="请求字段-1" aria-hidden="true"></span>
+
+### 请求字段
+
+| 字段 | Java 类型 | 必填 | 含义 |
+| --- | --- | --- | --- |
+| `platformUserIds` | `java.util.List<String>` | 条件必填 | 1～100 个不重复公开 ID；成交及条件委托必填。支持省略的查询使用直属玩家范围；[] 非法。 |
+| `symbol` | `String` | 否 | 可选交易对筛选。 |
+| `positionSide` | `String` | 否 | 按来源持仓方向枚举筛选。 |
+| `startTime` | `Long` | 否 | 包含起点，Unix 毫秒；使用固定 UTC 历史窗口。 |
+| `endTime` | `Long` | 否 | 不包含终点，Unix 毫秒。 |
+| `limit` | `Integer` | 否 | 默认 500，范围 1～1000。 |
+| `cursor` | `String` | 否 | 保持筛选条件，用 nextCursor 续页；hasMore=false 时结束。 |
+
+示例仅读取一页。必填条件、玩家范围、筛选语义、limit、cursor 与有限重试见[查询概览](/zh-CN/sdk/agent-sdk/java/perpetual-queries)。翻页保持全部筛选条件不变；不能把错误当作空结果。
+
+<span data-sixmm-canonical-anchor="持仓当前与历史" aria-hidden="true"></span>
+
+## 持仓：当前与历史
+
+| `data` 字段 | 类型 | 当前持仓 | 历史持仓 | 含义 |
+| --- | --- | --- | --- | --- |
+| `positionId` | string | 提供 | 提供 | 持仓 ID，对应 entityId |
+| `symbol` | string | 提供 | 提供 | 交易对 |
+| `positionSide` | string | 提供 | 提供 | LONG / SHORT / BOTH 等持仓方向 |
+| `status` | string | 提供 | 提供 | 持仓数字状态的字符串，见相关指南 |
+| `leverage` | integer | 提供 | 提供 | 杠杆倍数 |
+| `marginMode` | string | 提供 | 提供 | 数字枚举字符串 "1" 全仓、"2" 逐仓 |
+| `quantity` | string | 提供 | 不提供 | 当前持仓数量 |
+| `entryPrice` | string | 提供 | 提供 | 存储的持仓开仓均价 |
+| `margin` | string | 提供 | 不提供 | 当前持仓保证金金额，不是用户整个合约钱包余额 |
+| `maxQuantity` | string | 不提供 | 提供 | 该历史持仓记录的最大持仓数量 |
+| `closeQuantity` | string | 不提供 | 提供 | 该历史持仓生命周期的累计平仓数量 |
+| `closePrice` | string | 不提供 | 提供 | 存储的平仓均价 |
+| `pnl` | string | 不提供 | 提供 | 历史持仓损益；不将其与成交 realizedPnl 简单重复累加 |
+| `roe` | string | 不提供 | 提供 | 历史持仓收益率的比例值，未乘以 100；例如 `"0.043"` 表示 `4.3%`，`"-0.05"` 表示 `-5%` |
+| `fundingFeeAccum` | string | 提供 | 提供 | 累计资金费，保留来源符号与精度 |
+| `openedAt` | integer | 提供 | 提供 | 开仓时间，毫秒 |
+| `updatedAt` | integer | 提供 | 不提供 | 当前持仓更新时间，毫秒 |
+| `closedAt` | integer | 不提供 | 提供 | 平仓时间，毫秒；历史持仓时间筛选使用该字段 |
+
+历史 `roe` 的计算口径为 `pnl / (entryPrice × maxQuantity / leverage)`，接口直接返回保存的比例值。百分比展示时使用十进制运算乘以 100，再添加 `%`；分母使用该历史持仓记录的名义保证金，不是账户钱包余额。开仓价或最大持仓数量为 0、杠杆无效等无法计算的情况，来源保存为 0，因此不能仅凭 `roe=0` 推断该笔盈亏为 0。
+
+当前持仓没有实时标记价格、实时浮盈亏、实时 ROE 或实时强平价。它反映存储的持仓状态，不能用更新时刻和保证金字段自行声称当前实时风控结果。
+
+
+<span data-sixmm-canonical-anchor="响应结构示例" aria-hidden="true"></span>
+
+## 响应结构示例
+
+以下为合法空页的结构示例，不代表一笔已成交记录。有记录时，`items[].data` 的字段按上面的资源字段表解释。
+
+```json
+{"code":0,"message":"success","data":{"items":[],"nextCursor":"","hasMore":false}}
+```
+
+<span data-sixmm-canonical-anchor="来源与相关指南" aria-hidden="true"></span>
+
+## 来源与相关指南
+
+- [官方 v0.3.0 源码](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [合约查询与分页](/zh-CN/sdk/agent-sdk/java/perpetual-queries)
+- [Funding 钱包](/zh-CN/sdk/agent-sdk/java/funding-wallet)
+- [升级指南](/zh-CN/sdk/agent-sdk/java/upgrade)

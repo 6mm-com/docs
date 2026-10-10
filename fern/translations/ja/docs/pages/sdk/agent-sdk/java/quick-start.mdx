@@ -1,53 +1,66 @@
 ---
 title: "Java クイックスタート"
-subtitle: "バックエンドサービスから Java SDK をインストールして初期化してください。"
+subtitle: "Java クイックスタート: Agent Java SDK v0.3.0 の統合、例、パラメーター、および応答セマンティクス。"
 slug: sdk/agent-sdk/java/quick-start
 canonical-url: https://docs.6mm.com/ja/sdk/agent-sdk/java/quick-start
 ---
 
-<span id="install" data-sixmm-canonical-anchor="install" aria-hidden="true"></span>
+このガイドは、**Agent Java SDK `v0.3.0`**、Java 8 以降、およびタグ付けされたパブリック コントラクトを対象としています。例は `client` を初期化した後にパートナー バックエンドで実行されます。 [クイックスタート](/ja/sdk/agent-sdk/java/quick-start).
 
-## 設置
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
 
-公開 SDK ソースは現在、以下のMaven座標でタグ `v0.1.1` を記録しています。
+## 前提条件の例
+
+Java スニペットはこれらのインポートを共有します。クイック スタートを使用して `client` を初期化し、保存されたバインディングから `platformUserId` を取得します。ユーザー/オーダー ID の例は、独自の永続化された値に置き換える必要があります。
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span id="maven-coordinates" data-sixmm-canonical-anchor="maven-coordinates" aria-hidden="true"></span>
+
+## Maven 座標
+
+現在のソース座標:
 
 ```xml
 <dependency>
     <groupId>com.sixmm.exchange.sdk</groupId>
     <artifactId>agent</artifactId>
-    <version>0.1.1</version>
+    <version>0.3.0</version>
 </dependency>
 ```
 
-GitHubはMaven依存関係のリポジトリとして機能しません。依存関係を解決する前にタグ付けされたソースをローカルにインストールしてください:
+GitHub はソース ホスティングであり、Maven 依存関係リポジトリではありません。 SDK がまだ行われていない場合
+まだ Maven リポジトリに公開されていない場合は、ローカル Maven にインストールしてください
+最初にリポジトリ:
 
 ```bash
 git clone https://github.com/6mm-com/agent-java-sdk.git
 cd agent-java-sdk
-git checkout v0.1.1
+git checkout v0.3.0
 mvn install
 ```
 
-> **チームビルド**
->
-> 承認されたアーティファクトを組織のMavenリポジトリに公開し、CI、テスト、本番ビルドを行ってください。本番展開前に承認されたバージョンを 6MM で確認してください。
+ローカルにインストールした後、ビジネス プロジェクトを解決できます。
+`com.sixmm.exchange.sdk:agent:0.3.0` ローカル Maven リポジトリから。
 
-ソースコードおよび使用例は公式 Java SDK リポジトリで入手可能です:
+チームビルドおよびテスト環境の場合、SDK を Maven リポジトリに公開します
+Nexus、Artifactory、GitHub パッケージ、Maven Central など、または GitHub を使用する
+JitPack などのベースのビルド サービス。
 
-[6mm-com/agent-java-sdk](https://github.com/6mm-com/agent-java-sdk)
+既存の統合については、を参照してください。 [SDK アップグレード ガイド](https://github.com/6mm-com/agent-java-sdk/blob/v0.3.0/docs/merchant-integration.md#8-旧-sdk-升级)。安定した `v0.3.0` ソースタグを使用して SDK をインストールし、対応する統合ドキュメントを読んでください。
 
-<span id="before-you-start" data-sixmm-canonical-anchor="before-you-start" aria-hidden="true"></span>
 
-## 始める前に
-
-- 6MMチームにAPI 拠点URLの制作エージェントを確認してください。
-- apiSecret をバックエンドの秘密管理のみに保存します。
-- platformUserId と agentUserId間の安定した写像を作成する。
-- バインド、転送、秩序、ウェブフックのフローに関する構造化ログを有効にします。
-
-<span id="initialize-client" data-sixmm-canonical-anchor="initialize-client" aria-hidden="true"></span>
+<span id="client-initialization" data-sixmm-canonical-anchor="client-initialization" aria-hidden="true"></span>
 
 ## クライアントの初期化
+
+<span id="plain-java" data-sixmm-canonical-anchor="plain-java" aria-hidden="true"></span>
+
+### プレーン Java
 
 ```java
 import com.sixmm.agent.AgentClient;
@@ -61,32 +74,156 @@ AgentClient client = new AgentClient(AgentClientConfig.builder()
         .build());
 ```
 
-> **バックエンドのみ**
->
-> ブラウザ、モバイル、デスクトップのクライアントコードから Agent SDK を初期化しないでください。 SDK は特権エージェント API リクエストに署名します。
+<span id="spring-boot" data-sixmm-canonical-anchor="spring-boot" aria-hidden="true"></span>
 
-<span id="example-transfer-funds-in" data-sixmm-canonical-anchor="example-transfer-funds-in" aria-hidden="true"></span>
-
-## 例:資金の振替
+### スプリングブーツ
 
 ```java
-TransferResponse resp = client.transfer(TransferRequest.fixed(
-        "AGT-ORDER-1001",
-        "agent-user-001",
-        Direction.IN,
-        "USDT",
-        "10.00"));
+import com.sixmm.agent.AgentClient;
+import com.sixmm.agent.AgentClientConfig;
+import java.time.Duration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class AgentSdkConfig {
+
+    @Bean
+    public AgentClient agentClient(AgentSdkProperties props) {
+        return new AgentClient(AgentClientConfig.builder()
+                .baseUrl(props.getBaseUrl())
+                .agentCode(props.getAgentCode())
+                .apiSecret(props.getApiSecret())
+                .defaultCurrency("USDT")
+                .timeout(Duration.ofSeconds(10))
+                .build());
+    }
+}
 ```
 
-各転送リクエストには、パートナー側の注文番号を一意に設定してください。リクエストがタイムアウトした場合は、新しい注文を作成する前に元の注文にクエリを送りましょう。
+アプリケーションのプロパティの例:
 
-<span id="next-steps" data-sixmm-canonical-anchor="next-steps" aria-hidden="true"></span>
+```properties
+agent.sdk.base-url=https://agent-api.6mm.com
+agent.sdk.agent-code=AGENT001
+agent.sdk.api-secret=${AGENT_API_SECRET}
+```
 
-## 今後のステップ
 
-| 必要性 | 次のページ |
-| --- | --- |
-| Trading Widget認証を発行してください | [埋め込みトークンの作成](/ja/sdk/agent-sdk/java/embed-token) |
-| 6MMからの折り返しの確認 | [ウェブフックと冪等性](/ja/sdk/security/webhooks-idempotency) |
-| 署名行動のレビュー | [秘密と署名](/ja/sdk/security/secrets-signing) |
-| 積分問題の診断 | [SDK トラブルシューティング](/ja/sdk/security/troubleshooting) |
+<span id="bind-user" data-sixmm-canonical-anchor="bind-user" aria-hidden="true"></span>
+
+## バインドユーザー
+
+バインドは、パートナー ユーザーと 6MM の間の関係を作成または取得します。
+プラットフォームのユーザー。ユーザーが最初に取引フローに入るとき、または取引フローに入る前に呼び出します。
+最初に 6MM に転送します。
+
+```java
+import com.sixmm.agent.model.BindRequest;
+import com.sixmm.agent.model.BindResponse;
+
+BindResponse resp = client.bind(
+        BindRequest.of("agent-user-001")
+                .withUsername("alice")
+                .withExt("{\"source\":\"web\"}"));
+
+System.out.println(resp.platformUserId);
+System.out.println(resp.bindStatus);
+System.out.println(resp.isSimulatedUser);
+```
+
+リクエストフィールド:
+
+| 分野 | タイプ | 必須 | 説明 |
+| --- | --- | --- | --- |
+| `agentUserId` | string | はい | パートナー側の一意のユーザーID |
+| `username` | string | いいえ | プラットフォームユーザーのニックネームとして使用されるパートナー側の表示名 |
+| `ext` | string | いいえ | 拡張フィールド。 JSON 文字列が推奨されます |
+
+応答フィールド:
+
+| 分野 | タイプ | 説明 |
+| --- | --- | --- |
+| `platformUserId` | string | 6MM 外部ユーザー ID |
+| `bindStatus` | string | 通常 `BOUND` |
+| `isSimulatedUser` | boolean | これがシミュレートされたユーザーであるかどうか |
+
+
+<span id="recommended-business-flows" data-sixmm-canonical-anchor="recommended-business-flows" aria-hidden="true"></span>
+
+## 推奨業務フロー
+
+<span id="first-trading-entry" data-sixmm-canonical-anchor="first-trading-entry" aria-hidden="true"></span>
+
+### 最初の取引エントリー
+
+```text
+1. User logs in to the partner site.
+2. Partner backend calls bind with agentUserId.
+3. Partner stores the agentUserId and platformUserId relationship.
+4. User clicks the trading entry.
+5. Redirect mode: call createEntryUrl and open webUrl in the browser.
+6. Embed mode: Trading Widget calls tokenProvider, and partner backend calls createEmbedToken.
+```
+
+<span id="deposit-into-6mm" data-sixmm-canonical-anchor="deposit-into-6mm" aria-hidden="true"></span>
+
+### 6MM に入金する
+
+```text
+1. Partner creates a unique agentOrderNo.
+2. Partner calls transfer(Direction.IN).
+3. If SUCCESS is returned, mark the local order as successful.
+4. If PROCESSING is returned, wait for webhook or poll queryOrder.
+5. If FAILED is returned or AgentApiException is thrown, handle it as failed.
+```
+
+<span id="withdraw-back-to-partner" data-sixmm-canonical-anchor="withdraw-back-to-partner" aria-hidden="true"></span>
+
+### 撤退してパートナーに戻る
+
+```text
+1. Partner creates a unique agentOrderNo.
+2. Fixed amount withdraw: call transfer(Direction.OUT).
+3. Full withdraw: call transferAllOut.
+4. Confirm the final result by orderStatus, webhook, or queryOrder.
+```
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## ソースおよび関連ガイド
+
+- [公式 v0.3.0 ソース](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [クエリの概要とページネーション](/ja/sdk/agent-sdk/java/perpetual-queries)
+- [資金調達ウォレット](/ja/sdk/agent-sdk/java/funding-wallet)
+- [アップグレードガイド](/ja/sdk/agent-sdk/java/upgrade)
+<span id="error-handling" data-sixmm-canonical-anchor="error-handling" aria-hidden="true"></span>
+
+## エラー処理
+
+SDK 例外は 2 つのカテゴリに分類されます。
+
+| 例外 | シナリオ | 推奨される取り扱い |
+| --- | --- | --- |
+| `AgentApiException` | HTTP ステータスが 2xx ではない、またはエージェントの応答 `code != 0` | `getHttpStatus()`、`getCode()`、および `getResponseBody()` を読み取り、ビジネス/API の失敗として扱います |
+| `AgentSdkException` | ネットワーク、シリアル化、構成、または署名の失敗 | ログに記録し、システム例外として扱います |
+
+例：
+
+```java
+import com.sixmm.agent.AgentApiException;
+import com.sixmm.agent.AgentSdkException;
+
+try {
+    TransferResponse resp = client.transfer(TransferRequest.fixed(
+            "AGT-ORDER-1001", "agent-user-001", Direction.IN, "USDT", "10.00"));
+    // Update the local order according to resp.orderStatus.
+} catch (AgentApiException e) {
+    // Business rejection or HTTP error.
+    log.warn("6mm agent api rejected request, httpStatus={}, code={}, body={}",
+            e.getHttpStatus(), e.getCode(), e.getResponseBody());
+} catch (AgentSdkException e) {
+    // Local SDK error or network error.
+    log.error("6mm agent sdk request failed", e);
+}
+```

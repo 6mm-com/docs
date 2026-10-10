@@ -1,53 +1,66 @@
 ---
-title: "Java Inicio Rápido"
-subtitle: "Instala e inicializa el Java SDK desde un servicio backend."
+title: "Java Inicio rápido"
+subtitle: "Java Inicio rápido: Agent Java SDK v0.3.0 integración, ejemplos, parámetros y semántica de respuesta."
 slug: sdk/agent-sdk/java/quick-start
 canonical-url: https://docs.6mm.com/es-419/sdk/agent-sdk/java/quick-start
 ---
 
-<span id="install" data-sixmm-canonical-anchor="install" aria-hidden="true"></span>
+Esta guía está dirigida a **Agent Java SDK `v0.3.0`**, Java 8+ y el contrato público etiquetado. Los ejemplos se ejecutan en un backend asociado después de inicializar `client` en [Inicio rápido](/es-419/sdk/agent-sdk/java/quick-start).
 
-## Instalación
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
 
-La fuente pública SDK actualmente documenta `v0.1.1` de etiquetas con estas coordenadas de Maven:
+## Requisitos previos de ejemplo
+
+Los fragmentos Java comparten estas importaciones. Inicialice `client` usando el Inicio rápido y obtenga `platformUserId` del enlace guardado. Los ID de usuario/pedido de ejemplo deben reemplazarse con sus propios valores persistentes.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span id="maven-coordinates" data-sixmm-canonical-anchor="maven-coordinates" aria-hidden="true"></span>
+
+## Coordenadas Maven
+
+Coordenadas de origen actuales:
 
 ```xml
 <dependency>
     <groupId>com.sixmm.exchange.sdk</groupId>
     <artifactId>agent</artifactId>
-    <version>0.1.1</version>
+    <version>0.3.0</version>
 </dependency>
 ```
 
-GitHub no actúa como un repositorio de dependencias de Maven. Instala el código fuente etiquetado localmente antes de resolver la dependencia:
+GitHub es un alojamiento de origen, no un repositorio de dependencia de Maven. Si el SDK no lo ha hecho
+publicado en un repositorio de Maven todavía, instálelo en su Maven local
+repositorio primero:
 
 ```bash
 git clone https://github.com/6mm-com/agent-java-sdk.git
 cd agent-java-sdk
-git checkout v0.1.1
+git checkout v0.3.0
 mvn install
 ```
 
-> **Formaciones de equipo**
->
-> Publica el artefacto aprobado en el repositorio Maven de tu organización para CI, pruebas y compilaciones de producción. Confirma la versión aprobada con 6MM antes del despliegue en producción.
+Después de la instalación local, su proyecto empresarial puede resolverse
+`com.sixmm.exchange.sdk:agent:0.3.0` del repositorio local de Maven.
 
-Ejemplos de código fuente y uso están disponibles en el repositorio oficial de Java SDK :
+Para entornos de prueba y compilaciones de equipos, publique el SDK en un repositorio de Maven.
+como Nexus, Artifactory, GitHub Packages, Maven Central o utilice GitHub
+servicio de compilación basado en JitPack.
 
-[6mm-com/agent-java-sdk](https://github.com/6mm-com/agent-java-sdk)
+Para una integración existente, consulte la [SDK guía de actualización](https://github.com/6mm-com/agent-java-sdk/blob/v0.3.0/docs/merchant-integration.md#8-旧-sdk-升级). Utilice la etiqueta fuente estable `v0.3.0` para instalar SDK y lea la documentación de integración correspondiente.
 
-<span id="before-you-start" data-sixmm-canonical-anchor="before-you-start" aria-hidden="true"></span>
 
-## Antes de que empieces
+<span id="client-initialization" data-sixmm-canonical-anchor="client-initialization" aria-hidden="true"></span>
 
-- Confirma tu agente de producción API URL base con el equipo 6MM .
-- Almacenar apiSecret solo en la gestión de secretos del backend.
-- Preparar un mapeo estable entre platformUserId y agentUserId.
-- Habilitar registros estructurados alrededor de flujos de enlace, transferencia, orden y webhook.
+## Inicialización del cliente
 
-<span id="initialize-client" data-sixmm-canonical-anchor="initialize-client" aria-hidden="true"></span>
+<span id="plain-java" data-sixmm-canonical-anchor="plain-java" aria-hidden="true"></span>
 
-## Inicializar cliente
+### Sencillo Java
 
 ```java
 import com.sixmm.agent.AgentClient;
@@ -61,32 +74,156 @@ AgentClient client = new AgentClient(AgentClientConfig.builder()
         .build());
 ```
 
-> **Solo backend**
->
-> No inicialices el Agent SDK desde el código del cliente del navegador, móvil o escritorio. El SDK firma solicitudes privilegiadas del Agente API .
+<span id="spring-boot" data-sixmm-canonical-anchor="spring-boot" aria-hidden="true"></span>
 
-<span id="example-transfer-funds-in" data-sixmm-canonical-anchor="example-transfer-funds-in" aria-hidden="true"></span>
-
-## Ejemplo: transferir fondos en
+### Bota de primavera
 
 ```java
-TransferResponse resp = client.transfer(TransferRequest.fixed(
-        "AGT-ORDER-1001",
-        "agent-user-001",
-        Direction.IN,
-        "USDT",
-        "10.00"));
+import com.sixmm.agent.AgentClient;
+import com.sixmm.agent.AgentClientConfig;
+import java.time.Duration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class AgentSdkConfig {
+
+    @Bean
+    public AgentClient agentClient(AgentSdkProperties props) {
+        return new AgentClient(AgentClientConfig.builder()
+                .baseUrl(props.getBaseUrl())
+                .agentCode(props.getAgentCode())
+                .apiSecret(props.getApiSecret())
+                .defaultCurrency("USDT")
+                .timeout(Duration.ofSeconds(10))
+                .build());
+    }
+}
 ```
 
-Usa un número de pedido único del lado del socio para cada solicitud de transferencia. Si una solicitud expira, consulta el pedido original antes de crear uno nuevo.
+Propiedades de aplicación de ejemplo:
 
-<span id="next-steps" data-sixmm-canonical-anchor="next-steps" aria-hidden="true"></span>
+```properties
+agent.sdk.base-url=https://agent-api.6mm.com
+agent.sdk.agent-code=AGENT001
+agent.sdk.api-secret=${AGENT_API_SECRET}
+```
 
-## Próximos pasos
 
-| Necesidad | Página siguiente |
-| --- | --- |
-| Emitir una credencial Trading Widget | [Crear Token de Incrustación](/es-419/sdk/agent-sdk/java/embed-token) |
-| Verifica las devoluciones de llamada de 6MM | [Garfios y Idempotencia](/es-419/sdk/security/webhooks-idempotency) |
-| Revisar el comportamiento de firmas | [Secretos y Firmas](/es-419/sdk/security/secrets-signing) |
-| Diagnosticar un problema de integración | [SDK Solucionando problemas](/es-419/sdk/security/troubleshooting) |
+<span id="bind-user" data-sixmm-canonical-anchor="bind-user" aria-hidden="true"></span>
+
+## Vincular usuario
+
+Bind crea o recupera la relación entre un usuario asociado y un 6MM
+usuario de la plataforma. Llámelo cuando un usuario ingresa por primera vez al flujo comercial o antes del
+primera transferencia a 6MM.
+
+```java
+import com.sixmm.agent.model.BindRequest;
+import com.sixmm.agent.model.BindResponse;
+
+BindResponse resp = client.bind(
+        BindRequest.of("agent-user-001")
+                .withUsername("alice")
+                .withExt("{\"source\":\"web\"}"));
+
+System.out.println(resp.platformUserId);
+System.out.println(resp.bindStatus);
+System.out.println(resp.isSimulatedUser);
+```
+
+Campos de solicitud:
+
+| Campo | Tipo | Requerido | Descripción |
+| --- | --- | --- | --- |
+| `agentUserId` | string | Sí | ID de usuario único del lado del socio |
+| `username` | string | No | Nombre para mostrar del lado del socio utilizado como apodo del usuario de la plataforma |
+| `ext` | string | No | Campo de extensión. Se recomienda la cadena JSON |
+
+Campos de respuesta:
+
+| Campo | Tipo | Descripción |
+| --- | --- | --- |
+| `platformUserId` | string | 6MM ID de usuario externo |
+| `bindStatus` | string | Generalmente `BOUND` |
+| `isSimulatedUser` | boolean | Si se trata de un usuario simulado |
+
+
+<span id="recommended-business-flows" data-sixmm-canonical-anchor="recommended-business-flows" aria-hidden="true"></span>
+
+## Flujos comerciales recomendados
+
+<span id="first-trading-entry" data-sixmm-canonical-anchor="first-trading-entry" aria-hidden="true"></span>
+
+### Primera entrada comercial
+
+```text
+1. User logs in to the partner site.
+2. Partner backend calls bind with agentUserId.
+3. Partner stores the agentUserId and platformUserId relationship.
+4. User clicks the trading entry.
+5. Redirect mode: call createEntryUrl and open webUrl in the browser.
+6. Embed mode: Trading Widget calls tokenProvider, and partner backend calls createEmbedToken.
+```
+
+<span id="deposit-into-6mm" data-sixmm-canonical-anchor="deposit-into-6mm" aria-hidden="true"></span>
+
+### Depositar en 6MM
+
+```text
+1. Partner creates a unique agentOrderNo.
+2. Partner calls transfer(Direction.IN).
+3. If SUCCESS is returned, mark the local order as successful.
+4. If PROCESSING is returned, wait for webhook or poll queryOrder.
+5. If FAILED is returned or AgentApiException is thrown, handle it as failed.
+```
+
+<span id="withdraw-back-to-partner" data-sixmm-canonical-anchor="withdraw-back-to-partner" aria-hidden="true"></span>
+
+### Retirarse de nuevo al socio
+
+```text
+1. Partner creates a unique agentOrderNo.
+2. Fixed amount withdraw: call transfer(Direction.OUT).
+3. Full withdraw: call transferAllOut.
+4. Confirm the final result by orderStatus, webhook, or queryOrder.
+```
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Guías fuente y relacionadas
+
+- [Fuente oficial v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Descripción general de consultas y paginación](/es-419/sdk/agent-sdk/java/perpetual-queries)
+- [Cartera de financiación](/es-419/sdk/agent-sdk/java/funding-wallet)
+- [Guía de actualización](/es-419/sdk/agent-sdk/java/upgrade)
+<span id="error-handling" data-sixmm-canonical-anchor="error-handling" aria-hidden="true"></span>
+
+## Manejo de errores
+
+SDK las excepciones se dividen en dos categorías:
+
+| Excepción | Guión | Manejo sugerido |
+| --- | --- | --- |
+| `AgentApiException` | El estado de HTTP no es 2xx, o la respuesta del agente `code != 0` | Lea `getHttpStatus()`, `getCode()` y `getResponseBody()` y trátelo como un fracaso empresarial/API. |
+| `AgentSdkException` | Fallo de red, serialización, configuración o firma | Regístrelo y trátelo como una excepción del sistema. |
+
+Ejemplo:
+
+```java
+import com.sixmm.agent.AgentApiException;
+import com.sixmm.agent.AgentSdkException;
+
+try {
+    TransferResponse resp = client.transfer(TransferRequest.fixed(
+            "AGT-ORDER-1001", "agent-user-001", Direction.IN, "USDT", "10.00"));
+    // Update the local order according to resp.orderStatus.
+} catch (AgentApiException e) {
+    // Business rejection or HTTP error.
+    log.warn("6mm agent api rejected request, httpStatus={}, code={}, body={}",
+            e.getHttpStatus(), e.getCode(), e.getResponseBody());
+} catch (AgentSdkException e) {
+    // Local SDK error or network error.
+    log.error("6mm agent sdk request failed", e);
+}
+```

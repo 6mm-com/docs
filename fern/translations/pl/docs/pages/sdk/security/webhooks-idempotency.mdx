@@ -1,99 +1,109 @@
 ---
-title: "Weryfikacja podpisu webhooka i idempotencja"
-subtitle: "Weryfikuj 6MM Agent webhooków za pomocą surowego ciała żądania oraz powtórek procesów, timeoutów i powtarzających się zdarzeń bez duplikatów działań biznesowych."
+title: "Webhook Weryfikacja podpisu i Idempotencja"
+subtitle: "Zweryfikuj 6MM agenta webhooks za pomocą nieprzetworzonej treści żądania i przetwarzaj ponowne próby, przekroczenia limitu czasu i powtarzające się zdarzenia bez duplikowania działań biznesowych."
 slug: sdk/security/webhooks-idempotency
 canonical-url: https://docs.6mm.com/pl/sdk/security/webhooks-idempotency
 ---
 
-Webhooki powiadamiają backend partnera o asynchronicznych zmianach stanu biznesowego. Ponieważ dostarczenie może być powtarzane, każdy odbiorca musi zweryfikować podpis przed parsowaniem zaufanych danych i musi przetwarzać zdarzenie idempotentnie.
+Webhooks powiadom zaplecze partnera o asynchronicznych zmianach stanu biznesowego. Ponieważ można ponowić próbę dostarczenia, każdy odbiorca musi zweryfikować podpis przed przeanalizowaniem zaufanych danych i musi przetworzyć zdarzenie idempotentnie.
 
 <span id="webhook-headers" data-sixmm-canonical-anchor="webhook-headers" aria-hidden="true"></span>
 
-## Nagłówki Webhooków
+## Webhook nagłówki
 
-| Nagłówek | Opis |
+| Chodnikowiec | Opis |
 | --- | --- |
-| X-Agent-Timestamp | Znacznik czasu Unixa w sekundy. |
-| X-Agent-Nonce | Ochrona przed powtórkami. |
-| X-Agent-Sygnatura | HMAC-SHA256 podpis. |
+| Znacznik czasu X-Agent | Znacznik czasu Uniksa w sekundach. |
+| X-Agent-Nonce | Nonce chroniący przed powtórzeniem. |
+| Podpis X-Agenta | HMAC-SHA256 podpis. |
 
 ```text
 timestamp + nonce + rawBody
 ```
 
-Używaj dokładnego surowego ciała żądania otrzymanego przez HTTP podczas rekonstrukcji wartości podpisanej. Parsowanie i ponowne serializowanie JSON pierwsze może zmienić odstępy lub kolejność pola i uzyskać inny podpis.
+Podczas rekonstruowania podpisanej wartości użyj dokładnej nieprzetworzonej treści żądania otrzymanej w ciągu HTTP. Analiza i ponowna serializacja JSON może najpierw zmienić białe znaki lub kolejność pól i wygenerować inny podpis.
 
 <span id="verification-flow" data-sixmm-canonical-anchor="verification-flow" aria-hidden="true"></span>
 
 ## Przepływ weryfikacji
 
-1. Przeczytaj nagłówki z znacznikiem czasu, nonce i podpisem.
-2. Zdobyć niezmodyfikowany surowy korpus żądania.
-3. Buduj `timestamp + nonce + rawBody`.
+1. Przeczytaj znacznik czasu, wartość jednorazową i nagłówki podpisu.
+2. Przechwyć niezmodyfikowaną surową treść żądania.
+3. Zbuduj `timestamp + nonce + rawBody`.
 4. Oblicz HMAC-SHA256 z partnerem API sekretem.
-5. Porównaj obliczone i otrzymane sygnatury za pomocą porównania w czasie stałym.
-6. Stosuj zatwierdzone kontrole aktualności i ponownego użycia w czasie użycia.
-7. Analizuj i przetwarzaj zdarzenie dopiero po pomyślnym sprawdzeniu.
+5. Porównaj obliczone i otrzymane podpisy, korzystając z porównania w czasie stałym.
+6. Zastosuj zatwierdzone kontrole aktualności sygnatury czasowej i kontroli jednorazowego ponownego użycia.
+7. Analizuj i przetwarzaj zdarzenie dopiero po pomyślnej weryfikacji.
 
-Gdy dostępny jest oficjalny weryfikator Agent SDK , używaj go zamiast utrzymywać kod niezależnego podpisu.
+Gdy dostępny jest oficjalny weryfikator Agent SDK, użyj go zamiast utrzymywać niezależny kod podpisujący.
 
 <span id="order-idempotency" data-sixmm-canonical-anchor="order-idempotency" aria-hidden="true"></span>
 
-## Idempotencja rzędu
+## Zamów idempotencję
 
-| Sprawa | Prowadzenie |
+| Sprawa | Obsługiwanie |
 | --- | --- |
-| Początkowa prośba o przeniesienie | Stwórz jedną globalnie unikalną agentOrderNo. |
-| HTTP przerwa | Zapytaj oryginalny agentOrderNo przed utworzeniem nowego. |
-| PROCESSING reakcja | Czekaj na status webhooka lub kolejności zapytania. |
-| Powtarzające się webhooki | Deduplikuj według klucza idempotencji i ostatecznego statusu. |
+| Wstępna prośba o przeniesienie | Utwórz jeden, unikalny na całym świecie agentOrderNo. |
+| HTTP przekroczenie limitu czasu | Zapytaj o oryginał agentOrderNo przed utworzeniem nowego. |
+| PROCESSING odpowiedź | Poczekaj na webhook lub zapytaj o status zamówienia. |
+| Powtarzane webhook | Deduplikacja według klucza idempotencji i statusu końcowego. |
 
 <span id="recommended-idempotency-record" data-sixmm-canonical-anchor="recommended-idempotency-record" aria-hidden="true"></span>
 
 ## Zalecany rekord idempotencji
 
-Przechowuj wystarczająco dużo informacji, aby rozpoznać powtarzającą się dostawę i bezpiecznie ją odzyskać:
+Przechowuj wystarczającą ilość informacji, aby rozpoznać powtarzającą się dostawę i bezpiecznie odzyskać:
 
-| Pole | Cel |
+| Pole | Zamiar |
 | --- | --- |
-| Klucz do wydarzenia lub działalności gospodarczej | Jednoznacznie identyfikuje powiadomienie lub operację. |
-| Numer zamówienia partnera | Łączy zdarzenie z oryginalnym żądaniem. |
-| Hash ładunku | Pomaga zidentyfikować sprzeczne powtarzające się ładunki. |
-| Aktualny stan przetwarzania | Rozróżnia otrzymaną, przetwarzaną, sukcesową i nieudaną pracę. |
-| Ostateczny status działalności | Zapobiega podwójnemu zastosowaniu akcji terminalnej. |
-| Przetworzony znacznik czasu | Wspiera politykę dochodzeniową i retencyjną. |
+| Wydarzenie lub klucz biznesowy | Unikalnie identyfikuje powiadomienie lub operację. |
+| Numer zamówienia partnera | Łączy wydarzenie z pierwotnym żądaniem. |
+| Hash ładunku | Pomaga zidentyfikować sprzeczne, powtarzające się ładunki. |
+| Bieżący stan przetwarzania | Rozróżnia pracę otrzymaną, przetworzoną, udaną i nieudaną. |
+| Ostateczny status biznesowy | Zapobiega dwukrotnemu zastosowaniu akcji końcowej. |
+| Przetworzony znacznik czasu | Obsługuje zasady dochodzenia i przechowywania. |
 
-Jeśli to możliwe, zatwierdzaj zmianę biznesową i rekord idempotencji w tej samej transakcji. Powtarzające się zdarzenie powinno zwracać już znany wynik, zamiast ponownie stosować saldo, zamówienie lub zmianę użytkownika.
+Jeśli to możliwe, zatwierdź zmiany biznesowe i rekord idempotencji w tej samej transakcji. Powtarzające się zdarzenie powinno zwrócić już znany wynik zamiast ponownego stosowania salda, kolejności lub zmiany użytkownika.
 
 <span id="timeout-and-retry-rule" data-sixmm-canonical-anchor="timeout-and-retry-rule" aria-hidden="true"></span>
 
-## Zasada timeoutu i ponownej próby
+## Reguła limitu czasu i ponownej próby
 
-Limit HTTP nie dowodzi, że pierwotne żądanie nie powiodło się. Zapytaj operację używając oryginalnego `agentOrderNo`lub poczekaj na jej webhook, zanim zdecydujesz, czy potrzebna jest kolejna akcja. Tworzenie nowego numeru zlecenia biznesowego po każdym przekroczeniu może powodować duplikacje ruchów funduszy.
+Limit czasu HTTP nie oznacza, że ​​pierwotne żądanie nie powiodło się. Zapytaj o operację, używając oryginalnego `agentOrderNo` lub poczekaj na webhook, zanim podejmiesz decyzję, czy wymagane jest inne działanie. Utworzenie nowego numeru zamówienia biznesowego po każdym przekroczeniu limitu czasu może spowodować zdublowanie ruchów środków.
 
 <span id="production-checklist" data-sixmm-canonical-anchor="production-checklist" aria-hidden="true"></span>
 
 ## Lista kontrolna produkcji
 
-- Weryfikacja podpisu przed JSON parsowania lub przetwarzania biznesowego.
-- Zachowanie surowego ciała niezależnie od przeanalizowanego ładunku.
-- Odrzucanie przestarzałych lub powtarzanych żądań zgodnie z zatwierdzoną polityką integracji.
-- Zapewnienie bezpiecznego przetwarzania zdarzeń dla powtarzających się i niekolejnych dostaw.
-- Rejestruj identyfikatory zdarzeń, numery zamówień partnerów, wyniki przetwarzania oraz czas żądań.
-- Redakcja sekretów i wartości sygnatur z logów i załączników wsparcia.
+- Zweryfikuj podpis przed analizą JSON lub przetwarzaniem biznesowym.
+- Zachowaj surową treść niezależnie od przeanalizowanego ładunku.
+- Odrzucaj nieaktualne lub odtwarzane żądania zgodnie z zatwierdzoną polityką integracji.
+- Zapewnij bezpieczeństwo przetwarzania zdarzeń w przypadku powtarzających się dostaw poza kolejnością.
+- Rejestruj identyfikatory zdarzeń, numery zamówień partnerów, wyniki przetwarzania i czas żądania.
+- Usuń sekrety i wartości podpisów z dzienników i załączników pomocy technicznej.
 
 <span id="related-docs" data-sixmm-canonical-anchor="related-docs" aria-hidden="true"></span>
 
 ## Powiązane dokumenty
 
 <CardGroup cols={3}>
-<Card title="Sekrety i podpisywanie HMAC" icon="fa-duotone fa-shield-keyhole" href="/pl/sdk/security/secrets-signing">
-Chroń API sekret używany do weryfikacji żądań i webhooków.
+<Card title="Sekrety i HMAC Podpisywanie" icon="fa-duotone fa-shield-keyhole" href="/pl/sdk/security/secrets-signing">
+Chroń sekret API używany do żądania i weryfikacji webhook.
 </Card>
 <Card title="Agent SDK Przegląd" icon="fa-duotone fa-server" href="/pl/sdk/agent-sdk/overview">
-Przejrzyj cały proces integracji backendu.
+Przejrzyj pełny przepływ pracy związany z integracją zaplecza.
 </Card>
 <Card title="SDK Rozwiązywanie problemów" icon="fa-duotone fa-screwdriver-wrench" href="/pl/sdk/security/troubleshooting">
-Zbadaj odrzucone sygnatury, powtarzające się zdarzenia i oczekujące operacje.
+Sprawdź odrzucone podpisy, powtarzające się zdarzenia i oczekujące operacje.
 </Card>
 </CardGroup>
+
+<span id="funding-and-environment-boundaries" data-sixmm-canonical-anchor="funding-and-environment-boundaries" aria-hidden="true"></span>
+
+## Granice finansowania i środowiska
+
+Pierwotny transfer umowy webhook i przepływ `queryOrder` nie mają automatycznego zastosowania do Finansowania. Potwierdź operacje finansowania przy użyciu `queryWalletTransfer` i oryginalnego środowiska zamówienia. Wykorzystanie środków finansowych `status`; oryginalne odpowiedzi na przeniesienie umowy używają `orderStatus`. Pomyślna odpowiedź HTTP lub `code=0` nie jest sama w sobie dowodem przesunięcia środków.
+
+Jawne, symulowane powiadomienia o przeniesieniu kontraktu obejmują `environment=SIMULATED`. Najpierw zweryfikuj surową treść, a następnie sprawdź użytkownika, kwotę, tożsamość zamówienia i środowisko z zapisanym lokalnym zamówieniem biznesowym.
+
+[Przewodnik odzyskiwania środków](/pl/sdk/agent-sdk/java/funding-wallet) · [Przewodnik po środowisku](/pl/sdk/agent-sdk/java/environments)

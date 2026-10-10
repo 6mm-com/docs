@@ -1,80 +1,95 @@
 ---
-title: "SDK 統合トラブルシューティング"
-subtitle: "サポート要請をエスカレーションする前に、 Trading Widget、 Agent SDK、署名、ウェブフック、タイムアウト、環境の問題を診断してください。"
+title: "SDK 統合のトラブルシューティング"
+subtitle: "サポート リクエストをエスカレーションする前に、Trading Widget、Agent SDK、署名、webhook、タイムアウト、環境の問題を診断してください。"
 slug: sdk/security/troubleshooting
 canonical-url: https://docs.6mm.com/ja/sdk/security/troubleshooting
 ---
 
-まず、失敗した操作の環境、タイムスタンプ、ビジネス識別子から始めます。構造化チェックは通常、設定問題と認証、ネットワーク、非同期処理の問題を区別します。
+まず、失敗した操作の環境、タイムスタンプ、ビジネス識別子から始めます。構造化チェックでは通常、構成の問題を認証、ネットワーク、および非同期処理の問題から分離します。
 
 <span id="diagnostic-order" data-sixmm-canonical-anchor="diagnostic-order" aria-hidden="true"></span>
 
-## 推奨診断順
+## 推奨される診断順序
 
-1. 影響を受ける環境と基地 URLを確認する。
-2. UTC の時間範囲と最初の失敗リクエストを記録します。
-3. モジュールを特定する: Trading Widget、 Agent SDK、 REST API、 WebSocket、またはwebhook。
-4. リクエストID、パートナーユーザーID、 `agentOrderNo`、注文ID、またはウェブフックイベントIDを取得する。
-5. 最近のコード、認証情報、 IP ホワイトリスト、またはデプロイの変更を確認しましょう。
-6. 最小の安全なテストケースで繁殖すること。
+1. 影響を受ける環境とベース URL を確認してください。
+2. UTC の時間範囲と最初に失敗したリクエストを記録します。
+3. モジュールを特定します: Trading Widget、Agent SDK、REST API、WebSocket、または webhook。
+4. リクエスト ID、パートナー ユーザー ID、`agentOrderNo`、オーダー ID、または webhook イベント ID を取得します。
+5. 最近のコード、認証情報、IP ホワイトリスト、または展開の変更を確認してください。
+6. 最小の安全なテスト ケースで再現します。
 
 <span id="trading-widget-issues" data-sixmm-canonical-anchor="trading-widget-issues" aria-hidden="true"></span>
 
-## Trading Widget 号
+## Trading Widget の問題
 
-| 症状 | 原因としては | 修正 |
+| 症状 | 考えられる原因 | 修理 |
 | --- | --- | --- |
-| iFrameがパートナーのローカルドメインを要求します | baseUrl が欠けている | パス baseUrl: 『https://app.6mm.com』。 |
-| iframeは見えないか非常に短いです | 親コンテナには高さがありません | 容器の高さやパスの高さを設定してください。 |
-| token_provider_missing | パートナートークンモードにはプロバイダーがありません | 認証を追加。tokenProvider。 |
-| auth_exchange_failed | 無効、期限切れ、または不一致の埋め込みトークン | バックエンドのトークン応答と channelIdを確認してください。 |
+| iframe はパートナーのローカル ドメインをリクエストします | baseUrl が見つかりません | baseUrl: 'https://app.6mm.com' を渡します。 |
+| iframe が表示されないか、非常に短いです | 親コンテナには高さがありません | コンテナの高さまたはパスの高さを設定します。 |
+| token_provider_missing | パートナートークンモードにはプロバイダーがありません | auth.tokenProviderを追加します。 |
+| auth_exchange_failed | 無効、期限切れ、または不一致の埋め込みトークン | バックエンド トークンの応答と channelId を確認してください。 |
 
 <span id="agent-sdk-issues" data-sixmm-canonical-anchor="agent-sdk-issues" aria-hidden="true"></span>
 
-## Agent SDK 号
+## Agent SDK の問題
 
-| 症状 | 原因としては | 修正 |
+| 症状 | 考えられる原因 | 修理 |
 | --- | --- | --- |
-| 署名拒否 | 間違った秘密、時計のドリフト、または署名欄の手動変更 | 署名フィールドの生成とサーバータイムの同期を SDK します。 |
-| 重複資金移動リスク | タイムアウト後に使用した新しい注文番号 | まずは元の agentOrderNo でクエリを出してください。 |
-| PROCESSING 失敗者として扱われる | 州の未解決の誤解 | ウェブフックを待つか、 queryOrderに電話してください。 |
-| Webhookは複数回処理されました | 冪等性のない再試行動 | 冪等性キーと最終状態のチェックを追加してください。 |
+| 署名が拒否されました | 間違ったシークレット、クロックのずれ、または手動で変更された署名付きフィールド | SDK で署名フィールドを生成し、サーバー時刻を同期させます。 |
+| 資金移動の重複リスク | タイムアウト後に使用される新しい注文番号 | 最初に元の agentOrderNo でクエリを実行します。 |
+| PROCESSING は失敗として扱われます | 保留状態の誤解 | webhook を待つか、queryOrder に電話してください。 |
+| Webhook が複数回処理されました | 冪等性を持たない再試行動作 | 冪等性キーと最終状態チェックを追加します。 |
 
 <span id="evidence-to-capture" data-sixmm-canonical-anchor="evidence-to-capture" aria-hidden="true"></span>
 
-## 証拠を押収する
+## 捕らえるべき証拠
 
 | 統合 | 有用な証拠 |
 | --- | --- |
-| Trading Widget | ページ URL、 SDK バージョンパス、ブラウザコンソール、ネットワークリクエスト失敗、 `onError` ペイロード、コンテナ寸法。 |
-| Agent SDK | 言語・バージョンSDK、ベースURL、UTCタイムスタンプ、リクエストID、`agentOrderNo`、レスポンスコード、そしてサニタイズされたログです。 |
-| ウェブフック | 配信時間、イベントまたはビジネスキー、署名検証結果、処理状態、そしてサニティ化された生のハッシュ。 |
-| REST API | メソッド、パス、環境、リクエストID、レスポンスコード、サニティ化されたパラメータ。 |
+| Trading Widget | ページ URL、SDK バージョン パス、ブラウザ コンソール、失敗したネットワーク リクエスト、`onError` ペイロード、およびコンテナーのディメンション。 |
+| Agent SDK | SDK 言語/バージョン、ベース URL、UTC タイムスタンプ、リクエスト ID、`agentOrderNo`、応答コード、およびサニタイズされたログ。 |
+| Webhook | 配信時間、イベントまたはビジネスキー、署名検証結果、処理状態、およびサニタイズされた生の本体ハッシュ。 |
+| REST API | メソッド、パス、環境、リクエストID、レスポンスコード、サニタイズされたパラメータ。 |
 
-パスワード、アクセストークン、 API シークレット、完全な署名、秘密鍵、または編集されていない個人データは診断に含めてはいけません。
+診断には、パスワード、アクセス トークン、API シークレット、完全な署名、秘密キー、または編集されていない個人データを決して含めないでください。
 
 <span id="before-escalating" data-sixmm-canonical-anchor="before-escalating" aria-hidden="true"></span>
 
 ## エスカレートする前に
 
-- 操作が安全に再試行可能と記録されている場合のみ再試行。
-- タイムアウト後、新しい事業者識別子を作成する代わりに元のビジネス識別子をクエリする。
-- システムクロックおよび認証情報環境のシグネチャエラーの確認。
-- 最初の失敗とその後の再試行結果を保持する。
-- 次の [サポートリクエストテンプレート](/ja/resources/support-request-template) 完全な黒塗り報告書を送ること。
+- 操作を再試行しても安全であることが文書化されている場合にのみ再試行してください。
+- タイムアウト後は、新しいビジネス ID を作成するのではなく、元のビジネス ID をクエリします。
+- システム クロックと認証情報環境に署名エラーがないか確認します。
+- 最初の失敗とその後の再試行結果を保存します。
+- を使用します。 [サポートリクエストのテンプレート](/ja/resources/support-request-template) 編集された完全なレポートを送信します。
 
 <span id="related-docs" data-sixmm-canonical-anchor="related-docs" aria-hidden="true"></span>
 
-## 関連文書
+## 関連ドキュメント
 
 <CardGroup cols={3}>
 <Card title="Trading Widget クイックスタート" icon="fa-duotone fa-chart-line" href="/ja/sdk/trading-widget/quick-start">
-スクリプトの読み込み、コンテナサイズ、設定、コールバックの確認。
+スクリプトの読み込み、コンテナーのサイズ、構成、およびコールバックを確認します。
 </Card>
 <Card title="秘密と署名" icon="fa-duotone fa-shield-keyhole" href="/ja/sdk/security/secrets-signing">
-Agent SDK 認証情報、時計、署名済みフィールドをチェックしてください。
+Agent SDK 資格情報、クロック、署名済みフィールドを確認してください。
 </Card>
-<Card title="ウェブフックと冪等性" icon="fa-duotone fa-webhook" href="/ja/sdk/security/webhooks-idempotency">
-コールバック検証と重複イベント処理の確認。
+<Card title="Webhooks & べき等性" icon="fa-duotone fa-webhook" href="/ja/sdk/security/webhooks-idempotency">
+コールバックの検証と重複イベントの処理を確認します。
 </Card>
 </CardGroup>
+
+<span id="java-v030-diagnostics" data-sixmm-canonical-anchor="java-v030-diagnostics" aria-hidden="true"></span>
+
+## Java v0.3.0 診断
+
+| 症状 | 確認と回復 |
+| --- | --- |
+| 資金調達リクエストの結果は不明です | 元の `agentOrderNo` を保持します。元の環境で `queryWalletTransfer` を呼び出します。 `queryOrder` は使用しないでください。 |
+| シミュレーション UI に予期しない資金が表示される | フロントエンド `tradingMode` をバックエンド `environment` とは別にチェックします。アカウント `isSimulatedUser` はリクエストをルーティングしません。 |
+| クエリエラー `6905` | 共有パートナー クォータの使用を中止し、同じカーソルを再試行し、SDK でフィルターします。 |
+| クエリエラー `6904` | 同時クエリを減らし、時間枠を狭めます。解決しない場合はサポートにお問い合わせください。 |
+| カーソルが無効または期限切れです | 同じ固定履歴ウィンドウを再起動し、保存されたレコードを重複排除します。 |
+| 新しい Java メソッドがありません | 解決された Maven アーティファクトをパブリック タグ `v0.3.0` に対して確認します。アーティファクト ポリシーに従って、競合する依存関係を削除します。 |
+
+[クエリとエラーのリファレンス](/ja/sdk/agent-sdk/java/perpetual-queries) · [アップグレードガイド](/ja/sdk/agent-sdk/java/upgrade)

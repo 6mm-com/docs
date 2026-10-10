@@ -1,0 +1,83 @@
+---
+title: "v0.3.0으로 업그레이드"
+subtitle: "v0.3.0으로 업그레이드: Agent Java SDK v0.3.0 통합, 예시, 매개변수 및 응답 의미 체계."
+slug: sdk/agent-sdk/java/upgrade
+canonical-url: https://docs.6mm.com/ko/sdk/agent-sdk/java/upgrade
+---
+
+이 가이드는 **Agent Java SDK `v0.3.0`** 및 Java 8+를 대상으로 합니다.
+
+<span id="decide-what-needs-upgrading" data-sixmm-canonical-anchor="decide-what-needs-upgrading" aria-hidden="true"></span>
+
+## 업그레이드가 필요한 항목 결정
+
+| 기존 통합 | 행동 |
+| --- | --- |
+| 환경이 생략된 기존 생산 기능 | 기존 응답 형태는 계속 호환됩니다. 새 쿼리는 업그레이드를 강제하지 않습니다. |
+| 초 거래에 대한 기존 일반 내장 인증 | 인증 및 갱신 재사용 필요한 제품 페이지를 선택하세요. |
+| 자금 잔액, 이체 및 복구 | `withFunding`, `walletTransfer` 및 `queryWalletTransfer`가 포함된 모델을 사용하세요. |
+| 명시적 시뮬레이션 자금 | `environment`를 지원하는 요청/응답 모델을 사용하세요. |
+| 6개의 영구 데이터 쿼리 | 6가지 메서드와 배열 서명 지원을 포함하여 공개 Java SDK `v0.3.0`를 사용하세요. |
+
+현재 `baseUrl`, `agentCode`, `apiSecret`, 사용자 바인딩 및 원래 비즈니스 주문을 보존합니다.
+
+<span id="install-the-stable-public-tag" data-sixmm-canonical-anchor="install-the-stable-public-tag" aria-hidden="true"></span>
+
+## 안정적인 공개 태그 설치
+
+GitHub 호스트 소스. GitHub 태그를 게시해도 Maven 좌표가 Maven Central에 게시되지 않습니다. 태그가 지정된 소스를 로컬에 설치하거나 확인된 JAR/POM를 조직의 아티팩트 저장소에 게시하세요.
+
+```bash
+git clone --branch v0.3.0 --single-branch https://github.com/6mm-com/agent-java-sdk.git agent-java-sdk-v0.3.0
+cd agent-java-sdk-v0.3.0
+git rev-parse HEAD
+git rev-parse 'v0.3.0^{commit}'
+mvn install
+```
+
+두 커밋 ID가 일치해야 합니다. 파트너 프로젝트에서 종속성을 선언합니다.
+
+```xml
+<dependency>
+    <groupId>com.sixmm.exchange.sdk</groupId>
+    <artifactId>agent</artifactId>
+    <version>0.3.0</version>
+</dependency>
+```
+
+해결된 종속성을 확인합니다.
+
+```bash
+mvn dependency:tree -Dincludes=com.sixmm.exchange.sdk:agent
+```
+
+로컬 설치를 수행하면 해당 시스템에서만 아티팩트를 사용할 수 있습니다. CI 및 기타 개발자에게는 동일한 태그가 지정된 설치 또는 확인된 아티팩트 저장소가 필요합니다. `0.3.0`라는 비공개 아티팩트가 이미 있는 경우 해당 소스와 메서드를 확인하세요. 공유 아티팩트를 자동으로 덮어쓰지 마십시오.
+
+<span id="required-integration-changes" data-sixmm-canonical-anchor="required-integration-changes" aria-hidden="true"></span>
+
+## 필수 통합 변경사항
+
+1. 명시적 `environment`에 대한 요청 및 응답 모델을 업데이트합니다. 엄격한 이전 응답 모델은 추가 필드를 거부할 수 있습니다.
+2. `funding`을 읽기 전에 `withFunding()`을 사용하세요. 계약 잔액은 초 거래 잔액이 아닙니다.
+3. 자금 조달에는 `/v1/agent/wallet-transfer` 및 `/v1/agent/wallet-transfer-status`를 사용하세요. 이전 `queryOrder`에서는 자금 작업을 복구할 수 없습니다.
+4. 6개의 쿼리는 `platformUserIds`를 문자열 배열로 사용합니다. 배열을 압축하여 서명합니다. JSON; Java `List.toString()`은(는) 호환되지 않습니다.
+5. 상점 이전 주문, 일반 거래 주문, 조건부 주문 및 작성을 별개의 개체로 취급합니다. 작업에 따라 `orderStatus` 또는 `status`를 구문 분석합니다.
+6. 구문 분석하기 전에 원본 webhook 본문을 확인하세요. 명시적인 시뮬레이션 알림에는 `environment`; 저장된 순서와 비교해 보세요.
+7. Java 및 위젯 버전을 독립적으로 관리합니다. 백엔드 업그레이드는 프런트엔드 페이지나 거래 모드를 변경하지 않으며 초 거래에는 새로운 토큰 유형이 필요하지 않습니다.
+
+<span id="verify-the-upgrade" data-sixmm-canonical-anchor="verify-the-upgrade" aria-hidden="true"></span>
+
+## 업그레이드 확인
+
+파트너 프로젝트의 빌드를 실행하고 해당 종속성 트리를 검사합니다. 테스트 바인딩, 원래 생산 흐름, 명시적 시뮬레이션 잔액, 자금 조달 결과 복구, 6개 쿼리 모두, 고정 창 페이지 매김, 오류 처리 및 멱등성 콜백.
+
+사용자 정의 HTTP 클라이언트의 경우 기존 모델이 새로운 필드를 다룬다고 가정하는 대신 태그가 지정된 요청 및 서명 계약을 따르세요. 보다 [쿼리 개요](/ko/sdk/agent-sdk/java/perpetual-queries) 그리고 [환경가이드](/ko/sdk/agent-sdk/java/environments).
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## 소스 및 관련 가이드
+
+- [공식 v0.3.0 소스](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [쿼리 개요 및 페이지 매김](/ko/sdk/agent-sdk/java/perpetual-queries)
+- [펀딩 지갑](/ko/sdk/agent-sdk/java/funding-wallet)
+- [업그레이드 가이드](/ko/sdk/agent-sdk/java/upgrade)

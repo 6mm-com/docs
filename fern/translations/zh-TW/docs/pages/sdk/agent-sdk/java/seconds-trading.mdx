@@ -1,0 +1,165 @@
+---
+title: "秒交易整合"
+subtitle: "秒交易集成：Agent Java SDK v0.3.0 集成、示例、參數和響應語義。"
+slug: sdk/agent-sdk/java/seconds-trading
+canonical-url: https://docs.6mm.com/zh-TW/sdk/agent-sdk/java/seconds-trading
+---
+
+本指南的目標用戶為 **Agent Java SDK `v0.3.0`** 和 Java 8+。
+
+<span id="prepare-identity-authentication-and-funds" data-sixmm-canonical-anchor="prepare-identity-authentication-and-funds" aria-hidden="true"></span>
+
+## 準備身份、認證和資金
+
+秒盤交易採用與永續交易相同的用戶綁定和入市認證。它使用資金餘額；永續保證金使用合約餘額。分別配置前端產品/模式和後端資金環境。
+
+使用初始化 `client` [快速入門](/zh-TW/sdk/agent-sdk/java/quick-start)。保存綁定的用戶映射，並從經過身份驗證的後端會話中獲取合作伙伴用戶ID。
+
+<span id="redirect-entry" data-sixmm-canonical-anchor="redirect-entry" aria-hidden="true"></span>
+
+## 重定向條目
+
+```java
+import com.sixmm.agent.model.CreateEntryUrlRequest;
+import com.sixmm.agent.model.CreateEntryUrlResponse;
+
+CreateEntryUrlResponse entry = client.createEntryUrl(
+        CreateEntryUrlRequest.of("merchant-user-001")
+                .withRedirectPath("/zh-CN/up-down?tradingMode=demo")
+                .withReturnUrl("https://merchant.example/markets"));
+String webUrl = entry.webUrl;
+```
+
+SDK 調用 `POST /v1/agent/create-entry-url`。返回 `webUrl` 到合作伙伴前端並立即打開它。 `expireAt` 使用 Unix 秒。票證是短暫的、一次性的；過期或消費後獲取另一個。
+
+| 產品 | 示例前端路徑 | 錢包 |
+| --- | --- | --- |
+| 上/下 | `/zh-CN/up-down?tradingMode=real` 或 `demo` | 資金 |
+| 高/低 | `/zh-CN/high-low?tradingMode=real` 或 `demo` | 資金 |
+| 網格 | `/zh-CN/grid-prediction?tradingMode=real` 或 `demo` | 資金 |
+| 永續期貨 | `/zh-CN/futures/BTCUSDT?tradingMode=real` 或 `demo` | 合同 |
+
+使用 6MM 提供的實際前端路由。 `redirectPath`是以`/`開頭的相對平臺路徑； `returnUrl` 是絕對夥伴 HTTP/HTTPS URL。入場券對用戶進行身份驗證，但不執行轉賬。
+
+<span id="embedded-entry" data-sixmm-canonical-anchor="embedded-entry" aria-hidden="true"></span>
+
+## 嵌入式入口
+
+使用現有的 `partner-token` 和 `tokenProvider` 流程。沒有特定於預測的標記。使用所需的 `page` 和 `tradingMode` 創建小部件，並在調用合作伙伴後端時使用其當前的 `channelId`。
+
+```java
+import com.sixmm.agent.model.CreateEmbedTokenRequest;
+import com.sixmm.agent.model.CreateEmbedTokenResponse;
+
+String channelId = "tw_example_channel";
+CreateEmbedTokenResponse auth = client.createEmbedToken(
+        CreateEmbedTokenRequest.of("merchant-user-001", channelId));
+String embedToken = auth.embedToken;
+long expireAt = auth.expireAt;
+```
+
+SDK 調用 `POST /v1/agent/create-embed-token`。 `symbol` 是可選的；它不選擇秒交易產品。產品選擇屬於前端。代幣不會選擇資金環境或更改餘額。
+
+<span id="complete-frontend-example" data-sixmm-canonical-anchor="complete-frontend-example" aria-hidden="true"></span>
+
+## 完整的前端示例
+
+這些選項已於 2026 年 10 月 10 日針對公共 Trading Widget `1.8.0` 運行時進行驗證。 Widget 和 Agent Java SDK 版本是獨立的。
+
+```html
+<div id="seconds-widget" style="width: 100%; height: 720px"></div>
+<script src="https://app.6mm.com/sdk/trading-widget/v1/index.js"></script>
+<script>
+  const page = 'up-down';
+  const tradingMode = 'demo';
+  const capabilities = TradingWidget.capabilities;
+  if (!capabilities?.partnerToken ||
+      !capabilities.pages?.includes(page) ||
+      !capabilities.tradingModes?.includes(tradingMode)) {
+    throw new Error('Trading Widget SDK does not support the requested page or mode');
+  }
+
+  const widget = TradingWidget.create('#seconds-widget', {
+    baseUrl: 'https://app.6mm.com',
+    page,
+    tradingMode,
+    theme: 'dark',
+    locale: 'zh-CN',
+    auth: {
+      mode: 'partner-token',
+      tokenProvider: async ({ channelId }) => {
+        // Partner-owned endpoint; derive the user from the backend session.
+        const response = await fetch('/api/seconds/embed-token', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ channelId }),
+        });
+        if (!response.ok) {
+          throw new Error('Failed to request embed token');
+        }
+        const result = await response.json();
+        if (typeof result.embedToken !== 'string' || !result.embedToken.trim() ||
+            !Number.isFinite(result.expireAt) || result.channelId !== channelId) {
+          throw new Error('Invalid embed token response');
+        }
+        return {
+          embedToken: result.embedToken,
+          expireAt: result.expireAt,
+          channelId: result.channelId,
+        };
+      },
+    },
+    onReady() {
+      console.log('Trading widget ready');
+    },
+    onError(error) {
+      console.error('Trading widget error', error.code);
+    },
+  });
+  window.addEventListener('beforeunload', () => widget.destroy());
+</script>
+```
+
+| 選項 | 價值觀 | 意義 |
+| --- | --- | --- |
+| `page` | `up-down`，`high-low`，`grid-prediction` | 產品頁面。 |
+| `tradingMode` | `real`，`demo` | 默認為`real`；明確設置。 |
+| `baseUrl` | `https://app.6mm.com` | 平臺前端起源； Widget 構建其嵌入 URL。 |
+
+<span id="partner-backend-response" data-sixmm-canonical-anchor="partner-backend-response" aria-hidden="true"></span>
+
+## 合作伙伴後臺響應
+
+`/api/seconds/embed-token` 是合作伙伴擁有的端點，而不是新的 6MM API。驗證會話，派生 `agentUserId` 服務器端並調用 `createEmbedToken`。返回此頂級結構：
+
+```json
+{
+  "embedToken": "short-one-time-token",
+  "expireAt": 1791590700,
+  "channelId": "tw_xxx"
+}
+```
+
+使用代理響應的實際 `expireAt`，而不是說明性值。代理響應不包含`channelId`；您的後端會回顯當前請求的值。如果您的 API 將結果包裹在 `data` 中，請在從 tokenProvider 返回之前解開該層。拒絕業務失敗而不是返回無效的成功對象。
+
+每次初始化或更新都會獲得一個新的令牌。切勿再次緩存和交換相同的令牌，或將其放入 URL 中。續訂時重複使用相同的實例通道；重新創建實例後使用新通道。
+
+<span id="match-the-funds-environment" data-sixmm-canonical-anchor="match-the-funds-environment" aria-hidden="true"></span>
+
+## 匹配資金環境
+
+`demo` 前端需要使用 `environment=SIMULATED` 模擬資金請求。 `real` 前端需要生產資金。 `tradingMode` 和代幣創建都不會改變後端資金目標。
+
+當切換用戶或交易模式時，銷燬舊的Widget並創建一個新的實例。在將用戶視為已獲得資金之前，通過特定於資金的狀態端點查詢資金餘額、轉移資金並確認最終結果。
+
+看 [資金錢包](/zh-TW/sdk/agent-sdk/java/funding-wallet) 和 [環境指南](/zh-TW/sdk/agent-sdk/java/environments).
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## 來源及相關指南
+
+- [官方v0.3.0源碼](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [查詢概覽和分頁](/zh-TW/sdk/agent-sdk/java/perpetual-queries)
+- [資金錢包](/zh-TW/sdk/agent-sdk/java/funding-wallet)
+- [升級指南](/zh-TW/sdk/agent-sdk/java/upgrade)

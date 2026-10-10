@@ -1,15 +1,15 @@
 ---
-title: "Trading Widget Uwierzytelnianie"
-subtitle: "Wykorzystaj partner-token do nowych integracji z wbudowanym handlem SSO tradingiem."
+title: "Trading Widget Uwierzytelnienie"
+subtitle: "Użyj tokena partnera do nowych integracji handlu wbudowanego SSO."
 slug: sdk/trading-widget/authentication
 canonical-url: https://docs.6mm.com/pl/sdk/trading-widget/authentication
 ---
 
 <span id="recommended-mode-partner-token" data-sixmm-canonical-anchor="recommended-mode-partner-token" aria-hidden="true"></span>
 
-## Zalecany tryb: partner-token
+## Zalecany tryb: token partnera
 
-Partner-token unika umieszczania krótkich tokenów w URL-ach i utrzymuje apiSecret na backendzie partnera.
+partner-token pozwala uniknąć umieszczania krótkich tokenów w adresach URL i przechowuje apiSecret na zapleczu partnera.
 
 ```js
 const widget = TradingWidget.create('#trading-widget', {
@@ -38,14 +38,14 @@ const widget = TradingWidget.create('#trading-widget', {
 
 ## Powiązana dokumentacja
 
-- [Create Embed Token](/pl/sdk/agent-sdk/java/embed-token): przykład wydawania tokenów backendowych.
-- [Trading Widget Quick Start](/pl/sdk/trading-widget/quick-start): zakończ proces inicjalizacji.
-- [Sekrety i podpisywanie](/pl/sdk/security/secrets-signing): przechowywanie uprzywilejowanych danych uwierzytelniających agentów na zapleczu.
-- [Rozwiązywanie problemów](/pl/sdk/security/troubleshooting): niepowodzenia sesji diagnostycznej, tokena, źródła i inicjalizacji.
+- [Utwórz token osadzania](/pl/sdk/agent-sdk/java/embed-token): przykład wydania tokenu zaplecza.
+- [Trading Widget Szybki start](/pl/sdk/trading-widget/quick-start): pełny przebieg inicjalizacji.
+- [Sekrety i podpisywanie](/pl/sdk/security/secrets-signing): zachowaj poświadczenia agenta uprzywilejowanego na zapleczu.
+- [Rozwiązywanie problemów](/pl/sdk/security/troubleshooting): diagnozuj błędy sesji, tokenu, pochodzenia i inicjalizacji.
 
 <span id="backend-flow" data-sixmm-canonical-anchor="backend-flow" aria-hidden="true"></span>
 
-## Przepływ backend
+## Przepływ backendu
 
 ```text
 1. Partner frontend receives auth_request from the iframe.
@@ -60,32 +60,32 @@ const widget = TradingWidget.create('#trading-widget', {
 
 <span id="tokenprovider-contract" data-sixmm-canonical-anchor="tokenprovider-contract" aria-hidden="true"></span>
 
-## tokenProvider kontrakt
+## tokenProvider umowa
 
 | Pole | Kierunek | Opis |
 | --- | --- | --- |
-| channelId | SDK -> Backend partnera | Unikalny identyfikator sesji widżetu. Backend powinien przekazać to createEmbedToken. |
-| Symbol | SDK -> Backend partnera | Aktualnie żądany symbol handlowy. Użyj go, by w razie potrzeby wyznaczyć skalę tokena. |
-| Powód | SDK -> Backend partnera | Dlaczego SDK żąda tokena, takiego jak początkowe ładowanie lub odświeżanie. |
-| embedToken | Backend partnera -> SDK | Krótkotrwały token stworzony przez Agent SDK lub Agenta API. |
-| expireAt | Backend partnera -> SDK | Znacznik wygaśnięcia tokena zwrócony do 6MM. |
+| channelId | SDK -> Zaplecze partnera | Unikalny identyfikator sesji widgetu. Backend powinien przekazać go do createEmbedToken. |
+| symbol | SDK -> Zaplecze partnera | Aktualnie żądany symbol handlowy. Użyj go, aby w razie potrzeby określić zakres tokena. |
+| powód | SDK -> Zaplecze partnera | Dlaczego SDK żąda tokena, takiego jak początkowe ładowanie lub odświeżenie. |
+| embedToken | Zaplecze partnera -> SDK | Token krótkotrwały utworzony przez Agent SDK lub Agenta API. |
+| expireAt | Zaplecze partnera -> SDK | Sygnatura czasowa wygaśnięcia tokena zwrócona przez 6MM. |
 
 <span id="failure-handling" data-sixmm-canonical-anchor="failure-handling" aria-hidden="true"></span>
 
 ## Obsługa awarii
 
-| Stan | Zalecane prowadzenie |
+| Stan | Zalecana obsługa |
 | --- | --- |
-| Sesja partnerska wygasła | Zwróć 401 z punktu końcowego partnera i poproś użytkownika o ponowne zalogowanie. |
-| Tworzenie tokenów tymczasowo się nie powiodło | Wrzuć błąd do tokenProvider i pozwól, by widżet wykrył błąd uwierzytelniania. |
-| channelId niedopasowania | Odrzuć żądanie i odtworzyć instancję widżetu. |
-| Użytkownik nie ma prawa handlować | Zwróć błąd kontrolowany przez partnera i nie tworz tokena embed. |
+| Sesja partnera wygasła | Zwróć 401 z punktu końcowego partnera i poproś użytkownika o ponowne zalogowanie się. |
+| Utworzenie tokena tymczasowo nie powiodło się | Zgłoś błąd w tokenProvider i pozwól widżetowi wyświetlić błąd uwierzytelnienia. |
+| channelId niezgodność | Odrzuć żądanie i utwórz ponownie instancję widżetu. |
+| Użytkownikowi nie wolno handlować | Zwróć błąd kontrolowany przez partnera i nie twórz tokena osadzania. |
 
 <span id="compatibility-mode-agent-sso" data-sixmm-canonical-anchor="compatibility-mode-agent-sso" aria-hidden="true"></span>
 
-## Tryb kompatybilności: agent-sso
+## Tryb zgodności: agent-sso
 
-Agent-SSO zachowuje starszy przepływ zgłoszeń /agent-entry. Preferuję token partnera przy nowych integracjach.
+agent-sso utrzymuje przepływ starszych biletów /agent-entry. Preferuj token partnera w przypadku nowych integracji.
 
 ```js
 const widget = TradingWidget.create('#trading-widget', {
@@ -105,3 +105,13 @@ const widget = TradingWidget.create('#trading-widget', {
   },
 })
 ```
+
+<span id="seconds-trading-and-environment-rules" data-sixmm-canonical-anchor="seconds-trading-and-environment-rules" aria-hidden="true"></span>
+
+## Handel sekundami i zasady ochrony środowiska
+
+W przypadku stron sekundowych użyj tego samego uwierzytelniania `partner-token` z `page` i `tradingMode` skonfigurowanymi w Widgecie. Nie ma osobnego tokena przewidywania. Każde wywołanie tokenProvider musi uzyskać nowy jednorazowy token z Twojego backendu.
+
+Zwróć `embedToken`, `expireAt` w uniksowych sekundach i oryginalny `channelId` jako obiekt najwyższego poziomu. Odpowiedź tokena Agent SDK nie zawiera `channelId`; Twój backend odzwierciedla bieżący kanał Widget. Jeśli Twój punkt końcowy zawija odpowiedzi w `data`, rozpakuj go przed powrotem z tokenProvider.
+
+[Pełna integracja sekundowa](/pl/sdk/agent-sdk/java/seconds-trading) · [Przewodnik po środowisku funduszy](/pl/sdk/agent-sdk/java/environments)

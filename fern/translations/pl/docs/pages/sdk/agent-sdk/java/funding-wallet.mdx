@@ -1,0 +1,165 @@
+---
+title: "Portfel finansowania"
+subtitle: "Portfel finansowania: Agent Java SDK Integracja v0.3.0, przykłady, parametry i semantyka odpowiedzi."
+slug: sdk/agent-sdk/java/funding-wallet
+canonical-url: https://docs.6mm.com/pl/sdk/agent-sdk/java/funding-wallet
+---
+
+Ten przewodnik jest przeznaczony dla **Agent Java SDK `v0.3.0`**, Java 8+ i oznaczonych zamówień publicznych. Przykłady działają w zapleczu partnera po inicjalizacji `client` w [Szybki start](/pl/sdk/agent-sdk/java/quick-start).
+
+<span id="example-prerequisites" data-sixmm-canonical-anchor="example-prerequisites" aria-hidden="true"></span>
+
+## Przykładowe wymagania wstępne
+
+Fragmenty Java dzielą ten import. Zainicjuj `client` za pomocą Szybki start i uzyskaj `platformUserId` z zapisanego powiązania. Przykładowe identyfikatory użytkowników/zamówień należy zastąpić własnymi, utrwalonymi wartościami.
+
+```java
+import com.sixmm.agent.*;
+import com.sixmm.agent.model.*;
+import java.util.*;
+```
+
+<span id="wallet-queries-and-transfers" data-sixmm-canonical-anchor="wallet-queries-and-transfers" aria-hidden="true"></span>
+
+## Zapytania i przelewy w portfelu
+
+<span id="distinguish-the-three-wallets" data-sixmm-canonical-anchor="distinguish-the-three-wallets" aria-hidden="true"></span>
+
+### Rozróżnij trzy portfele
+
+| portfel | Źródło równowagi | używać |
+| --- | --- | --- |
+| Własny portfel użytkownika sprzedawcy | Własny system księgowy Sprzedawcy | Dostępne saldo użytkownika po stronie sprzedawcy |
+| Finansowanie platformy | `queryUserAssets` z `funding` | Fundusze handlu sekundami i wzajemny transfer środków/umowy |
+| Umowa Platformy | Pole aktywów kontraktowych `queryUserAssets` | Marża kontraktowa bezterminowa i saldo zbywalne |
+
+`queryAccount` Zapytaj o konto depozytu zabezpieczającego platformy sprzedawcy, a nie o portfel użytkownika sprzedawcy. Ten interfejs nie ma parametrów `environment` i nie można go sprawdzać jako symulowanego zasobu użytkownika.
+
+Zapytaj dwa portfele platformy symulowanych użytkowników:
+
+```java
+QueryUserAssetsResponse assets = client.queryUserAssets(
+        QueryUserAssetsRequest.of(platformUserId)
+                .withFunding()
+                .withEnvironment(ExecutionEnvironment.SIMULATED));
+```
+
+Interfejs: `POST /v1/agent/query-user-assets`. O finansowanie wnioskuje się tylko wtedy, gdy `includeFunding=true`; Domyślnie używana jest semantyka zapytań o zasobach kontraktu.
+
+| pola odpowiedzi | oznaczający |
+| --- | --- |
+| `walletBalance`, `availableBalance`, `frozenMargin`, `usedMargin`, `isolatedMargin` | Kwoty powiązane z portfelem kontraktowym |
+| `funding.assetCode` | Obecnie USDT |
+| `funding.availableAmount`, `heldAmount`, `totalAmount` | Dostępne środki, zajęte i całkowita kwota |
+| `funding.materialized` | Czy konto finansowania zostało zmaterializowane? |
+| `environment` | To pole jest powtarzane, gdy środowisko jest przekazywane jawnie; stare żądania pomijające środowisko nie zwracają tego pola. |
+| `isSimulatedUser` | Klasyfikacja konta; nie może zastąpić wyboru środowiska handlowego |
+
+Kwoty są obsługiwane jako ciągi znaków lub `BigDecimal`, a nie `float`/`double`.
+
+<span id="funding-transfer-directions" data-sixmm-canonical-anchor="funding-transfer-directions" aria-hidden="true"></span>
+
+### Kierunki transferu środków
+
+Utwórz: `POST /v1/agent/wallet-transfer`, SDK `walletTransfer`.
+
+| `direction` | Przepływ funduszy | `transferAll` |
+| --- | --- | --- |
+| `PARTNER_TO_FUNDING` | Sprzedawca → Finansowanie platformy | Tylko stała kwota |
+| `FUNDING_TO_PARTNER` | Finansowanie platformy → Sprzedawca | Tylko stała kwota |
+| `FUNDING_TO_CONTRACT` | Ta sama platforma środowiskowa Finansowanie → Umowa | Obsługuje stałą kwotę lub wszystkie środki do wypłaty |
+| `CONTRACT_TO_FUNDING` | Ta sama platforma środowiskowa Umowa → Finansowanie | Obsługuje stałą kwotę lub wszystkie środki do wypłaty |
+
+Obecna waluta obsługuje tylko USDT. Stała kwota musi być ciągiem dodatnim z maksymalnie 8 miejscami po przecinku i nie może być stosowana w notacji naukowej. Kiedy `transferAll=true`, pomiń `amount` i zapisz to jako ostateczną odpowiedź `amount`; „wszystko” obejmuje tylko środki do wypłaty.
+
+Przykład: Sprzedawca przekazuje 10 USDT na symulowane finansowanie. Najpierw zapisz zamówienie biznesowe i środowisko w systemie sprzedawcy, a następnie wyślij żądanie:
+
+```java
+String fundingOrderNo = "SIM-FUNDING-20261010-000001";
+WalletTransferResponse transfer = client.walletTransfer(
+        WalletTransferRequest.of(fundingOrderNo, "merchant-user-001",
+                "PARTNER_TO_FUNDING", "10.00000000", false)
+                .withEnvironment(ExecutionEnvironment.SIMULATED));
+```
+
+Transfer środków wszystkie środki, które można przelać na symulowany kontrakt:
+
+```java
+WalletTransferResponse move = client.walletTransfer(
+        WalletTransferRequest.of("SIM-F2C-20261010-000001", "merchant-user-001",
+                "FUNDING_TO_CONTRACT", null, true)
+                .withEnvironment(ExecutionEnvironment.SIMULATED));
+```
+
+Ta sama operacja musi nadal korzystać z oryginału `agentOrderNo`; różne operacje i różne środowiska używają różnych numerów porządkowych. Zmiana ilości, użytkownika, kierunku lub środowiska o tym samym numerze zamówienia zostanie odrzucona. Transfer środków/umów może odbywać się wyłącznie w tym samym środowisku, a środków symulowanych nie można przenieść na środki rzeczywiste.
+
+<span id="result-confirmation-and-unknown-result-recovery" data-sixmm-canonical-anchor="result-confirmation-and-unknown-result-recovery" aria-hidden="true"></span>
+
+### Potwierdzenie wyniku i odzyskanie nieznanego wyniku
+
+Odpowiedzi na finansowanie są reprezentowane przez `status`, `SUCCESS`, `PROCESSING` lub `FAILED` i są zwracane `orderNo`, `direction`, `currency`, `amount`, `resultCode` itd. `code=0` oznacza jedynie, że żądanie zostało pomyślnie przetworzone i należy kontynuować ocenę `status`.
+
+| wynik | Przetwarzanie handlowe |
+| --- | --- |
+| `SUCCESS` | Zakończ lokalne przetwarzanie księgowe w oparciu o rzeczywistą kwotę |
+| `PROCESSING` | Zachowaj je lokalnie w celu potwierdzenia i sprawdź oryginalne zamówienie |
+| HTTP Przekroczono limit czasu, błąd sieci, nie można przeanalizować wyniku | Wynik uznaje się za nieznany i kwestionuje się pierwotne zamówienie; nie można tego bezpośrednio określić jako niepowodzenia ani utworzyć nowego zamówienia i spróbować ponownie. |
+| Zidentyfikowano `FAILED` | Zwolnij rezerwację lokalną zgodnie z wyraźnym wynikiem niepowodzenia; stworzyć nowy porządek biznesowy, gdy trzeba będzie rozpocząć działalność gospodarczą od nowa |
+
+Zapytanie o finansowanie wykorzystuje dedykowany interfejs `POST /v1/agent/wallet-transfer-status`:
+
+```java
+WalletTransferResponse recovered = client.queryWalletTransfer(
+        WalletTransferQueryRequest.of(fundingOrderNo)
+                .withEnvironment(ExecutionEnvironment.SIMULATED));
+```
+
+Użyj tego dedykowanego punktu końcowego, aby odzyskać pierwotną operację finansowania; `queryOrder` nie może go zastąpić. Zapisz oryginalne środowisko i przekaż je jawnie podczas odzyskiwania. Jeżeli w `wallet-transfer-status` pominięto `environment`, serwer korzysta ze środowiska zapisanego na pierwotnym zamówieniu, w tym także na zamówieniach symulowanych. Środowisko jawnie sprzeczne zwraca `102002` (`order environment mismatch`). Kiedy osoba wywołująca pomija otoczenie, odpowiedź pomija także `environment`; nie oznacza to, że oryginalne zamówienie jest zleceniem produkcyjnym.
+
+Lokalne wpłaty i wypłaty sprzedawców są idempotentne; stałe zlecenia i salda są rezerwowane przed rozpoczęciem i są rezerwowane do potwierdzenia, gdy wynik jest nieznany. Dostęp do finansowania wykorzystuje dedykowane zapytanie w celu potwierdzenia ostatecznego statusu; nie zakładaj, że stare metody przeniesienia umowy Webhook lub odwrócenia umowy mają automatyczne zastosowanie do Finansowania.
+
+<span id="existing-contract-transfer-flow" data-sixmm-canonical-anchor="existing-contract-transfer-flow" aria-hidden="true"></span>
+
+### Istniejący przepływ przeniesienia kontraktu
+
+Oryginały `transfer`, `transferAllOut`, `reverse`, `queryOrder`, `listOrders` kontynuują proces pierwotnego przeniesienia umowy. `queryOrder` sprawdza zlecenia przelewu środków, `listOrders` jest listą uzgodnień przelewów; zamiast tego sześć typów zapytań opisanych w następnej sekcji jest używanych w przypadku zleceń typu perpetual trading.
+
+Oryginalna odpowiedź na finansowanie wykorzystuje `orderStatus`; odpowiedź Funding wykorzystuje `status`, nie mieszaj ich. Oryginalny przelew Webhook jest weryfikowany za pomocą `X-Agent-Timestamp`, `X-Agent-Nonce`, `X-Agent-Signature`, a oryginalna treść podpisu to `timestamp + nonce + rawBody`; pierwotna treść żądania jest najpierw weryfikowana, następnie deserializowana i idempotentna. Jawne powiadomienia o symulowanym środowisku zawierają `environment=SIMULATED`, powiadomienia produkcyjne pozostają zgodne ze starymi polami. Kwotę, numer zamówienia, status i środowisko należy sprawdzić w lokalnym zamówieniu biznesowym.
+
+<span id="source-and-related-guides" data-sixmm-canonical-anchor="source-and-related-guides" aria-hidden="true"></span>
+
+## Źródło i powiązane przewodniki
+
+- [Oficjalne źródło v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Przegląd zapytań i paginacja](/pl/sdk/agent-sdk/java/perpetual-queries)
+- [Portfel finansowania](/pl/sdk/agent-sdk/java/funding-wallet)
+- [Przewodnik po aktualizacji](/pl/sdk/agent-sdk/java/upgrade)
+
+<span id="funding-request-fields" data-sixmm-canonical-anchor="funding-request-fields" aria-hidden="true"></span>
+
+## Pola żądania finansowania
+
+| Pole | Wymagany | Oznaczający |
+| --- | --- | --- |
+| `agentOrderNo` | Tak | Globalnie unikalny numer zamówienia partnera; utrwalić przed wysłaniem. |
+| `agentUserId / platformUserId` | Jeden | Zidentyfikuj powiązanego użytkownika; jeśli oba są dostarczone, muszą pasować. |
+| `direction` | Tak | Jeden z czterech kierunków udokumentowanych powyżej. |
+| `currency` | Domyślny USDT | Obsługiwane jest tylko USDT. |
+| `transferAll` | Domyślnie fałsz | Tylko wewnętrzne transfery finansowania/umowy obsługują wartość true. |
+| `amount` | Warunkowy | Dodatni ciąg dziesiętny dla przelewu stałego; pomiń dla transferAll=true. |
+| `environment` | Fakultatywny | Produkcja w przypadku pominięcia w przypadku nowego przeniesienia; SIMULATED wybiera symulowane fundusze. |
+
+<span id="funding-response-fields" data-sixmm-canonical-anchor="funding-response-fields" aria-hidden="true"></span>
+
+## Pola odpowiedzi na finansowanie
+
+| Pole | Oznaczający |
+| --- | --- |
+| `orderNo` | Zwrócony identyfikator operacji; zachować wraz z oryginalnym numerem zamówienia partnera. |
+| `status` | SUCCESS / PROCESSING / FAILED; determinuje zakończenie działalności. |
+| `direction / currency` | Potwierdzony kierunek transferu i aktywa. |
+| `amount` | Rzeczywista przekazana kwota jako ciąg znaków. |
+| `transferAll` | Czy w ramach tej operacji zażądano wszystkich środków do wypłaty. |
+| `agentUserId / platformUserId` | Zwrócona tożsamość użytkownika; porównać z zapisanym zamówieniem. |
+| `resultCode` | Szczegóły wyniku operacji; zachować dla pojednania i wsparcia. |
+| `environment` | Powtarzane, gdy osoba dzwoniąca wyraźnie je podała; nieobecność nie stanowi dowodu produkcji w przypadku zapytania o status oryginalnego zamówienia. |
