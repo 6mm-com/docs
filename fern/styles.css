@@ -11,12 +11,12 @@
   --sixmm-accent-hover: #d7f7f1;
   --sixmm-home-text: #0b0f17;
   --sixmm-home-muted: #52626f;
-  --sixmm-home-border: rgba(0, 143, 125, 0.38);
+  --sixmm-home-border: rgba(15, 23, 42, 0.12);
   --sixmm-home-surface: #ffffff;
-  --sixmm-home-soft: #effbf8;
-  --sixmm-footer-shell: #eafbf8;
+  --sixmm-home-soft: #f8fafb;
+  --sixmm-footer-shell: #f8fafb;
   --sixmm-footer-item: #ffffff;
-  --sixmm-footer-divider: rgba(0, 143, 125, 0.28);
+  --sixmm-footer-divider: rgba(15, 23, 42, 0.12);
   --sixmm-focus-ring: rgba(0, 143, 125, 0.28);
   --sixmm-filled-hover: #00a891;
   --sixmm-filled-text: #ffffff;
@@ -29,12 +29,12 @@
   --sixmm-accent-hover: rgba(0, 255, 218, 0.16);
   --sixmm-home-text: #f7f8fb;
   --sixmm-home-muted: #aeb9c2;
-  --sixmm-home-border: rgba(0, 255, 218, 0.22);
+  --sixmm-home-border: rgba(255, 255, 255, 0.16);
   --sixmm-home-surface: #050706;
-  --sixmm-home-soft: #071311;
+  --sixmm-home-soft: #0b1110;
   --sixmm-footer-shell: rgba(255, 255, 255, 0.07);
   --sixmm-footer-item: #0b1110;
-  --sixmm-footer-divider: rgba(0, 255, 218, 0.16);
+  --sixmm-footer-divider: rgba(255, 255, 255, 0.16);
   --sixmm-focus-ring: rgba(0, 255, 218, 0.42);
   --sixmm-filled-hover: #32ffe5;
   --sixmm-filled-text: #02110f;
@@ -145,8 +145,9 @@ button,
 a:focus-visible,
 button:focus-visible,
 [role="button"]:focus-visible {
-  outline: 2px solid var(--sixmm-focus-ring) !important;
-  outline-offset: 2px;
+  /* Inset focus keeps a single edge instead of adding a second outer frame. */
+  outline: 2px solid var(--sixmm-accent) !important;
+  outline-offset: -2px !important;
 }
 
 :is(header, nav, aside) :is(a, button, [role="button"]) {
@@ -342,9 +343,9 @@ body:has(.sixmm-language-menu-enhanced[data-state="open"])::before {
 
 .sixmm-language-menu-enhanced
   .fern-language-dropdown-item[data-state="checked"] {
-  border-color: var(--sixmm-home-border);
+  border-color: var(--sixmm-accent);
   background: var(--sixmm-accent-soft) !important;
-  box-shadow: inset 0 0 0 1px var(--sixmm-home-border);
+  box-shadow: none !important;
   color: var(--sixmm-accent-strong) !important;
 }
 
@@ -538,7 +539,7 @@ button.fern-button.filled.primary:focus-visible {
   border-color: var(--sixmm-filled-hover) !important;
   background: var(--sixmm-filled-hover) !important;
   color: var(--sixmm-filled-text) !important;
-  box-shadow: 0 0 0 3px var(--sixmm-focus-ring) !important;
+  box-shadow: none !important;
 }
 
 .fern-button.outlined:hover,
@@ -549,21 +550,20 @@ a.fern-button.outlined:focus-visible,
 button.fern-button.outlined:focus-visible {
   border-color: var(--sixmm-accent) !important;
   color: var(--sixmm-accent-strong) !important;
-  box-shadow: 0 0 0 3px var(--sixmm-focus-ring) !important;
+  box-shadow: none !important;
 }
 
-[role="menuitemradio"][data-state="checked"],
-[role="menuitem"][data-state="checked"],
-[role="option"][aria-selected="true"],
-[data-highlighted] {
-  background-color: var(--sixmm-accent) !important;
-  color: var(--sixmm-filled-text) !important;
+/* Shared menu states use a quiet tint rather than a solid brand fill. */
+:is([role="menuitemradio"], [role="menuitem"], [role="option"]):is(
+  [data-state="checked"], [aria-selected="true"], [data-highlighted]
+) {
+  background-color: var(--sixmm-accent-soft) !important;
+  color: var(--sixmm-accent-strong) !important;
 }
 
-[role="menuitemradio"][data-state="checked"] svg,
-[role="menuitem"][data-state="checked"] svg,
-[role="option"][aria-selected="true"] svg,
-[data-highlighted] svg {
+:is([role="menuitemradio"], [role="menuitem"], [role="option"]):is(
+  [data-state="checked"], [aria-selected="true"], [data-highlighted]
+) svg {
   color: currentColor !important;
   stroke: currentColor !important;
 }
@@ -578,7 +578,7 @@ button.fern-button.outlined:focus-visible {
 :is(header, nav) button:has(kbd):not(.fern-language-selector):not(.sixmm-theme-trigger):not(.sixmm-mobile-menu-trigger):focus-visible {
   border-color: var(--sixmm-accent) !important;
   color: var(--sixmm-accent-strong) !important;
-  box-shadow: 0 0 0 3px var(--sixmm-focus-ring) !important;
+  box-shadow: none !important;
 }
 
 :is(header, nav)
@@ -708,6 +708,10 @@ button.fern-button.outlined:focus-visible {
   }
 }
 
+.fern-card {
+  border-color: var(--sixmm-home-border) !important;
+}
+
 .fern-card :is(.card-icon, svg) {
   color: var(--sixmm-accent-strong) !important;
 }
@@ -715,7 +719,8 @@ button.fern-button.outlined:focus-visible {
 .fern-card.interactive:hover,
 .fern-card.interactive:focus-visible {
   border-color: var(--sixmm-accent) !important;
-  box-shadow: 0 0 0 3px var(--sixmm-focus-ring) !important;
+  background: var(--sixmm-accent-soft) !important;
+  box-shadow: none !important;
 }
 
 article a:not([class]) {
@@ -860,7 +865,7 @@ article:has(.sixmm-home) > .fern-page-heading {
   border-radius: 8px;
   background: var(--sixmm-home-soft);
   text-align: left;
-  box-shadow: inset 0 2px 0 rgba(0, 255, 218, 0.42);
+  box-shadow: none;
   transition: border-color 0.16s ease, background-color 0.16s ease;
 }
 
@@ -953,7 +958,7 @@ article:has(.sixmm-home) > .fern-page-heading {
 .fern-footer-nav.fern-footer-nav--simple > a:hover {
   border-color: var(--sixmm-accent);
   background: var(--sixmm-accent-soft);
-  box-shadow: 0 0 0 3px var(--sixmm-focus-ring);
+  box-shadow: none;
 }
 
 .fern-footer-nav.fern-footer-nav--simple .fern-footer-prev,
