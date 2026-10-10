@@ -1,6 +1,6 @@
 ---
 title: "Consultas e paginação perpétuas"
-subtitle: "Consultas e paginação perpétuas: Integração Agent Java SDK v0.3.0, exemplos, parâmetros e semântica de resposta."
+subtitle: "Consultas e paginação perpétuas: integração Agent Java SDK v0.3.0, exemplos, parâmetros e semântica de resposta."
 slug: sdk/agent-sdk/java/perpetual-queries
 canonical-url: https://docs.6mm.com/pt-PT/sdk/agent-sdk/java/perpetual-queries
 ---
@@ -38,7 +38,9 @@ Todos os pedidos são assinados POST com um prefixo comum de `/v1/agent/perpetua
 | `/positions/history` | `listPerpetualPositionHistory(PerpetualPositionHistoryRequest)` | Os jogadores podem ser omitidos |
 | `/account/ledger` | `listPerpetualLedger(PerpetualLedgerRequest)` | Os jogadores podem ser omitidos |
 
-`platformUserIds` é uma matriz de strings de IDs de plataformas públicas. Quando especificado, são necessários 1 a 100 jogadores únicos com acesso; quando omitido, apenas é consultada a gama de jogadores diretos a que o comerciante atual tem acesso. A omissão não é equivalente a `[]` e as matrizes vazias são ilegais. O âmbito é determinado pelo comerciante subscritor e outros IDs de comerciante não podem ser transmitidos para expandir o âmbito.
+`platformUserIds` é uma matriz de strings de IDs de plataformas públicas. Quando especificado, são necessários 1 a 100 jogadores únicos com acesso; nos endpoints que permitem a omissão, apenas é consultada a gama de players diretos a que o comerciante atual tem acesso. As consultas de preenchimento comercial exigem sempre esta matriz; as consultas de ordem condicional também exigem IDs de utilizador explícitos. A omissão não é equivalente a `[]` e as matrizes vazias são ilegais. O âmbito é determinado pelo comerciante subscritor e outros IDs de comerciante não podem ser transmitidos para expandir o âmbito.
+
+Os valores da matriz são serializados como compactos JSON antes de se juntarem à carga útil de assinatura. Por exemplo, `platformUserIds` assina como `["1188041528"]`, fornecendo `platformUserIds=["1188041528"]` na carga útil `k=v`. Preservar a ordem dos elementos do array, as aspas duplas e os IDs de string; não introduza espaços de formatação nem utilize Java `List.toString()` (como `[1188041528]`). O SDK trata esta serialização automaticamente.
 
 A consulta do pedido deve passar `orderCategory=NORMAL` ou `CONDITIONAL`. Utilize `orderId` para encomendas normais e `conditionId` para encomendas condicionais. Não podem ser misturados entre categorias. As ordens condicionais e as ordens ordinárias geradas pelo seu acionamento são processadas separadamente como entidades.
 
@@ -105,7 +107,7 @@ while (true) {
 
 ### Estrutura de retorno e regras de salvamento
 
-Para obter uma descrição completa campo a campo, consulte [Descrição do campo de retorno da consulta de contrato](/pt-PT/sdk/agent-sdk/java/perpetual-queries), incluindo os tipos, significados e âmbito de aplicação da paginação pública, ordens ordinárias/condicionais, transações, posições atuais/históricas e alterações contratuais.
+Ver [Resposta comum e paginação](#common-response-and-pagination) para campos partilhados. Os campos de recursos estão documentados em [Pedidos](/pt-PT/sdk/agent-sdk/java/perpetual-orders), [Preenchimentos comerciais](/pt-PT/sdk/agent-sdk/java/perpetual-trades), [Posições](/pt-PT/sdk/agent-sdk/java/perpetual-positions) e [Livro de razão de contrato](/pt-PT/sdk/agent-sdk/java/perpetual-ledger).
 
 As seis interfaces devolvem uniformemente `PerpetualResponse`:
 
@@ -232,7 +234,6 @@ O âmbito real da aplicação no terreno está sujeito às tabelas de recursos a
 
 ## Fonte e guias relacionados
 
-- [Fonte oficial v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
-- [Visão geral da consulta e paginação](/pt-PT/sdk/agent-sdk/java/perpetual-queries)
+- [Fonte oficial v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/54aa3c1)
 - [Carteira de financiamento](/pt-PT/sdk/agent-sdk/java/funding-wallet)
 - [Guia de atualização](/pt-PT/sdk/agent-sdk/java/upgrade)

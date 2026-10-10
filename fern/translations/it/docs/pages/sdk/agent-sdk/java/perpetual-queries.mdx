@@ -1,6 +1,6 @@
 ---
 title: "Query e impaginazione perpetua"
-subtitle: "Query e impaginazione perpetua: Agent Java SDK Integrazione v0.3.0, esempi, parametri e semantica della risposta."
+subtitle: "Query e impaginazione perpetue: integrazione di Agent Java SDK v0.3.0, esempi, parametri e semantica della risposta."
 slug: sdk/agent-sdk/java/perpetual-queries
 canonical-url: https://docs.6mm.com/it/sdk/agent-sdk/java/perpetual-queries
 ---
@@ -38,7 +38,9 @@ Tutte le richieste sono firmate POST con il prefisso comune `/v1/agent/perpetual
 | `/positions/history` | `listPerpetualPositionHistory(PerpetualPositionHistoryRequest)` | I giocatori possono essere omessi |
 | `/account/ledger` | `listPerpetualLedger(PerpetualLedgerRequest)` | I giocatori possono essere omessi |
 
-`platformUserIds` è un array di stringhe di ID di piattaforma pubblica. Quando specificato, sono richiesti da 1 a 100 giocatori unici che hanno accesso; se omesso, viene interrogato solo l'intervallo di giocatori diretti a cui ha accesso il commerciante attuale. L'omissione non è equivalente a `[]` e gli array vuoti sono illegali. L'ambito è determinato dal commerciante firmatario e non è possibile trasmettere altri ID commerciante per espandere l'ambito.
+`platformUserIds` è un array di stringhe di ID di piattaforma pubblica. Quando specificato, sono richiesti da 1 a 100 giocatori unici che hanno accesso; sugli endpoint che consentono l'omissione, viene interrogata solo la gamma di giocatori diretti a cui ha accesso il commerciante attuale. Le query di riempimento richiedono sempre questa matrice; anche le query di ordine condizionale richiedono ID utente espliciti. L'omissione non è equivalente a `[]` e gli array vuoti sono illegali. L'ambito è determinato dal commerciante firmatario e non è possibile trasmettere altri ID commerciante per espandere l'ambito.
+
+I valori dell'array vengono serializzati come compatti JSON prima di unirsi al payload della firma. Ad esempio, `platformUserIds` viene indicato come `["1188041528"]`, fornendo `platformUserIds=["1188041528"]` nel payload `k=v`. Conserva l'ordine degli elementi dell'array, le virgolette doppie e gli ID delle stringhe; non inserire spazi di formattazione né utilizzare Java `List.toString()` (ad esempio `[1188041528]`). Il SDK gestisce questa serializzazione automaticamente.
 
 La query dell'ordine deve superare `orderCategory=NORMAL` o `CONDITIONAL`. Utilizza `orderId` per gli ordini ordinari e `conditionId` per gli ordini condizionati. Non possono essere mescolati tra le categorie. Gli ordini condizionati e gli ordini ordinari generati dalla loro attivazione vengono elaborati separatamente come entità.
 
@@ -105,7 +107,7 @@ while (true) {
 
 ### Struttura dei rendimenti e regole di salvataggio
 
-Per una descrizione completa campo per campo, vedere [Descrizione del campo di restituzione della query del contratto](/it/sdk/agent-sdk/java/perpetual-queries), ivi comprese le tipologie, i significati e l'ambito di applicazione dell'impaginazione pubblica, degli ordini ordinari/condizionati, delle transazioni, delle posizioni attuali/storiche e delle modifiche contrattuali.
+Vedere [Risposta comune e impaginazione](#common-response-and-pagination) per i campi condivisi. I campi delle risorse sono documentati in [Ordini](/it/sdk/agent-sdk/java/perpetual-orders), [Il commercio si riempie](/it/sdk/agent-sdk/java/perpetual-trades), [Posizioni](/it/sdk/agent-sdk/java/perpetual-positions) E [Registro dei contratti](/it/sdk/agent-sdk/java/perpetual-ledger).
 
 Le sei interfacce restituiscono uniformemente `PerpetualResponse`:
 
@@ -232,7 +234,6 @@ L'effettivo ambito di applicazione sul campo è soggetto alle tabelle delle riso
 
 ## Fonte e guide correlate
 
-- [Fonte ufficiale v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
-- [Panoramica delle query e impaginazione](/it/sdk/agent-sdk/java/perpetual-queries)
+- [Fonte ufficiale v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/54aa3c1)
 - [Portafoglio di finanziamento](/it/sdk/agent-sdk/java/funding-wallet)
 - [Guida all'aggiornamento](/it/sdk/agent-sdk/java/upgrade)

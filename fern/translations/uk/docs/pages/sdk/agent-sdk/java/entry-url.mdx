@@ -1,6 +1,6 @@
 ---
 title: "Прямий вхід URL"
-subtitle: "Прямий вхід URL: Інтеграція Agent Java SDK v0.3.0, приклади, параметри та семантика відповіді."
+subtitle: "Direct Entry URL: інтеграція Agent Java SDK v0.3.0, приклади, параметри та семантика відповіді."
 slug: sdk/agent-sdk/java/entry-url
 canonical-url: https://docs.6mm.com/uk/sdk/agent-sdk/java/entry-url
 ---
@@ -32,7 +32,7 @@ import com.sixmm.agent.model.CreateEntryUrlResponse;
 
 CreateEntryUrlResponse resp = client.createEntryUrl(
         CreateEntryUrlRequest.of("agent-user-001")
-                .withRedirectPath("/trade/BTCUSDT")
+                .withRedirectPath("/en/futures/BTCUSDT?tradingMode=real")
                 .withReturnUrl("https://partner.example.com/return#markets"));
 
 System.out.println(resp.webUrl);
@@ -43,9 +43,11 @@ System.out.println(resp.expireAt);
 
 | Поле | опис |
 | --- | --- |
-| `redirectPath` | 6MM інтерфейсний відносний шлях. Він має починатися з `/`, наприклад `/trade/BTCUSDT` |
+| `redirectPath` | 6MM інтерфейсний відносний шлях. Він має починатися з `/`, наприклад `/en/futures/BTCUSDT?tradingMode=real` |
 | `returnUrl` | Абсолютний партнер URL використовується, коли користувач виходить із зовнішнього інтерфейсу 6MM. Дозволено лише `http` і `https` |
 | `expireAt` | Термін дії вхідного квитка як мітка часу Unix у секундах |
+
+Приклад відкриває вічні ф'ючерси в реальному режимі. Для симуляції торгівлі використовуйте `tradingMode=demo` у інтерфейсі та явно передайте `environment=SIMULATED` у відповідних запитах гаманця. Frontend `tradingMode` і backend Funds `environment` налаштовуються окремо. Створення запису URL автентифікує користувача; він не переказує кошти та не вибирає середовище гаманця.
 
 Вимоги безпеки:
 
@@ -66,7 +68,7 @@ System.out.println(resp.expireAt);
 
 ## Джерело та відповідні посібники
 
-- [Офіційне джерело v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Офіційне джерело v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/54aa3c1)
 - [Огляд запиту та розбивка на сторінки](/uk/sdk/agent-sdk/java/perpetual-queries)
 - [Гаманець для фінансування](/uk/sdk/agent-sdk/java/funding-wallet)
 - [Посібник з оновлення](/uk/sdk/agent-sdk/java/upgrade)

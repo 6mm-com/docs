@@ -32,7 +32,7 @@ import com.sixmm.agent.model.CreateEntryUrlResponse;
 
 CreateEntryUrlResponse resp = client.createEntryUrl(
         CreateEntryUrlRequest.of("agent-user-001")
-                .withRedirectPath("/trade/BTCUSDT")
+                .withRedirectPath("/en/futures/BTCUSDT?tradingMode=real")
                 .withReturnUrl("https://partner.example.com/return#markets"));
 
 System.out.println(resp.webUrl);
@@ -43,9 +43,11 @@ System.out.println(resp.expireAt);
 
 | 필드 | 설명 |
 | --- | --- |
-| `redirectPath` | 6MM 프런트엔드 상대 경로입니다. `/`로 시작해야 합니다(예: `/trade/BTCUSDT`). |
+| `redirectPath` | 6MM 프런트엔드 상대 경로입니다. `/`로 시작해야 합니다(예: `/en/futures/BTCUSDT?tradingMode=real`). |
 | `returnUrl` | 사용자가 6MM 프런트엔드를 종료할 때 사용되는 파트너 절대값 URL 입니다. `http` 및 `https`만 허용됩니다. |
 | `expireAt` | Unix 타임스탬프로 표시되는 입장권 만료 시간(초) |
+
+이 예는 리얼 모드에서 영구 미래를 엽니다. 시뮬레이션 거래의 경우 프런트엔드에서 `tradingMode=demo`를 사용하고 해당 백엔드 지갑 요청에서 `environment=SIMULATED`를 명시적으로 전달합니다. 프론트엔드`tradingMode`와 백엔드 펀드`environment`는 별도로 구성됩니다. URL 항목을 생성하면 사용자가 인증됩니다. 자금을 이체하거나 지갑 환경을 선택하지 않습니다.
 
 보안 요구사항:
 
@@ -66,7 +68,7 @@ System.out.println(resp.expireAt);
 
 ## 소스 및 관련 가이드
 
-- [공식 v0.3.0 소스](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [공식 v0.3.0 소스](https://github.com/6mm-com/agent-java-sdk/tree/54aa3c1)
 - [쿼리 개요 및 페이지 매김](/ko/sdk/agent-sdk/java/perpetual-queries)
 - [펀딩 지갑](/ko/sdk/agent-sdk/java/funding-wallet)
 - [업그레이드 가이드](/ko/sdk/agent-sdk/java/upgrade)

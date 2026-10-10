@@ -1,6 +1,6 @@
 ---
 title: "Entrée directe URL"
-subtitle: "Entrée directe URL: Intégration Agent Java SDK v0.3.0, exemples, paramètres et sémantique de réponse."
+subtitle: "Entrée directe URL : intégration Agent Java SDK v0.3.0, exemples, paramètres et sémantique de réponse."
 slug: sdk/agent-sdk/java/entry-url
 canonical-url: https://docs.6mm.com/fr/sdk/agent-sdk/java/entry-url
 ---
@@ -32,7 +32,7 @@ import com.sixmm.agent.model.CreateEntryUrlResponse;
 
 CreateEntryUrlResponse resp = client.createEntryUrl(
         CreateEntryUrlRequest.of("agent-user-001")
-                .withRedirectPath("/trade/BTCUSDT")
+                .withRedirectPath("/en/futures/BTCUSDT?tradingMode=real")
                 .withReturnUrl("https://partner.example.com/return#markets"));
 
 System.out.println(resp.webUrl);
@@ -43,9 +43,11 @@ Règles de terrain :
 
 | Champ | Description |
 | --- | --- |
-| `redirectPath` | 6MM chemin relatif du frontend. Il doit commencer par `/`, par exemple `/trade/BTCUSDT` |
+| `redirectPath` | 6MM chemin relatif du frontend. Il doit commencer par `/`, par exemple `/en/futures/BTCUSDT?tradingMode=real` |
 | `returnUrl` | Partenaire absolu URL utilisé lorsque l'utilisateur quitte l'interface 6MM. Seuls `http` et `https` sont autorisés |
 | `expireAt` | Délai d'expiration du ticket d'entrée sous forme d'horodatage Unix en secondes |
+
+L'exemple ouvre des futurs perpétuels en mode réel. Pour le trading simulé, utilisez `tradingMode=demo` dans le frontend et transmettez explicitement `environment=SIMULATED` dans les requêtes de portefeuille backend correspondantes. Les fonds frontend `tradingMode` et backend `environment` sont configurés séparément. La création d'une entrée URL authentifie l'utilisateur ; il ne transfère pas de fonds et ne sélectionne pas d'environnement de portefeuille.
 
 Exigences de sécurité :
 
@@ -66,7 +68,7 @@ Voir [Trading de secondes](/fr/sdk/agent-sdk/java/seconds-trading) pour les exem
 
 ## Source et guides associés
 
-- [Source officielle v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Source officielle v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/54aa3c1)
 - [Présentation et pagination des requêtes](/fr/sdk/agent-sdk/java/perpetual-queries)
 - [Portefeuille de financement](/fr/sdk/agent-sdk/java/funding-wallet)
 - [Guide de mise à niveau](/fr/sdk/agent-sdk/java/upgrade)

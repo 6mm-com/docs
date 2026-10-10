@@ -7,6 +7,8 @@ canonical-url: https://docs.6mm.com/zh-TW/sdk/agent-sdk/java/overview
 
 本指南針對 **Agent Java SDK `v0.3.0`**、Java 8+ 以及標記的公共合約。初始化 `client` 後在合作伙伴後端運行示例 [快速入門](/zh-TW/sdk/agent-sdk/java/quick-start).
 
+文檔基線：SDK `v0.3.0`，提交`54aa3c1`。
+
 <span id="version-and-installation" data-sixmm-canonical-anchor="version-and-installation" aria-hidden="true"></span>
 
 ## 版本及安裝
@@ -96,6 +98,8 @@ GitHub 託管源代碼；它不會使這些座標可以從 Maven Central 解析�
 4. 作為 `k=v&k2=v2` 加入。
 5. 使用 `apiSecret` 計算 HMAC-SHA256 十六進制。
 
+在加入簽名有效負載之前，數組值被序列化為緊湊的 JSON。例如，`platformUserIds` 標記為 `["1188041528"]`，在 `k=v` 有效負載中給出 `platformUserIds=["1188041528"]`。保留數組元素順序、雙引號和字符串 ID；請勿插入格式空格或使用 Java `List.toString()`（例如 `[1188041528]`）。 SDK 自動處理此序列化。
+
 正常的業務代碼不應該計算簽名或者手動設置
 `agentCode`、`timestamp`、`nonce` 或 `sign`。
 
@@ -103,7 +107,7 @@ GitHub 託管源代碼；它不會使這些座標可以從 Maven Central 解析�
 
 ## 來源及相關指南
 
-- [官方v0.3.0源碼](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [官方v0.3.0源碼](https://github.com/6mm-com/agent-java-sdk/tree/54aa3c1)
 - [查詢概覽和分頁](/zh-TW/sdk/agent-sdk/java/perpetual-queries)
 - [資金錢包](/zh-TW/sdk/agent-sdk/java/funding-wallet)
 - [升級指南](/zh-TW/sdk/agent-sdk/java/upgrade)

@@ -1,6 +1,6 @@
 ---
 title: "Απευθείας είσοδος URL"
-subtitle: "Απευθείας είσοδος URL: Agent Java SDK Ενσωμάτωση v0.3.0, παραδείγματα, παράμετροι και σημασιολογία απόκρισης."
+subtitle: "Άμεση είσοδος URL: Agent Java SDK Ενοποίηση v0.3.0, παραδείγματα, παράμετροι και σημασιολογία απόκρισης."
 slug: sdk/agent-sdk/java/entry-url
 canonical-url: https://docs.6mm.com/el/sdk/agent-sdk/java/entry-url
 ---
@@ -32,7 +32,7 @@ import com.sixmm.agent.model.CreateEntryUrlResponse;
 
 CreateEntryUrlResponse resp = client.createEntryUrl(
         CreateEntryUrlRequest.of("agent-user-001")
-                .withRedirectPath("/trade/BTCUSDT")
+                .withRedirectPath("/en/futures/BTCUSDT?tradingMode=real")
                 .withReturnUrl("https://partner.example.com/return#markets"));
 
 System.out.println(resp.webUrl);
@@ -43,9 +43,11 @@ System.out.println(resp.expireAt);
 
 | Πεδίο | Περιγραφή |
 | --- | --- |
-| `redirectPath` | 6MM σχετική διαδρομή διεπαφής. Πρέπει να ξεκινά με `/`, για παράδειγμα `/trade/BTCUSDT` |
+| `redirectPath` | 6MM σχετική διαδρομή διεπαφής. Πρέπει να ξεκινά με `/`, για παράδειγμα `/en/futures/BTCUSDT?tradingMode=real` |
 | `returnUrl` | Απόλυτο συνεργάτη URL που χρησιμοποιείται όταν ο χρήστης εξέρχεται από το 6MM διεπαφή. Επιτρέπονται μόνο `http` και `https` |
 | `expireAt` | Ο χρόνος λήξης του εισιτηρίου εισόδου ως χρονοσήμανση Unix σε δευτερόλεπτα |
+
+Το παράδειγμα ανοίγει διαρκή συμβόλαια μελλοντικής εκπλήρωσης σε πραγματικό τρόπο. Για προσομοίωση συναλλαγών, χρησιμοποιήστε το `tradingMode=demo` στο frontend και περάστε ρητά το `environment=SIMULATED` στα αντίστοιχα αιτήματα πορτοφολιού υποστήριξης. Το Frontend `tradingMode` και το backend fund `environment` διαμορφώνονται ξεχωριστά. Η δημιουργία μιας καταχώρησης URL επαληθεύει την ταυτότητα του χρήστη. δεν μεταφέρει χρήματα ούτε επιλέγει περιβάλλον πορτοφολιού.
 
 Απαιτήσεις ασφαλείας:
 
@@ -66,7 +68,7 @@ System.out.println(resp.expireAt);
 
 ## Πηγή και σχετικοί οδηγοί
 
-- [Επίσημη πηγή έκδοσης 0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Επίσημη πηγή έκδοσης 0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/54aa3c1)
 - [Επισκόπηση ερωτήματος και σελιδοποίηση](/el/sdk/agent-sdk/java/perpetual-queries)
 - [Πορτοφόλι χρηματοδότησης](/el/sdk/agent-sdk/java/funding-wallet)
 - [Οδηγός αναβάθμισης](/el/sdk/agent-sdk/java/upgrade)

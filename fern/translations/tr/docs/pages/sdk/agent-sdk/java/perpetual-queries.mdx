@@ -38,7 +38,9 @@ Tüm istekler, ortak bir `/v1/agent/perpetual` önekiyle POST imzalanır.
 | `/positions/history` | `listPerpetualPositionHistory(PerpetualPositionHistoryRequest)` | Oyuncular çıkarılabilir |
 | `/account/ledger` | `listPerpetualLedger(PerpetualLedgerRequest)` | Oyuncular çıkarılabilir |
 
-`platformUserIds` genel platform kimliklerinden oluşan bir dize dizisidir. Belirtildiğinde, erişimi olan 1 ila 100 benzersiz oyuncu gereklidir; atlandığında yalnızca mevcut satıcının erişebildiği doğrudan oyuncuların aralığı sorgulanır. İhmal etme, `[]` ile eşdeğer değildir ve boş diziler yasa dışıdır. Kapsam, imzayı atan üye işyeri tarafından belirlenir ve kapsamın genişletilmesi için diğer üye işyeri kimlikleri aktarılamaz.
+`platformUserIds` genel platform kimliklerinden oluşan bir dize dizisidir. Belirtildiğinde, erişimi olan 1 ila 100 benzersiz oyuncu gereklidir; ihmale izin veren uç noktalarda, yalnızca mevcut satıcının erişebildiği doğrudan oynatıcıların aralığı sorgulanır. Takas doldurma sorguları her zaman bu diziyi gerektirir; koşullu sıralı sorgular ayrıca açık kullanıcı kimlikleri gerektirir. İhmal etme, `[]` ile eşdeğer değildir ve boş diziler yasa dışıdır. Kapsam, imzayı atan üye işyeri tarafından belirlenir ve kapsamın genişletilmesi için diğer üye işyeri kimlikleri aktarılamaz.
+
+Dizi değerleri, imzalama yüküne katılmadan önce kompakt JSON olarak serileştirilir. Örneğin, `platformUserIds`, `["1188041528"]` olarak işaretler ve `k=v` yükünde `platformUserIds=["1188041528"]` verir. Dizi öğesi sırasını, çift tırnakları ve dize kimliklerini koruyun; biçimlendirme boşlukları eklemeyin veya Java `List.toString()` (`[1188041528]` gibi) kullanmayın. SDK bu serileştirmeyi otomatik olarak gerçekleştirir.
 
 Sipariş sorgusu `orderCategory=NORMAL` veya `CONDITIONAL`'i geçmelidir. Sıradan siparişler için `orderId` ve koşullu siparişler için `conditionId` kullanın. Kategoriler arasında karıştırılamazlar. Koşullu emirler ve bunların tetiklenmesiyle oluşan olağan emirler ayrı ayrı varlık olarak işlenir.
 
@@ -105,7 +107,7 @@ while (true) {
 
 ### İade yapısı ve kaydetme kuralları
 
-Alan bazında eksiksiz bir açıklama için bkz. [Sözleşme sorgusu iade alanı açıklaması](/tr/sdk/agent-sdk/java/perpetual-queries)kamuya açık sayfalamanın türleri, anlamları ve uygulama kapsamı, olağan/şartlı emirler, işlemler, mevcut/geçmişsel pozisyonlar ve sözleşme değişiklikleri dahil.
+Görmek [Ortak yanıt ve sayfalandırma](#common-response-and-pagination) Paylaşılan alanlar için. Kaynak alanları şurada belgelenmiştir: [Siparişler](/tr/sdk/agent-sdk/java/perpetual-orders), [Ticaret doluyor](/tr/sdk/agent-sdk/java/perpetual-trades), [Pozisyonlar](/tr/sdk/agent-sdk/java/perpetual-positions) Ve [Sözleşme defteri](/tr/sdk/agent-sdk/java/perpetual-ledger).
 
 Altı arayüz aynı şekilde `PerpetualResponse` değerini döndürür:
 
@@ -232,7 +234,6 @@ Gerçek saha uygulama kapsamı yukarıdaki kaynak tablolarına tabidir; Platform
 
 ## Kaynak ve ilgili kılavuzlar
 
-- [Resmi v0.3.0 kaynağı](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
-- [Sorguya genel bakış ve sayfalandırma](/tr/sdk/agent-sdk/java/perpetual-queries)
+- [Resmi v0.3.0 kaynağı](https://github.com/6mm-com/agent-java-sdk/tree/54aa3c1)
 - [Finansman cüzdanı](/tr/sdk/agent-sdk/java/funding-wallet)
 - [Yükseltme kılavuzu](/tr/sdk/agent-sdk/java/upgrade)

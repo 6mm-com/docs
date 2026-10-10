@@ -32,7 +32,7 @@ import com.sixmm.agent.model.CreateEntryUrlResponse;
 
 CreateEntryUrlResponse resp = client.createEntryUrl(
         CreateEntryUrlRequest.of("agent-user-001")
-                .withRedirectPath("/trade/BTCUSDT")
+                .withRedirectPath("/en/futures/BTCUSDT?tradingMode=real")
                 .withReturnUrl("https://partner.example.com/return#markets"));
 
 System.out.println(resp.webUrl);
@@ -43,9 +43,11 @@ System.out.println(resp.expireAt);
 
 | 分野 | 説明 |
 | --- | --- |
-| `redirectPath` | 6MM フロントエンドの相対パス。 `/` で始まる必要があります (例: `/trade/BTCUSDT`) |
+| `redirectPath` | 6MM フロントエンドの相対パス。 `/` で始まる必要があります (例: `/en/futures/BTCUSDT?tradingMode=real`) |
 | `returnUrl` | ユーザーが 6MM フロントエンドを終了するときに使用される絶対パートナー URL。 `http` と `https` のみが許可されます |
 | `expireAt` | エントリーチケットの有効期限 (秒単位の Unix タイムスタンプ) |
+
+この例では、リアル モードで永久先物を開きます。シミュレートされた取引の場合は、フロントエンドで `tradingMode=demo` を使用し、対応するバックエンド ウォレット リクエストで `environment=SIMULATED` を明示的に渡します。フロントエンド `tradingMode` とバックエンド ファンド `environment` は個別に構成されます。エントリ URL を作成すると、ユーザーが認証されます。資金を転送したり、ウォレット環境を選択したりすることはありません。
 
 セキュリティ要件:
 
@@ -66,7 +68,7 @@ System.out.println(resp.expireAt);
 
 ## ソースおよび関連ガイド
 
-- [公式 v0.3.0 ソース](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [公式 v0.3.0 ソース](https://github.com/6mm-com/agent-java-sdk/tree/54aa3c1)
 - [クエリの概要とページネーション](/ja/sdk/agent-sdk/java/perpetual-queries)
 - [資金調達ウォレット](/ja/sdk/agent-sdk/java/funding-wallet)
 - [アップグレードガイド](/ja/sdk/agent-sdk/java/upgrade)

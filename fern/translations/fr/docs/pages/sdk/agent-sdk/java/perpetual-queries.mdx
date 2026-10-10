@@ -1,6 +1,6 @@
 ---
 title: "Requêtes perpétuelles et pagination"
-subtitle: "Requêtes perpétuelles et pagination: Intégration Agent Java SDK v0.3.0, exemples, paramètres et sémantique de réponse."
+subtitle: "Requêtes perpétuelles et pagination : intégration de Agent Java SDK v0.3.0, exemples, paramètres et sémantique de réponse."
 slug: sdk/agent-sdk/java/perpetual-queries
 canonical-url: https://docs.6mm.com/fr/sdk/agent-sdk/java/perpetual-queries
 ---
@@ -38,7 +38,9 @@ Toutes les demandes sont signées POST avec un préfixe commun de `/v1/agent/per
 | `/positions/history` | `listPerpetualPositionHistory(PerpetualPositionHistoryRequest)` | Les joueurs peuvent être omis |
 | `/account/ledger` | `listPerpetualLedger(PerpetualLedgerRequest)` | Les joueurs peuvent être omis |
 
-`platformUserIds` est un tableau de chaînes d'ID de plate-forme publique. Lorsque spécifié, 1 à 100 joueurs uniques ayant accès sont requis ; en cas d'omission, seule la gamme de joueurs directs à laquelle le commerçant actuel a accès est interrogée. L'omission n'est pas équivalente à `[]` et les tableaux vides sont illégaux. La portée est déterminée par le commerçant signataire, et d'autres identifiants de commerçant ne peuvent pas être transmis pour étendre la portée.
+`platformUserIds` est un tableau de chaînes d'ID de plate-forme publique. Lorsque spécifié, 1 à 100 joueurs uniques ayant accès sont requis ; sur les points de terminaison qui autorisent l'omission, seule la gamme de joueurs directs auxquels le commerçant actuel a accès est interrogée. Les requêtes de remplissage nécessitent toujours ce tableau ; les requêtes avec ordre conditionnel nécessitent également des ID utilisateur explicites. L'omission n'est pas équivalente à `[]` et les tableaux vides sont illégaux. La portée est déterminée par le commerçant signataire, et d'autres identifiants de commerçant ne peuvent pas être transmis pour étendre la portée.
+
+Les valeurs du tableau sont sérialisées sous forme compacte JSON avant de rejoindre la charge utile de signature. Par exemple, `platformUserIds` signe comme `["1188041528"]`, donnant `platformUserIds=["1188041528"]` dans la charge utile `k=v`. Conservez l'ordre des éléments du tableau, les guillemets doubles et les ID de chaîne ; n'insérez pas d'espaces de formatage et n'utilisez pas Java `List.toString()` (comme `[1188041528]`). Le SDK gère automatiquement cette sérialisation.
 
 La requête de commande doit transmettre `orderCategory=NORMAL` ou `CONDITIONAL`. Utilisez `orderId` pour les commandes ordinaires et `conditionId` pour les commandes conditionnelles. Ils ne peuvent pas être mélangés entre catégories. Les ordres conditionnels et les ordres ordinaires générés par leur déclenchement sont traités séparément en tant qu'entités.
 
@@ -105,7 +107,7 @@ while (true) {
 
 ### Structure de retour et règles d’épargne
 
-Pour une description complète champ par champ, voir [Description du champ de retour de la requête de contrat](/fr/sdk/agent-sdk/java/perpetual-queries), y compris les types, les significations et le champ d'application de la pagination publique, des commandes ordinaires/conditionnelles, des transactions, des positions actuelles/historiques et des modifications contractuelles.
+Voir [Réponse et pagination communes](#common-response-and-pagination) pour les champs partagés. Les champs de ressources sont documentés dans [Ordres](/fr/sdk/agent-sdk/java/perpetual-orders), [Le commerce remplit](/fr/sdk/agent-sdk/java/perpetual-trades), [Postes](/fr/sdk/agent-sdk/java/perpetual-positions) et [Grand livre des contrats](/fr/sdk/agent-sdk/java/perpetual-ledger).
 
 Les six interfaces renvoient uniformément `PerpetualResponse` :
 
@@ -232,7 +234,6 @@ La portée réelle de l'application sur le terrain est soumise aux tableaux de r
 
 ## Source et guides associés
 
-- [Source officielle v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
-- [Présentation et pagination des requêtes](/fr/sdk/agent-sdk/java/perpetual-queries)
+- [Source officielle v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/54aa3c1)
 - [Portefeuille de financement](/fr/sdk/agent-sdk/java/funding-wallet)
 - [Guide de mise à niveau](/fr/sdk/agent-sdk/java/upgrade)

@@ -1,6 +1,6 @@
 ---
 title: "영구 쿼리 및 페이지 매김"
-subtitle: "영구 쿼리 및 페이지 매김: Agent Java SDK v0.3.0 통합, 예시, 매개변수 및 응답 의미 체계."
+subtitle: "영구 쿼리 및 페이지 매김: Agent Java SDK v0.3.0 통합, 예제, 매개변수 및 응답 의미 체계."
 slug: sdk/agent-sdk/java/perpetual-queries
 canonical-url: https://docs.6mm.com/ko/sdk/agent-sdk/java/perpetual-queries
 ---
@@ -38,7 +38,9 @@ import java.util.*;
 | `/positions/history` | `listPerpetualPositionHistory(PerpetualPositionHistoryRequest)` | 선수 생략 가능 |
 | `/account/ledger` | `listPerpetualLedger(PerpetualLedgerRequest)` | 선수 생략 가능 |
 
-`platformUserIds`는 공개 플랫폼 ID의 문자열 배열입니다. 지정된 경우 액세스 권한이 있는 고유 플레이어는 1~100명이 필요합니다. 생략하면 현재 판매자가 액세스할 수 있는 직접 플레이어의 범위만 쿼리됩니다. 생략은 `[]`와 동일하지 않으며 빈 배열은 불법입니다. 범위는 서명한 판매자에 의해 결정되며, 범위 확장을 위해 다른 판매자 ID를 전달할 수 없습니다.
+`platformUserIds`는 공개 플랫폼 ID의 문자열 배열입니다. 지정된 경우 액세스 권한이 있는 고유 플레이어는 1~100명이 필요합니다. 생략을 허용하는 엔드포인트에서는 현재 판매자가 액세스할 수 있는 직접 플레이어의 범위만 쿼리됩니다. 교환 채우기 쿼리에는 항상 이 배열이 필요합니다. 조건부 순서 쿼리에는 명시적인 사용자 ID도 필요합니다. 생략은 `[]`와 동일하지 않으며 빈 배열은 불법입니다. 범위는 서명한 판매자에 의해 결정되며, 범위 확장을 위해 다른 판매자 ID를 전달할 수 없습니다.
+
+배열 값은 서명 페이로드에 합류하기 전에 압축된 JSON로 직렬화됩니다. 예를 들어, `platformUserIds`는 `["1188041528"]`로 서명되어 `k=v` 페이로드에 `platformUserIds=["1188041528"]`를 제공합니다. 배열 요소 순서, 큰따옴표 및 문자열 ID를 유지합니다. 서식 지정 공백을 삽입하거나 Java `List.toString()`(예: `[1188041528]`)를 사용하지 마세요. SDK는 이 직렬화를 자동으로 처리합니다.
 
 주문 쿼리는 `orderCategory=NORMAL` 또는 `CONDITIONAL`를 전달해야 합니다. 일반 주문에는 `orderId`를 사용하고 조건부 주문에는 `conditionId`를 사용합니다. 카테고리 간에 혼합될 수 없습니다. 조건부 주문과 이를 실행하여 생성된 일반 주문은 별도로 개체로 처리됩니다.
 
@@ -105,7 +107,7 @@ while (true) {
 
 ### 반환 구조 및 저장 규칙
 
-전체 필드별 설명은 다음을 참조하세요. [계약 쿼리 반환 필드 설명](/ko/sdk/agent-sdk/java/perpetual-queries)공개 페이지네이션, 일반/조건부 주문, 거래, 현재/과거 위치, 계약 변경의 유형, 의미 및 적용 범위를 포함합니다.
+보다 [일반적인 응답 및 페이지 매김](#common-response-and-pagination) 공유 필드의 경우. 리소스 필드는 다음 문서에 설명되어 있습니다. [명령](/ko/sdk/agent-sdk/java/perpetual-orders), [거래 채우기](/ko/sdk/agent-sdk/java/perpetual-trades), [직위](/ko/sdk/agent-sdk/java/perpetual-positions) 그리고 [계약 원장](/ko/sdk/agent-sdk/java/perpetual-ledger).
 
 6개의 인터페이스는 `PerpetualResponse`를 균일하게 반환합니다.
 
@@ -232,7 +234,6 @@ Generic RecordData / Java PerpetualData 모델은 다음 필드도 선언하지�
 
 ## 소스 및 관련 가이드
 
-- [공식 v0.3.0 소스](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
-- [쿼리 개요 및 페이지 매김](/ko/sdk/agent-sdk/java/perpetual-queries)
+- [공식 v0.3.0 소스](https://github.com/6mm-com/agent-java-sdk/tree/54aa3c1)
 - [펀딩 지갑](/ko/sdk/agent-sdk/java/funding-wallet)
 - [업그레이드 가이드](/ko/sdk/agent-sdk/java/upgrade)

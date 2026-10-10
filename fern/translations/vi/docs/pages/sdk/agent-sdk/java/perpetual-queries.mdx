@@ -1,6 +1,6 @@
 ---
 title: "Truy vấn & phân trang vĩnh viễn"
-subtitle: "Truy vấn & phân trang vĩnh viễn: Agent Java SDK tích hợp v0.3.0, ví dụ, tham số và ngữ nghĩa phản hồi."
+subtitle: "Truy vấn & phân trang vĩnh viễn: Agent Java SDK v0.3.0 tích hợp, ví dụ, tham số và ngữ nghĩa phản hồi."
 slug: sdk/agent-sdk/java/perpetual-queries
 canonical-url: https://docs.6mm.com/vi/sdk/agent-sdk/java/perpetual-queries
 ---
@@ -38,7 +38,9 @@ Tất cả các yêu cầu đều được ký POST với tiền tố chung là 
 | `/positions/history` | `listPerpetualPositionHistory(PerpetualPositionHistoryRequest)` | Người chơi có thể được bỏ qua |
 | `/account/ledger` | `listPerpetualLedger(PerpetualLedgerRequest)` | Người chơi có thể được bỏ qua |
 
-`platformUserIds` là một chuỗi ID nền tảng công cộng. Khi được chỉ định, cần có 1 đến 100 người chơi duy nhất có quyền truy cập; khi bị bỏ qua, chỉ có phạm vi người chơi trực tiếp mà người bán hiện tại có quyền truy cập mới được truy vấn. Thiếu sót không tương đương với `[]` và mảng trống là bất hợp pháp. Phạm vi được xác định bởi người bán ký tên và các ID người bán khác không thể được chuyển để mở rộng phạm vi.
+`platformUserIds` là một chuỗi ID nền tảng công cộng. Khi được chỉ định, cần có 1 đến 100 người chơi duy nhất có quyền truy cập; trên các điểm cuối cho phép bỏ qua, chỉ có phạm vi người chơi trực tiếp mà người bán hiện tại có quyền truy cập mới được truy vấn. Các truy vấn điền vào giao dịch luôn yêu cầu mảng này; truy vấn thứ tự có điều kiện cũng yêu cầu ID người dùng rõ ràng. Thiếu sót không tương đương với `[]` và mảng trống là bất hợp pháp. Phạm vi được xác định bởi người bán ký tên và các ID người bán khác không thể được chuyển để mở rộng phạm vi.
+
+Các giá trị mảng được tuần tự hóa dưới dạng JSON nhỏ gọn trước khi tham gia tải trọng ký. Ví dụ: `platformUserIds` ký hiệu là `["1188041528"]`, cung cấp `platformUserIds=["1188041528"]` trong tải trọng `k=v`. Giữ nguyên thứ tự phần tử mảng, dấu ngoặc kép và ID chuỗi; không chèn khoảng trắng định dạng hoặc sử dụng Java `List.toString()` (chẳng hạn như `[1188041528]`). SDK tự động xử lý việc tuần tự hóa này.
 
 Truy vấn thứ tự phải vượt qua `orderCategory=NORMAL` hoặc `CONDITIONAL`. Sử dụng `orderId` cho các lệnh thông thường và `conditionId` cho các lệnh có điều kiện. Chúng không thể được trộn lẫn giữa các danh mục. Lệnh có điều kiện và lệnh thông thường được tạo bằng cách kích hoạt chúng được xử lý riêng biệt dưới dạng thực thể.
 
@@ -105,7 +107,7 @@ while (true) {
 
 ### Cấu trúc trả về và quy tắc lưu
 
-Để biết mô tả đầy đủ theo từng trường, hãy xem [Mô tả trường trả về truy vấn hợp đồng](/vi/sdk/agent-sdk/java/perpetual-queries), bao gồm các loại, ý nghĩa và phạm vi áp dụng phân trang công khai, các lệnh thông thường/có điều kiện, giao dịch, vị trí hiện tại/lịch sử và các thay đổi trong hợp đồng.
+Nhìn thấy [Phản hồi và phân trang chung](#common-response-and-pagination) cho các trường được chia sẻ. Các trường tài nguyên được ghi lại trong [Đơn đặt hàng](/vi/sdk/agent-sdk/java/perpetual-orders), [Giao dịch lấp đầy](/vi/sdk/agent-sdk/java/perpetual-trades), [Vị trí](/vi/sdk/agent-sdk/java/perpetual-positions) Và [Sổ hợp đồng](/vi/sdk/agent-sdk/java/perpetual-ledger).
 
 Sáu giao diện trả về thống nhất `PerpetualResponse`:
 
@@ -232,7 +234,6 @@ Phạm vi ứng dụng hiện trường thực tế tuân theo các bảng tài 
 
 ## Nguồn và hướng dẫn liên quan
 
-- [Nguồn v0.3.0 chính thức](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
-- [Tổng quan về truy vấn và phân trang](/vi/sdk/agent-sdk/java/perpetual-queries)
+- [Nguồn v0.3.0 chính thức](https://github.com/6mm-com/agent-java-sdk/tree/54aa3c1)
 - [Ví tiền tài trợ](/vi/sdk/agent-sdk/java/funding-wallet)
 - [Hướng dẫn nâng cấp](/vi/sdk/agent-sdk/java/upgrade)

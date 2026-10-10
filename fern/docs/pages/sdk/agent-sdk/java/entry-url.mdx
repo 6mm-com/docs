@@ -31,7 +31,7 @@ import com.sixmm.agent.model.CreateEntryUrlResponse;
 
 CreateEntryUrlResponse resp = client.createEntryUrl(
         CreateEntryUrlRequest.of("agent-user-001")
-                .withRedirectPath("/trade/BTCUSDT")
+                .withRedirectPath("/en/futures/BTCUSDT?tradingMode=real")
                 .withReturnUrl("https://partner.example.com/return#markets"));
 
 System.out.println(resp.webUrl);
@@ -42,9 +42,11 @@ Field rules:
 
 | Field | Description |
 | --- | --- |
-| `redirectPath` | 6MM frontend relative path. It must start with `/`, for example `/trade/BTCUSDT` |
+| `redirectPath` | 6MM frontend relative path. It must start with `/`, for example `/en/futures/BTCUSDT?tradingMode=real` |
 | `returnUrl` | Partner absolute URL used when the user exits 6MM frontend. Only `http` and `https` are allowed |
 | `expireAt` | Entry ticket expiration time as a Unix timestamp in seconds |
+
+The example opens perpetual futures in real mode. For simulated trading, use `tradingMode=demo` in the frontend and explicitly pass `environment=SIMULATED` in the corresponding backend wallet requests. Frontend `tradingMode` and backend funds `environment` are configured separately. Creating an entry URL authenticates the user; it does not transfer funds or select a wallet environment.
 
 Security requirements:
 
@@ -65,7 +67,7 @@ See [Seconds trading](/sdk/agent-sdk/java/seconds-trading) for redirect and embe
 
 ## Source and related guides
 
-- [Official v0.3.0 source](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Official v0.3.0 source](https://github.com/6mm-com/agent-java-sdk/tree/54aa3c1)
 - [Query overview and pagination](/sdk/agent-sdk/java/perpetual-queries)
 - [Funding wallet](/sdk/agent-sdk/java/funding-wallet)
 - [Upgrade guide](/sdk/agent-sdk/java/upgrade)

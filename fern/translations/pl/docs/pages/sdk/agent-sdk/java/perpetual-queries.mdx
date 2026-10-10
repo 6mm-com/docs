@@ -1,6 +1,6 @@
 ---
 title: "Ciągłe zapytania i paginacja"
-subtitle: "Ciągłe zapytania i paginacja: Agent Java SDK Integracja v0.3.0, przykłady, parametry i semantyka odpowiedzi."
+subtitle: "Ciągłe zapytania i paginacja: Agent Java SDK integracja v0.3.0, przykłady, parametry i semantyka odpowiedzi."
 slug: sdk/agent-sdk/java/perpetual-queries
 canonical-url: https://docs.6mm.com/pl/sdk/agent-sdk/java/perpetual-queries
 ---
@@ -38,7 +38,9 @@ Wszystkie żądania są podpisane POST wspólnym prefiksem `/v1/agent/perpetual`
 | `/positions/history` | `listPerpetualPositionHistory(PerpetualPositionHistoryRequest)` | Graczy można pominąć |
 | `/account/ledger` | `listPerpetualLedger(PerpetualLedgerRequest)` | Graczy można pominąć |
 
-`platformUserIds` to tablica ciągów zawierająca identyfikatory platform publicznych. Jeśli określono, wymaganych jest od 1 do 100 unikalnych graczy mających dostęp; w przypadku pominięcia sprawdzany jest tylko zakres bezpośrednich graczy, do których ma dostęp bieżący sprzedawca. Pominięcie nie jest równoznaczne z `[]`, a puste tablice są nielegalne. Zakres jest określany przez sprzedawcę podpisującego i nie można przekazać innych identyfikatorów sprzedawców w celu rozszerzenia zakresu.
+`platformUserIds` to tablica ciągów zawierająca identyfikatory platform publicznych. Jeśli określono, wymaganych jest od 1 do 100 unikalnych graczy mających dostęp; na punktach końcowych, które pozwalają na pominięcie, sprawdzany jest tylko zakres bezpośrednich graczy, do których bieżący sprzedawca ma dostęp. Zapytania wypełniające transakcje zawsze wymagają tej tablicy; zapytania kolejności warunkowej również wymagają jawnych identyfikatorów użytkowników. Pominięcie nie jest równoznaczne z `[]`, a puste tablice są nielegalne. Zakres jest określany przez sprzedawcę podpisującego i nie można przekazać innych identyfikatorów sprzedawców w celu rozszerzenia zakresu.
+
+Wartości tablicy są serializowane jako kompaktowe JSON przed dołączeniem do ładunku podpisującego. Na przykład `platformUserIds` znakuje jako `["1188041528"]`, podając `platformUserIds=["1188041528"]` w ładunku `k=v`. Zachowaj kolejność elementów tablicy, podwójne cudzysłowy i identyfikatory ciągów; nie wstawiaj spacji formatujących ani nie używaj Java `List.toString()` (np. `[1188041528]`). SDK automatycznie obsługuje tę serializację.
 
 Zapytanie o zamówienie musi przejść `orderCategory=NORMAL` lub `CONDITIONAL`. Użyj `orderId` dla zleceń zwykłych i `conditionId` dla zleceń warunkowych. Nie można ich mieszać w różnych kategoriach. Zlecenia warunkowe oraz zlecenia zwykłe generowane w wyniku ich uruchomienia przetwarzane są oddzielnie jako byty.
 
@@ -105,7 +107,7 @@ while (true) {
 
 ### Struktura zwrotów i zasady zapisywania
 
-Aby zapoznać się z pełnym opisem pole po polu, zobacz [Opis pola zwracanego zapytania o kontrakt](/pl/sdk/agent-sdk/java/perpetual-queries), w tym rodzaje, znaczenie i zakres stosowania paginacji publicznej, zleceń zwyczajnych/warunkowych, transakcji, pozycji bieżących/historycznych oraz zmian umów.
+Widzieć [Wspólna odpowiedź i paginacja](#common-response-and-pagination) dla wspólnych pól. Pola zasobów są udokumentowane w [Święcenia](/pl/sdk/agent-sdk/java/perpetual-orders), [Handel wypełnia](/pl/sdk/agent-sdk/java/perpetual-trades), [Pozycje](/pl/sdk/agent-sdk/java/perpetual-positions) I [Księga kontraktowa](/pl/sdk/agent-sdk/java/perpetual-ledger).
 
 Sześć interfejsów równomiernie zwraca `PerpetualResponse`:
 
@@ -232,7 +234,6 @@ Rzeczywisty zakres zastosowań terenowych podlega powyższym tabelom zasobów; w
 
 ## Źródło i powiązane przewodniki
 
-- [Oficjalne źródło v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
-- [Przegląd zapytań i paginacja](/pl/sdk/agent-sdk/java/perpetual-queries)
+- [Oficjalne źródło v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/54aa3c1)
 - [Portfel finansowania](/pl/sdk/agent-sdk/java/funding-wallet)
 - [Przewodnik po aktualizacji](/pl/sdk/agent-sdk/java/upgrade)

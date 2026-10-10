@@ -32,7 +32,7 @@ import com.sixmm.agent.model.CreateEntryUrlResponse;
 
 CreateEntryUrlResponse resp = client.createEntryUrl(
         CreateEntryUrlRequest.of("agent-user-001")
-                .withRedirectPath("/trade/BTCUSDT")
+                .withRedirectPath("/en/futures/BTCUSDT?tradingMode=real")
                 .withReturnUrl("https://partner.example.com/return#markets"));
 
 System.out.println(resp.webUrl);
@@ -43,9 +43,11 @@ System.out.println(resp.expireAt);
 
 | 場地 | 描述 |
 | --- | --- |
-| `redirectPath` | 6MM 前端相對路徑。它必須以 `/` 開頭，例如 `/trade/BTCUSDT` |
+| `redirectPath` | 6MM 前端相對路徑。它必須以 `/` 開頭，例如 `/en/futures/BTCUSDT?tradingMode=real` |
 | `returnUrl` | 當用戶退出 6MM 前端時使用合作伙伴絕對 URL。僅允許 `http` 和 `https` |
 | `expireAt` | 入場券過期時間為 Unix 時間戳（以秒為單位） |
+
+該示例在實模式下開啟永續期貨。對於模擬交易，在前端使用 `tradingMode=demo` 並在相應的後端錢包請求中顯式傳遞 `environment=SIMULATED`。前端`tradingMode`和後端資金`environment`分別配置。創建條目 URL 對用戶進行身份驗證；它不轉移資金或選擇錢包環境。
 
 安全要求：
 
@@ -66,7 +68,7 @@ System.out.println(resp.expireAt);
 
 ## 來源及相關指南
 
-- [官方v0.3.0源碼](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [官方v0.3.0源碼](https://github.com/6mm-com/agent-java-sdk/tree/54aa3c1)
 - [查詢概覽和分頁](/zh-TW/sdk/agent-sdk/java/perpetual-queries)
 - [資金錢包](/zh-TW/sdk/agent-sdk/java/funding-wallet)
 - [升級指南](/zh-TW/sdk/agent-sdk/java/upgrade)

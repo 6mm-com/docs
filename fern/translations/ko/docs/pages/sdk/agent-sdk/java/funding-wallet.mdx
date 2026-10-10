@@ -1,6 +1,6 @@
 ---
 title: "펀딩 지갑"
-subtitle: "펀딩 지갑: Agent Java SDK v0.3.0 통합, 예시, 매개변수 및 응답 의미 체계."
+subtitle: "펀딩 지갑: Agent Java SDK v0.3.0 통합, 예시, 매개변수 및 응답 의미."
 slug: sdk/agent-sdk/java/funding-wallet
 canonical-url: https://docs.6mm.com/ko/sdk/agent-sdk/java/funding-wallet
 ---
@@ -122,7 +122,7 @@ WalletTransferResponse recovered = client.queryWalletTransfer(
 
 ### 기존 계약 이전 흐름
 
-원본 `transfer`, `transferAllOut`, `reverse`, `queryOrder`, `listOrders`는 원본 계약 이전 프로세스를 계속 처리합니다. `queryOrder`는 자금 이체 주문을 쿼리하고 있으며, `listOrders`는 이체 조정 목록입니다. 대신 다음 섹션의 6가지 유형의 쿼리가 영구 거래 주문에 사용됩니다.
+원본 `transfer`, `transferAllOut`, `reverse`, `queryOrder`, `listOrders`는 원본 계약 이전 프로세스를 계속 처리합니다. `queryOrder`는 자금 이체 주문을 쿼리하고 있으며, `listOrders`는 이체 조정 목록입니다. 대신에, [지속적인 쿼리](/ko/sdk/agent-sdk/java/perpetual-queries) 영구 거래 주문에 사용됩니다.
 
 원래 자금 조달 응답은 `orderStatus`를 사용합니다. 자금 조달 응답은 `status`를 사용하므로 혼합하지 마십시오. 원본 전송 Webhook은 `X-Agent-Timestamp`, `X-Agent-Nonce`, `X-Agent-Signature`를 사용하여 확인되며 원본 서명 텍스트는 `timestamp + nonce + rawBody`입니다. 원래 요청 본문이 먼저 확인된 다음 역직렬화되고 멱등성이 있습니다. 명시적인 시뮬레이션 환경 알림에는 `environment=SIMULATED`이 포함되어 있으며 프로덕션 알림은 이전 필드와 계속 호환됩니다. 금액, 주문번호, 상태, 환경 등은 현지 거래 주문서로 확인이 필요합니다.
 
@@ -130,9 +130,8 @@ WalletTransferResponse recovered = client.queryWalletTransfer(
 
 ## 소스 및 관련 가이드
 
-- [공식 v0.3.0 소스](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [공식 v0.3.0 소스](https://github.com/6mm-com/agent-java-sdk/tree/54aa3c1)
 - [쿼리 개요 및 페이지 매김](/ko/sdk/agent-sdk/java/perpetual-queries)
-- [펀딩 지갑](/ko/sdk/agent-sdk/java/funding-wallet)
 - [업그레이드 가이드](/ko/sdk/agent-sdk/java/upgrade)
 
 <span id="funding-request-fields" data-sixmm-canonical-anchor="funding-request-fields" aria-hidden="true"></span>

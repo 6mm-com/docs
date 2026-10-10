@@ -1,6 +1,6 @@
 ---
 title: "Kueri & Paginasi Abadi"
-subtitle: "Kueri & Paginasi Abadi: Agent Java SDK integrasi v0.3.0, contoh, parameter, dan semantik respons."
+subtitle: "Kueri & Paginasi Abadi: Integrasi Agent Java SDK v0.3.0, contoh, parameter, dan semantik respons."
 slug: sdk/agent-sdk/java/perpetual-queries
 canonical-url: https://docs.6mm.com/id/sdk/agent-sdk/java/perpetual-queries
 ---
@@ -38,7 +38,9 @@ Semua permintaan ditandatangani POST dengan awalan umum `/v1/agent/perpetual`.
 | `/positions/history` | `listPerpetualPositionHistory(PerpetualPositionHistoryRequest)` | Pemain dapat dihilangkan |
 | `/account/ledger` | `listPerpetualLedger(PerpetualLedgerRequest)` | Pemain dapat dihilangkan |
 
-`platformUserIds` adalah rangkaian string ID platform publik. Jika ditentukan, diperlukan 1 hingga 100 pemain unik yang memiliki akses; jika dihilangkan, hanya rentang pemain langsung yang dapat diakses oleh pedagang saat ini yang akan ditanyakan. Kelalaian tidak setara dengan `[]`, dan array kosong adalah ilegal. Cakupannya ditentukan oleh pedagang yang menandatangani, dan ID pedagang lainnya tidak dapat diteruskan untuk memperluas cakupan.
+`platformUserIds` adalah rangkaian string ID platform publik. Jika ditentukan, diperlukan 1 hingga 100 pemain unik yang memiliki akses; pada titik akhir yang memungkinkan penghilangan, hanya kisaran pemain langsung yang dapat diakses oleh pedagang saat ini yang ditanyakan. Kueri isi dagang selalu memerlukan larik ini; kueri pesanan bersyarat juga memerlukan ID pengguna eksplisit. Kelalaian tidak setara dengan `[]`, dan array kosong adalah ilegal. Cakupannya ditentukan oleh pedagang yang menandatangani, dan ID pedagang lainnya tidak dapat diteruskan untuk memperluas cakupan.
+
+Nilai array diserialkan sebagai kompak JSON sebelum bergabung dengan payload penandatanganan. Misalnya, `platformUserIds` ditandai sebagai `["1188041528"]`, memberikan `platformUserIds=["1188041528"]` dalam payload `k=v`. Pertahankan urutan elemen array, tanda kutip ganda, dan ID string; jangan menyisipkan spasi pemformatan atau menggunakan Java `List.toString()` (seperti `[1188041528]`). SDK menangani serialisasi ini secara otomatis.
 
 Kueri pesanan harus melewati `orderCategory=NORMAL` atau `CONDITIONAL`. Gunakan `orderId` untuk pesanan biasa dan `conditionId` untuk pesanan bersyarat. Mereka tidak dapat dicampur antar kategori. Pesanan bersyarat dan pesanan biasa yang dihasilkan dengan memicunya diproses secara terpisah sebagai entitas.
 
@@ -105,7 +107,7 @@ while (true) {
 
 ### Struktur pengembalian dan aturan penyimpanan
 
-Untuk deskripsi lengkap bidang demi bidang, lihat [Deskripsi bidang pengembalian kueri kontrak](/id/sdk/agent-sdk/java/perpetual-queries), termasuk jenis, arti dan ruang lingkup penerapan penomoran halaman publik, pesanan biasa/bersyarat, transaksi, posisi saat ini/historis, dan perubahan kontrak.
+Melihat [Respon umum dan penomoran halaman](#common-response-and-pagination) untuk bidang bersama. Bidang sumber daya didokumentasikan dalam [Pesanan](/id/sdk/agent-sdk/java/perpetual-orders), [Perdagangan terisi](/id/sdk/agent-sdk/java/perpetual-trades), [Posisi](/id/sdk/agent-sdk/java/perpetual-positions) Dan [Buku besar kontrak](/id/sdk/agent-sdk/java/perpetual-ledger).
 
 Keenam antarmuka secara seragam mengembalikan `PerpetualResponse`:
 
@@ -232,7 +234,6 @@ Cakupan penerapan lapangan sebenarnya tunduk pada tabel sumber daya di atas; ket
 
 ## Sumber dan panduan terkait
 
-- [Sumber resmi v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
-- [Ikhtisar kueri dan penomoran halaman](/id/sdk/agent-sdk/java/perpetual-queries)
+- [Sumber resmi v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/54aa3c1)
 - [Dompet pendanaan](/id/sdk/agent-sdk/java/funding-wallet)
 - [Panduan peningkatan](/id/sdk/agent-sdk/java/upgrade)

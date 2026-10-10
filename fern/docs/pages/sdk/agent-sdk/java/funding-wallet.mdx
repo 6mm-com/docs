@@ -121,7 +121,7 @@ Merchants' local deposits and withdrawals are idempotent; persistent orders and 
 
 ### Existing Contract transfer flow
 
-The original `transfer`, `transferAllOut`, `reverse`, `queryOrder`, `listOrders` continue to process the original contract transfer process. `queryOrder` is querying fund transfer orders, `listOrders` is a transfer reconciliation list; instead, the six types of queries in the next section are used for perpetual trading orders.
+The original `transfer`, `transferAllOut`, `reverse`, `queryOrder`, `listOrders` continue to process the original contract transfer process. `queryOrder` is querying fund transfer orders, `listOrders` is a transfer reconciliation list; instead, [Perpetual queries](/sdk/agent-sdk/java/perpetual-queries) are used for perpetual trading orders.
 
 The original funding response uses `orderStatus`; the Funding response uses `status`, do not mix them. The original transfer Webhook is verified using `X-Agent-Timestamp`, `X-Agent-Nonce`, `X-Agent-Signature`, and the original signature text is `timestamp + nonce + rawBody`; the original request body is first verified, then deserialized and idempotent. Explicit simulated environment notifications contain `environment=SIMULATED`, production notifications remain compatible with old fields. The amount, order number, status and environment need to be checked with the local business order.
 
@@ -129,9 +129,8 @@ The original funding response uses `orderStatus`; the Funding response uses `sta
 
 ## Source and related guides
 
-- [Official v0.3.0 source](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Official v0.3.0 source](https://github.com/6mm-com/agent-java-sdk/tree/54aa3c1)
 - [Query overview and pagination](/sdk/agent-sdk/java/perpetual-queries)
-- [Funding wallet](/sdk/agent-sdk/java/funding-wallet)
 - [Upgrade guide](/sdk/agent-sdk/java/upgrade)
 
 <span data-sixmm-canonical-anchor="funding-request-fields" aria-hidden="true"></span>

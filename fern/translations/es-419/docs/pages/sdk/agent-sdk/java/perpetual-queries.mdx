@@ -38,7 +38,9 @@ Todas las solicitudes están firmadas POST con un prefijo común de `/v1/agent/p
 | `/positions/history` | `listPerpetualPositionHistory(PerpetualPositionHistoryRequest)` | Los jugadores pueden ser omitidos. |
 | `/account/ledger` | `listPerpetualLedger(PerpetualLedgerRequest)` | Los jugadores pueden ser omitidos. |
 
-`platformUserIds` es una matriz de cadenas de ID de plataformas públicas. Cuando se especifica, se requieren de 1 a 100 jugadores únicos que tengan acceso; cuando se omite, solo se consulta el rango de jugadores directos a los que tiene acceso el comerciante actual. La omisión no es equivalente a `[]` y las matrices vacías son ilegales. El alcance lo determina el comerciante firmante y no se pueden pasar otros ID de comerciante para ampliar el alcance.
+`platformUserIds` es una matriz de cadenas de ID de plataformas públicas. Cuando se especifica, se requieren de 1 a 100 jugadores únicos que tengan acceso; en los puntos finales que permiten la omisión, solo se consulta el rango de jugadores directos a los que tiene acceso el comerciante actual. Las consultas de Trade-fill siempre requieren esta matriz; Las consultas de orden condicional también requieren ID de usuario explícitos. La omisión no es equivalente a `[]` y las matrices vacías son ilegales. El alcance lo determina el comerciante firmante y no se pueden pasar otros ID de comerciante para ampliar el alcance.
+
+Los valores de la matriz se serializan como JSON compacto antes de unirse a la carga útil de firma. Por ejemplo, `platformUserIds` firma como `["1188041528"]`, dando `platformUserIds=["1188041528"]` en la carga útil `k=v`. Preservar el orden de los elementos de la matriz, las comillas dobles y los ID de cadenas; no inserte espacios de formato ni utilice Java `List.toString()` (como `[1188041528]`). El SDK maneja esta serialización automáticamente.
 
 La consulta de pedido debe pasar `orderCategory=NORMAL` o `CONDITIONAL`. Utilice `orderId` para pedidos ordinarios y `conditionId` para pedidos condicionales. No se pueden mezclar entre categorías. Las órdenes condicionales y las órdenes ordinarias generadas al activarlas se procesan por separado como entidades.
 
@@ -105,7 +107,7 @@ while (true) {
 
 ### Estructura de devolución y reglas de ahorro.
 
-Para obtener una descripción completa campo por campo, consulte [Descripción del campo de devolución de consulta de contrato](/es-419/sdk/agent-sdk/java/perpetual-queries), incluidos los tipos, significados y ámbito de aplicación de la paginación pública, órdenes ordinarias/condicionales, transacciones, posiciones actuales/históricas y cambios de contratos.
+Ver [Respuesta común y paginación.](#common-response-and-pagination) para campos compartidos. Los campos de recursos están documentados en [Órdenes](/es-419/sdk/agent-sdk/java/perpetual-orders), [Rellenos comerciales](/es-419/sdk/agent-sdk/java/perpetual-trades), [Posiciones](/es-419/sdk/agent-sdk/java/perpetual-positions) y [Libro mayor de contratos](/es-419/sdk/agent-sdk/java/perpetual-ledger).
 
 Las seis interfaces devuelven uniformemente `PerpetualResponse`:
 
@@ -232,7 +234,6 @@ El alcance real de la aplicación de campo está sujeto a las tablas de recursos
 
 ## Guías fuente y relacionadas
 
-- [Fuente oficial v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
-- [Descripción general de consultas y paginación](/es-419/sdk/agent-sdk/java/perpetual-queries)
+- [Fuente oficial v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/54aa3c1)
 - [Cartera de financiación](/es-419/sdk/agent-sdk/java/funding-wallet)
 - [Guía de actualización](/es-419/sdk/agent-sdk/java/upgrade)

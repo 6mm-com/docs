@@ -32,7 +32,7 @@ import com.sixmm.agent.model.CreateEntryUrlResponse;
 
 CreateEntryUrlResponse resp = client.createEntryUrl(
         CreateEntryUrlRequest.of("agent-user-001")
-                .withRedirectPath("/trade/BTCUSDT")
+                .withRedirectPath("/en/futures/BTCUSDT?tradingMode=real")
                 .withReturnUrl("https://partner.example.com/return#markets"));
 
 System.out.println(resp.webUrl);
@@ -43,9 +43,11 @@ Alan kuralları:
 
 | Alan | Tanım |
 | --- | --- |
-| `redirectPath` | 6MM ön uç göreli yolu. `/` ile başlamalıdır, örneğin `/trade/BTCUSDT` |
+| `redirectPath` | 6MM ön uç göreli yolu. `/` ile başlamalıdır, örneğin `/en/futures/BTCUSDT?tradingMode=real` |
 | `returnUrl` | Kullanıcı 6MM ön uçtan çıktığında iş ortağı mutlak değeri URL kullanılır. Yalnızca `http` ve `https`'ye izin verilir |
 | `expireAt` | Saniye cinsinden Unix zaman damgası olarak giriş bileti son kullanma süresi |
+
+Örnek, gerçek modda kalıcı vadeli işlemleri açıyor. Simüle edilmiş alım satım için, ön uçta `tradingMode=demo` kullanın ve ilgili arka uç cüzdan isteklerine açıkça `environment=SIMULATED` iletin. Ön uç `tradingMode` ve arka uç fonları `environment` ayrı ayrı yapılandırılır. Bir giriş oluşturmak URL kullanıcının kimliğini doğrular; para aktarmaz veya bir cüzdan ortamı seçmez.
 
 Güvenlik gereksinimleri:
 
@@ -66,7 +68,7 @@ Görmek [Saniye ticareti](/tr/sdk/agent-sdk/java/seconds-trading) yönlendirme v
 
 ## Kaynak ve ilgili kılavuzlar
 
-- [Resmi v0.3.0 kaynağı](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Resmi v0.3.0 kaynağı](https://github.com/6mm-com/agent-java-sdk/tree/54aa3c1)
 - [Sorguya genel bakış ve sayfalandırma](/tr/sdk/agent-sdk/java/perpetual-queries)
 - [Finansman cüzdanı](/tr/sdk/agent-sdk/java/funding-wallet)
 - [Yükseltme kılavuzu](/tr/sdk/agent-sdk/java/upgrade)

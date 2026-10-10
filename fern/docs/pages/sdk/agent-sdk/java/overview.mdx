@@ -6,6 +6,8 @@ slug: sdk/agent-sdk/java/overview
 
 This guide targets **Agent Java SDK `v0.3.0`**, Java 8+, and the tagged public contract. Examples run in a partner backend after initializing `client` in [Quick Start](/sdk/agent-sdk/java/quick-start).
 
+Documentation baseline: SDK `v0.3.0`, commit `54aa3c1`.
+
 <span data-sixmm-canonical-anchor="version-and-installation" aria-hidden="true"></span>
 
 ## Version and installation
@@ -95,6 +97,8 @@ Signing rules:
 4. Join as `k=v&k2=v2`.
 5. Calculate HMAC-SHA256 hex with `apiSecret`.
 
+Array values are serialized as compact JSON before joining the signing payload. For example, `platformUserIds` signs as `["1188041528"]`, giving `platformUserIds=["1188041528"]` in the `k=v` payload. Preserve the array element order, double quotes and string IDs; do not insert formatting spaces or use Java `List.toString()` (such as `[1188041528]`). The SDK handles this serialization automatically.
+
 Normal business code should not calculate signatures or manually set
 `agentCode`, `timestamp`, `nonce`, or `sign`.
 
@@ -102,7 +106,7 @@ Normal business code should not calculate signatures or manually set
 
 ## Source and related guides
 
-- [Official v0.3.0 source](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Official v0.3.0 source](https://github.com/6mm-com/agent-java-sdk/tree/54aa3c1)
 - [Query overview and pagination](/sdk/agent-sdk/java/perpetual-queries)
 - [Funding wallet](/sdk/agent-sdk/java/funding-wallet)
 - [Upgrade guide](/sdk/agent-sdk/java/upgrade)

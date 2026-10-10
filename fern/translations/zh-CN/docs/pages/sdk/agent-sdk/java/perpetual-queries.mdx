@@ -38,7 +38,9 @@ import java.util.*;
 | `/positions/history` | `listPerpetualPositionHistory(PerpetualPositionHistoryRequest)` | 可省略玩家 |
 | `/account/ledger` | `listPerpetualLedger(PerpetualLedgerRequest)` | 可省略玩家 |
 
-`platformUserIds` 是公开平台 ID 的字符串数组，指定时需 1～100 个不重复且有权访问的玩家；省略时仅查询当前商户有权访问的直属玩家范围。省略与 `[]` 不等价，空数组非法。范围由签名商户确定，不能传其他商户 ID 扩大范围。
+`platformUserIds` 是公开平台 ID 的字符串数组，指定时需 1～100 个不重复且有权访问的玩家；对于允许省略的接口，省略时仅查询当前商户有权访问的直属玩家范围。成交查询始终必须传入该数组，条件委托查询也必须明确指定玩家 ID。省略与 `[]` 不等价，空数组非法。范围由签名商户确定，不能传其他商户 ID 扩大范围。
+
+数组值参与签名前先序列化为紧凑 JSON。例如，`platformUserIds` 使用 `["1188041528"]`，签名原文中的键值片段为 `platformUserIds=["1188041528"]`。保留数组元素顺序、双引号和字符串 ID，不插入格式化空格，不使用 Java `List.toString()`（例如 `[1188041528]`）。SDK 自动完成该序列化。
 
 委托查询必传 `orderCategory=NORMAL` 或 `CONDITIONAL`。普通委托使用 `orderId`，条件委托使用 `conditionId`，不能跨类别混用。条件单与其触发生成的普通委托分别按实体处理。
 
@@ -105,7 +107,7 @@ while (true) {
 
 ### 返回结构与保存规则
 
-完整逐字段说明见 [合约查询返回字段说明](/zh-CN/sdk/agent-sdk/java/perpetual-queries)，包含公共分页、普通/条件委托、成交、当前/历史持仓、合约账变的类型、含义和适用范围。
+公共字段见[公共响应与分页](#common-response-and-pagination)。资源字段分别见[委托字段](/zh-CN/sdk/agent-sdk/java/perpetual-orders)、[成交字段](/zh-CN/sdk/agent-sdk/java/perpetual-trades)、[持仓字段](/zh-CN/sdk/agent-sdk/java/perpetual-positions)和[账变字段](/zh-CN/sdk/agent-sdk/java/perpetual-ledger)。
 
 六接口统一返回 `PerpetualResponse`：
 
@@ -232,7 +234,6 @@ HTTP 成功不代表业务成功，必须检查 `code`。Java SDK 会以 `AgentA
 
 ## 来源与相关指南
 
-- [官方 v0.3.0 源码](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
-- [合约查询与分页](/zh-CN/sdk/agent-sdk/java/perpetual-queries)
+- [官方 v0.3.0 源码](https://github.com/6mm-com/agent-java-sdk/tree/54aa3c1)
 - [Funding 钱包](/zh-CN/sdk/agent-sdk/java/funding-wallet)
 - [升级指南](/zh-CN/sdk/agent-sdk/java/upgrade)

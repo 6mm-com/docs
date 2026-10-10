@@ -37,14 +37,14 @@ The production documentation source of truth is the `fern/` directory.
 
 ## SDK documentation baseline
 
-Agent Java SDK documentation targets the public `v0.3.0` source tag. The Java
+Agent Java SDK documentation targets `v0.3.0`, with documentation verified against commit `54aa3c1`. The Java
 sidebar contains 17 pages covering installation, identity, assets, Contract and
 Funding transfers, entry authentication, seconds trading, execution environments,
 six perpetual queries, response fields, fiat reference rates and upgrades.
 
-Sources: [tagged README](https://github.com/6mm-com/agent-java-sdk/blob/v0.3.0/README.md),
-[partner integration contract](https://github.com/6mm-com/agent-java-sdk/blob/v0.3.0/docs/merchant-integration.md),
-and [response fields](https://github.com/6mm-com/agent-java-sdk/blob/v0.3.0/docs/perpetual-response-fields.md).
+Sources: [tagged README](https://github.com/6mm-com/agent-java-sdk/blob/54aa3c1/README.md),
+[partner integration contract](https://github.com/6mm-com/agent-java-sdk/blob/54aa3c1/docs/merchant-integration.md),
+and [response fields](https://github.com/6mm-com/agent-java-sdk/blob/54aa3c1/docs/perpetual-response-fields.md).
 The public Trading Widget `v1` runtime was checked at version `1.8.0` on
 2026-10-10; frontend and backend SDK versions are independent.
 

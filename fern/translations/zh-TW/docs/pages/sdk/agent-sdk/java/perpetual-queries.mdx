@@ -38,7 +38,9 @@ import java.util.*;
 | `/positions/history` | `listPerpetualPositionHistory(PerpetualPositionHistoryRequest)` | 玩家可以省略 |
 | `/account/ledger` | `listPerpetualLedger(PerpetualLedgerRequest)` | 玩家可以省略 |
 
-`platformUserIds` 是公共平臺 ID 的字符串數組。如果指定，則需要 1 到 100 名具有訪問權限的唯一玩家；省略時，僅查詢當前商戶可以訪問的直接玩家範圍。省略不等於`[]`，空數組是非法的。範圍由簽約商戶決定，不能通過其他商戶ID來擴大範圍。
+`platformUserIds` 是公共平臺 ID 的字符串數組。如果指定，則需要 1 到 100 名具有訪問權限的唯一玩家；在允許省略的端點上，僅查詢當前商戶可以訪問的直接玩家範圍。交易填充查詢始終需要此數組；條件順序查詢還需要顯式的用戶 ID。省略不等於`[]`，空數組是非法的。範圍由簽約商戶決定，不能通過其他商戶ID來擴大範圍。
+
+在加入簽名有效負載之前，數組值被序列化為緊湊的 JSON。例如，`platformUserIds` 標記為 `["1188041528"]`，在 `k=v` 有效負載中給出 `platformUserIds=["1188041528"]`。保留數組元素順序、雙引號和字符串 ID；請勿插入格式空格或使用 Java `List.toString()`（例如 `[1188041528]`）。 SDK 自動處理此序列化。
 
 訂單查詢必須通過`orderCategory=NORMAL`或`CONDITIONAL`。普通訂單使用 `orderId`，條件訂單使用 `conditionId`。它們不能跨類別混合。條件訂單和觸發條件訂單生成的普通訂單作為實體單獨處理。
 
@@ -105,7 +107,7 @@ while (true) {
 
 ### 返回結構和保存規則
 
-有關完整的逐字段描述，請參閱 [合約查詢返回字段說明](/zh-TW/sdk/agent-sdk/java/perpetual-queries)，包括公共分頁、普通/條件訂單、交易、當前/歷史倉位、合約變更的類型、含義和適用範圍。
+看 [通用響應和分頁](#common-response-and-pagination) 對於共享字段。資源字段記錄在 [訂單](/zh-TW/sdk/agent-sdk/java/perpetual-orders), [貿易填補](/zh-TW/sdk/agent-sdk/java/perpetual-trades), [職位](/zh-TW/sdk/agent-sdk/java/perpetual-positions) 和 [合同臺賬](/zh-TW/sdk/agent-sdk/java/perpetual-ledger).
 
 六個接口統一返回`PerpetualResponse`：
 
@@ -232,7 +234,6 @@ Generic RecordData / Java PerpetualData 模型還聲明瞭以下字段，但當�
 
 ## 來源及相關指南
 
-- [官方v0.3.0源碼](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
-- [查詢概覽和分頁](/zh-TW/sdk/agent-sdk/java/perpetual-queries)
+- [官方v0.3.0源碼](https://github.com/6mm-com/agent-java-sdk/tree/54aa3c1)
 - [資金錢包](/zh-TW/sdk/agent-sdk/java/funding-wallet)
 - [升級指南](/zh-TW/sdk/agent-sdk/java/upgrade)

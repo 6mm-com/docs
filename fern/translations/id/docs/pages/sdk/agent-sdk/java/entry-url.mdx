@@ -1,6 +1,6 @@
 ---
 title: "Masuk Langsung URL"
-subtitle: "Masuk Langsung URL: Agent Java SDK integrasi v0.3.0, contoh, parameter, dan semantik respons."
+subtitle: "Entri Langsung URL: Agent Java SDK integrasi v0.3.0, contoh, parameter, dan semantik respons."
 slug: sdk/agent-sdk/java/entry-url
 canonical-url: https://docs.6mm.com/id/sdk/agent-sdk/java/entry-url
 ---
@@ -32,7 +32,7 @@ import com.sixmm.agent.model.CreateEntryUrlResponse;
 
 CreateEntryUrlResponse resp = client.createEntryUrl(
         CreateEntryUrlRequest.of("agent-user-001")
-                .withRedirectPath("/trade/BTCUSDT")
+                .withRedirectPath("/en/futures/BTCUSDT?tradingMode=real")
                 .withReturnUrl("https://partner.example.com/return#markets"));
 
 System.out.println(resp.webUrl);
@@ -43,9 +43,11 @@ Aturan lapangan:
 
 | Bidang | Keterangan |
 | --- | --- |
-| `redirectPath` | 6MM jalur relatif frontend. Harus dimulai dengan `/`, misalnya `/trade/BTCUSDT` |
+| `redirectPath` | 6MM jalur relatif frontend. Harus dimulai dengan `/`, misalnya `/en/futures/BTCUSDT?tradingMode=real` |
 | `returnUrl` | Mitra absolut URL digunakan saat pengguna keluar dari frontend 6MM. Hanya `http` dan `https` yang diperbolehkan |
 | `expireAt` | Waktu kedaluwarsa tiket masuk sebagai stempel waktu Unix dalam hitungan detik |
+
+Contoh ini membuka masa depan abadi dalam mode nyata. Untuk simulasi perdagangan, gunakan `tradingMode=demo` di frontend dan teruskan secara eksplisit `environment=SIMULATED` di permintaan dompet backend yang sesuai. Frontend `tradingMode` dan dana backend `environment` dikonfigurasi secara terpisah. Membuat entri URL mengautentikasi pengguna; itu tidak mentransfer dana atau memilih lingkungan dompet.
 
 Persyaratan keamanan:
 
@@ -66,7 +68,7 @@ Melihat [Perdagangan detik](/id/sdk/agent-sdk/java/seconds-trading) untuk contoh
 
 ## Sumber dan panduan terkait
 
-- [Sumber resmi v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Sumber resmi v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/54aa3c1)
 - [Ikhtisar kueri dan penomoran halaman](/id/sdk/agent-sdk/java/perpetual-queries)
 - [Dompet pendanaan](/id/sdk/agent-sdk/java/funding-wallet)
 - [Panduan peningkatan](/id/sdk/agent-sdk/java/upgrade)

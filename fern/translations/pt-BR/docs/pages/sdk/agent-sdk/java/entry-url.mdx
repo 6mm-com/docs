@@ -1,6 +1,6 @@
 ---
 title: "Entrada Direta URL"
-subtitle: "Entrada Direta URL: Integração Agent Java SDK v0.3.0, exemplos, parâmetros e semântica de resposta."
+subtitle: "Entrada direta URL: integração Agent Java SDK v0.3.0, exemplos, parâmetros e semântica de resposta."
 slug: sdk/agent-sdk/java/entry-url
 canonical-url: https://docs.6mm.com/pt-BR/sdk/agent-sdk/java/entry-url
 ---
@@ -32,7 +32,7 @@ import com.sixmm.agent.model.CreateEntryUrlResponse;
 
 CreateEntryUrlResponse resp = client.createEntryUrl(
         CreateEntryUrlRequest.of("agent-user-001")
-                .withRedirectPath("/trade/BTCUSDT")
+                .withRedirectPath("/en/futures/BTCUSDT?tradingMode=real")
                 .withReturnUrl("https://partner.example.com/return#markets"));
 
 System.out.println(resp.webUrl);
@@ -43,9 +43,11 @@ Regras de campo:
 
 | Campo | Descrição |
 | --- | --- |
-| `redirectPath` | 6MM caminho relativo do frontend. Deve começar com `/`, por exemplo `/trade/BTCUSDT` |
+| `redirectPath` | 6MM caminho relativo do frontend. Deve começar com `/`, por exemplo `/en/futures/BTCUSDT?tradingMode=real` |
 | `returnUrl` | Parceiro absoluto URL usado quando o usuário sai do frontend 6MM. Somente `http` e `https` são permitidos |
 | `expireAt` | Tempo de expiração do ticket de entrada como carimbo de data/hora Unix em segundos |
+
+O exemplo abre futuros perpétuos em modo real. Para negociação simulada, use `tradingMode=demo` no frontend e passe explicitamente `environment=SIMULATED` nas solicitações de carteira de backend correspondentes. Frontend `tradingMode` e fundos de backend `environment` são configurados separadamente. Criar uma entrada URL autentica o usuário; ele não transfere fundos nem seleciona um ambiente de carteira.
 
 Requisitos de segurança:
 
@@ -66,7 +68,7 @@ Ver [Negociação de segundos](/pt-BR/sdk/agent-sdk/java/seconds-trading) para e
 
 ## Fonte e guias relacionados
 
-- [Fonte oficial v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Fonte oficial v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/54aa3c1)
 - [Visão geral da consulta e paginação](/pt-BR/sdk/agent-sdk/java/perpetual-queries)
 - [Carteira de financiamento](/pt-BR/sdk/agent-sdk/java/funding-wallet)
 - [Guia de atualização](/pt-BR/sdk/agent-sdk/java/upgrade)

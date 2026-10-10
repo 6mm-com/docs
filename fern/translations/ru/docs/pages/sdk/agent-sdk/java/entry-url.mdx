@@ -1,6 +1,6 @@
 ---
 title: "Прямой вход URL"
-subtitle: "Прямой вход URL: Интеграция с Agent Java SDK v0.3.0, примеры, параметры и семантика ответа."
+subtitle: "Прямой вход URL: интеграция с Agent Java SDK v0.3.0, примеры, параметры и семантика ответов."
 slug: sdk/agent-sdk/java/entry-url
 canonical-url: https://docs.6mm.com/ru/sdk/agent-sdk/java/entry-url
 ---
@@ -32,7 +32,7 @@ import com.sixmm.agent.model.CreateEntryUrlResponse;
 
 CreateEntryUrlResponse resp = client.createEntryUrl(
         CreateEntryUrlRequest.of("agent-user-001")
-                .withRedirectPath("/trade/BTCUSDT")
+                .withRedirectPath("/en/futures/BTCUSDT?tradingMode=real")
                 .withReturnUrl("https://partner.example.com/return#markets"));
 
 System.out.println(resp.webUrl);
@@ -43,9 +43,11 @@ System.out.println(resp.expireAt);
 
 | Поле | Описание |
 | --- | --- |
-| `redirectPath` | 6MM относительный путь интерфейса. Он должен начинаться с `/`, например `/trade/BTCUSDT` |
+| `redirectPath` | 6MM относительный путь интерфейса. Он должен начинаться с `/`, например `/en/futures/BTCUSDT?tradingMode=real` |
 | `returnUrl` | Абсолютный партнер URL используется, когда пользователь выходит из 6MM интерфейса. Разрешены только `http` и `https` |
 | `expireAt` | Срок действия входного билета в виде временной метки Unix в секундах. |
+
+В примере открывается бессрочный фьючерс в реальном режиме. Для имитации торговли используйте `tradingMode=demo` во внешнем интерфейсе и явно передайте `environment=SIMULATED` в соответствующих запросах внутреннего кошелька. Фронтенд `tradingMode` и бэкенд фонды `environment` настраиваются отдельно. Создание записи URL аутентифицирует пользователя; он не переводит средства и не выбирает среду кошелька.
 
 Требования безопасности:
 
@@ -66,7 +68,7 @@ System.out.println(resp.expireAt);
 
 ## Источник и связанные руководства
 
-- [Официальный источник v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Официальный источник v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/54aa3c1)
 - [Обзор запроса и нумерация страниц](/ru/sdk/agent-sdk/java/perpetual-queries)
 - [Финансирование кошелька](/ru/sdk/agent-sdk/java/funding-wallet)
 - [Руководство по обновлению](/ru/sdk/agent-sdk/java/upgrade)

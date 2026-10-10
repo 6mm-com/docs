@@ -1,6 +1,6 @@
 ---
 title: "Ständige Abfragen und Paginierung"
-subtitle: "Ständige Abfragen und Paginierung: Agent Java SDK v0.3.0-Integration, Beispiele, Parameter und Antwortsemantik."
+subtitle: "Perpetual Queries & Pagination: Agent Java SDK v0.3.0-Integration, Beispiele, Parameter und Antwortsemantik."
 slug: sdk/agent-sdk/java/perpetual-queries
 canonical-url: https://docs.6mm.com/de/sdk/agent-sdk/java/perpetual-queries
 ---
@@ -38,7 +38,9 @@ Alle Anfragen werden mit POST mit dem gemeinsamen Präfix `/v1/agent/perpetual` 
 | `/positions/history` | `listPerpetualPositionHistory(PerpetualPositionHistoryRequest)` | Spieler können weggelassen werden |
 | `/account/ledger` | `listPerpetualLedger(PerpetualLedgerRequest)` | Spieler können weggelassen werden |
 
-`platformUserIds` ist ein String-Array öffentlicher Plattform-IDs. Sofern angegeben, sind 1 bis 100 einzelne Spieler mit Zugriff erforderlich; Wenn es weggelassen wird, wird nur der Bereich der direkten Spieler abgefragt, auf den der aktuelle Händler Zugriff hat. Auslassung ist nicht gleichbedeutend mit `[]` und leere Arrays sind unzulässig. Der Geltungsbereich wird vom unterzeichnenden Händler bestimmt und andere Händler-IDs können nicht weitergegeben werden, um den Geltungsbereich zu erweitern.
+`platformUserIds` ist ein String-Array öffentlicher Plattform-IDs. Sofern angegeben, sind 1 bis 100 einzelne Spieler mit Zugriff erforderlich; Auf Endpunkten, die das Auslassen zulassen, wird nur der Bereich der direkten Spieler abgefragt, auf den der aktuelle Händler Zugriff hat. Trade-Fill-Abfragen erfordern immer dieses Array; Abfragen mit bedingter Reihenfolge erfordern auch explizite Benutzer-IDs. Auslassung ist nicht gleichbedeutend mit `[]` und leere Arrays sind unzulässig. Der Geltungsbereich wird vom unterzeichnenden Händler bestimmt und andere Händler-IDs können nicht weitergegeben werden, um den Geltungsbereich zu erweitern.
+
+Array-Werte werden als kompakte JSON serialisiert, bevor sie der Signierungsnutzlast hinzugefügt werden. Beispielsweise signiert `platformUserIds` als `["1188041528"]` und ergibt `platformUserIds=["1188041528"]` in der Nutzlast `k=v`. Behalten Sie die Reihenfolge der Array-Elemente, doppelte Anführungszeichen und String-IDs bei. Fügen Sie keine Formatierungsleerzeichen ein und verwenden Sie nicht Java `List.toString()` (z. B. `[1188041528]`). Der SDK übernimmt diese Serialisierung automatisch.
 
 Die Bestellabfrage muss `orderCategory=NORMAL` oder `CONDITIONAL` bestehen. Verwenden Sie `orderId` für normale Bestellungen und `conditionId` für bedingte Bestellungen. Sie können nicht kategorienübergreifend gemischt werden. Bedingte Bestellungen und die durch ihre Auslösung generierten gewöhnlichen Bestellungen werden separat als Einheiten verarbeitet.
 
@@ -105,7 +107,7 @@ while (true) {
 
 ### Rückgabestruktur und Sparregeln
 
-Eine vollständige Beschreibung der einzelnen Felder finden Sie unter [Beschreibung des Rückgabefelds der Vertragsabfrage](/de/sdk/agent-sdk/java/perpetual-queries), einschließlich der Arten, Bedeutungen und Anwendungsbereiche öffentlicher Paginierung, ordentlicher/bedingter Bestellungen, Transaktionen, aktueller/historischer Positionen und Vertragsänderungen.
+Sehen [Gemeinsame Antwort und Paginierung](#common-response-and-pagination) für gemeinsam genutzte Felder. Ressourcenfelder sind in dokumentiert [Bestellungen](/de/sdk/agent-sdk/java/perpetual-orders), [Handelsfüllungen](/de/sdk/agent-sdk/java/perpetual-trades), [Positionen](/de/sdk/agent-sdk/java/perpetual-positions) Und [Vertragsbuch](/de/sdk/agent-sdk/java/perpetual-ledger).
 
 Die sechs Schnittstellen geben einheitlich `PerpetualResponse` zurück:
 
@@ -232,7 +234,6 @@ Der tatsächliche Anwendungsbereich vor Ort unterliegt den oben genannten Ressou
 
 ## Quelle und zugehörige Leitfäden
 
-- [Offizielle Quelle v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
-- [Abfrageübersicht und Paginierung](/de/sdk/agent-sdk/java/perpetual-queries)
+- [Offizielle Quelle v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/54aa3c1)
 - [Funding-Wallet](/de/sdk/agent-sdk/java/funding-wallet)
 - [Upgrade-Anleitung](/de/sdk/agent-sdk/java/upgrade)

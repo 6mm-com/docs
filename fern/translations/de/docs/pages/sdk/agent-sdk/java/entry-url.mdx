@@ -1,6 +1,6 @@
 ---
 title: "Direkteintrag URL"
-subtitle: "Direkteintrag URL: Agent Java SDK v0.3.0-Integration, Beispiele, Parameter und Antwortsemantik."
+subtitle: "Direct Entry URL: Agent Java SDK v0.3.0 Integration, Beispiele, Parameter und Antwortsemantik."
 slug: sdk/agent-sdk/java/entry-url
 canonical-url: https://docs.6mm.com/de/sdk/agent-sdk/java/entry-url
 ---
@@ -32,7 +32,7 @@ import com.sixmm.agent.model.CreateEntryUrlResponse;
 
 CreateEntryUrlResponse resp = client.createEntryUrl(
         CreateEntryUrlRequest.of("agent-user-001")
-                .withRedirectPath("/trade/BTCUSDT")
+                .withRedirectPath("/en/futures/BTCUSDT?tradingMode=real")
                 .withReturnUrl("https://partner.example.com/return#markets"));
 
 System.out.println(resp.webUrl);
@@ -43,9 +43,11 @@ Feldregeln:
 
 | Feld | Beschreibung |
 | --- | --- |
-| `redirectPath` | 6MM relativer Frontend-Pfad. Es muss mit `/` beginnen, zum Beispiel `/trade/BTCUSDT` |
+| `redirectPath` | 6MM relativer Frontend-Pfad. Es muss mit `/` beginnen, zum Beispiel `/en/futures/BTCUSDT?tradingMode=real` |
 | `returnUrl` | Absoluter Partner URL, der verwendet wird, wenn der Benutzer das 6MM-Frontend verlässt. Nur `http` und `https` sind zulässig |
 | `expireAt` | Ablaufzeit der Eintrittskarte als Unix-Zeitstempel in Sekunden |
+
+Das Beispiel eröffnet Perpetual Futures im Real-Modus. Für simulierten Handel verwenden Sie `tradingMode=demo` im Frontend und übergeben Sie explizit `environment=SIMULATED` in den entsprechenden Back-End-Wallet-Anfragen. Frontend `tradingMode` und Backend-Fonds `environment` werden separat konfiguriert. Durch das Erstellen eines Eintrags URL wird der Benutzer authentifiziert; Es werden weder Gelder überwiesen noch eine Wallet-Umgebung ausgewählt.
 
 Sicherheitsanforderungen:
 
@@ -66,7 +68,7 @@ Sehen [Sekundenhandel](/de/sdk/agent-sdk/java/seconds-trading) für Weiterleitun
 
 ## Quelle und zugehörige Leitfäden
 
-- [Offizielle Quelle v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
+- [Offizielle Quelle v0.3.0](https://github.com/6mm-com/agent-java-sdk/tree/54aa3c1)
 - [Abfrageübersicht und Paginierung](/de/sdk/agent-sdk/java/perpetual-queries)
 - [Funding-Wallet](/de/sdk/agent-sdk/java/funding-wallet)
 - [Upgrade-Anleitung](/de/sdk/agent-sdk/java/upgrade)

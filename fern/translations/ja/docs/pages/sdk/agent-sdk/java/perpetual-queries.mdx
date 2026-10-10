@@ -38,7 +38,9 @@ import java.util.*;
 | `/positions/history` | `listPerpetualPositionHistory(PerpetualPositionHistoryRequest)` | プレイヤーは省略可能 |
 | `/account/ledger` | `listPerpetualLedger(PerpetualLedgerRequest)` | プレイヤーは省略可能 |
 
-`platformUserIds` は、パブリック プラットフォーム ID の文字列配列です。指定する場合は、アクセス権を持つ 1 ～ 100 人の固有のプレーヤーが必要です。省略した場合、現在の販売者がアクセスできる直接プレーヤーの範囲のみが照会されます。省略は `[]` と同等ではなく、空の配列は不正です。スコープは署名するマーチャントによって決定され、スコープを拡張するために他のマーチャント ID を渡すことはできません。
+`platformUserIds` は、パブリック プラットフォーム ID の文字列配列です。指定する場合は、アクセス権を持つ 1 ～ 100 人の固有のプレーヤーが必要です。省略が許可されているエンドポイントでは、現在の販売者がアクセスできる直接プレーヤーの範囲のみがクエリされます。トレードフィルクエリには常にこの配列が必要です。条件付き順序クエリにも明示的なユーザー ID が必要です。省略は `[]` と同等ではなく、空の配列は不正です。スコープは署名するマーチャントによって決定され、スコープを拡張するために他のマーチャント ID を渡すことはできません。
+
+配列値は、署名ペイロードに結合する前に、コンパクト JSON としてシリアル化されます。たとえば、`platformUserIds` は `["1188041528"]` として署名し、`k=v` ペイロードに `platformUserIds=["1188041528"]` を与えます。配列要素の順序、二重引用符、文字列 ID を保持します。書式設定スペースを挿入したり、Java `List.toString()` (`[1188041528]` など) を使用したりしないでください。 SDK はこのシリアル化を自動的に処理します。
 
 注文クエリは `orderCategory=NORMAL` または `CONDITIONAL` を渡す必要があります。通常の注文には `orderId` を使用し、条件付き注文には `conditionId` を使用します。カテゴリ間で混在させることはできません。条件付き注文と、条件付き注文をトリガーして生成された通常の注文は、エンティティとして別々に処理されます。
 
@@ -105,7 +107,7 @@ while (true) {
 
 ### 戻り値の構造と保存ルール
 
-フィールドごとの完全な説明については、を参照してください。 [契約クエリの戻りフィールドの説明](/ja/sdk/agent-sdk/java/perpetual-queries)、公開ページネーション、通常/条件付き注文、取引、現在/過去のポジション、契約変更の種類、意味、適用範囲が含まれます。
+見る [一般的な応答とページネーション](#common-response-and-pagination) 共有フィールド用。リソースフィールドは次の場所に文書化されています。 [注文](/ja/sdk/agent-sdk/java/perpetual-orders), [取引約定](/ja/sdk/agent-sdk/java/perpetual-trades), [ポジション](/ja/sdk/agent-sdk/java/perpetual-positions) そして [契約台帳](/ja/sdk/agent-sdk/java/perpetual-ledger).
 
 6 つのインターフェイスは一律に `PerpetualResponse` を返します。
 
@@ -232,7 +234,6 @@ Generic RecordData / Java PerpetualData モデルは次のフィールドも宣�
 
 ## ソースおよび関連ガイド
 
-- [公式 v0.3.0 ソース](https://github.com/6mm-com/agent-java-sdk/tree/v0.3.0)
-- [クエリの概要とページネーション](/ja/sdk/agent-sdk/java/perpetual-queries)
+- [公式 v0.3.0 ソース](https://github.com/6mm-com/agent-java-sdk/tree/54aa3c1)
 - [資金調達ウォレット](/ja/sdk/agent-sdk/java/funding-wallet)
 - [アップグレードガイド](/ja/sdk/agent-sdk/java/upgrade)
