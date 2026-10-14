@@ -1371,3 +1371,60 @@ div[class~="lg:hidden"]
     transition: none;
   }
 }
+
+/* Language options reuse the pointer glow without card surfaces or movement. */
+.sixmm-language-option-effect {
+  --sixmm-card-x: 50%;
+  --sixmm-card-y: 50%;
+  --sixmm-card-intensity: 0;
+  position: relative;
+  isolation: isolate;
+  box-shadow: none !important;
+  transition: border-color 0.2s ease;
+}
+
+.sixmm-language-option-effect::before,
+.sixmm-language-option-effect::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: var(--sixmm-card-intensity);
+  transition: opacity 0.3s ease;
+}
+
+.sixmm-language-option-effect::before {
+  z-index: -1;
+  background: radial-gradient(180px circle at var(--sixmm-card-x) var(--sixmm-card-y),
+    rgba(10, 204, 170, 0.08), rgba(10, 204, 170, 0.02) 40%, transparent 70%);
+}
+
+.sixmm-language-option-effect::after {
+  inset: -1px;
+  z-index: 1;
+  padding: 1px;
+  background: radial-gradient(160px circle at var(--sixmm-card-x) var(--sixmm-card-y),
+    rgba(10, 204, 170, 0.8), rgba(10, 204, 170, 0.4) 30%, transparent 60%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+.sixmm-language-menu-enhanced .fern-language-dropdown-item.sixmm-language-option-effect:not([data-state="checked"]):is(:hover, :focus-visible, [data-highlighted]),
+.sixmm-mobile-language-dialog-option.sixmm-language-option-effect:not([data-state="checked"]):is(:hover, :focus-visible) {
+  border-color: #0accaa !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+@media (max-width: 768px), (hover: none), (pointer: coarse), (prefers-reduced-motion: reduce) {
+  .sixmm-language-option-effect::before,
+  .sixmm-language-option-effect::after {
+    display: none;
+  }
+  .sixmm-language-option-effect {
+    transition: none;
+  }
+}
