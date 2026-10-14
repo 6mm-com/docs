@@ -2,7 +2,7 @@
   if (window.__sixmmCardEffects) return;
   window.__sixmmCardEffects = true;
 
-  var groupSelector = ".fern-card-group, .sixmm-stat-grid";
+  var groupSelector = ".fern-card-group, .sixmm-stat-grid, .fern-layout-footer .fern-footer-nav";
   var cardSelector = ".fern-card, .sixmm-stat-grid > div";
   var groups = new Map();
   var hover = window.matchMedia("(hover: hover) and (pointer: fine)");
@@ -32,6 +32,14 @@
     activeGroup = null;
   }
 
+  function register(card) {
+    var group = card.closest(groupSelector) || card;
+    card.classList.add("sixmm-content-card");
+    if (!groups.has(group)) groups.set(group, []);
+    var cards = groups.get(group);
+    if (cards.indexOf(card) === -1) cards.push(card);
+  }
+
   function scan() {
     scanFrame = 0;
     groups.forEach(function (_, group) {
@@ -42,15 +50,13 @@
     });
     document.querySelectorAll("article").forEach(function (article) {
       article.querySelectorAll(cardSelector).forEach(function (card) {
-        // Header, sidebar, footer and search controls never become effect targets.
+        // Header, sidebar and search controls never become effect targets.
         if (card.closest("nav, aside, header, .fern-footer-nav")) return;
-        var group = card.closest(groupSelector) || card;
-        card.classList.add("sixmm-content-card");
-        if (!groups.has(group)) groups.set(group, []);
-        var cards = groups.get(group);
-        if (cards.indexOf(card) === -1) cards.push(card);
+        register(card);
       });
     });
+    // Only the footer's page-switching cards opt in; feedback and edit controls do not.
+    document.querySelectorAll(".fern-layout-footer .fern-footer-nav > a").forEach(register);
     groups.forEach(function (cards, group) {
       groups.set(group, cards.filter(function (card) { return card.isConnected; }));
     });
