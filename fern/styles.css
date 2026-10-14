@@ -1282,14 +1282,19 @@ div[class~="lg:hidden"]
   --sixmm-card-x: 50%;
   --sixmm-card-y: 50%;
   --sixmm-card-intensity: 0;
-  --sixmm-card-glow: 0, 143, 125;
+  --sixmm-card-glow: 10, 204, 170;
+  --sixmm-card-surface: #ffffff;
+  --sixmm-card-blend: normal;
+  background: var(--sixmm-card-surface) !important;
+  box-shadow: none !important;
   position: relative;
   isolation: isolate;
-  transition: translate 0.3s ease, border-color 0.2s ease;
+  transition: translate 0.3s ease, border-color 0.2s ease, box-shadow 0.3s ease;
 }
 
 :root.dark .sixmm-content-card {
-  --sixmm-card-glow: 10, 204, 170;
+  --sixmm-card-surface: rgba(255, 255, 255, 0.04);
+  --sixmm-card-blend: screen;
 }
 
 .sixmm-content-card::before,
@@ -1305,8 +1310,11 @@ div[class~="lg:hidden"]
 
 .sixmm-content-card::before {
   z-index: -1;
+  mix-blend-mode: var(--sixmm-card-blend);
   background: radial-gradient(400px circle at var(--sixmm-card-x) var(--sixmm-card-y),
-    rgba(var(--sixmm-card-glow), 0.12), rgba(var(--sixmm-card-glow), 0.04) 40%, transparent 70%);
+    rgba(var(--sixmm-card-glow), 0.12) 0%, rgba(var(--sixmm-card-glow), 0.064) 15%,
+    rgba(var(--sixmm-card-glow), 0.032) 25%, rgba(var(--sixmm-card-glow), 0.016) 40%,
+    rgba(var(--sixmm-card-glow), 0.008) 65%, transparent 70%);
 }
 
 .sixmm-content-card::after {
@@ -1321,19 +1329,25 @@ div[class~="lg:hidden"]
   mask-composite: exclude;
 }
 
-.fern-card.sixmm-content-card {
-  background: var(--sixmm-home-surface) !important;
-}
-
-.fern-card.interactive.sixmm-content-card:hover:not(:focus-visible) {
+.fern-card.interactive.sixmm-content-card:hover:not(:focus-visible):not([data-sixmm-card-hovered="true"]) {
   border-color: var(--sixmm-home-border) !important;
-  background: var(--sixmm-home-surface) !important;
+  background: var(--sixmm-card-surface) !important;
   box-shadow: none !important;
 }
 
-.sixmm-stat-grid > .sixmm-content-card:hover {
+.sixmm-stat-grid > .sixmm-content-card:hover:not([data-sixmm-card-hovered="true"]) {
   border-color: var(--sixmm-home-border);
-  background: var(--sixmm-home-soft);
+  background: var(--sixmm-card-surface);
+}
+
+/* Both themes share the website's complete hovered-card surface feedback. */
+@media (min-width: 769px) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .fern-card.sixmm-content-card[data-sixmm-card-hovered="true"],
+  .sixmm-stat-grid > .sixmm-content-card[data-sixmm-card-hovered="true"] {
+    border-color: #0accaa !important;
+    background: var(--sixmm-card-surface) !important;
+    box-shadow: inset 0 0 40px rgba(10, 204, 170, 0.15) !important;
+  }
 }
 
 @media (min-width: 769px) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
