@@ -1275,3 +1275,79 @@ div[class~="lg:hidden"]
   block-size: 0;
   scroll-margin-block-start: 8rem;
 }
+
+/* Content-card spotlight: the homepage steps and MDX cards share one effect.
+   Layered gradients stay inside each card and never cover navigation or text. */
+.sixmm-content-card {
+  --sixmm-card-x: 50%;
+  --sixmm-card-y: 50%;
+  --sixmm-card-intensity: 0;
+  --sixmm-card-glow: 0, 143, 125;
+  position: relative;
+  isolation: isolate;
+  transition: translate 0.3s ease, border-color 0.2s ease;
+}
+
+:root.dark .sixmm-content-card {
+  --sixmm-card-glow: 10, 204, 170;
+}
+
+.sixmm-content-card::before,
+.sixmm-content-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: var(--sixmm-card-intensity);
+  transition: opacity 0.3s ease;
+}
+
+.sixmm-content-card::before {
+  z-index: -1;
+  background: radial-gradient(400px circle at var(--sixmm-card-x) var(--sixmm-card-y),
+    rgba(var(--sixmm-card-glow), 0.12), rgba(var(--sixmm-card-glow), 0.04) 40%, transparent 70%);
+}
+
+.sixmm-content-card::after {
+  inset: -1px;
+  z-index: 1;
+  padding: 2px;
+  background: radial-gradient(300px circle at var(--sixmm-card-x) var(--sixmm-card-y),
+    rgba(var(--sixmm-card-glow), 0.8), rgba(var(--sixmm-card-glow), 0.4) 30%, transparent 60%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+.fern-card.sixmm-content-card {
+  background: var(--sixmm-home-surface) !important;
+}
+
+.fern-card.interactive.sixmm-content-card:hover:not(:focus-visible) {
+  border-color: var(--sixmm-home-border) !important;
+  background: var(--sixmm-home-surface) !important;
+  box-shadow: none !important;
+}
+
+.sixmm-stat-grid > .sixmm-content-card:hover {
+  border-color: var(--sixmm-home-border);
+  background: var(--sixmm-home-soft);
+}
+
+@media (min-width: 769px) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .sixmm-content-card[data-sixmm-card-hovered="true"] {
+    translate: 0 -2px;
+  }
+}
+
+@media (max-width: 768px), (hover: none), (pointer: coarse), (prefers-reduced-motion: reduce) {
+  .sixmm-content-card::before,
+  .sixmm-content-card::after {
+    display: none;
+  }
+  .sixmm-content-card {
+    transition: none;
+  }
+}
