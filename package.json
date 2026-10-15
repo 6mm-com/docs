@@ -4,11 +4,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "check": "npm run js:check && npm run anchors:check && npm run interface:check && npm run widget-sync:check && npm run translations:check && npm run fern:check",
+    "check": "npm run js:check && npm run navigation-icons:check && npm run anchors:check && npm run interface:check && npm run widget-sync:check && npm run translations:check && npm run fern:check",
     "fern:check": "fern check --warnings",
     "fern:dev": "fern docs dev",
-    "fern:publish": "fern generate --docs",
-    "js:check": "node --check fern/language-modal.js && node --check fern/locale-direction.js && node --check fern/seo-structured-data.js && node --check fern/support-widget.js && node --check scripts/locale-config.mjs && node --check scripts/check-translations.mjs && node --check scripts/check-widget-sync.mjs && node --check scripts/generate-translations.mjs && node --check scripts/polish-core-translations.mjs && node --check scripts/repair-translation-links.mjs && node --check scripts/preview-prediction.mjs && node --check fern/docs-interface.js && node --check fern/card-effects.js && node --check scripts/stabilize-heading-anchors.mjs && node --check scripts/check-docs-interface.mjs",
+    "fern:publish": "npm run navigation-icons:check && fern generate --docs",
+    "js:check": "node --check fern/language-modal.js && node --check fern/locale-direction.js && node --check fern/seo-structured-data.js && node --check fern/support-widget.js && node --check scripts/locale-config.mjs && node --check scripts/check-translations.mjs && node --check scripts/check-widget-sync.mjs && node --check scripts/generate-translations.mjs && node --check scripts/polish-core-translations.mjs && node --check scripts/repair-translation-links.mjs && node --check scripts/preview-prediction.mjs && node --check fern/docs-interface.js && node --check fern/card-effects.js && node --check scripts/stabilize-heading-anchors.mjs && node --check scripts/check-docs-interface.mjs && node --check scripts/check-navigation-icons.mjs && node --check scripts/check-navigation-icons.test.mjs",
     "widget-sync:check": "node scripts/check-widget-sync.mjs",
     "translations:generate": "node scripts/generate-translations.mjs && node scripts/stabilize-heading-anchors.mjs",
     "translations:polish": "node scripts/polish-core-translations.mjs && node scripts/stabilize-heading-anchors.mjs",
@@ -18,7 +18,8 @@
     "check:preview": "npm run check",
     "preview:prediction": "node scripts/preview-prediction.mjs",
     "anchors:check": "node scripts/stabilize-heading-anchors.mjs --check",
-    "interface:check": "node scripts/check-docs-interface.mjs"
+    "interface:check": "node scripts/check-docs-interface.mjs",
+    "navigation-icons:check": "node --test scripts/check-navigation-icons.test.mjs && node scripts/check-navigation-icons.mjs"
   },
   "engines": {
     "node": ">=18.0"
