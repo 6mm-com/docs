@@ -7,7 +7,7 @@ canonical-url: https://docs.6mm.com/id/sdk/agent-sdk/java/overview
 
 Panduan ini menargetkan **Agent Java SDK `v0.3.0`**, Java 8+, dan kontrak publik yang diberi tag. Contoh dijalankan di backend mitra setelah menginisialisasi `client` di [Mulai Cepat](/id/sdk/agent-sdk/java/quick-start).
 
-Dasar dokumentasi: SDK `v0.3.0`, komit `54aa3c1`.
+Dasar dokumentasi: SDK `v0.3.0`, komit `54aa3c1`. Webhook aturan penerimaan juga diikuti [`WEBHOOKS.md` pada `fa6c7b6`](https://github.com/6mm-com/agent-java-sdk/blob/fa6c7b65124f1346f815b3b73eb8a7729466c3dc/WEBHOOKS.md); ini adalah pembaruan hanya dokumentasi, tanpa artefak SDK baru yang berisi metode pembantu peringatan.
 
 <span id="version-and-installation" data-sixmm-canonical-anchor="version-and-installation" aria-hidden="true"></span>
 
@@ -36,7 +36,7 @@ Sumber host GitHub; hal ini tidak membuat koordinat ini dapat diselesaikan dari 
 | Transfer | Urutan terbalik | `reverse` | Membalikkan transfer yang berhasil ketika backend mendukung aliran kompensasi |
 | Transfer | Urutan kueri | `queryOrder` | Kueri satu pesanan transfer berdasarkan nomor pesanan mitra |
 | Transfer | Daftar pesanan | `listOrders` | Halaman melalui perintah transfer untuk rekonsiliasi |
-| Transfer | Webhook verifikasi | `WebhookVerifier.verify` | Verifikasi callback status akhir transfer dari 6MM |
+| Webhook | Verifikasi tanda tangan | `WebhookVerifier.verify` | Memverifikasi badan acara dana mentah dan badan peringatan likuidasi; kode pedagang menangani pemeriksaan waktu, kepemilikan, dan deduplikasi terus-menerus. Melihat [Webhook Peristiwa & Peringatan Likuidasi](/id/sdk/agent-sdk/java/webhook-events). |
 | Dompet pendanaan | Transfer dana | `walletTransfer` | Mitra ↔ Pendanaan atau Pendanaan ↔ Kontrak; konfirmasi status pengembalian |
 | Dompet pendanaan | Status transfer dana | `queryWalletTransfer` | Memulihkan operasi Pendanaan menggunakan nomor pesanan mitra aslinya |
 | Entri perdagangan | Masuk langsung URL | `createEntryUrl` | Buat SSO URL satu kali untuk mode pengalihan |
@@ -65,7 +65,7 @@ mengintegrasikan.
 | `agentCode` | `AGENT001` | Kode mitra |
 | `apiSecret` | `your-api-secret` | API rahasia penandatanganan. Simpan di backend saja |
 | `defaultCurrency` | `USDT` | Mata uang default, biasanya `USDT` |
-| `webhookUrl` | `https://partner.example.com/6mm/webhook` | Titik akhir mitra untuk panggilan balik 6MM |
+| `webhookUrl` | `https://partner.example.com/6mm/webhook` | Callback pedagang URL dibagikan oleh keempat jenis peristiwa; pengiriman berdasarkan isi `event`, tanpa peringatan terpisah URL. |
 
 Rekomendasi produksi:
 

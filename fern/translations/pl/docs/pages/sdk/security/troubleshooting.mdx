@@ -93,3 +93,18 @@ Przejrzyj weryfikację wywołania zwrotnego i obsługę duplikatów zdarzeń.
 | Brakuje nowej metody Java. | Sprawdź rozwiązany artefakt Mavena pod kątem tagu publicznego `v0.3.0`; usuń sprzeczne zależności zgodnie z zasadami dotyczącymi artefaktów. |
 
 [Zapytanie i odniesienie do błędu](/pl/sdk/agent-sdk/java/perpetual-queries) · [Przewodnik po aktualizacji](/pl/sdk/agent-sdk/java/upgrade)
+
+<span id="webhook-receiving-issues" data-sixmm-canonical-anchor="webhook-receiving-issues" aria-hidden="true"></span>
+
+## Webhook problemy z odbieraniem
+
+| Objaw | Sprawdź i obsługuj |
+| --- | --- |
+| Brak ponownej próby po zwróceniu błędu JSON | Sprawdź, czy punkt końcowy nadal zwraca HTTP 200. Dostarczenie wykorzystuje tylko status HTTP, a nie wskaźnik sukcesu w treści. |
+| Ponowne próby są kontynuowane po 401 lub 409 | Odpowiedzi inne niż 2xx są zgodne z istniejącymi zasadami ponawiania; sprawdź podpisy, treść powiadomień lub konfigurację sprzedawcy. |
+| Pusty klucz idempotencji dla ostrzeżenia o likwidacji | Bieżące `WebhookVerifier.idempotencyKey` wyodrębnia jedynie tożsamości zdarzeń funduszy. Po sprawdzeniu podpisu i własności zatwierdź `notificationId` i utwórz klucz ostrzegawczy w kodzie sprzedawcy. Nigdy nie używaj pustego klucza. |
+| Zduplikowane powiadomienie po pomyślnym przetworzeniu | Utrzymuj deduplikację w zakresie sprzedawcy i `environment`. Zwróć 2xx za identyczne duplikaty; rekordowe konflikty i zwróć inny niż 2xx dla tego samego identyfikatora z inną treścią. |
+| Ostrzeżenie nie zostało przetworzone | Zaakceptuj `liquidation.warning` i historyczne `LIQUIDATION_WARNING`; nie grupuj odrębnych identyfikatorów powiadomień według użytkownika, odcinka lub typu wydarzenia i nie odrzucaj ich. |
+| Przyjęte powiadomienie traci oczekujące zadanie | Zapisz zadanie niezawodnie przed zwróceniem 2xx; uruchomienie zadania asynchronicznego w pamięci jest niewystarczające. |
+
+[Pola zdarzeń i kompatybilność](/pl/sdk/agent-sdk/java/webhook-events) · [HTTP odpowiedzi i rzetelne potwierdzenie](/pl/sdk/security/webhooks-idempotency)

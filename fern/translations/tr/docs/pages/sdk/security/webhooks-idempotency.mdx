@@ -1,11 +1,13 @@
 ---
 title: "Webhook İmza Doğrulaması ve Kimlik Yetkisi"
-subtitle: "Ham istek gövdesiyle 6MM Temsilciyi webhooks doğrulayın ve yinelenen iş eylemleri olmadan yeniden denemeler, zaman aşımları ve tekrarlanan olaylarla işlem yapın."
+subtitle: "Ham Webhook gövdeleri doğrulayın, HTTP durum kodlarını kullanarak onaylayın ve yeniden denemeleri ve kopyalamaları güvenilir bir şekilde gerçekleştirin."
 slug: sdk/security/webhooks-idempotency
 canonical-url: https://docs.6mm.com/tr/sdk/security/webhooks-idempotency
 ---
 
-Webhooks bir iş ortağının arka ucunu eşzamansız iş durumu değişiklikleri hakkında bilgilendirir. Teslimat yeniden denenebileceğinden, her alıcının güvenilir verileri ayrıştırmadan önce imzayı doğrulaması ve olayı bağımsız olarak işlemesi gerekir.
+Bu sayfa takip ediyor [Agent Java SDK `WEBHOOKS.md`](https://github.com/6mm-com/agent-java-sdk/blob/fa6c7b65124f1346f815b3b73eb8a7729466c3dc/WEBHOOKS.md) taahhüt sırasında `fa6c7b6`. Bu yalnızca belgelere yönelik bir güncelleştirmedir; uyarı yardımcı yöntemlerini içeren yeni bir SDK yapı yayınlanmadı.
+
+Dört olay türünün tümü bir satıcı geri aramasını URL kullanır ve gövde `event` tarafından gönderilir. Görmek [Webhook Etkinlikler ve Tasfiye Uyarıları](/tr/sdk/agent-sdk/java/webhook-events) olay alanları ve yük örnekleri için.
 
 <span id="webhook-headers" data-sixmm-canonical-anchor="webhook-headers" aria-hidden="true"></span>
 
@@ -13,90 +15,118 @@ Webhooks bir iş ortağının arka ucunu eşzamansız iş durumu değişiklikler
 
 | Başlık | Tanım |
 | --- | --- |
-| X-Agent-Zaman Damgası | Saniye cinsinden Unix zaman damgası. |
-| X-Ajan-Nonce | Tekrar oynatma koruması bir kez. |
-| X-Agent-İmzası | HMAC-SHA256 imza. |
+| `X-Agent-Timestamp` | Saniye cinsinden Unix zaman damgası. |
+| `X-Agent-Nonce` | Bir kez. |
+| `X-Agent-Signature` | HMAC-SHA256 onaltılı imza. |
 
 ```text
 timestamp + nonce + rawBody
 ```
 
-İmzalı değeri yeniden oluştururken HTTP üzerinden alınan ham istek gövdesini tam olarak kullanın. Öncelikle JSON ayrıştırma ve yeniden serileştirme, boşluk veya alan sırasını değiştirebilir ve farklı bir imza oluşturabilir.
+<span id="order-idempotency" data-sixmm-canonical-anchor="order-idempotency" aria-hidden="true"></span>
+
+## Olay belirsizliği
+
+Ticari işlemlerle atomik olarak satıcı ve `environment` kapsamında tekilleştirmeye devam edin. Farklı `notificationId` değerleri, bağımsız `FIRST` / `UPGRADE` / `REMINDER` bildirimlerini tanımlar; bildirimleri kullanıcıya, bölüme veya `eventType`'e göre gruplayarak atmayın. Tekilleştirme için boş bir idempotency anahtarı kullanılamaz. SDK yalnızca bir yardımcı anahtar döndürür; iş verilerini sürdürmez veya işlemez. Aynı kimliği farklı bir bedenle çatışma olarak kaydedin; işlenen gövdenin üzerine yazmayın.
 
 <span id="verification-flow" data-sixmm-canonical-anchor="verification-flow" aria-hidden="true"></span>
 
-## Doğrulama akışı
+## İmza doğrulama ve alma
 
-1. Zaman damgasını, tek seferlik ve imza başlıklarını okuyun.
-2. Değiştirilmemiş ham istek gövdesini yakalayın.
-3. `timestamp + nonce + rawBody` oluşturun.
-4. Ortak API sırrı ile HMAC-SHA256 hesaplayın.
-5. Hesaplanan ve alınan imzaları sabit zamanlı karşılaştırma kullanarak karşılaştırın.
-6. Onaylanan zaman damgası güncelliği ve yeniden kullanılmama kontrollerini uygulayın.
-7. Etkinliği yalnızca doğrulama başarılı olduktan sonra ayrıştırın ve işleyin.
+API tüccarının HMAC-SHA256 onaltılı imzasını hesaplamak için `timestamp + nonce + rawBody` sırrını kullanın. Orijinal alınan baytları doğrulayın; JSON biçimlendirmeyin, alanları yeniden adlandırmayın veya önce gövdeyi yeniden serileştirmeyin.
 
-Resmi bir Agent SDK doğrulayıcı mevcut olduğunda, bağımsız imzalama kodunu sürdürmek yerine onu kullanın.
+Önce imzayı doğrulayın, ardından zaman penceresini (önerilen ±300 saniye), satıcıyı ve ortamı kontrol edin. Daha sonra idempotency kimliğini çıkarın ve bildirimi güvenilir bir şekilde işleyin. Teşhis için bilinmeyen olay değerlerini koruyun; bunları asla fon başarısı olarak yorumlamayın. Doğrulama yardımcısı zaman penceresi, sahiplik veya kalıcı veri tekilleştirme kontrolleri gerçekleştirmez.
 
-<span id="order-idempotency" data-sixmm-canonical-anchor="order-idempotency" aria-hidden="true"></span>
+İşlemeyi tamamladıktan veya aynı kopyayı onayladıktan sonra HTTP 2xx'i döndürün; başarısızlık durumunda 2xx olmayanı döndür. Uyarıyı gönderenin 5 saniyelik HTTP zaman aşımı ve en fazla 8 denemesi vardır. Yeniden denemeler donmuş gövdeyi korur; yalnızca imza zaman damgası ve bir kez değişiklik olmaz. Güvenilir kabulün ardından derhal yanıt verin; uzun süredir devam eden iş çalışmaları, tüccarın kendi kalıcı görevlerini kullanabilir.
 
-## Sipariş yetersizliği
+Satıcı bildirimleri kullanıcının çevrimiçi durumuna bağlı değildir. Platform kullanıcılarının gönderimleri yalnızca çevrimiçi olarak en iyi çabayla gerçekleştirilir ve çevrimdışı tekrar oynatılmaz; birinci aşamada bildirim gelen kutusu yoktur.
 
-| Dava | Taşıma |
+<span id="successful-responses-and-stopping-retries" data-sixmm-canonical-anchor="successful-responses-and-stopping-retries" aria-hidden="true"></span>
+
+### Başarılı yanıtlar ve yeniden denemelerin durdurulması
+
+Fon geri aramaları ve tasfiye uyarıları, teslimat başarısını belirlemek için **yalnızca HTTP durum kodunu** kullanır. Gönderen, yanıt gövdesini `code`, `success`, `result` veya `message` yorumlamaz ve sabit bir `OK` / `success` yanıtı gerektirmez.
+
+| Satıcı yanıtı | Platform davranışı |
 | --- | --- |
-| İlk transfer talebi | Global olarak benzersiz bir agentOrderNo oluşturun. |
-| HTTP zaman aşımı | Yenisini oluşturmadan önce orijinali agentOrderNo sorgulayın. |
-| PROCESSING yanıt | webhook bekleyin veya sipariş durumunu sorgulayın. |
-| Tekrarlanan webhook | İdempotency anahtarına ve son duruma göre tekilleştirme. |
+| HTTP 200–299, 200, 202 ve 204 dahil | Teslimat başarılı; Başarı durumu devam ettirildikten sonra otomatik yeniden gönderimler durur. |
+| 400, 401, 403, 409, 429, 500 ve 503 dahil olmak üzere 2xx olmayan nihai yanıt | Teslimat başarısız olur ve yeniden denemeler mevcut geri alma politikasını izler; deneme sınırından sonra `DEAD` olarak işaretlenir. 4xx bildirimi otomatik olarak onaylamaz. |
+| Kullanılabilir bir yanıt olmadan bağlantı hatası veya yanıt zaman aşımı | Sonuç onaylanmaz ve başarısızlık ilkesi kapsamında yeniden denenir. |
+
+Yanıt gövdesi boş, metin veya JSON olabilir. Örnek `result` alanları protokol gereksinimleri için değil, satıcı için bilgi amaçlıdır. `202 Accepted` ayrıca platformun yeniden denemelerini de durdurur; bu nedenle, yalnızca bellek içi eşzamansız bir görevi başlatmakla kalmayıp, yalnızca bildirimi satıcının kalıcı görev kuyruğuna güvenilir bir şekilde kaydettikten sonra geri döndürün.
+
+<span id="successful-response-examples" data-sixmm-canonical-anchor="successful-response-examples" aria-hidden="true"></span>
+
+### Başarılı yanıt örnekleri
+
+İş süreci tamamlandıktan veya bildirim satıcının bekleme kuyruğuna güvenilir bir şekilde kaydedildikten sonra:
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"result":"RECEIVED"}
+```
+
+Yanıt kuruluşuna ihtiyaç duyulmadığında:
+
+```http
+HTTP/1.1 204 No Content
+```
+
+Aynı gövdeye sahip önceden işlenmiş bir bildirim için, yinelenen iş işlemeyi atlayın ve yine de 2xx değerini döndürün:
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"result":"DUPLICATE"}
+```
+
+<span id="failure-response-examples" data-sixmm-canonical-anchor="failure-response-examples" aria-hidden="true"></span>
+
+### Arıza yanıtı örnekleri
+
+Veritabanı geçici olarak kullanılamıyorsa ve satıcı işlemi tamamlamamışsa veya bildirimi güvenilir bir şekilde kaydetmemişse platformun yeniden deneyebilmesi için 2xx olmayanı döndürün:
+
+```http
+HTTP/1.1 503 Service Unavailable
+Content-Type: application/json
+
+{"result":"FAILED","message":"temporary storage failure"}
+```
+
+İş verilerini veya başarılı veri tekilleştirme kayıtlarını güncellemeden geçersiz bir imzayı reddedin:
+
+```http
+HTTP/1.1 401 Unauthorized
+Content-Type: application/json
+
+{"result":"INVALID_SIGNATURE"}
+```
+
+Bu yanıt organları yeniden deneme kararlarını değiştirmez. 401 veya 409'un yeniden denemeleri kalıcı olarak durdurmasını beklemeyin; imzayı, bildirim içeriğini veya satıcı yapılandırmasını araştırın.
+
+**Yanlış örnek: Aşağıdaki yanıt hâlâ başarılı teslimat olarak sayılıyor. Platform `success:false` nedeniyle yeniden denemeyecek.**
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"success":false,"code":500,"message":"processing failed"}
+```
+
+Çerçeve veya genel istisna işleyicisi iş hatalarını HTTP 200'de sararsa, geri çağırma uç noktasında doğru hata durumunu açıkça ayarlayın.
 
 <span id="recommended-idempotency-record" data-sixmm-canonical-anchor="recommended-idempotency-record" aria-hidden="true"></span>
 
-## Önerilen idempotency kaydı
+### Güvenilir onay ve kopya teslimat
 
-Tekrarlanan bir teslimatı tanımak ve güvenli bir şekilde kurtarmak için yeterli bilgiyi saklayın:
+Önerilen sıra: imzayı doğrulayın ve zamanı / tüccarı / ortamı kontrol edin → yetersizlik kimliğini çıkarın → bir işlemde iş verilerini ve başarılı veri tekilleştirme kayıtlarını işleyin veya bekleyen bir görevi güvenilir bir şekilde kaydedin → taahhüt başarılı olduktan sonra 200/204'ü döndürün. Başarılı bir veritabanı yazma işleminden önce 2xx döndürmeyin veya işlenen bildirimi işaretlemeyin.
 
-| Alan | Amaç |
-| --- | --- |
-| Etkinlik veya iş anahtarı | Bildirimi veya işlemi benzersiz şekilde tanımlar. |
-| İş ortağı sipariş numarası | Olayı orijinal isteğe bağlar. |
-| Yük karması | Çakışan tekrarlanan yüklerin belirlenmesine yardımcı olur. |
-| Mevcut işlem durumu | Alınan, işlenen, başarılı ve başarısız işleri ayırt eder. |
-| Nihai iş durumu | Bir terminal eyleminin iki kez uygulanmasını engeller. |
-| İşlenen zaman damgası | Soruşturma ve saklama politikalarını destekler. |
+Satıcının işlemesi başarılı olduktan sonra yinelenen teslimat gerçekleşebilir: yanıt kaybolabilir veya platform 2xx alabilir ancak `SUCCESS` devam edemeyebilir. HTTP geri aramalar tek seferlik teslimatı garanti etmez. Satıcı ve `environment` kapsamında tekilleştirmeye devam edin. Fonlar `orderType:orderId:targetStatus` kullanır; uyarılarda `liquidation.warning:notificationId` kullanılır. Zaten işlenmiş aynı gövde için, 2xx'i para yatırmadan veya tekrar hatırlatmada bulunmadan iade edin. Farklı bir gövdeyle aynı kimlik için bir çakışma kaydedin ve 2xx olmayanı döndürün; orijinal kaydın üzerine yazmayın.
 
-Mümkün olduğunda iş değişikliği ve geçicilik kaydını aynı işlemde kaydedin. Tekrarlanan bir etkinlik, bakiyeyi, siparişi veya kullanıcı değişikliğini yeniden uygulamak yerine önceden bilinen sonucu döndürmelidir.
-
-<span id="timeout-and-retry-rule" data-sixmm-canonical-anchor="timeout-and-retry-rule" aria-hidden="true"></span>
-
-## Zaman aşımı ve yeniden deneme kuralı
-
-HTTP zaman aşımı, orijinal isteğin başarısız olduğunu kanıtlamaz. Başka bir eylemin gerekip gerekmediğine karar vermeden önce orijinal `agentOrderNo` kullanarak işlemi sorgulayın veya webhook değerini bekleyin. Her zaman aşımından sonra yeni bir iş emri numarası oluşturmak, mükerrer fon hareketlerine neden olabilir.
-
-<span id="production-checklist" data-sixmm-canonical-anchor="production-checklist" aria-hidden="true"></span>
-
-## Üretim kontrol listesi
-
-- JSON ayrıştırma veya iş işleme öncesinde imzayı doğrulayın.
-- Ham gövdeyi ayrıştırılmış yükten bağımsız olarak koruyun.
-- Onaylanan entegrasyon politikasına göre eski veya tekrar oynatılan istekleri reddedin.
-- Tekrarlanan ve sıra dışı teslimat için olay işlemeyi güvenli hale getirin.
-- Etkinlik kimliklerini, iş ortağı sipariş numaralarını, işleme sonucunu ve istek süresini günlüğe kaydedin.
-- Günlüklerden ve destek eklerinden gizli dizileri ve imza değerlerini çıkarın.
-
-<span id="related-docs" data-sixmm-canonical-anchor="related-docs" aria-hidden="true"></span>
-
-## İlgili dokümanlar
-
-<CardGroup cols={3}>
-<Card title="Sırlar ve HMAC İmzalama" icon="fa-duotone fa-shield-keyhole" href="/tr/sdk/security/secrets-signing">
-İstek ve webhook doğrulama için kullanılan API sırrını koruyun.
-</Card>
-<Card title="Agent SDK Genel Bakış" icon="fa-duotone fa-server" href="/tr/sdk/agent-sdk/overview">
-Arka uç entegrasyonu iş akışının tamamını inceleyin.
-</Card>
-<Card title="SDK Sorun Giderme" icon="fa-duotone fa-screwdriver-wrench" href="/tr/sdk/security/troubleshooting">
-Reddedilen imzaları, tekrarlanan olayları ve bekleyen işlemleri araştırın.
-</Card>
-</CardGroup>
+Onay başarısı, ödeme işleminin başarılı olduğu anlamına gelmez, satıcının bildirimi aldığı/işlediği anlamına gelir. Geçerli bir fon bildirimini `targetStatus=FAILED` ile kaydettikten sonra ayrıca 2xx değerini döndürün; Siparişin başarısız olması, bildirim onayının reddedilmesi için bir neden değildir.
 
 <span id="funding-and-environment-boundaries" data-sixmm-canonical-anchor="funding-and-environment-boundaries" aria-hidden="true"></span>
 
@@ -104,6 +134,6 @@ Reddedilen imzaları, tekrarlanan olayları ve bekleyen işlemleri araştırın.
 
 Orijinal Sözleşme transferi webhook ve `queryOrder` akışı, Finansmana otomatik olarak uygulanmaz. Finansman işlemlerini `queryWalletTransfer` ve orijinal sipariş ortamını kullanarak onaylayın. Finansmanda `status` kullanılır; Orijinal Sözleşme aktarım yanıtlarında `orderStatus` kullanılır. Başarılı bir HTTP yanıtı veya `code=0` tek başına fonların taşındığını kanıtlamaz.
 
-Açık simüle edilmiş Sözleşme aktarım bildirimleri arasında `environment=SIMULATED` bulunur. Önce ham gövdeyi doğrulayın, ardından kullanıcıyı, miktarı, sipariş kimliğini ve ortamı kayıtlı yerel iş emriyle karşılaştırarak kontrol edin.
+Açık simüle edilmiş Sözleşme aktarım bildirimleri arasında `environment=SIMULATED` bulunur. Önce ham gövdeyi doğrulayın, ardından kullanıcıyı, tutarı, sipariş kimliğini ve ortamı kaydedilen yerel iş emriyle karşılaştırarak kontrol edin.
 
 [Finansman kurtarma kılavuzu](/tr/sdk/agent-sdk/java/funding-wallet) · [Çevre kılavuzu](/tr/sdk/agent-sdk/java/environments)

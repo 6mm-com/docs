@@ -258,3 +258,13 @@ resp.orders.forEach(order -> System.out.println(order.orderNo));
 - [쿼리 개요 및 페이지 매김](/ko/sdk/agent-sdk/java/perpetual-queries)
 - [펀딩 지갑](/ko/sdk/agent-sdk/java/funding-wallet)
 - [업그레이드 가이드](/ko/sdk/agent-sdk/java/upgrade)
+
+<span id="funds-event-callbacks" data-sixmm-canonical-anchor="funds-event-callbacks" aria-hidden="true"></span>
+
+## 자금 이벤트 콜백
+
+`transfer.completed`는 `SUCCESS`, `FAILED` 또는 `REVERSED`의 원래 주문 업데이트를 전달할 수 있습니다. `reverse.completed`는 역주문 터미널 이벤트입니다. `transfer.dead`는 확인된 실패가 아니라 재시도 후에도 최종 상태가 확인되지 않은 상태로 남아 있으며 수동 조정이 필요함을 의미합니다. 이벤트 이름만으로는 자금이 적립되었음을 증명할 수 없습니다.
+
+성공적인 승인은 성공적인 자금 이동과 다릅니다. 유효한 `targetStatus=FAILED` 알림을 기록한 후 HTTP 2xx도 반환합니다. 판매자 및 `environment` 범위 내에서 `orderType:orderId:targetStatus`에 의한 자금 이벤트 중복 제거를 지속합니다.
+
+[이벤트 필드 및 JSON 예시](/ko/sdk/agent-sdk/java/webhook-events) · [서명 확인, 응답 및 재시도](/ko/sdk/security/webhooks-idempotency)

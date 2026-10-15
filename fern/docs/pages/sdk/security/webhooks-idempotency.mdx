@@ -1,10 +1,12 @@
 ---
 title: "Webhook Signature Verification & Idempotency"
-subtitle: "Verify 6MM Agent webhooks with the raw request body and process retries, timeouts, and repeated events without duplicate business actions."
+subtitle: "Verify raw Webhook bodies, acknowledge using HTTP status codes, and handle retries and duplicates reliably."
 slug: sdk/security/webhooks-idempotency
 ---
 
-Webhooks notify a partner backend about asynchronous business-state changes. Because delivery may be retried, every receiver must verify the signature before parsing trusted data and must process the event idempotently.
+This page follows [Agent Java SDK `WEBHOOKS.md`](https://github.com/6mm-com/agent-java-sdk/blob/fa6c7b65124f1346f815b3b73eb8a7729466c3dc/WEBHOOKS.md) at commit `fa6c7b6`. This is a documentation-only update; no new SDK artifact containing warning helper methods was released.
+
+All four event types use one merchant callback URL and are dispatched by the body `event`. See [Webhook Events & Liquidation Warnings](/sdk/agent-sdk/java/webhook-events) for event fields and payload examples.
 
 <span data-sixmm-canonical-anchor="webhook-headers" aria-hidden="true"></span>
 
@@ -12,90 +14,118 @@ Webhooks notify a partner backend about asynchronous business-state changes. Bec
 
 | Header | Description |
 | --- | --- |
-| X-Agent-Timestamp | Unix timestamp in seconds. |
-| X-Agent-Nonce | Replay-protection nonce. |
-| X-Agent-Signature | HMAC-SHA256 signature. |
+| `X-Agent-Timestamp` | Unix timestamp in seconds. |
+| `X-Agent-Nonce` | Nonce. |
+| `X-Agent-Signature` | HMAC-SHA256 hexadecimal signature. |
 
 ```text
 timestamp + nonce + rawBody
 ```
 
-Use the exact raw request body received over HTTP when reconstructing the signed value. Parsing and re-serializing JSON first can change whitespace or field order and produce a different signature.
+<span id="order-idempotency" data-sixmm-canonical-anchor="order-idempotency" aria-hidden="true"></span>
 
-<span data-sixmm-canonical-anchor="verification-flow" aria-hidden="true"></span>
+## Event idempotency
 
-## Verification flow
+Persist deduplication within the merchant and `environment` scope, atomically with business processing. Different `notificationId` values identify independent `FIRST` / `UPGRADE` / `REMINDER` notifications; do not discard notifications by grouping on user, episode, or `eventType`. An empty idempotency key cannot be used for deduplication. The SDK only returns a helper key; it does not persist or process business data. Record the same identity with a different body as a conflict; do not overwrite the processed body.
 
-1. Read the timestamp, nonce, and signature headers.
-2. Capture the unmodified raw request body.
-3. Build `timestamp + nonce + rawBody`.
-4. Calculate HMAC-SHA256 with the partner API secret.
-5. Compare the calculated and received signatures using a constant-time comparison.
-6. Apply the approved timestamp-freshness and nonce-reuse checks.
-7. Parse and process the event only after verification succeeds.
+<span id="verification-flow" data-sixmm-canonical-anchor="verification-flow" aria-hidden="true"></span>
 
-When an official Agent SDK verifier is available, use it instead of maintaining independent signing code.
+## Signature verification and receiving
 
-<span data-sixmm-canonical-anchor="order-idempotency" aria-hidden="true"></span>
+Use the merchant API secret to calculate the HMAC-SHA256 hexadecimal signature of `timestamp + nonce + rawBody`. Verify the original received bytes; do not format JSON, rename fields, or re-serialize the body first.
 
-## Order idempotency
+Verify the signature first, then check the time window (recommended ±300 seconds), merchant, and environment. Next extract the idempotency identity and handle the notification reliably. Preserve unknown event values for diagnosis; never interpret them as funds success. The verification helper does not perform time-window, ownership, or persistent deduplication checks.
 
-| Case | Handling |
+Return HTTP 2xx after completing processing or confirming an identical duplicate; return non-2xx on failure. The warning sender has a 5-second HTTP timeout and at most 8 attempts. Retries retain the frozen body; only the signature timestamp and nonce change. Respond promptly after reliable acceptance; long-running business work can use the merchant's own persistent tasks.
+
+Merchant notifications do not depend on the user's online status. Platform user pushes are online best-effort delivery only, with no offline replay; phase one has no notification inbox.
+
+<span data-sixmm-canonical-anchor="successful-responses-and-stopping-retries" aria-hidden="true"></span>
+
+### Successful responses and stopping retries
+
+Funds callbacks and liquidation warnings use **only the HTTP status code** to determine delivery success. The sender does not interpret response-body `code`, `success`, `result`, or `message`, and does not require a fixed `OK` / `success` response.
+
+| Merchant response | Platform behavior |
 | --- | --- |
-| Initial transfer request | Create one globally unique agentOrderNo. |
-| HTTP timeout | Query the original agentOrderNo before creating a new one. |
-| PROCESSING response | Wait for webhook or query order status. |
-| Repeated webhook | Deduplicate by idempotency key and final status. |
+| HTTP 200–299, including 200, 202, and 204 | Delivery succeeds; automatic resends stop after the success state is persisted. |
+| Final non-2xx response, including 400, 401, 403, 409, 429, 500, and 503 | Delivery fails and retries follow the existing backoff policy; after the attempt limit it is marked `DEAD`. A 4xx does not automatically acknowledge the notification. |
+| Connection failure or response timeout without a usable response | The result is unconfirmed and retried under the failure policy. |
 
-<span data-sixmm-canonical-anchor="recommended-idempotency-record" aria-hidden="true"></span>
+The response body may be empty, text, or JSON. The example `result` fields are informational for the merchant, not protocol requirements. `202 Accepted` also stops platform retries, so return it only after reliably saving the notification to the merchant's persistent task queue, not merely starting an in-memory async task.
 
-## Recommended idempotency record
+<span data-sixmm-canonical-anchor="successful-response-examples" aria-hidden="true"></span>
 
-Store enough information to recognize a repeated delivery and recover safely:
+### Successful response examples
 
-| Field | Purpose |
-| --- | --- |
-| Event or business key | Uniquely identifies the notification or operation. |
-| Partner order number | Connects the event to the original request. |
-| Payload hash | Helps identify conflicting repeated payloads. |
-| Current processing state | Distinguishes received, processing, succeeded, and failed work. |
-| Final business status | Prevents a terminal action from being applied twice. |
-| Processed timestamp | Supports investigation and retention policies. |
+After business processing completes, or the notification has been reliably saved to the merchant's own pending queue:
 
-Commit the business change and idempotency record in the same transaction where possible. A repeated event should return the already-known result instead of applying the balance, order, or user change again.
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
 
-<span data-sixmm-canonical-anchor="timeout-and-retry-rule" aria-hidden="true"></span>
+{"result":"RECEIVED"}
+```
 
-## Timeout and retry rule
+When no response body is needed:
 
-An HTTP timeout does not prove that the original request failed. Query the operation using the original `agentOrderNo`, or wait for its webhook, before deciding whether another action is required. Creating a new business order number after every timeout can cause duplicate fund movements.
+```http
+HTTP/1.1 204 No Content
+```
 
-<span data-sixmm-canonical-anchor="production-checklist" aria-hidden="true"></span>
+For an already-processed notification with an identical body, skip duplicate business processing and still return 2xx:
 
-## Production checklist
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
 
-- Verify the signature before JSON parsing or business processing.
-- Preserve the raw body independently from the parsed payload.
-- Reject stale or replayed requests according to the approved integration policy.
-- Make event processing safe for repeated and out-of-order delivery.
-- Log event IDs, partner order numbers, processing result, and request time.
-- Redact secrets and signature values from logs and support attachments.
+{"result":"DUPLICATE"}
+```
 
-<span data-sixmm-canonical-anchor="related-docs" aria-hidden="true"></span>
+<span data-sixmm-canonical-anchor="failure-response-examples" aria-hidden="true"></span>
 
-## Related docs
+### Failure response examples
 
-<CardGroup cols={3}>
-<Card title="Secrets & HMAC Signing" icon="fa-duotone fa-shield-keyhole" href="/sdk/security/secrets-signing">
-Protect the API secret used for request and webhook verification.
-</Card>
-<Card title="Agent SDK Overview" icon="fa-duotone fa-server" href="/sdk/agent-sdk/overview">
-Review the complete backend integration workflow.
-</Card>
-<Card title="SDK Troubleshooting" icon="fa-duotone fa-screwdriver-wrench" href="/sdk/security/troubleshooting">
-Investigate rejected signatures, repeated events, and pending operations.
-</Card>
-</CardGroup>
+If the database is temporarily unavailable and the merchant has neither completed processing nor reliably saved the notification, return non-2xx so the platform can retry:
+
+```http
+HTTP/1.1 503 Service Unavailable
+Content-Type: application/json
+
+{"result":"FAILED","message":"temporary storage failure"}
+```
+
+Reject an invalid signature without updating business data or successful deduplication records:
+
+```http
+HTTP/1.1 401 Unauthorized
+Content-Type: application/json
+
+{"result":"INVALID_SIGNATURE"}
+```
+
+These response bodies do not change retry decisions. Do not expect a 401 or 409 to permanently stop retries; investigate the signature, notification content, or merchant configuration.
+
+**Incorrect example: the following response still counts as successful delivery. The platform will not retry because of `success:false`.**
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"success":false,"code":500,"message":"processing failed"}
+```
+
+If the framework or global exception handler wraps business failures in HTTP 200, explicitly set the correct failure status at the callback endpoint.
+
+<span id="recommended-idempotency-record" data-sixmm-canonical-anchor="recommended-idempotency-record" aria-hidden="true"></span>
+
+### Reliable acknowledgement and duplicate delivery
+
+Recommended order: verify the signature and check time / merchant / environment → extract the idempotency identity → process business data and successful deduplication records in a transaction, or reliably save a pending task → return 200/204 after the commit succeeds. Do not return 2xx or mark the notification processed before a successful database write.
+
+Duplicate delivery can still occur after merchant processing succeeds: the response may be lost, or the platform may receive 2xx but fail to persist `SUCCESS`. HTTP callbacks do not guarantee one-time delivery. Persist deduplication within the merchant and `environment` scope. Funds use `orderType:orderId:targetStatus`; warnings use `liquidation.warning:notificationId`. For an identical already-processed body, return 2xx without crediting funds or issuing a reminder again. For the same identity with a different body, record a conflict and return non-2xx; do not overwrite the original record.
+
+Acknowledgement success means the merchant received / processed the notification, not that the funds operation succeeded. After recording a valid funds notification with `targetStatus=FAILED`, also return 2xx; an order failure is not a reason to reject notification acknowledgement.
 
 <span data-sixmm-canonical-anchor="funding-and-environment-boundaries" aria-hidden="true"></span>
 

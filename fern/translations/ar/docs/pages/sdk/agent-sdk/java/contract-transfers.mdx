@@ -258,3 +258,13 @@ resp.orders.forEach(order -> System.out.println(order.orderNo));
 - [نظرة عامة على الاستعلام وترقيم الصفحات](/ar/sdk/agent-sdk/java/perpetual-queries)
 - [محفظة التمويل](/ar/sdk/agent-sdk/java/funding-wallet)
 - [دليل الترقية](/ar/sdk/agent-sdk/java/upgrade)
+
+<span id="funds-event-callbacks" data-sixmm-canonical-anchor="funds-event-callbacks" aria-hidden="true"></span>
+
+## عمليات الاسترجاعات لحدث الأموال
+
+`transfer.completed` قد يحمل `SUCCESS`، `FAILED`، أو تحديث الطلب الأصلي لـ `REVERSED`؛ `reverse.completed` هو حدث طرفي لأمر عكسي. `transfer.dead` يعني أن الحالة النهائية تظل غير مؤكدة بعد إعادة المحاولة وتحتاج إلى تسوية يدوية، وليس فشلًا مؤكدًا. اسم الحدث وحده لا يثبت أنه تم إضافة الأموال.
+
+يختلف الإقرار الناجح عن حركة الأموال الناجحة: بعد تسجيل إشعار `targetStatus=FAILED` صالح، قم بإرجاع HTTP 2xx أيضًا. استمرار إلغاء البيانات المكررة في حدث الأموال بواسطة `orderType:orderId:targetStatus` داخل نطاق التاجر و`environment`.
+
+[حقول الأحداث وأمثلة JSON](/ar/sdk/agent-sdk/java/webhook-events) · [التحقق من التوقيع والاستجابات وإعادة المحاولة](/ar/sdk/security/webhooks-idempotency)

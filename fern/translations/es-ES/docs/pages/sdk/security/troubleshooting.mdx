@@ -93,3 +93,18 @@ Revise la verificación de devolución de llamadas y el manejo de eventos duplic
 | Falta el nuevo método Java | Verifique el artefacto Maven resuelto con la etiqueta pública `v0.3.0`; elimine las dependencias en conflicto de acuerdo con su política de artefactos. |
 
 [Referencia de consultas y errores](/es-ES/sdk/agent-sdk/java/perpetual-queries) · [Guía de actualización](/es-ES/sdk/agent-sdk/java/upgrade)
+
+<span id="webhook-receiving-issues" data-sixmm-canonical-anchor="webhook-receiving-issues" aria-hidden="true"></span>
+
+## Webhook recibiendo problemas
+
+| Síntoma | Control y manejo |
+| --- | --- |
+| No hay reintento después de devolver el error JSON | Compruebe si el punto final todavía devuelve HTTP 200. La entrega utiliza solo el estado HTTP, no un indicador de éxito en el cuerpo. |
+| Los reintentos continúan después de 401 o 409 | Las respuestas que no sean 2xx siguen la política de reintento existente; investigar firmas, contenido de notificaciones o configuración del comerciante. |
+| Clave de idempotencia vacía para una advertencia de liquidación | El `WebhookVerifier.idempotencyKey` actual solo extrae identidades de eventos de fondos. Después de las comprobaciones de firma y propiedad, valide `notificationId` y cree la clave de advertencia en el código de comerciante. Nunca utilices una clave vacía. |
+| Notificación duplicada después de un procesamiento exitoso | Mantener la deduplicación dentro del alcance del comerciante y `environment`. Devuelve 2xx para duplicados idénticos; registre conflictos y devuelva no-2xx para la misma ID con un cuerpo diferente. |
+| Advertencia no procesada | Aceptar `liquidation.warning` e histórico `LIQUIDATION_WARNING`; no agrupe ID de notificación distintos por usuario, episodio o tipo de evento y los descarte. |
+| La notificación aceptada pierde su tarea pendiente | Guarde una tarea de manera confiable antes de regresar 2xx; iniciar una tarea asíncrona en memoria no es suficiente. |
+
+[Campos de eventos y compatibilidad](/es-ES/sdk/agent-sdk/java/webhook-events) · [HTTP respuestas y reconocimiento confiable](/es-ES/sdk/security/webhooks-idempotency)

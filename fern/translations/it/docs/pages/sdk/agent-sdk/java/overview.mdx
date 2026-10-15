@@ -7,7 +7,7 @@ canonical-url: https://docs.6mm.com/it/sdk/agent-sdk/java/overview
 
 Questa guida è rivolta a **Agent Java SDK `v0.3.0`**, Java 8+ e agli appalti pubblici contrassegnati. Gli esempi vengono eseguiti nel backend di un partner dopo aver inizializzato `client` in [Avvio rapido](/it/sdk/agent-sdk/java/quick-start).
 
-Base della documentazione: SDK `v0.3.0`, commit `54aa3c1`.
+Base della documentazione: SDK `v0.3.0`, commit `54aa3c1`. Seguono inoltre le Webhook regole di ricezione [`WEBHOOKS.md` presso `fa6c7b6`](https://github.com/6mm-com/agent-java-sdk/blob/fa6c7b65124f1346f815b3b73eb8a7729466c3dc/WEBHOOKS.md); questo è un aggiornamento di sola documentazione, senza un nuovo artefatto SDK contenente metodi di supporto di avviso.
 
 <span id="version-and-installation" data-sixmm-canonical-anchor="version-and-installation" aria-hidden="true"></span>
 
@@ -36,7 +36,7 @@ GitHub ospita l'origine; non rende queste coordinate risolvibili da Maven Centra
 | Trasferimenti | Ordine inverso | `reverse` | Annulla un trasferimento riuscito quando il backend supporta un flusso di compensazione |
 | Trasferimenti | Ordine delle interrogazioni | `queryOrder` | Interroga un ordine di trasferimento in base al numero dell'ordine del partner |
 | Trasferimenti | Elenca gli ordini | `listOrders` | Sfogliare gli ordini di trasferimento per la riconciliazione |
-| Trasferimenti | Webhook verifica | `WebhookVerifier.verify` | Verifica il trasferimento delle richiamate dello stato finale da 6MM |
+| Webhook | Verifica della firma | `WebhookVerifier.verify` | Verificare gli organismi di allerta sugli eventi dei fondi grezzi e sulla liquidazione; il codice commerciante gestisce il tempo, la proprietà e i controlli di deduplicazione persistenti. Vedere [Webhook Eventi e avvisi di liquidazione](/it/sdk/agent-sdk/java/webhook-events). |
 | Portafoglio di finanziamento | Trasferimento fondi | `walletTransfer` | Partner ↔ Finanziamento o Finanziamento ↔ Contratto; confermare lo stato restituito |
 | Portafoglio di finanziamento | Stato del trasferimento dei fondi | `queryWalletTransfer` | Recupera un'operazione di finanziamento utilizzando il numero d'ordine del partner originale |
 | Ingresso commerciale | Inserimento diretto URL | `createEntryUrl` | Crea un SSO URL una tantum per la modalità di reindirizzamento |
@@ -65,7 +65,7 @@ integrando.
 | `agentCode` | `AGENT001` | Codice partner |
 | `apiSecret` | `your-api-secret` | API segreto di firma. Tienilo solo sul backend |
 | `defaultCurrency` | `USDT` | Valuta predefinita, solitamente `USDT` |
-| `webhookUrl` | `https://partner.example.com/6mm/webhook` | Endpoint partner per callback 6MM. |
+| `webhookUrl` | `https://partner.example.com/6mm/webhook` | Richiamata del commerciante URL condivisa da tutti e quattro i tipi di eventi; invio tramite organismo `event`, senza avviso separato URL. |
 
 Raccomandazioni per la produzione:
 

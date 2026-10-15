@@ -7,7 +7,7 @@ canonical-url: https://docs.6mm.com/zh-TW/sdk/agent-sdk/java/overview
 
 本指南針對 **Agent Java SDK `v0.3.0`**、Java 8+ 以及標記的公共合約。初始化 `client` 後在合作伙伴後端運行示例 [快速入門](/zh-TW/sdk/agent-sdk/java/quick-start).
 
-文檔基線：SDK `v0.3.0`，提交`54aa3c1`。
+文件基線：SDK `v0.3.0`，提交`54aa3c1`。 Webhook接收規則另外遵循 [`WEBHOOKS.md` 在 `fa6c7b6`](https://github.com/6mm-com/agent-java-sdk/blob/fa6c7b65124f1346f815b3b73eb8a7729466c3dc/WEBHOOKS.md);這是僅文件更新，沒有包含警告輔助方法的新 SDK 工件。
 
 <span id="version-and-installation" data-sixmm-canonical-anchor="version-and-installation" aria-hidden="true"></span>
 
@@ -36,7 +36,7 @@ GitHub 託管源代碼；它不會使這些座標可以從 Maven Central 解析�
 | 接送服務 | 顛倒順序 | `reverse` | 當後端支持補償流時反轉成功的傳輸 |
 | 接送服務 | 查詢訂單 | `queryOrder` | 按合作伙伴訂單號查詢一張調撥訂單 |
 | 接送服務 | 列出訂單 | `listOrders` | 翻閱調撥單以進行調節 |
-| 接送服務 | Webhook驗證 | `WebhookVerifier.verify` | 驗證來自 6MM 的傳輸最終狀態回調 |
+| Webhook | 簽名驗證 | `WebhookVerifier.verify` | 驗證資金事件和強平預警的原始正文簽章；時間、歸屬及持久去重校驗由商戶程式碼處理。見 [Webhook 事件與強平預警](/zh-TW/sdk/agent-sdk/java/webhook-events). |
 | 資金錢包 | 資金轉移 | `walletTransfer` | 合作伙伴 ↔ 資助或資助 ↔ 合同；確認返回狀態 |
 | 資金錢包 | 資金轉移狀態 | `queryWalletTransfer` | 使用原始合作伙伴訂單號恢復資金操作 |
 | 交易入場 | 直接輸入URL | `createEntryUrl` | 為重定向模式創建一次性 SSO URL |
@@ -65,7 +65,7 @@ GitHub 託管源代碼；它不會使這些座標可以從 Maven Central 解析�
 | `agentCode` | `AGENT001` | 合作伙伴代碼 |
 | `apiSecret` | `your-api-secret` | API簽名秘密。僅將其保留在後端 |
 | `defaultCurrency` | `USDT` | 默認貨幣，通常為 `USDT` |
-| `webhookUrl` | `https://partner.example.com/6mm/webhook` | 6MM 回調的合作伙伴端點 |
+| `webhookUrl` | `https://partner.example.com/6mm/webhook` | 商家回呼URL由所有四種事件類型共享；由正文 `event` 調度，沒有單獨的警告 URL。 |
 
 製作建議：
 

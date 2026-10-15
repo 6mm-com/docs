@@ -1,0 +1,164 @@
+---
+title: "Webhook Ereignisse und Liquidationswarnungen"
+subtitle: "Ereignistypen des Händlers Webhook, Idempotenzidentitäten, Liquidationswarnfelder und Beispiele für Geldergebnisse."
+slug: sdk/agent-sdk/java/webhook-events
+canonical-url: https://docs.6mm.com/de/sdk/agent-sdk/java/webhook-events
+---
+
+Diese Seite folgt [Agent Java SDK `WEBHOOKS.md`](https://github.com/6mm-com/agent-java-sdk/blob/fa6c7b65124f1346f815b3b73eb8a7729466c3dc/WEBHOOKS.md) beim Commit `fa6c7b6`. Dies ist ein reines Dokumentationsupdate. Es wurde kein neues SDK-Artefakt veröffentlicht, das Warnhilfsmethoden enthält.
+
+Alle vier Ereignistypen verwenden den einzelnen konfigurierten Rückruf des Händlers URL (`agents.webhook_url`). Versand am Körper `event`; Es ist keine separate Warnung URL erforderlich. Die Beispiele zeigen die Nutzlaststruktur und dürfen nicht zum Einspeisen von Daten in eine Testumgebung verwendet werden.
+
+<span id="events-and-idempotency" data-sixmm-canonical-anchor="events-and-idempotency" aria-hidden="true"></span>
+
+## Ereignisse und Idempotenz
+
+| `event` | Bedeutung | `targetStatus` / Deduplizierungsschlüssel |
+| --- | --- | --- |
+| `transfer.completed` | Terminalstatus übertragen, einschließlich einer Aktualisierung der ursprünglichen Bestellung nach der Stornierung; nicht unbedingt erfolgreich | `SUCCESS` / `FAILED` / `REVERSED`; `orderType:orderId:targetStatus` |
+| `reverse.completed` | Status des Umkehrauftragsterminals | `SUCCESS` / `FAILED`; `orderType:orderId:targetStatus` |
+| `transfer.dead` | Der endgültige Status der Mittelbestellung bleibt nach Wiederholungsversuchen unbestätigt und muss manuell abgeglichen werden. kein bestätigter Fehler | `DEAD`; `orderType:orderId:targetStatus` |
+| `liquidation.warning` | Warnung vor Liquidationsrisiko, ohne Order-Terminal-State-Felder | `liquidation.warning:notificationId` |
+
+Das Händlerwarnungsereignis ist `liquidation.warning`; Benutzer WebSocket `data.event` bleibt `LIQUIDATION_WARNING`. Halten Sie die beiden Kanäle getrennt.
+
+Verwendete historische Händlerbenachrichtigungen `LIQUIDATION_WARNING`. Eingefrorene Nutzdaten behalten bei Wiederholungsversuchen ihren ursprünglichen Inhalt, daher müssen Empfänger beide Namen erkennen. Wenn vorhandene Geschäftsdatensätze ein Warnschlüsselpräfix in Großbuchstaben verwenden, behalten Sie den ursprünglichen Schlüssel bei oder überprüfen Sie beide Schlüssel während der Migration, um eine erneute Verarbeitung der Benachrichtigung zu vermeiden.
+
+**Der aktuelle `WebhookVerifier.idempotencyKey` extrahiert nur `orderType:orderId:targetStatus` für Fondsereignisse und gibt eine leere Zeichenfolge für Warnnutzlasten zurück.** Mit diesem Dokumentationsupdate wurde kein neues SDK-Artefakt veröffentlicht, das Warnhilfsmethoden enthält. Verwenden Sie weiterhin die vorhandene Methode `verify`, um den Rohtext der Warnung zu überprüfen. Nach der Signatur- und Besitzüberprüfung muss der Geschäftscode des Händlers beide Ereignisnamen erkennen, validieren, dass `notificationId` eine positive Dezimal-Ganzzahl-Zeichenfolge ist, und `liquidation.warning:<notificationId>` erstellen. Verwenden Sie niemals einen leeren Deduplizierungsschlüssel und verlangen Sie niemals, dass Warnungen Geldauftragsfelder enthalten.
+
+Behalten Sie die Deduplizierung im Händler- und `environment`-Bereich bei und übernehmen Sie sie atomar mit der Geschäftsverarbeitung. `FIRST` / `UPGRADE` / `REMINDER`-Benachrichtigungen mit unterschiedlichen `notificationId`-Werten sind unabhängig; Verwerfen Sie sie nicht, indem Sie sie nach Benutzer, Episode oder `eventType` gruppieren. Ein leerer Schlüssel bedeutet, dass keine gültige Identität extrahiert werden konnte. Der SDK gibt nur einen Hilfsschlüssel zurück; Es speichert keine Datensätze und führt keine Geschäftsverarbeitung durch. Erfassen Sie dieselbe Identität mit einer anderen Stelle als Konflikt. Überschreiben Sie nicht den verarbeiteten Körper.
+
+<span id="liquidation-warning-fields-and-example" data-sixmm-canonical-anchor="liquidation-warning-fields-and-example" aria-hidden="true"></span>
+
+## Liquidationswarnfelder und Beispiel
+
+| Feld | Typ/Beschreibung |
+| --- | --- |
+| `notificationId` | Positive Dezimal-Ganzzahl-Zeichenfolge; eindeutige Benachrichtigungs-ID. Konvertieren Sie es nicht in eine Gleitkommazahl. |
+| `eventType` | `FIRST`: erste Warnung in der aktuellen Folge; `UPGRADE`: normales Risiko in dieser Episode auf hohes Risiko hochgestuft; `REMINDER`: eine weitere Erinnerung an das anhaltende Risiko. |
+| `severity` | `NORMAL` / `HIGH`. `FIRST` ist möglicherweise bereits `HIGH`; `UPGRADE` ist `HIGH`; `REMINDER` kann `NORMAL` oder `HIGH` sein. |
+| `occurredAt` | JSON Nummer; Unix-Millisekunden, als die Warnung ausgelöst wurde, nicht als die HTTP-Lieferung eintraf. |
+| `object` | `type=CROSS`: Cross-Margin-Konto mit leeren Zeichenfolgen für `symbol`, `side` und `positionId`. `ISOLATED`: Position mit isolierter Marge, die den entsprechenden Vertrag, die entsprechende Seite und die entsprechende Positions-ID trägt. |
+| `episode` | Zeichenfolge; aktuelle Warnfolge. `FIRST` bedeutet nicht die allererste Warnung des Benutzers. |
+| `stateVersion` / `configVersion` | Saiten; Upstream-Status/Konfigurationsversion. Verwerfen Sie Benachrichtigungen, die auf diesen Feldern basieren, nicht unabhängig voneinander. |
+| `riskRatio` / `minLargePositionValue` / `liquidationHighRiskThreshold` | Dezimalzeichenfolgen für das Risikoverhältnis, den normalen Warnschwellenwert und den Schwellenwert für hohes Risiko. Präzision bewahren; Upstream berechnet die Schwellenwertregeln. |
+| `environment` | `PRODUCTION` / `SIMULATED`; durch die konfigurierte Fondsumgebung isolieren, nicht durch einen Servernamen. |
+| `agentId` / `agentCode` / `agentUserId` | Saiten; Agenten-ID, Agentencode und händlerseitige Benutzer-ID. |
+| `platformUserId` | Zeichenfolge; Benutzer-ID der öffentlichen Plattform, die mit dem Bindungsergebnis übereinstimmt, nicht mit dem internen `user_id` des Dienstes. |
+
+```json
+{
+  "event": "liquidation.warning",
+  "notificationId": "68460336",
+  "eventType": "FIRST",
+  "severity": "NORMAL",
+  "occurredAt": 1791875870804,
+  "object": {
+    "type": "CROSS",
+    "symbol": "",
+    "side": "",
+    "positionId": ""
+  },
+  "episode": "3",
+  "stateVersion": "9",
+  "riskRatio": "0.29133109",
+  "minLargePositionValue": "0.20000000",
+  "liquidationHighRiskThreshold": "0.40000000",
+  "configVersion": "8",
+  "environment": "PRODUCTION",
+  "agentId": "16",
+  "agentCode": "DEMO",
+  "agentUserId": "merchant-user-001",
+  "platformUserId": "6054354872"
+}
+```
+
+<span id="transfer-result-example" data-sixmm-canonical-anchor="transfer-result-example" aria-hidden="true"></span>
+
+## Beispiel für ein Übertragungsergebnis
+
+Fondsrückrufe behalten ihre bestehenden Typen: `orderId` und `agentId` sind JSON Nummern; `amount` und `platformUserId` sind Zeichenfolgen. Wenden Sie die Zeichenfolgenkonvention `agentId` der Warnung nicht auf Fondsrückrufe an. Lesen Sie große Ganzzahlen ohne Genauigkeitsverlust mithilfe von Ganzzahl-/Dezimaltypen. `completedAt` ist UTC RFC3339; `ts` sind Unix-Sekunden.
+
+```json
+{
+  "environment": "PRODUCTION",
+  "event": "transfer.completed",
+  "orderType": "transfer",
+  "orderId": 10001,
+  "orderNo": "merchant-order-001",
+  "targetStatus": "SUCCESS",
+  "agentId": 16,
+  "agentCode": "DEMO",
+  "currency": "USDT",
+  "amount": "10.00",
+  "direction": "IN",
+  "transferMode": "FIXED_AMOUNT",
+  "agentUserId": "merchant-user-001",
+  "platformUserId": "6054354872",
+  "rejectCode": 0,
+  "rejectMessage": "",
+  "failReason": "",
+  "completedAt": "2026-10-13T07:17:50Z",
+  "ts": 1791875870
+}
+```
+
+<span id="reversal-result-example" data-sixmm-canonical-anchor="reversal-result-example" aria-hidden="true"></span>
+
+## Beispiel für ein Umkehrergebnis
+
+```json
+{
+  "environment": "PRODUCTION",
+  "event": "reverse.completed",
+  "orderType": "transfer",
+  "orderId": 10002,
+  "orderNo": "merchant-reverse-001",
+  "targetStatus": "SUCCESS",
+  "agentId": 16,
+  "agentCode": "DEMO",
+  "currency": "USDT",
+  "amount": "10.00",
+  "direction": "IN",
+  "transferMode": "FIXED_AMOUNT",
+  "agentUserId": "merchant-user-001",
+  "platformUserId": "6054354872",
+  "rejectCode": 0,
+  "rejectMessage": "",
+  "failReason": "",
+  "completedAt": "2026-10-13T07:17:50Z",
+  "ts": 1791875870
+}
+```
+
+<span id="funds-order-dead-state-example" data-sixmm-canonical-anchor="funds-order-dead-state-example" aria-hidden="true"></span>
+
+## Beispiel für einen toten Zustand einer Fondsbestellung
+
+```json
+{
+  "environment": "PRODUCTION",
+  "event": "transfer.dead",
+  "orderType": "transfer",
+  "orderId": 10003,
+  "orderNo": "merchant-order-002",
+  "targetStatus": "DEAD",
+  "agentId": 16,
+  "agentCode": "DEMO",
+  "currency": "USDT",
+  "amount": "10.00",
+  "direction": "IN",
+  "transferMode": "FIXED_AMOUNT",
+  "agentUserId": "merchant-user-001",
+  "platformUserId": "6054354872",
+  "rejectCode": 0,
+  "rejectMessage": "",
+  "failReason": "order dead",
+  "completedAt": "2026-10-13T07:17:50Z",
+  "ts": 1791875870
+}
+```
+
+Diese Beispiele zeigen nur das Protokoll. Für `FAILED` spiegeln `rejectCode`, `rejectMessage` und `failReason` die tatsächliche Ablehnung wider. Der Name der Ereignis allein ist kein Beweis dafür, dass Gelder gutgeschrieben wurden.
+
+[Signaturüberprüfung, Antworten und Wiederholungsversuche](/de/sdk/security/webhooks-idempotency)

@@ -1,0 +1,164 @@
+---
+title: "Webhook 事件與強平預警"
+subtitle: "商戶 Webhook 事件類型、冪等身份、強平預警欄位和資金結果範例。"
+slug: sdk/agent-sdk/java/webhook-events
+canonical-url: https://docs.6mm.com/zh-TW/sdk/agent-sdk/java/webhook-events
+---
+
+本頁依據 [Agent Java SDK `WEBHOOKS.md`](https://github.com/6mm-com/agent-java-sdk/blob/fa6c7b65124f1346f815b3b73eb8a7729466c3dc/WEBHOOKS.md) 提交 `fa6c7b6` 同步。此次僅更新文件，沒有發布包含預警輔助方法的新 SDK 製品。
+
+四類事件共用商戶設定的一個回呼 URL（`agents.webhook_url`），依正文 `event` 分流；無需為預警另外設定 URL。以下範例只展示資料結構，不用於向測試環境注入資料。
+
+<span id="events-and-idempotency" data-sixmm-canonical-anchor="events-and-idempotency" aria-hidden="true"></span>
+
+## 事件和冪等性
+
+| `event` | 意義 | `targetStatus` / 重複資料刪除鍵 |
+| --- | --- | --- |
+| `transfer.completed` | 劃轉終態，包括原單沖正後的更新；不一定成功 | `SUCCESS` / `FAILED` / `REVERSED`；`orderType:orderId:targetStatus` |
+| `reverse.completed` | 沖正訂單終態 | `SUCCESS` / `FAILED`；`orderType:orderId:targetStatus` |
+| `transfer.dead` | 重試後最終資金訂單狀態仍未確認，需要手動對帳；不是確認的失敗 | `DEAD`; `orderType:orderId:targetStatus` |
+| `liquidation.warning` | 強平風險提示，無訂單終止狀態字段 | `liquidation.warning:notificationId` |
+
+商戶預警事件為 `liquidation.warning`，使用者 WebSocket 的 `data.event` 仍為 `LIQUIDATION_WARNING`。不要混用兩種通道。
+
+歷史商戶通知曾使用 `LIQUIDATION_WARNING`。已凍結的正文在重試時保持原樣，因此接收端必須識別兩種名稱。如果既有業務記錄使用大寫預警鍵前綴，應繼續使用原鍵，或在遷移期間查詢兩種鍵，避免再次處理通知。
+
+**目前 `WebhookVerifier.idempotencyKey` 只提取資金事件的 `orderType:orderId:targetStatus`，對預警正文會回傳空字串。** 此次文件更新沒有發布包含預警輔助方法的新 SDK 製品。可繼續使用現有 `verify` 方法驗證原始預警正文。驗簽與歸屬校驗通過後，商戶業務程式碼須識別兩種事件名稱，校驗 `notificationId` 為正整數十進位字串，再構造 `liquidation.warning:<notificationId>`。不能用空字串去重，也不能要求預警包含資金訂單欄位。
+
+去重必須在商戶與 `environment` 範圍內持久化，並與業務處理原子提交。不同 `notificationId` 的 `FIRST` / `UPGRADE` / `REMINDER` 是獨立通知；不要依使用者、輪次或 `eventType` 合併丟棄。空鍵表示無法提取有效身份。SDK 只回傳輔助鍵，不儲存記錄或執行業務處理。同一身份、不同正文應記錄為衝突，不能覆蓋已處理的正文。
+
+<span id="liquidation-warning-fields-and-example" data-sixmm-canonical-anchor="liquidation-warning-fields-and-example" aria-hidden="true"></span>
+
+## 強平警告欄位及範例
+
+| 欄位 | 類型／說明 |
+| --- | --- |
+| `notificationId` | 正十進制整數字串；唯一的通知 ID。不要將其轉換為浮點數。 |
+| `eventType` | `FIRST`：本輪首次；`UPGRADE`：本輪普通風險升級為高風險；`REMINDER`：持續風險再次提醒。 |
+| `severity` | `NORMAL` / `HIGH`。 `FIRST` 可能已經是 `HIGH`; `UPGRADE` 是 `HIGH`; `REMINDER` 或許 `NORMAL` 或者 `HIGH`。 |
+| `occurredAt` | JSON 數字；觸發警告時的 Unix 毫秒數，而不是 HTTP 交付到達時的毫秒數。 |
+| `object` | `type=CROSS` 為全倉帳戶，`symbol`、`side`、`positionId` 為空字串；`ISOLATED` 為逐倉倉位，包含對應合約、方向及倉位 ID。 |
+| `episode` | 字串，本輪預警輪次；`FIRST` 不代表該使用者歷史上第一次收到預警。 |
+| `stateVersion` / `configVersion` | 字串，上游狀態／設定版本；不據此自行丟棄通知。 |
+| `riskRatio` / `minLargePositionValue` / `liquidationHighRiskThreshold` | 風險比率、正常警告閾值和高風險閾值的十進位字串。保持精度；上游計算閾值規則。 |
+| `environment` | `PRODUCTION` / `SIMULATED`;透過配置的資金環境隔離，而不是伺服器名稱。 |
+| `agentId` / `agentCode` / `agentUserId` | 字串，代理 ID／代理編碼／商戶側使用者 ID。 |
+| `platformUserId` | 字串，平台公開使用者 ID，與綁定結果一致；不是服務內部 `user_id`。 |
+
+```json
+{
+  "event": "liquidation.warning",
+  "notificationId": "68460336",
+  "eventType": "FIRST",
+  "severity": "NORMAL",
+  "occurredAt": 1791875870804,
+  "object": {
+    "type": "CROSS",
+    "symbol": "",
+    "side": "",
+    "positionId": ""
+  },
+  "episode": "3",
+  "stateVersion": "9",
+  "riskRatio": "0.29133109",
+  "minLargePositionValue": "0.20000000",
+  "liquidationHighRiskThreshold": "0.40000000",
+  "configVersion": "8",
+  "environment": "PRODUCTION",
+  "agentId": "16",
+  "agentCode": "DEMO",
+  "agentUserId": "merchant-user-001",
+  "platformUserId": "6054354872"
+}
+```
+
+<span id="transfer-result-example" data-sixmm-canonical-anchor="transfer-result-example" aria-hidden="true"></span>
+
+## 資金劃轉結果範例
+
+資金回調保留其現有類型：`orderId` 和 `agentId` 是 JSON 數字； `amount` 和 `platformUserId` 是字串。不要將警告的字串 `agentId` 約定應用於資金回呼。使用整數/小數類型讀取大整數而不損失精確度。 `completedAt` 是 UTC RFC3339； `ts` 是 Unix 秒。
+
+```json
+{
+  "environment": "PRODUCTION",
+  "event": "transfer.completed",
+  "orderType": "transfer",
+  "orderId": 10001,
+  "orderNo": "merchant-order-001",
+  "targetStatus": "SUCCESS",
+  "agentId": 16,
+  "agentCode": "DEMO",
+  "currency": "USDT",
+  "amount": "10.00",
+  "direction": "IN",
+  "transferMode": "FIXED_AMOUNT",
+  "agentUserId": "merchant-user-001",
+  "platformUserId": "6054354872",
+  "rejectCode": 0,
+  "rejectMessage": "",
+  "failReason": "",
+  "completedAt": "2026-10-13T07:17:50Z",
+  "ts": 1791875870
+}
+```
+
+<span id="reversal-result-example" data-sixmm-canonical-anchor="reversal-result-example" aria-hidden="true"></span>
+
+## 沖正結果範例
+
+```json
+{
+  "environment": "PRODUCTION",
+  "event": "reverse.completed",
+  "orderType": "transfer",
+  "orderId": 10002,
+  "orderNo": "merchant-reverse-001",
+  "targetStatus": "SUCCESS",
+  "agentId": 16,
+  "agentCode": "DEMO",
+  "currency": "USDT",
+  "amount": "10.00",
+  "direction": "IN",
+  "transferMode": "FIXED_AMOUNT",
+  "agentUserId": "merchant-user-001",
+  "platformUserId": "6054354872",
+  "rejectCode": 0,
+  "rejectMessage": "",
+  "failReason": "",
+  "completedAt": "2026-10-13T07:17:50Z",
+  "ts": 1791875870
+}
+```
+
+<span id="funds-order-dead-state-example" data-sixmm-canonical-anchor="funds-order-dead-state-example" aria-hidden="true"></span>
+
+## 資金訂單終止範例
+
+```json
+{
+  "environment": "PRODUCTION",
+  "event": "transfer.dead",
+  "orderType": "transfer",
+  "orderId": 10003,
+  "orderNo": "merchant-order-002",
+  "targetStatus": "DEAD",
+  "agentId": 16,
+  "agentCode": "DEMO",
+  "currency": "USDT",
+  "amount": "10.00",
+  "direction": "IN",
+  "transferMode": "FIXED_AMOUNT",
+  "agentUserId": "merchant-user-001",
+  "platformUserId": "6054354872",
+  "rejectCode": 0,
+  "rejectMessage": "",
+  "failReason": "order dead",
+  "completedAt": "2026-10-13T07:17:50Z",
+  "ts": 1791875870
+}
+```
+
+以上範例僅展示協定；`FAILED` 的 `rejectCode`、`rejectMessage`、`failReason` 依實際拒絕結果回傳，不能僅憑事件名稱判斷資金已入帳。
+
+[簽名驗證、回應和重試](/zh-TW/sdk/security/webhooks-idempotency)

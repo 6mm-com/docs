@@ -257,3 +257,13 @@ Pagination recommendations:
 - [Query overview and pagination](/sdk/agent-sdk/java/perpetual-queries)
 - [Funding wallet](/sdk/agent-sdk/java/funding-wallet)
 - [Upgrade guide](/sdk/agent-sdk/java/upgrade)
+
+<span data-sixmm-canonical-anchor="funds-event-callbacks" aria-hidden="true"></span>
+
+## Funds event callbacks
+
+`transfer.completed` may carry `SUCCESS`, `FAILED`, or an original order update of `REVERSED`; `reverse.completed` is a reversal order terminal event. `transfer.dead` means the final state remains unconfirmed after retries and needs manual reconciliation, not a confirmed failure. The event name alone does not prove funds were credited.
+
+Successful acknowledgement is distinct from successful funds movement: after recording a valid `targetStatus=FAILED` notification, return HTTP 2xx as well. Persist funds-event deduplication by `orderType:orderId:targetStatus` within the merchant and `environment` scope.
+
+[Event fields and JSON examples](/sdk/agent-sdk/java/webhook-events) · [Signature verification, responses, and retries](/sdk/security/webhooks-idempotency)

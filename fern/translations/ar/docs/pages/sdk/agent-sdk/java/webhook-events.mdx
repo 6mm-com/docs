@@ -1,0 +1,164 @@
+---
+title: "Webhook الأحداث وتحذيرات التصفية"
+subtitle: "أنواع أحداث التاجر Webhook، وهويات العجز، وحقول التحذير من التصفية، وأمثلة على نتائج الأموال."
+slug: sdk/agent-sdk/java/webhook-events
+canonical-url: https://docs.6mm.com/ar/sdk/agent-sdk/java/webhook-events
+---
+
+هذه الصفحة تتبع [Agent Java SDK `WEBHOOKS.md`](https://github.com/6mm-com/agent-java-sdk/blob/fa6c7b65124f1346f815b3b73eb8a7729466c3dc/WEBHOOKS.md) عند الالتزام `fa6c7b6`. هذا تحديث للوثائق فقط؛ لم يتم إصدار أي قطعة أثرية جديدة SDK تحتوي على أساليب مساعدة للتحذير.
+
+تستخدم جميع أنواع الأحداث الأربعة رد الاتصال الفردي الذي تم تكوينه للتاجر URL (`agents.webhook_url`). إرسال على الجسم `event`؛ لا يلزم وجود تحذير منفصل URL. توضح الأمثلة بنية الحمولة ويجب عدم استخدامها لإدخال البيانات في بيئة اختبار.
+
+<span id="events-and-idempotency" data-sixmm-canonical-anchor="events-and-idempotency" aria-hidden="true"></span>
+
+## الأحداث والعجز
+
+| `event` | معنى | `targetStatus` / مفتاح إلغاء البيانات المكررة |
+| --- | --- | --- |
+| `transfer.completed` | نقل الحالة النهائية، بما في ذلك تحديث الأمر الأصلي بعد الإلغاء؛ ليس بالضرورة ناجحا | `SUCCESS` / `FAILED` / `REVERSED`; `orderType:orderId:targetStatus` |
+| `reverse.completed` | عكس حالة النظام النهائي | `SUCCESS` / `FAILED`; `orderType:orderId:targetStatus` |
+| `transfer.dead` | تظل حالة أمر الأموال النهائية غير مؤكدة بعد إعادة المحاولة وتحتاج إلى تسوية يدوية؛ ليس فشلا مؤكدا | `DEAD`; `orderType:orderId:targetStatus` |
+| `liquidation.warning` | تحذير من مخاطر التصفية، بدون حقول الحالة النهائية للطلب | `liquidation.warning:notificationId` |
+
+حدث تحذير التاجر هو `liquidation.warning`؛ المستخدم WebSocket `data.event` يبقى `LIQUIDATION_WARNING`. أبقِ القناتين منفصلتين.
+
+تم استخدام إشعارات التجار التاريخية `LIQUIDATION_WARNING`. تحتفظ الحمولات المجمدة بجسمها الأصلي عند إعادة المحاولة، لذلك يجب على أجهزة الاستقبال التعرف على كلا الاسمين. إذا كانت سجلات الأعمال الحالية تستخدم بادئة مفتاح تحذير بأحرف كبيرة، فاحتفظ بالمفتاح الأصلي أو تحقق من كلا المفتاحين أثناء الترحيل لتجنب معالجة الإشعار مرة أخرى.
+
+**`WebhookVerifier.idempotencyKey` الحالي يستخرج فقط `orderType:orderId:targetStatus` لأحداث الأموال ويعيد سلسلة فارغة لحمولات التحذير.** لم يتم إصدار أي قطعة أثرية جديدة SDK تحتوي على أساليب مساعد تحذير مع تحديث الوثائق هذا. استمر في استخدام طريقة `verify` الحالية للتحقق من نص التحذير الأولي. بعد التحقق من التوقيع والملكية، يجب أن يتعرف رمز العمل التجاري على اسمي الحدثين، ويتحقق من أن `notificationId` عبارة عن سلسلة عدد صحيح عشري موجب، وينشئ `liquidation.warning:<notificationId>`. لا تستخدم مطلقًا مفتاح إلغاء البيانات المكررة الفارغ أو تطلب تحذيرات تحتوي على حقول أوامر الأموال.
+
+استمر في إلغاء البيانات المكررة داخل نطاق التاجر و`environment` والتزم بها تلقائيًا في معالجة الأعمال. `FIRST` / `UPGRADE` / `REMINDER` مع قيم `notificationId` مختلفة تكون مستقلة؛ لا تتخلص منها عن طريق التجميع حسب المستخدم أو الحلقة أو `eventType`. المفتاح الفارغ يعني أنه لا يمكن استخراج هوية صالحة. يقوم SDK بإرجاع مفتاح مساعد فقط؛ ولا يحتفظ بالسجلات أو يقوم بمعالجة الأعمال. تسجيل نفس الهوية مع هيئة مختلفة كالصراع؛ لا تكتب فوق الجسم المعالج.
+
+<span id="liquidation-warning-fields-and-example" data-sixmm-canonical-anchor="liquidation-warning-fields-and-example" aria-hidden="true"></span>
+
+## حقول التحذير من التصفية والأمثلة
+
+| مجال | النوع / الوصف |
+| --- | --- |
+| `notificationId` | سلسلة عدد صحيح عشري موجب؛ معرف الإخطار الفريد. لا تقم بتحويله إلى رقم الفاصلة العائمة. |
+| `eventType` | `FIRST`: الإنذار الأول في الحلقة الحالية؛ `UPGRADE`: تمت ترقية المخاطر العادية إلى مخاطر عالية في هذه الحلقة؛ `REMINDER`: تذكير آخر بالمخاطر المستمرة. |
+| `severity` | `NORMAL` / `HIGH`. `FIRST` قد يكون بالفعل `HIGH`؛ `UPGRADE` هو `HIGH`؛ `REMINDER` قد يكون `NORMAL` أو `HIGH`. |
+| `occurredAt` | JSON الرقم؛ Unix بالمللي ثانية عندما تم تشغيل التحذير، وليس عند وصول التسليم HTTP. |
+| `object` | `type=CROSS`: حساب هامشي، مع سلاسل فارغة لـ `symbol`، `side`، و`positionId`. `ISOLATED`: موضع هامش معزول، يحمل العقد المقابل ومعرف الجانب والموقع. |
+| `episode` | خيط؛ حلقة التحذير الحالية. `FIRST` لا يعني التحذير الأول للمستخدم على الإطلاق. |
+| `stateVersion` / `configVersion` | سلاسل؛ حالة المنبع/إصدار التكوين. لا تتجاهل الإشعارات بشكل مستقل بناءً على هذه الحقول. |
+| `riskRatio` / `minLargePositionValue` / `liquidationHighRiskThreshold` | سلاسل عشرية لنسبة المخاطر، وعتبة التحذير العادية، وعتبة المخاطر العالية. الحفاظ على الدقة. المنبع يحسب قواعد العتبة. |
+| `environment` | `PRODUCTION` / `SIMULATED`; عزل بواسطة بيئة الأموال التي تم تكوينها، وليس اسم الخادم. |
+| `agentId` / `agentCode` / `agentUserId` | سلاسل؛ معرف الوكيل ورمز الوكيل ومعرف المستخدم من جانب التاجر. |
+| `platformUserId` | خيط؛ معرف مستخدم النظام الأساسي العام المطابق لنتيجة الربط، وليس `user_id` الداخلي للخدمة. |
+
+```json
+{
+  "event": "liquidation.warning",
+  "notificationId": "68460336",
+  "eventType": "FIRST",
+  "severity": "NORMAL",
+  "occurredAt": 1791875870804,
+  "object": {
+    "type": "CROSS",
+    "symbol": "",
+    "side": "",
+    "positionId": ""
+  },
+  "episode": "3",
+  "stateVersion": "9",
+  "riskRatio": "0.29133109",
+  "minLargePositionValue": "0.20000000",
+  "liquidationHighRiskThreshold": "0.40000000",
+  "configVersion": "8",
+  "environment": "PRODUCTION",
+  "agentId": "16",
+  "agentCode": "DEMO",
+  "agentUserId": "merchant-user-001",
+  "platformUserId": "6054354872"
+}
+```
+
+<span id="transfer-result-example" data-sixmm-canonical-anchor="transfer-result-example" aria-hidden="true"></span>
+
+## مثال نتيجة النقل
+
+تحتفظ عمليات رد الاتصال بالأموال بأنواعها الحالية: `orderId` و`agentId` هي أرقام JSON؛ `amount` و `platformUserId` عبارة عن سلاسل. لا تقم بتطبيق اصطلاح سلسلة التحذير `agentId` على عمليات الاسترجاعات المالية. قراءة الأعداد الصحيحة الكبيرة دون فقدان الدقة باستخدام أنواع الأعداد الصحيحة/العشرية. `completedAt` هو UTC RFC3339؛ `ts` هي ثانية يونكس.
+
+```json
+{
+  "environment": "PRODUCTION",
+  "event": "transfer.completed",
+  "orderType": "transfer",
+  "orderId": 10001,
+  "orderNo": "merchant-order-001",
+  "targetStatus": "SUCCESS",
+  "agentId": 16,
+  "agentCode": "DEMO",
+  "currency": "USDT",
+  "amount": "10.00",
+  "direction": "IN",
+  "transferMode": "FIXED_AMOUNT",
+  "agentUserId": "merchant-user-001",
+  "platformUserId": "6054354872",
+  "rejectCode": 0,
+  "rejectMessage": "",
+  "failReason": "",
+  "completedAt": "2026-10-13T07:17:50Z",
+  "ts": 1791875870
+}
+```
+
+<span id="reversal-result-example" data-sixmm-canonical-anchor="reversal-result-example" aria-hidden="true"></span>
+
+## مثال على نتيجة الانعكاس
+
+```json
+{
+  "environment": "PRODUCTION",
+  "event": "reverse.completed",
+  "orderType": "transfer",
+  "orderId": 10002,
+  "orderNo": "merchant-reverse-001",
+  "targetStatus": "SUCCESS",
+  "agentId": 16,
+  "agentCode": "DEMO",
+  "currency": "USDT",
+  "amount": "10.00",
+  "direction": "IN",
+  "transferMode": "FIXED_AMOUNT",
+  "agentUserId": "merchant-user-001",
+  "platformUserId": "6054354872",
+  "rejectCode": 0,
+  "rejectMessage": "",
+  "failReason": "",
+  "completedAt": "2026-10-13T07:17:50Z",
+  "ts": 1791875870
+}
+```
+
+<span id="funds-order-dead-state-example" data-sixmm-canonical-anchor="funds-order-dead-state-example" aria-hidden="true"></span>
+
+## طلب الصناديق مثال على الحالة الميتة
+
+```json
+{
+  "environment": "PRODUCTION",
+  "event": "transfer.dead",
+  "orderType": "transfer",
+  "orderId": 10003,
+  "orderNo": "merchant-order-002",
+  "targetStatus": "DEAD",
+  "agentId": 16,
+  "agentCode": "DEMO",
+  "currency": "USDT",
+  "amount": "10.00",
+  "direction": "IN",
+  "transferMode": "FIXED_AMOUNT",
+  "agentUserId": "merchant-user-001",
+  "platformUserId": "6054354872",
+  "rejectCode": 0,
+  "rejectMessage": "",
+  "failReason": "order dead",
+  "completedAt": "2026-10-13T07:17:50Z",
+  "ts": 1791875870
+}
+```
+
+تظهر هذه الأمثلة البروتوكول فقط. بالنسبة إلى `FAILED`، و`rejectCode`، و`rejectMessage`، و`failReason` تعكس الرفض الفعلي. اسم الحدث وحده لا يثبت أنه تم إضافة الأموال.
+
+[التحقق من التوقيع والاستجابات وإعادة المحاولة](/ar/sdk/security/webhooks-idempotency)

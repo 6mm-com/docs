@@ -93,3 +93,18 @@ Tinjau verifikasi panggilan balik dan penanganan peristiwa duplikat.
 | Metode Java baru tidak ada | Periksa artefak Maven yang terselesaikan terhadap tag publik `v0.3.0`; hapus dependensi yang bertentangan sesuai dengan kebijakan artefak Anda. |
 
 [Referensi kueri dan kesalahan](/id/sdk/agent-sdk/java/perpetual-queries) · [Panduan peningkatan](/id/sdk/agent-sdk/java/upgrade)
+
+<span id="webhook-receiving-issues" data-sixmm-canonical-anchor="webhook-receiving-issues" aria-hidden="true"></span>
+
+## Webhook menerima masalah
+
+| Gejala | Periksa dan penanganannya |
+| --- | --- |
+| Tidak ada percobaan ulang setelah kembali gagal JSON | Periksa apakah titik akhir masih mengembalikan HTTP 200. Pengiriman hanya menggunakan status HTTP, bukan indikator keberhasilan di isi. |
+| Percobaan ulang dilanjutkan setelah 401 atau 409 | Respons non-2xx mengikuti kebijakan percobaan ulang yang ada; menyelidiki tanda tangan, konten pemberitahuan, atau konfigurasi pedagang. |
+| Kunci idempotensi kosong untuk peringatan likuidasi | `WebhookVerifier.idempotencyKey` saat ini hanya mengekstrak identitas peristiwa dana. Setelah pemeriksaan tanda tangan dan kepemilikan, validasi `notificationId` dan buat kunci peringatan dalam kode pedagang. Jangan pernah menggunakan kunci kosong. |
+| Pemberitahuan duplikat setelah pemrosesan berhasil | Pertahankan deduplikasi dalam cakupan pedagang dan `environment`. Kembalikan 2xx untuk duplikat yang identik; rekam konflik dan kembalikan non-2xx untuk ID yang sama dengan isi yang berbeda. |
+| Peringatan tidak diproses | Terima `liquidation.warning` dan `LIQUIDATION_WARNING` historis; jangan mengelompokkan ID notifikasi yang berbeda berdasarkan pengguna, episode, atau jenis acara dan membuangnya. |
+| Notifikasi yang diterima akan kehilangan tugasnya yang tertunda | Simpan tugas dengan andal sebelum mengembalikan 2xx; memulai tugas asinkron dalam memori tidaklah cukup. |
+
+[Bidang acara dan kompatibilitas](/id/sdk/agent-sdk/java/webhook-events) · [HTTP tanggapan dan pengakuan yang dapat diandalkan](/id/sdk/security/webhooks-idempotency)

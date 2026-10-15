@@ -1,11 +1,13 @@
 ---
 title: "Webhook Verificación de firma e idempotencia"
-subtitle: "Verifique el 6MM Agente webhooks con el cuerpo de la solicitud sin procesar y procese reintentos, tiempos de espera y eventos repetidos sin acciones comerciales duplicadas."
+subtitle: "Verifique los cuerpos Webhook sin procesar, reconozca el uso de códigos de estado HTTP y maneje los reintentos y duplicados de manera confiable."
 slug: sdk/security/webhooks-idempotency
 canonical-url: https://docs.6mm.com/es-ES/sdk/security/webhooks-idempotency
 ---
 
-Webhooks notifica a un socio backend sobre cambios asincrónicos en el estado del negocio. Debido a que se puede volver a intentar la entrega, cada receptor debe verificar la firma antes de analizar los datos confiables y debe procesar el evento de manera idempotente.
+Esta página sigue [Agent Java SDK `WEBHOOKS.md`](https://github.com/6mm-com/agent-java-sdk/blob/fa6c7b65124f1346f815b3b73eb8a7729466c3dc/WEBHOOKS.md) en el compromiso `fa6c7b6`. Esta es una actualización de documentación únicamente; no se lanzó ningún nuevo artefacto SDK que contenga métodos auxiliares de advertencia.
+
+Los cuatro tipos de eventos utilizan una devolución de llamada del comerciante URL y son enviados por el cuerpo `event`. Ver [Webhook Eventos y advertencias de liquidación](/es-ES/sdk/agent-sdk/java/webhook-events) para campos de eventos y ejemplos de carga útil.
 
 <span id="webhook-headers" data-sixmm-canonical-anchor="webhook-headers" aria-hidden="true"></span>
 
@@ -13,90 +15,118 @@ Webhooks notifica a un socio backend sobre cambios asincrónicos en el estado de
 
 | Encabezamiento | Descripción |
 | --- | --- |
-| Marca de tiempo del Agente X | Marca de tiempo de Unix en segundos. |
-| Agente X-Nonce | Nonce de protección de reproducción. |
-| Firma del agente X | HMAC-SHA256 firma. |
+| `X-Agent-Timestamp` | Marca de tiempo de Unix en segundos. |
+| `X-Agent-Nonce` | Mientras tanto. |
+| `X-Agent-Signature` | HMAC-SHA256 firma hexadecimal. |
 
 ```text
 timestamp + nonce + rawBody
 ```
 
-Utilice el cuerpo exacto de la solicitud sin procesar recibido durante HTTP al reconstruir el valor firmado. Analizar y volver a serializar JSON primero puede cambiar los espacios en blanco o el orden de los campos y producir una firma diferente.
+<span id="order-idempotency" data-sixmm-canonical-anchor="order-idempotency" aria-hidden="true"></span>
+
+## Idempotencia del evento
+
+Persista la deduplicación dentro del comerciante y `environment` alcance, atómicamente con el procesamiento comercial. Diferentes valores `notificationId` identifican notificaciones `FIRST` / `UPGRADE` / `REMINDER` independientes; no descartes las notificaciones agrupándolas por usuario, episodio o `eventType`. No se puede utilizar una clave de idempotencia vacía para la deduplicación. El SDK solo devuelve una clave auxiliar; no persiste ni procesa datos comerciales. Registrar la misma identidad con un organismo diferente como conflicto; no sobrescriba el cuerpo procesado.
 
 <span id="verification-flow" data-sixmm-canonical-anchor="verification-flow" aria-hidden="true"></span>
 
-## Flujo de verificación
+## Verificación y recepción de firma.
 
-1. Lea los encabezados de marca de tiempo, nonce y firma.
-2. Capture el cuerpo de la solicitud sin modificar.
-3. Construya `timestamp + nonce + rawBody`.
-4. Calcula HMAC-SHA256 con el socio API secreto.
-5. Compare las firmas calculadas y recibidas mediante una comparación de tiempo constante.
-6. Aplique las comprobaciones aprobadas de frescura y no reutilización de la marca de tiempo.
-7. Analice y procese el evento solo después de que la verificación sea exitosa.
+Utilice el secreto comercial API para calcular la firma hexadecimal HMAC-SHA256 de `timestamp + nonce + rawBody`. Verifique los bytes recibidos originales; no formatee JSON, cambie el nombre de los campos ni vuelva a serializar el cuerpo primero.
 
-Cuando esté disponible un verificador oficial Agent SDK, utilícelo en lugar de mantener un código de firma independiente.
+Primero verifique la firma, luego verifique la ventana de tiempo (recomendado ±300 segundos), el comerciante y el entorno. A continuación, extraiga la identidad de idempotencia y maneje la notificación de manera confiable. Preservar valores de eventos desconocidos para el diagnóstico; Nunca los interpretes como éxito de los fondos. El asistente de verificación no realiza comprobaciones de ventana de tiempo, propiedad o deduplicación persistente.
 
-<span id="order-idempotency" data-sixmm-canonical-anchor="order-idempotency" aria-hidden="true"></span>
+Devuelve HTTP 2xx después de completar el procesamiento o confirmar un duplicado idéntico; devolver no-2xx en caso de error. El remitente de la advertencia tiene un tiempo de espera de 5 segundos HTTP y como máximo 8 intentos. Los reintentos retienen el cuerpo congelado; solo cambian la marca de tiempo de la firma y el nonce. Responder con prontitud después de una aceptación confiable; El trabajo comercial de larga duración puede utilizar las tareas persistentes del propio comerciante.
 
-## Idempotencia del orden
+Las notificaciones de los comerciantes no dependen del estado en línea del usuario. Los envíos de los usuarios de la plataforma se realizan únicamente en línea con el mejor esfuerzo posible, sin repetición fuera de línea; La fase uno no tiene bandeja de entrada de notificaciones.
 
-| Caso | Manejo |
+<span id="successful-responses-and-stopping-retries" data-sixmm-canonical-anchor="successful-responses-and-stopping-retries" aria-hidden="true"></span>
+
+### Respuestas exitosas y detención de reintentos
+
+Las devoluciones de llamada de fondos y las advertencias de liquidación utilizan **solo el código de estado HTTP** para determinar el éxito de la entrega. El remitente no interpreta el cuerpo de la respuesta `code`, `success`, `result` o `message`, y no requiere una respuesta fija `OK`/`success`.
+
+| Respuesta del comerciante | Comportamiento de la plataforma |
 | --- | --- |
-| Solicitud de transferencia inicial | Cree un agentOrderNo único a nivel mundial. |
-| HTTP tiempo de espera | Consulta el agentOrderNo original antes de crear uno nuevo. |
-| PROCESSING respuesta | Espere a webhook o consulte el estado del pedido. |
-| webhook repetido | Deduplicar por clave de idempotencia y estado final. |
+| HTTP 200–299, incluidos 200, 202 y 204 | La entrega es exitosa; Los reenvíos automáticos se detienen después de que persiste el estado de éxito. |
+| Respuesta final que no es 2xx, incluidas 400, 401, 403, 409, 429, 500 y 503 | La entrega falla y los reintentos siguen la política de retraso existente; después del límite de intentos se marca `DEAD`. Un 4xx no reconoce automáticamente la notificación. |
+| Fallo de conexión o tiempo de espera de respuesta sin una respuesta utilizable | El resultado no se confirma y se vuelve a intentar según la política de fallas. |
+
+El cuerpo de la respuesta puede estar vacío, texto o JSON. Los campos de ejemplo `result` son ​​informativos para el comerciante, no requisitos de protocolo. `202 Accepted` también detiene los reintentos de la plataforma, así que devuélvalo solo después de guardar de manera confiable la notificación en la cola de tareas persistentes del comerciante, no simplemente iniciando una tarea asíncrona en memoria.
+
+<span id="successful-response-examples" data-sixmm-canonical-anchor="successful-response-examples" aria-hidden="true"></span>
+
+### Ejemplos de respuestas exitosas
+
+Una vez que se completa el procesamiento comercial o la notificación se guarda de manera confiable en la cola pendiente del comerciante:
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"result":"RECEIVED"}
+```
+
+Cuando no se necesita un cuerpo de respuesta:
+
+```http
+HTTP/1.1 204 No Content
+```
+
+Para una notificación ya procesada con un cuerpo idéntico, omita el procesamiento comercial duplicado y aún así devuelva 2xx:
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"result":"DUPLICATE"}
+```
+
+<span id="failure-response-examples" data-sixmm-canonical-anchor="failure-response-examples" aria-hidden="true"></span>
+
+### Ejemplos de respuesta a fallos
+
+Si la base de datos no está disponible temporalmente y el comerciante no completó el procesamiento ni guardó de manera confiable la notificación, devuelva non-2xx para que la plataforma pueda volver a intentarlo:
+
+```http
+HTTP/1.1 503 Service Unavailable
+Content-Type: application/json
+
+{"result":"FAILED","message":"temporary storage failure"}
+```
+
+Rechazar una firma no válida sin actualizar datos comerciales o registros de deduplicación exitosos:
+
+```http
+HTTP/1.1 401 Unauthorized
+Content-Type: application/json
+
+{"result":"INVALID_SIGNATURE"}
+```
+
+Estos cuerpos de respuesta no cambian las decisiones de reintento. No espere que un 401 o 409 detenga permanentemente los reintentos; investigue la firma, el contenido de la notificación o la configuración del comerciante.
+
+**Ejemplo incorrecto: la siguiente respuesta aún cuenta como entrega exitosa. La plataforma no volverá a intentarlo debido a `success:false`.**
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"success":false,"code":500,"message":"processing failed"}
+```
+
+Si el marco o el controlador de excepciones global envuelve las fallas comerciales en HTTP 200, establezca explícitamente el estado de falla correcto en el punto final de devolución de llamada.
 
 <span id="recommended-idempotency-record" data-sixmm-canonical-anchor="recommended-idempotency-record" aria-hidden="true"></span>
 
-## Registro de idempotencia recomendado
+### Acuse de recibo confiable y entrega duplicada
 
-Almacene suficiente información para reconocer una entrega repetida y recuperarla de forma segura:
+Orden recomendado: verificar la firma y verificar la hora/comerciante/entorno → extraer la identidad de idempotencia → procesar datos comerciales y registros de deduplicación exitosos en una transacción, o guardar de manera confiable una tarea pendiente → devolver 200/204 después de que la confirmación sea exitosa. No devuelva 2xx ni marque la notificación procesada antes de una escritura exitosa en la base de datos.
 
-| Campo | Objetivo |
-| --- | --- |
-| Clave de evento o negocio | Identifica de forma única la notificación u operación. |
-| Número de pedido del socio | Conecta el evento a la solicitud original. |
-| hash de carga útil | Ayuda a identificar cargas útiles repetidas y conflictivas. |
-| Estado de procesamiento actual | Distingue el trabajo recibido, procesado, exitoso y fallido. |
-| Estado comercial final | Evita que una acción terminal se aplique dos veces. |
-| Marca de tiempo procesada | Apoya las políticas de investigación y retención. |
+Aún puede ocurrir una entrega duplicada después de que el procesamiento del comerciante sea exitoso: la respuesta puede perderse o la plataforma puede recibir 2xx pero no persistir `SUCCESS`. HTTP las devoluciones de llamada no garantizan una entrega única. Mantener la deduplicación dentro del alcance del comerciante y `environment`. Uso de fondos `orderType:orderId:targetStatus`; las advertencias utilizan `liquidation.warning:notificationId`. Para un cuerpo idéntico ya procesado, devuelva 2xx sin acreditar fondos ni emitir un recordatorio nuevamente. Para la misma identidad con un cuerpo diferente, registre un conflicto y devuelva un valor distinto de 2xx; no sobrescriba el registro original.
 
-Confirme el cambio de negocio y el registro de idempotencia en la misma transacción cuando sea posible. Un evento repetido debería devolver el resultado ya conocido en lugar de aplicar nuevamente el saldo, el pedido o el cambio de usuario.
-
-<span id="timeout-and-retry-rule" data-sixmm-canonical-anchor="timeout-and-retry-rule" aria-hidden="true"></span>
-
-## Regla de tiempo de espera y reintento
-
-Un tiempo de espera de HTTP no prueba que la solicitud original haya fallado. Consulte la operación utilizando el `agentOrderNo` original, o espere su webhook, antes de decidir si se requiere otra acción. Crear un nuevo número de orden comercial después de cada tiempo de espera puede provocar movimientos de fondos duplicados.
-
-<span id="production-checklist" data-sixmm-canonical-anchor="production-checklist" aria-hidden="true"></span>
-
-## Lista de verificación de producción
-
-- Verifique la firma antes de JSON análisis o procesamiento comercial.
-- Conserve el cuerpo sin procesar independientemente de la carga útil analizada.
-- Rechace solicitudes obsoletas o reproducidas de acuerdo con la política de integración aprobada.
-- Haga que el procesamiento de eventos sea seguro para entregas repetidas y fuera de orden.
-- Registre los ID de eventos, los números de pedidos de los socios, el resultado del procesamiento y la hora de la solicitud.
-- Redactar secretos y valores de firma de registros y archivos adjuntos de soporte.
-
-<span id="related-docs" data-sixmm-canonical-anchor="related-docs" aria-hidden="true"></span>
-
-## Documentos relacionados
-
-<CardGroup cols={3}>
-<Card title="Secretos y HMAC Firma" icon="fa-duotone fa-shield-keyhole" href="/es-ES/sdk/security/secrets-signing">
-Proteja el secreto API utilizado para la solicitud y la verificación webhook.
-</Card>
-<Card title="Agent SDK Descripción general" icon="fa-duotone fa-server" href="/es-ES/sdk/agent-sdk/overview">
-Revise el flujo de trabajo completo de integración de backend.
-</Card>
-<Card title="SDK Solución de problemas" icon="fa-duotone fa-screwdriver-wrench" href="/es-ES/sdk/security/troubleshooting">
-Investiga firmas rechazadas, eventos repetidos y operaciones pendientes.
-</Card>
-</CardGroup>
+El reconocimiento exitoso significa que el comerciante recibió/procesó la notificación, no que la operación de fondos se realizó correctamente. Después de registrar una notificación de fondos válida con `targetStatus=FAILED`, devuelva también 2xx; el fracaso del pedido no es motivo para rechazar el acuse de recibo de la notificación.
 
 <span id="funding-and-environment-boundaries" data-sixmm-canonical-anchor="funding-and-environment-boundaries" aria-hidden="true"></span>
 

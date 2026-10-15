@@ -93,3 +93,18 @@ Agent SDK 자격 증명, 시계 및 서명된 필드를 확인하세요.
 | 새로운 Java 메서드가 누락되었습니다. | 공개 태그 `v0.3.0`와 비교하여 해결된 Maven 아티팩트를 확인하세요. 아티팩트 정책에 따라 충돌하는 종속성을 제거합니다. |
 
 [쿼리 및 오류 참조](/ko/sdk/agent-sdk/java/perpetual-queries) · [업그레이드 가이드](/ko/sdk/agent-sdk/java/upgrade)
+
+<span id="webhook-receiving-issues" data-sixmm-canonical-anchor="webhook-receiving-issues" aria-hidden="true"></span>
+
+## Webhook 수신 문제
+
+| 징후 | 점검 및 취급 |
+| --- | --- |
+| 실패 반환 후 재시도 없음 JSON | 엔드포인트가 여전히 HTTP 200을 반환하는지 확인하세요. 전달은 본문의 성공 표시기가 아닌 HTTP 상태만 사용합니다. |
+| 401 또는 409 이후에도 재시도가 계속됩니다. | 2xx가 아닌 응답은 기존 재시도 정책을 따릅니다. 서명, 알림 내용 또는 판매자 구성을 조사합니다. |
+| 청산 경고에 대한 빈 멱등성 키 | 현재 `WebhookVerifier.idempotencyKey`는 자금 이벤트 ID만 추출합니다. 서명 및 소유권을 확인한 후 `notificationId`을 검증하고 판매자 코드에 경고 키를 생성합니다. 빈 키를 사용하지 마십시오. |
+| 성공적으로 처리된 후 중복 알림 | 판매자 및 `environment` 범위 내에서 중복 제거를 유지합니다. 동일한 중복에 대해서는 2xx를 반환합니다. 충돌을 기록하고 다른 본문을 가진 동일한 ID에 대해 2xx가 아닌 것을 반환합니다. |
+| 경고가 처리되지 않았습니다. | `liquidation.warning` 및 과거 `LIQUIDATION_WARNING`를 수락합니다. 사용자, 에피소드 또는 이벤트 유형별로 고유한 알림 ID를 그룹화하여 삭제하지 마세요. |
+| 수락된 알림이 보류 중인 작업을 잃습니다. | 2xx를 반환하기 전에 안정적으로 작업을 저장하세요. 메모리 내 비동기 작업을 시작하는 것만으로는 충분하지 않습니다. |
+
+[이벤트 필드 및 호환성](/ko/sdk/agent-sdk/java/webhook-events) · [HTTP 응답 및 안정적인 승인](/ko/sdk/security/webhooks-idempotency)

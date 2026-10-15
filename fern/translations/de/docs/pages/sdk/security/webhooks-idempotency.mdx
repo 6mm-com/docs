@@ -1,11 +1,13 @@
 ---
 title: "Webhook Signaturüberprüfung und Idempotenz"
-subtitle: "Überprüfen Sie den Agenten 6MM webhooks anhand des rohen Anforderungstexts und verarbeiten Sie Wiederholungsversuche, Zeitüberschreitungen und wiederholte Ereignisse ohne doppelte Geschäftsaktionen."
+subtitle: "Überprüfen Sie rohe Webhook-Körper, bestätigen Sie mit HTTP-Statuscodes und verarbeiten Sie Wiederholungsversuche und Duplikate zuverlässig."
 slug: sdk/security/webhooks-idempotency
 canonical-url: https://docs.6mm.com/de/sdk/security/webhooks-idempotency
 ---
 
-Webhooks benachrichtigen ein Partner-Backend über asynchrone Änderungen des Geschäftsstatus. Da die Zustellung wiederholt werden kann, muss jeder Empfänger die Signatur überprüfen, bevor er vertrauenswürdige Daten analysiert, und das Ereignis idempotent verarbeiten.
+Diese Seite folgt [Agent Java SDK `WEBHOOKS.md`](https://github.com/6mm-com/agent-java-sdk/blob/fa6c7b65124f1346f815b3b73eb8a7729466c3dc/WEBHOOKS.md) beim Commit `fa6c7b6`. Dies ist ein reines Dokumentationsupdate. Es wurde kein neues SDK-Artefakt veröffentlicht, das Warnhilfsmethoden enthält.
+
+Alle vier Ereignistypen verwenden einen Händler-Callback URL und werden vom Body `event` versendet. Sehen [Webhook Ereignisse und Liquidationswarnungen](/de/sdk/agent-sdk/java/webhook-events) für Ereignisfelder und Payload-Beispiele.
 
 <span id="webhook-headers" data-sixmm-canonical-anchor="webhook-headers" aria-hidden="true"></span>
 
@@ -13,90 +15,118 @@ Webhooks benachrichtigen ein Partner-Backend über asynchrone Änderungen des Ge
 
 | Kopfzeile | Beschreibung |
 | --- | --- |
-| X-Agent-Zeitstempel | Unix-Zeitstempel in Sekunden. |
-| X-Agent-Nonce | Wiedergabeschutz-Nonce. |
-| X-Agent-Signatur | HMAC-SHA256 Signatur. |
+| `X-Agent-Timestamp` | Unix-Zeitstempel in Sekunden. |
+| `X-Agent-Nonce` | Nonce. |
+| `X-Agent-Signature` | HMAC-SHA256 Hexadezimale Signatur. |
 
 ```text
 timestamp + nonce + rawBody
 ```
 
-Verwenden Sie bei der Rekonstruktion des vorzeichenbehafteten Werts den genauen rohen Anforderungstext, der über HTTP empfangen wurde. Das erste Parsen und erneute Serialisieren von JSON kann die Leerzeichen- oder Feldreihenfolge ändern und eine andere Signatur erzeugen.
+<span id="order-idempotency" data-sixmm-canonical-anchor="order-idempotency" aria-hidden="true"></span>
+
+## Ereignis-Idempotenz
+
+Behalten Sie die Deduplizierung innerhalb des Händler- und `environment`-Bereichs bei, atomar mit der Geschäftsverarbeitung. Verschiedene `notificationId`-Werte identifizieren unabhängige `FIRST`/`UPGRADE`/`REMINDER`-Benachrichtigungen; Verwerfen Sie Benachrichtigungen nicht durch Gruppierung nach Benutzer, Episode oder `eventType`. Ein leerer Idempotenzschlüssel kann nicht für die Deduplizierung verwendet werden. Der SDK gibt nur einen Hilfsschlüssel zurück; Es werden keine Geschäftsdaten gespeichert oder verarbeitet. Erfassen Sie dieselbe Identität mit einer anderen Stelle als Konflikt. Überschreiben Sie nicht den verarbeiteten Körper.
 
 <span id="verification-flow" data-sixmm-canonical-anchor="verification-flow" aria-hidden="true"></span>
 
-## Verifizierungsablauf
+## Überprüfung und Empfang der Unterschrift
 
-1. Lesen Sie die Zeitstempel-, Nonce- und Signatur-Header.
-2. Erfassen Sie den unveränderten rohen Anforderungstext.
-3. Erstellen Sie `timestamp + nonce + rawBody`.
-4. Berechnen Sie HMAC-SHA256 mit dem Partner-Geheimnis API.
-5. Vergleichen Sie die berechneten und empfangenen Signaturen mithilfe eines zeitkonstanten Vergleichs.
-6. Wenden Sie die genehmigten Zeitstempelaktualisierungs- und Nonce-Wiederverwendungsprüfungen an.
-7. Analysieren und verarbeiten Sie das Ereignis erst, nachdem die Überprüfung erfolgreich war.
+Verwenden Sie das Händlergeheimnis API, um die HMAC-SHA256 Hexadezimalsignatur von `timestamp + nonce + rawBody` zu berechnen. Überprüfen Sie die ursprünglich empfangenen Bytes. Formatieren Sie JSON nicht, benennen Sie Felder nicht um und serialisieren Sie den Text nicht zuerst neu.
 
-Wenn ein offizieller Prüfer Agent SDK verfügbar ist, verwenden Sie ihn, anstatt einen unabhängigen Signaturcode zu verwalten.
+Überprüfen Sie zuerst die Signatur und dann das Zeitfenster (empfohlen ±300 Sekunden), den Händler und die Umgebung. Extrahieren Sie als Nächstes die Idempotenzidentität und verarbeiten Sie die Benachrichtigung zuverlässig. Unbekannte Ereigniswerte für die Diagnose aufbewahren; Interpretieren Sie sie niemals als Erfolg des Fonds. Der Überprüfungshelfer führt keine Zeitfenster-, Besitz- oder dauerhaften Deduplizierungsprüfungen durch.
 
-<span id="order-idempotency" data-sixmm-canonical-anchor="order-idempotency" aria-hidden="true"></span>
+Geben Sie HTTP 2xx zurück, nachdem die Verarbeitung abgeschlossen oder ein identisches Duplikat bestätigt wurde. Bei Fehler Nicht-2xx zurückgeben. Der Absender der Warnung hat eine Zeitüberschreitung von 5 Sekunden HTTP und maximal 8 Versuche. Bei Wiederholungsversuchen bleibt der eingefrorene Körper erhalten; Nur der Signaturzeitstempel und die Nonce ändern sich. Reagieren Sie zeitnah nach zuverlässiger Annahme; Langfristige Geschäftsarbeiten können die eigenen persistenten Aufgaben des Händlers nutzen.
 
-## Orderen Sie Idempotenz
+Händlerbenachrichtigungen hängen nicht vom Online-Status des Benutzers ab. Plattformbenutzer-Pushs erfolgen ausschließlich online und nach bestem Wissen und Gewissen, ohne Offline-Wiedergabe. Phase eins hat keinen Benachrichtigungseingang.
 
-| Fall | Handhabung |
+<span id="successful-responses-and-stopping-retries" data-sixmm-canonical-anchor="successful-responses-and-stopping-retries" aria-hidden="true"></span>
+
+### Erfolgreiche Antworten und Stoppen von Wiederholungsversuchen
+
+Fondsrückrufe und Liquidationswarnungen verwenden **nur den HTTP-Statuscode**, um den Liefererfolg zu bestimmen. Der Absender interpretiert den Antworttext `code`, `success`, `result` oder `message` nicht und erfordert keine feste Antwort `OK` / `success`.
+
+| Antwort des Händlers | Plattformverhalten |
 | --- | --- |
-| Erster Transferantrag | Erstellen Sie ein weltweit eindeutiges agentOrderNo. |
-| HTTP Zeitüberschreitung | Fragen Sie den ursprünglichen agentOrderNo ab, bevor Sie einen neuen erstellen. |
-| PROCESSING Antwort | Warten Sie auf webhook oder fragen Sie den Orderstatus ab. |
-| Wiederholt webhook | Deduplizieren nach Idempotenzschlüssel und Endstatus. |
+| HTTP 200–299, einschließlich 200, 202 und 204 | Die Zustellung ist erfolgreich; Automatische erneute Sendungen werden gestoppt, nachdem der Erfolgsstatus bestehen bleibt. |
+| Endgültige Nicht-2xx-Antwort, einschließlich 400, 401, 403, 409, 429, 500 und 503 | Die Zustellung schlägt fehl und Wiederholungsversuche folgen der bestehenden Backoff-Richtlinie. nach dem Versuchslimit wird es mit `DEAD` markiert. Ein 4xx quittiert die Benachrichtigung nicht automatisch. |
+| Verbindungsfehler oder Antwortzeitüberschreitung ohne verwendbare Antwort | Das Ergebnis wird nicht bestätigt und gemäß der Fehlerrichtlinie erneut versucht. |
+
+Der Antworttext kann leer, Text oder JSON sein. Die Beispielfelder `result` dienen der Information des Händlers und sind keine Protokollanforderungen. `202 Accepted` stoppt auch Plattform-Wiederholungsversuche. Geben Sie es daher erst zurück, nachdem die Benachrichtigung zuverlässig in der permanenten Aufgabenwarteschlange des Händlers gespeichert wurde, und nicht nur nach dem Starten einer asynchronen Aufgabe im Arbeitsspeicher.
+
+<span id="successful-response-examples" data-sixmm-canonical-anchor="successful-response-examples" aria-hidden="true"></span>
+
+### Beispiele für erfolgreiche Antworten
+
+Nachdem die Geschäftsverarbeitung abgeschlossen ist oder die Benachrichtigung zuverlässig in der eigenen Warteschleife des Händlers gespeichert wurde:
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"result":"RECEIVED"}
+```
+
+Wenn kein Antworttext erforderlich ist:
+
+```http
+HTTP/1.1 204 No Content
+```
+
+Überspringen Sie bei einer bereits verarbeiteten Benachrichtigung mit identischem Text die doppelte Geschäftsverarbeitung und geben Sie trotzdem 2xx zurück:
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"result":"DUPLICATE"}
+```
+
+<span id="failure-response-examples" data-sixmm-canonical-anchor="failure-response-examples" aria-hidden="true"></span>
+
+### Beispiele für Fehlerreaktionen
+
+Wenn die Datenbank vorübergehend nicht verfügbar ist und der Händler die Verarbeitung weder abgeschlossen noch die Benachrichtigung zuverlässig gespeichert hat, geben Sie „non-2xx“ zurück, damit die Plattform es erneut versuchen kann:
+
+```http
+HTTP/1.1 503 Service Unavailable
+Content-Type: application/json
+
+{"result":"FAILED","message":"temporary storage failure"}
+```
+
+Lehnen Sie eine ungültige Signatur ab, ohne Geschäftsdaten oder erfolgreiche Deduplizierungsdatensätze zu aktualisieren:
+
+```http
+HTTP/1.1 401 Unauthorized
+Content-Type: application/json
+
+{"result":"INVALID_SIGNATURE"}
+```
+
+Diese Antwortkörper ändern keine Wiederholungsentscheidungen. Erwarten Sie nicht, dass ein 401 oder 409 Wiederholungsversuche dauerhaft stoppt. Untersuchen Sie die Signatur, den Benachrichtigungsinhalt oder die Händlerkonfiguration.
+
+**Falsches Beispiel: Die folgende Antwort zählt weiterhin als erfolgreiche Zustellung. Die Plattform führt aufgrund von `success:false` keinen erneuten Versuch durch.**
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"success":false,"code":500,"message":"processing failed"}
+```
+
+Wenn das Framework oder der globale Ausnahmehandler Geschäftsausfälle in HTTP 200 umschließt, legen Sie explizit den richtigen Fehlerstatus am Callback-Endpunkt fest.
 
 <span id="recommended-idempotency-record" data-sixmm-canonical-anchor="recommended-idempotency-record" aria-hidden="true"></span>
 
-## Empfohlener Idempotenz-Datensatz
+### Zuverlässige Quittierung und Duplikatzustellung
 
-Speichern Sie genügend Informationen, um eine wiederholte Zustellung zu erkennen und sicher wiederherzustellen:
+Empfohlene Reihenfolge: Überprüfen Sie die Signatur und überprüfen Sie Zeit/Händler/Umgebung → extrahieren Sie die Idempotenzidentität → verarbeiten Sie Geschäftsdaten und erfolgreiche Deduplizierungsdatensätze in einer Transaktion oder speichern Sie eine ausstehende Aufgabe zuverlässig → geben Sie 200/204 zurück, nachdem das Commit erfolgreich war. Geben Sie vor einem erfolgreichen Datenbankschreibvorgang nicht 2xx zurück und markieren Sie die Benachrichtigung nicht als verarbeitet.
 
-| Feld | Zweck |
-| --- | --- |
-| Ereigniss- oder Geschäftsschlüssel | Identifiziert die Benachrichtigung oder den Vorgang eindeutig. |
-| Ordernummer des Partners | Verbindet das Ereignis mit der ursprünglichen Anfrage. |
-| Nutzlast-Hash | Hilft bei der Identifizierung widersprüchlicher wiederholter Nutzlasten. |
-| Aktueller Bearbeitungsstand | Unterscheidet zwischen empfangener, verarbeiteter, erfolgreicher und fehlgeschlagener Arbeit. |
-| Endgültiger Geschäftsstatus | Verhindert, dass eine Terminalaktion zweimal angewendet wird. |
-| Verarbeiteter Zeitstempel | Unterstützt Untersuchungs- und Aufbewahrungsrichtlinien. |
+Nach erfolgreicher Händlerverarbeitung kann es immer noch zu einer doppelten Zustellung kommen: Die Antwort geht möglicherweise verloren oder die Plattform empfängt möglicherweise 2xx, bleibt aber nicht bestehen `SUCCESS`. HTTP Rückrufe garantieren keine einmalige Zustellung. Behalten Sie die Deduplizierung im Händler- und `environment`-Bereich bei. Mittelverwendung `orderType:orderId:targetStatus`; Warnungen verwenden `liquidation.warning:notificationId`. Für einen identischen bereits bearbeiteten Körper senden Sie 2xx ohne Gutschrift oder erneute Mahnung zurück. Zeichnen Sie für dieselbe Identität mit einem anderen Körper einen Konflikt auf und geben Sie Nicht-2xx zurück. Überschreiben Sie nicht den ursprünglichen Datensatz.
 
-Übernehmen Sie die Geschäftsänderung und den Idempotenzdatensatz nach Möglichkeit in derselben Transaktion. Ein wiederholtes Ereignis sollte das bereits bekannte Ergebnis zurückgeben, anstatt den Kontostand, die Order oder die Benutzeränderung erneut anzuwenden.
-
-<span id="timeout-and-retry-rule" data-sixmm-canonical-anchor="timeout-and-retry-rule" aria-hidden="true"></span>
-
-## Timeout- und Wiederholungsregel
-
-Eine HTTP-Zeitüberschreitung beweist nicht, dass die ursprüngliche Anfrage fehlgeschlagen ist. Fragen Sie den Vorgang mit dem ursprünglichen `agentOrderNo` ab oder warten Sie auf dessen webhook, bevor Sie entscheiden, ob eine weitere Aktion erforderlich ist. Das Erstellen einer neuen Geschäftsauftragsnummer nach jeder Zeitüberschreitung kann zu doppelten Geldbewegungen führen.
-
-<span id="production-checklist" data-sixmm-canonical-anchor="production-checklist" aria-hidden="true"></span>
-
-## Checkliste für die Produktion
-
-- Überprüfen Sie vorher die Signatur JSON Parsing oder Geschäftsverarbeitung.
-- Bewahren Sie den Rohkörper unabhängig von der analysierten Nutzlast auf.
-- Lehnen Sie veraltete oder wiederholte Anfragen gemäß der genehmigten Integrationsrichtlinie ab.
-- Machen Sie die Ereignisverarbeitung für wiederholte und nicht ordnungsgemäße Zustellung sicher.
-- Protokollieren Sie Ereignis-IDs, Partnerbestellnummern, Verarbeitungsergebnis und Anfragezeit.
-- Schwärzen Sie Geheimnisse und Signaturwerte aus Protokollen und Support-Anhängen.
-
-<span id="related-docs" data-sixmm-canonical-anchor="related-docs" aria-hidden="true"></span>
-
-## Verwandte Dokumente
-
-<CardGroup cols={3}>
-<Card title="Geheimnisse & HMAC Signieren" icon="fa-duotone fa-shield-keyhole" href="/de/sdk/security/secrets-signing">
-Schützen Sie das API-Geheimnis, das für die Anfrage und die webhook-Verifizierung verwendet wird.
-</Card>
-<Card title="Agent SDK Übersicht" icon="fa-duotone fa-server" href="/de/sdk/agent-sdk/overview">
-Sehen Sie sich den vollständigen Backend-Integrationsworkflow an.
-</Card>
-<Card title="SDK Fehlerbehebung" icon="fa-duotone fa-screwdriver-wrench" href="/de/sdk/security/troubleshooting">
-Untersuchen Sie abgelehnte Unterschriften, wiederholte Ereignisse und ausstehende Vorgänge.
-</Card>
-</CardGroup>
+Eine erfolgreiche Bestätigung bedeutet, dass der Händler die Benachrichtigung erhalten/verarbeitet hat und nicht, dass der Geldvorgang erfolgreich war. Nachdem Sie eine gültige Mittelmitteilung mit `targetStatus=FAILED` erfasst haben, geben Sie auch 2xx zurück; Das Scheitern einer Order ist kein Grund, die Bestätigung einer Benachrichtigung abzulehnen.
 
 <span id="funding-and-environment-boundaries" data-sixmm-canonical-anchor="funding-and-environment-boundaries" aria-hidden="true"></span>
 

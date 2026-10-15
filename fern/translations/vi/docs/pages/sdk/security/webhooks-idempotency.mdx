@@ -1,11 +1,13 @@
 ---
 title: "Webhook Xác minh chữ ký & quyền sở hữu"
-subtitle: "Xác minh 6MM Tác nhân webhooks với nội dung yêu cầu thô và các lần thử lại quy trình, hết thời gian chờ và các sự kiện lặp lại mà không có hành động kinh doanh trùng lặp."
+subtitle: "Xác minh nội dung Webhook thô, xác nhận bằng cách sử dụng mã trạng thái HTTP, đồng thời xử lý các lần thử lại và trùng lặp một cách đáng tin cậy."
 slug: sdk/security/webhooks-idempotency
 canonical-url: https://docs.6mm.com/vi/sdk/security/webhooks-idempotency
 ---
 
-Webhooks thông báo cho chương trình phụ trợ của đối tác về các thay đổi trạng thái doanh nghiệp không đồng bộ. Vì việc gửi có thể được thử lại nên mọi người nhận đều phải xác minh chữ ký trước khi phân tích cú pháp dữ liệu đáng tin cậy và phải xử lý sự kiện một cách bình thường.
+Trang này theo dõi [Agent Java SDK `WEBHOOKS.md`](https://github.com/6mm-com/agent-java-sdk/blob/fa6c7b65124f1346f815b3b73eb8a7729466c3dc/WEBHOOKS.md) tại cam kết `fa6c7b6`. Đây chỉ là bản cập nhật tài liệu; không có tạo phẩm SDK mới nào chứa các phương thức trợ giúp cảnh báo được phát hành.
+
+Tất cả bốn loại sự kiện đều sử dụng một lệnh gọi lại của người bán URL và được gửi đi bởi nội dung `event`. Nhìn thấy [Webhook Sự kiện & Cảnh báo thanh lý](/vi/sdk/agent-sdk/java/webhook-events) cho các trường sự kiện và ví dụ về tải trọng.
 
 <span id="webhook-headers" data-sixmm-canonical-anchor="webhook-headers" aria-hidden="true"></span>
 
@@ -13,90 +15,118 @@ Webhooks thông báo cho chương trình phụ trợ của đối tác về các
 
 | tiêu đề | Sự miêu tả |
 | --- | --- |
-| X-Agent-Dấu thời gian | Dấu thời gian Unix tính bằng giây. |
-| Đặc vụ X-Nonce | Bảo vệ chống phát lại nonce. |
-| X-Agent-Chữ ký | HMAC-SHA256 chữ ký. |
+| `X-Agent-Timestamp` | Dấu thời gian Unix tính bằng giây. |
+| `X-Agent-Nonce` | Không. |
+| `X-Agent-Signature` | HMAC-SHA256 chữ ký thập lục phân. |
 
 ```text
 timestamp + nonce + rawBody
 ```
 
-Sử dụng nội dung yêu cầu thô chính xác nhận được qua HTTP khi xây dựng lại giá trị đã ký. Trước tiên, việc phân tích cú pháp và sắp xếp lại JSON có thể thay đổi khoảng trắng hoặc lệnh trường và tạo ra một chữ ký khác.
+<span id="order-idempotency" data-sixmm-canonical-anchor="order-idempotency" aria-hidden="true"></span>
+
+## sự kiện bình thường
+
+Liên tục loại bỏ trùng lặp trong phạm vi người bán và `environment`, một cách nguyên tử với quá trình xử lý kinh doanh. Các giá trị `notificationId` khác nhau xác định các thông báo `FIRST` / `UPGRADE` / `REMINDER` độc lập; không loại bỏ thông báo bằng cách nhóm theo người dùng, tập hoặc `eventType`. Không thể sử dụng khóa tạm thời trống để loại bỏ trùng lặp. SDK chỉ trả về khóa trợ giúp; nó không tồn tại hoặc xử lý dữ liệu kinh doanh. Ghi nhận cùng một danh tính với một cơ thể khác là xung đột; không ghi đè lên phần thân đã được xử lý.
 
 <span id="verification-flow" data-sixmm-canonical-anchor="verification-flow" aria-hidden="true"></span>
 
-## Luồng xác minh
+## Xác minh và nhận chữ ký
 
-1. Đọc tiêu đề dấu thời gian, nonce và chữ ký.
-2. Nắm bắt nội dung yêu cầu thô chưa sửa đổi.
-3. Xây dựng `timestamp + nonce + rawBody`.
-4. Tính toán HMAC-SHA256 với đối tác API bí mật.
-5. So sánh các chữ ký được tính toán và nhận được bằng cách sử dụng so sánh theo thời gian không đổi.
-6. Áp dụng các kiểm tra về độ mới của dấu thời gian và mức độ không tái sử dụng đã được phê duyệt.
-7. Chỉ phân tích và xử lý sự kiện sau khi xác minh thành công.
+Sử dụng bí mật thương mại API để tính toán HMAC-SHA256 chữ ký thập lục phân của `timestamp + nonce + rawBody`. Xác minh các byte nhận được ban đầu; trước tiên không định dạng JSON, đổi tên các trường hoặc sắp xếp lại phần nội dung.
 
-Khi có trình xác minh Agent SDK chính thức, hãy sử dụng nó thay vì duy trì mã ký độc lập.
+Trước tiên, hãy xác minh chữ ký, sau đó kiểm tra khoảng thời gian (khuyến nghị ±300 giây), người bán và môi trường. Tiếp theo, trích xuất danh tính bình thường và xử lý thông báo một cách đáng tin cậy. Bảo toàn các giá trị sự kiện chưa biết để chẩn đoán; không bao giờ hiểu chúng là sự thành công của quỹ. Trình trợ giúp xác minh không thực hiện kiểm tra thời gian, quyền sở hữu hoặc kiểm tra loại bỏ trùng lặp liên tục.
 
-<span id="order-idempotency" data-sixmm-canonical-anchor="order-idempotency" aria-hidden="true"></span>
+Trả về HTTP 2xx sau khi hoàn tất xử lý hoặc xác nhận một bản sao giống hệt nhau; trả về không phải 2xx khi thất bại. Người gửi cảnh báo có thời gian chờ HTTP là 5 giây và có tối đa 8 lần thử. Thử lại giữ lại cơ thể đông lạnh; chỉ có dấu thời gian chữ ký và thay đổi nonce. Trả lời kịp thời sau khi chấp nhận đáng tin cậy; công việc kinh doanh lâu dài có thể sử dụng các nhiệm vụ thường xuyên của chính thương gia.
 
-## Lệnh bình thường
+Thông báo của người bán không phụ thuộc vào trạng thái trực tuyến của người dùng. Các lần đẩy của người dùng nền tảng chỉ được thực hiện trực tuyến với nỗ lực tốt nhất, không có tính năng phát lại ngoại tuyến; giai đoạn một không có hộp thư thông báo.
 
-| Trường hợp | Xử lý |
+<span id="successful-responses-and-stopping-retries" data-sixmm-canonical-anchor="successful-responses-and-stopping-retries" aria-hidden="true"></span>
+
+### Phản hồi thành công và ngừng thử lại
+
+Lệnh gọi lại và cảnh báo thanh lý quỹ sử dụng **chỉ mã trạng thái HTTP** để xác định giao hàng thành công. Người gửi không diễn giải nội dung phản hồi `code`, `success`, `result` hoặc `message` và không yêu cầu phản hồi `OK` / `success` cố định.
+
+| Phản hồi của người bán | Hành vi nền tảng |
 | --- | --- |
-| Yêu cầu chuyển ban đầu | Tạo một agentOrderNo duy nhất trên toàn cầu. |
-| HTTP hết thời gian chờ | Truy vấn agentOrderNo ban đầu trước khi tạo một cái mới. |
-| PROCESSING phản hồi | Đợi webhook hoặc truy vấn trạng thái đơn hàng. |
-| Đã lặp lại webhook | Loại bỏ trùng lặp bằng khóa bình thường và trạng thái cuối cùng. |
+| HTTP 200–299, bao gồm 200, 202 và 204 | Giao hàng thành công; tự động dừng gửi lại sau khi trạng thái thành công được duy trì. |
+| Phản hồi cuối cùng không phải 2xx, bao gồm 400, 401, 403, 409, 429, 500 và 503 | Việc phân phối không thành công và việc thử lại tuân theo chính sách chờ đợi hiện có; sau giới hạn lần thử, nó được đánh dấu `DEAD`. 4xx không tự động xác nhận thông báo. |
+| Lỗi kết nối hoặc hết thời gian phản hồi mà không có phản hồi có thể sử dụng được | Kết quả không được xác nhận và thử lại theo chính sách thất bại. |
+
+Nội dung phản hồi có thể trống, văn bản hoặc JSON. Các trường ví dụ `result` là thông tin dành cho người bán, không phải là yêu cầu về giao thức. `202 Accepted` cũng dừng việc thử lại nền tảng, vì vậy chỉ trả lại thông báo sau khi lưu thông báo vào hàng đợi tác vụ liên tục của người bán một cách đáng tin cậy, chứ không chỉ bắt đầu một tác vụ không đồng bộ trong bộ nhớ.
+
+<span id="successful-response-examples" data-sixmm-canonical-anchor="successful-response-examples" aria-hidden="true"></span>
+
+### Ví dụ phản hồi thành công
+
+Sau khi quá trình xử lý công việc hoàn tất hoặc thông báo đã được lưu một cách đáng tin cậy vào hàng đợi chờ xử lý của chính người bán:
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"result":"RECEIVED"}
+```
+
+Khi không cần nội dung phản hồi:
+
+```http
+HTTP/1.1 204 No Content
+```
+
+Đối với thông báo đã được xử lý có nội dung giống hệt nhau, hãy bỏ qua quá trình xử lý công việc trùng lặp và vẫn trả về 2xx:
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"result":"DUPLICATE"}
+```
+
+<span id="failure-response-examples" data-sixmm-canonical-anchor="failure-response-examples" aria-hidden="true"></span>
+
+### Ví dụ về phản hồi lỗi
+
+Nếu cơ sở dữ liệu tạm thời không khả dụng và người bán chưa hoàn tất quá trình xử lý cũng như chưa lưu thông báo một cách đáng tin cậy, hãy trả về non-2xx để nền tảng có thể thử lại:
+
+```http
+HTTP/1.1 503 Service Unavailable
+Content-Type: application/json
+
+{"result":"FAILED","message":"temporary storage failure"}
+```
+
+Từ chối chữ ký không hợp lệ mà không cập nhật dữ liệu kinh doanh hoặc hồ sơ chống trùng lặp thành công:
+
+```http
+HTTP/1.1 401 Unauthorized
+Content-Type: application/json
+
+{"result":"INVALID_SIGNATURE"}
+```
+
+Các cơ quan phản hồi này không thay đổi quyết định thử lại. Đừng mong đợi lỗi 401 hoặc 409 sẽ ngừng thử lại vĩnh viễn; điều tra chữ ký, nội dung thông báo hoặc cấu hình người bán.
+
+**Ví dụ không chính xác: phản hồi sau vẫn được tính là gửi thành công. Nền tảng sẽ không thử lại vì `success:false`.**
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"success":false,"code":500,"message":"processing failed"}
+```
+
+Nếu khung hoặc trình xử lý ngoại lệ chung bao gồm các lỗi kinh doanh trong HTTP 200, hãy đặt rõ ràng trạng thái lỗi chính xác ở điểm cuối gọi lại.
 
 <span id="recommended-idempotency-record" data-sixmm-canonical-anchor="recommended-idempotency-record" aria-hidden="true"></span>
 
-## Bản ghi bất lực được đề xuất
+### Xác nhận đáng tin cậy và phân phối trùng lặp
 
-Lưu trữ đủ thông tin để nhận biết việc giao hàng lặp lại và khôi phục một cách an toàn:
+Lệnh đề xuất: xác minh chữ ký và kiểm tra thời gian/người bán/môi trường → trích xuất danh tính bình thường → xử lý dữ liệu kinh doanh và bản ghi chống trùng lặp thành công trong giao dịch hoặc lưu một cách đáng tin cậy một nhiệm vụ đang chờ xử lý → trả về 200/204 sau khi cam kết thành công. Không trả về 2xx hoặc đánh dấu thông báo đã xử lý trước khi ghi cơ sở dữ liệu thành công.
 
-| Cánh đồng | Mục đích |
-| --- | --- |
-| Chìa khóa sự kiện hoặc doanh nghiệp | Xác định duy nhất thông báo hoặc hoạt động. |
-| Số đơn đặt hàng của đối tác | Kết nối sự kiện với yêu cầu ban đầu. |
-| Băm tải trọng | Giúp xác định các tải trọng lặp lại xung đột. |
-| Trạng thái xử lý hiện tại | Phân biệt công việc đã nhận, đang xử lý, thành công và thất bại. |
-| Tình trạng kinh doanh cuối cùng | Ngăn chặn một hành động đầu cuối được áp dụng hai lần. |
-| Dấu thời gian đã xử lý | Hỗ trợ các chính sách điều tra và lưu giữ. |
+Việc phân phối trùng lặp vẫn có thể xảy ra sau khi quá trình xử lý của người bán thành công: phản hồi có thể bị mất hoặc nền tảng có thể nhận được 2xx nhưng không tồn tại được `SUCCESS`. Lệnh gọi lại HTTP không đảm bảo giao hàng một lần. Liên tục loại bỏ trùng lặp trong phạm vi người bán và `environment`. Quỹ sử dụng `orderType:orderId:targetStatus`; cảnh báo sử dụng `liquidation.warning:notificationId`. Đối với nội dung giống hệt đã được xử lý, hãy trả lại 2xx mà không ghi có tiền hoặc đưa ra lời nhắc lại. Đối với cùng một danh tính với một nội dung khác, hãy ghi lại xung đột và trả về không phải 2xx; không ghi đè lên bản ghi gốc.
 
-Cam kết thay đổi hoạt động kinh doanh và ghi lại quyền sở hữu trong cùng một giao dịch nếu có thể. Một sự kiện lặp lại sẽ trả về kết quả đã biết thay vì áp dụng lại số dư, lệnh hoặc thay đổi của người dùng.
-
-<span id="timeout-and-retry-rule" data-sixmm-canonical-anchor="timeout-and-retry-rule" aria-hidden="true"></span>
-
-## Quy tắc hết thời gian chờ và thử lại
-
-Thời gian chờ HTTP không chứng minh rằng yêu cầu ban đầu không thành công. Truy vấn thao tác bằng cách sử dụng `agentOrderNo` ban đầu hoặc đợi webhook của nó trước khi quyết định xem có cần thực hiện hành động khác hay không. Việc tạo số đơn đặt hàng kinh doanh mới sau mỗi lần hết thời gian chờ có thể gây ra sự chuyển động quỹ trùng lặp.
-
-<span id="production-checklist" data-sixmm-canonical-anchor="production-checklist" aria-hidden="true"></span>
-
-## Danh sách kiểm tra sản xuất
-
-- Xác minh chữ ký trước khi phân tích cú pháp JSON hoặc xử lý công việc.
-- Bảo quản phần thân thô độc lập với tải trọng được phân tích cú pháp.
-- Từ chối các yêu cầu cũ hoặc được phát lại theo chính sách tích hợp đã được phê duyệt.
-- Giúp quá trình xử lý sự kiện trở nên an toàn đối với việc phân phối lặp lại và không theo lệnh.
-- Ghi lại ID sự kiện, số đơn đặt hàng của đối tác, kết quả xử lý và thời gian yêu cầu.
-- Biên tập lại các bí mật và giá trị chữ ký từ nhật ký và tệp đính kèm hỗ trợ.
-
-<span id="related-docs" data-sixmm-canonical-anchor="related-docs" aria-hidden="true"></span>
-
-## Tài liệu liên quan
-
-<CardGroup cols={3}>
-<Card title="Bí mật & HMAC Ký kết" icon="fa-duotone fa-shield-keyhole" href="/vi/sdk/security/secrets-signing">
-Bảo vệ bí mật API được sử dụng để yêu cầu và xác minh webhook.
-</Card>
-<Card title="Agent SDK Tổng quan" icon="fa-duotone fa-server" href="/vi/sdk/agent-sdk/overview">
-Xem lại quy trình tích hợp phụ trợ hoàn chỉnh.
-</Card>
-<Card title="SDK Khắc phục sự cố" icon="fa-duotone fa-screwdriver-wrench" href="/vi/sdk/security/troubleshooting">
-Điều tra các chữ ký bị từ chối, các sự kiện lặp lại và các hoạt động đang chờ xử lý.
-</Card>
-</CardGroup>
+Xác nhận thành công có nghĩa là người bán đã nhận được/xử lý thông báo chứ không phải hoạt động nạp tiền đã thành công. Sau khi ghi lại thông báo về số tiền hợp lệ bằng `targetStatus=FAILED`, đồng thời trả về 2xx; lỗi đơn hàng không phải là lý do để từ chối xác nhận thông báo.
 
 <span id="funding-and-environment-boundaries" data-sixmm-canonical-anchor="funding-and-environment-boundaries" aria-hidden="true"></span>
 

@@ -258,3 +258,13 @@ Sayfalandırma önerileri:
 - [Sorguya genel bakış ve sayfalandırma](/tr/sdk/agent-sdk/java/perpetual-queries)
 - [Finansman cüzdanı](/tr/sdk/agent-sdk/java/funding-wallet)
 - [Yükseltme kılavuzu](/tr/sdk/agent-sdk/java/upgrade)
+
+<span id="funds-event-callbacks" data-sixmm-canonical-anchor="funds-event-callbacks" aria-hidden="true"></span>
+
+## Etkinlik geri aramalarına fon sağlar
+
+`transfer.completed`, `SUCCESS`, `FAILED` veya `REVERSED` orijinal sipariş güncellemesini taşıyabilir; `reverse.completed` bir ters sıra terminal olayıdır. `transfer.dead`, yeniden denemelerden sonra nihai durumun onaylanmadan kaldığı ve onaylanmış bir hata değil, manuel mutabakat gerektirdiği anlamına gelir. Etkinlik adı tek başına paranın yatırıldığını kanıtlamaz.
+
+Başarılı onay, başarılı fon hareketinden farklıdır: geçerli bir `targetStatus=FAILED` bildirimi kaydettikten sonra, HTTP 2xx'i de döndürün. Satıcı ve `environment` kapsamında `orderType:orderId:targetStatus` tarafından fon olaylarının tekilleştirilmesine devam edin.
+
+[Etkinlik alanları ve JSON örnekleri](/tr/sdk/agent-sdk/java/webhook-events) · [İmza doğrulama, yanıtlar ve yeniden denemeler](/tr/sdk/security/webhooks-idempotency)

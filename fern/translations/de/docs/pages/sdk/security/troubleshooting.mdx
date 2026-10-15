@@ -93,3 +93,18 @@ Beziehen Sie niemals Passwörter, Zugriffstokens, API Geheimnisse, vollständige
 | Fehlende neue Methode Java. | Überprüfen Sie das aufgelöste Maven-Artefakt anhand des öffentlichen Tags `v0.3.0`; Entfernen Sie widersprüchliche Abhängigkeiten gemäß Ihrer Artefaktrichtlinie. |
 
 [Abfrage- und Fehlerreferenz](/de/sdk/agent-sdk/java/perpetual-queries) · [Upgrade-Anleitung](/de/sdk/agent-sdk/java/upgrade)
+
+<span id="webhook-receiving-issues" data-sixmm-canonical-anchor="webhook-receiving-issues" aria-hidden="true"></span>
+
+## Webhook Probleme beim Empfang
+
+| Symptom | Kontrolle und Abwicklung |
+| --- | --- |
+| Kein erneuter Versuch nach erneutem Fehler JSON | Überprüfen Sie, ob der Endpunkt immer noch HTTP 200 zurückgibt. Bei der Zustellung wird nur der Status HTTP verwendet, kein Erfolgsindikator im Text. |
+| Wiederholungsversuche werden nach 401 oder 409 fortgesetzt | Nicht-2xx-Antworten folgen der bestehenden Wiederholungsrichtlinie; Untersuchen Sie Signaturen, Benachrichtigungsinhalte oder Händlerkonfigurationen. |
+| Leerer Idempotenzschlüssel für eine Liquidationswarnung | Der aktuelle `WebhookVerifier.idempotencyKey` extrahiert nur Fonds-Ereignisidentitäten. Validieren Sie nach der Signatur- und Eigentumsprüfung `notificationId` und erstellen Sie den Warnschlüssel im Händlercode. Verwenden Sie niemals einen leeren Schlüssel. |
+| Doppelte Benachrichtigung nach erfolgreicher Bearbeitung | Behalten Sie die Deduplizierung innerhalb des Händler- und `environment`-Bereichs bei. Geben Sie 2xx für identische Duplikate zurück. Zeichnen Sie Konflikte auf und geben Sie Nicht-2xx für dieselbe ID mit einem anderen Text zurück. |
+| Warnung nicht verarbeitet | Akzeptieren Sie `liquidation.warning` und historische `LIQUIDATION_WARNING`; Gruppieren Sie unterschiedliche Benachrichtigungs-IDs nicht nach Benutzer, Episode oder Ereignistyp und verwerfen Sie sie. |
+| Eine angenommene Benachrichtigung verliert ihre ausstehende Aufgabe | Speichern Sie eine Aufgabe zuverlässig, bevor Sie 2xx zurückgeben. Das Starten einer asynchronen Aufgabe im Arbeitsspeicher reicht nicht aus. |
+
+[Ereignisfelder und Kompatibilität](/de/sdk/agent-sdk/java/webhook-events) · [HTTP Antworten und zuverlässige Bestätigung](/de/sdk/security/webhooks-idempotency)

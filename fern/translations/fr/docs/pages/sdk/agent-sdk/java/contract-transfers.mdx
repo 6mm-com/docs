@@ -258,3 +258,13 @@ Recommandations de pagination :
 - [Présentation et pagination des requêtes](/fr/sdk/agent-sdk/java/perpetual-queries)
 - [Portefeuille de financement](/fr/sdk/agent-sdk/java/funding-wallet)
 - [Guide de mise à niveau](/fr/sdk/agent-sdk/java/upgrade)
+
+<span id="funds-event-callbacks" data-sixmm-canonical-anchor="funds-event-callbacks" aria-hidden="true"></span>
+
+## Rappels d'événements de fonds
+
+`transfer.completed` peut contenir `SUCCESS`, `FAILED` ou une mise à jour de commande originale de `REVERSED` ; `reverse.completed` est un événement terminal d'ordre d'inversion. `transfer.dead` signifie que l'état final n'est pas confirmé après de nouvelles tentatives et nécessite une réconciliation manuelle, et non un échec confirmé. Le nom de l’événement à lui seul ne prouve pas que les fonds ont été crédités.
+
+Un accusé de réception réussi est distinct d'un mouvement de fonds réussi : après avoir enregistré une notification `targetStatus=FAILED` valide, renvoyez également HTTP 2xx. Conserver la déduplication des événements de fonds par `orderType:orderId:targetStatus` au sein du commerçant et dans la portée de `environment`.
+
+[Champs d'événement et exemples de JSON](/fr/sdk/agent-sdk/java/webhook-events) · [Vérification de signature, réponses et tentatives](/fr/sdk/security/webhooks-idempotency)

@@ -258,3 +258,13 @@ resp.orders.forEach(order -> System.out.println(order.orderNo));
 - [Обзор запроса и нумерация страниц](/ru/sdk/agent-sdk/java/perpetual-queries)
 - [Финансирование кошелька](/ru/sdk/agent-sdk/java/funding-wallet)
 - [Руководство по обновлению](/ru/sdk/agent-sdk/java/upgrade)
+
+<span id="funds-event-callbacks" data-sixmm-canonical-anchor="funds-event-callbacks" aria-hidden="true"></span>
+
+## Обратные вызовы событий фондов
+
+`transfer.completed` может содержать `SUCCESS`, `FAILED` или исходное обновление заказа `REVERSED`; `reverse.completed` — терминальное событие разворота ордера. `transfer.dead` означает, что окончательное состояние остается неподтвержденным после повторных попыток и требует ручной сверки, а не подтвержденного сбоя. Само по себе название мероприятия не доказывает, что средства были зачислены.
+
+Успешное подтверждение отличается от успешного перемещения средств: после записи действительного уведомления `targetStatus=FAILED` необходимо также вернуть HTTP 2xx. Сохранять дедупликацию событий средств с помощью `orderType:orderId:targetStatus` внутри продавца и области действия `environment`.
+
+[Поля событий и примеры JSON](/ru/sdk/agent-sdk/java/webhook-events) · [Проверка подписи, ответы и повторные попытки](/ru/sdk/security/webhooks-idempotency)

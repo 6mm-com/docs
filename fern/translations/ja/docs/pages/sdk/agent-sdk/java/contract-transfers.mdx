@@ -258,3 +258,13 @@ resp.orders.forEach(order -> System.out.println(order.orderNo));
 - [クエリの概要とページネーション](/ja/sdk/agent-sdk/java/perpetual-queries)
 - [資金調達ウォレット](/ja/sdk/agent-sdk/java/funding-wallet)
 - [アップグレードガイド](/ja/sdk/agent-sdk/java/upgrade)
+
+<span id="funds-event-callbacks" data-sixmm-canonical-anchor="funds-event-callbacks" aria-hidden="true"></span>
+
+## Funds イベントのコールバック
+
+`transfer.completed` には、`SUCCESS`、`FAILED`、または元の注文の更新 `REVERSED` が含まれる場合があります。 `reverse.completed` は反転注文のターミナルイベントです。 `transfer.dead` は、再試行後も最終状態が未確認のままであり、手動による調整が必要であることを意味します。確認された失敗ではありません。イベント名だけでは資金が入金されたことを証明するものではありません。
+
+承認の成功は資金移動の成功とは異なります。有効な `targetStatus=FAILED` 通知を記録した後、HTTP 2xx も返します。販売者および `environment` スコープ内で `orderType:orderId:targetStatus` による資金イベントの重複排除を永続化します。
+
+[イベントフィールドとJSONの例](/ja/sdk/agent-sdk/java/webhook-events) · [署名の検証、応答、および再試行](/ja/sdk/security/webhooks-idempotency)

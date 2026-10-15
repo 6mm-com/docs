@@ -1,11 +1,13 @@
 ---
 title: "Webhook Verifikasi & Idempotensi Tanda Tangan"
-subtitle: "Verifikasi 6MM Agen webhooks dengan isi permintaan mentah dan proses percobaan ulang, batas waktu, dan kejadian berulang tanpa tindakan bisnis duplikat."
+subtitle: "Verifikasi isi Webhook mentah, konfirmasikan penggunaan kode status HTTP, dan tangani percobaan ulang dan duplikat dengan andal."
 slug: sdk/security/webhooks-idempotency
 canonical-url: https://docs.6mm.com/id/sdk/security/webhooks-idempotency
 ---
 
-Webhooks memberi tahu backend mitra tentang perubahan status bisnis asinkron. Karena pengiriman dapat dicoba ulang, setiap penerima harus memverifikasi tanda tangan sebelum menguraikan data tepercaya dan harus memproses peristiwa tersebut secara idempoten.
+Halaman ini mengikuti [Agent Java SDK `WEBHOOKS.md`](https://github.com/6mm-com/agent-java-sdk/blob/fa6c7b65124f1346f815b3b73eb8a7729466c3dc/WEBHOOKS.md) saat melakukan `fa6c7b6`. Ini adalah pembaruan dokumentasi saja; tidak ada artefak SDK baru yang berisi metode pembantu peringatan yang dirilis.
+
+Keempat jenis peristiwa menggunakan satu panggilan balik pedagang URL dan dikirim oleh isi `event`. Melihat [Webhook Peristiwa & Peringatan Likuidasi](/id/sdk/agent-sdk/java/webhook-events) untuk bidang acara dan contoh muatan.
 
 <span id="webhook-headers" data-sixmm-canonical-anchor="webhook-headers" aria-hidden="true"></span>
 
@@ -13,90 +15,118 @@ Webhooks memberi tahu backend mitra tentang perubahan status bisnis asinkron. Ka
 
 | Tajuk | Keterangan |
 | --- | --- |
-| X-Agen-Stempel Waktu | Stempel waktu Unix dalam hitungan detik. |
-| X-Agen-Nonce | Nonce perlindungan pemutaran ulang. |
-| X-Agen-Tanda Tangan | HMAC-SHA256 tanda tangan. |
+| `X-Agent-Timestamp` | Stempel waktu Unix dalam hitungan detik. |
+| `X-Agent-Nonce` | Tidak sekali pun. |
+| `X-Agent-Signature` | HMAC-SHA256 tanda tangan heksadesimal. |
 
 ```text
 timestamp + nonce + rawBody
 ```
 
-Gunakan isi permintaan mentah persis yang diterima lebih dari HTTP saat merekonstruksi nilai yang ditandatangani. Mengurai dan membuat serial ulang JSON terlebih dahulu dapat mengubah spasi atau urutan bidang dan menghasilkan tanda tangan yang berbeda.
+<span id="order-idempotency" data-sixmm-canonical-anchor="order-idempotency" aria-hidden="true"></span>
+
+## Idempotensi peristiwa
+
+Pertahankan deduplikasi dalam lingkup pedagang dan `environment`, secara atomik dengan pemrosesan bisnis. Nilai `notificationId` yang berbeda mengidentifikasi notifikasi `FIRST` / `UPGRADE` / `REMINDER` independen; jangan membuang notifikasi dengan mengelompokkan berdasarkan pengguna, episode, atau `eventType`. Kunci idempotensi yang kosong tidak dapat digunakan untuk deduplikasi. SDK hanya mengembalikan kunci pembantu; itu tidak menyimpan atau memproses data bisnis. Mencatat identitas yang sama dengan badan yang berbeda sebagai konflik; jangan menimpa tubuh yang diproses.
 
 <span id="verification-flow" data-sixmm-canonical-anchor="verification-flow" aria-hidden="true"></span>
 
-## Alur verifikasi
+## Verifikasi dan penerimaan tanda tangan
 
-1. Baca stempel waktu, nonce, dan header tanda tangan.
-2. Tangkap isi permintaan mentah yang tidak dimodifikasi.
-3. Bangun `timestamp + nonce + rawBody`.
-4. Hitung HMAC-SHA256 dengan rahasia API mitra.
-5. Bandingkan tanda tangan yang dihitung dan diterima menggunakan perbandingan waktu yang konstan.
-6. Terapkan pemeriksaan kesegaran stempel waktu dan nonce-reuse yang disetujui.
-7. Parsing dan proses acara hanya setelah verifikasi berhasil.
+Gunakan rahasia pedagang API untuk menghitung HMAC-SHA256 tanda tangan heksadesimal dari `timestamp + nonce + rawBody`. Verifikasi byte asli yang diterima; jangan memformat JSON, mengganti nama kolom, atau membuat serial ulang isi terlebih dahulu.
 
-Jika pemverifikasi Agent SDK resmi tersedia, gunakanlah pemverifikasi tersebut alih-alih mempertahankan kode penandatanganan independen.
+Verifikasi tanda tangan terlebih dahulu, lalu periksa rentang waktu (disarankan ±300 detik), pedagang, dan lingkungan. Selanjutnya ekstrak identitas idempotensi dan tangani notifikasi dengan andal. Pertahankan nilai peristiwa yang tidak diketahui untuk diagnosis; jangan pernah menafsirkannya sebagai kesuksesan dana. Pembantu verifikasi tidak melakukan pemeriksaan jangka waktu, kepemilikan, atau deduplikasi terus-menerus.
 
-<span id="order-idempotency" data-sixmm-canonical-anchor="order-idempotency" aria-hidden="true"></span>
+Kembalikan HTTP 2xx setelah menyelesaikan pemrosesan atau mengonfirmasi duplikat yang identik; kembalikan non-2xx jika gagal. Pengirim peringatan mempunyai batas waktu HTTP 5 detik dan paling banyak 8 kali percobaan. Percobaan ulang mempertahankan tubuh yang membeku; hanya stempel waktu tanda tangan dan nonce yang berubah. Tanggapi segera setelah penerimaan yang dapat diandalkan; pekerjaan bisnis jangka panjang dapat menggunakan tugas-tugas terus-menerus dari pedagang itu sendiri.
 
-## Idempotensi tatanan
+Notifikasi merchant tidak bergantung pada status online pengguna. Dorongan pengguna platform hanyalah penyampaian upaya terbaik secara online, tanpa pemutaran ulang offline; fase satu tidak memiliki kotak masuk notifikasi.
 
-| Kasus | Penanganan |
+<span id="successful-responses-and-stopping-retries" data-sixmm-canonical-anchor="successful-responses-and-stopping-retries" aria-hidden="true"></span>
+
+### Respons berhasil dan menghentikan percobaan ulang
+
+Panggilan balik dana dan peringatan likuidasi **hanya menggunakan kode status HTTP** untuk menentukan keberhasilan pengiriman. Pengirim tidak menafsirkan isi respons `code`, `success`, `result`, atau `message`, dan tidak memerlukan respons `OK` / `success` yang tetap.
+
+| Respon pedagang | Perilaku platform |
 | --- | --- |
-| Permintaan transfer awal | Buat satu agentOrderNo yang unik secara global. |
-| HTTP batas waktu habis | Kueri agentOrderNo asli sebelum membuat yang baru. |
-| PROCESSING tanggapan | Tunggu webhook atau menanyakan status pesanan. |
-| Berulang webhook | Hapus duplikat berdasarkan kunci idempotensi dan status akhir. |
+| HTTP 200–299, termasuk 200, 202, dan 204 | Pengiriman berhasil; pengiriman ulang otomatis berhenti setelah status sukses dipertahankan. |
+| Respons akhir non-2xx, termasuk 400, 401, 403, 409, 429, 500, dan 503 | Pengiriman gagal dan percobaan ulang mengikuti kebijakan backoff yang ada; setelah batas percobaan ditandai `DEAD`. 4xx tidak secara otomatis mengakui pemberitahuan tersebut. |
+| Kegagalan koneksi atau batas waktu respons tanpa respons yang dapat digunakan | Hasilnya belum dikonfirmasi dan dicoba ulang berdasarkan kebijakan kegagalan. |
+
+Isi respons mungkin kosong, teks, atau JSON. Contoh kolom `result` bersifat informasi bagi pedagang, bukan persyaratan protokol. `202 Accepted` juga menghentikan percobaan ulang platform, jadi kembalikan hanya setelah menyimpan notifikasi dengan andal ke antrean tugas persisten penjual, bukan hanya memulai tugas asinkron dalam memori.
+
+<span id="successful-response-examples" data-sixmm-canonical-anchor="successful-response-examples" aria-hidden="true"></span>
+
+### Contoh respons yang berhasil
+
+Setelah pemrosesan bisnis selesai, atau notifikasi telah disimpan dengan andal ke antrean tertunda milik penjual:
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"result":"RECEIVED"}
+```
+
+Ketika tidak diperlukan badan tanggapan:
+
+```http
+HTTP/1.1 204 No Content
+```
+
+Untuk notifikasi yang sudah diproses dengan isi yang identik, lewati pemrosesan bisnis duplikat dan tetap kembalikan 2xx:
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"result":"DUPLICATE"}
+```
+
+<span id="failure-response-examples" data-sixmm-canonical-anchor="failure-response-examples" aria-hidden="true"></span>
+
+### Contoh respon kegagalan
+
+Jika database untuk sementara tidak tersedia dan pedagang belum menyelesaikan pemrosesan atau menyimpan notifikasi dengan andal, kembalikan non-2xx agar platform dapat mencoba lagi:
+
+```http
+HTTP/1.1 503 Service Unavailable
+Content-Type: application/json
+
+{"result":"FAILED","message":"temporary storage failure"}
+```
+
+Tolak tanda tangan yang tidak valid tanpa memperbarui data bisnis atau catatan deduplikasi yang berhasil:
+
+```http
+HTTP/1.1 401 Unauthorized
+Content-Type: application/json
+
+{"result":"INVALID_SIGNATURE"}
+```
+
+Badan respons ini tidak mengubah keputusan percobaan ulang. Jangan berharap 401 atau 409 menghentikan percobaan ulang secara permanen; selidiki tanda tangan, konten pemberitahuan, atau konfigurasi pedagang.
+
+**Contoh salah: respons berikut masih dihitung sebagai pengiriman berhasil. Platform tidak akan mencoba lagi karena `success:false`.**
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"success":false,"code":500,"message":"processing failed"}
+```
+
+Jika kerangka kerja atau pengendali pengecualian global membungkus kegagalan bisnis dalam HTTP 200, secara eksplisit tetapkan status kegagalan yang benar pada titik akhir panggilan balik.
 
 <span id="recommended-idempotency-record" data-sixmm-canonical-anchor="recommended-idempotency-record" aria-hidden="true"></span>
 
-## Catatan idempotensi yang direkomendasikan
+### Pengakuan yang andal dan pengiriman duplikat
 
-Simpan informasi yang cukup untuk mengenali pengiriman berulang dan memulihkan dengan aman:
+Urutan yang disarankan: verifikasi tanda tangan dan periksa waktu / pedagang / lingkungan → ekstrak identitas idempotensi → proses data bisnis dan catatan deduplikasi yang berhasil dalam suatu transaksi, atau simpan tugas yang tertunda dengan andal → kembalikan 200/204 setelah penerapan berhasil. Jangan kembalikan 2xx atau tandai notifikasi diproses sebelum penulisan database berhasil.
 
-| Bidang | Tujuan |
-| --- | --- |
-| Kunci acara atau bisnis | Secara unik mengidentifikasi notifikasi atau operasi. |
-| Nomor pesanan mitra | Menghubungkan acara ke permintaan awal. |
-| Hash muatan | Membantu mengidentifikasi muatan berulang yang saling bertentangan. |
-| Status pemrosesan saat ini | Membedakan pekerjaan yang diterima, diproses, berhasil, dan gagal. |
-| Status bisnis akhir | Mencegah tindakan terminal diterapkan dua kali. |
-| Stempel waktu yang diproses | Mendukung kebijakan investigasi dan penyimpanan. |
+Pengiriman duplikat masih dapat terjadi setelah pemrosesan pedagang berhasil: respons mungkin hilang, atau platform mungkin menerima 2xx tetapi gagal bertahan `SUCCESS`. HTTP panggilan balik tidak menjamin pengiriman satu kali. Pertahankan deduplikasi dalam lingkup pedagang dan `environment`. Penggunaan dana `orderType:orderId:targetStatus`; peringatan gunakan `liquidation.warning:notificationId`. Untuk badan identik yang sudah diproses, kembalikan 2xx tanpa mengkredit dana atau mengeluarkan pengingat lagi. Untuk identitas yang sama dengan badan berbeda, catat konflik dan kembalikan non-2xx; jangan menimpa catatan aslinya.
 
-Komit perubahan bisnis dan catatan idempotensi dalam transaksi yang sama jika memungkinkan. Peristiwa yang berulang harus mengembalikan hasil yang sudah diketahui alih-alih menerapkan kembali saldo, pesanan, atau perubahan pengguna.
-
-<span id="timeout-and-retry-rule" data-sixmm-canonical-anchor="timeout-and-retry-rule" aria-hidden="true"></span>
-
-## Aturan batas waktu dan coba lagi
-
-Batas waktu HTTP tidak membuktikan bahwa permintaan awal gagal. Kueri operasi menggunakan `agentOrderNo` asli, atau tunggu webhook, sebelum memutuskan apakah tindakan lain diperlukan. Membuat nomor pesanan bisnis baru setiap kali habis dapat menyebabkan pergerakan dana duplikat.
-
-<span id="production-checklist" data-sixmm-canonical-anchor="production-checklist" aria-hidden="true"></span>
-
-## Daftar periksa produksi
-
-- Verifikasi tanda tangan sebelum JSON penguraian atau pemrosesan bisnis.
-- Pertahankan tubuh mentah secara terpisah dari muatan yang diurai.
-- Tolak permintaan yang sudah usang atau diputar ulang sesuai dengan kebijakan integrasi yang disetujui.
-- Jadikan pemrosesan acara aman untuk pengiriman berulang dan tidak sesuai pesanan.
-- Catat ID peristiwa, nomor pesanan mitra, hasil pemrosesan, dan waktu permintaan.
-- Redaksikan rahasia dan nilai tanda tangan dari log dan lampiran dukungan.
-
-<span id="related-docs" data-sixmm-canonical-anchor="related-docs" aria-hidden="true"></span>
-
-## Dokumen terkait
-
-<CardGroup cols={3}>
-<Card title="Rahasia & HMAC Penandatanganan" icon="fa-duotone fa-shield-keyhole" href="/id/sdk/security/secrets-signing">
-Lindungi rahasia API yang digunakan untuk permintaan dan webhook verifikasi.
-</Card>
-<Card title="Agent SDK Ikhtisar" icon="fa-duotone fa-server" href="/id/sdk/agent-sdk/overview">
-Tinjau alur kerja integrasi backend secara lengkap.
-</Card>
-<Card title="SDK Pemecahan masalah" icon="fa-duotone fa-screwdriver-wrench" href="/id/sdk/security/troubleshooting">
-Selidiki tanda tangan yang ditolak, kejadian berulang, dan operasi yang tertunda.
-</Card>
-</CardGroup>
+Pengakuan berhasil berarti pedagang menerima/memproses pemberitahuan, bukan bahwa pengoperasian dana berhasil. Setelah mencatat notifikasi dana yang valid dengan `targetStatus=FAILED`, kembalikan juga 2xx; kegagalan pesanan bukan alasan untuk menolak pengakuan pemberitahuan.
 
 <span id="funding-and-environment-boundaries" data-sixmm-canonical-anchor="funding-and-environment-boundaries" aria-hidden="true"></span>
 
@@ -104,6 +134,6 @@ Selidiki tanda tangan yang ditolak, kejadian berulang, dan operasi yang tertunda
 
 Alur transfer Kontrak asli webhook dan `queryOrder` tidak secara otomatis berlaku untuk Pendanaan. Konfirmasikan operasi Pendanaan menggunakan `queryWalletTransfer` dan lingkungan pesanan asli. Pendanaan menggunakan `status`; tanggapan transfer kontrak asli menggunakan `orderStatus`. Respons HTTP yang berhasil atau `code=0` tidak dengan sendirinya membuktikan dana telah dipindahkan.
 
-Pemberitahuan transfer Kontrak yang disimulasikan secara eksplisit mencakup `environment=SIMULATED`. Verifikasi isi mentahnya terlebih dahulu, lalu periksa pengguna, jumlah, identitas pesanan, dan lingkungan terhadap pesanan bisnis lokal yang disimpan.
+Pemberitahuan transfer Kontrak yang disimulasikan secara eksplisit mencakup `environment=SIMULATED`. Verifikasi isi mentah terlebih dahulu, lalu periksa pengguna, jumlah, identitas pesanan, dan lingkungan terhadap pesanan bisnis lokal yang disimpan.
 
 [Panduan pemulihan pendanaan](/id/sdk/agent-sdk/java/funding-wallet) · [Panduan lingkungan](/id/sdk/agent-sdk/java/environments)

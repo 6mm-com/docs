@@ -7,7 +7,7 @@ canonical-url: https://docs.6mm.com/fr/sdk/agent-sdk/java/overview
 
 Ce guide cible **Agent Java SDK `v0.3.0`**, Java 8+ et le contrat public étiqueté. Exemples exécutés dans un backend partenaire après l'initialisation de `client` dans [Démarrage rapide](/fr/sdk/agent-sdk/java/quick-start).
 
-Base de référence de la documentation : SDK `v0.3.0`, commit `54aa3c1`.
+Base de référence de la documentation : SDK `v0.3.0`, commit `54aa3c1`. Webhook les règles de réception suivent également [`WEBHOOKS.md` à `fa6c7b6`](https://github.com/6mm-com/agent-java-sdk/blob/fa6c7b65124f1346f815b3b73eb8a7729466c3dc/WEBHOOKS.md); il s'agit d'une mise à jour de documentation uniquement, sans nouvel artefact SDK contenant des méthodes d'assistance d'avertissement.
 
 <span id="version-and-installation" data-sixmm-canonical-anchor="version-and-installation" aria-hidden="true"></span>
 
@@ -36,7 +36,7 @@ GitHub héberge la source ; cela ne rend pas ces coordonnées résolubles à pa
 | Transferts | Ordre inverse | `reverse` | Annuler un transfert réussi lorsque le backend prend en charge un flux de compensation |
 | Transferts | Ordre de requête | `queryOrder` | Rechercher un ordre de transfert par numéro de commande partenaire |
 | Transferts | Liste des commandes | `listOrders` | Feuilleter les ordres de transfert pour le rapprochement |
-| Transferts | Webhook vérification | `WebhookVerifier.verify` | Vérifier le transfert des rappels de l'état final à partir de 6MM |
+| Webhook | Vérification des signatures | `WebhookVerifier.verify` | Vérifier les organismes d'avertissement de fonds bruts et de liquidation ; le code marchand gère les contrôles de temps, de propriété et de déduplication persistante. Voir [Webhook Événements et avertissements de liquidation](/fr/sdk/agent-sdk/java/webhook-events). |
 | Portefeuille de financement | Transfert de fonds | `walletTransfer` | Partenaire ↔ Financement ou Financement ↔ Contrat ; confirmer le statut renvoyé |
 | Portefeuille de financement | Statut du transfert de fonds | `queryWalletTransfer` | Récupérer une opération de financement en utilisant son numéro de commande partenaire d'origine |
 | Entrée en bourse | Entrée directe URL | `createEntryUrl` | Créez un SSO URL unique pour le mode de redirection. |
@@ -65,7 +65,7 @@ intégrant.
 | `agentCode` | `AGENT001` | Code partenaire |
 | `apiSecret` | `your-api-secret` | API secret de signature. Gardez-le uniquement sur le backend |
 | `defaultCurrency` | `USDT` | Devise par défaut, généralement `USDT` |
-| `webhookUrl` | `https://partner.example.com/6mm/webhook` | Point de terminaison partenaire pour les rappels 6MM |
+| `webhookUrl` | `https://partner.example.com/6mm/webhook` | Rappel du commerçant URL partagé par les quatre types d'événements ; expédition par organisme `event`, sans avertissement distinct URL. |
 
 Recommandations de fabrication :
 

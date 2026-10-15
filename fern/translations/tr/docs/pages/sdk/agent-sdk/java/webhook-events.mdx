@@ -1,0 +1,164 @@
+---
+title: "Webhook Etkinlikler ve Tasfiye Uyarıları"
+subtitle: "Satıcı Webhook olay türleri, idempotency kimlikleri, tasfiye uyarı alanları ve fon sonuç örnekleri."
+slug: sdk/agent-sdk/java/webhook-events
+canonical-url: https://docs.6mm.com/tr/sdk/agent-sdk/java/webhook-events
+---
+
+Bu sayfa takip ediyor [Agent Java SDK `WEBHOOKS.md`](https://github.com/6mm-com/agent-java-sdk/blob/fa6c7b65124f1346f815b3b73eb8a7729466c3dc/WEBHOOKS.md) taahhüt sırasında `fa6c7b6`. Bu yalnızca belgelere yönelik bir güncelleştirmedir; uyarı yardımcı yöntemlerini içeren yeni bir SDK yapı yayınlanmadı.
+
+Dört olay türünün tümü, satıcının tek yapılandırılmış geri aramasını URL (`agents.webhook_url`) kullanır. Gövde üzerine gönderim `event`; ayrı bir uyarıya URL gerek yoktur. Örnekler yük yapısını gösterir ve bir test ortamına veri eklemek için kullanılmamalıdır.
+
+<span id="events-and-idempotency" data-sixmm-canonical-anchor="events-and-idempotency" aria-hidden="true"></span>
+
+## Olaylar ve geçicilik
+
+| `event` | Anlam | `targetStatus` / tekilleştirme anahtarı |
+| --- | --- | --- |
+| `transfer.completed` | Tersine çevrildikten sonra orijinal siparişin güncellenmesi de dahil olmak üzere terminal durumunu aktarın; mutlaka başarılı değil | `SUCCESS` / `FAILED` / `REVERSED`; `orderType:orderId:targetStatus` |
+| `reverse.completed` | Ters sipariş terminal durumu | `SUCCESS` / `FAILED`; `orderType:orderId:targetStatus` |
+| `transfer.dead` | Nihai fon siparişi durumu, yeniden denemelerden sonra onaylanmadan kalır ve manuel mutabakat gerektirir; onaylanmış bir başarısızlık değil | `DEAD`; `orderType:orderId:targetStatus` |
+| `liquidation.warning` | Sipariş terminal durumu alanları olmadan tasfiye riski uyarısı | `liquidation.warning:notificationId` |
+
+Satıcı uyarı olayı şu şekildedir: `liquidation.warning`; kullanıcı WebSocket `data.event`, `LIQUIDATION_WARNING` olarak kalır. İki kanalı ayrı tutun.
+
+Geçmiş satıcı bildirimleri `LIQUIDATION_WARNING` kullanıldı. Dondurulmuş veriler yeniden denemelerde orijinal gövdelerini korur, bu nedenle alıcıların her iki adı da tanıması gerekir. Mevcut iş kayıtları büyük harfli bir uyarı anahtarı öneki kullanıyorsa, bildirimin tekrar işlenmesini önlemek için orijinal anahtarı saklayın veya taşıma sırasında her iki anahtarı da kontrol edin.
+
+**Mevcut `WebhookVerifier.idempotencyKey` yalnızca fon olayları için `orderType:orderId:targetStatus`'i çıkarır ve uyarı yükleri için boş bir dize döndürür.** Bu belge güncellemesiyle uyarı yardımcı yöntemleri içeren yeni bir SDK yapı yayınlanmamıştır. Ham uyarı gövdesini doğrulamak için mevcut `verify` yöntemini kullanmaya devam edin. İmza ve sahiplik kontrollerinden sonra, satıcı iş kodunun her iki etkinlik adını da tanıması, `notificationId` öğesinin pozitif bir ondalık tamsayı dizesi olduğunu doğrulaması ve `liquidation.warning:<notificationId>` oluşturması gerekir. Asla boş bir veri tekilleştirme anahtarı kullanmayın veya fon talimatı alanlarını içermesi için uyarı gerektirmeyin.
+
+Satıcı ve `environment` kapsamında tekilleştirmeyi sürdürün ve bunu iş süreçleriyle atomik olarak gerçekleştirin. Farklı `notificationId` değerlerine sahip `FIRST` / `UPGRADE` / `REMINDER` bildirimleri bağımsızdır; bunları kullanıcı, bölüm veya `eventType` temelinde gruplayarak atmayın. Boş anahtar, geçerli bir kimliğin çıkarılamadığı anlamına gelir. SDK yalnızca bir yardımcı anahtar döndürür; kayıtları saklamaz veya ticari işlemler gerçekleştirmez. Aynı kimliği farklı bir bedenle çatışma olarak kaydedin; işlenen gövdenin üzerine yazmayın.
+
+<span id="liquidation-warning-fields-and-example" data-sixmm-canonical-anchor="liquidation-warning-fields-and-example" aria-hidden="true"></span>
+
+## Tasfiye uyarı alanları ve örneği
+
+| Alan | Tip / açıklama |
+| --- | --- |
+| `notificationId` | Pozitif ondalık tamsayı dizesi; benzersiz bildirim kimliği. Bunu kayan noktalı sayıya dönüştürmeyin. |
+| `eventType` | `FIRST`: mevcut bölümdeki ilk uyarı; `UPGRADE`: bu bölümde normal risk yüksek riske yükseltildi; `REMINDER`: devam eden riskin bir başka hatırlatıcısı. |
+| `severity` | `NORMAL` / `HIGH`. `FIRST` zaten `HIGH` olabilir; `UPGRADE`, `HIGH`'dir; `REMINDER`, `NORMAL` veya `HIGH` olabilir. |
+| `occurredAt` | JSON sayı; Uyarının tetiklendiği Unix milisaniyesi, HTTP teslimatının ulaştığı zaman değil. |
+| `object` | `type=CROSS`: `symbol`, `side` ve `positionId` için boş dizelere sahip çapraz kenar boşluğu hesabı. `ISOLATED`: karşılık gelen sözleşmeyi, tarafı ve pozisyon kimliğini taşıyan izole marjlı pozisyon. |
+| `episode` | Sicim; güncel uyarı bölümü. `FIRST` kullanıcının ilk uyarısı anlamına gelmez. |
+| `stateVersion` / `configVersion` | Dizeler; yukarı akış durumu/yapılandırma sürümü. Bu alanlara dayalı bildirimleri bağımsız olarak atmayın. |
+| `riskRatio` / `minLargePositionValue` / `liquidationHighRiskThreshold` | Risk oranı, normal uyarı eşiği ve yüksek risk eşiği için ondalık dizeler. Hassasiyeti koruyun; yukarı akış eşik kurallarını hesaplar. |
+| `environment` | `PRODUCTION` / `SIMULATED`; sunucu adına göre değil, yapılandırılmış fon ortamına göre izole edin. |
+| `agentId` / `agentCode` / `agentUserId` | Dizeler; acente kimliği, acente kodu ve satıcı tarafı kullanıcı kimliği. |
+| `platformUserId` | Sicim; Hizmetin dahili `user_id` değil, bağlama sonucuyla eşleşen genel platform kullanıcı kimliği. |
+
+```json
+{
+  "event": "liquidation.warning",
+  "notificationId": "68460336",
+  "eventType": "FIRST",
+  "severity": "NORMAL",
+  "occurredAt": 1791875870804,
+  "object": {
+    "type": "CROSS",
+    "symbol": "",
+    "side": "",
+    "positionId": ""
+  },
+  "episode": "3",
+  "stateVersion": "9",
+  "riskRatio": "0.29133109",
+  "minLargePositionValue": "0.20000000",
+  "liquidationHighRiskThreshold": "0.40000000",
+  "configVersion": "8",
+  "environment": "PRODUCTION",
+  "agentId": "16",
+  "agentCode": "DEMO",
+  "agentUserId": "merchant-user-001",
+  "platformUserId": "6054354872"
+}
+```
+
+<span id="transfer-result-example" data-sixmm-canonical-anchor="transfer-result-example" aria-hidden="true"></span>
+
+## Sonuç örneğini aktar
+
+Fon geri aramaları mevcut türlerini korur: `orderId` ve `agentId`, JSON sayılarıdır; `amount` ve `platformUserId` dizelerdir. Uyarı dizesi `agentId` kuralını fon geri aramalarına uygulamayın. Tamsayı / ondalık türleri kullanarak büyük tamsayıları hassasiyet kaybı olmadan okuyun. `completedAt`, UTC RFC3339'dır; `ts` Unix saniyesidir.
+
+```json
+{
+  "environment": "PRODUCTION",
+  "event": "transfer.completed",
+  "orderType": "transfer",
+  "orderId": 10001,
+  "orderNo": "merchant-order-001",
+  "targetStatus": "SUCCESS",
+  "agentId": 16,
+  "agentCode": "DEMO",
+  "currency": "USDT",
+  "amount": "10.00",
+  "direction": "IN",
+  "transferMode": "FIXED_AMOUNT",
+  "agentUserId": "merchant-user-001",
+  "platformUserId": "6054354872",
+  "rejectCode": 0,
+  "rejectMessage": "",
+  "failReason": "",
+  "completedAt": "2026-10-13T07:17:50Z",
+  "ts": 1791875870
+}
+```
+
+<span id="reversal-result-example" data-sixmm-canonical-anchor="reversal-result-example" aria-hidden="true"></span>
+
+## Ters sonuç örneği
+
+```json
+{
+  "environment": "PRODUCTION",
+  "event": "reverse.completed",
+  "orderType": "transfer",
+  "orderId": 10002,
+  "orderNo": "merchant-reverse-001",
+  "targetStatus": "SUCCESS",
+  "agentId": 16,
+  "agentCode": "DEMO",
+  "currency": "USDT",
+  "amount": "10.00",
+  "direction": "IN",
+  "transferMode": "FIXED_AMOUNT",
+  "agentUserId": "merchant-user-001",
+  "platformUserId": "6054354872",
+  "rejectCode": 0,
+  "rejectMessage": "",
+  "failReason": "",
+  "completedAt": "2026-10-13T07:17:50Z",
+  "ts": 1791875870
+}
+```
+
+<span id="funds-order-dead-state-example" data-sixmm-canonical-anchor="funds-order-dead-state-example" aria-hidden="true"></span>
+
+## Fon emri ölü durum örneği
+
+```json
+{
+  "environment": "PRODUCTION",
+  "event": "transfer.dead",
+  "orderType": "transfer",
+  "orderId": 10003,
+  "orderNo": "merchant-order-002",
+  "targetStatus": "DEAD",
+  "agentId": 16,
+  "agentCode": "DEMO",
+  "currency": "USDT",
+  "amount": "10.00",
+  "direction": "IN",
+  "transferMode": "FIXED_AMOUNT",
+  "agentUserId": "merchant-user-001",
+  "platformUserId": "6054354872",
+  "rejectCode": 0,
+  "rejectMessage": "",
+  "failReason": "order dead",
+  "completedAt": "2026-10-13T07:17:50Z",
+  "ts": 1791875870
+}
+```
+
+Bu örnekler yalnızca protokolü gösterir. `FAILED` için, `rejectCode`, `rejectMessage` ve `failReason` gerçek reddi yansıtır. Etkinlik adı tek başına paranın yatırıldığını kanıtlamaz.
+
+[İmza doğrulama, yanıtlar ve yeniden denemeler](/tr/sdk/security/webhooks-idempotency)

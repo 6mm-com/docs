@@ -7,7 +7,7 @@ canonical-url: https://docs.6mm.com/ja/sdk/agent-sdk/java/overview
 
 このガイドは、**Agent Java SDK `v0.3.0`**、Java 8 以降、およびタグ付けされたパブリック コントラクトを対象としています。例は `client` を初期化した後にパートナー バックエンドで実行されます。 [クイックスタート](/ja/sdk/agent-sdk/java/quick-start).
 
-ドキュメントのベースライン: SDK `v0.3.0`、コミット `54aa3c1`。
+ドキュメントのベースライン: SDK `v0.3.0`、コミット `54aa3c1`。 Webhook の受信ルールはさらに続きます [`WEBHOOKS.md`、`fa6c7b6`](https://github.com/6mm-com/agent-java-sdk/blob/fa6c7b65124f1346f815b3b73eb8a7729466c3dc/WEBHOOKS.md);これはドキュメントのみの更新であり、警告ヘルパー メソッドを含む新しい SDK アーティファクトはありません。
 
 <span id="version-and-installation" data-sixmm-canonical-anchor="version-and-installation" aria-hidden="true"></span>
 
@@ -36,7 +36,7 @@ GitHub ホストのソース。これらの座標を Maven Central から解決�
 | 転送 | 逆順 | `reverse` | バックエンドが補償フローをサポートしている場合、成功した転送を元に戻す |
 | 転送 | クエリの順序 | `queryOrder` | パートナー注文番号による 1 つの転送注文のクエリ |
 | 転送 | 注文をリストアップする | `listOrders` | 調整のための転送オーダーのページング |
-| 転送 | Webhook 検証 | `WebhookVerifier.verify` | 6MM からの最終状態コールバックの転送を確認する |
+| Webhook | 署名の検証 | `WebhookVerifier.verify` | 原資のイベントおよび清算の警告機関を確認します。販売者コードは、時間、所有権、永続的な重複排除チェックを処理します。見る [Webhook イベントと清算に関する警告](/ja/sdk/agent-sdk/java/webhook-events). |
 | 資金調達ウォレット | 資金移動 | `walletTransfer` | パートナー ↔ 資金調達または資金調達 ↔ 契約。返品ステータスを確認する |
 | 資金調達ウォレット | 資金移動状況 | `queryWalletTransfer` | 元のパートナー注文番号を使用して資金調達オペレーションを回復する |
 | 取引エントリー | 直接入力 URL | `createEntryUrl` | リダイレクト モード用のワンタイム SSO URL を作成する |
@@ -65,7 +65,7 @@ GitHub ホストのソース。これらの座標を Maven Central から解決�
 | `agentCode` | `AGENT001` | パートナーコード |
 | `apiSecret` | `your-api-secret` | API の署名秘密。バックエンドのみに保持してください |
 | `defaultCurrency` | `USDT` | デフォルトの通貨、通常は `USDT` |
-| `webhookUrl` | `https://partner.example.com/6mm/webhook` | 6MM コールバックのパートナー エンドポイント |
+| `webhookUrl` | `https://partner.example.com/6mm/webhook` | マーチャント コールバック URL は 4 つのイベント タイプすべてで共有されます。本文 `event` によって発送され、個別の警告はありません URL。 |
 
 制作上の推奨事項:
 

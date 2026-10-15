@@ -258,3 +258,13 @@ Rekomendasi penomoran halaman:
 - [Ikhtisar kueri dan penomoran halaman](/id/sdk/agent-sdk/java/perpetual-queries)
 - [Dompet pendanaan](/id/sdk/agent-sdk/java/funding-wallet)
 - [Panduan peningkatan](/id/sdk/agent-sdk/java/upgrade)
+
+<span id="funds-event-callbacks" data-sixmm-canonical-anchor="funds-event-callbacks" aria-hidden="true"></span>
+
+## Mendanai panggilan balik acara
+
+`transfer.completed` mungkin membawa `SUCCESS`, `FAILED`, atau pembaruan pesanan asli `REVERSED`; `reverse.completed` adalah peristiwa terminal pembalikan pesanan. `transfer.dead` berarti keadaan akhir masih belum dikonfirmasi setelah percobaan ulang dan memerlukan rekonsiliasi manual, bukan kegagalan yang dikonfirmasi. Nama acara saja tidak membuktikan dana telah dikreditkan.
+
+Pengakuan yang berhasil berbeda dengan perpindahan dana yang berhasil: setelah mencatat notifikasi `targetStatus=FAILED` yang valid, kembalikan HTTP 2xx juga. Pertahankan deduplikasi peristiwa dana sebesar `orderType:orderId:targetStatus` dalam lingkup pedagang dan `environment`.
+
+[Bidang acara dan JSON contohnya](/id/sdk/agent-sdk/java/webhook-events) · [Verifikasi tanda tangan, tanggapan, dan percobaan ulang](/id/sdk/security/webhooks-idempotency)

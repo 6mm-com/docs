@@ -1,11 +1,13 @@
 ---
 title: "Webhook 署名の検証と冪等性"
-subtitle: "6MM エージェント webhooks を未処理のリクエスト本文で検証し、重複するビジネス アクションを発生させずに再試行、タイムアウト、繰り返しイベントを処理します。"
+subtitle: "生の Webhook ボディを検証し、HTTP ステータス コードを使用して確認し、再試行と重複を確実に処理します。"
 slug: sdk/security/webhooks-idempotency
 canonical-url: https://docs.6mm.com/ja/sdk/security/webhooks-idempotency
 ---
 
-Webhooks 非同期のビジネス状態の変更についてパートナー バックエンドに通知します。配信は再試行される可能性があるため、すべての受信者は信頼できるデータを解析する前に署名を検証し、イベントをべき等に処理する必要があります。
+このページは次のページに続きます [Agent Java SDK `WEBHOOKS.md`](https://github.com/6mm-com/agent-java-sdk/blob/fa6c7b65124f1346f815b3b73eb8a7729466c3dc/WEBHOOKS.md) コミット `fa6c7b6` で。これはドキュメントのみの更新です。警告ヘルパー メソッドを含む新しい SDK アーティファクトはリリースされませんでした。
+
+4 つのイベント タイプはすべて 1 つのマーチャント コールバック URL を使用し、本体 `event` によってディスパッチされます。見る [Webhook イベントと清算に関する警告](/ja/sdk/agent-sdk/java/webhook-events) イベントフィールドとペイロードの例については、
 
 <span id="webhook-headers" data-sixmm-canonical-anchor="webhook-headers" aria-hidden="true"></span>
 
@@ -13,90 +15,118 @@ Webhooks 非同期のビジネス状態の変更についてパートナー バ�
 
 | ヘッダ | 説明 |
 | --- | --- |
-| X-エージェント-タイムスタンプ | 秒単位の Unix タイムスタンプ。 |
-| X-エージェント-ノンス | リプレイ保護ノンス。 |
-| X エージェントの署名 | HMAC-SHA256 の署名。 |
+| `X-Agent-Timestamp` | 秒単位の Unix タイムスタンプ。 |
+| `X-Agent-Nonce` | ノンス。 |
+| `X-Agent-Signature` | HMAC-SHA256 16 進署名。 |
 
 ```text
 timestamp + nonce + rawBody
 ```
 
-署名された値を再構築するときは、HTTP で受信した正確な生のリクエスト本文を使用します。最初に JSON を解析して再シリアル化すると、空白やフィールドの順序が変更され、別の署名が生成される可能性があります。
+<span id="order-idempotency" data-sixmm-canonical-anchor="order-idempotency" aria-hidden="true"></span>
+
+## イベントのべき等性
+
+ビジネス処理を使用して、販売者および `environment` スコープ内で重複排除をアトミックに継続します。異なる `notificationId` 値は、独立した `FIRST` / `UPGRADE` / `REMINDER` 通知を識別します。ユーザー、エピソード、または `eventType` でグループ化して通知を破棄しないでください。空の冪等キーは重複排除には使用できません。 SDK はヘルパー キーのみを返します。ビジネス データを保持したり処理したりしません。異なる本体を持つ同じアイデンティティを競合として記録します。処理された本文を上書きしないでください。
 
 <span id="verification-flow" data-sixmm-canonical-anchor="verification-flow" aria-hidden="true"></span>
 
-## 検証の流れ
+## 署名の検証と受信
 
-1. タイムスタンプ、ノンス、署名ヘッダーを読み取ります。
-2. 変更されていない生のリクエスト本文をキャプチャします。
-3. `timestamp + nonce + rawBody` をビルドします。
-4. パートナー API のシークレットを使用して HMAC-SHA256 を計算します。
-5. 定数時間比較を使用して、計算された署名と受信された署名を比較します。
-6. 承認されたタイムスタンプの鮮度チェックと非再利用チェックを適用します。
-7. 検証が成功した場合にのみ、イベントを解析して処理します。
+マーチャント API シークレットを使用して、`timestamp + nonce + rawBody` の HMAC-SHA256 16 進署名を計算します。元の受信バイトを確認します。最初に JSON の書式設定、フィールド名の変更、本文の再シリアル化を行わないでください。
 
-公式の Agent SDK 検証ツールが利用可能な場合は、独立した署名コードを維持する代わりにそれを使用します。
+最初に署名を検証し、次に時間枠 (±300 秒を推奨)、販売者、および環境を確認します。次に、冪等性 ID を抽出し、通知を確実に処理します。診断のために未知のイベント値を保存します。決してそれらを資金調達の成功として解釈しないでください。検証ヘルパーは、時間枠、所有権、または永続的な重複排除チェックを実行しません。
 
-<span id="order-idempotency" data-sixmm-canonical-anchor="order-idempotency" aria-hidden="true"></span>
+処理が完了した後、または同一の重複を確認した後、HTTP 2xx を返します。失敗した場合は 2xx 以外を返します。警告送信者には 5 秒の HTTP タイムアウトと最大 8 回の試行があります。再試行では、凍結されたボディが保持されます。署名のタイムスタンプとナンスのみが変更されます。確実に受け入れられた後、速やかに対応します。長時間にわたるビジネス作業では、マーチャント独自の永続タスクを使用できます。
 
-## 順序冪等性
+販売者からの通知は、ユーザーのオンライン ステータスには依存しません。プラットフォーム ユーザーのプッシュはオンラインでのベストエフォート配信のみであり、オフラインでの再生はありません。フェーズ 1 には通知受信箱がありません。
 
-| 場合 | 取り扱い |
+<span id="successful-responses-and-stopping-retries" data-sixmm-canonical-anchor="successful-responses-and-stopping-retries" aria-hidden="true"></span>
+
+### 成功した応答と再試行の停止
+
+ファンドのコールバックと清算警告では、**HTTP ステータス コードのみ**を使用して配信の成功を判断します。送信者は応答本文 `code`、`success`、`result`、または `message` を解釈せず、固定の `OK` / `success` 応答を必要としません。
+
+| 販売者の対応 | プラットフォームの動作 |
 | --- | --- |
-| 最初の転送リクエスト | グローバルに一意の agentOrderNo を 1 つ作成します。 |
-| HTTP タイムアウト | 新しいものを作成する前に、元の agentOrderNo をクエリします。 |
-| PROCESSING 応答 | webhook を待つか、注文ステータスを問い合わせてください。 |
-| 繰り返しwebhook | 冪等性キーと最終ステータスによって重複を排除します。 |
+| HTTP 200 ～ 299 (200、202、204 を含む) | 配信は成功します。自動再送信は成功状態が持続すると停止します。 |
+| 2xx 以外の最終応答（400、401、403、409、429、500、503 を含む） | 配信は失敗し、既存のバックオフ ポリシーに従って再試行されます。試行制限を超えると、`DEAD` とマークされます。 4xx は通知を自動的に確認しません。 |
+| 接続失敗または使用可能な応答なしの応答タイムアウト | 結果は未確認であり、失敗ポリシーに従って再試行されます。 |
+
+応答本文は空、テキスト、または JSON の場合があります。例の `result` フィールドは販売者向けの情報であり、プロトコル要件ではありません。 `202 Accepted` はプラットフォームの再試行も停止するため、単にメモリ内の非同期タスクを開始するのではなく、マーチャントの永続タスク キューに通知を確実に保存した後にのみ通知を返します。
+
+<span id="successful-response-examples" data-sixmm-canonical-anchor="successful-response-examples" aria-hidden="true"></span>
+
+### 成功した対応例
+
+ビジネス処理が完了した後、または通知がマーチャント自身の保留キューに確実に保存された後、次のようになります。
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"result":"RECEIVED"}
+```
+
+レスポンスボディが必要ない場合:
+
+```http
+HTTP/1.1 204 No Content
+```
+
+同一の本文を持つ処理済みの通知の場合、重複するビジネス処理をスキップし、引き続き 2xx を返します。
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"result":"DUPLICATE"}
+```
+
+<span id="failure-response-examples" data-sixmm-canonical-anchor="failure-response-examples" aria-hidden="true"></span>
+
+### 障害対応例
+
+データベースが一時的に利用できず、販売者が処理を完了していない、または通知を確実に保存していない場合は、プラットフォームが再試行できるように、非 2xx を返します。
+
+```http
+HTTP/1.1 503 Service Unavailable
+Content-Type: application/json
+
+{"result":"FAILED","message":"temporary storage failure"}
+```
+
+ビジネス データや成功した重複排除レコードを更新せずに、無効な署名を拒否します。
+
+```http
+HTTP/1.1 401 Unauthorized
+Content-Type: application/json
+
+{"result":"INVALID_SIGNATURE"}
+```
+
+これらの応答本文は、再試行の決定を変更しません。 401 または 409 によって再試行が永久に停止されるとは期待しないでください。署名、通知内容、または販売者の設定を調査します。
+
+**間違った例: 次の応答は、引き続き正常な配信としてカウントされます。 `success:false` のため、プラットフォームは再試行しません。**
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"success":false,"code":500,"message":"processing failed"}
+```
+
+フレームワークまたはグローバル例外ハンドラーがビジネス障害を HTTP 200 でラップする場合は、コールバック エンドポイントで正しい障害ステータスを明示的に設定します。
 
 <span id="recommended-idempotency-record" data-sixmm-canonical-anchor="recommended-idempotency-record" aria-hidden="true"></span>
 
-## 推奨されるべき等性レコード
+### 信頼性の高い確認応答と二重配信
 
-繰り返しの配信を認識し、安全に回復するために十分な情報を保存します。
+推奨される順序: 署名を検証し、時刻/マーチャント/環境を確認する → 冪等性 ID を抽出する → トランザクション内のビジネス データと成功した重複排除レコードを処理する、または保留中のタスクを確実に保存する → コミットが成功した後に 200/204 を返す。データベースへの書き込みが成功する前に、2xx を返したり、通知を処理済みとしてマークしたりしないでください。
 
-| 分野 | 目的 |
-| --- | --- |
-| イベントまたはビジネスキー | 通知または操作を一意に識別します。 |
-| パートナー注文番号 | イベントを元のリクエストに接続します。 |
-| ペイロードハッシュ | 競合する反復ペイロードを特定するのに役立ちます。 |
-| 現在の処理状態 | 受信した作業、処理中の作業、成功した作業、失敗した作業を区別します。 |
-| 最終的な営業状況 | 終了アクションが 2 回適用されるのを防ぎます。 |
-| 処理されたタイムスタンプ | 調査と保持ポリシーをサポートします。 |
+販売者の処理が成功した後でも、重複配信が発生する可能性があります。応答が失われたり、プラットフォームが 2xx を受信して​​も永続化に失敗したりする可能性があります `SUCCESS`。 HTTP コールバックは 1 回限りの配信を保証するものではありません。マーチャントおよび `environment` スコープ内で重複排除を維持します。資金は `orderType:orderId:targetStatus` を使用します。警告には `liquidation.warning:notificationId` を使用します。同一の処理済みボディの場合は、資金を入金したり再度リマインダーを発行したりせずに 2xx を返します。ボディが異なる同じ ID の場合は、競合を記録し、2xx 以外を返します。元のレコードを上書きしないでください。
 
-可能な場合は、ビジネス変更と冪等性レコードを同じトランザクションでコミットします。繰り返されるイベントでは、残高、順序、またはユーザーの変更を再度適用するのではなく、既知の結果を返す必要があります。
-
-<span id="timeout-and-retry-rule" data-sixmm-canonical-anchor="timeout-and-retry-rule" aria-hidden="true"></span>
-
-## タイムアウトと再試行のルール
-
-HTTP タイムアウトは、元のリクエストが失敗したことを証明するものではありません。元の `agentOrderNo` を使用して操作をクエリするか、その webhook を待ってから、別のアクションが必要かどうかを判断します。タイムアウトが発生するたびに新しい業務注文番号を作成すると、重複した資金移動が発生する可能性があります。
-
-<span id="production-checklist" data-sixmm-canonical-anchor="production-checklist" aria-hidden="true"></span>
-
-## 製作チェックリスト
-
-- JSON の解析またはビジネス処理の前に署名を検証してください。
-- 解析されたペイロードから独立して生の本体を保存します。
-- 承認された統合ポリシーに従って、古いリクエストまたは再実行されたリクエストを拒否します。
-- 繰り返しの配信や順序どおりでない配信に対してイベント処理を安全にします。
-- イベント ID、パートナー注文番号、処理結果、リクエスト時刻を記録します。
-- ログからのシークレットと署名値を編集し、添付ファイルをサポートします。
-
-<span id="related-docs" data-sixmm-canonical-anchor="related-docs" aria-hidden="true"></span>
-
-## 関連ドキュメント
-
-<CardGroup cols={3}>
-<Card title="秘密とHMAC署名" icon="fa-duotone fa-shield-keyhole" href="/ja/sdk/security/secrets-signing">
-リクエストと webhook の検証に使用される API シークレットを保護します。
-</Card>
-<Card title="Agent SDK 概要" icon="fa-duotone fa-server" href="/ja/sdk/agent-sdk/overview">
-完全なバックエンド統合ワークフローを確認します。
-</Card>
-<Card title="SDK トラブルシューティング" icon="fa-duotone fa-screwdriver-wrench" href="/ja/sdk/security/troubleshooting">
-拒否された署名、繰り返されるイベント、保留中の操作を調査します。
-</Card>
-</CardGroup>
+承認の成功は、資金操作が成功したことを意味するのではなく、販売者が通知を受信/処理したことを意味します。 `targetStatus=FAILED` で有効な資金通知を記録した後、2xx も返します。注文の失敗は、通知の確認を拒否する理由にはなりません。
 
 <span id="funding-and-environment-boundaries" data-sixmm-canonical-anchor="funding-and-environment-boundaries" aria-hidden="true"></span>
 
@@ -104,6 +134,6 @@ HTTP タイムアウトは、元のリクエストが失敗したことを証明
 
 元の契約転送 webhook および `queryOrder` フローは、資金調達に自動的には適用されません。 `queryWalletTransfer` と元の注文環境を使用して資金調達操作を確認します。資金には `status` が使用されます。元の契約転送応答では `orderStatus` を使用します。成功した HTTP 応答または `code=0` 自体は、資金が移動したことを証明するものではありません。
 
-明示的にシミュレートされた契約転送通知には `environment=SIMULATED` が含まれます。まず生の本文を確認し、次にユーザー、金額、注文 ID、および環境を保存されたローカル ビジネス注文と比較して確認します。
+明示的にシミュレートされた契約転送通知には `environment=SIMULATED` が含まれます。最初に生の本文を確認し、次にユーザー、金額、注文 ID、および環境を保存されたローカル ビジネス注文と比較して確認します。
 
 [資金回収ガイド](/ja/sdk/agent-sdk/java/funding-wallet) · [環境ガイド](/ja/sdk/agent-sdk/java/environments)

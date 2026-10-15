@@ -7,7 +7,7 @@ canonical-url: https://docs.6mm.com/pt-PT/sdk/agent-sdk/java/overview
 
 Este guia é dirigido a **Agent Java SDK `v0.3.0`**, Java 8+ e ao contrato público assinalado. Os exemplos são executados num back-end de parceiro após a inicialização de `client` em [Início rápido](/pt-PT/sdk/agent-sdk/java/quick-start).
 
-Linha de base da documentação: SDK `v0.3.0`, commit `54aa3c1`.
+Linha de base da documentação: SDK `v0.3.0`, commit `54aa3c1`. As regras de recepção de Webhook seguem adicionalmente [`WEBHOOKS.md` em `fa6c7b6`](https://github.com/6mm-com/agent-java-sdk/blob/fa6c7b65124f1346f815b3b73eb8a7729466c3dc/WEBHOOKS.md); trata-se de uma atualização apenas de documentação, sem um novo artefacto SDK contendo métodos auxiliares de aviso.
 
 <span id="version-and-installation" data-sixmm-canonical-anchor="version-and-installation" aria-hidden="true"></span>
 
@@ -36,7 +36,7 @@ Fonte de hosts GitHub; isso não torna estas coordenadas solucionáveis ​​no
 | Transferências | Ordem inversa | `reverse` | Reverter uma transferência bem-sucedida quando o back-end suporta um fluxo de compensação |
 | Transferências | Ordem de consulta | `queryOrder` | Consultar uma ordem de transferência por número de ordem do parceiro |
 | Transferências | Listar pedidos | `listOrders` | Percorrer ordens de transferência para reconciliação |
-| Transferências | Verificação Webhook | `WebhookVerifier.verify` | Verifique os retornos de chamada do estado final da transferência de 6MM |
+| Webhook | Verificação de assinatura | `WebhookVerifier.verify` | Verificar eventos de fundos brutos e órgãos de alerta de liquidação; o código do comerciante lida com verificações de tempo, propriedade e desduplicação persistente. Ver [Webhook Eventos e avisos de liquidação](/pt-PT/sdk/agent-sdk/java/webhook-events). |
 | Carteira de financiamento | Transferência de financiamento | `walletTransfer` | Parceiro ↔ Financiamento ou Financiamento ↔ Contrato; confirme o estado retornado |
 | Carteira de financiamento | Estado da transferência de financiamento | `queryWalletTransfer` | Recuperar uma operação de financiamento utilizando o número original do pedido do parceiro |
 | Entrada de negociação | Entrada direta URL | `createEntryUrl` | Crie um SSO URL único para o modo de redireccionamento |
@@ -65,7 +65,7 @@ integrando.
 | `agentCode` | `AGENT001` | Código de parceiro |
 | `apiSecret` | `your-api-secret` | API segredo de assinatura. Mantenha-o apenas no back-end |
 | `defaultCurrency` | `USDT` | Moeda padrão, geralmente `USDT` |
-| `webhookUrl` | `https://partner.example.com/6mm/webhook` | Endpoint do parceiro para as chamadas de retorno 6MM |
+| `webhookUrl` | `https://partner.example.com/6mm/webhook` | Callback do comerciante URL partilhado por todos os quatro tipos de evento; envio por corpo `event`, sem aviso separado URL. |
 
 Recomendações de produção:
 

@@ -93,3 +93,18 @@ Geri arama doğrulamasını ve yinelenen olay işlemeyi gözden geçirin.
 | Yeni Java yöntemi eksik | Çözülmüş Maven yapıtını genel etiket `v0.3.0` ile karşılaştırarak kontrol edin; yapı politikanıza göre çakışan bağımlılıkları kaldırın. |
 
 [Sorgu ve hata referansı](/tr/sdk/agent-sdk/java/perpetual-queries) · [Yükseltme kılavuzu](/tr/sdk/agent-sdk/java/upgrade)
+
+<span id="webhook-receiving-issues" data-sixmm-canonical-anchor="webhook-receiving-issues" aria-hidden="true"></span>
+
+## Webhook alma sorunları
+
+| Belirti | Kontrol ve kullanım |
+| --- | --- |
+| Başarısızlık döndürüldükten sonra yeniden deneme yok JSON | Uç noktanın hala HTTP 200 döndürüp döndürmediğini kontrol edin. Teslimat, gövdedeki bir başarı göstergesini değil, yalnızca HTTP durumunu kullanır. |
+| Yeniden denemeler 401 veya 409'dan sonra devam ediyor | 2xx olmayan yanıtlar mevcut yeniden deneme ilkesine uyar; imzaları, bildirim içeriğini veya satıcı yapılandırmasını araştırın. |
+| Tasfiye uyarısı için boş idempotency anahtarı | Mevcut `WebhookVerifier.idempotencyKey` yalnızca fon-etkinlik kimliklerini çıkarır. İmza ve sahiplik kontrollerinden sonra, `notificationId` doğrulayın ve satıcı kodunda uyarı anahtarını oluşturun. Asla boş bir anahtar kullanmayın. |
+| Başarılı işlemden sonra yinelenen bildirim | Satıcı ve `environment` kapsamında tekilleştirmeye devam edin. Aynı kopyalar için 2xx değerini döndürün; çakışmaları kaydedin ve aynı kimlik için farklı bir gövdeyle 2xx olmayanı döndürün. |
+| Uyarı işlenmedi | `liquidation.warning` ve geçmiş `LIQUIDATION_WARNING`'i kabul edin; Farklı bildirim kimliklerini kullanıcıya, bölüme veya etkinlik türüne göre gruplandırmayın ve bunları atmayın. |
+| Kabul edilen bildirim, bekleyen görevini kaybeder | 2xx'i döndürmeden önce görevi güvenilir bir şekilde kaydedin; bellek içi eşzamansız bir görevin başlatılması yetersizdir. |
+
+[Etkinlik alanları ve uyumluluk](/tr/sdk/agent-sdk/java/webhook-events) · [HTTP yanıtlar ve güvenilir onay](/tr/sdk/security/webhooks-idempotency)

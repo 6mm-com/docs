@@ -258,3 +258,13 @@ Empfehlungen zur Paginierung:
 - [Abfrageübersicht und Paginierung](/de/sdk/agent-sdk/java/perpetual-queries)
 - [Funding-Wallet](/de/sdk/agent-sdk/java/funding-wallet)
 - [Upgrade-Anleitung](/de/sdk/agent-sdk/java/upgrade)
+
+<span id="funds-event-callbacks" data-sixmm-canonical-anchor="funds-event-callbacks" aria-hidden="true"></span>
+
+## Rückrufe bei Fondsveranstaltungen
+
+`transfer.completed` kann `SUCCESS`, `FAILED` oder eine ursprüngliche Bestellaktualisierung von `REVERSED` enthalten; `reverse.completed` ist ein Terminalereignis für die Stornierung von Bestellungen. `transfer.dead` bedeutet, dass der endgültige Status nach Wiederholungsversuchen unbestätigt bleibt und einen manuellen Abgleich erfordert, kein bestätigter Fehler. Der Name der Ereignis allein ist kein Beweis dafür, dass Gelder gutgeschrieben wurden.
+
+Eine erfolgreiche Bestätigung unterscheidet sich von einer erfolgreichen Geldbewegung: Nachdem Sie eine gültige `targetStatus=FAILED`-Benachrichtigung erfasst haben, geben Sie auch HTTP 2xx zurück. Behalten Sie die Deduplizierung von Geldereignissen durch `orderType:orderId:targetStatus` innerhalb des Händler- und `environment`-Bereichs bei.
+
+[Ereignisfelder und JSON Beispiele](/de/sdk/agent-sdk/java/webhook-events) · [Signaturüberprüfung, Antworten und Wiederholungsversuche](/de/sdk/security/webhooks-idempotency)

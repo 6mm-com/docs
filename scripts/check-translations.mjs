@@ -144,8 +144,8 @@ const activePages = [
     ),
   ),
 ];
-if (activePages.length !== 139) {
-  pushError(`Expected 139 active pages, found ${activePages.length}`);
+if (activePages.length !== 140) {
+  pushError(`Expected 140 active pages, found ${activePages.length}`);
 }
 
 if (config.title !== "6MM Docs") {

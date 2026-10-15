@@ -253,3 +253,13 @@ resp.orders.forEach(order -> System.out.println(order.orderNo));
 - [合约查询与分页](/zh-CN/sdk/agent-sdk/java/perpetual-queries)
 - [Funding 钱包](/zh-CN/sdk/agent-sdk/java/funding-wallet)
 - [升级指南](/zh-CN/sdk/agent-sdk/java/upgrade)
+
+<span id="funds-event-callbacks" data-sixmm-canonical-anchor="funds-event-callbacks" aria-hidden="true"></span>
+
+## 资金事件回调
+
+`transfer.completed` 可携带 `SUCCESS`、`FAILED` 或原单冲正后的 `REVERSED`；`reverse.completed` 为冲正订单终态；`transfer.dead` 表示重试仍无法确认最终状态，需要人工核对，不代表确定失败。不能仅凭事件名称判断资金已入账。
+
+回调成功确认与资金成功不同：合法的 `targetStatus=FAILED` 通知完成记录后，也应返回 HTTP 2xx。资金事件按 `orderType:orderId:targetStatus` 在商户与 `environment` 范围内持久去重。
+
+[事件字段与 JSON 示例](/zh-CN/sdk/agent-sdk/java/webhook-events) · [验签、响应与重试](/zh-CN/sdk/security/webhooks-idempotency)

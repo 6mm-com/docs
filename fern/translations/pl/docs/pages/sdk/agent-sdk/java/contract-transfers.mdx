@@ -258,3 +258,13 @@ Zalecenia dotyczące paginacji:
 - [Przegląd zapytań i paginacja](/pl/sdk/agent-sdk/java/perpetual-queries)
 - [Portfel finansowania](/pl/sdk/agent-sdk/java/funding-wallet)
 - [Przewodnik po aktualizacji](/pl/sdk/agent-sdk/java/upgrade)
+
+<span id="funds-event-callbacks" data-sixmm-canonical-anchor="funds-event-callbacks" aria-hidden="true"></span>
+
+## Fundusze na wywołania zwrotne zdarzeń
+
+`transfer.completed` może zawierać `SUCCESS`, `FAILED` lub aktualizację pierwotnego zamówienia na `REVERSED`; `reverse.completed` to zdarzenie końcowe zlecenia odwrócenia. `transfer.dead` oznacza, że ​​stan końcowy pozostaje niepotwierdzony po ponownych próbach i wymaga ręcznego uzgodnienia, a nie potwierdzonego błędu. Sama nazwa wydarzenia nie świadczy o zaksięgowaniu środków.
+
+Pomyślne potwierdzenie różni się od pomyślnego przeniesienia środków: po zarejestrowaniu ważnego `targetStatus=FAILED` powiadomienia, zwróć również HTTP 2xx. Utrzymuj deduplikację zdarzeń związanych z funduszami przez `orderType:orderId:targetStatus` w zakresie sprzedawcy i `environment`.
+
+[Pola zdarzeń i JSON przykłady](/pl/sdk/agent-sdk/java/webhook-events) · [Weryfikacja podpisu, odpowiedzi i ponowne próby](/pl/sdk/security/webhooks-idempotency)

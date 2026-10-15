@@ -93,3 +93,18 @@ Agent SDK 資格情報、クロック、署名済みフィールドを確認し�
 | 新しい Java メソッドがありません | 解決された Maven アーティファクトをパブリック タグ `v0.3.0` に対して確認します。アーティファクト ポリシーに従って、競合する依存関係を削除します。 |
 
 [クエリとエラーのリファレンス](/ja/sdk/agent-sdk/java/perpetual-queries) · [アップグレードガイド](/ja/sdk/agent-sdk/java/upgrade)
+
+<span id="webhook-receiving-issues" data-sixmm-canonical-anchor="webhook-receiving-issues" aria-hidden="true"></span>
+
+## Webhook の受信に関する問題
+
+| 症状 | 点検と取り扱い |
+| --- | --- |
+| 失敗を返した後は再試行なし JSON | エンドポイントが引き続き HTTP 200 を返すかどうかを確認します。配信では、本文内の成功インジケーターではなく、HTTP ステータスのみが使用されます。 |
+| 401 または 409 の後も再試行が続行されます | 2xx 以外の応答は既存の再試行ポリシーに従います。署名、通知内容、または販売者の設定を調査します。 |
+| 清算警告のための空の冪等性キー | 現在の `WebhookVerifier.idempotencyKey` は資金イベント ID のみを抽出します。署名と所有権のチェック後、`notificationId` を検証し、販売者コードで警告キーを構築します。空のキーは決して使用しないでください。 |
+| 処理が成功した後の重複通知 | マーチャントおよび `environment` スコープ内で重複排除を維持します。同一の重複の場合は 2xx を返します。レコードが競合し、本体が異なる同じ ID に対して 2xx 以外を返します。 |
+| 警告は処理されませんでした | `liquidation.warning` および過去の `LIQUIDATION_WARNING` を受け入れます。個別の通知 ID をユーザー、エピソード、またはイベント タイプごとにグループ化して破棄しないでください。 |
+| 受け入れられた通知は保留中のタスクを失います | 2xx を返す前にタスクを確実に保存します。メモリ内の非同期タスクを開始するだけでは不十分です。 |
+
+[イベントフィールドと互換性](/ja/sdk/agent-sdk/java/webhook-events) · [HTTP の応答と信頼できる確認応答](/ja/sdk/security/webhooks-idempotency)

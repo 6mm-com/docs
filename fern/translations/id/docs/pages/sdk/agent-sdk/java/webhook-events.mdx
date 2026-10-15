@@ -1,0 +1,164 @@
+---
+title: "Webhook Peristiwa & Peringatan Likuidasi"
+subtitle: "Jenis peristiwa pedagang Webhook, identitas idempotensi, bidang peringatan likuidasi, dan contoh hasil dana."
+slug: sdk/agent-sdk/java/webhook-events
+canonical-url: https://docs.6mm.com/id/sdk/agent-sdk/java/webhook-events
+---
+
+Halaman ini mengikuti [Agent Java SDK `WEBHOOKS.md`](https://github.com/6mm-com/agent-java-sdk/blob/fa6c7b65124f1346f815b3b73eb8a7729466c3dc/WEBHOOKS.md) saat melakukan `fa6c7b6`. Ini adalah pembaruan dokumentasi saja; tidak ada artefak SDK baru yang berisi metode pembantu peringatan yang dirilis.
+
+Keempat jenis peristiwa tersebut menggunakan callback tunggal yang dikonfigurasi milik pedagang URL (`agents.webhook_url`). Pengiriman pada badan `event`; tidak diperlukan peringatan terpisah URL. Contoh menunjukkan struktur muatan dan tidak boleh digunakan untuk memasukkan data ke dalam lingkungan pengujian.
+
+<span id="events-and-idempotency" data-sixmm-canonical-anchor="events-and-idempotency" aria-hidden="true"></span>
+
+## Peristiwa dan idempotensi
+
+| `event` | Arti | `targetStatus` / kunci deduplikasi |
+| --- | --- | --- |
+| `transfer.completed` | Status terminal transfer, termasuk pembaruan ke pesanan asli setelah pembalikan; belum tentu berhasil | `SUCCESS` / `FAILED` / `REVERSED`; `orderType:orderId:targetStatus` |
+| `reverse.completed` | Status terminal pesanan pembalikan | `SUCCESS` / `FAILED`; `orderType:orderId:targetStatus` |
+| `transfer.dead` | Status pesanan dana akhir masih belum dikonfirmasi setelah percobaan ulang dan memerlukan rekonsiliasi manual; bukan kegagalan yang dikonfirmasi | `DEAD`; `orderType:orderId:targetStatus` |
+| `liquidation.warning` | Peringatan risiko likuidasi, tanpa kolom status terminal pesanan | `liquidation.warning:notificationId` |
+
+Peristiwa peringatan pedagang adalah `liquidation.warning`; pengguna WebSocket `data.event` tetap `LIQUIDATION_WARNING`. Jaga agar kedua saluran tetap berbeda.
+
+Notifikasi pedagang historis digunakan `LIQUIDATION_WARNING`. Muatan yang dibekukan mempertahankan isi aslinya saat percobaan ulang, sehingga penerima harus mengenali kedua nama tersebut. Jika catatan bisnis yang ada menggunakan awalan kunci peringatan huruf besar, pertahankan kunci asli atau periksa kedua kunci selama migrasi untuk menghindari pemrosesan pemberitahuan lagi.
+
+**`WebhookVerifier.idempotencyKey` saat ini hanya mengekstrak `orderType:orderId:targetStatus` untuk peristiwa dana dan mengembalikan string kosong untuk payload peringatan.** Tidak ada artefak SDK baru yang berisi metode pembantu peringatan yang dirilis dengan pembaruan dokumentasi ini. Lanjutkan menggunakan metode `verify` yang ada untuk memverifikasi isi peringatan mentah. Setelah pemeriksaan tanda tangan dan kepemilikan, kode bisnis pedagang harus mengenali kedua nama peristiwa, memvalidasi bahwa `notificationId` adalah string bilangan bulat desimal positif, dan membuat `liquidation.warning:<notificationId>`. Jangan pernah menggunakan kunci deduplikasi kosong atau memerlukan peringatan untuk memuat bidang pemesanan dana.
+
+Pertahankan deduplikasi dalam lingkup pedagang dan `environment` dan lakukan secara atomik dengan pemrosesan bisnis. Pemberitahuan `FIRST` / `UPGRADE` / `REMINDER` dengan nilai `notificationId` yang berbeda bersifat independen; jangan membuangnya dengan mengelompokkannya berdasarkan pengguna, episode, atau `eventType`. Kunci kosong berarti identitas yang valid tidak dapat diekstraksi. SDK hanya mengembalikan kunci pembantu; itu tidak menyimpan catatan atau melakukan pemrosesan bisnis. Mencatat identitas yang sama dengan badan yang berbeda sebagai konflik; jangan menimpa tubuh yang diproses.
+
+<span id="liquidation-warning-fields-and-example" data-sixmm-canonical-anchor="liquidation-warning-fields-and-example" aria-hidden="true"></span>
+
+## Bidang peringatan likuidasi dan contohnya
+
+| Bidang | Jenis / deskripsi |
+| --- | --- |
+| `notificationId` | String bilangan bulat desimal positif; ID pemberitahuan unik. Jangan mengubahnya menjadi bilangan floating-point. |
+| `eventType` | `FIRST`: peringatan pertama di episode saat ini; `UPGRADE`: risiko normal ditingkatkan menjadi risiko tinggi pada episode ini; `REMINDER`: pengingat lain akan risiko yang sedang berlangsung. |
+| `severity` | `NORMAL` / `HIGH`. `FIRST` mungkin sudah menjadi `HIGH`; `UPGRADE` adalah `HIGH`; `REMINDER` mungkin `NORMAL` atau `HIGH`. |
+| `occurredAt` | JSON nomor; Unix milidetik saat peringatan dipicu, bukan saat HTTP pengiriman tiba. |
+| `object` | `type=CROSS`: akun lintas margin, dengan string kosong untuk `symbol`, `side`, dan `positionId`. `ISOLATED`: posisi margin terisolasi, membawa kontrak, sisi, dan ID posisi yang sesuai. |
+| `episode` | Rangkaian; episode peringatan saat ini. `FIRST` tidak berarti peringatan pertama bagi pengguna. |
+| `stateVersion` / `configVersion` | Senar; status hulu/versi konfigurasi. Jangan membuang notifikasi secara mandiri berdasarkan bidang ini. |
+| `riskRatio` / `minLargePositionValue` / `liquidationHighRiskThreshold` | String desimal untuk rasio risiko, ambang peringatan normal, dan ambang risiko tinggi. Pertahankan presisi; upstream menghitung aturan ambang batas. |
+| `environment` | `PRODUCTION` / `SIMULATED`; isolasi berdasarkan lingkungan dana yang dikonfigurasi, bukan nama server. |
+| `agentId` / `agentCode` / `agentUserId` | Senar; ID agen, kode agen, dan ID pengguna sisi pedagang. |
+| `platformUserId` | Rangkaian; ID pengguna platform publik cocok dengan hasil pengikatan, bukan `user_id` internal layanan. |
+
+```json
+{
+  "event": "liquidation.warning",
+  "notificationId": "68460336",
+  "eventType": "FIRST",
+  "severity": "NORMAL",
+  "occurredAt": 1791875870804,
+  "object": {
+    "type": "CROSS",
+    "symbol": "",
+    "side": "",
+    "positionId": ""
+  },
+  "episode": "3",
+  "stateVersion": "9",
+  "riskRatio": "0.29133109",
+  "minLargePositionValue": "0.20000000",
+  "liquidationHighRiskThreshold": "0.40000000",
+  "configVersion": "8",
+  "environment": "PRODUCTION",
+  "agentId": "16",
+  "agentCode": "DEMO",
+  "agentUserId": "merchant-user-001",
+  "platformUserId": "6054354872"
+}
+```
+
+<span id="transfer-result-example" data-sixmm-canonical-anchor="transfer-result-example" aria-hidden="true"></span>
+
+## Contoh hasil transfer
+
+Callback dana mempertahankan tipe yang ada: `orderId` dan `agentId` adalah JSON angka; `amount` dan `platformUserId` adalah string. Jangan terapkan konvensi string peringatan `agentId` untuk mendanai callback. Baca bilangan bulat besar tanpa kehilangan presisi menggunakan tipe bilangan bulat/desimal. `completedAt` adalah UTC RFC3339; `ts` adalah detik Unix.
+
+```json
+{
+  "environment": "PRODUCTION",
+  "event": "transfer.completed",
+  "orderType": "transfer",
+  "orderId": 10001,
+  "orderNo": "merchant-order-001",
+  "targetStatus": "SUCCESS",
+  "agentId": 16,
+  "agentCode": "DEMO",
+  "currency": "USDT",
+  "amount": "10.00",
+  "direction": "IN",
+  "transferMode": "FIXED_AMOUNT",
+  "agentUserId": "merchant-user-001",
+  "platformUserId": "6054354872",
+  "rejectCode": 0,
+  "rejectMessage": "",
+  "failReason": "",
+  "completedAt": "2026-10-13T07:17:50Z",
+  "ts": 1791875870
+}
+```
+
+<span id="reversal-result-example" data-sixmm-canonical-anchor="reversal-result-example" aria-hidden="true"></span>
+
+## Contoh hasil pembalikan
+
+```json
+{
+  "environment": "PRODUCTION",
+  "event": "reverse.completed",
+  "orderType": "transfer",
+  "orderId": 10002,
+  "orderNo": "merchant-reverse-001",
+  "targetStatus": "SUCCESS",
+  "agentId": 16,
+  "agentCode": "DEMO",
+  "currency": "USDT",
+  "amount": "10.00",
+  "direction": "IN",
+  "transferMode": "FIXED_AMOUNT",
+  "agentUserId": "merchant-user-001",
+  "platformUserId": "6054354872",
+  "rejectCode": 0,
+  "rejectMessage": "",
+  "failReason": "",
+  "completedAt": "2026-10-13T07:17:50Z",
+  "ts": 1791875870
+}
+```
+
+<span id="funds-order-dead-state-example" data-sixmm-canonical-anchor="funds-order-dead-state-example" aria-hidden="true"></span>
+
+## Contoh pesanan dana dalam keadaan mati
+
+```json
+{
+  "environment": "PRODUCTION",
+  "event": "transfer.dead",
+  "orderType": "transfer",
+  "orderId": 10003,
+  "orderNo": "merchant-order-002",
+  "targetStatus": "DEAD",
+  "agentId": 16,
+  "agentCode": "DEMO",
+  "currency": "USDT",
+  "amount": "10.00",
+  "direction": "IN",
+  "transferMode": "FIXED_AMOUNT",
+  "agentUserId": "merchant-user-001",
+  "platformUserId": "6054354872",
+  "rejectCode": 0,
+  "rejectMessage": "",
+  "failReason": "order dead",
+  "completedAt": "2026-10-13T07:17:50Z",
+  "ts": 1791875870
+}
+```
+
+Contoh-contoh ini hanya menunjukkan protokolnya. Untuk `FAILED`, `rejectCode`, `rejectMessage`, dan `failReason` mencerminkan penolakan yang sebenarnya. Nama acara saja tidak membuktikan dana telah dikreditkan.
+
+[Verifikasi tanda tangan, tanggapan, dan percobaan ulang](/id/sdk/security/webhooks-idempotency)

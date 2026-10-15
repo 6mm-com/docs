@@ -93,3 +93,18 @@ Revise a verificação de retorno de chamada e o tratamento de eventos duplicado
 | Novo método Java ausente | Verifique o artefato Maven resolvido em relação à tag pública `v0.3.0`; remova dependências conflitantes de acordo com sua política de artefatos. |
 
 [Referência de consulta e erro](/pt-BR/sdk/agent-sdk/java/perpetual-queries) · [Guia de atualização](/pt-BR/sdk/agent-sdk/java/upgrade)
+
+<span id="webhook-receiving-issues" data-sixmm-canonical-anchor="webhook-receiving-issues" aria-hidden="true"></span>
+
+## Webhook problemas de recebimento
+
+| Sintoma | Verificação e manuseio |
+| --- | --- |
+| Nenhuma nova tentativa após retornar a falha JSON | Verifique se o endpoint ainda retorna HTTP 200. A entrega usa apenas o status HTTP, não um indicador de sucesso no corpo. |
+| As novas tentativas continuam após 401 ou 409 | As respostas diferentes de 2xx seguem a política de repetição existente; investigue assinaturas, conteúdo de notificação ou configuração do comerciante. |
+| Chave de idempotência vazia para um aviso de liquidação | O `WebhookVerifier.idempotencyKey` atual extrai apenas identidades de eventos de fundos. Após as verificações de assinatura e propriedade, valide `notificationId` e crie a chave de aviso no código do comerciante. Nunca use uma chave vazia. |
+| Notificação duplicada após processamento bem-sucedido | Persista a desduplicação no escopo do comerciante e `environment`. Retorne 2xx para duplicatas idênticas; registre conflitos e retorne não-2xx para o mesmo ID com um corpo diferente. |
+| Aviso não processado | Aceite `liquidation.warning` e histórico `LIQUIDATION_WARNING`; não agrupe IDs de notificação distintos por usuário, episódio ou tipo de evento e descarte-os. |
+| A notificação aceita perde sua tarefa pendente | Salve uma tarefa de forma confiável antes de retornar 2xx; iniciar uma tarefa assíncrona na memória é insuficiente. |
+
+[Campos de evento e compatibilidade](/pt-BR/sdk/agent-sdk/java/webhook-events) · [HTTP respostas e reconhecimento confiável](/pt-BR/sdk/security/webhooks-idempotency)

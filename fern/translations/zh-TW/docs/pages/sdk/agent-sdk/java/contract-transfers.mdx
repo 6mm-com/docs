@@ -258,3 +258,13 @@ resp.orders.forEach(order -> System.out.println(order.orderNo));
 - [查詢概覽和分頁](/zh-TW/sdk/agent-sdk/java/perpetual-queries)
 - [資金錢包](/zh-TW/sdk/agent-sdk/java/funding-wallet)
 - [升級指南](/zh-TW/sdk/agent-sdk/java/upgrade)
+
+<span id="funds-event-callbacks" data-sixmm-canonical-anchor="funds-event-callbacks" aria-hidden="true"></span>
+
+## 資金事件回調
+
+`transfer.completed`可以攜帶`SUCCESS`、`FAILED`，或`REVERSED`的原始訂單更新； `reverse.completed` 是反轉訂單終止事件。 `transfer.dead` 表示重試後最終狀態仍未確認，需要手動調節，而不是已確認的失敗。僅憑活動名稱並不能證明資金已記入。
+
+成功確認與成功資金轉移不同：記錄有效的 `targetStatus=FAILED` 通知後，也返回 HTTP 2xx。透過 `orderType:orderId:targetStatus` 在商家和 `environment` 範圍內持續進行資金事件重複資料刪除。
+
+[事件欄位和 JSON 範例](/zh-TW/sdk/agent-sdk/java/webhook-events) · [簽名驗證、回應和重試](/zh-TW/sdk/security/webhooks-idempotency)

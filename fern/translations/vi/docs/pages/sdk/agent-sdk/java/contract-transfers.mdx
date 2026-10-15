@@ -258,3 +258,13 @@ resp.orders.forEach(order -> System.out.println(order.orderNo));
 - [Tổng quan về truy vấn và phân trang](/vi/sdk/agent-sdk/java/perpetual-queries)
 - [Ví tiền tài trợ](/vi/sdk/agent-sdk/java/funding-wallet)
 - [Hướng dẫn nâng cấp](/vi/sdk/agent-sdk/java/upgrade)
+
+<span id="funds-event-callbacks" data-sixmm-canonical-anchor="funds-event-callbacks" aria-hidden="true"></span>
+
+## Cuộc gọi lại sự kiện quỹ
+
+`transfer.completed` có thể mang theo `SUCCESS`, `FAILED` hoặc bản cập nhật đơn hàng ban đầu của `REVERSED`; `reverse.completed` là sự kiện kết thúc lệnh đảo ngược. `transfer.dead` có nghĩa là trạng thái cuối cùng vẫn chưa được xác nhận sau khi thử lại và cần điều chỉnh thủ công chứ không phải là lỗi được xác nhận. Chỉ riêng tên sự kiện không chứng minh được tiền đã được ghi có.
+
+Xác nhận thành công khác với chuyển tiền thành công: sau khi ghi lại thông báo `targetStatus=FAILED` hợp lệ, hãy trả lại HTTP 2xx. Duy trì việc loại bỏ trùng lặp quỹ-sự kiện theo `orderType:orderId:targetStatus` trong phạm vi người bán và `environment`.
+
+[Các trường sự kiện và ví dụ JSON](/vi/sdk/agent-sdk/java/webhook-events) · [Xác minh chữ ký, phản hồi và thử lại](/vi/sdk/security/webhooks-idempotency)

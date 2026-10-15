@@ -93,3 +93,18 @@ Vérifiez la vérification des rappels et la gestion des événements en double.
 | Nouvelle méthode Java manquante | Vérifiez l'artefact Maven résolu par rapport à la balise publique `v0.3.0` ; supprimez les dépendances conflictuelles conformément à votre politique d’artefact. |
 
 [Référence des requêtes et des erreurs](/fr/sdk/agent-sdk/java/perpetual-queries) · [Guide de mise à niveau](/fr/sdk/agent-sdk/java/upgrade)
+
+<span id="webhook-receiving-issues" data-sixmm-canonical-anchor="webhook-receiving-issues" aria-hidden="true"></span>
+
+## Webhook problèmes de réception
+
+| Symptôme | Contrôle et manipulation |
+| --- | --- |
+| Aucune nouvelle tentative après un retour d'échec JSON | Vérifiez si le point de terminaison renvoie toujours HTTP 200. La livraison utilise uniquement le statut HTTP, pas un indicateur de réussite dans le corps. |
+| Les tentatives se poursuivent après 401 ou 409 | Les réponses non-2xx suivent la politique de nouvelle tentative existante ; enquêtez sur les signatures, le contenu des notifications ou la configuration du commerçant. |
+| Clé d'idempotence vide pour un avertissement de liquidation | Le `WebhookVerifier.idempotencyKey` actuel extrait uniquement les identités des fonds et des événements. Après les vérifications de signature et de propriété, validez `notificationId` et créez la clé d'avertissement dans le code marchand. N'utilisez jamais une clé vide. |
+| Notification en double après un traitement réussi | Conserver la déduplication au sein du commerçant et dans la portée de `environment`. Renvoyez 2xx pour les doublons identiques ; enregistrer les conflits et renvoyer non-2xx pour le même identifiant avec un corps différent. |
+| Avertissement non traité | Acceptez `liquidation.warning` et les `LIQUIDATION_WARNING` historiques ; ne regroupez pas les ID de notification distincts par utilisateur, épisode ou type d'événement et supprimez-les. |
+| La notification acceptée perd sa tâche en attente | Enregistrez une tâche de manière fiable avant de renvoyer 2xx ; démarrer une tâche asynchrone en mémoire est insuffisant. |
+
+[Champs d'événement et compatibilité](/fr/sdk/agent-sdk/java/webhook-events) · [HTTP réponses et accusé de réception fiable](/fr/sdk/security/webhooks-idempotency)

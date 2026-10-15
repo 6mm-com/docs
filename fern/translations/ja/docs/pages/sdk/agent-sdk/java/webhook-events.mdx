@@ -1,0 +1,164 @@
+---
+title: "Webhook イベントと清算に関する警告"
+subtitle: "マーチャント Webhook イベント タイプ、べき等 ID、清算警告フィールド、および資金結果の例。"
+slug: sdk/agent-sdk/java/webhook-events
+canonical-url: https://docs.6mm.com/ja/sdk/agent-sdk/java/webhook-events
+---
+
+このページは次のページに続きます [Agent Java SDK `WEBHOOKS.md`](https://github.com/6mm-com/agent-java-sdk/blob/fa6c7b65124f1346f815b3b73eb8a7729466c3dc/WEBHOOKS.md) コミット `fa6c7b6` で。これはドキュメントのみの更新です。警告ヘルパー メソッドを含む新しい SDK アーティファクトはリリースされませんでした。
+
+4 つのイベント タイプはすべて、マーチャントが設定した単一のコールバック URL (`agents.webhook_url`) を使用します。本体にディスパッチ `event`;個別の警告 URL は必要ありません。この例はペイロード構造を示しているため、テスト環境にデータを挿入するために使用しないでください。
+
+<span id="events-and-idempotency" data-sixmm-canonical-anchor="events-and-idempotency" aria-hidden="true"></span>
+
+## イベントとべき等性
+
+| `event` | 意味 | `targetStatus` / 重複排除キー |
+| --- | --- | --- |
+| `transfer.completed` | 反転後の元の注文への更新を含む、最終状態の転送。必ずしも成功するとは限りません | `SUCCESS` / `FAILED` / `REVERSED`; `orderType:orderId:targetStatus` |
+| `reverse.completed` | 逆注文の終了状態 | `SUCCESS` / `FAILED`; `orderType:orderId:targetStatus` |
+| `transfer.dead` | 最終的な資金注文の状態は再試行後も未確認のままであり、手動で調整する必要があります。確認された失敗ではない | `DEAD`; `orderType:orderId:targetStatus` |
+| `liquidation.warning` | 清算リスク警告、注文終了状態フィールドなし | `liquidation.warning:notificationId` |
+
+販売者警告イベントは `liquidation.warning` です。ユーザー WebSocket `data.event` は `LIQUIDATION_WARNING` のままです。 2 つのチャネルを区別してください。
+
+これまでの販売者通知は `LIQUIDATION_WARNING` を使用していました。凍結されたペイロードは再試行時に元の本体を保持するため、受信者は両方の名前を認識する必要があります。既存のビジネス レコードで大文字の警告キー プレフィックスが使用されている場合は、元のキーを保持するか、移行中に両方のキーを確認して、通知が再度処理されないようにします。
+
+**現在の `WebhookVerifier.idempotencyKey` は、資金イベントの `orderType:orderId:targetStatus` のみを抽出し、警告ペイロードには空の文字列を返します。** このドキュメント更新では、警告ヘルパー メソッドを含む新しい SDK アーティファクトはリリースされませんでした。既存の `verify` メソッドを引き続き使用して、生の警告本文を確認します。署名と所有権のチェックの後、マーチャントのビジネス コードは両方のイベント名を認識し、`notificationId` が正の 10 進整数文字列であることを検証して、`liquidation.warning:<notificationId>` を構築する必要があります。空の重複排除キーを使用したり、資金注文フィールドを含めるために警告を要求したりしないでください。
+
+マーチャントおよび `environment` スコープ内で重複排除を維持し、ビジネス処理でアトミックにコミットします。 `FIRST` / `UPGRADE` / `REMINDER` の値が異なる `notificationId` 通知は独立しています。ユーザー、エピソード、または `eventType` でグループ化してそれらを破棄しないでください。空のキーは、有効な ID を抽出できなかったことを意味します。 SDK はヘルパー キーのみを返します。レコードを保持したり、ビジネス処理を実行したりすることはありません。異なる本体を持つ同じアイデンティティを競合として記録します。処理された本文を上書きしないでください。
+
+<span id="liquidation-warning-fields-and-example" data-sixmm-canonical-anchor="liquidation-warning-fields-and-example" aria-hidden="true"></span>
+
+## 清算警告フィールドと例
+
+| 分野 | タイプ/説明 |
+| --- | --- |
+| `notificationId` | 正の 10 進整数文字列。一意の通知 ID。浮動小数点数に変換しないでください。 |
+| `eventType` | `FIRST`: 現在のエピソードの最初の警告。 `UPGRADE`: このエピソードでは通常リスクが高リスクにアップグレードされました。 `REMINDER`: 進行中のリスクを再度思い出させます。 |
+| `severity` | `NORMAL` / `HIGH`。 `FIRST` はすでに `HIGH` になっている可能性があります。 `UPGRADE` は `HIGH` です。 `REMINDER` は `NORMAL` または `HIGH` の場合があります。 |
+| `occurredAt` | JSON 番号; HTTP の配信が到着したときではなく、警告がトリガーされたときの Unix ミリ秒。 |
+| `object` | `type=CROSS`: クロスマージン口座。`symbol`、`side`、および `positionId` は空の文字列です。 `ISOLATED`: 対応する契約、サイド、およびポジション ID を含む分離マージン ポジション。 |
+| `episode` | 弦;現在の警告エピソード。 `FIRST` は、ユーザーに対する初めての警告を意味するものではありません。 |
+| `stateVersion` / `configVersion` | 文字列;アップストリームの状態/構成バージョン。これらのフィールドに基づいて通知を個別に破棄しないでください。 |
+| `riskRatio` / `minLargePositionValue` / `liquidationHighRiskThreshold` | リスク比率、通常の警告しきい値、および高リスクしきい値の 10 進数の文字列。精度を維持します。アップストリームはしきい値ルールを計算します。 |
+| `environment` | `PRODUCTION` / `SIMULATED`;サーバー名ではなく、構成されたファンド環境によって分離します。 |
+| `agentId` / `agentCode` / `agentUserId` | 文字列;エージェント ID、エージェント コード、およびマーチャント側のユーザー ID。 |
+| `platformUserId` | 弦;サービスの内部 `user_id` ではなく、バインディング結果と一致するパブリック プラットフォーム ユーザー ID。 |
+
+```json
+{
+  "event": "liquidation.warning",
+  "notificationId": "68460336",
+  "eventType": "FIRST",
+  "severity": "NORMAL",
+  "occurredAt": 1791875870804,
+  "object": {
+    "type": "CROSS",
+    "symbol": "",
+    "side": "",
+    "positionId": ""
+  },
+  "episode": "3",
+  "stateVersion": "9",
+  "riskRatio": "0.29133109",
+  "minLargePositionValue": "0.20000000",
+  "liquidationHighRiskThreshold": "0.40000000",
+  "configVersion": "8",
+  "environment": "PRODUCTION",
+  "agentId": "16",
+  "agentCode": "DEMO",
+  "agentUserId": "merchant-user-001",
+  "platformUserId": "6054354872"
+}
+```
+
+<span id="transfer-result-example" data-sixmm-canonical-anchor="transfer-result-example" aria-hidden="true"></span>
+
+## 転送結果例
+
+ファンドのコールバックは既存のタイプを保持します: `orderId` と `agentId` は JSON の数値です。 `amount` と `platformUserId` は文字列です。警告の文字列 `agentId` 規則を資金コールバックに適用しないでください。整数/10 進数型を使用して、精度を損なうことなく大きな整数を読み取ります。 `completedAt` は UTC RFC3339 です。 `ts` は Unix 秒です。
+
+```json
+{
+  "environment": "PRODUCTION",
+  "event": "transfer.completed",
+  "orderType": "transfer",
+  "orderId": 10001,
+  "orderNo": "merchant-order-001",
+  "targetStatus": "SUCCESS",
+  "agentId": 16,
+  "agentCode": "DEMO",
+  "currency": "USDT",
+  "amount": "10.00",
+  "direction": "IN",
+  "transferMode": "FIXED_AMOUNT",
+  "agentUserId": "merchant-user-001",
+  "platformUserId": "6054354872",
+  "rejectCode": 0,
+  "rejectMessage": "",
+  "failReason": "",
+  "completedAt": "2026-10-13T07:17:50Z",
+  "ts": 1791875870
+}
+```
+
+<span id="reversal-result-example" data-sixmm-canonical-anchor="reversal-result-example" aria-hidden="true"></span>
+
+## 逆転結果例
+
+```json
+{
+  "environment": "PRODUCTION",
+  "event": "reverse.completed",
+  "orderType": "transfer",
+  "orderId": 10002,
+  "orderNo": "merchant-reverse-001",
+  "targetStatus": "SUCCESS",
+  "agentId": 16,
+  "agentCode": "DEMO",
+  "currency": "USDT",
+  "amount": "10.00",
+  "direction": "IN",
+  "transferMode": "FIXED_AMOUNT",
+  "agentUserId": "merchant-user-001",
+  "platformUserId": "6054354872",
+  "rejectCode": 0,
+  "rejectMessage": "",
+  "failReason": "",
+  "completedAt": "2026-10-13T07:17:50Z",
+  "ts": 1791875870
+}
+```
+
+<span id="funds-order-dead-state-example" data-sixmm-canonical-anchor="funds-order-dead-state-example" aria-hidden="true"></span>
+
+## 資金注文のデッドステートの例
+
+```json
+{
+  "environment": "PRODUCTION",
+  "event": "transfer.dead",
+  "orderType": "transfer",
+  "orderId": 10003,
+  "orderNo": "merchant-order-002",
+  "targetStatus": "DEAD",
+  "agentId": 16,
+  "agentCode": "DEMO",
+  "currency": "USDT",
+  "amount": "10.00",
+  "direction": "IN",
+  "transferMode": "FIXED_AMOUNT",
+  "agentUserId": "merchant-user-001",
+  "platformUserId": "6054354872",
+  "rejectCode": 0,
+  "rejectMessage": "",
+  "failReason": "order dead",
+  "completedAt": "2026-10-13T07:17:50Z",
+  "ts": 1791875870
+}
+```
+
+これらの例はプロトコルのみを示しています。 `FAILED`、`rejectCode`、`rejectMessage`、および `failReason` の場合、実際の拒否が反映されます。イベント名だけでは資金が入金されたことを証明するものではありません。
+
+[署名の検証、応答、および再試行](/ja/sdk/security/webhooks-idempotency)

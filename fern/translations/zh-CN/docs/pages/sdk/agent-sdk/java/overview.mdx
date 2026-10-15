@@ -7,7 +7,7 @@ canonical-url: https://docs.6mm.com/zh-CN/sdk/agent-sdk/java/overview
 
 本文对应 **Agent Java SDK `v0.3.0`**、Java 8+ 与该标签的公开契约。示例在合作方后端运行；先按[快速开始](/zh-CN/sdk/agent-sdk/java/quick-start)初始化 `client`。
 
-文档核对基线：SDK `v0.3.0`，提交 `54aa3c1`。
+文档核对基线：SDK `v0.3.0`，提交 `54aa3c1`。Webhook 接收约定另同步至 [`WEBHOOKS.md` 提交 `fa6c7b6`](https://github.com/6mm-com/agent-java-sdk/blob/fa6c7b65124f1346f815b3b73eb8a7729466c3dc/WEBHOOKS.md)；此次仅更新文档，没有发布包含预警辅助方法的新 SDK 制品。
 
 <span data-sixmm-canonical-anchor="版本与安装" aria-hidden="true"></span>
 
@@ -36,7 +36,7 @@ GitHub 托管源码，不代表这些坐标已发布到 Maven Central。使用�
 | 资金划转 | 冲正 | `reverse` | 对已成功的划转订单发起反向处理 |
 | 资金划转 | 查询订单 | `queryOrder` | 按代理商订单号查询单笔划转订单 |
 | 资金划转 | 查询订单列表 | `listOrders` | 分页查询划转订单 |
-| 资金划转 | Webhook 验签 | `WebhookVerifier.verify` | 校验 6MM 推送的划转终态通知 |
+| Webhook | 签名验证 | `WebhookVerifier.verify` | 验证资金事件和强平预警的原始正文签名；时间、归属校验和持久去重由商户处理，见 [Webhook 事件与强平预警](/zh-CN/sdk/agent-sdk/java/webhook-events) |
 | Funding 钱包 | Funding 划转 | `walletTransfer` | 商户与 Funding 增减，或 Funding 与 Contract 互转 |
 | Funding 钱包 | Funding 查单 | `queryWalletTransfer` | 按原商户单号恢复 Funding 操作结果 |
 | 交易入口 | 直接跳转入口 | `createEntryUrl` | 生成一次性 SSO 跳转链接 |
@@ -64,7 +64,7 @@ GitHub 托管源码，不代表这些坐标已发布到 Maven Central。使用�
 | `agentCode` | `AGENT001` | 代理商编码 |
 | `apiSecret` | `your-api-secret` | API 签名密钥，只能保存在后端 |
 | `defaultCurrency` | `USDT` | 默认币种，通常为 `USDT` |
-| `webhookUrl` | `https://partner.example.com/6mm/webhook` | 代理商接收 6MM 回调的地址 |
+| `webhookUrl` | `https://partner.example.com/6mm/webhook` | 商户配置的回调地址；四类事件共用，按正文 `event` 分流，无需为预警另配 URL |
 
 生产环境建议：
 

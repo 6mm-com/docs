@@ -93,3 +93,18 @@ Xem lại xác minh cuộc gọi lại và xử lý sự kiện trùng lặp.
 | Thiếu phương thức Java mới | Kiểm tra tạo phẩm Maven đã giải quyết dựa trên thẻ công khai `v0.3.0`; loại bỏ các phụ thuộc xung đột theo chính sách tạo tác của bạn. |
 
 [Truy vấn và tham chiếu lỗi](/vi/sdk/agent-sdk/java/perpetual-queries) · [Hướng dẫn nâng cấp](/vi/sdk/agent-sdk/java/upgrade)
+
+<span id="webhook-receiving-issues" data-sixmm-canonical-anchor="webhook-receiving-issues" aria-hidden="true"></span>
+
+## Webhook nhận được sự cố
+
+| triệu chứng | Kiểm tra và xử lý |
+| --- | --- |
+| Không thử lại sau khi trả về lỗi JSON | Kiểm tra xem điểm cuối có còn trả về HTTP 200 hay không. Việc phân phối chỉ sử dụng trạng thái HTTP chứ không phải chỉ báo thành công trong nội dung. |
+| Việc thử lại tiếp tục sau 401 hoặc 409 | Các phản hồi không phải 2xx tuân theo chính sách thử lại hiện có; điều tra chữ ký, nội dung thông báo hoặc cấu hình người bán. |
+| Khóa tạm thời trống để cảnh báo thanh lý | `WebhookVerifier.idempotencyKey` hiện tại chỉ trích xuất danh tính sự kiện quỹ. Sau khi kiểm tra chữ ký và quyền sở hữu, hãy xác thực `notificationId` và tạo khóa cảnh báo trong mã người bán. Không bao giờ sử dụng một phím trống. |
+| Thông báo trùng lặp sau khi xử lý thành công | Liên tục loại bỏ trùng lặp trong phạm vi người bán và `environment`. Trả về 2xx cho các bản sao giống hệt nhau; ghi lại các xung đột và trả về không phải 2xx cho cùng một ID với nội dung khác. |
+| Cảnh báo chưa được xử lý | Chấp nhận `liquidation.warning` và lịch sử `LIQUIDATION_WARNING`; không nhóm các ID thông báo riêng biệt theo người dùng, tập hoặc loại sự kiện và loại bỏ chúng. |
+| Thông báo được chấp nhận sẽ mất tác vụ đang chờ xử lý | Lưu tác vụ một cách đáng tin cậy trước khi trả về 2xx; bắt đầu một tác vụ không đồng bộ trong bộ nhớ là không đủ. |
+
+[Các trường sự kiện và khả năng tương thích](/vi/sdk/agent-sdk/java/webhook-events) · [HTTP phản hồi và xác nhận đáng tin cậy](/vi/sdk/security/webhooks-idempotency)

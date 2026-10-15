@@ -1,0 +1,164 @@
+---
+title: "Webhook Події та попередження про ліквідацію"
+subtitle: "Типи подій Merchant Webhook, ідентифікатори ідемпотентності, поля попередження про ліквідацію та приклади результатів коштів."
+slug: sdk/agent-sdk/java/webhook-events
+canonical-url: https://docs.6mm.com/uk/sdk/agent-sdk/java/webhook-events
+---
+
+Далі йде ця сторінка [Agent Java SDK `WEBHOOKS.md`](https://github.com/6mm-com/agent-java-sdk/blob/fa6c7b65124f1346f815b3b73eb8a7729466c3dc/WEBHOOKS.md) під час фіксації `fa6c7b6`. Це оновлення лише для документації; не було випущено нового SDK артефакту, що містить допоміжні методи попередження.
+
+Усі чотири типи подій використовують один налаштований продавцем зворотний виклик URL (`agents.webhook_url`). Відправка на тіло `event`; окреме попередження URL не потрібне. Приклади показують структуру корисного навантаження, і їх не можна використовувати для введення даних у тестове середовище.
+
+<span id="events-and-idempotency" data-sixmm-canonical-anchor="events-and-idempotency" aria-hidden="true"></span>
+
+## Події та ідемпотенція
+
+| `event` | Сенс | `targetStatus` / ключ дедуплікації |
+| --- | --- | --- |
+| `transfer.completed` | Стан терміналу переказу, включаючи оновлення початкового замовлення після сторнування; не обов'язково успішно | `SUCCESS` / `FAILED` / `REVERSED`; `orderType:orderId:targetStatus` |
+| `reverse.completed` | Термінальний стан сторнованого замовлення | `SUCCESS` / `FAILED`; `orderType:orderId:targetStatus` |
+| `transfer.dead` | Остаточний стан замовлення коштів залишається непідтвердженим після повторних спроб і потребує ручної звірки; не підтверджена помилка | `DEAD`; `orderType:orderId:targetStatus` |
+| `liquidation.warning` | Попередження про ризик ліквідації, без полів термінального стану замовлення | `liquidation.warning:notificationId` |
+
+Подія попередження продавця: `liquidation.warning`; користувач WebSocket `data.event` залишається `LIQUIDATION_WARNING`. Розрізняйте два канали.
+
+Використані історичні сповіщення продавця `LIQUIDATION_WARNING`. Заморожені корисні навантаження зберігають своє оригінальне тіло під час повторних спроб, тому отримувачі повинні розпізнавати обидва імені. Якщо в існуючих бізнес-записах використовується префікс ключа попередження у верхньому регістрі, збережіть оригінальний ключ або перевірте обидва ключі під час міграції, щоб уникнути повторної обробки сповіщення.
+
+**Поточний `WebhookVerifier.idempotencyKey` лише витягує `orderType:orderId:targetStatus` для подій коштів і повертає порожній рядок для корисних навантажень попереджень.** З цим оновленням документації не було випущено нових артефактів SDK, які містять допоміжні методи попереджень. Продовжуйте використовувати існуючий метод `verify` для перевірки необробленого тіла попередження. Після перевірки підпису та права власності бізнес-код продавця має розпізнавати обидві назви подій, підтверджувати, що `notificationId` є позитивним десятковим цілим рядком, і створювати `liquidation.warning:<notificationId>`. Ніколи не використовуйте порожній ключ дедуплікації та не вимагайте, щоб попередження містили поля замовлення коштів.
+
+Зберігайте дедуплікацію в межах продавця та `environment` і зафіксуйте її атомарно з бізнес-обробкою. `FIRST` / `UPGRADE` / `REMINDER` сповіщення з різними значеннями `notificationId` є незалежними; не відкидайте їх, групуючи за користувачем, епізодом або `eventType`. Порожній ключ означає, що дійсну особу не вдалося отримати. SDK повертає лише допоміжний ключ; він не зберігає записи та не виконує бізнес-обробку. Записати ту саму ідентичність з іншим тілом як конфлікт; не перезаписуйте оброблене тіло.
+
+<span id="liquidation-warning-fields-and-example" data-sixmm-canonical-anchor="liquidation-warning-fields-and-example" aria-hidden="true"></span>
+
+## Поля попередження про ліквідацію та приклад
+
+| Поле | Тип / опис |
+| --- | --- |
+| `notificationId` | Рядок додатного десяткового цілого числа; унікальний ідентифікатор сповіщення. Не перетворюйте його на число з плаваючою комою. |
+| `eventType` | `FIRST`: перше попередження в поточному епізоді; `UPGRADE`: нормальний ризик підвищено до високого ризику в цьому епізоді; `REMINDER`: ще одне нагадування про постійний ризик. |
+| `severity` | `NORMAL` / `HIGH`. `FIRST` вже може бути `HIGH`; `UPGRADE` це `HIGH`; `REMINDER` може бути `NORMAL` або `HIGH`. |
+| `occurredAt` | JSON номер; Unix мілісекунди, коли було викликано попередження, а не коли надійшла доставка HTTP. |
+| `object` | `type=CROSS`: міжмаржинальний рахунок із порожніми рядками для `symbol`, `side` і `positionId`. `ISOLATED`: ізольована маржинальна позиція, що містить відповідний контракт, сторону та ідентифікатор позиції. |
+| `episode` | рядок; поточний епізод попередження. `FIRST` не означає перше в історії попередження користувача. |
+| `stateVersion` / `configVersion` | рядки; вихідний стан / версія конфігурації. Не відхиляйте самостійно сповіщення на основі цих полів. |
+| `riskRatio` / `minLargePositionValue` / `liquidationHighRiskThreshold` | Десяткові рядки для коефіцієнта ризику, нормального порогового значення попередження та високого порогового значення. Зберігайте точність; upstream обчислює порогові правила. |
+| `environment` | `PRODUCTION` / `SIMULATED`; ізолювати за налаштованим середовищем фондів, а не за назвою сервера. |
+| `agentId` / `agentCode` / `agentUserId` | рядки; ідентифікатор агента, код агента та ідентифікатор користувача на стороні продавця. |
+| `platformUserId` | рядок; загальнодоступний ідентифікатор користувача платформи, що відповідає результату прив’язки, а не внутрішньому сервісу `user_id`. |
+
+```json
+{
+  "event": "liquidation.warning",
+  "notificationId": "68460336",
+  "eventType": "FIRST",
+  "severity": "NORMAL",
+  "occurredAt": 1791875870804,
+  "object": {
+    "type": "CROSS",
+    "symbol": "",
+    "side": "",
+    "positionId": ""
+  },
+  "episode": "3",
+  "stateVersion": "9",
+  "riskRatio": "0.29133109",
+  "minLargePositionValue": "0.20000000",
+  "liquidationHighRiskThreshold": "0.40000000",
+  "configVersion": "8",
+  "environment": "PRODUCTION",
+  "agentId": "16",
+  "agentCode": "DEMO",
+  "agentUserId": "merchant-user-001",
+  "platformUserId": "6054354872"
+}
+```
+
+<span id="transfer-result-example" data-sixmm-canonical-anchor="transfer-result-example" aria-hidden="true"></span>
+
+## Приклад результату передачі
+
+Зворотні виклики коштів зберігають існуючі типи: `orderId` і `agentId` — це JSON числа; `amount` і `platformUserId` є рядками. Не застосовуйте угоду щодо рядка попередження `agentId` до зворотних викликів коштів. Читайте великі цілі числа без втрати точності за допомогою цілочисельних/десяткових типів. `completedAt` це UTC RFC3339; `ts` — це секунди Unix.
+
+```json
+{
+  "environment": "PRODUCTION",
+  "event": "transfer.completed",
+  "orderType": "transfer",
+  "orderId": 10001,
+  "orderNo": "merchant-order-001",
+  "targetStatus": "SUCCESS",
+  "agentId": 16,
+  "agentCode": "DEMO",
+  "currency": "USDT",
+  "amount": "10.00",
+  "direction": "IN",
+  "transferMode": "FIXED_AMOUNT",
+  "agentUserId": "merchant-user-001",
+  "platformUserId": "6054354872",
+  "rejectCode": 0,
+  "rejectMessage": "",
+  "failReason": "",
+  "completedAt": "2026-10-13T07:17:50Z",
+  "ts": 1791875870
+}
+```
+
+<span id="reversal-result-example" data-sixmm-canonical-anchor="reversal-result-example" aria-hidden="true"></span>
+
+## Приклад результату розвороту
+
+```json
+{
+  "environment": "PRODUCTION",
+  "event": "reverse.completed",
+  "orderType": "transfer",
+  "orderId": 10002,
+  "orderNo": "merchant-reverse-001",
+  "targetStatus": "SUCCESS",
+  "agentId": 16,
+  "agentCode": "DEMO",
+  "currency": "USDT",
+  "amount": "10.00",
+  "direction": "IN",
+  "transferMode": "FIXED_AMOUNT",
+  "agentUserId": "merchant-user-001",
+  "platformUserId": "6054354872",
+  "rejectCode": 0,
+  "rejectMessage": "",
+  "failReason": "",
+  "completedAt": "2026-10-13T07:17:50Z",
+  "ts": 1791875870
+}
+```
+
+<span id="funds-order-dead-state-example" data-sixmm-canonical-anchor="funds-order-dead-state-example" aria-hidden="true"></span>
+
+## Приклад розпорядження коштів
+
+```json
+{
+  "environment": "PRODUCTION",
+  "event": "transfer.dead",
+  "orderType": "transfer",
+  "orderId": 10003,
+  "orderNo": "merchant-order-002",
+  "targetStatus": "DEAD",
+  "agentId": 16,
+  "agentCode": "DEMO",
+  "currency": "USDT",
+  "amount": "10.00",
+  "direction": "IN",
+  "transferMode": "FIXED_AMOUNT",
+  "agentUserId": "merchant-user-001",
+  "platformUserId": "6054354872",
+  "rejectCode": 0,
+  "rejectMessage": "",
+  "failReason": "order dead",
+  "completedAt": "2026-10-13T07:17:50Z",
+  "ts": 1791875870
+}
+```
+
+Ці приклади показують лише протокол. Для `FAILED`, `rejectCode`, `rejectMessage` і `failReason` відображають фактичну відмову. Сама по собі назва події не свідчить про зарахування коштів.
+
+[Перевірка підпису, відповіді та повторні спроби](/uk/sdk/security/webhooks-idempotency)

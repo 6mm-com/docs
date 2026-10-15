@@ -258,3 +258,13 @@ resp.orders.forEach(order -> System.out.println(order.orderNo));
 - [Επισκόπηση ερωτήματος και σελιδοποίηση](/el/sdk/agent-sdk/java/perpetual-queries)
 - [Πορτοφόλι χρηματοδότησης](/el/sdk/agent-sdk/java/funding-wallet)
 - [Οδηγός αναβάθμισης](/el/sdk/agent-sdk/java/upgrade)
+
+<span id="funds-event-callbacks" data-sixmm-canonical-anchor="funds-event-callbacks" aria-hidden="true"></span>
+
+## Χρηματοδοτεί επανάκληση συμβάντων
+
+Το `transfer.completed` μπορεί να φέρει `SUCCESS`, `FAILED` ή μια αρχική ενημέρωση παραγγελίας `REVERSED`. Το `reverse.completed` είναι ένα συμβάν τερματικού εντολής αντιστροφής. `transfer.dead` σημαίνει ότι η τελική κατάσταση παραμένει μη επιβεβαιωμένη μετά από επαναλήψεις και χρειάζεται μη αυτόματη συμφωνία, όχι επιβεβαιωμένη αποτυχία. Το όνομα της εκδήλωσης από μόνο του δεν αποδεικνύει ότι πιστώθηκαν χρήματα.
+
+Η επιτυχής επιβεβαίωση διαφέρει από την επιτυχημένη κίνηση κεφαλαίων: αφού καταγράψετε μια έγκυρη ειδοποίηση `targetStatus=FAILED`, επιστρέψτε επίσης HTTP 2xx. Συνέχιση της αφαίρεσης γεγονότων κεφαλαίων κατά `orderType:orderId:targetStatus` εντός του εμπόρου και του πεδίου `environment`.
+
+[Πεδία συμβάντων και JSON παραδείγματα](/el/sdk/agent-sdk/java/webhook-events) · [Επαλήθευση υπογραφής, απαντήσεις και επαναλήψεις](/el/sdk/security/webhooks-idempotency)

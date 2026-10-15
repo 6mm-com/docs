@@ -1,11 +1,13 @@
 ---
-title: "Webhook 簽名驗證和冪等性"
-subtitle: "使用原始請求正文驗證 6MM 代理 webhooks，並處理重試、超時和重複事件，而無需重複的業務操作。"
+title: "Webhook 簽名驗證與冪等性"
+subtitle: "驗證原始 Webhook 主體，使用 HTTP 狀態碼進行確認，並可靠地處理重試和重複。"
 slug: sdk/security/webhooks-idempotency
 canonical-url: https://docs.6mm.com/zh-TW/sdk/security/webhooks-idempotency
 ---
 
-Webhooks 通知合作伙伴後端有關異步業務狀態更改的信息。由於可能會重試傳遞，因此每個接收者都必須在解析可信數據之前驗證簽名，並且必須冪等地處理事件。
+本頁依據 [Agent Java SDK `WEBHOOKS.md`](https://github.com/6mm-com/agent-java-sdk/blob/fa6c7b65124f1346f815b3b73eb8a7729466c3dc/WEBHOOKS.md) 提交 `fa6c7b6` 同步。此次僅更新文件，沒有發布包含預警輔助方法的新 SDK 製品。
+
+四類事件共用一個商戶回呼 URL，依正文 `event` 分流。事件欄位與範例見 [Webhook 事件與強平預警](/zh-TW/sdk/agent-sdk/java/webhook-events)。
 
 <span id="webhook-headers" data-sixmm-canonical-anchor="webhook-headers" aria-hidden="true"></span>
 
@@ -13,97 +15,125 @@ Webhooks 通知合作伙伴後端有關異步業務狀態更改的信息。由�
 
 | 標頭 | 描述 |
 | --- | --- |
-| X-代理時間戳 | Unix 時間戳（以秒為單位）。 |
-| X-代理-隨機數 | 重放保護隨機數。 |
-| X-代理簽名 | HMAC-SHA256簽名。 |
+| `X-Agent-Timestamp` | Unix 時間戳（以秒為單位）。 |
+| `X-Agent-Nonce` | 隨機數。 |
+| `X-Agent-Signature` | HMAC-SHA256 十六進位簽章。 |
 
 ```text
 timestamp + nonce + rawBody
 ```
 
-重建簽名值時，使用通過 HTTP 收到的確切原始請求正文。首先解析和重新序列化 JSON 可以更改空格或字段順序併產生不同的簽名。
+<span id="order-idempotency" data-sixmm-canonical-anchor="order-idempotency" aria-hidden="true"></span>
+
+## 事件冪等性
+
+去重必須在商戶與 `environment` 範圍內持久化，並與業務處理原子提交。不同 `notificationId` 的 `FIRST` / `UPGRADE` / `REMINDER` 是獨立通知，不可依使用者、輪次或 `eventType` 合併丟棄。空冪等鍵不能用於去重。SDK 只回傳輔助鍵，不儲存或處理業務資料。同一身份、不同正文應記錄為衝突，不能覆蓋已處理的正文。
 
 <span id="verification-flow" data-sixmm-canonical-anchor="verification-flow" aria-hidden="true"></span>
 
-## 驗證流程
+## 簽名驗證及接收
 
-1. 讀取時間戳、隨機數和簽名標頭。
-2. 捕獲未修改的原始請求正文。
-3. 構建`timestamp + nonce + rawBody`。
-4. 使用夥伴 API 秘密計算 HMAC-SHA256。
-5. 使用恆定時間比較來比較計算出的簽名和接收到的簽名。
-6. 應用批准的時間戳新鮮度和隨機數重用檢查。
-7. 驗證成功後才解析並處理該事件。
+使用商家API秘密計算`timestamp + nonce + rawBody`的HMAC-SHA256十六進位簽章。驗證原始接收的位元組；不要先格式化 JSON、重新命名欄位或重新序列化正文。
 
-當官方 Agent SDK 驗證器可用時，使用它而不是維護獨立的簽名代碼。
+先驗簽，再校驗時間視窗（建議 ±300 秒）、商戶與環境，然後提取冪等身份並可靠處理。保留未知事件原值供排查，不能視為資金成功。驗證輔助方法本身不執行時間、歸屬或持久去重校驗。
 
-<span id="order-idempotency" data-sixmm-canonical-anchor="order-idempotency" aria-hidden="true"></span>
+處理完成或確認同正文重複後回傳 HTTP 2xx；失敗回傳非 2xx。預警發送端 HTTP 逾時為 5 秒，最多 8 次嘗試。重試保持已凍結的正文，僅簽章時間與隨機數更新。可靠接管後儘快回應；耗時業務可使用商戶自己的持久任務。
 
-## 順序冪等性
+商家通知不依賴使用者的線上狀態。平台用戶推播僅在線上盡力推送，無線下重播；第一階段沒有通知收件匣。
 
-| 案件 | 處理 |
+<span id="successful-responses-and-stopping-retries" data-sixmm-canonical-anchor="successful-responses-and-stopping-retries" aria-hidden="true"></span>
+
+### 成功響應並停止重試
+
+資金回呼和強平預警只根據 **HTTP 狀態碼** 判斷本次投遞結果，不解析回應正文的 `code`、`success`、`result` 或 `message`，也不要求固定回傳 `OK` / `success`。
+
+| 商家回應 | 平台行為 |
 | --- | --- |
-| 初始轉移請求 | 創建一個全球唯一的 agentOrderNo。 |
-| HTTP 超時 | 在創建新的之前查詢原始的 agentOrderNo。 |
-| PROCESSING 回覆 | 等待webhook或查詢訂單狀態。 |
-| 重複webhook | 按冪等鍵和最終狀態進行重複數據刪除。 |
+| HTTP 200–299，包括 200、202、204 | 本次投遞成功；成功狀態持久化後，不再自動重發。 |
+| 最終非 2xx 響應，包括 400、401、403、409、429、500 和 503 | 投遞失敗重試遵循現有的退避策略；在嘗試限制之後，它被標記為 `DEAD`。 4xx 不會自動確認通知。 |
+| 連線失敗或回應逾時，沒有可用的回應 | 結果未確認並在失敗策略下重試。 |
+
+回應正文可為空、文字或 JSON。範例 `result` 欄位僅供商戶閱讀，不是協定要求。`202 Accepted` 同樣會停止平台重試，因此必須先將通知可靠保存到商戶自己的持久任務佇列，不能只啟動記憶體非同步任務就確認成功。
+
+<span id="successful-response-examples" data-sixmm-canonical-anchor="successful-response-examples" aria-hidden="true"></span>
+
+### 成功響應範例
+
+業務處理完成後，或通知已可靠地儲存至商家本身的待處理佇列：
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"result":"RECEIVED"}
+```
+
+當不需要響應體時：
+
+```http
+HTTP/1.1 204 No Content
+```
+
+對於已經處理過且body相同的通知，跳過重複的業務處理，仍然返回2xx：
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"result":"DUPLICATE"}
+```
+
+<span id="failure-response-examples" data-sixmm-canonical-anchor="failure-response-examples" aria-hidden="true"></span>
+
+### 失敗回應範例
+
+例如資料庫暫時不可用，商戶尚未完成處理，也未可靠保存通知，應回傳非 2xx，讓平台後續重試：
+
+```http
+HTTP/1.1 503 Service Unavailable
+Content-Type: application/json
+
+{"result":"FAILED","message":"temporary storage failure"}
+```
+
+拒絕無效簽名而不更新業務資料或成功的重複資料刪除記錄：
+
+```http
+HTTP/1.1 401 Unauthorized
+Content-Type: application/json
+
+{"result":"INVALID_SIGNATURE"}
+```
+
+這些回應正文不影響重試判斷。不能期待回傳 401 或 409 就永久停止重試；需要排查簽章、通知內容或商戶設定。
+
+**錯誤範例：以下回應仍會被平台視為投遞成功，不會因 `success:false` 而觸發重試。**
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"success":false,"code":500,"message":"processing failed"}
+```
+
+如果框架或統一例外處理預設將業務錯誤包裝成 HTTP 200，回呼入口須明確設定正確的 HTTP 失敗狀態。
 
 <span id="recommended-idempotency-record" data-sixmm-canonical-anchor="recommended-idempotency-record" aria-hidden="true"></span>
 
-## 推薦冪等記錄
+### 可靠的確認和重複傳送
 
-存儲足夠的信息以識別重複交付並安全恢復：
+建議順序：驗證簽章並檢查時間/商家/環境→提取冪等性身分→處理事務中的業務資料和成功去重記錄，或可靠保存待處理任務→提交成功後回傳200/204。在成功寫入資料庫之前，不要返回 2xx 或將通知標記為已處理。
 
-| 場地 | 目的 |
-| --- | --- |
-| 活動或業務密鑰 | 唯一標識通知或操作。 |
-| 合作伙伴訂單號 | 將事件連接到原始請求。 |
-| 有效負載哈希 | 幫助識別衝突的重複負載。 |
-| 當前處理狀態 | 區分接收、處理、成功和失敗的工作。 |
-| 最終經營狀況 | 防止終端操作被應用兩次。 |
-| 處理時間戳 | 支持調查和保留策略。 |
+商戶處理成功後仍可能收到重複請求：回應可能在網路中遺失，或平台收到 2xx 後未能持久化 `SUCCESS`。HTTP 回呼不保證只投遞一次。必須在商戶與 `environment` 範圍內持久去重。資金使用 `orderType:orderId:targetStatus`，預警使用 `liquidation.warning:notificationId`。已處理的同正文通知回傳 2xx，避免重複入帳或提醒；同一身份、不同正文應記錄衝突並回傳非 2xx，不能覆蓋原記錄。
 
-儘可能在同一事務中提交業務變更和冪等記錄。重複的事件應該返回已知的結果，而不是再次應用餘額、訂單或用戶更改。
-
-<span id="timeout-and-retry-rule" data-sixmm-canonical-anchor="timeout-and-retry-rule" aria-hidden="true"></span>
-
-## 超時和重試規則
-
-HTTP 超時並不能證明原始請求失敗。使用原始的 `agentOrderNo` 查詢操作，或等待其 webhook，然後再決定是否需要執行其他操作。每次超時後創建新的業務訂單號可能會導致重複的資金流動。
-
-<span id="production-checklist" data-sixmm-canonical-anchor="production-checklist" aria-hidden="true"></span>
-
-## 生產清單
-
-- 在JSON解析或業務處理之前驗證簽名。
-- 獨立於解析的有效負載保留原始主體。
-- 根據批准的集成策略拒絕過時或重播的請求。
-- 確保事件處理對於重複和無序交付來說是安全的。
-- 記錄事件 ID、合作伙伴訂單號、處理結果和請求時間。
-- 編輯日誌和支持附件中的機密和簽名值。
-
-<span id="related-docs" data-sixmm-canonical-anchor="related-docs" aria-hidden="true"></span>
-
-## 相關文檔
-
-<CardGroup cols={3}>
-<Card title="秘密 & HMAC 簽名" icon="fa-duotone fa-shield-keyhole" href="/zh-TW/sdk/security/secrets-signing">
-保護用於請求和 webhook 驗證的 API 秘密。
-</Card>
-<Card title="Agent SDK 概述" icon="fa-duotone fa-server" href="/zh-TW/sdk/agent-sdk/overview">
-查看完整的後端集成工作流程。
-</Card>
-<Card title="SDK 故障排除" icon="fa-duotone fa-screwdriver-wrench" href="/zh-TW/sdk/security/troubleshooting">
-調查被拒絕的簽名、重複事件和待處理的操作。
-</Card>
-</CardGroup>
+確認成功是指商家收到/處理了通知，而不是資金作業成功。以`targetStatus=FAILED`記錄有效資金通知後，也回2xx；訂單失敗並非拒絕通知確認的理由。
 
 <span id="funding-and-environment-boundaries" data-sixmm-canonical-anchor="funding-and-environment-boundaries" aria-hidden="true"></span>
 
 ## 資金和環境邊界
 
-原始合同轉賬 webhook 和 `queryOrder` 流程不會自動應用於資金。使用`queryWalletTransfer`和原始訂單環境確認資金操作。資金用途`status`；原始合同傳輸響應使用`orderStatus`。成功的 HTTP 響應或 `code=0` 本身並不能證明資金已轉移。
+原始合約轉帳 webhook 和 `queryOrder` 流程不會自動應用於資金。使用`queryWalletTransfer`和原始訂單環境確認資金操作。資金用途`status`；原始合約傳輸回應使用`orderStatus`。成功的 HTTP 回應或 `code=0` 本身並不能證明資金已轉移。
 
-顯式模擬合約轉移通知包括`environment=SIMULATED`。首先驗證原始主體，然後根據保存的本地業務訂單檢查用戶、金額、訂單身份和環境。
+明確模擬合約轉移通知包括`environment=SIMULATED`。首先驗證原始主體，然後根據已儲存的本地業務訂單檢查使用者、金額、訂單身分和環境。
 
 [資金回收指南](/zh-TW/sdk/agent-sdk/java/funding-wallet) · [環境指南](/zh-TW/sdk/agent-sdk/java/environments)

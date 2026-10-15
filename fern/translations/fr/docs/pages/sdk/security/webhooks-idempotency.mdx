@@ -1,11 +1,13 @@
 ---
 title: "Webhook Vérification de signature et idempotence"
-subtitle: "Vérifiez 6MM Agent webhooks avec le corps brut de la demande et traitez les tentatives, les délais d'attente et les événements répétés sans actions commerciales en double."
+subtitle: "Vérifiez les corps Webhook bruts, accusez réception à l'aide des codes d'état HTTP et gérez les tentatives et les doublons de manière fiable."
 slug: sdk/security/webhooks-idempotency
 canonical-url: https://docs.6mm.com/fr/sdk/security/webhooks-idempotency
 ---
 
-Webhooks informe un backend partenaire des changements asynchrones de l'état de l'entreprise. Étant donné que la livraison peut être réessayée, chaque destinataire doit vérifier la signature avant d'analyser les données fiables et doit traiter l'événement de manière idempotente.
+Cette page suit [Agent Java SDK `WEBHOOKS.md`](https://github.com/6mm-com/agent-java-sdk/blob/fa6c7b65124f1346f815b3b73eb8a7729466c3dc/WEBHOOKS.md) au commit `fa6c7b6`. Il s'agit d'une mise à jour de documentation uniquement ; aucun nouvel artefact SDK contenant des méthodes d'assistance d'avertissement n'a été publié.
+
+Les quatre types d'événements utilisent un rappel du commerçant URL et sont distribués par le corps `event`. Voir [Webhook Événements et avertissements de liquidation](/fr/sdk/agent-sdk/java/webhook-events) pour les champs d'événements et les exemples de charges utiles.
 
 <span id="webhook-headers" data-sixmm-canonical-anchor="webhook-headers" aria-hidden="true"></span>
 
@@ -13,90 +15,118 @@ Webhooks informe un backend partenaire des changements asynchrones de l'état de
 
 | En-tête | Description |
 | --- | --- |
-| Horodatage de l'agent X | Horodatage Unix en secondes. |
-| X-Agent-Nonce | Protection contre la relecture à l'occasion. |
-| Signature de l'agent X | HMAC-SHA256 signature. |
+| `X-Agent-Timestamp` | Horodatage Unix en secondes. |
+| `X-Agent-Nonce` | Nonce. |
+| `X-Agent-Signature` | HMAC-SHA256 signature hexadécimale. |
 
 ```text
 timestamp + nonce + rawBody
 ```
 
-Utilisez le corps brut exact de la requête reçu sur HTTP lors de la reconstruction de la valeur signée. L'analyse et la re-sérialisation de JSON peuvent d'abord modifier les espaces ou l'ordre des champs et produire une signature différente.
+<span id="order-idempotency" data-sixmm-canonical-anchor="order-idempotency" aria-hidden="true"></span>
+
+## Idempotence des événements
+
+Persistance de la déduplication au sein du commerçant et de la portée `environment`, de manière atomique avec le traitement métier. Différentes valeurs `notificationId` identifient des notifications `FIRST` / `UPGRADE` / `REMINDER` indépendantes ; ne supprimez pas les notifications en les regroupant par utilisateur, épisode ou `eventType`. Une clé d'idempotence vide ne peut pas être utilisée pour la déduplication. Le SDK renvoie uniquement une clé d'assistance ; il ne persiste pas et ne traite pas les données commerciales. Enregistrez la même identité avec un corps différent comme un conflit ; n'écrasez pas le corps traité.
 
 <span id="verification-flow" data-sixmm-canonical-anchor="verification-flow" aria-hidden="true"></span>
 
-## Flux de vérification
+## Vérification et réception de signature
 
-1. Lisez les en-têtes d’horodatage, de nonce et de signature.
-2. Capturez le corps brut de la requête non modifié.
-3. Construisez `timestamp + nonce + rawBody`.
-4. Calculez HMAC-SHA256 avec le secret du partenaire API.
-5. Comparez les signatures calculées et reçues à l'aide d'une comparaison à temps constant.
-6. Appliquez les contrôles approuvés de fraîcheur d’horodatage et de non-réutilisation.
-7. Analysez et traitez l'événement uniquement une fois la vérification réussie.
+Utilisez le secret du marchand API pour calculer la signature hexadécimale HMAC-SHA256 de `timestamp + nonce + rawBody`. Vérifiez les octets originaux reçus ; ne formatez pas JSON, ne renommez pas les champs ou ne resérialisez pas le corps en premier.
 
-Lorsqu'un vérificateur Agent SDK officiel est disponible, utilisez-le au lieu de conserver un code de signature indépendant.
+Vérifiez d'abord la signature, puis vérifiez la fenêtre de temps (recommandée ± 300 secondes), le commerçant et l'environnement. Extrayez ensuite l’identité d’idempotence et gérez la notification de manière fiable. Conserver les valeurs d'événements inconnus pour le diagnostic ; ne les interprétez jamais comme un succès financier. L'assistant de vérification n'effectue pas de contrôle de fenêtre temporelle, de propriété ou de déduplication persistante.
 
-<span id="order-idempotency" data-sixmm-canonical-anchor="order-idempotency" aria-hidden="true"></span>
+Renvoyez HTTP 2xx après avoir terminé le traitement ou confirmé un duplicata identique ; renvoie non-2xx en cas d'échec. L'expéditeur de l'avertissement dispose d'un délai d'attente de HTTP de 5 secondes et d'un maximum de 8 tentatives. Les tentatives conservent le corps gelé ; seuls l'horodatage de la signature et le changement occasionnel. Répondez rapidement après une acceptation fiable ; le travail commercial de longue durée peut utiliser les propres tâches persistantes du commerçant.
 
-## Ordre de l'idempotence
+Les notifications des commerçants ne dépendent pas du statut en ligne de l'utilisateur. Les push des utilisateurs de la plateforme sont uniquement diffusés en ligne, au mieux, sans rediffusion hors ligne ; la première phase n’a pas de boîte de réception de notification.
 
-| Cas | Manutention |
+<span id="successful-responses-and-stopping-retries" data-sixmm-canonical-anchor="successful-responses-and-stopping-retries" aria-hidden="true"></span>
+
+### Réponses réussies et tentatives d'arrêt
+
+Les rappels de fonds et les avertissements de liquidation utilisent **uniquement le code d'état HTTP** pour déterminer le succès de la livraison. L'expéditeur n'interprète pas le corps de la réponse `code`, `success`, `result` ou `message`, et n'exige pas de réponse fixe `OK` / `success`.
+
+| Réponse du commerçant | Comportement de la plateforme |
 | --- | --- |
-| Demande de transfert initiale | Créez un agentOrderNo unique au monde. |
-| Délai d'expiration de HTTP | Interrogez le agentOrderNo d'origine avant d'en créer un nouveau. |
-| PROCESSING réponse | Attendez webhook ou interrogez l'état de la commande. |
-| Répété webhook | Dédoublonner par clé d'idempotence et statut final. |
+| HTTP 200-299, dont 200, 202 et 204 | La livraison réussit ; les renvois automatiques s'arrêtent une fois l'état de réussite persisté. |
+| Réponse finale non-2xx, comprenant 400, 401, 403, 409, 429, 500 et 503 | La livraison échoue et les nouvelles tentatives suivent la politique d'attente existante ; après la limite de tentatives, il est marqué `DEAD`. Un 4xx ne reconnaît pas automatiquement la notification. |
+| Échec de connexion ou délai de réponse sans réponse utilisable | Le résultat n'est pas confirmé et une nouvelle tentative est effectuée selon la politique d'échec. |
+
+Le corps de la réponse peut être vide, texte ou JSON. Les exemples de champs `result` sont informatifs pour le commerçant, et non des exigences de protocole. `202 Accepted` arrête également les nouvelles tentatives de la plate-forme, donc ne la renvoyez qu'après avoir enregistré de manière fiable la notification dans la file d'attente des tâches persistantes du commerçant, et pas simplement en démarrant une tâche asynchrone en mémoire.
+
+<span id="successful-response-examples" data-sixmm-canonical-anchor="successful-response-examples" aria-hidden="true"></span>
+
+### Exemples de réponses réussies
+
+Une fois le traitement commercial terminé ou lorsque la notification a été enregistrée de manière fiable dans la file d'attente en attente du commerçant :
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"result":"RECEIVED"}
+```
+
+Lorsqu’aucun corps de réponse n’est nécessaire :
+
+```http
+HTTP/1.1 204 No Content
+```
+
+Pour une notification déjà traitée avec un corps identique, ignorez le traitement commercial en double et renvoyez quand même 2xx :
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"result":"DUPLICATE"}
+```
+
+<span id="failure-response-examples" data-sixmm-canonical-anchor="failure-response-examples" aria-hidden="true"></span>
+
+### Exemples de réponses aux échecs
+
+Si la base de données est temporairement indisponible et que le commerçant n'a pas terminé le traitement ni enregistré la notification de manière fiable, renvoyez non-2xx afin que la plateforme puisse réessayer :
+
+```http
+HTTP/1.1 503 Service Unavailable
+Content-Type: application/json
+
+{"result":"FAILED","message":"temporary storage failure"}
+```
+
+Rejetez une signature non valide sans mettre à jour les données commerciales ou les enregistrements de déduplication réussie :
+
+```http
+HTTP/1.1 401 Unauthorized
+Content-Type: application/json
+
+{"result":"INVALID_SIGNATURE"}
+```
+
+Ces organismes de réponse ne modifient pas les décisions de nouvelle tentative. Ne vous attendez pas à ce qu'un 401 ou un 409 arrête définitivement les tentatives ; enquêtez sur la signature, le contenu de la notification ou la configuration du commerçant.
+
+**Exemple incorrect : la réponse suivante compte toujours comme une livraison réussie. La plateforme ne réessayera pas en raison de `success:false`.**
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"success":false,"code":500,"message":"processing failed"}
+```
+
+Si le framework ou le gestionnaire d'exceptions global encapsule les échecs métier dans HTTP 200, définissez explicitement l'état d'échec correct au niveau du point de terminaison de rappel.
 
 <span id="recommended-idempotency-record" data-sixmm-canonical-anchor="recommended-idempotency-record" aria-hidden="true"></span>
 
-## Dossier d'idempotence recommandé
+### Accusé de réception fiable et livraison en double
 
-Stockez suffisamment d’informations pour reconnaître une livraison répétée et récupérer en toute sécurité :
+Ordre recommandé : vérifier la signature et vérifier l'heure/le commerçant/l'environnement → extraire l'identité d'idempotence → traiter les données commerciales et les enregistrements de déduplication réussis dans une transaction, ou enregistrer de manière fiable une tâche en attente → renvoyer 200/204 une fois la validation réussie. Ne renvoyez pas 2xx et ne marquez pas la notification traitée avant une écriture réussie dans la base de données.
 
-| Champ | But |
-| --- | --- |
-| Clé d'événement ou d'entreprise | Identifie de manière unique la notification ou l'opération. |
-| Numéro de commande du partenaire | Connecte l'événement à la demande d'origine. |
-| Hachage de la charge utile | Aide à identifier les charges utiles répétées et conflictuelles. |
-| État de traitement actuel | Distingue le travail reçu, en cours de traitement, réussi et échoué. |
-| Statut final de l'entreprise | Empêche qu’une action de terminal soit appliquée deux fois. |
-| Horodatage traité | Prend en charge les politiques d’enquête et de rétention. |
+Une livraison en double peut toujours se produire une fois le traitement réussi par le commerçant : la réponse peut être perdue ou la plate-forme peut recevoir 2xx mais ne pas persister `SUCCESS`. Les rappels HTTP ne garantissent pas une livraison unique. Conserver la déduplication au sein du commerçant et dans la portée de `environment`. Utilisation des fonds `orderType:orderId:targetStatus` ; les avertissements utilisent `liquidation.warning:notificationId`. Pour un corps identique déjà traité, renvoyez 2xx sans créditer de fonds ni émettre de nouveau rappel. Pour la même identité avec un corps différent, enregistrez un conflit et renvoyez non-2xx ; n’écrasez pas l’enregistrement original.
 
-Validez le changement commercial et l’enregistrement d’idempotence dans la même transaction lorsque cela est possible. Un événement répété devrait renvoyer le résultat déjà connu au lieu d’appliquer à nouveau le solde, la commande ou la modification de l’utilisateur.
-
-<span id="timeout-and-retry-rule" data-sixmm-canonical-anchor="timeout-and-retry-rule" aria-hidden="true"></span>
-
-## Règle de délai d'attente et de nouvelle tentative
-
-Un délai d'expiration HTTP ne prouve pas que la demande d'origine a échoué. Interrogez l'opération à l'aide du `agentOrderNo` d'origine ou attendez son webhook avant de décider si une autre action est requise. La création d'un nouveau numéro de commande après chaque expiration peut entraîner des mouvements de fonds en double.
-
-<span id="production-checklist" data-sixmm-canonical-anchor="production-checklist" aria-hidden="true"></span>
-
-## Liste de contrôle de production
-
-- Vérifiez la signature avant l'analyse JSON ou le traitement commercial.
-- Préservez le corps brut indépendamment de la charge utile analysée.
-- Rejetez les demandes obsolètes ou rejouées conformément à la politique d’intégration approuvée.
-- Sécurisez le traitement des événements pour les livraisons répétées et dans le désordre.
-- Enregistrez les ID d’événement, les numéros de commande des partenaires, le résultat du traitement et l’heure de la demande.
-- Rédigez les secrets et les valeurs de signature des journaux et des pièces jointes de support.
-
-<span id="related-docs" data-sixmm-canonical-anchor="related-docs" aria-hidden="true"></span>
-
-## Documents associés
-
-<CardGroup cols={3}>
-<Card title="Secrets et HMAC Signature" icon="fa-duotone fa-shield-keyhole" href="/fr/sdk/security/secrets-signing">
-Protégez le secret API utilisé pour la requête et la vérification webhook.
-</Card>
-<Card title="Agent SDK Présentation" icon="fa-duotone fa-server" href="/fr/sdk/agent-sdk/overview">
-Passez en revue le flux de travail complet d’intégration backend.
-</Card>
-<Card title="SDK Dépannage" icon="fa-duotone fa-screwdriver-wrench" href="/fr/sdk/security/troubleshooting">
-Enquêtez sur les signatures rejetées, les événements répétés et les opérations en attente.
-</Card>
-</CardGroup>
+L'accusé de réception réussi signifie que le commerçant a reçu/traité la notification, et non que l'opération de fonds a réussi. Après avoir enregistré une notification de fonds valide avec `targetStatus=FAILED`, renvoyez également 2xx ; un échec de commande ne constitue pas une raison pour rejeter l’accusé de réception de la notification.
 
 <span id="funding-and-environment-boundaries" data-sixmm-canonical-anchor="funding-and-environment-boundaries" aria-hidden="true"></span>
 

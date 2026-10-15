@@ -1,0 +1,163 @@
+---
+title: "Webhook Events & Liquidation Warnings"
+subtitle: "Merchant Webhook event types, idempotency identities, liquidation warning fields, and funds result examples."
+slug: sdk/agent-sdk/java/webhook-events
+---
+
+This page follows [Agent Java SDK `WEBHOOKS.md`](https://github.com/6mm-com/agent-java-sdk/blob/fa6c7b65124f1346f815b3b73eb8a7729466c3dc/WEBHOOKS.md) at commit `fa6c7b6`. This is a documentation-only update; no new SDK artifact containing warning helper methods was released.
+
+All four event types use the merchant's single configured callback URL (`agents.webhook_url`). Dispatch on the body `event`; no separate warning URL is required. The examples show payload structure and must not be used to inject data into a test environment.
+
+<span data-sixmm-canonical-anchor="events-and-idempotency" aria-hidden="true"></span>
+
+## Events and idempotency
+
+| `event` | Meaning | `targetStatus` / deduplication key |
+| --- | --- | --- |
+| `transfer.completed` | Transfer terminal state, including an update to the original order after reversal; not necessarily successful | `SUCCESS` / `FAILED` / `REVERSED`; `orderType:orderId:targetStatus` |
+| `reverse.completed` | Reversal order terminal state | `SUCCESS` / `FAILED`; `orderType:orderId:targetStatus` |
+| `transfer.dead` | The final funds order state remains unconfirmed after retries and needs manual reconciliation; not a confirmed failure | `DEAD`; `orderType:orderId:targetStatus` |
+| `liquidation.warning` | Liquidation risk warning, without order terminal-state fields | `liquidation.warning:notificationId` |
+
+The merchant warning event is `liquidation.warning`; user WebSocket `data.event` remains `LIQUIDATION_WARNING`. Keep the two channels distinct.
+
+Historical merchant notifications used `LIQUIDATION_WARNING`. Frozen payloads retain their original body on retries, so receivers must recognize both names. If existing business records use an uppercase warning-key prefix, retain the original key or check both keys during migration to avoid processing the notification again.
+
+**The current `WebhookVerifier.idempotencyKey` only extracts `orderType:orderId:targetStatus` for funds events and returns an empty string for warning payloads.** No new SDK artifact containing warning helper methods was released with this documentation update. Continue using the existing `verify` method to verify the raw warning body. After signature and ownership checks, merchant business code must recognize both event names, validate that `notificationId` is a positive decimal-integer string, and construct `liquidation.warning:<notificationId>`. Never use an empty deduplication key or require warnings to contain funds order fields.
+
+Persist deduplication within the merchant and `environment` scope and commit it atomically with business processing. `FIRST` / `UPGRADE` / `REMINDER` notifications with different `notificationId` values are independent; do not discard them by grouping on user, episode, or `eventType`. An empty key means a valid identity could not be extracted. The SDK only returns a helper key; it does not persist records or perform business processing. Record the same identity with a different body as a conflict; do not overwrite the processed body.
+
+<span data-sixmm-canonical-anchor="liquidation-warning-fields-and-example" aria-hidden="true"></span>
+
+## Liquidation warning fields and example
+
+| Field | Type / description |
+| --- | --- |
+| `notificationId` | Positive decimal-integer string; unique notification ID. Do not convert it to a floating-point number. |
+| `eventType` | `FIRST`: first warning in the current episode; `UPGRADE`: normal risk upgraded to high risk in this episode; `REMINDER`: another reminder of ongoing risk. |
+| `severity` | `NORMAL` / `HIGH`. `FIRST` may already be `HIGH`; `UPGRADE` is `HIGH`; `REMINDER` may be `NORMAL` or `HIGH`. |
+| `occurredAt` | JSON number; Unix milliseconds when the warning was triggered, not when HTTP delivery arrived. |
+| `object` | `type=CROSS`: cross-margin account, with empty strings for `symbol`, `side`, and `positionId`. `ISOLATED`: isolated-margin position, carrying the corresponding contract, side, and position ID. |
+| `episode` | String; current warning episode. `FIRST` does not mean the user's first-ever warning. |
+| `stateVersion` / `configVersion` | Strings; upstream state / configuration version. Do not independently discard notifications based on these fields. |
+| `riskRatio` / `minLargePositionValue` / `liquidationHighRiskThreshold` | Decimal strings for the risk ratio, normal warning threshold, and high-risk threshold. Preserve precision; upstream calculates the threshold rules. |
+| `environment` | `PRODUCTION` / `SIMULATED`; isolate by the configured funds environment, not a server name. |
+| `agentId` / `agentCode` / `agentUserId` | Strings; agent ID, agent code, and merchant-side user ID. |
+| `platformUserId` | String; public platform user ID matching the binding result, not the service's internal `user_id`. |
+
+```json
+{
+  "event": "liquidation.warning",
+  "notificationId": "68460336",
+  "eventType": "FIRST",
+  "severity": "NORMAL",
+  "occurredAt": 1791875870804,
+  "object": {
+    "type": "CROSS",
+    "symbol": "",
+    "side": "",
+    "positionId": ""
+  },
+  "episode": "3",
+  "stateVersion": "9",
+  "riskRatio": "0.29133109",
+  "minLargePositionValue": "0.20000000",
+  "liquidationHighRiskThreshold": "0.40000000",
+  "configVersion": "8",
+  "environment": "PRODUCTION",
+  "agentId": "16",
+  "agentCode": "DEMO",
+  "agentUserId": "merchant-user-001",
+  "platformUserId": "6054354872"
+}
+```
+
+<span data-sixmm-canonical-anchor="transfer-result-example" aria-hidden="true"></span>
+
+## Transfer result example
+
+Funds callbacks retain their existing types: `orderId` and `agentId` are JSON numbers; `amount` and `platformUserId` are strings. Do not apply the warning's string `agentId` convention to funds callbacks. Read large integers without precision loss using integer / decimal types. `completedAt` is UTC RFC3339; `ts` is Unix seconds.
+
+```json
+{
+  "environment": "PRODUCTION",
+  "event": "transfer.completed",
+  "orderType": "transfer",
+  "orderId": 10001,
+  "orderNo": "merchant-order-001",
+  "targetStatus": "SUCCESS",
+  "agentId": 16,
+  "agentCode": "DEMO",
+  "currency": "USDT",
+  "amount": "10.00",
+  "direction": "IN",
+  "transferMode": "FIXED_AMOUNT",
+  "agentUserId": "merchant-user-001",
+  "platformUserId": "6054354872",
+  "rejectCode": 0,
+  "rejectMessage": "",
+  "failReason": "",
+  "completedAt": "2026-10-13T07:17:50Z",
+  "ts": 1791875870
+}
+```
+
+<span data-sixmm-canonical-anchor="reversal-result-example" aria-hidden="true"></span>
+
+## Reversal result example
+
+```json
+{
+  "environment": "PRODUCTION",
+  "event": "reverse.completed",
+  "orderType": "transfer",
+  "orderId": 10002,
+  "orderNo": "merchant-reverse-001",
+  "targetStatus": "SUCCESS",
+  "agentId": 16,
+  "agentCode": "DEMO",
+  "currency": "USDT",
+  "amount": "10.00",
+  "direction": "IN",
+  "transferMode": "FIXED_AMOUNT",
+  "agentUserId": "merchant-user-001",
+  "platformUserId": "6054354872",
+  "rejectCode": 0,
+  "rejectMessage": "",
+  "failReason": "",
+  "completedAt": "2026-10-13T07:17:50Z",
+  "ts": 1791875870
+}
+```
+
+<span data-sixmm-canonical-anchor="funds-order-dead-state-example" aria-hidden="true"></span>
+
+## Funds order dead-state example
+
+```json
+{
+  "environment": "PRODUCTION",
+  "event": "transfer.dead",
+  "orderType": "transfer",
+  "orderId": 10003,
+  "orderNo": "merchant-order-002",
+  "targetStatus": "DEAD",
+  "agentId": 16,
+  "agentCode": "DEMO",
+  "currency": "USDT",
+  "amount": "10.00",
+  "direction": "IN",
+  "transferMode": "FIXED_AMOUNT",
+  "agentUserId": "merchant-user-001",
+  "platformUserId": "6054354872",
+  "rejectCode": 0,
+  "rejectMessage": "",
+  "failReason": "order dead",
+  "completedAt": "2026-10-13T07:17:50Z",
+  "ts": 1791875870
+}
+```
+
+These examples show the protocol only. For `FAILED`, `rejectCode`, `rejectMessage`, and `failReason` reflect the actual rejection. The event name alone does not prove funds were credited.
+
+[Signature verification, responses, and retries](/sdk/security/webhooks-idempotency)

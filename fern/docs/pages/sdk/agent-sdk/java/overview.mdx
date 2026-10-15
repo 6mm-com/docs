@@ -6,7 +6,7 @@ slug: sdk/agent-sdk/java/overview
 
 This guide targets **Agent Java SDK `v0.3.0`**, Java 8+, and the tagged public contract. Examples run in a partner backend after initializing `client` in [Quick Start](/sdk/agent-sdk/java/quick-start).
 
-Documentation baseline: SDK `v0.3.0`, commit `54aa3c1`.
+Documentation baseline: SDK `v0.3.0`, commit `54aa3c1`. Webhook receiving rules additionally follow [`WEBHOOKS.md` at `fa6c7b6`](https://github.com/6mm-com/agent-java-sdk/blob/fa6c7b65124f1346f815b3b73eb8a7729466c3dc/WEBHOOKS.md); this is a documentation-only update, without a new SDK artifact containing warning helper methods.
 
 <span data-sixmm-canonical-anchor="version-and-installation" aria-hidden="true"></span>
 
@@ -35,7 +35,7 @@ GitHub hosts source; it does not make these coordinates resolvable from Maven Ce
 | Transfers | Reverse order | `reverse` | Reverse a successful transfer when the backend supports a compensation flow |
 | Transfers | Query order | `queryOrder` | Query one transfer order by partner order number |
 | Transfers | List orders | `listOrders` | Page through transfer orders for reconciliation |
-| Transfers | Webhook verification | `WebhookVerifier.verify` | Verify transfer final-state callbacks from 6MM |
+| Webhook | Signature verification | `WebhookVerifier.verify` | Verify raw funds-event and liquidation-warning bodies; merchant code handles time, ownership, and persistent deduplication checks. See [Webhook Events & Liquidation Warnings](/sdk/agent-sdk/java/webhook-events). |
 | Funding wallet | Funding transfer | `walletTransfer` | Partner ↔ Funding or Funding ↔ Contract; confirm the returned status |
 | Funding wallet | Funding transfer status | `queryWalletTransfer` | Recover a Funding operation using its original partner order number |
 | Trading entry | Direct entry URL | `createEntryUrl` | Create a one-time SSO URL for redirect mode |
@@ -64,7 +64,7 @@ integrating.
 | `agentCode` | `AGENT001` | Partner code |
 | `apiSecret` | `your-api-secret` | API signing secret. Keep it on the backend only |
 | `defaultCurrency` | `USDT` | Default currency, usually `USDT` |
-| `webhookUrl` | `https://partner.example.com/6mm/webhook` | Partner endpoint for 6MM callbacks |
+| `webhookUrl` | `https://partner.example.com/6mm/webhook` | Merchant callback URL shared by all four event types; dispatch by body `event`, with no separate warning URL. |
 
 Production recommendations:
 

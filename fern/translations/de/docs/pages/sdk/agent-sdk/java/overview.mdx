@@ -7,7 +7,7 @@ canonical-url: https://docs.6mm.com/de/sdk/agent-sdk/java/overview
 
 Dieser Leitfaden richtet sich an **Agent Java SDK `v0.3.0`**, Java 8+ und den getaggten öffentlichen Auftrag. Beispiele werden nach der Initialisierung von `client` in einem Partner-Backend ausgeführt [Schnellstart](/de/sdk/agent-sdk/java/quick-start).
 
-Dokumentationsbasis: SDK `v0.3.0`, Commit `54aa3c1`.
+Dokumentationsbasis: SDK `v0.3.0`, Commit `54aa3c1`. Webhook Es gelten zusätzlich Empfangsregeln [`WEBHOOKS.md` um `fa6c7b6`](https://github.com/6mm-com/agent-java-sdk/blob/fa6c7b65124f1346f815b3b73eb8a7729466c3dc/WEBHOOKS.md); Dies ist ein reines Dokumentationsupdate ohne ein neues SDK-Artefakt mit Hilfsmethoden für Warnungen.
 
 <span id="version-and-installation" data-sixmm-canonical-anchor="version-and-installation" aria-hidden="true"></span>
 
@@ -36,7 +36,7 @@ GitHub-Hosts-Quelle; Dadurch sind diese Koordinaten nicht von Maven Central aus 
 | Überweisungen | Umgekehrte Reihenfolge | `reverse` | Stornieren Sie eine erfolgreiche Übertragung, wenn das Backend einen Kompensationsfluss unterstützt |
 | Überweisungen | Reihenfolge abfragen | `queryOrder` | Fragen Sie einen Übertragungsauftrag nach Partnerauftragsnummer ab |
 | Überweisungen | Bestellungen auflisten | `listOrders` | Durchblättern Sie Übertragungsaufträge zum Abgleich |
-| Überweisungen | Webhook Verifizierung | `WebhookVerifier.verify` | Überprüfen Sie, ob Rückrufe im endgültigen Status von 6MM übertragen werden. |
+| Webhook | Signaturüberprüfung | `WebhookVerifier.verify` | Überprüfen Sie die Gremien für Rohgeldereignisse und Liquidationswarnungen. Der Händlercode übernimmt Zeit-, Eigentums- und dauerhafte Deduplizierungsprüfungen. Sehen [Webhook Ereignisse und Liquidationswarnungen](/de/sdk/agent-sdk/java/webhook-events). |
 | Funding-Wallet | Fördermitteltransfer | `walletTransfer` | Partner ↔ Finanzierung oder Finanzierung ↔ Vertrag; Bestätigen Sie den zurückgegebenen Status |
 | Funding-Wallet | Status der Finanzierungsübertragung | `queryWalletTransfer` | Stellen Sie einen Finanzierungsvorgang unter Verwendung seiner ursprünglichen Partnerbestellnummer wieder her |
 | Handelseintrag | Direkteintrag URL | `createEntryUrl` | Erstellen Sie einen einmaligen SSO URL für den Weiterleitungsmodus |
@@ -65,7 +65,7 @@ integrierend.
 | `agentCode` | `AGENT001` | Partnercode |
 | `apiSecret` | `your-api-secret` | API Signaturgeheimnis. Behalten Sie es nur im Backend |
 | `defaultCurrency` | `USDT` | Standardwährung, normalerweise `USDT` |
-| `webhookUrl` | `https://partner.example.com/6mm/webhook` | Partnerendpunkt für 6MM Rückrufe |
+| `webhookUrl` | `https://partner.example.com/6mm/webhook` | Händlerrückruf URL, der von allen vier Ereignistypen gemeinsam genutzt wird; Versand durch Körper `event`, ohne gesonderte Warnung URL. |
 
 Produktionsempfehlungen:
 

@@ -1,11 +1,13 @@
 ---
 title: "Webhook Weryfikacja podpisu i Idempotencja"
-subtitle: "Zweryfikuj 6MM agenta webhooks za pomocą nieprzetworzonej treści żądania i przetwarzaj ponowne próby, przekroczenia limitu czasu i powtarzające się zdarzenia bez duplikowania działań biznesowych."
+subtitle: "Weryfikuj nieprzetworzone treści Webhook, potwierdzaj użycie kodów stanu HTTP oraz niezawodnie obsługuj ponowne próby i duplikaty."
 slug: sdk/security/webhooks-idempotency
 canonical-url: https://docs.6mm.com/pl/sdk/security/webhooks-idempotency
 ---
 
-Webhooks powiadom zaplecze partnera o asynchronicznych zmianach stanu biznesowego. Ponieważ można ponowić próbę dostarczenia, każdy odbiorca musi zweryfikować podpis przed przeanalizowaniem zaufanych danych i musi przetworzyć zdarzenie idempotentnie.
+Ta strona następuje [Agent Java SDK `WEBHOOKS.md`](https://github.com/6mm-com/agent-java-sdk/blob/fa6c7b65124f1346f815b3b73eb8a7729466c3dc/WEBHOOKS.md) przy zatwierdzeniu `fa6c7b6`. To jest aktualizacja zawierająca wyłącznie dokumentację; nie wydano żadnego nowego SDK artefaktu zawierającego metody pomocnicze ostrzegawcze.
+
+Wszystkie cztery typy zdarzeń wykorzystują jedno wywołanie zwrotne sprzedawcy URL i są wysyłane przez treść `event`. Widzieć [Webhook Ostrzeżenia dotyczące zdarzeń i likwidacji](/pl/sdk/agent-sdk/java/webhook-events) dla pól zdarzeń i przykładów ładunku.
 
 <span id="webhook-headers" data-sixmm-canonical-anchor="webhook-headers" aria-hidden="true"></span>
 
@@ -13,90 +15,118 @@ Webhooks powiadom zaplecze partnera o asynchronicznych zmianach stanu biznesoweg
 
 | Chodnikowiec | Opis |
 | --- | --- |
-| Znacznik czasu X-Agent | Znacznik czasu Uniksa w sekundach. |
-| X-Agent-Nonce | Nonce chroniący przed powtórzeniem. |
-| Podpis X-Agenta | HMAC-SHA256 podpis. |
+| `X-Agent-Timestamp` | Znacznik czasu Uniksa w sekundach. |
+| `X-Agent-Nonce` | Chwilowo. |
+| `X-Agent-Signature` | HMAC-SHA256 podpis szesnastkowy. |
 
 ```text
 timestamp + nonce + rawBody
 ```
 
-Podczas rekonstruowania podpisanej wartości użyj dokładnej nieprzetworzonej treści żądania otrzymanej w ciągu HTTP. Analiza i ponowna serializacja JSON może najpierw zmienić białe znaki lub kolejność pól i wygenerować inny podpis.
+<span id="order-idempotency" data-sixmm-canonical-anchor="order-idempotency" aria-hidden="true"></span>
+
+## Idempotencja zdarzenia
+
+Utrzymuj deduplikację w zakresie sprzedawcy i `environment`, atomowo z przetwarzaniem biznesowym. Różne wartości `notificationId` identyfikują niezależne powiadomienia `FIRST` / `UPGRADE` / `REMINDER`; nie odrzucaj powiadomień według użytkownika, odcinka lub `eventType`. Do deduplikacji nie można użyć pustego klucza idempotencji. SDK zwraca tylko klucz pomocniczy; nie przechowuje ani nie przetwarza danych biznesowych. Zapisz tę samą tożsamość w innym organie jako konflikt; nie nadpisuj przetworzonej treści.
 
 <span id="verification-flow" data-sixmm-canonical-anchor="verification-flow" aria-hidden="true"></span>
 
-## Przepływ weryfikacji
+## Weryfikacja i odbiór podpisu
 
-1. Przeczytaj znacznik czasu, wartość jednorazową i nagłówki podpisu.
-2. Przechwyć niezmodyfikowaną surową treść żądania.
-3. Zbuduj `timestamp + nonce + rawBody`.
-4. Oblicz HMAC-SHA256 z partnerem API sekretem.
-5. Porównaj obliczone i otrzymane podpisy, korzystając z porównania w czasie stałym.
-6. Zastosuj zatwierdzone kontrole aktualności sygnatury czasowej i kontroli jednorazowego ponownego użycia.
-7. Analizuj i przetwarzaj zdarzenie dopiero po pomyślnej weryfikacji.
+Użyj sekretu sprzedawcy API, aby obliczyć HMAC-SHA256 podpis szesnastkowy `timestamp + nonce + rawBody`. Sprawdź oryginalne odebrane bajty; nie formatuj JSON, nie zmieniaj nazw pól ani nie serializuj najpierw treści.
 
-Gdy dostępny jest oficjalny weryfikator Agent SDK, użyj go zamiast utrzymywać niezależny kod podpisujący.
+Najpierw zweryfikuj podpis, a następnie sprawdź okno czasowe (zalecane ± 300 sekund), sprzedawcę i środowisko. Następnie wyodrębnij tożsamość idempotencji i niezawodnie obsłuż powiadomienie. Zachowaj nieznane wartości zdarzeń do celów diagnozy; nigdy nie interpretuj ich jako sukcesu funduszy. Pomocnik weryfikacji nie przeprowadza kontroli okien czasowych, własności ani trwałej deduplikacji.
 
-<span id="order-idempotency" data-sixmm-canonical-anchor="order-idempotency" aria-hidden="true"></span>
+Zwróć HTTP 2xx po zakończeniu przetwarzania lub potwierdzeniu identycznego duplikatu; w przypadku niepowodzenia zwróć wartość inną niż 2xx. Nadawca ostrzeżenia ma 5-sekundowy limit czasu HTTP i maksymalnie 8 prób. Ponowne próby zatrzymują zamrożone ciało; zmienia się tylko znacznik czasu i wartość jednorazowa podpisu. Odpowiadaj niezwłocznie po rzetelnej akceptacji; długotrwała praca biznesowa może wykorzystywać własne, stałe zadania sprzedawcy.
 
-## Zamów idempotencję
+Powiadomienia sprzedawcy nie zależą od statusu online użytkownika. Wypychanie użytkowników platformy odbywa się wyłącznie w trybie online, bez konieczności odtwarzania w trybie offline; faza pierwsza nie ma skrzynki odbiorczej powiadomień.
 
-| Sprawa | Obsługiwanie |
+<span id="successful-responses-and-stopping-retries" data-sixmm-canonical-anchor="successful-responses-and-stopping-retries" aria-hidden="true"></span>
+
+### Pomyślne odpowiedzi i zatrzymanie ponownych prób
+
+Wezwania zwrotne środków i ostrzeżenia o likwidacji wykorzystują **tylko kod stanu HTTP** do określenia powodzenia dostawy. Nadawca nie interpretuje treści odpowiedzi `code`, `success`, `result` ani `message` i nie wymaga ustalonej odpowiedzi `OK`/`success`.
+
+| Odpowiedź sprzedawcy | Zachowanie platformy |
 | --- | --- |
-| Wstępna prośba o przeniesienie | Utwórz jeden, unikalny na całym świecie agentOrderNo. |
-| HTTP przekroczenie limitu czasu | Zapytaj o oryginał agentOrderNo przed utworzeniem nowego. |
-| PROCESSING odpowiedź | Poczekaj na webhook lub zapytaj o status zamówienia. |
-| Powtarzane webhook | Deduplikacja według klucza idempotencji i statusu końcowego. |
+| HTTP 200–299, w tym 200, 202 i 204 | Dostawa powiodła się; automatyczne ponowne wysyłanie zostaje zatrzymane po utrwaleniu się stanu powodzenia. |
+| Ostateczna odpowiedź inna niż 2xx, w tym 400, 401, 403, 409, 429, 500 i 503 | Dostawa nie powiodła się, a ponowne próby są zgodne z istniejącą polityką wycofywania; po limicie prób jest oznaczony `DEAD`. 4xx nie potwierdza automatycznie powiadomienia. |
+| Błąd połączenia lub przekroczono limit czasu odpowiedzi bez użytecznej odpowiedzi | Wynik jest niepotwierdzony i ponowiona próba zgodnie z zasadami dotyczącymi niepowodzeń. |
+
+Treść odpowiedzi może być pusta, tekstowa lub JSON. Przykładowe pola `result` mają charakter informacyjny dla sprzedawcy, a nie wymagania protokołu. `202 Accepted` zatrzymuje także ponowne próby platformy, więc zwróć je dopiero po niezawodnym zapisaniu powiadomienia w trwałej kolejce zadań sprzedawcy, a nie tylko po uruchomieniu zadania asynchronicznego w pamięci.
+
+<span id="successful-response-examples" data-sixmm-canonical-anchor="successful-response-examples" aria-hidden="true"></span>
+
+### Przykłady udanych odpowiedzi
+
+Po zakończeniu przetwarzania biznesowego lub po niezawodnym zapisaniu powiadomienia w oczekującej kolejce sprzedawcy:
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"result":"RECEIVED"}
+```
+
+Jeżeli treść odpowiedzi nie jest potrzebna:
+
+```http
+HTTP/1.1 204 No Content
+```
+
+W przypadku już przetworzonego powiadomienia o identycznej treści pomiń zduplikowane przetwarzanie biznesowe i nadal zwróć 2xx:
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"result":"DUPLICATE"}
+```
+
+<span id="failure-response-examples" data-sixmm-canonical-anchor="failure-response-examples" aria-hidden="true"></span>
+
+### Przykłady reakcji na awarię
+
+Jeśli baza danych jest tymczasowo niedostępna, a sprzedawca nie zakończył przetwarzania ani niezawodnie zapisał powiadomienie, zwróć wartość inną niż 2xx, aby platforma mogła spróbować ponownie:
+
+```http
+HTTP/1.1 503 Service Unavailable
+Content-Type: application/json
+
+{"result":"FAILED","message":"temporary storage failure"}
+```
+
+Odrzuć nieprawidłowy podpis bez aktualizacji danych biznesowych lub pomyślnych zapisów deduplikacji:
+
+```http
+HTTP/1.1 401 Unauthorized
+Content-Type: application/json
+
+{"result":"INVALID_SIGNATURE"}
+```
+
+Te treści odpowiedzi nie powodują zmiany decyzji o ponownym podjęciu próby. Nie należy oczekiwać, że błąd 401 lub 409 trwale zatrzyma ponowne próby; sprawdź podpis, treść powiadomienia lub konfigurację sprzedawcy.
+
+**Niepoprawny przykład: poniższa odpowiedź nadal liczy się jako pomyślne dostarczenie. Platforma nie podejmie ponownej próby z powodu `success:false`.**
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"success":false,"code":500,"message":"processing failed"}
+```
+
+Jeśli struktura lub globalna procedura obsługi wyjątków otacza niepowodzenia biznesowe w HTTP 200, jawnie ustaw prawidłowy stan błędu w punkcie końcowym wywołania zwrotnego.
 
 <span id="recommended-idempotency-record" data-sixmm-canonical-anchor="recommended-idempotency-record" aria-hidden="true"></span>
 
-## Zalecany rekord idempotencji
+### Niezawodne potwierdzenie i zduplikowana dostawa
 
-Przechowuj wystarczającą ilość informacji, aby rozpoznać powtarzającą się dostawę i bezpiecznie odzyskać:
+Zalecana kolejność: zweryfikuj podpis i sprawdź czas/sprzedawcę/środowisko → wyodrębnij tożsamość idempotencji → przetwórz dane biznesowe i pomyślne zapisy deduplikacji w transakcji lub niezawodnie zapisz oczekujące zadanie → zwróć 200/204 po pomyślnym zatwierdzeniu. Nie zwracaj 2xx ani nie oznaczaj powiadomienia przetworzonego przed pomyślnym zapisem do bazy danych.
 
-| Pole | Zamiar |
-| --- | --- |
-| Wydarzenie lub klucz biznesowy | Unikalnie identyfikuje powiadomienie lub operację. |
-| Numer zamówienia partnera | Łączy wydarzenie z pierwotnym żądaniem. |
-| Hash ładunku | Pomaga zidentyfikować sprzeczne, powtarzające się ładunki. |
-| Bieżący stan przetwarzania | Rozróżnia pracę otrzymaną, przetworzoną, udaną i nieudaną. |
-| Ostateczny status biznesowy | Zapobiega dwukrotnemu zastosowaniu akcji końcowej. |
-| Przetworzony znacznik czasu | Obsługuje zasady dochodzenia i przechowywania. |
+Zduplikowana dostawa może nadal wystąpić po pomyślnym przetworzeniu przez sprzedawcę: odpowiedź może zostać utracona lub platforma może otrzymać wiadomość 2xx, ale wiadomość nie zostanie zachowana `SUCCESS`. HTTP wywołania zwrotne nie gwarantują jednorazowej dostawy. Utrzymuj deduplikację w obrębie sprzedawcy i zakresu `environment`. Fundusze wykorzystują `orderType:orderId:targetStatus`; ostrzeżenia używają `liquidation.warning:notificationId`. W przypadku identycznego, już przetworzonego ciała, zwróć 2xx bez uznania środków lub ponownego wystawienia przypomnienia. Dla tej samej tożsamości z innym ciałem zarejestruj konflikt i zwróć inny niż 2xx; nie nadpisuj oryginalnego zapisu.
 
-Jeśli to możliwe, zatwierdź zmiany biznesowe i rekord idempotencji w tej samej transakcji. Powtarzające się zdarzenie powinno zwrócić już znany wynik zamiast ponownego stosowania salda, kolejności lub zmiany użytkownika.
-
-<span id="timeout-and-retry-rule" data-sixmm-canonical-anchor="timeout-and-retry-rule" aria-hidden="true"></span>
-
-## Reguła limitu czasu i ponownej próby
-
-Limit czasu HTTP nie oznacza, że ​​pierwotne żądanie nie powiodło się. Zapytaj o operację, używając oryginalnego `agentOrderNo` lub poczekaj na webhook, zanim podejmiesz decyzję, czy wymagane jest inne działanie. Utworzenie nowego numeru zamówienia biznesowego po każdym przekroczeniu limitu czasu może spowodować zdublowanie ruchów środków.
-
-<span id="production-checklist" data-sixmm-canonical-anchor="production-checklist" aria-hidden="true"></span>
-
-## Lista kontrolna produkcji
-
-- Zweryfikuj podpis przed analizą JSON lub przetwarzaniem biznesowym.
-- Zachowaj surową treść niezależnie od przeanalizowanego ładunku.
-- Odrzucaj nieaktualne lub odtwarzane żądania zgodnie z zatwierdzoną polityką integracji.
-- Zapewnij bezpieczeństwo przetwarzania zdarzeń w przypadku powtarzających się dostaw poza kolejnością.
-- Rejestruj identyfikatory zdarzeń, numery zamówień partnerów, wyniki przetwarzania i czas żądania.
-- Usuń sekrety i wartości podpisów z dzienników i załączników pomocy technicznej.
-
-<span id="related-docs" data-sixmm-canonical-anchor="related-docs" aria-hidden="true"></span>
-
-## Powiązane dokumenty
-
-<CardGroup cols={3}>
-<Card title="Sekrety i HMAC Podpisywanie" icon="fa-duotone fa-shield-keyhole" href="/pl/sdk/security/secrets-signing">
-Chroń sekret API używany do żądania i weryfikacji webhook.
-</Card>
-<Card title="Agent SDK Przegląd" icon="fa-duotone fa-server" href="/pl/sdk/agent-sdk/overview">
-Przejrzyj pełny przepływ pracy związany z integracją zaplecza.
-</Card>
-<Card title="SDK Rozwiązywanie problemów" icon="fa-duotone fa-screwdriver-wrench" href="/pl/sdk/security/troubleshooting">
-Sprawdź odrzucone podpisy, powtarzające się zdarzenia i oczekujące operacje.
-</Card>
-</CardGroup>
+Sukces potwierdzenia oznacza, że ​​sprzedawca otrzymał/przetworzył powiadomienie, a nie, że operacja środków powiodła się. Po zarejestrowaniu prawidłowego powiadomienia o środkach za pomocą `targetStatus=FAILED` zwróć również 2xx; niepowodzenie zamówienia nie jest powodem do odmowy potwierdzenia zgłoszenia.
 
 <span id="funding-and-environment-boundaries" data-sixmm-canonical-anchor="funding-and-environment-boundaries" aria-hidden="true"></span>
 

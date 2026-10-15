@@ -93,3 +93,18 @@ canonical-url: https://docs.6mm.com/zh-CN/sdk/security/troubleshooting
 | Java 新方法不存在 | 核对 Maven 实际解析制品与公开标签 `v0.3.0`，按制品策略处理依赖冲突。 |
 
 [查询与错误说明](/zh-CN/sdk/agent-sdk/java/perpetual-queries) · [升级指南](/zh-CN/sdk/agent-sdk/java/upgrade)
+
+<span id="webhook-receiving-issues" data-sixmm-canonical-anchor="webhook-receiving-issues" aria-hidden="true"></span>
+
+## Webhook 接收排查
+
+| 现象 | 检查与处理 |
+| --- | --- |
+| 返回失败 JSON 后平台没有重试 | 检查是否仍返回 HTTP 200；平台只看 HTTP 状态码，不解析正文成功标识。 |
+| 返回 401 或 409 后仍收到重试 | 非 2xx 会按既有策略重试；排查签名、通知内容或商户配置。 |
+| 强平预警幂等键为空 | 当前 `WebhookVerifier.idempotencyKey` 仅提取资金事件身份；验签和归属校验后，自行校验 `notificationId` 并构造预警键，不能使用空串。 |
+| 处理成功后仍收到同一通知 | 在商户与 `environment` 范围内持久去重；同正文重复返回 2xx，同 ID 异正文记录冲突并返回非 2xx。 |
+| 预警被漏处理 | 兼容 `liquidation.warning` 与历史 `LIQUIDATION_WARNING`；不同通知 ID 不按用户、轮次或事件类型合并丢弃。 |
+| 业务已确认接收但后续任务丢失 | 返回 2xx 前必须可靠保存任务，不能仅启动内存异步任务。 |
+
+[事件字段与兼容说明](/zh-CN/sdk/agent-sdk/java/webhook-events) · [HTTP 响应与可靠确认](/zh-CN/sdk/security/webhooks-idempotency)

@@ -93,3 +93,18 @@ Esamina la verifica della richiamata e la gestione degli eventi duplicati.
 | Manca il nuovo metodo Java. | Confronta l'artefatto Maven risolto con il tag pubblico `v0.3.0`; rimuovere le dipendenze in conflitto in base alla policy degli artefatti. |
 
 [Riferimento a query ed errori](/it/sdk/agent-sdk/java/perpetual-queries) · [Guida all'aggiornamento](/it/sdk/agent-sdk/java/upgrade)
+
+<span id="webhook-receiving-issues" data-sixmm-canonical-anchor="webhook-receiving-issues" aria-hidden="true"></span>
+
+## Webhook problemi di ricezione
+
+| Sintomo | Controllo e manipolazione |
+| --- | --- |
+| Nessun tentativo dopo aver restituito l'errore JSON | Controlla se l'endpoint restituisce ancora HTTP 200. La consegna utilizza solo lo stato HTTP, non un indicatore di successo nel corpo. |
+| I tentativi continuano dopo 401 o 409 | Le risposte non 2xx seguono la politica di ripetizione esistente; indagare su firme, contenuto delle notifiche o configurazione del commerciante. |
+| Chiave di idempotenza vuota per un avviso di liquidazione | L'attuale `WebhookVerifier.idempotencyKey` estrae solo le identità degli eventi fondi. Dopo i controlli della firma e della proprietà, convalida `notificationId` e crea la chiave di avviso nel codice commerciante. Non utilizzare mai una chiave vuota. |
+| Notifica duplicata dopo l'elaborazione riuscita | Deduplicazione persistente nell'ambito del commerciante e `environment`. Restituisce 2xx per duplicati identici; registrano conflitti e restituiscono valori diversi da 2xx per lo stesso ID con un corpo diverso. |
+| Avviso non elaborato | Accetta `liquidation.warning` e storico `LIQUIDATION_WARNING`; non raggruppare ID di notifica distinti per utente, episodio o tipo di evento ed eliminarli. |
+| La notifica accettata perde l'attività in sospeso | Salvare un'attività in modo affidabile prima di restituire 2xx; l'avvio di un'attività asincrona in memoria non è sufficiente. |
+
+[Campi evento e compatibilità](/it/sdk/agent-sdk/java/webhook-events) · [HTTP risposte e riconoscimenti affidabili](/it/sdk/security/webhooks-idempotency)

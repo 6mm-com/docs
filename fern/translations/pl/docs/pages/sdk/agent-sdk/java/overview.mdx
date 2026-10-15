@@ -7,7 +7,7 @@ canonical-url: https://docs.6mm.com/pl/sdk/agent-sdk/java/overview
 
 Ten przewodnik jest przeznaczony dla **Agent Java SDK `v0.3.0`**, Java 8+ i oznaczonych zamówień publicznych. Przykłady działają w zapleczu partnera po inicjalizacji `client` w [Szybki start](/pl/sdk/agent-sdk/java/quick-start).
 
-Bazowa dokumentacja: SDK `v0.3.0`, zatwierdzenie `54aa3c1`.
+Bazowa dokumentacja: SDK `v0.3.0`, zatwierdzenie `54aa3c1`. Webhook dodatkowo przestrzegane są zasady odbierania [`WEBHOOKS.md` w `fa6c7b6`](https://github.com/6mm-com/agent-java-sdk/blob/fa6c7b65124f1346f815b3b73eb8a7729466c3dc/WEBHOOKS.md); jest to aktualizacja zawierająca wyłącznie dokumentację, bez nowego SDK artefaktu zawierającego metody pomocnicze ostrzegające.
 
 <span id="version-and-installation" data-sixmm-canonical-anchor="version-and-installation" aria-hidden="true"></span>
 
@@ -36,7 +36,7 @@ Bazowa dokumentacja: SDK `v0.3.0`, zatwierdzenie `54aa3c1`.
 | Transfery | Odwrotna kolejność | `reverse` | Odwróć pomyślny transfer, gdy zaplecze obsługuje przepływ kompensacji |
 | Transfery | Kolejność zapytania | `queryOrder` | Zapytaj o jedno zlecenie przeniesienia według numeru zamówienia partnera |
 | Transfery | Lista zamówień | `listOrders` | Przejrzyj zamówienia przeniesienia w celu uzgodnienia |
-| Transfery | Webhook weryfikacja | `WebhookVerifier.verify` | Zweryfikuj wywołania zwrotne dotyczące końcowego stanu transferu z 6MM |
+| Webhook | Weryfikacja podpisu | `WebhookVerifier.verify` | Weryfikacja organów surowcowych w przypadku zdarzeń i likwidacji; kod sprzedawcy obsługuje kontrolę czasu, własności i trwałej deduplikacji. Widzieć [Webhook Ostrzeżenia dotyczące zdarzeń i likwidacji](/pl/sdk/agent-sdk/java/webhook-events). |
 | Portfel finansowania | Transfer środków | `walletTransfer` | Partner ↔ Finansowanie lub Finansowanie ↔ Umowa; potwierdź zwrócony status |
 | Portfel finansowania | Stan transferu środków | `queryWalletTransfer` | Odzyskaj operację finansowania, korzystając z oryginalnego numeru zamówienia partnera |
 | Wejście handlowe | Wpis bezpośredni URL | `createEntryUrl` | Utwórz jednorazowe SSO URL dla trybu przekierowania |
@@ -65,7 +65,7 @@ integrowanie.
 | `agentCode` | `AGENT001` | Kod partnera |
 | `apiSecret` | `your-api-secret` | API tajemnica podpisywania. Trzymaj go tylko na zapleczu |
 | `defaultCurrency` | `USDT` | Domyślna waluta, zwykle `USDT` |
-| `webhookUrl` | `https://partner.example.com/6mm/webhook` | Punkt końcowy partnera dla wywołań zwrotnych 6MM. |
+| `webhookUrl` | `https://partner.example.com/6mm/webhook` | Wywołanie zwrotne sprzedawcy URL wspólne dla wszystkich czterech typów zdarzeń; wysyłka przez organ `event`, bez osobnego ostrzeżenia URL. |
 
 Zalecenia produkcyjne:
 

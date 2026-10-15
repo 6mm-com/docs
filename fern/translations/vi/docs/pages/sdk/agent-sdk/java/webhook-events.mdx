@@ -1,0 +1,164 @@
+---
+title: "Webhook Sự kiện & Cảnh báo thanh lý"
+subtitle: "Người bán Webhook loại sự kiện, danh tính tạm thời, trường cảnh báo thanh lý và ví dụ về kết quả quỹ."
+slug: sdk/agent-sdk/java/webhook-events
+canonical-url: https://docs.6mm.com/vi/sdk/agent-sdk/java/webhook-events
+---
+
+Trang này theo dõi [Agent Java SDK `WEBHOOKS.md`](https://github.com/6mm-com/agent-java-sdk/blob/fa6c7b65124f1346f815b3b73eb8a7729466c3dc/WEBHOOKS.md) tại cam kết `fa6c7b6`. Đây chỉ là bản cập nhật tài liệu; không có tạo phẩm SDK mới nào chứa các phương thức trợ giúp cảnh báo được phát hành.
+
+Tất cả bốn loại sự kiện đều sử dụng lệnh gọi lại được định cấu hình duy nhất của người bán URL (`agents.webhook_url`). Công văn trên cơ thể `event`; không cần có cảnh báo riêng URL. Các ví dụ hiển thị cấu trúc tải trọng và không được sử dụng để đưa dữ liệu vào môi trường thử nghiệm.
+
+<span id="events-and-idempotency" data-sixmm-canonical-anchor="events-and-idempotency" aria-hidden="true"></span>
+
+## Sự kiện và sự bình thường
+
+| `event` | Nghĩa | `targetStatus` / khóa chống trùng lặp |
+| --- | --- | --- |
+| `transfer.completed` | Chuyển trạng thái thiết bị đầu cuối, bao gồm cập nhật đơn hàng ban đầu sau khi đảo ngược; không nhất thiết phải thành công | `SUCCESS` / `FAILED` / `REVERSED`; `orderType:orderId:targetStatus` |
+| `reverse.completed` | Trạng thái kết thúc lệnh đảo ngược | `SUCCESS` / `FAILED`; `orderType:orderId:targetStatus` |
+| `transfer.dead` | Trạng thái lệnh chuyển tiền cuối cùng vẫn chưa được xác nhận sau khi thử lại và cần đối chiếu thủ công; không phải là một thất bại được xác nhận | `DEAD`; `orderType:orderId:targetStatus` |
+| `liquidation.warning` | Cảnh báo rủi ro thanh lý, không có trường trạng thái đầu cuối lệnh | `liquidation.warning:notificationId` |
+
+Sự kiện cảnh báo người bán là `liquidation.warning`; người dùng WebSocket `data.event` vẫn còn `LIQUIDATION_WARNING`. Giữ hai kênh riêng biệt.
+
+Thông báo trước đây của người bán đã được sử dụng `LIQUIDATION_WARNING`. Tải trọng bị đóng băng vẫn giữ nguyên nội dung ban đầu khi thử lại, vì vậy người nhận phải nhận ra cả hai tên. Nếu hồ sơ kinh doanh hiện có sử dụng tiền tố khóa cảnh báo viết hoa, hãy giữ lại khóa gốc hoặc kiểm tra cả hai khóa trong quá trình di chuyển để tránh xử lý lại thông báo.
+
+**`WebhookVerifier.idempotencyKey` hiện tại chỉ trích xuất `orderType:orderId:targetStatus` cho các sự kiện cấp vốn và trả về một chuỗi trống cho tải trọng cảnh báo.** Không có tạo phẩm SDK mới nào chứa các phương thức trợ giúp cảnh báo được phát hành cùng với bản cập nhật tài liệu này. Tiếp tục sử dụng phương pháp `verify` hiện có để xác minh nội dung cảnh báo thô. Sau khi kiểm tra chữ ký và quyền sở hữu, mã doanh nghiệp của người bán phải nhận dạng cả hai tên sự kiện, xác thực rằng `notificationId` là chuỗi số nguyên thập phân dương và tạo dựng `liquidation.warning:<notificationId>`. Không bao giờ sử dụng khóa chống trùng lặp trống hoặc yêu cầu cảnh báo chứa các trường lệnh chuyển tiền.
+
+Duy trì việc loại bỏ trùng lặp trong phạm vi người bán và phạm vi `environment` và thực hiện nó một cách nguyên tử trong quá trình xử lý kinh doanh. Thông báo `FIRST` / `UPGRADE` / `REMINDER` với các giá trị `notificationId` khác nhau là độc lập; không loại bỏ chúng bằng cách nhóm theo người dùng, tập hoặc `eventType`. Khóa trống có nghĩa là không thể trích xuất danh tính hợp lệ. SDK chỉ trả về khóa trợ giúp; nó không lưu giữ hồ sơ hoặc thực hiện xử lý kinh doanh. Ghi nhận cùng một danh tính với một cơ thể khác là xung đột; không ghi đè lên phần thân đã được xử lý.
+
+<span id="liquidation-warning-fields-and-example" data-sixmm-canonical-anchor="liquidation-warning-fields-and-example" aria-hidden="true"></span>
+
+## Các trường và ví dụ cảnh báo thanh lý
+
+| Cánh đồng | Loại/mô tả |
+| --- | --- |
+| `notificationId` | Chuỗi số nguyên thập phân dương; ID thông báo duy nhất. Không chuyển đổi nó thành số dấu phẩy động. |
+| `eventType` | `FIRST`: cảnh báo đầu tiên trong tập hiện tại; `UPGRADE`: rủi ro bình thường được nâng cấp lên rủi ro cao trong đợt này; `REMINDER`: một lời nhắc nhở khác về rủi ro đang diễn ra. |
+| `severity` | `NORMAL` / `HIGH`. `FIRST` có thể đã là `HIGH`; `UPGRADE` là `HIGH`; `REMINDER` có thể là `NORMAL` hoặc `HIGH`. |
+| `occurredAt` | JSON số; Unix mili giây khi cảnh báo được kích hoạt, không phải khi phân phối HTTP đến. |
+| `object` | `type=CROSS`: tài khoản ký quỹ chéo, với các chuỗi trống cho `symbol`, `side` và `positionId`. `ISOLATED`: vị thế ký quỹ riêng biệt, mang ID hợp đồng, bên và vị thế tương ứng. |
+| `episode` | Sợi dây; giai đoạn cảnh báo hiện tại. `FIRST` không có nghĩa là cảnh báo đầu tiên của người dùng. |
+| `stateVersion` / `configVersion` | Dây; trạng thái ngược dòng/phiên bản cấu hình. Không loại bỏ thông báo một cách độc lập dựa trên các trường này. |
+| `riskRatio` / `minLargePositionValue` / `liquidationHighRiskThreshold` | Chuỗi thập phân cho tỷ lệ rủi ro, ngưỡng cảnh báo bình thường và ngưỡng rủi ro cao. Bảo toàn độ chính xác; ngược dòng tính toán các quy tắc ngưỡng. |
+| `environment` | `PRODUCTION` / `SIMULATED`; cách ly bởi môi trường quỹ được định cấu hình, không phải tên máy chủ. |
+| `agentId` / `agentCode` / `agentUserId` | Dây; ID đại lý, mã đại lý và ID người dùng phía người bán. |
+| `platformUserId` | Sợi dây; ID người dùng nền tảng công khai khớp với kết quả liên kết, không phải `user_id` nội bộ của dịch vụ. |
+
+```json
+{
+  "event": "liquidation.warning",
+  "notificationId": "68460336",
+  "eventType": "FIRST",
+  "severity": "NORMAL",
+  "occurredAt": 1791875870804,
+  "object": {
+    "type": "CROSS",
+    "symbol": "",
+    "side": "",
+    "positionId": ""
+  },
+  "episode": "3",
+  "stateVersion": "9",
+  "riskRatio": "0.29133109",
+  "minLargePositionValue": "0.20000000",
+  "liquidationHighRiskThreshold": "0.40000000",
+  "configVersion": "8",
+  "environment": "PRODUCTION",
+  "agentId": "16",
+  "agentCode": "DEMO",
+  "agentUserId": "merchant-user-001",
+  "platformUserId": "6054354872"
+}
+```
+
+<span id="transfer-result-example" data-sixmm-canonical-anchor="transfer-result-example" aria-hidden="true"></span>
+
+## Ví dụ về kết quả chuyển giao
+
+Lệnh gọi lại quỹ giữ nguyên các loại hiện có: `orderId` và `agentId` là các số JSON; `amount` và `platformUserId` là các chuỗi. Không áp dụng quy ước chuỗi `agentId` của cảnh báo cho các lệnh gọi lại quỹ. Đọc số nguyên lớn mà không mất độ chính xác khi sử dụng kiểu số nguyên/thập phân. `completedAt` là UTC RFC3339; `ts` là giây Unix.
+
+```json
+{
+  "environment": "PRODUCTION",
+  "event": "transfer.completed",
+  "orderType": "transfer",
+  "orderId": 10001,
+  "orderNo": "merchant-order-001",
+  "targetStatus": "SUCCESS",
+  "agentId": 16,
+  "agentCode": "DEMO",
+  "currency": "USDT",
+  "amount": "10.00",
+  "direction": "IN",
+  "transferMode": "FIXED_AMOUNT",
+  "agentUserId": "merchant-user-001",
+  "platformUserId": "6054354872",
+  "rejectCode": 0,
+  "rejectMessage": "",
+  "failReason": "",
+  "completedAt": "2026-10-13T07:17:50Z",
+  "ts": 1791875870
+}
+```
+
+<span id="reversal-result-example" data-sixmm-canonical-anchor="reversal-result-example" aria-hidden="true"></span>
+
+## Ví dụ về kết quả đảo ngược
+
+```json
+{
+  "environment": "PRODUCTION",
+  "event": "reverse.completed",
+  "orderType": "transfer",
+  "orderId": 10002,
+  "orderNo": "merchant-reverse-001",
+  "targetStatus": "SUCCESS",
+  "agentId": 16,
+  "agentCode": "DEMO",
+  "currency": "USDT",
+  "amount": "10.00",
+  "direction": "IN",
+  "transferMode": "FIXED_AMOUNT",
+  "agentUserId": "merchant-user-001",
+  "platformUserId": "6054354872",
+  "rejectCode": 0,
+  "rejectMessage": "",
+  "failReason": "",
+  "completedAt": "2026-10-13T07:17:50Z",
+  "ts": 1791875870
+}
+```
+
+<span id="funds-order-dead-state-example" data-sixmm-canonical-anchor="funds-order-dead-state-example" aria-hidden="true"></span>
+
+## Ví dụ về trạng thái chết của lệnh quỹ
+
+```json
+{
+  "environment": "PRODUCTION",
+  "event": "transfer.dead",
+  "orderType": "transfer",
+  "orderId": 10003,
+  "orderNo": "merchant-order-002",
+  "targetStatus": "DEAD",
+  "agentId": 16,
+  "agentCode": "DEMO",
+  "currency": "USDT",
+  "amount": "10.00",
+  "direction": "IN",
+  "transferMode": "FIXED_AMOUNT",
+  "agentUserId": "merchant-user-001",
+  "platformUserId": "6054354872",
+  "rejectCode": 0,
+  "rejectMessage": "",
+  "failReason": "order dead",
+  "completedAt": "2026-10-13T07:17:50Z",
+  "ts": 1791875870
+}
+```
+
+Những ví dụ này chỉ hiển thị giao thức. Đối với `FAILED`, `rejectCode`, `rejectMessage` và `failReason` phản ánh sự từ chối thực tế. Chỉ riêng tên sự kiện không chứng minh được tiền đã được ghi có.
+
+[Xác minh chữ ký, phản hồi và thử lại](/vi/sdk/security/webhooks-idempotency)

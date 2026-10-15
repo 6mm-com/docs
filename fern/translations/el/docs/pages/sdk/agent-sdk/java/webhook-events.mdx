@@ -1,0 +1,164 @@
+---
+title: "Webhook Προειδοποιήσεις συμβάντων και εκκαθάρισης"
+subtitle: "Εμπόρων Webhook τύποι συμβάντων, ταυτότητες ανικανότητας, πεδία προειδοποίησης εκκαθάρισης και παραδείγματα αποτελεσμάτων κεφαλαίων."
+slug: sdk/agent-sdk/java/webhook-events
+canonical-url: https://docs.6mm.com/el/sdk/agent-sdk/java/webhook-events
+---
+
+Ακολουθεί αυτή η σελίδα [Agent Java SDK `WEBHOOKS.md`](https://github.com/6mm-com/agent-java-sdk/blob/fa6c7b65124f1346f815b3b73eb8a7729466c3dc/WEBHOOKS.md) κατά τη δέσμευση `fa6c7b6`. Αυτή είναι μια ενημέρωση μόνο για τεκμηρίωση. Δεν κυκλοφόρησε κανένα νέο SDK τεχνούργημα που να περιέχει βοηθητικές μεθόδους προειδοποίησης.
+
+Και οι τέσσερις τύποι συμβάντων χρησιμοποιούν τη μοναδική διαμορφωμένη επιστροφή κλήσης του εμπόρου URL (`agents.webhook_url`). Αποστολή στο σώμα `event`; δεν απαιτείται ξεχωριστή προειδοποίηση URL. Τα παραδείγματα δείχνουν τη δομή ωφέλιμου φορτίου και δεν πρέπει να χρησιμοποιούνται για την εισαγωγή δεδομένων σε περιβάλλον δοκιμής.
+
+<span id="events-and-idempotency" data-sixmm-canonical-anchor="events-and-idempotency" aria-hidden="true"></span>
+
+## Γεγονότα και αδυναμία
+
+| `event` | Εννοια | `targetStatus` / κλειδί κατάργησης διπλότυπων |
+| --- | --- | --- |
+| `transfer.completed` | Μεταφορά κατάστασης τερματικού, συμπεριλαμβανομένης ενημέρωσης της αρχικής παραγγελίας μετά την αντιστροφή. όχι απαραίτητα επιτυχημένη | `SUCCESS` / `FAILED` / `REVERSED`; `orderType:orderId:targetStatus` |
+| `reverse.completed` | Κατάσταση τερματικού εντολής αντιστροφής | `SUCCESS` / `FAILED`; `orderType:orderId:targetStatus` |
+| `transfer.dead` | Η κατάσταση της τελικής παραγγελίας κεφαλαίων παραμένει μη επιβεβαιωμένη μετά από επαναλήψεις και χρειάζεται μη αυτόματη συμφωνία. δεν είναι επιβεβαιωμένη αποτυχία | `DEAD`; `orderType:orderId:targetStatus` |
+| `liquidation.warning` | Προειδοποίηση κινδύνου ρευστοποίησης, χωρίς πεδία κατάστασης τερματικού παραγγελίας | `liquidation.warning:notificationId` |
+
+Το συμβάν προειδοποίησης εμπόρου είναι `liquidation.warning`. χρήστης WebSocket `data.event` παραμένει `LIQUIDATION_WARNING`. Διατηρήστε τα δύο κανάλια διακριτά.
+
+Χρησιμοποιήθηκαν ιστορικές ειδοποιήσεις εμπόρων `LIQUIDATION_WARNING`. Τα παγωμένα ωφέλιμα φορτία διατηρούν το αρχικό τους σώμα σε επαναλήψεις, επομένως οι δέκτες πρέπει να αναγνωρίζουν και τα δύο ονόματα. Εάν οι υπάρχουσες επαγγελματικές εγγραφές χρησιμοποιούν ένα κεφαλαίο πρόθεμα κλειδιού προειδοποίησης, διατηρήστε το αρχικό κλειδί ή ελέγξτε και τα δύο κλειδιά κατά τη μετεγκατάσταση για να αποφύγετε την εκ νέου επεξεργασία της ειδοποίησης.
+
+**Το τρέχον `WebhookVerifier.idempotencyKey` εξάγει μόνο το `orderType:orderId:targetStatus` για συμβάντα κεφαλαίων και επιστρέφει μια κενή συμβολοσειρά για προειδοποιητικά ωφέλιμα φορτία.** Δεν κυκλοφόρησε νέο SDK τεχνούργημα που περιέχει βοηθητικές μεθόδους προειδοποίησης με αυτήν την ενημέρωση τεκμηρίωσης. Συνεχίστε να χρησιμοποιείτε την υπάρχουσα μέθοδο `verify` για να επαληθεύσετε το μη επεξεργασμένο σώμα προειδοποίησης. Μετά από ελέγχους υπογραφής και ιδιοκτησίας, ο κωδικός επιχείρησης εμπόρου πρέπει να αναγνωρίζει και τα δύο ονόματα συμβάντων, να επικυρώνει ότι το `notificationId` είναι θετική συμβολοσειρά δεκαδικού ακέραιου αριθμού και να δημιουργεί `liquidation.warning:<notificationId>`. Ποτέ μην χρησιμοποιείτε ένα κενό κλειδί κατάργησης διπλότυπων ή μην απαιτείτε προειδοποιήσεις να περιέχουν πεδία παραγγελίας χρημάτων.
+
+Συνεχίστε την κατάργηση διπλότυπων εντός του εμπόρου και του πεδίου `environment` και δεσμεύστε την ατομικά με την επιχειρηματική επεξεργασία. `FIRST` / `UPGRADE` / `REMINDER` ειδοποιήσεις με διαφορετικές `notificationId` τιμές είναι ανεξάρτητες. Μην τα απορρίπτετε ομαδοποιώντας σε χρήστη, επεισόδιο ή `eventType`. Ένα κενό κλειδί σημαίνει ότι δεν ήταν δυνατή η εξαγωγή μιας έγκυρης ταυτότητας. Το SDK επιστρέφει μόνο ένα βοηθητικό κλειδί. δεν διατηρεί αρχεία ούτε εκτελεί επιχειρηματική επεξεργασία. Καταγράψτε την ίδια ταυτότητα με διαφορετικό σώμα ως σύγκρουση. μην αντικαθιστάτε το επεξεργασμένο σώμα.
+
+<span id="liquidation-warning-fields-and-example" data-sixmm-canonical-anchor="liquidation-warning-fields-and-example" aria-hidden="true"></span>
+
+## Πεδία προειδοποίησης εκκαθάρισης και παράδειγμα
+
+| Πεδίο | Τύπος / περιγραφή |
+| --- | --- |
+| `notificationId` | Θετική συμβολοσειρά δεκαδικού ακέραιου αριθμού. μοναδικό αναγνωριστικό ειδοποίησης. Μην τον μετατρέψετε σε αριθμό κινητής υποδιαστολής. |
+| `eventType` | `FIRST`: πρώτη προειδοποίηση στο τρέχον επεισόδιο. `UPGRADE`: ο κανονικός κίνδυνος αναβαθμίστηκε σε υψηλού κινδύνου σε αυτό το επεισόδιο. `REMINDER`: άλλη μια υπενθύμιση του συνεχιζόμενου κινδύνου. |
+| `severity` | `NORMAL` / `HIGH`. `FIRST` μπορεί ήδη να είναι `HIGH`; `UPGRADE` είναι `HIGH`; Το `REMINDER` μπορεί να είναι `NORMAL` ή `HIGH`. |
+| `occurredAt` | JSON αριθμός; Unix χιλιοστά του δευτερολέπτου όταν ενεργοποιήθηκε η προειδοποίηση, όχι όταν έφτασε η παράδοση HTTP. |
+| `object` | `type=CROSS`: λογαριασμός μεταξύ περιθωρίου, με κενές συμβολοσειρές για `symbol`, `side` και `positionId`. `ISOLATED`: θέση απομονωμένου περιθωρίου, που φέρει το αντίστοιχο συμβόλαιο, πλευρά και αναγνωριστικό θέσης. |
+| `episode` | Σειρά; τρέχον προειδοποιητικό επεισόδιο. Το `FIRST` δεν σημαίνει την πρώτη προειδοποίηση του χρήστη. |
+| `stateVersion` / `configVersion` | Χορδές; Ανοδική έκδοση κατάστασης / διαμόρφωσης. Μην απορρίπτετε ανεξάρτητα τις ειδοποιήσεις που βασίζονται σε αυτά τα πεδία. |
+| `riskRatio` / `minLargePositionValue` / `liquidationHighRiskThreshold` | Δεκαδικές συμβολοσειρές για την αναλογία κινδύνου, το κανονικό όριο προειδοποίησης και το όριο υψηλού κινδύνου. Διατήρηση της ακρίβειας. upstream υπολογίζει τους κανόνες κατωφλίου. |
+| `environment` | `PRODUCTION` / `SIMULATED`; απομόνωση από το διαμορφωμένο περιβάλλον κεφαλαίων και όχι από όνομα διακομιστή. |
+| `agentId` / `agentCode` / `agentUserId` | Χορδές; αναγνωριστικό πράκτορα, κωδικός αντιπροσώπου και αναγνωριστικό χρήστη από την πλευρά του εμπόρου. |
+| `platformUserId` | Σειρά; αναγνωριστικό χρήστη δημόσιας πλατφόρμας που αντιστοιχεί στο δεσμευτικό αποτέλεσμα, όχι στο εσωτερικό `user_id` της υπηρεσίας. |
+
+```json
+{
+  "event": "liquidation.warning",
+  "notificationId": "68460336",
+  "eventType": "FIRST",
+  "severity": "NORMAL",
+  "occurredAt": 1791875870804,
+  "object": {
+    "type": "CROSS",
+    "symbol": "",
+    "side": "",
+    "positionId": ""
+  },
+  "episode": "3",
+  "stateVersion": "9",
+  "riskRatio": "0.29133109",
+  "minLargePositionValue": "0.20000000",
+  "liquidationHighRiskThreshold": "0.40000000",
+  "configVersion": "8",
+  "environment": "PRODUCTION",
+  "agentId": "16",
+  "agentCode": "DEMO",
+  "agentUserId": "merchant-user-001",
+  "platformUserId": "6054354872"
+}
+```
+
+<span id="transfer-result-example" data-sixmm-canonical-anchor="transfer-result-example" aria-hidden="true"></span>
+
+## Παράδειγμα αποτελέσματος μεταφοράς
+
+Οι επιστροφές κεφαλαίων διατηρούν τους υπάρχοντες τύπους τους: `orderId` και `agentId` είναι JSON αριθμοί. Οι `amount` και `platformUserId` είναι συμβολοσειρές. Μην εφαρμόζετε τη σύμβαση της συμβολοσειράς της προειδοποίησης `agentId` στις επιστροφές κεφαλαίων. Διαβάστε μεγάλους ακέραιους αριθμούς χωρίς απώλεια ακρίβειας χρησιμοποιώντας ακέραιους/δεκαδικούς τύπους. `completedAt` είναι UTC RFC3339; Το `ts` είναι Unix δευτερόλεπτα.
+
+```json
+{
+  "environment": "PRODUCTION",
+  "event": "transfer.completed",
+  "orderType": "transfer",
+  "orderId": 10001,
+  "orderNo": "merchant-order-001",
+  "targetStatus": "SUCCESS",
+  "agentId": 16,
+  "agentCode": "DEMO",
+  "currency": "USDT",
+  "amount": "10.00",
+  "direction": "IN",
+  "transferMode": "FIXED_AMOUNT",
+  "agentUserId": "merchant-user-001",
+  "platformUserId": "6054354872",
+  "rejectCode": 0,
+  "rejectMessage": "",
+  "failReason": "",
+  "completedAt": "2026-10-13T07:17:50Z",
+  "ts": 1791875870
+}
+```
+
+<span id="reversal-result-example" data-sixmm-canonical-anchor="reversal-result-example" aria-hidden="true"></span>
+
+## Παράδειγμα αποτελέσματος αντιστροφής
+
+```json
+{
+  "environment": "PRODUCTION",
+  "event": "reverse.completed",
+  "orderType": "transfer",
+  "orderId": 10002,
+  "orderNo": "merchant-reverse-001",
+  "targetStatus": "SUCCESS",
+  "agentId": 16,
+  "agentCode": "DEMO",
+  "currency": "USDT",
+  "amount": "10.00",
+  "direction": "IN",
+  "transferMode": "FIXED_AMOUNT",
+  "agentUserId": "merchant-user-001",
+  "platformUserId": "6054354872",
+  "rejectCode": 0,
+  "rejectMessage": "",
+  "failReason": "",
+  "completedAt": "2026-10-13T07:17:50Z",
+  "ts": 1791875870
+}
+```
+
+<span id="funds-order-dead-state-example" data-sixmm-canonical-anchor="funds-order-dead-state-example" aria-hidden="true"></span>
+
+## Παράδειγμα νεκρής κατάστασης παραγγελιών κεφαλαίων
+
+```json
+{
+  "environment": "PRODUCTION",
+  "event": "transfer.dead",
+  "orderType": "transfer",
+  "orderId": 10003,
+  "orderNo": "merchant-order-002",
+  "targetStatus": "DEAD",
+  "agentId": 16,
+  "agentCode": "DEMO",
+  "currency": "USDT",
+  "amount": "10.00",
+  "direction": "IN",
+  "transferMode": "FIXED_AMOUNT",
+  "agentUserId": "merchant-user-001",
+  "platformUserId": "6054354872",
+  "rejectCode": 0,
+  "rejectMessage": "",
+  "failReason": "order dead",
+  "completedAt": "2026-10-13T07:17:50Z",
+  "ts": 1791875870
+}
+```
+
+Αυτά τα παραδείγματα δείχνουν μόνο το πρωτόκολλο. Για τα `FAILED`, `rejectCode`, `rejectMessage` και `failReason` αντικατοπτρίζουν την πραγματική απόρριψη. Το όνομα της εκδήλωσης από μόνο του δεν αποδεικνύει ότι πιστώθηκαν χρήματα.
+
+[Επαλήθευση υπογραφής, απαντήσεις και επαναλήψεις](/el/sdk/security/webhooks-idempotency)

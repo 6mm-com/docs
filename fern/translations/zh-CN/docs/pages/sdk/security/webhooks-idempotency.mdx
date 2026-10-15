@@ -1,11 +1,13 @@
 ---
 title: "Webhook 签名验证与幂等处理"
-subtitle: "使用原始请求体验证 6MM Agent Webhook，并在重试、超时和重复事件中避免重复业务操作。"
+subtitle: "使用原始请求体验签，按 HTTP 状态码确认回调，并可靠处理重试和重复事件。"
 slug: sdk/security/webhooks-idempotency
 canonical-url: https://docs.6mm.com/zh-CN/sdk/security/webhooks-idempotency
 ---
 
-Webhook 用于通知合作方后端异步业务状态变化。由于通知可能重试，接收端必须先验证签名，再把数据作为可信内容解析，并且以幂等方式处理事件。
+本文同步自 [Agent Java SDK `WEBHOOKS.md`](https://github.com/6mm-com/agent-java-sdk/blob/fa6c7b65124f1346f815b3b73eb8a7729466c3dc/WEBHOOKS.md)（提交 `fa6c7b6`）。本次仅更新文档，没有发布包含预警辅助方法的新 SDK 制品。
+
+四类事件共用商户配置的一个回调地址，按正文 `event` 分流。事件字段和示例见 [Webhook 事件与强平预警](/zh-CN/sdk/agent-sdk/java/webhook-events)。
 
 <span id="webhook-headers" data-sixmm-canonical-anchor="webhook-headers" aria-hidden="true"></span>
 
@@ -13,90 +15,120 @@ Webhook 用于通知合作方后端异步业务状态变化。由于通知可能
 
 | Header | 说明 |
 | --- | --- |
-| X-Agent-Timestamp | Unix 秒级时间戳。 |
-| X-Agent-Nonce | 防重放随机串。 |
-| X-Agent-Signature | HMAC-SHA256 签名。 |
+| `X-Agent-Timestamp` | Unix 秒级时间戳。 |
+| `X-Agent-Nonce` | 随机串。 |
+| `X-Agent-Signature` | HMAC-SHA256 十六进制签名。 |
 
 ```text
 timestamp + nonce + rawBody
 ```
 
-重建签名内容时必须使用 HTTP 接收的原始请求体。先解析再重新序列化 JSON 可能改变空格或字段顺序，从而产生不同的签名。
+<span id="order-idempotency" data-sixmm-canonical-anchor="order-idempotency" aria-hidden="true"></span>
+
+## 事件幂等
+
+去重必须在商户与 environment 范围内持久化，并与业务处理原子提交。不同 notificationId 的 FIRST/UPGRADE/REMINDER 都是独立通知；不要按用户、轮次或 eventType 合并丢弃。空幂等键表示无法提取有效身份，不能拿空串去重。SDK 只返回辅助键，不会保存或执行业务。相同身份不同正文应作为冲突记录，不覆盖已处理正文。
+
 
 <span id="verification-flow" data-sixmm-canonical-anchor="verification-flow" aria-hidden="true"></span>
 
-## 验证流程
+## 验签和接收
 
-1. 读取 timestamp、nonce 和 signature 请求头。
-2. 保存未经修改的原始请求体。
-3. 拼接 `timestamp + nonce + rawBody`。
-4. 使用合作方 API Secret 计算 HMAC-SHA256。
-5. 使用恒定时间比较方式对比计算结果与收到的签名。
-6. 按已确认的接入策略检查时间有效性和 nonce 是否重复。
-7. 验证成功后再解析并处理事件。
+请求头为 `X-Agent-Timestamp`（Unix 秒）、`X-Agent-Nonce`、`X-Agent-Signature`。签名是商户 API Secret 对 `timestamp + nonce + rawBody` 计算的 HMAC-SHA256 十六进制字符串。必须用收到的原始字节验签，不能先格式化 JSON、改名或重序列化。
 
-如果官方 Agent SDK 已提供验证器，应优先使用，避免长期维护独立签名代码。
+先验签，再校验时间窗口（建议 ±300 秒）、商户和环境，随后提取幂等键并可靠处理。未知事件须保留原值以便排查，不能当作资金成功。验签辅助方法本身不执行时间、归属或持久去重校验。
 
-<span id="order-idempotency" data-sixmm-canonical-anchor="order-idempotency" aria-hidden="true"></span>
+处理完成或确认同正文重复后返回 HTTP 2xx；失败返回非 2xx。预警发送端 HTTP 超时为 5 秒，最多 8 次尝试，旧正文固定，仅签名时间与 nonce 更新。可靠接管后尽快响应，耗时业务可由商户自己的持久任务异步处理。
 
-## 订单幂等
+商户通知与用户在线状态无关。平台用户推送仅在线尽力投递，离线不补发；第一期没有站内信。
 
-| 场景 | 处理方式 |
+<span id="successful-responses-and-stopping-retries" data-sixmm-canonical-anchor="successful-responses-and-stopping-retries" aria-hidden="true"></span>
+
+### 响应成功判定与停止重试
+
+资金回调和强平预警都只根据 **HTTP 状态码** 判断本次投递结果，不解析响应正文中的 `code`、`success`、`result` 或 `message`，也不要求固定返回 `OK` / `success`。
+
+| 商户返回结果 | 平台行为 |
 | --- | --- |
-| 首次划转请求 | 生成一个全局唯一 agentOrderNo。 |
-| HTTP 超时 | 先查原 agentOrderNo，不要直接生成新订单号。 |
-| PROCESSING 响应 | 等待 Webhook 或查询订单状态。 |
-| Webhook 重复推送 | 按幂等键和终态去重。 |
+| HTTP 200–299，包括 200、202、204 | 判定本次投递成功；成功状态持久化后，不再自动重发这条通知 |
+| 最终 HTTP 响应为非 2xx，包括 400、401、403、409、429、500、503 | 本次投递失败，按既有退避策略重试，达到尝试上限后标记 DEAD；不会因为 4xx 自动视为已确认 |
+| 连接失败或等待响应超时，未取得可用响应 | 本次结果未确认，按失败策略重试 |
+
+响应正文可以为空、文本或 JSON，以下 `result` 等字段只供商户自身阅读，并非平台协议要求。`202 Accepted` 同样会终止平台重试，因此只能在商户已经把通知可靠保存到自己的持久任务队列后返回，不能只启动一个内存异步任务就确认成功。
+
+<span id="successful-response-examples" data-sixmm-canonical-anchor="successful-response-examples" aria-hidden="true"></span>
+
+### 成功响应例子
+
+业务处理完成，或已可靠保存到商户自己的待处理队列：
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"result":"RECEIVED"}
+```
+
+无需响应正文时，也可以返回：
+
+```http
+HTTP/1.1 204 No Content
+```
+
+同一通知已成功处理，且确认正文一致时，跳过重复业务，仍然返回 2xx：
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"result":"DUPLICATE"}
+```
+
+<span id="failure-response-examples" data-sixmm-canonical-anchor="failure-response-examples" aria-hidden="true"></span>
+
+### 失败响应例子
+
+例如数据库暂时不可用，商户既未完成处理，也未可靠保存通知，应返回非 2xx，让平台后续重试：
+
+```http
+HTTP/1.1 503 Service Unavailable
+Content-Type: application/json
+
+{"result":"FAILED","message":"temporary storage failure"}
+```
+
+验签失败时拒绝处理，不更新业务或成功去重记录：
+
+```http
+HTTP/1.1 401 Unauthorized
+Content-Type: application/json
+
+{"result":"INVALID_SIGNATURE"}
+```
+
+这些响应正文不会改变平台的重试判断。不要期待返回 401、409 等状态即可永久停止重试；需要排查签名、通知内容或商户配置。
+
+**错误示例：以下响应仍会被平台判定为投递成功，不会因 `success:false` 而重试。**
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"success":false,"code":500,"message":"processing failed"}
+```
+
+如果 Web 框架或统一异常处理默认把业务错误包装成 HTTP 200，回调入口需要显式设置正确的 HTTP 失败状态。
 
 <span id="recommended-idempotency-record" data-sixmm-canonical-anchor="recommended-idempotency-record" aria-hidden="true"></span>
 
-## 建议保存的幂等记录
+### 可靠确认与重复投递
 
-保存足够的信息，以识别重复通知并支持安全恢复：
+推荐顺序：验签、检查时间/商户/环境 → 提取幂等身份 → 在事务内完成业务和成功去重记录，或可靠保存待处理任务 → 提交成功后返回 200/204。数据库写入失败时不要提前返回 2xx，也不要先把通知标记为已处理。
 
-| 字段 | 用途 |
-| --- | --- |
-| 事件或业务键 | 唯一标识通知或业务操作。 |
-| 合作方订单号 | 关联原始请求。 |
-| Payload Hash | 识别内容冲突的重复通知。 |
-| 当前处理状态 | 区分已接收、处理中、成功和失败。 |
-| 最终业务状态 | 避免终态操作被执行两次。 |
-| 处理时间 | 支持排查和数据保留策略。 |
+商户处理成功后仍可能收到重复请求，例如响应在网络中丢失，或平台收到 2xx 后未能持久化 SUCCESS。HTTP 回调不保证只投递一次：必须在商户与 environment 范围内持久去重。资金使用 `orderType:orderId:targetStatus`，预警使用 `liquidation.warning:notificationId`；已处理的同正文通知返回 2xx，避免重复入账或重复提醒。同 ID 异正文应记录冲突并返回非 2xx，不覆盖原记录。
 
-条件允许时，应在同一事务中提交业务变更和幂等记录。收到重复事件时返回已有处理结果，不要再次修改余额、订单或用户状态。
+这里的“成功”指商户成功接收/处理通知，不代表通知所描述的资金业务成功。例如收到 `targetStatus=FAILED` 的合法资金结果并完成记录后，也应返回 2xx，不能因为订单失败就拒绝确认通知。
 
-<span id="timeout-and-retry-rule" data-sixmm-canonical-anchor="timeout-and-retry-rule" aria-hidden="true"></span>
-
-## 超时与重试规则
-
-HTTP 超时不能证明原请求失败。再次操作前，应使用原始 `agentOrderNo` 查询状态，或等待对应 Webhook。每次超时后都创建新的业务订单号，可能造成重复资金变动。
-
-<span id="production-checklist" data-sixmm-canonical-anchor="production-checklist" aria-hidden="true"></span>
-
-## 生产环境检查
-
-- 在 JSON 解析或业务处理前验证签名。
-- 分别保留原始请求体和解析后的数据。
-- 按已确认的接入策略拒绝过期或重复请求。
-- 确保重复和乱序事件不会造成错误业务结果。
-- 记录事件 ID、合作方订单号、处理结果和请求时间。
-- 从日志和支持附件中移除密钥和完整签名。
-
-<span id="related-docs" data-sixmm-canonical-anchor="related-docs" aria-hidden="true"></span>
-
-## 相关文档
-
-<CardGroup cols={3}>
-<Card title="密钥与 HMAC 签名" icon="fa-duotone fa-shield-keyhole" href="/zh-CN/sdk/security/secrets-signing">
-保护请求和 Webhook 验证使用的 API Secret。
-</Card>
-<Card title="Agent SDK 概览" icon="fa-duotone fa-server" href="/zh-CN/sdk/agent-sdk/overview">
-查看完整的后端接入流程。
-</Card>
-<Card title="SDK 接入排查" icon="fa-duotone fa-screwdriver-wrench" href="/zh-CN/sdk/security/troubleshooting">
-排查签名失败、重复事件和待确认操作。
-</Card>
-</CardGroup>
 
 <span data-sixmm-canonical-anchor="funding-与环境边界" aria-hidden="true"></span>
 

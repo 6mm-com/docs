@@ -92,3 +92,18 @@ Review callback verification and duplicate-event handling.
 | Missing new Java method | Check the resolved Maven artifact against public tag `v0.3.0`; remove conflicting dependencies according to your artifact policy. |
 
 [Query and error reference](/sdk/agent-sdk/java/perpetual-queries) · [Upgrade guide](/sdk/agent-sdk/java/upgrade)
+
+<span data-sixmm-canonical-anchor="webhook-receiving-issues" aria-hidden="true"></span>
+
+## Webhook receiving issues
+
+| Symptom | Check and handling |
+| --- | --- |
+| No retry after returning failure JSON | Check whether the endpoint still returns HTTP 200. Delivery uses only the HTTP status, not a success indicator in the body. |
+| Retries continue after 401 or 409 | Non-2xx responses follow the existing retry policy; investigate signatures, notification content, or merchant configuration. |
+| Empty idempotency key for a liquidation warning | The current `WebhookVerifier.idempotencyKey` only extracts funds-event identities. After signature and ownership checks, validate `notificationId` and build the warning key in merchant code. Never use an empty key. |
+| Duplicate notification after successful processing | Persist deduplication within merchant and `environment` scope. Return 2xx for identical duplicates; record conflicts and return non-2xx for the same ID with a different body. |
+| Warning not processed | Accept `liquidation.warning` and historical `LIQUIDATION_WARNING`; do not group distinct notification IDs by user, episode, or event type and discard them. |
+| Accepted notification loses its pending task | Save a task reliably before returning 2xx; starting an in-memory async task is insufficient. |
+
+[Event fields and compatibility](/sdk/agent-sdk/java/webhook-events) · [HTTP responses and reliable acknowledgement](/sdk/security/webhooks-idempotency)
