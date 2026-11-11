@@ -1,10 +1,21 @@
 ---
 title: "Registros de operación"
-description: "Registros de operación — Abra Registros de operación. Filtre por palabra clave, categoría, acción, tipo de actor, tipo de objetivo y fecha utilizando los controles disponibles. Lea los detalles para identificar quién act"
+description: "Registros de operaciones: utilice registros de operaciones para responder quién cambió qué y cuándo. Combine la acción, el destino y la fuente con el registro comercial en lugar de leer la descripción del registro de forma aislada."
 subtitle: "6MM Atención al cliente de IA · Guía para inquilinos"
 slug: customer-support/logs
 canonical-url: https://docs.6mm.com/es-ES/customer-support/logs
 ---
+
+Utilice registros de operaciones para responder quién cambió qué y cuándo. Combine la acción, el destino y la fuente con el registro comercial en lugar de leer la descripción del registro de forma aislada.
+
+<div className="sixmm-support-flow">
+
+1. **Ubica el evento**: filtra por hora, palabra clave y categoría.
+2. **Lea los detalles**: verifique el actor, el objetivo, la fuente y el resultado.
+3. **Verifique el resultado**: abra el registro afectado antes de volver a intentarlo.
+
+</div>
+
 
 <span id="trace-an-operation" data-sixmm-canonical-anchor="trace-an-operation" aria-hidden="true"></span>
 
@@ -21,3 +32,60 @@ Las operaciones MCP se muestran con su aplicación/fuente y estado de ejecución
 La conexión de una aplicación solo prueba la autorización. Una escritura propuesta, una aprobación pendiente y una escritura completa son estados diferentes. El registro no es una transcripción completa de todo lo que se dice a la IA externa, y no se debe suponer que una consulta de solo lectura crea un registro de escritura comercial.
 
 Al investigar una llamada MCP fallida, conserve su ID de operación, hora y mensaje de error. Consulte el resultado de la operación antes de volver a intentarlo. Los registros de operaciones son de solo lectura a través de MCP.
+
+
+<span id="read-one-log-entry" data-sixmm-canonical-anchor="read-one-log-entry" aria-hidden="true"></span>
+
+## Leer una entrada de registro
+
+| Detalle | Por qué es importante |
+| --- | --- |
+| Tiempo | Coloca la acción en la secuencia de eventos que estás investigando. |
+| Categoría y acción | Distinguir una actualización de contenido, acción de sesión u otra operación compatible. |
+| Actor | Identifica una cuenta o acción del sistema; no es necesariamente el visitante en la conversación. |
+| Fuente | Ayuda a distinguir la actividad de la aplicación MCP de otras operaciones. |
+| Objetivo | Identifica el objeto de negocio u MCP operación a la que hace referencia el registro. |
+| Detalles y resultado | Proporcione la explicación disponible y el estado de ejecución. Lea el error antes de decidir volver a intentarlo. |
+
+<span id="example-an-mcp-article-change-did-not-appear" data-sixmm-canonical-anchor="example-an-mcp-article-change-did-not-appear" aria-hidden="true"></span>
+
+### Ejemplo: no apareció un cambio de artículo MCP
+
+1. Limite el rango de fechas y busque la aplicación u operación relacionada.
+2. Compruebe si la operación está esperando confirmación, falló o se completó. La autorización por sí sola no significa que se haya ejecutado el cambio.
+3. Abra el artículo de destino y compare su contenido actual. Si se informa un conflicto de versiones, lea la última versión y prepare una nueva solicitud en lugar de reutilizar contenido obsoleto.
+4. Conserve el ID de la operación y los detalles del error si es necesario realizar más investigaciones. Un registro de auditoría empresarial relacionado y un registro de ejecución MCP pueden describir el mismo cambio.
+
+Un traspaso útil contiene la hora, el identificador del objetivo, el ID de la operación, si está presente, y el resultado observado. No debe incluir contraseñas de cuentas ni secretos API.
+
+<span id="common-questions" data-sixmm-canonical-anchor="common-questions" aria-hidden="true"></span>
+
+## Preguntas comunes
+
+<AccordionGroup>
+
+<Accordion title="¿Por qué no hay registro de una conversación de IA?">
+El registro de operaciones no es una transcripción de los chats en una aplicación de IA externa. Una llamada a una herramienta de solo lectura tampoco crea necesariamente un registro de cambios comerciales.
+</Accordion>
+
+<Accordion title="¿Debo repetir inmediatamente una operación que parece fallida?">
+Primero verifique el resultado de la operación y el registro de destino. Si el cliente perdió su respuesta, es posible que el servidor ya haya procesado la solicitud.
+</Accordion>
+
+</AccordionGroup>
+
+<span id="continue-with" data-sixmm-canonical-anchor="continue-with" aria-hidden="true"></span>
+
+## Continuar con
+
+<CardGroup cols={2}>
+
+<Card title="Comprender la ejecución de MCP" href="/es-ES/customer-support/mcp-calls">
+Conozca la confirmación, los resultados de la operación y los reintentos seguros.
+</Card>
+
+<Card title="Revisar el acceso a la cuenta" href="/es-ES/customer-support/team">
+Verifique qué cuenta y rol autorizó el trabajo.
+</Card>
+
+</CardGroup>

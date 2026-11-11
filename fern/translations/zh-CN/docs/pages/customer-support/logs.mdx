@@ -1,10 +1,21 @@
 ---
 title: "操作日志"
-description: "操作日志 — 进入 操作日志，使用页面提供的关键词、分类、动作、操作人类型、目标类型和日期筛选。查看详情，确认谁操作了哪个对象，以及执行结果。"
+description: "操作日志 — 操作日志用于回答“谁在什么时间操作了什么”。结合动作、目标和来源，再回到业务记录核对结果。"
 subtitle: "6MM AI 客服 · 租户使用指南"
 slug: customer-support/logs
 canonical-url: https://docs.6mm.com/zh-CN/customer-support/logs
 ---
+
+操作日志用于回答“谁在什么时间操作了什么”。结合动作、目标和来源，再回到业务记录核对结果。
+
+<div className="sixmm-support-flow">
+
+1. **定位事件** — 按时间、关键词和分类筛选。
+2. **阅读详情** — 核对操作人、目标、来源和结果。
+3. **核实结果** — 重试前先检查对应业务记录。
+
+</div>
+
 
 <span id="trace-an-operation" data-sixmm-canonical-anchor="trace-an-operation" aria-hidden="true"></span>
 
@@ -21,3 +32,60 @@ MCP 操作显示应用或操作来源和状态。根据操作类型，业务变�
 连接应用只代表完成授权。提出写入、等待确认和执行完成是不同状态。日志不是外部 AI 的全部聊天记录，也不能假定一次只读查询一定产生业务写入日志。
 
 排查 MCP 失败时，保留操作 ID、时间和错误信息，先查询结果再重试。MCP 只能查询操作日志，不能修改。
+
+
+<span id="read-one-log-entry" data-sixmm-canonical-anchor="read-one-log-entry" aria-hidden="true"></span>
+
+## 读懂一条日志
+
+| 信息 | 核对什么 |
+| --- | --- |
+| 时间 | 将操作放回问题发生的时间顺序。 |
+| 分类与动作 | 区分内容更新、会话操作及其他已支持的操作。 |
+| 操作人 | 区分客服账号与系统行为，不把操作人误认为聊天中的访客。 |
+| 操作来源 | 识别 MCP 应用调用与其他来源的操作。 |
+| 目标 | 确认记录指向哪个业务对象或 MCP 操作。 |
+| 详情与结果 | 阅读已有说明、执行状态和错误，再决定是否重试。 |
+
+<span id="example-an-mcp-article-change-did-not-appear" data-sixmm-canonical-anchor="example-an-mcp-article-change-did-not-appear" aria-hidden="true"></span>
+
+### 示例：MCP 修改文章后没有看到变化
+
+1. 缩小时间范围，查找对应应用或相关操作记录。
+2. 确认是等待确认、执行失败还是已完成；完成授权不代表修改已经执行。
+3. 打开目标文章核对实际内容。若出现版本冲突，先读取最新版本再发起新请求，不要直接复用旧内容。
+4. 需要继续排查时保留操作 ID 和错误信息。业务审计记录与 MCP 执行记录可能描述的是同一次变更。
+
+交接时提供发生时间、目标标识、已有的操作 ID 和观察结果即可，不要在排查材料中夹带账号密码或 API 密钥。
+
+<span id="common-questions" data-sixmm-canonical-anchor="common-questions" aria-hidden="true"></span>
+
+## 常见问题
+
+<AccordionGroup>
+
+<Accordion title="为什么与 AI 聊天却没有操作记录？">
+这里不是外部 AI 应用的聊天记录，只读工具调用也不一定产生业务变更日志。
+</Accordion>
+
+<Accordion title="看起来失败了，能马上再执行一次吗？">
+先查询操作结果并核对目标记录。若只是客户端没有收到响应，服务端可能已经处理了请求。
+</Accordion>
+
+</AccordionGroup>
+
+<span id="continue-with" data-sixmm-canonical-anchor="continue-with" aria-hidden="true"></span>
+
+## 继续了解
+
+<CardGroup cols={2}>
+
+<Card title="了解 MCP 执行流程" href="/zh-CN/customer-support/mcp-calls">
+查看确认、结果查询和重试方式。
+</Card>
+
+<Card title="核对账号权限" href="/zh-CN/customer-support/team">
+确认操作所用账号、角色及授权范围。
+</Card>
+
+</CardGroup>

@@ -29,6 +29,12 @@ for(const locale of config.translations){
  const base=locale.default?'fern':`fern/translations/${locale.lang}`;
  const prefix=locale.default?'':`/${locale.lang}`;
  for(const file of pages) { const body=await read(`${base}/${file}`); assert(body.length>200,`${locale.lang}: missing tenant guide content`); assert(!/^#{1,6}[ \t]*$/m.test(body),`${locale.lang}: empty heading in ${file}`); const source=await read(`fern/${file}`); assert.equal((body.match(/^## /gm)||[]).length,(source.match(/^## /gm)||[]).length,`${locale.lang}: missing heading in ${file}`); }
+ for (const slug of ['workbench','tickets','history','team','settings','analytics','billing','logs']) {
+  const guide=await read(`${base}/docs/pages/customer-support/${slug}.mdx`);
+  assert(guide.includes('className="sixmm-support-flow"'),`${locale.lang}/${slug}: missing workflow diagram`);
+  assert.equal((guide.match(/<Accordion title="[^\"]+">/g)||[]).length,2,`${locale.lang}/${slug}: missing question or answer`);
+  assert.equal((guide.match(/<Card title="[^\"]+" href="/g)||[]).length,2,`${locale.lang}/${slug}: missing related guide card`);
+ }
  const calls=await read(`${base}/docs/pages/customer-support/mcp-calls.mdx`);
  assert.deepEqual(examples(calls),expected,`${locale.lang}: protocol examples changed`);
  const connect=await read(`${base}/docs/pages/customer-support/mcp-connect.mdx`);

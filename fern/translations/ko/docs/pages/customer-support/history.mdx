@@ -1,10 +1,21 @@
 ---
 title: "대화 기록"
-description: "대화 기록 — 대화 기록을 엽니다. 사용 가능한 사용자/세션 검색, 대화 유형, 등급, 상담원, 카테고리, 언어 및 시간 필터를 사용하세요. 메시지와 세션 정보를 읽으려면 세부정보를 엽니다."
+description: "대화 기록 — 대화 기록을 사용하여 상황을 복구하고, 서비스 품질을 검토하고, 특정 상담을 조사합니다. 모든 기록을 탐색하는 대신 대화 번호 또는 좁은 시간 범위로 시작하세요."
 subtitle: "6MM AI 고객지원 · 입주자 안내"
 slug: customer-support/history
 canonical-url: https://docs.6mm.com/ko/customer-support/history
 ---
+
+대화 기록을 사용하여 상황을 복구하고, 서비스 품질을 검토하고, 특정 상담을 조사하세요. 모든 기록을 탐색하는 대신 대화 번호 또는 좁은 시간 범위로 시작하세요.
+
+<div className="sixmm-support-flow">
+
+1. **세션 찾기** — 필터와 올바른 날짜 기준을 선택하세요.
+2. **전체 내용 읽기** — 메시지, 상담원 및 방문자 세부정보를 검토하세요.
+3. **후속 조치** — 답변을 개선하거나 해결되지 않은 케이스를 계속 진행합니다.
+
+</div>
+
 
 <span id="find-an-earlier-conversation" data-sixmm-canonical-anchor="find-an-earlier-conversation" aria-hidden="true"></span>
 
@@ -21,3 +32,58 @@ canonical-url: https://docs.6mm.com/ko/customer-support/history
 대화, 상담원, 평가를 함께 사용하여 사례를 이해하세요. AI 메시지로 표시되는 답변은 대형 모델 호출이 아닌 구성된 답변 또는 매칭 단계에서 나올 수 있습니다. 내용을 현재 지식과 비교하고 응답 동작을 조사할 때 흐름 테스트를 사용합니다.
 
 삭제는 해당 권한이 있는 경우에만 가능합니다. 하나 또는 여러 개의 기록을 삭제하기 전에 확인 메시지를 읽어보세요. MCP 기록 쿼리는 승인된 범위를 사용하며 삭제하려면 확인이 필요합니다. 모든 에이전트가 전체 테넌트 기록을 사용할 수 있다고 가정하지 마십시오.
+
+
+<span id="read-the-fields-without-mixing-identities" data-sixmm-canonical-anchor="read-the-fields-without-mixing-identities" aria-hidden="true"></span>
+
+## ID를 혼합하지 않고 필드 읽기
+
+| 필드 | 해석 |
+| --- | --- |
+| 대화 번호 | 검토 중인 상담을 식별합니다. 별도의 세션을 혼동하지 않으려면 이를 사용하십시오. |
+| 방문자 이름 | 확인된 교환 계좌의 증거가 아닌 읽을 수 있는 표시 라벨입니다. |
+| 항목 유형 및 사용자 ID | 통합 로그인 ID와 익명 액세스를 구별하는 데 도움이 됩니다. 누락된 신원 데이터를 추측해서는 안 됩니다. |
+| 사용자 이메일 | 연락처 이메일을 먼저 사용한 다음 방문자 이메일을 사용합니다. 세부 정보는 두 소스를 별도로 유지합니다. |
+| 언어 및 IP 위치 | 사용자의 신원이나 정확한 물리적 위치에 대한 증거가 아닌 지원을 위한 유용한 컨텍스트입니다. |
+| 평가 | 해당 세션에 존재하는 피드백입니다. 등급이 없다는 것은 부정적인 등급과 동일하지 않습니다. |
+
+<span id="example-review-a-low-rated-consultation" data-sixmm-canonical-anchor="example-review-a-low-rated-consultation" aria-hidden="true"></span>
+
+### 예: 낮은 등급의 상담 검토
+
+1. 날짜, 상담원 및 등급별로 적절하게 필터링한 다음 전체 기록을 엽니다.
+2. 답변을 평가하기 전에 방문자가 질문한 내용을 읽어보세요. 핸드오프나 언어 오해가 대화에 영향을 미쳤는지 확인하세요.
+3. 답변이 불완전한 경우 해당 지식 콘텐츠와 봇 구성을 검토하세요. 결과가 좋지 않다고 해서 항상 모델 자체가 실패했다는 의미는 아닙니다.
+4. 팀이 동일한 증거로 돌아갈 수 있도록 내부 후속 조치와 함께 세션 번호를 유지하십시오.
+
+<span id="common-questions" data-sixmm-canonical-anchor="common-questions" aria-hidden="true"></span>
+
+## 일반적인 질문
+
+<AccordionGroup>
+
+<Accordion title="이메일이 비어 있는 이유는 무엇인가요?">
+세션이 연락처 이메일을 수집하지 않았거나 항목 통합으로부터 이메일을 수신하지 않았을 수 있습니다. 데이터가 예기치 않게 누락되었다고 결론을 내리기 전에 두 필드를 모두 자세히 검토하세요.
+</Accordion>
+
+<Accordion title="날짜 필터를 변경하면 결과가 변경되는 이유는 무엇입니까?">
+페이지는 시작 시간이나 종료 시간을 기준으로 필터링할 수 있습니다. 어느 날 시작해서 다른 날 끝나는 대화는 이 두 가지 선택에 따라 다른 결과에 속합니다.
+</Accordion>
+
+</AccordionGroup>
+
+<span id="continue-with" data-sixmm-canonical-anchor="continue-with" aria-hidden="true"></span>
+
+## 계속
+
+<CardGroup cols={2}>
+
+<Card title="더 폭넓은 동향 검토" href="/ko/customer-support/analytics">
+단일 사례를 선택한 보고 기간과 비교합니다.
+</Card>
+
+<Card title="답변 소스 개선" href="/ko/customer-support/knowledge">
+향후 답변 뒤에 도움말 콘텐츠를 유지하세요.
+</Card>
+
+</CardGroup>

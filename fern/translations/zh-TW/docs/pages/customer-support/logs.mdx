@@ -1,10 +1,21 @@
 ---
 title: "操作日誌"
-description: "操作日誌 — 開啟操作日誌。使用可用控制項按關鍵字、類別、操作、參與者類型、目標類型和日期進行篩選。閱讀詳細資訊以確定誰執行了操作、更改了哪些記錄以及結果。"
+description: "操作日誌 — 使用操作日誌來回答誰更改了什麼以及何時更改。將操作、目標和來源與業務記錄結合起來，而不是孤立地讀取日誌描述。"
 subtitle: "6MMAI客戶支援·租戶指南"
 slug: customer-support/logs
 canonical-url: https://docs.6mm.com/zh-TW/customer-support/logs
 ---
+
+使用操作日誌來回答誰更改了什麼以及何時更改。將操作、目標和來源與業務記錄結合起來，而不是孤立地讀取日誌描述。
+
+<div className="sixmm-support-flow">
+
+1. **定位事件** — 依時間、關鍵字和類別篩選。
+2. **閱讀詳細資訊** — 檢查參與者、目標、來源和結果。
+3. **驗證結果** — 在重試之前開啟受影響的記錄。
+
+</div>
+
 
 <span id="trace-an-operation" data-sixmm-canonical-anchor="trace-an-operation" aria-hidden="true"></span>
 
@@ -16,8 +27,65 @@ MCP 操作及其應用程式/來源和執行狀態顯示。根據操作的不同
 
 <span id="distinguish-authorization-from-execution" data-sixmm-canonical-anchor="distinguish-authorization-from-execution" aria-hidden="true"></span>
 
-## 區分授權與執行
+## 區分授權和執行
 
 應用程式連線僅證明授權。提議的寫入、待批准和已完成的寫入是不同的狀態。日誌並不是對外部 AI 所說的所有內容的完整記錄，並且不應假定唯讀查詢會建立業務寫入記錄。
 
 當調查失敗的 MCP 呼叫時，請保留其操作 ID、時間和錯誤訊息。重試前查詢操作結果。操作日誌透過MCP只讀。
+
+
+<span id="read-one-log-entry" data-sixmm-canonical-anchor="read-one-log-entry" aria-hidden="true"></span>
+
+## 讀取一個日誌條目
+
+| 細節 | 為什麼這很重要 |
+| --- | --- |
+| 時間 | 將操作置於您正在調查的事件序列中。 |
+| 類別和行動 | 區分內容更新、會話操作或其他支援的操作。 |
+| 演員 | 標識帳戶或系統操作；它不一定是談話中的訪客。 |
+| 來源 | 幫助區分 MCP 應用程式活動與其他操作。 |
+| 目標 | 標識記錄引用的業務物件或 MCP 操作。 |
+| 詳細資訊和結果 | 提供可用的解釋和執行狀態。在決定重試之前請先閱讀錯誤。 |
+
+<span id="example-an-mcp-article-change-did-not-appear" data-sixmm-canonical-anchor="example-an-mcp-article-change-did-not-appear" aria-hidden="true"></span>
+
+### 範例：MCP 文章變更未出現
+
+1. 縮小日期範圍並尋找應用程式或相關操作。
+2. 檢查操作是否正在等待確認、失敗或已完成。單獨授權並不意味著變更已執行。
+3. 打開目標文章並比較其當前內容。如果報告版本衝突，請閱讀最新版本並準備新請求，而不是重複使用過時的內容。
+4. 如果需要進一步調查，請保留操作 ID 和錯誤詳細資訊。相關的業務審計記錄和MCP執行記錄可以描述相同的變更。
+
+有用的切換包含時間、目標標識符、操作 ID（如果存在）以及觀察到的結果。它不應包含帳戶密碼或 API 機密。
+
+<span id="common-questions" data-sixmm-canonical-anchor="common-questions" aria-hidden="true"></span>
+
+## 常見問題
+
+<AccordionGroup>
+
+<Accordion title="為什麼AI對話沒有記錄？">
+操作日誌不是外部人工智慧應用程式中的聊天記錄。只讀工具呼叫也不一定會建立業務變更日誌。
+</Accordion>
+
+<Accordion title="我應該立即重複看似失敗的操作嗎？">
+首先檢查操作結果和目標記錄。如果客戶端遺失回應，則伺服器可能已經處理了請求。
+</Accordion>
+
+</AccordionGroup>
+
+<span id="continue-with" data-sixmm-canonical-anchor="continue-with" aria-hidden="true"></span>
+
+## 繼續
+
+<CardGroup cols={2}>
+
+<Card title="了解 MCP 執行" href="/zh-TW/customer-support/mcp-calls">
+了解確認、操作結果和安全重試。
+</Card>
+
+<Card title="查看帳戶存取權限" href="/zh-TW/customer-support/team">
+檢查哪個帳戶和角色授權了該工作。
+</Card>
+
+</CardGroup>

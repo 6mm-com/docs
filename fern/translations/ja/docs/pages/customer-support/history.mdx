@@ -1,10 +1,21 @@
 ---
 title: "会話履歴"
-description: "会話履歴 — 会話履歴を開きます。利用可能なユーザー/セッション検索、会話タイプ、評価、エージェント、カテゴリ、言語、時間フィルターを使用します。詳細を開いてメッセージとセッション情報を確認します。"
+description: "会話履歴 — 会話履歴を使用してコンテキストを復元し、サービス品質を確認し、特定の相談を調査します。すべての記録を参照するのではなく、会話番号または狭い時間範囲から始めます。"
 subtitle: "6MM AI カスタマー サポート · テナント ガイド"
 slug: customer-support/history
 canonical-url: https://docs.6mm.com/ja/customer-support/history
 ---
+
+会話履歴を使用してコンテキストを復元し、サービスの品質を確認し、特定の相談を調査します。すべての記録を参照するのではなく、会話番号または狭い時間範囲から始めます。
+
+<div className="sixmm-support-flow">
+
+1. **セッションを検索** — フィルターと正しい日付ベースを選択します。
+2. **全文を読む** — メッセージ、エージェント、訪問者の詳細を確認します。
+3. **フォローアップ** — 回答を改善するか、未解決のケースを続行します。
+
+</div>
+
 
 <span id="find-an-earlier-conversation" data-sixmm-canonical-anchor="find-an-earlier-conversation" aria-hidden="true"></span>
 
@@ -21,3 +32,58 @@ canonical-url: https://docs.6mm.com/ja/customer-support/history
 ケースを理解するには、会話、エージェント、評価を組み合わせて使用​​します。 AI メッセージとして表示される応答は、大規模モデルの呼び出しではなく、構成された応答または照合ステージから得られる場合があります。内容を現在の知識と比較し、返信動作を調査するときにフロー テストを使用します。
 
 削除は、関連する権限がある場合にのみ実行できます。 1 つまたは複数のレコードを削除する前に確認を読んでください。 MCP 履歴クエリは承認されたスコープを使用し、削除には確認が必要です。すべてのエージェントがテナントの完全な履歴を利用できるとは想定しないでください。
+
+
+<span id="read-the-fields-without-mixing-identities" data-sixmm-canonical-anchor="read-the-fields-without-mixing-identities" aria-hidden="true"></span>
+
+## ID を混在させずにフィールドを読み取る
+
+| 分野 | 解釈 |
+| --- | --- |
+| 会話番号 | 検討しているコンサルテーションを特定します。個別のセッションの混乱を避けるために使用します。 |
+| 訪問者名 | 読み取り可能な表示ラベル。検証済みの Exchange アカウントの証明ではありません。 |
+| エントリータイプとユーザーID | 匿名アクセスと統合ログイン ID を区別するのに役立ちます。欠落している ID データを推測してはなりません。 |
+| ユーザーのメールアドレス | 最初に連絡先メールアドレスを使用し、次に訪問者のメールアドレスを使用します。詳細は 2 つのソースを分けてください。 |
+| 言語とIPの場所 | ユーザーの身元や正確な物理的位置の証明ではなく、サポートに役立つコンテキスト。 |
+| 評価 | そのセッションに対して存在するフィードバック。評価なしはマイナス評価と同じではありません。 |
+
+<span id="example-review-a-low-rated-consultation" data-sixmm-canonical-anchor="example-review-a-low-rated-consultation" aria-hidden="true"></span>
+
+### 例: 低評価のコンサルテーションを確認する
+
+1. 必要に応じて日付、エージェント、評価でフィルターし、完全な記録を開きます。
+2. 回答を評価する前に、訪問者の質問を読んでください。引き継ぎや言葉の誤解が会話に影響を与えていないか確認してください。
+3. 回答が不完全な場合は、対応するナレッジ コンテンツとボット構成を確認してください。結果が悪かったとしても、必ずしもモデル自体が失敗したことを意味するわけではありません。
+4. チームが同じ証拠に戻ることができるように、内部フォローアップでセッション番号を保管してください。
+
+<span id="common-questions" data-sixmm-canonical-anchor="common-questions" aria-hidden="true"></span>
+
+## よくある質問
+
+<AccordionGroup>
+
+<Accordion title="メールが空白なのはなぜですか?">
+セッションが連絡先電子メールを収集していないか、エントリー統合から電子メールを受信して​​いない可能性があります。データが予期せず欠落していると判断する前に、両方のフィールドを詳細に確認してください。
+</Accordion>
+
+<Accordion title="日付フィルターを変更すると結果が変わるのはなぜですか?">
+ページは開始時間または終了時間でフィルタリングできます。ある日に始まり、別の日に終わる会話は、これら 2 つの選択肢の下では異なる結果に属します。
+</Accordion>
+
+</AccordionGroup>
+
+<span id="continue-with" data-sixmm-canonical-anchor="continue-with" aria-hidden="true"></span>
+
+## 続けて
+
+<CardGroup cols={2}>
+
+<Card title="より広範な傾向を確認する" href="/ja/customer-support/analytics">
+単一のケースを選択したレポート期間と比較します。
+</Card>
+
+<Card title="回答ソースを改善する" href="/ja/customer-support/knowledge">
+今後の返信の背後にあるヘルプ コンテンツを維持します。
+</Card>
+
+</CardGroup>

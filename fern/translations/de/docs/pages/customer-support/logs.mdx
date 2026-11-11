@@ -1,10 +1,21 @@
 ---
 title: "Betriebsprotokolle"
-description: "Betriebsprotokolle — Öffnen Sie Vorgangsprotokolle. Filtern Sie mithilfe der verfügbaren Steuerelemente nach Schlüsselwort, Kategorie, Aktion, Akteurstyp, Zieltyp und Datum. Lesen Sie die Details, um herauszufinden, wer "
+description: "Betriebsprotokolle – Verwenden Sie Betriebsprotokolle, um zu beantworten, wer wann was geändert hat. Kombinieren Sie Aktion, Ziel und Quelle mit dem Geschäftsdatensatz, anstatt die Protokollbeschreibung isoliert zu lesen."
 subtitle: "6MM AI-Kundensupport · Mieterleitfaden"
 slug: customer-support/logs
 canonical-url: https://docs.6mm.com/de/customer-support/logs
 ---
+
+Verwenden Sie Betriebsprotokolle, um zu beantworten, wer wann was geändert hat. Kombinieren Sie Aktion, Ziel und Quelle mit dem Geschäftsdatensatz, anstatt die Protokollbeschreibung isoliert zu lesen.
+
+<div className="sixmm-support-flow">
+
+1. **Suchen Sie die Veranstaltung** – Filtern Sie nach Zeit, Schlüsselwort und Kategorie.
+2. **Lesen Sie die Details** – Überprüfen Sie den Akteur, das Ziel, die Quelle und das Ergebnis.
+3. **Überprüfen Sie das Ergebnis** – Öffnen Sie den betroffenen Datensatz, bevor Sie es erneut versuchen.
+
+</div>
+
 
 <span id="trace-an-operation" data-sixmm-canonical-anchor="trace-an-operation" aria-hidden="true"></span>
 
@@ -21,3 +32,60 @@ MCP Vorgänge werden mit ihrem Anwendungs-/Quellen- und Ausführungsstatus angez
 Eine Anwendungsverbindung weist lediglich die Autorisierung nach. Ein vorgeschlagener Schreibvorgang, eine ausstehende Genehmigung und ein abgeschlossener Schreibvorgang sind unterschiedliche Zustände. Das Protokoll ist keine vollständige Abschrift aller Aussagen zur externen KI, und es sollte nicht davon ausgegangen werden, dass eine schreibgeschützte Abfrage einen geschäftlichen Schreibdatensatz erstellt.
 
 Behalten Sie bei der Untersuchung eines fehlgeschlagenen MCP-Anrufs dessen Vorgangs-ID, Uhrzeit und Fehlermeldung bei. Fragen Sie das Operationsergebnis ab, bevor Sie es erneut versuchen. Betriebsprotokolle sind bis MCP schreibgeschützt.
+
+
+<span id="read-one-log-entry" data-sixmm-canonical-anchor="read-one-log-entry" aria-hidden="true"></span>
+
+## Einen Protokolleintrag lesen
+
+| Detail | Warum es wichtig ist |
+| --- | --- |
+| Zeit | Platziert die Aktion in der Abfolge der Ereignisse, die Sie untersuchen. |
+| Kategorie und Aktion | Unterscheiden Sie zwischen einer Inhaltsaktualisierung, einer Sitzungsaktion oder einem anderen unterstützten Vorgang. |
+| Schauspieler | Identifiziert ein Konto oder eine Systemaktion; Es ist nicht unbedingt der Besucher im Gespräch. |
+| Quelle | Hilft dabei, Anwendungsaktivitäten von MCP von anderen Vorgängen zu unterscheiden. |
+| Ziel | Identifiziert das Geschäftsobjekt oder den Vorgang MCP, auf den der Datensatz verweist. |
+| Details und Ergebnis | Geben Sie die verfügbare Erklärung und den Ausführungsstatus an. Lesen Sie den Fehler, bevor Sie es erneut versuchen. |
+
+<span id="example-an-mcp-article-change-did-not-appear" data-sixmm-canonical-anchor="example-an-mcp-article-change-did-not-appear" aria-hidden="true"></span>
+
+### Beispiel: Eine MCP-Artikeländerung wurde nicht angezeigt
+
+1. Grenzen Sie den Datumsbereich ein und suchen Sie nach der Anwendung oder dem zugehörigen Vorgang.
+2. Überprüfen Sie, ob der Vorgang auf Bestätigung wartet, fehlgeschlagen oder abgeschlossen ist. Die Autorisierung allein bedeutet nicht, dass die Änderung ausgeführt wurde.
+3. Öffnen Sie den Zielartikel und vergleichen Sie seinen aktuellen Inhalt. Wenn ein Versionskonflikt gemeldet wird, lesen Sie die neueste Version und bereiten Sie eine neue Anfrage vor, anstatt veraltete Inhalte wiederzuverwenden.
+4. Bewahren Sie die Vorgangs-ID und Fehlerdetails auf, falls weitere Untersuchungen erforderlich sind. Ein zugehöriger Geschäftsprüfungsdatensatz und ein MCP Ausführungsdatensatz können dieselbe Änderung beschreiben.
+
+Eine nützliche Übergabe enthält die Zeit, die Zielkennung, die Operations-ID (falls vorhanden) und das beobachtete Ergebnis. Es sollte keine Kontokennwörter oder API Geheimnisse enthalten.
+
+<span id="common-questions" data-sixmm-canonical-anchor="common-questions" aria-hidden="true"></span>
+
+## Häufige Fragen
+
+<AccordionGroup>
+
+<Accordion title="Warum gibt es keine Aufzeichnung für ein KI-Gespräch?">
+Das Betriebsprotokoll ist kein Transkript von Chats in einer externen KI-Anwendung. Ein schreibgeschützter Toolaufruf erstellt auch nicht unbedingt ein Geschäftsänderungsprotokoll.
+</Accordion>
+
+<Accordion title="Sollte ich eine scheinbar fehlgeschlagene Operation sofort wiederholen?">
+Überprüfen Sie zunächst das Operationsergebnis und den Zieldatensatz. Wenn der Client seine Antwort verloren hat, hat der Server die Anfrage möglicherweise bereits verarbeitet.
+</Accordion>
+
+</AccordionGroup>
+
+<span id="continue-with" data-sixmm-canonical-anchor="continue-with" aria-hidden="true"></span>
+
+## Weiter mit
+
+<CardGroup cols={2}>
+
+<Card title="Verstehen Sie die Ausführung von MCP." href="/de/customer-support/mcp-calls">
+Erfahren Sie Bestätigung, Betriebsergebnisse und sichere Wiederholungsversuche.
+</Card>
+
+<Card title="Überprüfen Sie den Kontozugriff" href="/de/customer-support/team">
+Überprüfen Sie, welches Konto und welche Rolle die Arbeit autorisiert hat.
+</Card>
+
+</CardGroup>
