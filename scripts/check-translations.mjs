@@ -144,8 +144,8 @@ const activePages = [
     ),
   ),
 ];
-if (activePages.length !== 140) {
-  pushError(`Expected 140 active pages, found ${activePages.length}`);
+if (activePages.length !== 158) {
+  pushError(`Expected 158 active pages, found ${activePages.length}`);
 }
 
 if (config.title !== "6MM Docs") {
@@ -225,7 +225,7 @@ for (const locale of ["en", ...translatedLocales]) {
   const home = await readFile(homePath, "utf8");
   const groups = [...home.matchAll(/<CardGroup cols=\{(\d+)\}>([\s\S]*?)<\/CardGroup>/g)];
   const counts = groups.map(group => (group[2].match(/<Card\s/g) ?? []).length);
-  if (counts.join(",") !== "2,4,6" || groups.map(group => group[1]).join(",") !== "2,2,3") pushError(`[${locale}] unexpected homepage group layout`);
+  if (counts.join(",") !== "2,2,4,6" || groups.map(group => group[1]).join(",") !== "2,2,2,3") pushError(`[${locale}] unexpected homepage group layout`);
   const prefix = locale === "en" ? "" : `/${locale}`;
   for (const route of ["/trading/overview", "/prediction/overview"]) {
     if (!groups[0]?.[2].includes(`href="${prefix}${route}"`)) pushError(`[${locale}] trading products must appear together first`);

@@ -1,0 +1,47 @@
+---
+title: "通过 MCP 连接 AI 助手"
+description: "通过 MCP 连接 AI 助手 — 选择支持上述远程传输和授权流程的 AI 应用。租户不需要单独部署 MCP，也不需要另外配置 MCP 权限。不要添加 SSE 路径，也不要把 App Key 当作 OAuth 访问令牌。"
+subtitle: "6MM AI 客服 · 租户使用指南"
+slug: customer-support/mcp-connect
+canonical-url: https://docs.6mm.com/zh-CN/customer-support/mcp-connect
+---
+
+```text
+https://csadmin.6mm.com/api/v1/mcp
+```
+
+<span id="connection-details" data-sixmm-canonical-anchor="connection-details" aria-hidden="true"></span>
+
+## 连接信息
+
+| 项目 | 内容 |
+| --- | --- |
+| 租户后台 | [租户后台](https://csadmin.6mm.com/) |
+| 传输方式 | Streamable HTTP |
+| 授权方式 | OAuth 授权码与 PKCE，支持动态客户端注册 |
+| 使用账号 | 现有客服后台账号 |
+
+选择支持上述远程传输和授权流程的 AI 应用。租户不需要单独部署 MCP，也不需要另外配置 MCP 权限。不要添加 SSE 路径，也不要把 App Key 当作 OAuth 访问令牌。
+
+<span id="connect-step-by-step" data-sixmm-canonical-anchor="connect-step-by-step" aria-hidden="true"></span>
+
+## 逐步连接
+
+1. 登录后台，进入 **系统设置 → MCP 连接**。
+2. 复制地址，在 AI 应用中添加远程 MCP 服务，名称可填写 6MM 客服。
+3. 由应用发起授权，在浏览器完成客服账号登录及要求的验证。
+4. 核对应用、租户、账号和返回地址，再允许连接。应用自行提供的名称不代表官方认证。
+5. 返回 AI 应用，必要时刷新工具列表，先让 AI 查询知识分类，验证只读调用。
+6. 在后台「已连接应用」查看连接，不再使用时撤销。
+
+不要向 AI 提供密码、验证码或身份签名密钥，只通过登录和授权页面完成授权。
+
+<span id="what-access-does-the-ai-receive" data-sixmm-canonical-anchor="what-access-does-the-ai-receive" aria-hidden="true"></span>
+
+## AI 获得什么权限
+
+仅获得当前账号允许的工具和本租户数据。调用时会重新校验权限；账号停用、租户服务不可用或授权撤销都可能阻止访问。退出后台登录，不会自动撤销 AI 连接。
+
+当前实现的连接授权为 30 天，访问令牌短期有效，刷新令牌轮换使用。以「已连接应用」显示的到期时间为准，到期后按要求重新连接。令牌交换与续期由 AI 应用处理，租户不用在工具参数中填写密码。
+
+这个 MCP 用于管理客服后台，不会让访客机器人获得后台操作能力，也不会授予交易账户权限。

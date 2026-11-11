@@ -1,0 +1,48 @@
+---
+title: "Website- und App-Integration"
+description: "Website- und App-Integration — Öffnen Sie Systemeinstellungen → Website-Integration. Konfigurieren Sie die zulässigen Website-Domains und kopieren Sie den generierten Code. Der App Key identifiziert Ihren Mandanten; Es h"
+subtitle: "6MM AI-Kundensupport · Mieterleitfaden"
+slug: customer-support/integration
+canonical-url: https://docs.6mm.com/de/customer-support/integration
+---
+
+<span id="copy-the-tenant-integration-code" data-sixmm-canonical-anchor="copy-the-tenant-integration-code" aria-hidden="true"></span>
+
+## Kopieren Sie den Mandantenintegrationscode
+
+Öffnen Sie **Systemeinstellungen → Website-Integration**. Konfigurieren Sie die zulässigen Website-Domains und kopieren Sie den generierten Code. Der App Key identifiziert Ihren Mandanten; Es handelt sich nicht um ein Login-Passwort oder ein Identitätssignierungsgeheimnis. Das Kundensupport-Widget ist vom Trading Widget SDK getrennt.
+
+Im Folgenden werden die unterstützten Skriptattribute veranschaulicht. Ersetzen Sie den Platzhalter durch den App Key Ihres Mandanten und verwenden Sie das von Ihrer Konsole generierte Skript URL.
+
+```html
+<script src="https://cs.6mm.com/widget/widget.js"
+        data-app-key="YOUR_TENANT_APP_KEY"></script>
+```
+
+Für eine vorhandene Schaltfläche:
+
+```html
+<button id="support-button">Contact support</button>
+<script src="https://cs.6mm.com/widget/widget.js"
+        data-app-key="YOUR_TENANT_APP_KEY"
+        data-trigger="#support-button"></script>
+```
+
+<span id="visitor-identity" data-sixmm-canonical-anchor="visitor-identity" aria-hidden="true"></span>
+
+## Besucheridentität
+
+| Modus | Integrationsverantwortung |
+| --- | --- |
+| Anonymer Besucher | Nutzen Sie den konfigurierten Besuchereintrag des Mieters; Das System identifiziert den Browserbesucher |
+| Angemeldeter Benutzer | Generieren Sie das Identitätstoken in Ihrem Backend und übergeben Sie die stabile Benutzer-ID und das signierte Token anhand des Beispiels der Konsole |
+
+Die unterstützten Anmeldeattribute sind <code>Datenbenutzer-ID</code> und <code>Datenbenutzertoken</code>. Halten Sie die Signatur auf Ihrem Server geheim. Fügen Sie es nicht in HTML, mobilen Code oder eine KI-Eingabeaufforderung ein. Verwenden Sie das genaue Tokenformat und die Lebensdauer, die in der Konsole angezeigt werden.
+
+Verwenden Sie für eine App oder WebView den für Ihren Mandanten bereitgestellten Eingabe- und Integrationsmodus. Testen Sie Navigation, Authentifizierung, Dateiauswahl und Ansichtsfensterverhalten auf dem tatsächlichen Gerät; Ein Website-Snippet allein stellt keine native SDK-Unterstützung her.
+
+<span id="verify-the-entry" data-sixmm-canonical-anchor="verify-the-entry" aria-hidden="true"></span>
+
+## Überprüfen Sie den Eintrag
+
+Überprüfen Sie die zulässigen Domänen, die Sprache, das Hell-/Dunkel-Thema, das Öffnen und Schließen, eine Testnachricht, den menschlichen Support und die Ticketübermittlung. Stellen Sie beim Wechseln der Website-Benutzer sicher, dass die an das Widget übergebene Identität dem aktuellen Benutzer gehört. Wenn das Widget nicht geöffnet wird, überprüfen Sie den App-Schlüssel, das Laden des Skripts, die Domäneneinstellungen und die Verfügbarkeit des Mandantendienstes.

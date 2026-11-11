@@ -1,0 +1,131 @@
+---
+title: "MCP 工具呼叫與範例"
+description: "MCP 工具呼叫與範例 — OAuth授權後，使用帶有Streamable HTTP的MCP客戶端初始化連線並透過tools/list取得工具。透過tools/call呼叫工具。讀取每個傳回的輸入模式，而不是從 REST URL 派生參數。從讀取中取得的 ID 通常是路徑參數的十進位字串；主體內的數字欄位在模式需要的地方仍然是數字。"
+subtitle: "6MMAI客戶支援·租戶指南"
+slug: customer-support/mcp-calls
+canonical-url: https://docs.6mm.com/zh-TW/customer-support/mcp-calls
+---
+
+<span id="discover-available-tools" data-sixmm-canonical-anchor="discover-available-tools" aria-hidden="true"></span>
+
+## 發現可用的工具
+
+OAuth授權後，使用帶有Streamable HTTP的MCP客戶端初始化連線並透過`tools/list`取得工具。透過`tools/call`呼叫工具。讀取每個傳回的輸入模式，而不是從 REST URL 派生參數。從讀取中取得的 ID 通常是路徑參數的十進位字串；主體內的數字欄位在模式需要的地方仍然是數字。
+
+以下範例是初始化後的 JSON-RPC 工具訊息，而不是完整的獨立 HTTP 請求。客戶端提供存取令牌和協定標頭。將說明性 ID 替換為為您自己的租戶傳回的記錄。
+
+<span id="read-categories" data-sixmm-canonical-anchor="read-categories" aria-hidden="true"></span>
+
+## 閱讀類別
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/call",
+  "params": {
+    "name": "knowledge_get_categories",
+    "arguments": {}
+  }
+}
+```
+
+<span id="create-a-draft" data-sixmm-canonical-anchor="create-a-draft" aria-hidden="true"></span>
+
+## 建立草稿
+
+從讀取結果中選擇現有類別。類別為必填項。除非您打算發布並完成任何所需的確認，否則請勿設定發布狀態。
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "method": "tools/call",
+  "params": {
+    "name": "knowledge_create_article",
+    "arguments": {
+      "requestId": "support-demo-create-001",
+      "body": {
+        "title": "Withdrawal guide draft",
+        "content": "Reviewed withdrawal instructions go here.",
+        "categoryId": 12,
+        "status": "draft"
+      }
+    }
+  }
+}
+```
+
+<span id="preview-an-update-or-deletion" data-sixmm-canonical-anchor="preview-an-update-or-deletion" aria-hidden="true"></span>
+
+## 預覽更新或刪除
+
+首先閱讀文章。預覽確切的預期寫入，包括新的請求 ID。預覽不執行它。
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 3,
+  "method": "tools/call",
+  "params": {
+    "name": "mcp_preview",
+    "arguments": {
+      "tool": "knowledge_delete_article",
+      "arguments": {
+        "id": "123",
+        "requestId": "support-demo-delete-001"
+      }
+    }
+  }
+}
+```
+
+將傳回的 `version` 複製到 `expectedVersion` 中，而不更改預期目標或參數：
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 4,
+  "method": "tools/call",
+  "params": {
+    "name": "knowledge_delete_article",
+    "arguments": {
+      "id": "123",
+      "requestId": "support-demo-delete-001",
+      "expectedVersion": "REPLACE_WITH_THE_64_CHARACTER_VERSION_FROM_PREVIEW"
+    }
+  }
+}
+```
+
+佔位符不是有效版本。使用預覽傳回的實際 64 字元值。
+
+<span id="confirm-and-check-the-result" data-sixmm-canonical-anchor="confirm-and-check-the-result" aria-hidden="true"></span>
+
+## 確認並檢查結果
+
+如果結果報告`awaiting_approval`，請開啟`approvalUrl`，以授權帳號身分登入並檢視操作。只有批准它才會運行掛起的操作。目前，確認訊息將在 15 分鐘後過期。拒絕或過期不執行寫入。
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 5,
+  "method": "tools/call",
+  "params": {
+    "name": "mcp_operation",
+    "arguments": {
+      "operationId": "REPLACE_WITH_RETURNED_OPERATION_ID"
+    }
+  }
+}
+```
+
+工具輸出攜帶在包含JSON的文字內容中；檢查它和任何 `isError` 標誌。僅 HTTP 回應或批准連結並不能證明成功。讀取操作狀態，並在有用時查詢受影響的記錄。
+
+<span id="retry-safely" data-sixmm-canonical-anchor="retry-safely" aria-hidden="true"></span>
+
+## 安全重試
+
+重複使用相同的 `requestId` 和參數進行相同寫入的網路重試。請勿重複用於其他操作。如果內容發生更改，請再次閱讀並預覽，然後使用新的請求 ID 提交新的預期操作。如果回應遺失或操作仍在運行，請在決定做什麼之前查詢其狀態和業務記錄；永遠不要假設逾時意味著什麼也沒有發生。
+
+AI客戶端通常會為使用者執行此協定。這些詳細資訊適用於客戶端開發人員和診斷工具工作流程。

@@ -1,0 +1,48 @@
+---
+title: "Integrasi Situs Web dan Aplikasi"
+description: "Integrasi Situs Web dan Aplikasi — Buka Pengaturan Sistem → Integrasi Situs Web. Konfigurasikan domain situs web yang diizinkan dan salin kode yang dihasilkan. Kunci Aplikasi mengidentifikasi penyewa Anda; ini bukan kata"
+subtitle: "6MM Dukungan Pelanggan AI · Panduan penyewa"
+slug: customer-support/integration
+canonical-url: https://docs.6mm.com/id/customer-support/integration
+---
+
+<span id="copy-the-tenant-integration-code" data-sixmm-canonical-anchor="copy-the-tenant-integration-code" aria-hidden="true"></span>
+
+## Salin kode integrasi penyewa
+
+Buka **Pengaturan Sistem → Integrasi Situs Web**. Konfigurasikan domain situs web yang diizinkan dan salin kode yang dihasilkan. Kunci Aplikasi mengidentifikasi penyewa Anda; ini bukan kata sandi login atau rahasia penandatanganan identitas. Widget dukungan pelanggan terpisah dari Trading Widget SDK.
+
+Berikut ini mengilustrasikan atribut skrip yang didukung. Ganti placeholder dengan Kunci Aplikasi penyewa Anda dan gunakan skrip URL yang dihasilkan oleh konsol Anda.
+
+```html
+<script src="https://cs.6mm.com/widget/widget.js"
+        data-app-key="YOUR_TENANT_APP_KEY"></script>
+```
+
+Untuk tombol yang sudah ada:
+
+```html
+<button id="support-button">Contact support</button>
+<script src="https://cs.6mm.com/widget/widget.js"
+        data-app-key="YOUR_TENANT_APP_KEY"
+        data-trigger="#support-button"></script>
+```
+
+<span id="visitor-identity" data-sixmm-canonical-anchor="visitor-identity" aria-hidden="true"></span>
+
+## Identitas pengunjung
+
+| Mode | Tanggung jawab integrasi |
+| --- | --- |
+| Pengunjung anonim | Gunakan entri pengunjung yang dikonfigurasi penyewa; sistem mengidentifikasi pengunjung browser |
+| Pengguna yang masuk | Hasilkan token identitas di backend Anda dan teruskan ID pengguna stabil dan token yang ditandatangani menggunakan contoh konsol |
+
+Atribut masuk yang didukung adalah <code>data-user-id</code> dan <code>data-user-token</code>. Jaga kerahasiaan penandatanganan di server Anda; jangan memasukkannya ke dalam HTML, kode seluler, atau perintah AI. Gunakan format token dan masa pakai yang sama persis dengan yang ditampilkan di konsol.
+
+Untuk Aplikasi atau WebView, gunakan mode entri dan integrasi yang disediakan untuk penyewa Anda. Uji navigasi, autentikasi, pemilihan file, dan perilaku area pandang pada perangkat sebenarnya; cuplikan situs web saja tidak memberikan dukungan SDK asli.
+
+<span id="verify-the-entry" data-sixmm-canonical-anchor="verify-the-entry" aria-hidden="true"></span>
+
+## Verifikasi entri tersebut
+
+Periksa domain yang diizinkan, bahasa, tema terang/gelap, pembukaan dan penutupan, pesan pengujian, dukungan manusia, dan penyerahan tiket. Saat berpindah pengguna situs web, verifikasi identitas yang diteruskan ke widget milik pengguna saat ini. Jika widget tidak terbuka, periksa Kunci Aplikasi, pemuatan skrip, pengaturan domain, dan ketersediaan layanan penyewa.

@@ -1,0 +1,48 @@
+---
+title: "ウェブサイトとアプリの統合"
+description: "ウェブサイトとアプリの統合 — [システム設定] → [Web サイトの統合] を開きます。許可された Web サイトのドメインを構成し、生成されたコードをコピーします。アプリ キーはテナントを識別します。これは、ログイン パスワードや ID 署名秘密ではありません。カスタマー サポート ウィジェットは Trading Widget SDK とは別のものです。"
+subtitle: "6MM AI カスタマー サポート · テナント ガイド"
+slug: customer-support/integration
+canonical-url: https://docs.6mm.com/ja/customer-support/integration
+---
+
+<span id="copy-the-tenant-integration-code" data-sixmm-canonical-anchor="copy-the-tenant-integration-code" aria-hidden="true"></span>
+
+## テナント統合コードをコピーします
+
+**[システム設定] → [Web サイトの統合]** を開きます。許可された Web サイトのドメインを構成し、生成されたコードをコピーします。アプリ キーはテナントを識別します。これは、ログイン パスワードや ID 署名秘密ではありません。カスタマー サポート ウィジェットは Trading Widget SDK とは別のものです。
+
+以下に、サポートされているスクリプト属性を示します。プレースホルダーをテナントのアプリ キーに置き換え、コンソールによって生成されたスクリプト URL を使用します。
+
+```html
+<script src="https://cs.6mm.com/widget/widget.js"
+        data-app-key="YOUR_TENANT_APP_KEY"></script>
+```
+
+既存のボタンの場合:
+
+```html
+<button id="support-button">Contact support</button>
+<script src="https://cs.6mm.com/widget/widget.js"
+        data-app-key="YOUR_TENANT_APP_KEY"
+        data-trigger="#support-button"></script>
+```
+
+<span id="visitor-identity" data-sixmm-canonical-anchor="visitor-identity" aria-hidden="true"></span>
+
+## 訪問者の身元確認
+
+| モード | 統合の責任 |
+| --- | --- |
+| 匿名の訪問者 | テナントの設定された訪問者エントリを使用します。システムはブラウザ訪問者を識別します |
+| サインインしたユーザー | コンソールの例を使用して、バックエンドで ID トークンを生成し、安定したユーザー ID と署名付きトークンを渡します。 |
+
+サポートされているサインイン属性は、<code>data-user-id</code> および <code>data-user-token</code> です。署名の秘密はサーバー上に保管してください。 HTML、モバイルコード、AI プロンプトには挿入しないでください。コンソールに表示される正確なトークン形式と有効期間を使用してください。
+
+アプリまたは WebView の場合は、テナントに提供されているエントリ モードと統合モードを使用します。実際のデバイスでナビゲーション、認証、ファイル選択、ビューポートの動作をテストします。 Web サイトのスニペットだけでは、ネイティブ SDK サポートは確立されません。
+
+<span id="verify-the-entry" data-sixmm-canonical-anchor="verify-the-entry" aria-hidden="true"></span>
+
+## エントリを確認してください
+
+許可されているドメイン、言語、ライト/ダーク テーマ、開始と終了、テスト メッセージ、人間によるサポート、チケットの送信を確認します。 Web サイトのユーザーを切り替えるときは、ウィジェットに渡された ID が現在のユーザーのものであることを確認してください。ウィジェットが開かない場合は、アプリ キー、スクリプトの読み込み、ドメイン設定、およびテナント サービスの可用性を調べてください。

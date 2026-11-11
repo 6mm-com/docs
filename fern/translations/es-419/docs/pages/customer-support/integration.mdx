@@ -1,0 +1,48 @@
+---
+title: "Integración de sitios web y aplicaciones"
+description: "Integración de sitios web y aplicaciones — Abra Configuración del sistema → Integración del sitio web. Configure los dominios del sitio web permitidos y copie el código generado. La clave de la aplicación identifica a su"
+subtitle: "6MM Atención al cliente de IA · Guía para inquilinos"
+slug: customer-support/integration
+canonical-url: https://docs.6mm.com/es-419/customer-support/integration
+---
+
+<span id="copy-the-tenant-integration-code" data-sixmm-canonical-anchor="copy-the-tenant-integration-code" aria-hidden="true"></span>
+
+## Copie el código de integración del inquilino
+
+Abra **Configuración del sistema → Integración del sitio web**. Configure los dominios del sitio web permitidos y copie el código generado. La clave de la aplicación identifica a su inquilino; no es una contraseña de inicio de sesión ni un secreto de firma de identidad. El widget de atención al cliente está separado del Trading Widget SDK.
+
+A continuación se ilustran los atributos de script admitidos. Reemplace el marcador de posición con la clave de aplicación de su inquilino y use el script URL generado por su consola.
+
+```html
+<script src="https://cs.6mm.com/widget/widget.js"
+        data-app-key="YOUR_TENANT_APP_KEY"></script>
+```
+
+Para un botón existente:
+
+```html
+<button id="support-button">Contact support</button>
+<script src="https://cs.6mm.com/widget/widget.js"
+        data-app-key="YOUR_TENANT_APP_KEY"
+        data-trigger="#support-button"></script>
+```
+
+<span id="visitor-identity" data-sixmm-canonical-anchor="visitor-identity" aria-hidden="true"></span>
+
+## Identidad del visitante
+
+| Modo | Responsabilidad de integración |
+| --- | --- |
+| Visitante anónimo | Utilice la entrada de visitante configurada por el inquilino; el sistema identifica al visitante del navegador |
+| Usuario registrado | Genere el token de identidad en su backend y pase el ID de usuario estable y el token firmado usando el ejemplo de la consola. |
+
+Los atributos de inicio de sesión admitidos son <code>data-user-id</code> y <code>data-user-token</code>. Mantenga la firma en secreto en su servidor; no lo insertes en HTML, código móvil o un mensaje AI. Utilice el formato de token exacto y la duración que se muestran en la consola.
+
+Para una aplicación o WebView, utilice el modo de entrada e integración proporcionado para su inquilino. Pruebe la navegación, la autenticación, la selección de archivos y el comportamiento de la ventana gráfica en el dispositivo real; un fragmento de sitio web por sí solo no establece soporte nativo SDK.
+
+<span id="verify-the-entry" data-sixmm-canonical-anchor="verify-the-entry" aria-hidden="true"></span>
+
+## Verificar la entrada
+
+Verifique los dominios permitidos, el idioma, el tema claro/oscuro, la apertura y el cierre, un mensaje de prueba, el soporte humano y el envío de tickets. Al cambiar de usuario del sitio web, verifique que la identidad pasada al widget pertenezca al usuario actual. Si el widget no se abre, inspeccione la clave de la aplicación, la carga del script, la configuración del dominio y la disponibilidad del servicio del inquilino.

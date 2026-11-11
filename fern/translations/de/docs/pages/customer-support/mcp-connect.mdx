@@ -1,0 +1,47 @@
+---
+title: "Verbinden Sie einen KI-Assistenten mit MCP"
+description: "Verbinden Sie einen KI-Assistenten mit MCP — Verwenden Sie eine KI-Anwendung, die diesen Remote-Transport- und Autorisierungsfluss unterstützt. Es ist keine mandantenspezifische MCP-Serverbereitstellung oder separate MCP"
+subtitle: "6MM AI-Kundensupport · Mieterleitfaden"
+slug: customer-support/mcp-connect
+canonical-url: https://docs.6mm.com/de/customer-support/mcp-connect
+---
+
+```text
+https://csadmin.6mm.com/api/v1/mcp
+```
+
+<span id="connection-details" data-sixmm-canonical-anchor="connection-details" aria-hidden="true"></span>
+
+## Verbindungsdetails
+
+| Artikel | Wert |
+| --- | --- |
+| Mieterkonsole | [Mieterkonsole](https://csadmin.6mm.com/) |
+| Transport | Streambar HTTP |
+| Genehmigung | OAuth Autorisierungscode mit PKCE; dynamische Kundenregistrierung |
+| Konto | Ihr bestehendes Kundensupportkonto |
+
+Verwenden Sie eine KI-Anwendung, die diesen Remote-Transport- und Autorisierungsfluss unterstützt. Es ist keine mandantenspezifische MCP-Serverbereitstellung oder separate MCP-Berechtigungskonfiguration erforderlich. Hängen Sie keinen SSE-Pfad an und verwenden Sie den App-Schlüssel nicht als OAuth-Inhaber-Token.
+
+<span id="connect-step-by-step" data-sixmm-canonical-anchor="connect-step-by-step" aria-hidden="true"></span>
+
+## Verbinden Sie sich Schritt für Schritt
+
+1. Melden Sie sich bei der Konsole an und öffnen Sie **Systemeinstellungen → MCP Verbindung**.
+2. Kopieren Sie den Endpunkt und fügen Sie ihn als Remote-Server MCP in Ihrer KI-Anwendung hinzu. Ein Anzeigename wie 6MM Customer Support ist ausreichend.
+3. Lassen Sie die Anwendung mit der Autorisierung beginnen. Melden Sie sich im Browser an und führen Sie alle erforderlichen Überprüfungen durch.
+4. Überprüfen Sie den Antrag, den Mieter, das Konto und die Absenderadresse, bevor Sie die Verbindung zulassen. Ein angegebener Anwendungsname ist kein Zertifizierungszeichen.
+5. Kehren Sie zur KI-Anwendung zurück und aktualisieren Sie deren Tools bei Bedarf. Bitten Sie es, Wissenskategorien als ersten schreibgeschützten Test aufzulisten.
+6. Überprüfen Sie „Verbundene Anwendungen“ in der Konsole. Widerrufen Sie dort die Verbindung, wenn sie nicht mehr benötigt wird.
+
+Geben Sie der KI niemals Ihr Passwort, Ihren Verifizierungscode oder Ihr Signaturgeheimnis weiter. Autorisieren Sie nur über die Anmelde- und Einwilligungsseiten.
+
+<span id="what-access-does-the-ai-receive" data-sixmm-canonical-anchor="what-access-does-the-ai-receive" aria-hidden="true"></span>
+
+## Welchen Zugriff erhält die KI?
+
+Nur die unterstützten Tools und Mandantendaten des aktuellen Kontos. Bei Anrufen werden die Berechtigungen erneut überprüft; Kontosperrung, Nichtverfügbarkeit des Mieters oder widerrufene Autorisierung können den Zugriff blockieren. Durch das Abmelden von der Konsole wird die AI-Verbindung nicht automatisch widerrufen.
+
+Die aktuelle Implementierung verwendet eine 30-tägige Verbindungsautorisierung und kurzlebige Zugriffstoken mit rotierenden Aktualisierungstoken. Befolgen Sie den in „Verbundene Anwendungen“ angezeigten Ablauf und stellen Sie bei Bedarf erneut eine Verbindung her. KI-Anwendungen kümmern sich um den Austausch und die Erneuerung von Token. Mieter fügen Passwörter nicht manuell in Toolaufrufe ein.
+
+Dieser MCP verwaltet das Support-Backend. Es ermöglicht dem Besucher-Bot nicht, das Backend zu bedienen oder Zugriff auf Handelskonten zu gewähren.

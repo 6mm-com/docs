@@ -1,0 +1,131 @@
+---
+title: "MCP Panggilan Alat dan Contohnya"
+description: "MCP Panggilan Alat dan Contohnya — Setelah otorisasi OAuth, gunakan klien MCP dengan Streamable HTTP untuk menginisialisasi koneksi dan mendapatkan alat melalui tools/list. Panggil alat melalui tools/call. Baca setiap sk"
+subtitle: "6MM Dukungan Pelanggan AI · Panduan penyewa"
+slug: customer-support/mcp-calls
+canonical-url: https://docs.6mm.com/id/customer-support/mcp-calls
+---
+
+<span id="discover-available-tools" data-sixmm-canonical-anchor="discover-available-tools" aria-hidden="true"></span>
+
+## Temukan alat yang tersedia
+
+Setelah otorisasi OAuth, gunakan klien MCP dengan Streamable HTTP untuk menginisialisasi koneksi dan mendapatkan alat melalui `tools/list`. Panggil alat melalui `tools/call`. Baca setiap skema masukan yang dikembalikan daripada mengambil parameter dari URL REST. ID yang diambil dari pembacaan biasanya berupa string desimal untuk argumen jalur; bidang numerik di dalam badan tetap numerik jika skema memerlukannya.
+
+Contoh di bawah ini adalah pesan alat JSON-RPC setelah inisialisasi, bukan permintaan HTTP mandiri yang lengkap. Klien menyediakan token akses dan header protokol. Ganti ID ilustratif dengan catatan yang dikembalikan untuk penyewa Anda sendiri.
+
+<span id="read-categories" data-sixmm-canonical-anchor="read-categories" aria-hidden="true"></span>
+
+## Baca kategori
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/call",
+  "params": {
+    "name": "knowledge_get_categories",
+    "arguments": {}
+  }
+}
+```
+
+<span id="create-a-draft" data-sixmm-canonical-anchor="create-a-draft" aria-hidden="true"></span>
+
+## Buat draf
+
+Pilih kategori yang ada dari hasil baca. Kategori ini wajib diisi. Jangan tetapkan status penerbitan kecuali Anda bermaksud menerbitkan dan melengkapi konfirmasi apa pun yang diperlukan.
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "method": "tools/call",
+  "params": {
+    "name": "knowledge_create_article",
+    "arguments": {
+      "requestId": "support-demo-create-001",
+      "body": {
+        "title": "Withdrawal guide draft",
+        "content": "Reviewed withdrawal instructions go here.",
+        "categoryId": 12,
+        "status": "draft"
+      }
+    }
+  }
+}
+```
+
+<span id="preview-an-update-or-deletion" data-sixmm-canonical-anchor="preview-an-update-or-deletion" aria-hidden="true"></span>
+
+## Pratinjau pembaruan atau penghapusan
+
+Baca artikelnya terlebih dahulu. Pratinjau penulisan yang diinginkan, termasuk ID permintaan baru. Pratinjau tidak menjalankannya.
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 3,
+  "method": "tools/call",
+  "params": {
+    "name": "mcp_preview",
+    "arguments": {
+      "tool": "knowledge_delete_article",
+      "arguments": {
+        "id": "123",
+        "requestId": "support-demo-delete-001"
+      }
+    }
+  }
+}
+```
+
+Salin `version` yang dikembalikan ke `expectedVersion` tanpa mengubah target atau parameter yang diinginkan:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 4,
+  "method": "tools/call",
+  "params": {
+    "name": "knowledge_delete_article",
+    "arguments": {
+      "id": "123",
+      "requestId": "support-demo-delete-001",
+      "expectedVersion": "REPLACE_WITH_THE_64_CHARACTER_VERSION_FROM_PREVIEW"
+    }
+  }
+}
+```
+
+Placeholder bukan versi yang valid. Gunakan nilai 64 karakter sebenarnya yang dikembalikan oleh pratinjau.
+
+<span id="confirm-and-check-the-result" data-sixmm-canonical-anchor="confirm-and-check-the-result" aria-hidden="true"></span>
+
+## Konfirmasikan dan periksa hasilnya
+
+Jika hasilnya melaporkan `awaiting_approval`, buka `approvalUrl`, masuk sebagai akun otorisasi dan tinjau tindakannya. Hanya menyetujuinya yang menjalankan operasi yang tertunda. Konfirmasi saat ini kedaluwarsa setelah 15 menit. Penolakan atau kadaluwarsa tidak mengeksekusi penulisan.
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 5,
+  "method": "tools/call",
+  "params": {
+    "name": "mcp_operation",
+    "arguments": {
+      "operationId": "REPLACE_WITH_RETURNED_OPERATION_ID"
+    }
+  }
+}
+```
+
+Keluaran alat dibawa dalam konten teks yang berisi JSON; periksa dan tanda `isError` apa pun. Tanggapan HTTP atau tautan persetujuan saja tidak membuktikan keberhasilan. Baca status operasi dan, bila berguna, tanyakan rekaman yang terpengaruh.
+
+<span id="retry-safely" data-sixmm-canonical-anchor="retry-safely" aria-hidden="true"></span>
+
+## Coba lagi dengan aman
+
+Gunakan kembali `requestId` dan argumen yang sama untuk percobaan ulang jaringan dari penulisan yang sama. Jangan menggunakannya kembali untuk tindakan lain. Jika konten telah berubah, baca dan pratinjau lagi, lalu kirimkan operasi baru yang diinginkan dengan ID permintaan baru. Jika respons hilang atau operasi tetap berjalan, tanyakan status dan catatan bisnisnya sebelum memutuskan apa yang harus dilakukan; jangan pernah berasumsi batas waktu berarti tidak terjadi apa-apa.
+
+Klien AI biasanya menjalankan protokol ini untuk pengguna. Detail ini ditujukan untuk pengembang klien dan untuk mendiagnosis alur kerja alat.

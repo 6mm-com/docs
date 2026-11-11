@@ -1,0 +1,131 @@
+---
+title: "MCP Appels d'outils et exemples"
+description: "MCP Appels d'outils et exemples — Après l'autorisation OAuth, utilisez un client MCP avec Streamable HTTP pour initialiser la connexion et obtenir des outils via tools/list. Appelez les outils via tools/call. Lisez chaqu"
+subtitle: "6MM Support client AI · Guide du locataire"
+slug: customer-support/mcp-calls
+canonical-url: https://docs.6mm.com/fr/customer-support/mcp-calls
+---
+
+<span id="discover-available-tools" data-sixmm-canonical-anchor="discover-available-tools" aria-hidden="true"></span>
+
+## Découvrez les outils disponibles
+
+Après l'autorisation OAuth, utilisez un client MCP avec Streamable HTTP pour initialiser la connexion et obtenir des outils via `tools/list`. Appelez les outils via `tools/call`. Lisez chaque schéma d'entrée renvoyé plutôt que de dériver les paramètres des URL REST. Les identifiants extraits des lectures sont généralement des chaînes décimales pour les arguments de chemin ; un champ numérique à l'intérieur d'un corps reste numérique là où le schéma l'exige.
+
+Les exemples ci-dessous sont des messages de l'outil JSON-RPC après l'initialisation, et non des requêtes HTTP autonomes complètes. Le client fournit le jeton d'accès et les en-têtes de protocole. Remplacez les ID illustratifs par les enregistrements renvoyés pour votre propre locataire.
+
+<span id="read-categories" data-sixmm-canonical-anchor="read-categories" aria-hidden="true"></span>
+
+## Lire les catégories
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/call",
+  "params": {
+    "name": "knowledge_get_categories",
+    "arguments": {}
+  }
+}
+```
+
+<span id="create-a-draft" data-sixmm-canonical-anchor="create-a-draft" aria-hidden="true"></span>
+
+## Créer un brouillon
+
+Choisissez une catégorie existante dans le résultat de la lecture. La catégorie est obligatoire. Ne définissez pas de statut publié sauf si vous avez l'intention de publier et de compléter toute confirmation requise.
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "method": "tools/call",
+  "params": {
+    "name": "knowledge_create_article",
+    "arguments": {
+      "requestId": "support-demo-create-001",
+      "body": {
+        "title": "Withdrawal guide draft",
+        "content": "Reviewed withdrawal instructions go here.",
+        "categoryId": 12,
+        "status": "draft"
+      }
+    }
+  }
+}
+```
+
+<span id="preview-an-update-or-deletion" data-sixmm-canonical-anchor="preview-an-update-or-deletion" aria-hidden="true"></span>
+
+## Aperçu d'une mise à jour ou d'une suppression
+
+Lisez d'abord l'article. Prévisualisez l’écriture exacte prévue, y compris un nouvel ID de demande. L'aperçu ne l'exécute pas.
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 3,
+  "method": "tools/call",
+  "params": {
+    "name": "mcp_preview",
+    "arguments": {
+      "tool": "knowledge_delete_article",
+      "arguments": {
+        "id": "123",
+        "requestId": "support-demo-delete-001"
+      }
+    }
+  }
+}
+```
+
+Copiez le `version` renvoyé dans `expectedVersion` sans modifier la cible ou les paramètres prévus :
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 4,
+  "method": "tools/call",
+  "params": {
+    "name": "knowledge_delete_article",
+    "arguments": {
+      "id": "123",
+      "requestId": "support-demo-delete-001",
+      "expectedVersion": "REPLACE_WITH_THE_64_CHARACTER_VERSION_FROM_PREVIEW"
+    }
+  }
+}
+```
+
+L'espace réservé n'est pas une version valide. Utilisez la valeur réelle de 64 caractères renvoyée par l'aperçu.
+
+<span id="confirm-and-check-the-result" data-sixmm-canonical-anchor="confirm-and-check-the-result" aria-hidden="true"></span>
+
+## Confirmez et vérifiez le résultat
+
+Si le résultat indique `awaiting_approval`, ouvrez `approvalUrl`, connectez-vous en tant que compte autorisant et examinez l'action. Seule son approbation exécute l’opération en attente. La confirmation expire actuellement après 15 minutes. Le rejet ou l'expiration n'exécute pas l'écriture.
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 5,
+  "method": "tools/call",
+  "params": {
+    "name": "mcp_operation",
+    "arguments": {
+      "operationId": "REPLACE_WITH_RETURNED_OPERATION_ID"
+    }
+  }
+}
+```
+
+La sortie de l'outil est réalisée dans un contenu texte contenant JSON ; inspectez-le ainsi que tout indicateur `isError`. Une réponse HTTP ou un lien d'approbation à lui seul ne prouve pas le succès. Lisez l'état de l'opération et, lorsque cela est utile, interrogez l'enregistrement concerné.
+
+<span id="retry-safely" data-sixmm-canonical-anchor="retry-safely" aria-hidden="true"></span>
+
+## Réessayez en toute sécurité
+
+Réutilisez les mêmes `requestId` et arguments pour une nouvelle tentative réseau de la même écriture. Ne le réutilisez pas pour une autre action. Si le contenu a changé, lisez et prévisualisez à nouveau, puis soumettez une nouvelle opération prévue avec un nouvel ID de demande. Si une réponse est perdue ou si une opération reste en cours, interrogez son statut et son historique avant de décider quoi faire ; ne supposez jamais qu'un délai d'attente signifie que rien ne s'est produit.
+
+Le client AI exécute généralement ce protocole pour l'utilisateur. Ces détails sont destinés aux développeurs clients et au diagnostic d'un flux de travail d'outil.

@@ -1,0 +1,131 @@
+---
+title: "MCP Tool Calls and Examples"
+description: "MCP Tool Calls and Examples — After OAuth authorization, use an MCP client with Streamable HTTP to initialize the connection and obtain tools through tools/list. Call tools through tools/call. Read each returned input sc"
+subtitle: "6MM AI Customer Support · Tenant guide"
+slug: customer-support/mcp-calls
+canonical-url: https://docs.6mm.com/customer-support/mcp-calls
+---
+
+<span data-sixmm-canonical-anchor="discover-available-tools" aria-hidden="true"></span>
+
+## Discover available tools
+
+After OAuth authorization, use an MCP client with Streamable HTTP to initialize the connection and obtain tools through `tools/list`. Call tools through `tools/call`. Read each returned input schema rather than deriving parameters from REST URLs. IDs taken from reads are typically decimal strings for path arguments; a numeric field inside a body remains numeric where the schema requires it.
+
+The examples below are JSON-RPC tool messages after initialization, not complete standalone HTTP requests. The client supplies the access token and protocol headers. Replace illustrative IDs with records returned for your own tenant.
+
+<span data-sixmm-canonical-anchor="read-categories" aria-hidden="true"></span>
+
+## Read categories
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/call",
+  "params": {
+    "name": "knowledge_get_categories",
+    "arguments": {}
+  }
+}
+```
+
+<span data-sixmm-canonical-anchor="create-a-draft" aria-hidden="true"></span>
+
+## Create a draft
+
+Choose an existing category from the read result. The category is required. Do not set a published status unless you intend to publish and complete any required confirmation.
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "method": "tools/call",
+  "params": {
+    "name": "knowledge_create_article",
+    "arguments": {
+      "requestId": "support-demo-create-001",
+      "body": {
+        "title": "Withdrawal guide draft",
+        "content": "Reviewed withdrawal instructions go here.",
+        "categoryId": 12,
+        "status": "draft"
+      }
+    }
+  }
+}
+```
+
+<span data-sixmm-canonical-anchor="preview-an-update-or-deletion" aria-hidden="true"></span>
+
+## Preview an update or deletion
+
+Read the article first. Preview the exact intended write, including a new request ID. Preview does not execute it.
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 3,
+  "method": "tools/call",
+  "params": {
+    "name": "mcp_preview",
+    "arguments": {
+      "tool": "knowledge_delete_article",
+      "arguments": {
+        "id": "123",
+        "requestId": "support-demo-delete-001"
+      }
+    }
+  }
+}
+```
+
+Copy the returned `version` into `expectedVersion` without changing the intended target or parameters:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 4,
+  "method": "tools/call",
+  "params": {
+    "name": "knowledge_delete_article",
+    "arguments": {
+      "id": "123",
+      "requestId": "support-demo-delete-001",
+      "expectedVersion": "REPLACE_WITH_THE_64_CHARACTER_VERSION_FROM_PREVIEW"
+    }
+  }
+}
+```
+
+The placeholder is not a valid version. Use the actual 64-character value returned by the preview.
+
+<span data-sixmm-canonical-anchor="confirm-and-check-the-result" aria-hidden="true"></span>
+
+## Confirm and check the result
+
+If the result reports `awaiting_approval`, open `approvalUrl`, sign in as the authorizing account and review the action. Only approving it runs the pending operation. The confirmation currently expires after 15 minutes. Rejection or expiry does not execute the write.
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 5,
+  "method": "tools/call",
+  "params": {
+    "name": "mcp_operation",
+    "arguments": {
+      "operationId": "REPLACE_WITH_RETURNED_OPERATION_ID"
+    }
+  }
+}
+```
+
+Tool output is carried in text content containing JSON; inspect it and any `isError` flag. An HTTP response or an approval link alone does not prove success. Read the operation status and, when useful, query the affected record.
+
+<span data-sixmm-canonical-anchor="retry-safely" aria-hidden="true"></span>
+
+## Retry safely
+
+Reuse the same `requestId` and arguments for a network retry of the same write. Do not reuse it for another action. If content has changed, read and preview again, then submit a new intended operation with a new request ID. If a response is lost or an operation remains running, query its status and business record before deciding what to do; never assume a timeout means nothing happened.
+
+The AI client usually performs this protocol for the user. These details are for client developers and for diagnosing a tool workflow.

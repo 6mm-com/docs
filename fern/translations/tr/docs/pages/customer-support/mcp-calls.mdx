@@ -1,0 +1,131 @@
+---
+title: "MCP Araç Çağrıları ve Örnekler"
+description: "MCP Araç Çağrıları ve Örnekler — OAuth yetkilendirmesinden sonra, bağlantıyı başlatmak ve tools/list yoluyla araçlar elde etmek için Streamable HTTP içeren bir MCP istemcisi kullanın. Araçları tools/call aracılığıyla çağ"
+subtitle: "6MM Yapay Zeka Müşteri Desteği · Kiracı kılavuzu"
+slug: customer-support/mcp-calls
+canonical-url: https://docs.6mm.com/tr/customer-support/mcp-calls
+---
+
+<span id="discover-available-tools" data-sixmm-canonical-anchor="discover-available-tools" aria-hidden="true"></span>
+
+## Mevcut araçları keşfedin
+
+OAuth yetkilendirmesinden sonra, bağlantıyı başlatmak ve `tools/list` yoluyla araçlar elde etmek için Streamable HTTP içeren bir MCP istemcisi kullanın. Araçları `tools/call` aracılığıyla çağırın. Parametreleri REST URL'lerinden türetmek yerine, döndürülen her giriş şemasını okuyun. Okumalardan alınan kimlikler genellikle yol bağımsız değişkenleri için ondalık dizelerdir; gövde içindeki sayısal alan, şemanın gerektirdiği yerde sayısal kalır.
+
+Aşağıdaki örnekler, başlatma sonrasındaki JSON-RPC araç mesajlarıdır, bağımsız HTTP istekleri tamamlamaz. İstemci erişim belirtecini ve protokol başlıklarını sağlar. Açıklayıcı kimlikleri kendi kiracınız için döndürülen kayıtlarla değiştirin.
+
+<span id="read-categories" data-sixmm-canonical-anchor="read-categories" aria-hidden="true"></span>
+
+## Kategorileri oku
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/call",
+  "params": {
+    "name": "knowledge_get_categories",
+    "arguments": {}
+  }
+}
+```
+
+<span id="create-a-draft" data-sixmm-canonical-anchor="create-a-draft" aria-hidden="true"></span>
+
+## Taslak oluştur
+
+Okuma sonucundan mevcut bir kategoriyi seçin. Kategori gereklidir. Gerekli herhangi bir onayı yayınlamayı ve tamamlamayı düşünmüyorsanız, yayınlanma durumunu ayarlamayın.
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "method": "tools/call",
+  "params": {
+    "name": "knowledge_create_article",
+    "arguments": {
+      "requestId": "support-demo-create-001",
+      "body": {
+        "title": "Withdrawal guide draft",
+        "content": "Reviewed withdrawal instructions go here.",
+        "categoryId": 12,
+        "status": "draft"
+      }
+    }
+  }
+}
+```
+
+<span id="preview-an-update-or-deletion" data-sixmm-canonical-anchor="preview-an-update-or-deletion" aria-hidden="true"></span>
+
+## Bir güncellemeyi veya silme işlemini önizleme
+
+Önce makaleyi okuyun. Yeni istek kimliği de dahil olmak üzere tam olarak amaçlanan yazmayı önizleyin. Önizleme bunu yürütmüyor.
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 3,
+  "method": "tools/call",
+  "params": {
+    "name": "mcp_preview",
+    "arguments": {
+      "tool": "knowledge_delete_article",
+      "arguments": {
+        "id": "123",
+        "requestId": "support-demo-delete-001"
+      }
+    }
+  }
+}
+```
+
+Döndürülen `version` değerini, amaçlanan hedefi veya parametreleri değiştirmeden `expectedVersion` içine kopyalayın:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 4,
+  "method": "tools/call",
+  "params": {
+    "name": "knowledge_delete_article",
+    "arguments": {
+      "id": "123",
+      "requestId": "support-demo-delete-001",
+      "expectedVersion": "REPLACE_WITH_THE_64_CHARACTER_VERSION_FROM_PREVIEW"
+    }
+  }
+}
+```
+
+Yer tutucu geçerli bir sürüm değil. Önizlemenin döndürdüğü gerçek 64 karakterlik değeri kullanın.
+
+<span id="confirm-and-check-the-result" data-sixmm-canonical-anchor="confirm-and-check-the-result" aria-hidden="true"></span>
+
+## Sonucu onaylayın ve kontrol edin
+
+Sonuç `awaiting_approval` rapor ediyorsa, `approvalUrl` açın, yetki veren hesap olarak oturum açın ve işlemi inceleyin. Yalnızca onaylamak, bekleyen işlemi çalıştırır. Onay şu anda 15 dakika sonra sona ermektedir. Reddetme veya sürenin dolması yazma işlemini gerçekleştirmez.
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 5,
+  "method": "tools/call",
+  "params": {
+    "name": "mcp_operation",
+    "arguments": {
+      "operationId": "REPLACE_WITH_RETURNED_OPERATION_ID"
+    }
+  }
+}
+```
+
+Araç çıktısı, JSON içeren metin içeriğinde taşınır; onu ve herhangi bir `isError` işaretini inceleyin. Bir HTTP yanıtı veya onay bağlantısı tek başına başarıyı kanıtlamaz. İşlem durumunu okuyun ve yararlı olduğunda etkilenen kaydı sorgulayın.
+
+<span id="retry-safely" data-sixmm-canonical-anchor="retry-safely" aria-hidden="true"></span>
+
+## Güvenli bir şekilde yeniden deneyin
+
+Aynı yazma işleminin ağda yeniden denenmesi için aynı `requestId` ve bağımsız değişkenleri yeniden kullanın. Başka bir işlem için tekrar kullanmayın. İçerik değiştiyse tekrar okuyun ve önizleyin, ardından yeni bir istek kimliğiyle amaçlanan yeni işlemi gönderin. Bir yanıt kaybolursa veya bir işlem çalışmaya devam ederse ne yapılacağına karar vermeden önce durumunu ve iş kaydını sorgulayın; asla zaman aşımının hiçbir şey olmadığı anlamına geldiğini varsaymayın.
+
+AI istemcisi genellikle bu protokolü kullanıcı için gerçekleştirir. Bu ayrıntılar istemci geliştiricilere ve bir araç iş akışının tanılanmasına yöneliktir.
