@@ -1,0 +1,47 @@
+---
+title: "Connect an AI Assistant with MCP"
+description: "Connect an AI Assistant with MCP — Use an AI application that supports this remote transport and authorization flow. No tenant-specific MCP server deployment or separate MCP permission configuration is needed. Do not app"
+subtitle: "6MM AI Customer Support · Tenant guide"
+slug: customer-support/mcp-connect
+canonical-url: https://docs.6mm.com/customer-support/mcp-connect
+---
+
+```text
+https://csadmin.6mm.com/api/v1/mcp
+```
+
+<span data-sixmm-canonical-anchor="connection-details" aria-hidden="true"></span>
+
+## Connection details
+
+| Item | Value |
+| --- | --- |
+| Tenant console | [Tenant console](https://csadmin.6mm.com/) |
+| Transport | Streamable HTTP |
+| Authorization | OAuth authorization code with PKCE; dynamic client registration |
+| Account | Your existing customer support account |
+
+Use an AI application that supports this remote transport and authorization flow. No tenant-specific MCP server deployment or separate MCP permission configuration is needed. Do not append an SSE path or use the App Key as an OAuth bearer token.
+
+<span data-sixmm-canonical-anchor="connect-step-by-step" aria-hidden="true"></span>
+
+## Connect step by step
+
+1. Sign in to the console and open **System Settings → MCP Connection**.
+2. Copy the endpoint and add it as a remote MCP server in your AI application. A display name such as 6MM Customer Support is sufficient.
+3. Let the application start authorization. In the browser, sign in and complete any required verification.
+4. Check the application, tenant, account and return address before allowing the connection. A supplied application name is not a certification mark.
+5. Return to the AI application and refresh its tools if necessary. Ask it to list knowledge categories as a first read-only test.
+6. Check Connected Applications in the console. Revoke the connection there when no longer needed.
+
+Never give the AI your password, verification code or identity-signing secret. Authorize only through the login and consent pages.
+
+<span data-sixmm-canonical-anchor="what-access-does-the-ai-receive" aria-hidden="true"></span>
+
+## What access does the AI receive?
+
+Only the current account's supported tools and tenant data. Permissions are checked again during calls; account suspension, tenant unavailability or revoked authorization can block access. Signing out of the console does not automatically revoke the AI connection.
+
+The current implementation uses a 30-day connection authorization and short-lived access tokens with rotating refresh tokens. Follow the expiration shown in Connected Applications and reconnect when required. AI applications handle token exchange and renewal; tenants do not manually paste passwords into tool calls.
+
+This MCP manages the support backend. It does not enable the visitor bot to operate the backend or grant access to trading accounts.

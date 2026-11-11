@@ -1,0 +1,48 @@
+---
+title: "Intégration de sites Web et d'applications"
+description: "Intégration de sites Web et d'applications — Ouvrez Paramètres système → Intégration de sites Web. Configurez les domaines de site Web autorisés et copiez le code généré. La clé d'application identifie votre locataire ; "
+subtitle: "6MM Support client AI · Guide du locataire"
+slug: customer-support/integration
+canonical-url: https://docs.6mm.com/fr/customer-support/integration
+---
+
+<span id="copy-the-tenant-integration-code" data-sixmm-canonical-anchor="copy-the-tenant-integration-code" aria-hidden="true"></span>
+
+## Copiez le code d'intégration du locataire
+
+Ouvrez **Paramètres système → Intégration de sites Web**. Configurez les domaines de site Web autorisés et copiez le code généré. La clé d'application identifie votre locataire ; il ne s'agit pas d'un mot de passe de connexion ou d'un secret de signature d'identité. Le widget de support client est distinct du Trading Widget SDK.
+
+Ce qui suit illustre les attributs de script pris en charge. Remplacez l'espace réservé par la clé d'application de votre locataire et utilisez le script URL généré par votre console.
+
+```html
+<script src="https://cs.6mm.com/widget/widget.js"
+        data-app-key="YOUR_TENANT_APP_KEY"></script>
+```
+
+Pour un bouton existant :
+
+```html
+<button id="support-button">Contact support</button>
+<script src="https://cs.6mm.com/widget/widget.js"
+        data-app-key="YOUR_TENANT_APP_KEY"
+        data-trigger="#support-button"></script>
+```
+
+<span id="visitor-identity" data-sixmm-canonical-anchor="visitor-identity" aria-hidden="true"></span>
+
+## Identité du visiteur
+
+| Mode | Responsabilité d'intégration |
+| --- | --- |
+| Visiteur anonyme | Utiliser l'entrée de visiteur configurée par le locataire ; le système identifie le visiteur du navigateur |
+| Utilisateur connecté | Générez le jeton d'identité sur votre backend et transmettez l'ID utilisateur stable et le jeton signé en utilisant l'exemple de la console |
+
+Les attributs de connexion pris en charge sont <code>data-user-id</code> et <code>data-user-token</code>. Gardez le secret de signature sur votre serveur ; ne l'insérez pas dans HTML, le code mobile ou une invite AI. Utilisez le format et la durée de vie exacts du jeton indiqués dans la console.
+
+Pour une application ou une WebView, utilisez le mode de saisie et d'intégration fourni pour votre locataire. Testez la navigation, l'authentification, la sélection de fichiers et le comportement de la fenêtre d'affichage sur l'appareil réel ; un extrait de site Web à lui seul n'établit pas la prise en charge native de SDK.
+
+<span id="verify-the-entry" data-sixmm-canonical-anchor="verify-the-entry" aria-hidden="true"></span>
+
+## Vérifier l'entrée
+
+Vérifiez les domaines autorisés, la langue, le thème clair/sombre, l'ouverture et la fermeture, un message de test, l'assistance humaine et la soumission du ticket. Lorsque vous changez d'utilisateur de site Web, vérifiez que l'identité transmise au widget appartient à l'utilisateur actuel. Si le widget ne s'ouvre pas, inspectez la clé d'application, le chargement du script, les paramètres de domaine et la disponibilité du service locataire.

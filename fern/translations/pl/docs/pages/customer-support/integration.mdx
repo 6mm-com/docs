@@ -1,0 +1,48 @@
+---
+title: "Integracja strony internetowej i aplikacji"
+description: "Integracja strony internetowej i aplikacji — Otwórz Ustawienia systemu → Integracja z witryną. Skonfiguruj dozwolone domeny internetowe i skopiuj wygenerowany kod. Klucz aplikacji identyfikuje Twojego najemcę; nie jest t"
+subtitle: "6MM Obsługa klienta AI · Przewodnik dla najemców"
+slug: customer-support/integration
+canonical-url: https://docs.6mm.com/pl/customer-support/integration
+---
+
+<span id="copy-the-tenant-integration-code" data-sixmm-canonical-anchor="copy-the-tenant-integration-code" aria-hidden="true"></span>
+
+## Skopiuj kod integracji dzierżawy
+
+Otwórz **Ustawienia systemu → Integracja z witryną**. Skonfiguruj dozwolone domeny internetowe i skopiuj wygenerowany kod. Klucz aplikacji identyfikuje Twojego najemcę; nie jest to hasło logowania ani sekret podpisywania tożsamości. Widget obsługi klienta jest niezależny od Trading Widget SDK.
+
+Poniżej przedstawiono obsługiwane atrybuty skryptu. Zastąp symbol zastępczy kluczem aplikacji dzierżawcy i użyj skryptu URL wygenerowanego przez konsolę.
+
+```html
+<script src="https://cs.6mm.com/widget/widget.js"
+        data-app-key="YOUR_TENANT_APP_KEY"></script>
+```
+
+Dla istniejącego przycisku:
+
+```html
+<button id="support-button">Contact support</button>
+<script src="https://cs.6mm.com/widget/widget.js"
+        data-app-key="YOUR_TENANT_APP_KEY"
+        data-trigger="#support-button"></script>
+```
+
+<span id="visitor-identity" data-sixmm-canonical-anchor="visitor-identity" aria-hidden="true"></span>
+
+## Tożsamość gościa
+
+| Tryb | Odpowiedzialność integracyjna |
+| --- | --- |
+| Anonimowy gość | Użyj skonfigurowanego wpisu gościa dzierżawcy; system identyfikuje osobę odwiedzającą przeglądarkę |
+| Zalogowany użytkownik | Wygeneruj token tożsamości na swoim zapleczu i przekaż stabilny identyfikator użytkownika i podpisany token, korzystając z przykładu konsoli |
+
+Obsługiwane atrybuty zalogowania to <code>identyfikator-użytkownika danych</code> i <code>token-użytkownika danych</code>. Zachowaj tajemnicę podpisu na swoim serwerze; nie wstawiaj go do HTML, kodu mobilnego ani monitu AI. Użyj dokładnego formatu i okresu ważności tokenu pokazanych w konsoli.
+
+W przypadku aplikacji lub WebView użyj trybu wprowadzania i integracji udostępnionego dla dzierżawcy. Testuj nawigację, uwierzytelnianie, wybór plików i zachowanie rzutni na rzeczywistym urządzeniu; sam fragment witryny internetowej nie zapewnia natywnej obsługi SDK.
+
+<span id="verify-the-entry" data-sixmm-canonical-anchor="verify-the-entry" aria-hidden="true"></span>
+
+## Sprawdź wpis
+
+Sprawdź dozwolone domeny, język, jasny/ciemny motyw, otwieranie i zamykanie, wiadomość testową, pomoc techniczną i przesłanie zgłoszenia. Podczas przełączania użytkowników serwisu sprawdź, czy tożsamość przekazana do widgetu należy do bieżącego użytkownika. Jeśli widżet się nie otworzy, sprawdź klucz aplikacji, ładowanie skryptu, ustawienia domeny i dostępność usług najemcy.

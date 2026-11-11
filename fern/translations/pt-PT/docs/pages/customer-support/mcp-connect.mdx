@@ -1,0 +1,47 @@
+---
+title: "Ligue um assistente de IA com MCP"
+description: "Ligue um assistente de IA com MCP — Utilize uma aplicação de IA que suporte este fluxo remoto de transporte e autorização. Não é necessária qualquer implementação de servidor MCP específica do locatário ou configuração d"
+subtitle: "6MM Suporte ao cliente IA · Guia do locatário"
+slug: customer-support/mcp-connect
+canonical-url: https://docs.6mm.com/pt-PT/customer-support/mcp-connect
+---
+
+```text
+https://csadmin.6mm.com/api/v1/mcp
+```
+
+<span id="connection-details" data-sixmm-canonical-anchor="connection-details" aria-hidden="true"></span>
+
+## Detalhes de ligação
+
+| Artigo | Valor |
+| --- | --- |
+| Consola de locatário | [Consola de locatário](https://csadmin.6mm.com/) |
+| Transporte | Transmissível HTTP |
+| Autorização | OAuth código de autorização com PKCE; registo dinâmico de clientes |
+| Conta | A sua conta de apoio ao cliente existente |
+
+Utilize uma aplicação de IA que suporte este fluxo remoto de transporte e autorização. Não é necessária qualquer implementação de servidor MCP específica do locatário ou configuração de permissão MCP separada. Não anexe um caminho SSE nem utilize a chave da aplicação como token de portador OAuth.
+
+<span id="connect-step-by-step" data-sixmm-canonical-anchor="connect-step-by-step" aria-hidden="true"></span>
+
+## Ligue-se passo a passo
+
+1. Inicie sessão na consola e abra **Definições do sistema → MCP Ligação**.
+2. Copie o endpoint e adicione-o como um servidor MCP remoto na sua aplicação de IA. Um nome de utilizador como 6MM Suporte ao Cliente é suficiente.
+3. Deixe a aplicação iniciar a autorização. No browser, inicie sessão e conclua qualquer verificação necessária.
+4. Verifique a candidatura, o inquilino, a conta e o endereço de devolução antes de permitir a ligação. Um nome de aplicação fornecido não é uma marca de certificação.
+5. Volte à aplicação de IA e atualize as suas ferramentas, se necessário. Peça-lhe para listar categorias de conhecimento como um primeiro teste de leitura apenas.
+6. Verifique as aplicações conectadas no console. Revogue a ligação quando já não for necessária.
+
+Nunca forneça à IA a sua palavra-passe, código de verificação ou segredo de assinatura de identidade. Autorize apenas através das páginas de login e consentimento.
+
+<span id="what-access-does-the-ai-receive" data-sixmm-canonical-anchor="what-access-does-the-ai-receive" aria-hidden="true"></span>
+
+## Que acesso recebe a IA?
+
+Apenas as ferramentas suportadas e os dados do inquilino da conta atual. As permissões são novamente verificadas durante as chamadas; suspensão da conta, a indisponibilidade do locatário ou a autorização revogada podem bloquear o acesso. Sair da consola não revoga automaticamente a ligação do AI.
+
+A implementação atual utiliza uma autorização de ligação de 30 dias e tokens de acesso de curta duração com tokens de atualização rotativos. Siga a expiração apresentada em Aplicações Ligadas e volte a ligar quando necessário. As aplicações de IA lidam com a troca e renovação de tokens; os locatários não colam as palavras-passe manualmente nas chamadas de ferramenta.
+
+Este MCP gere o back-end de suporte. Não permite que o bot visitante opere o back-end ou conceda acesso às contas de negociação.

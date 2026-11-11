@@ -704,8 +704,8 @@ const activePages = [
   ),
 ];
 
-if (activePages.length !== 140) {
-  throw new Error(`Expected 140 active pages, found ${activePages.length}`);
+if (activePages.length !== 158) {
+  throw new Error(`Expected 158 active pages, found ${activePages.length}`);
 }
 
 const manifest = await loadManifest();

@@ -1,0 +1,47 @@
+---
+title: "Connetti un assistente AI con MCP"
+description: "Connetti un assistente AI con MCP — Utilizza un'applicazione AI che supporti questo flusso di trasporto e autorizzazione remoto. Non è necessaria alcuna distribuzione del server MCP specifica del tenant o una configurazi"
+subtitle: "6MM Assistenza clienti AI · Guida per l'inquilino"
+slug: customer-support/mcp-connect
+canonical-url: https://docs.6mm.com/it/customer-support/mcp-connect
+---
+
+```text
+https://csadmin.6mm.com/api/v1/mcp
+```
+
+<span id="connection-details" data-sixmm-canonical-anchor="connection-details" aria-hidden="true"></span>
+
+## Dettagli di connessione
+
+| Articolo | Valore |
+| --- | --- |
+| Consolle inquilino | [Consolle inquilino](https://csadmin.6mm.com/) |
+| Trasporto | Streamabile HTTP |
+| Autorizzazione | OAuth codice di autorizzazione con PKCE; registrazione dinamica del cliente |
+| Account | Il tuo account di assistenza clienti esistente |
+
+Utilizza un'applicazione AI che supporti questo flusso di trasporto e autorizzazione remoto. Non è necessaria alcuna distribuzione del server MCP specifica del tenant o una configurazione di autorizzazione MCP separata. Non aggiungere un percorso SSE né utilizzare la chiave dell'app come token di connessione OAuth.
+
+<span id="connect-step-by-step" data-sixmm-canonical-anchor="connect-step-by-step" aria-hidden="true"></span>
+
+## Connettiti passo dopo passo
+
+1. Accedi alla console e apri **Impostazioni di sistema → MCP Connessione**.
+2. Copia l'endpoint e aggiungilo come server MCP remoto nella tua applicazione AI. È sufficiente un nome visualizzato come 6MM Assistenza clienti.
+3. Lascia che l'applicazione avvii l'autorizzazione. Nel browser, accedi e completa le eventuali verifiche richieste.
+4. Controllare l'applicazione, l'inquilino, l'account e l'indirizzo del mittente prima di consentire la connessione. Il nome dell'applicazione fornito non è un marchio di certificazione.
+5. Torna all'applicazione AI e aggiorna i suoi strumenti se necessario. Chiedigli di elencare le categorie di conoscenza come primo test di sola lettura.
+6. Controlla le applicazioni connesse nella console. Revoca la connessione lì quando non è più necessaria.
+
+Non fornire mai all'IA la tua password, il codice di verifica o il segreto della firma dell'identità. Autorizzare solo attraverso le pagine di login e consenso.
+
+<span id="what-access-does-the-ai-receive" data-sixmm-canonical-anchor="what-access-does-the-ai-receive" aria-hidden="true"></span>
+
+## Che accesso riceve l’IA?
+
+Solo gli strumenti supportati e i dati del tenant dell'account corrente. Le autorizzazioni vengono nuovamente controllate durante le chiamate; la sospensione dell'account, l'indisponibilità dell'inquilino o la revoca dell'autorizzazione possono bloccare l'accesso. La disconnessione dalla console non revoca automaticamente la connessione AI.
+
+L'attuale implementazione utilizza un'autorizzazione di connessione di 30 giorni e token di accesso di breve durata con token di aggiornamento a rotazione. Segui la scadenza mostrata in Applicazioni connesse e riconnettiti quando richiesto. Le applicazioni AI gestiscono lo scambio e il rinnovo dei token; i tenant non incollano manualmente le password nelle chiamate agli strumenti.
+
+Questo MCP gestisce il backend di supporto. Non consente al bot visitatore di gestire il backend o di concedere l'accesso ai conti di trading.

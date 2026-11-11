@@ -1,0 +1,47 @@
+---
+title: "Kết nối Trợ lý AI với MCP"
+description: "Kết nối Trợ lý AI với MCP — Sử dụng ứng dụng AI hỗ trợ luồng vận chuyển và ủy quyền từ xa này. Không cần triển khai máy chủ MCP dành riêng cho đối tượng thuê hoặc cấu hình quyền MCP riêng biệt. Không thêm đường dẫn SSE h"
+subtitle: "6MM Hỗ trợ khách hàng AI · Hướng dẫn người thuê nhà"
+slug: customer-support/mcp-connect
+canonical-url: https://docs.6mm.com/vi/customer-support/mcp-connect
+---
+
+```text
+https://csadmin.6mm.com/api/v1/mcp
+```
+
+<span id="connection-details" data-sixmm-canonical-anchor="connection-details" aria-hidden="true"></span>
+
+## Chi tiết kết nối
+
+| Mục | Giá trị |
+| --- | --- |
+| Bảng điều khiển dành cho người thuê | [Bảng điều khiển dành cho người thuê](https://csadmin.6mm.com/) |
+| Chuyên chở | Có thể phát trực tuyến HTTP |
+| Ủy quyền | OAuth mã ủy quyền với PKCE; đăng ký khách hàng năng động |
+| Tài khoản | Tài khoản hỗ trợ khách hàng hiện tại của bạn |
+
+Sử dụng ứng dụng AI hỗ trợ luồng vận chuyển và ủy quyền từ xa này. Không cần triển khai máy chủ MCP dành riêng cho đối tượng thuê hoặc cấu hình quyền MCP riêng biệt. Không thêm đường dẫn SSE hoặc sử dụng Khóa ứng dụng làm mã thông báo mang OAuth.
+
+<span id="connect-step-by-step" data-sixmm-canonical-anchor="connect-step-by-step" aria-hidden="true"></span>
+
+## Kết nối từng bước
+
+1. Đăng nhập vào bảng điều khiển và mở **Cài đặt hệ thống → MCP Kết nối**.
+2. Sao chép điểm cuối và thêm nó làm máy chủ MCP từ xa trong ứng dụng AI của bạn. Tên hiển thị như 6MM Hỗ trợ khách hàng là đủ.
+3. Hãy để ứng dụng bắt đầu ủy quyền. Trong trình duyệt, hãy đăng nhập và hoàn thành mọi xác minh bắt buộc.
+4. Kiểm tra ứng dụng, người thuê, tài khoản và địa chỉ trả lại trước khi cho phép kết nối. Tên ứng dụng được cung cấp không phải là nhãn hiệu chứng nhận.
+5. Quay lại ứng dụng AI và làm mới các công cụ của nó nếu cần. Yêu cầu nó liệt kê các danh mục kiến ​​thức dưới dạng bài kiểm tra chỉ đọc đầu tiên.
+6. Kiểm tra Ứng dụng được kết nối trong bảng điều khiển. Thu hồi kết nối ở đó khi không còn cần thiết.
+
+Không bao giờ cung cấp cho AI mật khẩu, mã xác minh hoặc bí mật xác nhận danh tính của bạn. Chỉ ủy quyền thông qua các trang đăng nhập và đồng ý.
+
+<span id="what-access-does-the-ai-receive" data-sixmm-canonical-anchor="what-access-does-the-ai-receive" aria-hidden="true"></span>
+
+## AI nhận được quyền truy cập gì?
+
+Chỉ các công cụ được hỗ trợ và dữ liệu đối tượng thuê của tài khoản hiện tại. Quyền được kiểm tra lại trong các cuộc gọi; đình chỉ tài khoản, người thuê không có sẵn hoặc ủy quyền bị thu hồi có thể chặn quyền truy cập. Việc đăng xuất khỏi bảng điều khiển không tự động thu hồi kết nối AI.
+
+Việc triển khai hiện tại sử dụng ủy quyền kết nối trong 30 ngày và mã thông báo truy cập có thời hạn sử dụng ngắn hạn với mã thông báo làm mới luân phiên. Thực hiện theo thời hạn hiển thị trong Ứng dụng được kết nối và kết nối lại khi được yêu cầu. Các ứng dụng AI xử lý việc trao đổi và gia hạn token; người thuê không dán mật khẩu theo cách thủ công vào các cuộc gọi công cụ.
+
+MCP này quản lý phần phụ trợ hỗ trợ. Nó không cho phép bot khách truy cập vận hành chương trình phụ trợ hoặc cấp quyền truy cập vào tài khoản giao dịch.

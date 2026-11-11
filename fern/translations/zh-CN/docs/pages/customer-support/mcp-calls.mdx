@@ -1,0 +1,131 @@
+---
+title: "MCP 调用流程与示例"
+description: "MCP 调用流程与示例 — 完成 OAuth 授权后，使用支持 Streamable HTTP 的 MCP 客户端初始化连接，通过 tools/list 获取工具，再通过 tools/call 调用。阅读返回的输入结构，不要根据 REST 地址猜参数。路径参数中的数字 ID 通常使用十进制字符串；请求体中要求数字的字段仍使用数字。"
+subtitle: "6MM AI 客服 · 租户使用指南"
+slug: customer-support/mcp-calls
+canonical-url: https://docs.6mm.com/zh-CN/customer-support/mcp-calls
+---
+
+<span id="discover-available-tools" data-sixmm-canonical-anchor="discover-available-tools" aria-hidden="true"></span>
+
+## 先发现工具，再调用
+
+完成 OAuth 授权后，使用支持 Streamable HTTP 的 MCP 客户端初始化连接，通过 `tools/list` 获取工具，再通过 `tools/call` 调用。阅读返回的输入结构，不要根据 REST 地址猜参数。路径参数中的数字 ID 通常使用十进制字符串；请求体中要求数字的字段仍使用数字。
+
+下面是初始化后的 JSON-RPC 工具消息，不是可以独立发送的完整 HTTP 请求。访问令牌与协议请求头由客户端处理。示例 ID 必须替换为本租户查询得到的实际记录。
+
+<span id="read-categories" data-sixmm-canonical-anchor="read-categories" aria-hidden="true"></span>
+
+## 查询分类
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/call",
+  "params": {
+    "name": "knowledge_get_categories",
+    "arguments": {}
+  }
+}
+```
+
+<span id="create-a-draft" data-sixmm-canonical-anchor="create-a-draft" aria-hidden="true"></span>
+
+## 创建草稿
+
+从查询结果选择已有分类，分类是必填项。除非明确准备发布并完成要求的确认，否则不要设置为已发布状态。
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "method": "tools/call",
+  "params": {
+    "name": "knowledge_create_article",
+    "arguments": {
+      "requestId": "support-demo-create-001",
+      "body": {
+        "title": "Withdrawal guide draft",
+        "content": "Reviewed withdrawal instructions go here.",
+        "categoryId": 12,
+        "status": "draft"
+      }
+    }
+  }
+}
+```
+
+<span id="preview-an-update-or-deletion" data-sixmm-canonical-anchor="preview-an-update-or-deletion" aria-hidden="true"></span>
+
+## 预览修改或删除
+
+先读取文章，再预览完整写入参数，包含新的请求编号。预览不会执行操作。
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 3,
+  "method": "tools/call",
+  "params": {
+    "name": "mcp_preview",
+    "arguments": {
+      "tool": "knowledge_delete_article",
+      "arguments": {
+        "id": "123",
+        "requestId": "support-demo-delete-001"
+      }
+    }
+  }
+}
+```
+
+将返回的 `version` 原样填入 `expectedVersion`，保持目标和其他参数一致：
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 4,
+  "method": "tools/call",
+  "params": {
+    "name": "knowledge_delete_article",
+    "arguments": {
+      "id": "123",
+      "requestId": "support-demo-delete-001",
+      "expectedVersion": "REPLACE_WITH_THE_64_CHARACTER_VERSION_FROM_PREVIEW"
+    }
+  }
+}
+```
+
+上面的占位文字不是有效版本值，必须替换为预览实际返回的 64 位字符。
+
+<span id="confirm-and-check-the-result" data-sixmm-canonical-anchor="confirm-and-check-the-result" aria-hidden="true"></span>
+
+## 确认并查询结果
+
+返回 `awaiting_approval` 时，打开 `approvalUrl`，使用授权账号登录并核对操作。批准后才执行待确认操作，当前确认有效期为 15 分钟；拒绝或过期不会执行写入。
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 5,
+  "method": "tools/call",
+  "params": {
+    "name": "mcp_operation",
+    "arguments": {
+      "operationId": "REPLACE_WITH_RETURNED_OPERATION_ID"
+    }
+  }
+}
+```
+
+工具结果通过文本内容中的 JSON 返回，需检查内容和 `isError` 标记。收到 HTTP 响应或确认链接，不等于已经成功。读取操作状态，必要时再次查询业务记录。
+
+<span id="retry-safely" data-sixmm-canonical-anchor="retry-safely" aria-hidden="true"></span>
+
+## 正确重试
+
+同一次写入发生网络重试，复用同一个 `requestId` 和相同参数，不要将其用于另一项操作。内容版本变化时，重新读取和预览，再用新请求编号提交新的操作。响应丢失或操作仍在执行时，先查状态及业务记录，不能把超时当作未执行。
+
+这些协议步骤通常由 AI 客户端完成，租户只需描述任务；本页也供客户端开发人员和排障时参考。

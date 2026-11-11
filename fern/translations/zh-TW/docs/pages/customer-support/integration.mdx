@@ -1,0 +1,48 @@
+---
+title: "網站和應用程式集成"
+description: "網站和應用程式集成 — 開啟系統設定→網站整合。配置允許的網站網域並複製產生的程式碼。應用程式金鑰可識別您的租用戶；它不是登入密碼或身分簽名秘密。客戶支援小部件與 Trading Widget SDK 是分開的。"
+subtitle: "6MMAI客戶支援·租戶指南"
+slug: customer-support/integration
+canonical-url: https://docs.6mm.com/zh-TW/customer-support/integration
+---
+
+<span id="copy-the-tenant-integration-code" data-sixmm-canonical-anchor="copy-the-tenant-integration-code" aria-hidden="true"></span>
+
+## 複製租戶整合代碼
+
+開啟**系統設定→網站整合**。配置允許的網站網域並複製產生的程式碼。應用程式金鑰可識別您的租用戶；它不是登入密碼或身分簽名秘密。客戶支援小部件與 Trading Widget SDK 是分開的。
+
+下面說明了支援的腳本屬性。將佔位符替換為租用戶的應用程式金鑰，並使用控制台產生的腳本 URL。
+
+```html
+<script src="https://cs.6mm.com/widget/widget.js"
+        data-app-key="YOUR_TENANT_APP_KEY"></script>
+```
+
+對於現有按鈕：
+
+```html
+<button id="support-button">Contact support</button>
+<script src="https://cs.6mm.com/widget/widget.js"
+        data-app-key="YOUR_TENANT_APP_KEY"
+        data-trigger="#support-button"></script>
+```
+
+<span id="visitor-identity" data-sixmm-canonical-anchor="visitor-identity" aria-hidden="true"></span>
+
+## 訪客身份
+
+| 模式 | 整合責任 |
+| --- | --- |
+| 匿名訪客 | 使用租戶配置的訪客入口；系統識別瀏覽器訪客 |
+| 登入用戶 | 使用控制台的範例在後端產生身份令牌並傳遞穩定的使用者 ID 和簽名令牌 |
+
+支援的登入屬性為 <code>data-user-id</code> 和 <code>data-user-token</code>。在您的伺服器上保密簽名；請勿將其插入HTML、移動代碼或AI提示中。使用控制台中顯示的確切令牌格式和生命週期。
+
+對於App或WebView，請使用為您的租用戶提供的入口和整合模式。在實際裝置上測試導覽、驗證、檔案選擇和視口行為；單獨的網站片段無法建立本機 SDK 支援。
+
+<span id="verify-the-entry" data-sixmm-canonical-anchor="verify-the-entry" aria-hidden="true"></span>
+
+## 驗證條目
+
+檢查允許的網域、語言、淺色/深色主題、開啟和關閉、測試訊息、人工支援和票證提交。切換網站使用者時，驗證傳遞給小工具的身份是否屬於目前使用者。如果小工具未打開，請檢查應用程式金鑰、腳本載入、網域設定和租用戶服務可用性。

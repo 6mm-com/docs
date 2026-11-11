@@ -1,0 +1,47 @@
+---
+title: "Połącz Asystenta AI z MCP"
+description: "Połącz Asystenta AI z MCP — Użyj aplikacji AI, która obsługuje ten zdalny przepływ transportu i autoryzacji. Nie jest potrzebne żadne wdrożenie serwera MCP specyficzne dla dzierżawy ani osobna konfiguracja uprawnień MCP."
+subtitle: "6MM Obsługa klienta AI · Przewodnik dla najemców"
+slug: customer-support/mcp-connect
+canonical-url: https://docs.6mm.com/pl/customer-support/mcp-connect
+---
+
+```text
+https://csadmin.6mm.com/api/v1/mcp
+```
+
+<span id="connection-details" data-sixmm-canonical-anchor="connection-details" aria-hidden="true"></span>
+
+## Szczegóły połączenia
+
+| Przedmiot | Wartość |
+| --- | --- |
+| Konsola najemcy | [Konsola najemcy](https://csadmin.6mm.com/) |
+| Transport | Możliwość transmisji strumieniowej HTTP |
+| Upoważnienie | OAuth kod autoryzacyjny zawierający PKCE; dynamiczna rejestracja klienta |
+| Konto | Twoje istniejące konto obsługi klienta |
+
+Użyj aplikacji AI, która obsługuje ten zdalny przepływ transportu i autoryzacji. Nie jest potrzebne żadne wdrożenie serwera MCP specyficzne dla dzierżawy ani osobna konfiguracja uprawnień MCP. Nie dołączaj ścieżki SSE ani nie używaj klucza aplikacji jako tokena nośnika OAuth.
+
+<span id="connect-step-by-step" data-sixmm-canonical-anchor="connect-step-by-step" aria-hidden="true"></span>
+
+## Połącz krok po kroku
+
+1. Zaloguj się do konsoli i otwórz **Ustawienia systemu → MCP Połączenie**.
+2. Skopiuj punkt końcowy i dodaj go jako zdalny serwer MCP w swojej aplikacji AI. Wystarczająca jest nazwa wyświetlana, np. 6MM Obsługa klienta.
+3. Pozwól aplikacji rozpocząć autoryzację. W przeglądarce zaloguj się i dokonaj wymaganej weryfikacji.
+4. Przed zezwoleniem na połączenie sprawdź aplikację, najemcę, konto i adres zwrotny. Dostarczona nazwa aplikacji nie jest znakiem certyfikacji.
+5. Wróć do aplikacji AI i w razie potrzeby odśwież jej narzędzia. Poproś go o wypisanie kategorii wiedzy w ramach pierwszego testu tylko do odczytu.
+6. Sprawdź połączone aplikacje w konsoli. Odwołaj tam połączenie, gdy nie jest już potrzebne.
+
+Nigdy nie podawaj AI swojego hasła, kodu weryfikacyjnego ani sekretu podpisu tożsamości. Autoryzuj tylko poprzez strony logowania i zgody.
+
+<span id="what-access-does-the-ai-receive" data-sixmm-canonical-anchor="what-access-does-the-ai-receive" aria-hidden="true"></span>
+
+## Jaki dostęp otrzymuje sztuczna inteligencja?
+
+Tylko narzędzia i dane dzierżawy obsługiwane przez konto bieżące. Uprawnienia są ponownie sprawdzane podczas połączeń; zawieszenie konta, niedostępność najemcy lub cofnięta autoryzacja mogą zablokować dostęp. Wylogowanie się z konsoli nie powoduje automatycznego zerwania połączenia AI.
+
+Obecna implementacja wykorzystuje 30-dniową autoryzację połączenia i krótkotrwałe tokeny dostępu z rotacyjnymi tokenami odświeżania. Postępuj zgodnie z upływem czasu pokazanym w Połączonych aplikacjach i połącz się ponownie, jeśli zajdzie taka potrzeba. Aplikacje AI obsługują wymianę i odnawianie tokenów; dzierżawcy nie wklejają ręcznie haseł do wywołań narzędzi.
+
+Ten MCP zarządza zapleczem wsparcia. Nie umożliwia botowi odwiedzającemu obsługi backendu ani nie zapewnia dostępu do kont handlowych.

@@ -51,7 +51,7 @@ The public Trading Widget `v1` runtime was checked at version `1.8.0` on
 English and Simplified Chinese are reviewed together. The other 18 locales use
 machine-assisted translation with code, links, identifiers and structure checks;
 these checks do not substitute for native-language editorial review. The current
-navigation has 139 unique pages per locale.
+navigation has 158 unique pages per locale.
 
 ## Local Development
 
@@ -162,3 +162,9 @@ bounded retries, and protected-token validation. This unofficial endpoint may ch
 `DOCS_TRANSLATION_PROVIDER=edge` retains the previous provider for environments where it works.
 Existing manifest hashes still control incremental generation; do not refresh them to hide
 missing translations. The full `npm run check` validates all 20 locales.
+
+## AI customer support tenant guide
+
+The `customer-support` section contains 18 tenant-facing pages covering the console, knowledge-grounded AI replies, multilingual translation, website integration, billing, and MCP authorization and tool calls. The homepage and Solutions overview provide entry cards. The live service addresses are `https://csadmin.6mm.com/` and `https://csadmin.6mm.com/api/v1/mcp`.
+
+English and Simplified Chinese are authored together; the other 18 documentation locales use the existing machine-assisted translation workflow and structural checks. API identifiers and JSON examples remain unchanged. Machine translation is not a substitute for native-language editorial review. See `docs/customer-support-content-review.md` for the verification boundary.

@@ -1,0 +1,48 @@
+---
+title: "网站与 App 接入"
+description: "网站与 App 接入 — 进入 系统设置 → 网站接入，配置允许接入的网站域名，再复制生成的代码。App Key 用于识别租户，不是登录密码或身份签名密钥。客服组件与交易组件 SDK 是不同的产品。"
+subtitle: "6MM AI 客服 · 租户使用指南"
+slug: customer-support/integration
+canonical-url: https://docs.6mm.com/zh-CN/customer-support/integration
+---
+
+<span id="copy-the-tenant-integration-code" data-sixmm-canonical-anchor="copy-the-tenant-integration-code" aria-hidden="true"></span>
+
+## 复制本租户的接入代码
+
+进入 **系统设置 → 网站接入**，配置允许接入的网站域名，再复制生成的代码。App Key 用于识别租户，不是登录密码或身份签名密钥。客服组件与交易组件 SDK 是不同的产品。
+
+下面展示支持的脚本属性。请替换为本租户 App Key，并以后台生成的脚本地址为准。
+
+```html
+<script src="https://cs.6mm.com/widget/widget.js"
+        data-app-key="YOUR_TENANT_APP_KEY"></script>
+```
+
+已有按钮可以这样接入：
+
+```html
+<button id="support-button">Contact support</button>
+<script src="https://cs.6mm.com/widget/widget.js"
+        data-app-key="YOUR_TENANT_APP_KEY"
+        data-trigger="#support-button"></script>
+```
+
+<span id="visitor-identity" data-sixmm-canonical-anchor="visitor-identity" aria-hidden="true"></span>
+
+## 访客身份
+
+| 方式 | 接入要求 |
+| --- | --- |
+| 匿名访客 | 使用租户配置的访客入口，系统识别当前浏览器访客 |
+| 登录用户 | 由业务后端生成身份令牌，按照后台示例传入稳定的用户 ID 和签名令牌 |
+
+登录用户属性为 <code>data-user-id</code> 和 <code>data-user-token</code>。签名密钥只存放在服务端，不写入 HTML、移动端代码或 AI 提示词。令牌格式与有效期严格按照后台接入示例实现。
+
+App 或 WebView 使用本租户提供的入口和接入方式，并在真实设备测试导航、身份、文件选择和屏幕适配。网站脚本示例不代表系统提供独立原生 SDK。
+
+<span id="verify-the-entry" data-sixmm-canonical-anchor="verify-the-entry" aria-hidden="true"></span>
+
+## 验证接入
+
+依次检查域名、语言、明暗主题、打开关闭、测试消息、人工入口和工单提交。网站切换登录用户后，确认传给客服组件的身份属于当前用户。无法打开时，检查 App Key、脚本加载、域名设置以及租户服务是否可用。

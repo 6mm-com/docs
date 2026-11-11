@@ -1,0 +1,47 @@
+---
+title: "MCP로 AI 어시스턴트 연결"
+description: "MCP로 AI 어시스턴트 연결 — 이 원격 전송 및 인증 흐름을 지원하는 AI 애플리케이션을 사용하세요. 테넌트별 MCP 서버 배포나 별도의 MCP 권한 구성이 필요하지 않습니다. SSE 경로를 추가하거나 앱 키를 OAuth 전달자 토큰으로 사용하지 마세요."
+subtitle: "6MM AI 고객지원 · 입주자 안내"
+slug: customer-support/mcp-connect
+canonical-url: https://docs.6mm.com/ko/customer-support/mcp-connect
+---
+
+```text
+https://csadmin.6mm.com/api/v1/mcp
+```
+
+<span id="connection-details" data-sixmm-canonical-anchor="connection-details" aria-hidden="true"></span>
+
+## 연결 세부정보
+
+| 목 | 값 |
+| --- | --- |
+| 테넌트 콘솔 | [테넌트 콘솔](https://csadmin.6mm.com/) |
+| 수송 | 스트리밍 가능 HTTP |
+| 권한 부여 | OAuth 인증 코드는 PKCE입니다. 동적 클라이언트 등록 |
+| 계정 | 기존 고객 지원 계정 |
+
+이 원격 전송 및 인증 흐름을 지원하는 AI 애플리케이션을 사용하세요. 테넌트별 MCP 서버 배포나 별도의 MCP 권한 구성이 필요하지 않습니다. SSE 경로를 추가하거나 앱 키를 OAuth 전달자 토큰으로 사용하지 마세요.
+
+<span id="connect-step-by-step" data-sixmm-canonical-anchor="connect-step-by-step" aria-hidden="true"></span>
+
+## 단계별로 연결하세요
+
+1. 콘솔에 로그인하고 **시스템 설정 → MCP 연결**을 엽니다.
+2. 엔드포인트를 복사하여 AI 애플리케이션에 원격 MCP 서버로 추가합니다. 6MM 고객 지원과 같은 표시 이름이면 충분합니다.
+3. 애플리케이션이 인증을 시작하도록 하세요. 브라우저에서 로그인하고 필요한 확인을 완료합니다.
+4. 연결을 허용하기 전에 애플리케이션, 테넌트, 계정 및 반환 주소를 확인하세요. 제공된 애플리케이션 이름은 인증마크가 아닙니다.
+5. 필요한 경우 AI 애플리케이션으로 돌아가 도구를 새로 고칩니다. 첫 번째 읽기 전용 테스트로 지식 카테고리를 나열하도록 요청하세요.
+6. 콘솔에서 연결된 애플리케이션을 확인하세요. 더 이상 필요하지 않으면 연결을 취소하세요.
+
+AI에게 비밀번호, 확인 코드 또는 신원 서명 비밀을 알려주지 마십시오. 로그인 및 동의 페이지를 통해서만 승인하세요.
+
+<span id="what-access-does-the-ai-receive" data-sixmm-canonical-anchor="what-access-does-the-ai-receive" aria-hidden="true"></span>
+
+## AI는 어떤 액세스 권한을 받나요?
+
+현재 계정의 지원되는 도구 및 테넌트 데이터만. 통화 중에 권한이 다시 확인됩니다. 계정 정지, 테넌트 사용 불가능 또는 승인 취소로 인해 액세스가 차단될 수 있습니다. 콘솔에서 로그아웃해도 AI 연결이 자동으로 취소되지 않습니다.
+
+현재 구현에서는 30일 연결 인증과 순환 새로 고침 토큰이 포함된 단기 액세스 토큰을 사용합니다. 연결된 애플리케이션에 표시된 만료일을 따르고 필요한 경우 다시 연결하세요. AI 애플리케이션은 토큰 교환 및 갱신을 처리합니다. 테넌트는 도구 호출에 수동으로 암호를 붙여넣지 않습니다.
+
+이 MCP는 지원 백엔드를 관리합니다. 방문자 봇이 백엔드를 운영하거나 거래 계정에 대한 액세스 권한을 부여하는 것은 허용되지 않습니다.

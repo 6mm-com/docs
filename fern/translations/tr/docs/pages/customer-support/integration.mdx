@@ -1,0 +1,48 @@
+---
+title: "Web Sitesi ve Uygulama Entegrasyonu"
+description: "Web Sitesi ve Uygulama Entegrasyonu — Sistem Ayarları → Web Sitesi Entegrasyonu'nu açın. İzin verilen web sitesi alan adlarını yapılandırın ve oluşturulan kodu kopyalayın. Uygulama Anahtarı kiracınızı tanımlar; bir oturu"
+subtitle: "6MM Yapay Zeka Müşteri Desteği · Kiracı kılavuzu"
+slug: customer-support/integration
+canonical-url: https://docs.6mm.com/tr/customer-support/integration
+---
+
+<span id="copy-the-tenant-integration-code" data-sixmm-canonical-anchor="copy-the-tenant-integration-code" aria-hidden="true"></span>
+
+## Kiracı entegrasyon kodunu kopyalayın
+
+**Sistem Ayarları → Web Sitesi Entegrasyonu**'nu açın. İzin verilen web sitesi alan adlarını yapılandırın ve oluşturulan kodu kopyalayın. Uygulama Anahtarı kiracınızı tanımlar; bir oturum açma parolası veya kimlik imzalama sırrı değildir. Müşteri desteği widget'ı Trading Widget SDK'dan ayrıdır.
+
+Aşağıda desteklenen komut dosyası nitelikleri gösterilmektedir. Yer tutucuyu kiracınızın Uygulama Anahtarıyla değiştirin ve konsolunuz tarafından oluşturulan URL betiğini kullanın.
+
+```html
+<script src="https://cs.6mm.com/widget/widget.js"
+        data-app-key="YOUR_TENANT_APP_KEY"></script>
+```
+
+Mevcut bir düğme için:
+
+```html
+<button id="support-button">Contact support</button>
+<script src="https://cs.6mm.com/widget/widget.js"
+        data-app-key="YOUR_TENANT_APP_KEY"
+        data-trigger="#support-button"></script>
+```
+
+<span id="visitor-identity" data-sixmm-canonical-anchor="visitor-identity" aria-hidden="true"></span>
+
+## Ziyaretçi kimliği
+
+| Mod | Entegrasyon sorumluluğu |
+| --- | --- |
+| İsimsiz ziyaretçi | Kiracının yapılandırılmış ziyaretçi girişini kullanın; sistem tarayıcı ziyaretçisini tanımlar |
+| Oturum açmış kullanıcı | Arka uçta kimlik belirtecini oluşturun ve konsolun örneğini kullanarak kararlı kullanıcı kimliğini ve imzalı belirteci iletin |
+
+Desteklenen oturum açma özellikleri şunlardır: <code>data-user-id</code> ve <code>data-user-token</code>. İmzalamayı sunucunuzda gizli tutun; bunu HTML, mobil kod veya yapay zeka istemine eklemeyin. Konsolda gösterilen belirteç biçimini ve ömrünü tam olarak kullanın.
+
+Bir Uygulama veya Web Görünümü için kiracınıza sağlanan giriş ve entegrasyon modunu kullanın. Gerçek cihazda gezinmeyi, kimlik doğrulamayı, dosya seçimini ve görünüm davranışını test edin; bir web sitesi snippet'i tek başına yerel SDK desteği sağlamaz.
+
+<span id="verify-the-entry" data-sixmm-canonical-anchor="verify-the-entry" aria-hidden="true"></span>
+
+## Girişi doğrulayın
+
+İzin verilen alanları, dili, açık/koyu temayı, açılış ve kapanışı, test mesajını, insan desteğini ve bilet gönderimini kontrol edin. Web sitesi kullanıcılarını değiştirirken, widget'a aktarılan kimliğin geçerli kullanıcıya ait olduğunu doğrulayın. Widget açılmazsa Uygulama Anahtarını, komut dosyası yüklemesini, etki alanı ayarlarını ve kiracı hizmetinin kullanılabilirliğini inceleyin.

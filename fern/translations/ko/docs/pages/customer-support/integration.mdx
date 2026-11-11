@@ -1,0 +1,48 @@
+---
+title: "웹사이트 및 앱 통합"
+description: "웹사이트 및 앱 통합 — 시스템 설정 → 웹사이트 통합을 엽니다. 허용된 웹사이트 도메인을 구성하고 생성된 코드를 복사합니다. 앱 키는 테넌트를 식별합니다. 이는 로그인 비밀번호나 신원 서명 비밀이 아닙니다. 고객 지원 위젯은 Trading Widget SDK와 별개입니다."
+subtitle: "6MM AI 고객지원 · 입주자 안내"
+slug: customer-support/integration
+canonical-url: https://docs.6mm.com/ko/customer-support/integration
+---
+
+<span id="copy-the-tenant-integration-code" data-sixmm-canonical-anchor="copy-the-tenant-integration-code" aria-hidden="true"></span>
+
+## 테넌트 통합 코드 복사
+
+**시스템 설정 → 웹사이트 통합**을 엽니다. 허용된 웹사이트 도메인을 구성하고 생성된 코드를 복사합니다. 앱 키는 테넌트를 식별합니다. 이는 로그인 비밀번호나 신원 서명 비밀이 아닙니다. 고객 지원 위젯은 Trading Widget SDK와 별개입니다.
+
+다음은 지원되는 스크립트 속성을 보여줍니다. 자리 표시자를 테넌트의 앱 키로 바꾸고 콘솔에서 생성된 스크립트 URL 를 사용합니다.
+
+```html
+<script src="https://cs.6mm.com/widget/widget.js"
+        data-app-key="YOUR_TENANT_APP_KEY"></script>
+```
+
+기존 버튼의 경우:
+
+```html
+<button id="support-button">Contact support</button>
+<script src="https://cs.6mm.com/widget/widget.js"
+        data-app-key="YOUR_TENANT_APP_KEY"
+        data-trigger="#support-button"></script>
+```
+
+<span id="visitor-identity" data-sixmm-canonical-anchor="visitor-identity" aria-hidden="true"></span>
+
+## 방문자 신원
+
+| 방법 | 통합 책임 |
+| --- | --- |
+| 익명 방문자 | 테넌트가 구성한 방문자 항목을 사용합니다. 시스템은 브라우저 방문자를 식별합니다 |
+| 로그인한 사용자 | 백엔드에서 ID 토큰을 생성하고 콘솔 예시를 사용하여 안정적인 사용자 ID와 서명된 토큰을 전달합니다. |
+
+지원되는 로그인 속성은 <code>data-user-id</code> 및 <code>data-user-token</code>입니다. 서버에 서명 비밀을 유지하십시오. HTML, 모바일 코드 또는 AI 프롬프트에 삽입하지 마세요. 콘솔에 표시된 정확한 토큰 형식과 수명을 사용하세요.
+
+앱 또는 WebView의 경우 테넌트에 제공되는 항목 및 통합 모드를 사용하세요. 실제 장치에서 탐색, 인증, 파일 선택 및 뷰포트 동작을 테스트합니다. 웹사이트 스니펫만으로는 기본 SDK 지원을 구축할 수 없습니다.
+
+<span id="verify-the-entry" data-sixmm-canonical-anchor="verify-the-entry" aria-hidden="true"></span>
+
+## 항목을 확인하세요
+
+허용된 도메인, 언어, 라이트/다크 테마, 열기 및 닫기, 테스트 메시지, 인력 지원 및 티켓 제출을 확인하세요. 웹사이트 사용자를 전환할 때 위젯에 전달된 ID가 현재 사용자에게 속하는지 확인하세요. 위젯이 열리지 않으면 앱 키, 스크립트 로딩, 도메인 설정 및 테넌트 서비스 가용성을 검사하세요.

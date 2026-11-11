@@ -1,0 +1,48 @@
+---
+title: "Tích hợp trang web và ứng dụng"
+description: "Tích hợp trang web và ứng dụng — Mở Cài đặt hệ thống → Tích hợp trang web. Định cấu hình các miền trang web được phép và sao chép mã được tạo. Khóa ứng dụng xác định đối tượng thuê của bạn; nó không phải là mật khẩu đăng"
+subtitle: "6MM Hỗ trợ khách hàng AI · Hướng dẫn người thuê nhà"
+slug: customer-support/integration
+canonical-url: https://docs.6mm.com/vi/customer-support/integration
+---
+
+<span id="copy-the-tenant-integration-code" data-sixmm-canonical-anchor="copy-the-tenant-integration-code" aria-hidden="true"></span>
+
+## Sao chép mã tích hợp đối tượng thuê
+
+Mở **Cài đặt hệ thống → Tích hợp trang web**. Định cấu hình các miền trang web được phép và sao chép mã được tạo. Khóa ứng dụng xác định đối tượng thuê của bạn; nó không phải là mật khẩu đăng nhập hoặc bí mật ký nhận dạng. Tiện ích hỗ trợ khách hàng tách biệt với Trading Widget SDK.
+
+Phần sau minh họa các thuộc tính tập lệnh được hỗ trợ. Thay thế trình giữ chỗ bằng Khóa ứng dụng của đối tượng thuê và sử dụng tập lệnh URL do bảng điều khiển của bạn tạo.
+
+```html
+<script src="https://cs.6mm.com/widget/widget.js"
+        data-app-key="YOUR_TENANT_APP_KEY"></script>
+```
+
+Đối với một nút hiện có:
+
+```html
+<button id="support-button">Contact support</button>
+<script src="https://cs.6mm.com/widget/widget.js"
+        data-app-key="YOUR_TENANT_APP_KEY"
+        data-trigger="#support-button"></script>
+```
+
+<span id="visitor-identity" data-sixmm-canonical-anchor="visitor-identity" aria-hidden="true"></span>
+
+## Danh tính khách truy cập
+
+| Cách thức | Trách nhiệm hội nhập |
+| --- | --- |
+| Khách truy cập ẩn danh | Sử dụng mục nhập khách truy cập được cấu hình của đối tượng thuê; hệ thống xác định khách truy cập trình duyệt |
+| Người dùng đã đăng nhập | Tạo mã thông báo nhận dạng trên chương trình phụ trợ của bạn và chuyển ID người dùng ổn định cũng như mã thông báo đã ký bằng cách sử dụng ví dụ của bảng điều khiển |
+
+Các thuộc tính đăng nhập được hỗ trợ là <code>data-user-id</code> và <code>data-user-token</code>. Giữ bí mật ký kết trên máy chủ của bạn; không chèn nó vào HTML, mã di động hoặc lời nhắc AI. Sử dụng định dạng mã thông báo chính xác và thời gian tồn tại được hiển thị trong bảng điều khiển.
+
+Đối với Ứng dụng hoặc WebView, hãy sử dụng chế độ nhập và tích hợp được cung cấp cho đối tượng thuê của bạn. Kiểm tra hoạt động điều hướng, xác thực, lựa chọn tệp và chế độ xem trên thiết bị thực tế; riêng đoạn mã trang web không thiết lập được hỗ trợ gốc SDK.
+
+<span id="verify-the-entry" data-sixmm-canonical-anchor="verify-the-entry" aria-hidden="true"></span>
+
+## Xác minh mục nhập
+
+Kiểm tra các miền, ngôn ngữ, chủ đề sáng/tối được phép, mở và đóng, thông báo kiểm tra, hỗ trợ của con người và gửi yêu cầu. Khi chuyển đổi người dùng trang web, hãy xác minh danh tính được chuyển tới tiện ích thuộc về người dùng hiện tại. Nếu tiện ích không mở, hãy kiểm tra Khóa ứng dụng, tải tập lệnh, cài đặt miền và tính khả dụng của dịch vụ đối tượng thuê.

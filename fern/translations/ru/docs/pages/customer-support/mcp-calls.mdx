@@ -1,0 +1,131 @@
+---
+title: "MCP Вызовы инструментов и примеры"
+description: "MCP Вызовы инструментов и примеры — После авторизации OAuth используйте клиент MCP с Streamable HTTP для инициализации соединения и получения инструментов через tools/list. Вызов инструментов через tools/call. Прочитайте"
+subtitle: "6MM Служба поддержки клиентов AI · Руководство для арендаторов"
+slug: customer-support/mcp-calls
+canonical-url: https://docs.6mm.com/ru/customer-support/mcp-calls
+---
+
+<span id="discover-available-tools" data-sixmm-canonical-anchor="discover-available-tools" aria-hidden="true"></span>
+
+## Откройте для себя доступные инструменты
+
+После авторизации OAuth используйте клиент MCP с Streamable HTTP для инициализации соединения и получения инструментов через `tools/list`. Вызов инструментов через `tools/call`. Прочитайте каждую возвращенную входную схему, а не извлекайте параметры из URL-адресов REST. Идентификаторы, полученные при чтении, обычно представляют собой десятичные строки для аргументов пути; числовое поле внутри тела остается числовым там, где этого требует схема.
+
+В приведенных ниже примерах показаны сообщения инструмента JSON-RPC после инициализации, а не завершенные автономные запросы HTTP. Клиент предоставляет токен доступа и заголовки протокола. Замените иллюстративные идентификаторы записями, возвращенными для вашего собственного клиента.
+
+<span id="read-categories" data-sixmm-canonical-anchor="read-categories" aria-hidden="true"></span>
+
+## Читать категории
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/call",
+  "params": {
+    "name": "knowledge_get_categories",
+    "arguments": {}
+  }
+}
+```
+
+<span id="create-a-draft" data-sixmm-canonical-anchor="create-a-draft" aria-hidden="true"></span>
+
+## Создать черновик
+
+Выберите существующую категорию из результатов чтения. Категория обязательна. Не устанавливайте статус публикации, если вы не собираетесь опубликовать и выполнить необходимое подтверждение.
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "method": "tools/call",
+  "params": {
+    "name": "knowledge_create_article",
+    "arguments": {
+      "requestId": "support-demo-create-001",
+      "body": {
+        "title": "Withdrawal guide draft",
+        "content": "Reviewed withdrawal instructions go here.",
+        "categoryId": 12,
+        "status": "draft"
+      }
+    }
+  }
+}
+```
+
+<span id="preview-an-update-or-deletion" data-sixmm-canonical-anchor="preview-an-update-or-deletion" aria-hidden="true"></span>
+
+## Предварительный просмотр обновления или удаления
+
+Сначала прочитайте статью. Предварительный просмотр точной предполагаемой записи, включая новый идентификатор запроса. Предварительный просмотр не выполняет его.
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 3,
+  "method": "tools/call",
+  "params": {
+    "name": "mcp_preview",
+    "arguments": {
+      "tool": "knowledge_delete_article",
+      "arguments": {
+        "id": "123",
+        "requestId": "support-demo-delete-001"
+      }
+    }
+  }
+}
+```
+
+Скопируйте возвращенный `version` в `expectedVersion` без изменения предполагаемой цели или параметров:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 4,
+  "method": "tools/call",
+  "params": {
+    "name": "knowledge_delete_article",
+    "arguments": {
+      "id": "123",
+      "requestId": "support-demo-delete-001",
+      "expectedVersion": "REPLACE_WITH_THE_64_CHARACTER_VERSION_FROM_PREVIEW"
+    }
+  }
+}
+```
+
+Заполнитель не является допустимой версией. Используйте фактическое 64-значное значение, возвращаемое при предварительном просмотре.
+
+<span id="confirm-and-check-the-result" data-sixmm-canonical-anchor="confirm-and-check-the-result" aria-hidden="true"></span>
+
+## Подтвердите и проверьте результат
+
+Если результат показывает `awaiting_approval`, откройте `approvalUrl`, войдите в систему как авторизующую учетную запись и просмотрите действие. Только его одобрение запускает ожидающую операцию. В настоящее время срок действия подтверждения истекает через 15 минут. Отклонение или истечение срока действия не приводят к выполнению записи.
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 5,
+  "method": "tools/call",
+  "params": {
+    "name": "mcp_operation",
+    "arguments": {
+      "operationId": "REPLACE_WITH_RETURNED_OPERATION_ID"
+    }
+  }
+}
+```
+
+Вывод инструмента передается в текстовом содержимом, содержащем JSON; проверьте его и любой флаг `isError`. Ответ HTTP или ссылка для подтверждения сами по себе не являются доказательством успеха. Прочтите статус операции и, если это необходимо, запросите затронутую запись.
+
+<span id="retry-safely" data-sixmm-canonical-anchor="retry-safely" aria-hidden="true"></span>
+
+## Повторите попытку безопасно
+
+Повторно используйте тот же `requestId` и аргументы для сетевой повторной попытки той же записи. Не используйте его повторно для другого действия. Если содержимое изменилось, прочитайте и просмотрите его еще раз, а затем отправьте новую предполагаемую операцию с новым идентификатором запроса. Если ответ потерян или операция продолжает выполняться, запросите ее статус и деловую запись, прежде чем решить, что делать; никогда не предполагайте, что тайм-аут означает, что ничего не произошло.
+
+Клиент AI обычно выполняет этот протокол для пользователя. Эти сведения предназначены для разработчиков клиентов и для диагностики рабочего процесса инструмента.

@@ -1,0 +1,48 @@
+---
+title: "Integrazione di siti Web e app"
+description: "Integrazione di siti Web e app — Apri Impostazioni di sistema → Integrazione sito web. Configura i domini consentiti del sito web e copia il codice generato. La chiave dell'app identifica il tuo tenant; non è una passwor"
+subtitle: "6MM Assistenza clienti AI · Guida per l'inquilino"
+slug: customer-support/integration
+canonical-url: https://docs.6mm.com/it/customer-support/integration
+---
+
+<span id="copy-the-tenant-integration-code" data-sixmm-canonical-anchor="copy-the-tenant-integration-code" aria-hidden="true"></span>
+
+## Copia il codice di integrazione del tenant
+
+Apri **Impostazioni di sistema → Integrazione sito web**. Configura i domini consentiti del sito web e copia il codice generato. La chiave dell'app identifica il tuo tenant; non è una password di accesso o un segreto per la firma dell'identità. Il widget dell'assistenza clienti è separato dal Trading Widget SDK.
+
+Di seguito vengono illustrati gli attributi di script supportati. Sostituisci il segnaposto con la chiave app del tuo tenant e utilizza lo script URL generato dalla tua console.
+
+```html
+<script src="https://cs.6mm.com/widget/widget.js"
+        data-app-key="YOUR_TENANT_APP_KEY"></script>
+```
+
+Per un pulsante esistente:
+
+```html
+<button id="support-button">Contact support</button>
+<script src="https://cs.6mm.com/widget/widget.js"
+        data-app-key="YOUR_TENANT_APP_KEY"
+        data-trigger="#support-button"></script>
+```
+
+<span id="visitor-identity" data-sixmm-canonical-anchor="visitor-identity" aria-hidden="true"></span>
+
+## Identità del visitatore
+
+| Modalità | Responsabilità dell'integrazione |
+| --- | --- |
+| Visitatore anonimo | Utilizzare la voce visitatore configurata dell'inquilino; il sistema identifica il visitatore del browser |
+| Utente registrato | Genera il token di identità sul tuo backend e passa l'ID utente stabile e il token firmato utilizzando l'esempio della console |
+
+Gli attributi di accesso supportati sono <code>data-user-id</code> e <code>data-user-token</code>. Mantieni segreta la firma sul tuo server; non inserirlo in HTML, codice mobile o prompt AI. Utilizza il formato esatto del token e la durata mostrati nella console.
+
+Per un'app o una WebView, utilizza la modalità di immissione e integrazione prevista per il tuo tenant. Testare la navigazione, l'autenticazione, la selezione dei file e il comportamento del viewport sul dispositivo reale; uno snippet di sito web da solo non stabilisce il supporto nativo SDK.
+
+<span id="verify-the-entry" data-sixmm-canonical-anchor="verify-the-entry" aria-hidden="true"></span>
+
+## Verificare la voce
+
+Controlla i domini consentiti, la lingua, il tema chiaro/scuro, l'apertura e la chiusura, un messaggio di prova, il supporto umano e l'invio del ticket. Quando si cambia utente del sito Web, verificare che l'identità trasmessa al widget appartenga all'utente corrente. Se il widget non si apre, controlla la chiave dell'app, il caricamento dello script, le impostazioni del dominio e la disponibilità del servizio tenant.
