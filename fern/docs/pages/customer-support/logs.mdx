@@ -1,10 +1,21 @@
 ---
 title: "Operation Logs"
-description: "Operation Logs — Open Operation Logs. Filter by keyword, category, action, actor type, target type and date using the available controls. Read the details to identify who acted, which record changed and the result."
+description: "Operation Logs — Use operation logs to answer who changed what and when. Combine the action, target and source with the business record instead of reading the log description in isolation."
 subtitle: "6MM AI Customer Support · Tenant guide"
 slug: customer-support/logs
 canonical-url: https://docs.6mm.com/customer-support/logs
 ---
+
+Use operation logs to answer who changed what and when. Combine the action, target and source with the business record instead of reading the log description in isolation.
+
+<div className="sixmm-support-flow">
+
+1. **Locate the event** — Filter by time, keyword and category.
+2. **Read the details** — Check the actor, target, source and outcome.
+3. **Verify the result** — Open the affected record before retrying.
+
+</div>
+
 
 <span data-sixmm-canonical-anchor="trace-an-operation" aria-hidden="true"></span>
 
@@ -21,3 +32,60 @@ MCP operations are shown with their application/source and execution status. Dep
 An application connection only proves authorization. A proposed write, a pending approval and a completed write are different states. The log is not a complete transcript of everything said to the external AI, and a read-only query should not be assumed to create a business-write record.
 
 When investigating a failed MCP call, retain its operation ID, time and error message. Query the operation result before retrying. Operation logs are read-only through MCP.
+
+
+<span data-sixmm-canonical-anchor="read-one-log-entry" aria-hidden="true"></span>
+
+## Read one log entry
+
+| Detail | Why it matters |
+| --- | --- |
+| Time | Places the action in the sequence of events you are investigating. |
+| Category and action | Distinguish a content update, session action or other supported operation. |
+| Actor | Identifies an account or system action; it is not necessarily the visitor in the conversation. |
+| Source | Helps distinguish MCP application activity from other operations. |
+| Target | Identifies the business object or MCP operation referenced by the record. |
+| Details and result | Provide the available explanation and execution state. Read the error before deciding to retry. |
+
+<span data-sixmm-canonical-anchor="example-an-mcp-article-change-did-not-appear" aria-hidden="true"></span>
+
+### Example: an MCP article change did not appear
+
+1. Narrow the date range and look for the application or related operation.
+2. Check whether the operation is waiting for confirmation, failed or completed. Authorization alone does not mean the change executed.
+3. Open the target article and compare its current content. If a version conflict is reported, read the latest version and prepare a new request rather than reusing stale content.
+4. Preserve the operation ID and error details if further investigation is needed. A related business audit record and MCP execution record can describe the same change.
+
+A useful handoff contains the time, target identifier, operation ID if present, and the observed result. It should not include account passwords or API secrets.
+
+<span data-sixmm-canonical-anchor="common-questions" aria-hidden="true"></span>
+
+## Common questions
+
+<AccordionGroup>
+
+<Accordion title="Why is there no record for an AI conversation?">
+The operation log is not a transcript of chats in an external AI application. A read-only tool call also does not necessarily create a business change log.
+</Accordion>
+
+<Accordion title="Should I immediately repeat a failed-looking operation?">
+Check the operation result and target record first. If the client lost its response, the server may already have processed the request.
+</Accordion>
+
+</AccordionGroup>
+
+<span data-sixmm-canonical-anchor="continue-with" aria-hidden="true"></span>
+
+## Continue with
+
+<CardGroup cols={2}>
+
+<Card title="Understand MCP execution" href="/customer-support/mcp-calls">
+Learn confirmation, operation results and safe retries.
+</Card>
+
+<Card title="Review account access" href="/customer-support/team">
+Check which account and role authorized the work.
+</Card>
+
+</CardGroup>

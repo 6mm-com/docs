@@ -1,10 +1,21 @@
 ---
 title: "Operasyon Günlükleri"
-description: "Operasyon Günlükleri — İşlem Günlüklerini açın. Mevcut kontrolleri kullanarak anahtar kelimeye, kategoriye, eyleme, aktör türüne, hedef türüne ve tarihe göre filtreleyin. Kimin harekete geçtiğini, hangi kaydın değiştiğin"
+description: "Operasyon Günlükleri — Kimin neyi, ne zaman değiştirdiğini yanıtlamak için operasyon günlüklerini kullanın. Günlük açıklamasını ayrı ayrı okumak yerine eylemi, hedefi ve kaynağı iş kaydıyla birleştirin."
 subtitle: "6MM Yapay Zeka Müşteri Desteği · Kiracı kılavuzu"
 slug: customer-support/logs
 canonical-url: https://docs.6mm.com/tr/customer-support/logs
 ---
+
+Kimin neyi, ne zaman değiştirdiğini yanıtlamak için operasyon günlüklerini kullanın. Günlük açıklamasını ayrı ayrı okumak yerine eylemi, hedefi ve kaynağı iş kaydıyla birleştirin.
+
+<div className="sixmm-support-flow">
+
+1. **Etkinliği bulun** — Zamana, anahtar kelimeye ve kategoriye göre filtreleyin.
+2. **Ayrıntıları okuyun** — Aktörü, hedefi, kaynağı ve sonucu kontrol edin.
+3. **Sonucu doğrulayın** — Yeniden denemeden önce etkilenen kaydı açın.
+
+</div>
+
 
 <span id="trace-an-operation" data-sixmm-canonical-anchor="trace-an-operation" aria-hidden="true"></span>
 
@@ -21,3 +32,60 @@ MCP işlemleri, uygulama/kaynak ve yürütme durumlarıyla birlikte gösterilir.
 Bir uygulama bağlantısı yalnızca yetkilendirmeyi kanıtlar. Önerilen bir yazma, bekleyen bir onay ve tamamlanmış bir yazma farklı durumlardır. Günlük, harici yapay zekaya söylenen her şeyin tam bir dökümü değildir ve salt okunur bir sorgunun iş amaçlı yazma kaydı oluşturduğu varsayılmamalıdır.
 
 Başarısız bir MCP çağrısını araştırırken, işlem kimliğini, saatini ve hata mesajını saklayın. Yeniden denemeden önce işlem sonucunu sorgulayın. İşlem günlükleri MCP aracılığıyla salt okunurdur.
+
+
+<span id="read-one-log-entry" data-sixmm-canonical-anchor="read-one-log-entry" aria-hidden="true"></span>
+
+## Bir günlük girişini okuyun
+
+| Detay | Neden önemli? |
+| --- | --- |
+| Zaman | Eylemi araştırdığınız olayların sırasına yerleştirir. |
+| Kategori ve eylem | İçerik güncellemesini, oturum eylemini veya desteklenen diğer işlemi ayırt edin. |
+| Aktör | Bir hesap veya sistem eylemini tanımlar; konuşmadaki kişinin mutlaka ziyaretçi olması gerekmez. |
+| Kaynak | MCP uygulama etkinliğini diğer işlemlerden ayırmaya yardımcı olur. |
+| Hedef | Kaydın referans verdiği iş nesnesini veya MCP işlemini tanımlar. |
+| Ayrıntılar ve sonuç | Mevcut açıklamayı ve yürütme durumunu sağlayın. Yeniden denemeye karar vermeden önce hatayı okuyun. |
+
+<span id="example-an-mcp-article-change-did-not-appear" data-sixmm-canonical-anchor="example-an-mcp-article-change-did-not-appear" aria-hidden="true"></span>
+
+### Örnek: bir MCP makale değişikliği görünmedi
+
+1. Tarih aralığını daraltın ve uygulamayı veya ilgili işlemi arayın.
+2. İşlemin onay bekliyor mu, başarısız mı yoksa tamamlanmış mı olduğunu kontrol edin. Yetkilendirme tek başına değişikliğin gerçekleştirildiği anlamına gelmez.
+3. Hedef makaleyi açın ve mevcut içeriğini karşılaştırın. Sürüm çakışması bildirilirse eski içeriği yeniden kullanmak yerine en son sürümü okuyun ve yeni bir istek hazırlayın.
+4. Daha fazla araştırmaya ihtiyaç duyulursa işlem kimliğini ve hata ayrıntılarını koruyun. İlgili bir iş denetim kaydı ve MCP yürütme kaydı aynı değişikliği açıklayabilir.
+
+Yararlı bir aktarma, zamanı, hedef tanımlayıcıyı, varsa işlem kimliğini ve gözlemlenen sonucu içerir. Hesap şifrelerini veya API sırlarını içermemelidir.
+
+<span id="common-questions" data-sixmm-canonical-anchor="common-questions" aria-hidden="true"></span>
+
+## Sık sorulan sorular
+
+<AccordionGroup>
+
+<Accordion title="Yapay zeka konuşmasının kaydı neden yok?">
+İşlem günlüğü, harici bir yapay zeka uygulamasındaki sohbetlerin dökümü değildir. Salt okunur bir araç çağrısının mutlaka bir iş değişikliği günlüğü oluşturması da gerekmez.
+</Accordion>
+
+<Accordion title="Başarısız görünen bir operasyonu hemen tekrarlamalı mıyım?">
+Önce işlem sonucunu ve hedef kaydını kontrol edin. İstemci yanıtını kaybetmişse sunucu isteği zaten işlenmiş olabilir.
+</Accordion>
+
+</AccordionGroup>
+
+<span id="continue-with" data-sixmm-canonical-anchor="continue-with" aria-hidden="true"></span>
+
+## Şununla devam et:
+
+<CardGroup cols={2}>
+
+<Card title="MCP yürütmesini anlayın" href="/tr/customer-support/mcp-calls">
+Onaylamayı, işlem sonuçlarını ve güvenli yeniden denemeleri öğrenin.
+</Card>
+
+<Card title="Hesap erişimini inceleyin" href="/tr/customer-support/team">
+Çalışmaya hangi hesabın ve rolün izin verdiğini kontrol edin.
+</Card>
+
+</CardGroup>

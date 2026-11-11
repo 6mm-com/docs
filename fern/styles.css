@@ -741,6 +741,22 @@ article a:not([class]):hover {
   color: var(--sixmm-accent);
 }
 
+/* Keep labels readable in MCP and tenant-console guide tables. */
+article:is(:has([data-sixmm-canonical-anchor="available-tools-follow-your-role"]), :has(.sixmm-support-flow)) .fern-table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+article:is(:has([data-sixmm-canonical-anchor="available-tools-follow-your-role"]), :has(.sixmm-support-flow)) .fern-table :is(th, td) {
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+article:is(:has([data-sixmm-canonical-anchor="available-tools-follow-your-role"]), :has(.sixmm-support-flow)) .fern-table :is(th, td):first-child {
+  width: 8rem;
+  word-break: keep-all;
+}
+
 article :is(blockquote, table, th, td, hr) {
   border-color: var(--sixmm-home-border) !important;
 }
@@ -1432,5 +1448,45 @@ div[class~="lg:hidden"]
   }
   .sixmm-language-option-effect {
     transition: none;
+  }
+}
+
+/* A compact, localized process diagram for tenant-console guides. */
+.sixmm-support-flow {
+  margin-block: 1.5rem 2rem;
+  padding-block: 1.25rem;
+  border-block: 1px solid var(--sixmm-home-border);
+}
+
+.sixmm-support-flow ol {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.5rem;
+  margin: 0;
+  padding-inline-start: 1.25rem;
+}
+
+.sixmm-support-flow li {
+  margin: 0;
+  padding-inline-end: 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.sixmm-support-flow li::marker {
+  color: var(--sixmm-accent-strong);
+  font-weight: 600;
+}
+
+.sixmm-support-flow li strong {
+  display: block;
+  margin-block-end: 0.25rem;
+}
+
+@media (max-width: 640px) {
+  .sixmm-support-flow ol {
+    grid-template-columns: 1fr;
+    gap: 1rem;
   }
 }

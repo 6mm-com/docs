@@ -1,10 +1,21 @@
 ---
 title: "Log Operasi"
-description: "Log Operasi — Buka Log Operasi. Filter berdasarkan kata kunci, kategori, tindakan, jenis aktor, jenis target, dan tanggal menggunakan kontrol yang tersedia. Baca detailnya untuk mengidentifikasi siapa yang bertindak, rek"
+description: "Log Operasi — Gunakan log operasi untuk menjawab siapa yang mengubah apa dan kapan. Gabungkan tindakan, target, dan sumber dengan catatan bisnis alih-alih membaca deskripsi log secara terpisah."
 subtitle: "6MM Dukungan Pelanggan AI · Panduan penyewa"
 slug: customer-support/logs
 canonical-url: https://docs.6mm.com/id/customer-support/logs
 ---
+
+Gunakan log operasi untuk menjawab siapa yang mengubah apa dan kapan. Gabungkan tindakan, target, dan sumber dengan catatan bisnis alih-alih membaca deskripsi log secara terpisah.
+
+<div className="sixmm-support-flow">
+
+1. **Temukan lokasi acara** — Filter berdasarkan waktu, kata kunci, dan kategori.
+2. **Baca detailnya** — Periksa aktor, target, sumber, dan hasil.
+3. **Verifikasi hasilnya** — Buka data yang terpengaruh sebelum mencoba lagi.
+
+</div>
+
 
 <span id="trace-an-operation" data-sixmm-canonical-anchor="trace-an-operation" aria-hidden="true"></span>
 
@@ -21,3 +32,60 @@ Operasi MCP ditampilkan dengan aplikasi/sumber dan status eksekusinya. Tergantun
 Koneksi aplikasi hanya membuktikan otorisasi. Penulisan yang diusulkan, persetujuan yang menunggu keputusan, dan penulisan yang selesai adalah keadaan yang berbeda. Log bukanlah transkrip lengkap dari semua yang dikatakan kepada AI eksternal, dan kueri baca-saja tidak boleh diasumsikan membuat catatan bisnis-tulis.
 
 Saat menyelidiki panggilan MCP yang gagal, simpan ID operasi, waktu, dan pesan kesalahannya. Kueri hasil operasi sebelum mencoba lagi. Log operasi hanya dapat dibaca melalui MCP.
+
+
+<span id="read-one-log-entry" data-sixmm-canonical-anchor="read-one-log-entry" aria-hidden="true"></span>
+
+## Baca satu entri log
+
+| Detil | Mengapa itu penting |
+| --- | --- |
+| Waktu | Tempatkan tindakan dalam urutan peristiwa yang Anda selidiki. |
+| Kategori dan tindakan | Bedakan pembaruan konten, tindakan sesi, atau operasi lain yang didukung. |
+| Aktor | Mengidentifikasi tindakan akun atau sistem; itu belum tentu menjadi pengunjung dalam percakapan. |
+| Sumber | Membantu membedakan MCP aktivitas aplikasi dari operasi lainnya. |
+| Target | Mengidentifikasi objek bisnis atau operasi MCP yang direferensikan oleh catatan. |
+| Detail dan hasil | Berikan penjelasan yang tersedia dan status eksekusi. Baca kesalahannya sebelum memutuskan untuk mencoba lagi. |
+
+<span id="example-an-mcp-article-change-did-not-appear" data-sixmm-canonical-anchor="example-an-mcp-article-change-did-not-appear" aria-hidden="true"></span>
+
+### Contoh: perubahan artikel MCP tidak muncul
+
+1. Persempit rentang tanggal dan cari aplikasi atau operasi terkait.
+2. Periksa apakah operasi menunggu konfirmasi, gagal atau selesai. Otorisasi saja tidak berarti perubahan dijalankan.
+3. Buka artikel target dan bandingkan isinya saat ini. Jika konflik versi dilaporkan, baca versi terbaru dan siapkan permintaan baru daripada menggunakan kembali konten lama.
+4. Simpan ID operasi dan detail kesalahan jika penyelidikan lebih lanjut diperlukan. Catatan audit bisnis terkait dan catatan eksekusi MCP dapat menjelaskan perubahan yang sama.
+
+Handoff yang berguna berisi waktu, pengidentifikasi target, ID operasi jika ada, dan hasil yang diamati. Ini tidak boleh menyertakan kata sandi akun atau API rahasia.
+
+<span id="common-questions" data-sixmm-canonical-anchor="common-questions" aria-hidden="true"></span>
+
+## Pertanyaan umum
+
+<AccordionGroup>
+
+<Accordion title="Mengapa tidak ada rekaman percakapan AI?">
+Log operasi bukan transkrip obrolan di aplikasi AI eksternal. Panggilan alat read-only juga tidak selalu membuat log perubahan bisnis.
+</Accordion>
+
+<Accordion title="Haruskah saya segera mengulangi operasi yang tampaknya gagal?">
+Periksa hasil operasi dan catatan target terlebih dahulu. Jika klien kehilangan responsnya, server mungkin sudah memproses permintaan tersebut.
+</Accordion>
+
+</AccordionGroup>
+
+<span id="continue-with" data-sixmm-canonical-anchor="continue-with" aria-hidden="true"></span>
+
+## Lanjutkan dengan
+
+<CardGroup cols={2}>
+
+<Card title="Memahami MCP eksekusi" href="/id/customer-support/mcp-calls">
+
+</Card>
+
+<Card title="Tinjau akses akun" href="/id/customer-support/team">
+Periksa akun dan peran mana yang mengizinkan pekerjaan tersebut.
+</Card>
+
+</CardGroup>

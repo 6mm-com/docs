@@ -1,10 +1,21 @@
 ---
 title: "Registos de operação"
-description: "Registos de operação — Abra Registos de operação. Filtre por palavra-chave, categoria, ação, tipo de ator, tipo de alvo e data, utilizando os controlos disponíveis. Leia os detalhes para identificar quem agiu, qual o reg"
+description: "Registos de operação — Utilize registos de operação para responder a quem alterou o quê e quando. Combine a ação, o destino e a origem com o registo comercial em vez de ler a descrição do registo isoladamente."
 subtitle: "6MM Suporte ao cliente IA · Guia do locatário"
 slug: customer-support/logs
 canonical-url: https://docs.6mm.com/pt-PT/customer-support/logs
 ---
+
+Utilize os registos de operação para responder quem alterou o quê e quando. Combine a ação, o destino e a origem com o registo comercial em vez de ler a descrição do registo isoladamente.
+
+<div className="sixmm-support-flow">
+
+1. **Localizar o evento** — Filtrar por horário, palavra-chave e categoria.
+2. **Leia os detalhes** — Verifique o ator, o alvo, a fonte e o resultado.
+3. **Verifique o resultado** — Abra o registo afetado antes de tentar novamente.
+
+</div>
+
 
 <span id="trace-an-operation" data-sixmm-canonical-anchor="trace-an-operation" aria-hidden="true"></span>
 
@@ -21,3 +32,60 @@ As operações MCP são mostradas com a sua aplicação/fonte e estado de execu�
 Uma ligação de aplicação apenas comprova autorização. Uma gravação proposta, uma aprovação pendente e uma gravação concluída são estados diferentes. O registo não é uma transcrição completa de tudo o que é dito à IA externa, e uma consulta de leitura apenas não deve ser considerada para criar um registo de escrita comercial.
 
 Ao investigar uma chamada MCP com falha, mantenha o seu ID de operação, hora e mensagem de erro. Consulte o resultado da operação antes de tentar novamente. Os registos de operação são de leitura apenas através de MCP.
+
+
+<span id="read-one-log-entry" data-sixmm-canonical-anchor="read-one-log-entry" aria-hidden="true"></span>
+
+## Ler uma entrada de registo
+
+| Detalhe | Por que razão isso importa |
+| --- | --- |
+| Hora | Coloca a ação na sequência de acontecimentos que está a investigar. |
+| Categoria e ação | Distinguir uma atualização de conteúdo, ação de sessão ou outra operação suportada. |
+| Ator | Identifica uma conta ou ação do sistema; não é necessariamente o visitante na conversa. |
+| Fonte | Ajuda a distinguir a atividade da aplicação MCP de outras operações. |
+| Objetivo | Identifica o objeto de negócio ou operação MCP referenciado pelo registo. |
+| Detalhes e resultado | Forneça a explicação disponível e o estado de execução. Leia o erro antes de decidir tentar novamente. |
+
+<span id="example-an-mcp-article-change-did-not-appear" data-sixmm-canonical-anchor="example-an-mcp-article-change-did-not-appear" aria-hidden="true"></span>
+
+### Exemplo: uma alteração de artigo MCP não apareceu
+
+1. Limite o intervalo de datas e procure a aplicação ou operação relacionada.
+2. Verifique se a operação está a aguardar confirmação, falhou ou foi concluída. A autorização por si só não significa a alteração executada.
+3. Abra o artigo alvo e compare o seu conteúdo atual. Se for reportado um conflito de versão, leia a versão mais recente e prepare um novo pedido em vez de reutilizar conteúdo desatualizado.
+4. Preserve o ID da operação e os detalhes do erro se for necessária uma investigação mais aprofundada. Um registo de auditoria empresarial relacionado e um registo de execução MCP podem descrever a mesma alteração.
+
+Uma transferência útil contém a hora, o identificador de destino, o ID da operação, se presente, e o resultado observado. Não deve incluir palavras-passe de contas ou segredos API.
+
+<span id="common-questions" data-sixmm-canonical-anchor="common-questions" aria-hidden="true"></span>
+
+## Perguntas comuns
+
+<AccordionGroup>
+
+<Accordion title="Porque é que não há registo de uma conversa de IA?">
+O registo de operação não é uma transcrição de chats numa aplicação externa de IA. Uma chamada de ferramenta de leitura apenas também não cria necessariamente um registo de alterações comerciais.
+</Accordion>
+
+<Accordion title="Devo repetir imediatamente uma operação que parece ter falhado?">
+Verifique primeiro o resultado da operação e o registo de destino. Se o cliente perder a resposta, o servidor pode já ter processado o pedido.
+</Accordion>
+
+</AccordionGroup>
+
+<span id="continue-with" data-sixmm-canonical-anchor="continue-with" aria-hidden="true"></span>
+
+## Continuar com
+
+<CardGroup cols={2}>
+
+<Card title="Compreender a execução de MCP" href="/pt-PT/customer-support/mcp-calls">
+Aprenda a confirmação, os resultados da operação e as tentativas seguras.
+</Card>
+
+<Card title="Reveja o acesso à conta" href="/pt-PT/customer-support/team">
+Verifique qual a conta e função que autorizou o trabalho.
+</Card>
+
+</CardGroup>

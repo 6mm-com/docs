@@ -1,10 +1,21 @@
 ---
 title: "Dzienniki operacji"
-description: "Dzienniki operacji — Otwórz Dzienniki operacji. Filtruj według słowa kluczowego, kategorii, działania, typu aktora, typu celu i daty, korzystając z dostępnych elementów sterujących. Przeczytaj szczegóły, aby ustalić, kto"
+description: "Dzienniki operacji — Użyj dzienników operacji, aby dowiedzieć się, kto i kiedy zmienił. Połącz działanie, cel i źródło z rekordem biznesowym, zamiast czytać opis dziennika w oderwaniu."
 subtitle: "6MM Obsługa klienta AI · Przewodnik dla najemców"
 slug: customer-support/logs
 canonical-url: https://docs.6mm.com/pl/customer-support/logs
 ---
+
+Użyj dzienników operacji, aby dowiedzieć się, kto, co i kiedy zmienił. Połącz działanie, cel i źródło z rekordem biznesowym, zamiast czytać opis dziennika w oderwaniu.
+
+<div className="sixmm-support-flow">
+
+1. **Zlokalizuj wydarzenie** — Filtruj według czasu, słowa kluczowego i kategorii.
+2. **Przeczytaj szczegóły** — Sprawdź aktora, cel, źródło i wynik.
+3. **Sprawdź wynik** — Otwórz rekord, którego dotyczy problem, przed ponowną próbą.
+
+</div>
+
 
 <span id="trace-an-operation" data-sixmm-canonical-anchor="trace-an-operation" aria-hidden="true"></span>
 
@@ -21,3 +32,60 @@ Operacje MCP są pokazane wraz z ich aplikacją/źródłem i statusem wykonania.
 Połączenie z aplikacją potwierdza jedynie autoryzację. Proponowany zapis, oczekujący na zatwierdzenie i ukończony zapis to różne stany. Dziennik nie jest pełnym zapisem wszystkiego, co powiedziano zewnętrznej sztucznej inteligencji, dlatego nie należy zakładać, że zapytanie tylko do odczytu spowoduje utworzenie rekordu zapisu biznesowego.
 
 Podczas sprawdzania nieudanego połączenia MCP zachowaj identyfikator operacji, godzinę i komunikat o błędzie. Zapytaj o wynik operacji przed ponowną próbą. Dzienniki operacji są tylko do odczytu za pośrednictwem MCP.
+
+
+<span id="read-one-log-entry" data-sixmm-canonical-anchor="read-one-log-entry" aria-hidden="true"></span>
+
+## Przeczytaj jeden wpis w dzienniku
+
+| Szczegół | Dlaczego to ma znaczenie |
+| --- | --- |
+| Czas | Umieszcza akcję w sekwencji zdarzeń, które badasz. |
+| Kategoria i akcja | Rozróżnij aktualizację zawartości, akcję sesji lub inną obsługiwaną operację. |
+| Aktor | Identyfikuje konto lub akcję systemową; niekoniecznie jest to gość w rozmowie. |
+| Źródło | Pomaga odróżnić MCP aktywność aplikacji od innych operacji. |
+| Cel | Identyfikuje obiekt biznesowy lub operację MCP, do której odwołuje się rekord. |
+| Szczegóły i wynik | Podaj dostępne wyjaśnienie i stan wykonania. Przeczytaj błąd, zanim podejmiesz decyzję o ponownej próbie. |
+
+<span id="example-an-mcp-article-change-did-not-appear" data-sixmm-canonical-anchor="example-an-mcp-article-change-did-not-appear" aria-hidden="true"></span>
+
+### Przykład: zmiana artykułu MCP nie pojawiła się
+
+1. Zawęź zakres dat i poszukaj aplikacji lub powiązanej operacji.
+2. Sprawdź, czy operacja oczekuje na potwierdzenie, nie powiodła się lub została zakończona. Sama autoryzacja nie oznacza wykonania zmiany.
+3. Otwórz artykuł docelowy i porównaj jego aktualną zawartość. Jeśli zostanie zgłoszony konflikt wersji, przeczytaj najnowszą wersję i przygotuj nowe żądanie, zamiast ponownie wykorzystywać nieaktualną zawartość.
+4. Jeśli konieczne będzie dalsze badanie, zachowaj identyfikator operacji i szczegóły błędu. Powiązany rekord audytu biznesowego i rekord wykonania MCP mogą opisywać tę samą zmianę.
+
+Przydatne przekazanie zawiera czas, identyfikator celu, identyfikator operacji, jeśli jest obecny, i zaobserwowany wynik. Nie powinien zawierać haseł do kont ani API sekretów.
+
+<span id="common-questions" data-sixmm-canonical-anchor="common-questions" aria-hidden="true"></span>
+
+## Często zadawane pytania
+
+<AccordionGroup>
+
+<Accordion title="Dlaczego nie ma zapisu rozmowy AI?">
+Dziennik operacji nie jest zapisem rozmów prowadzonych w zewnętrznej aplikacji AI. Wywołanie narzędzia tylko do odczytu również niekoniecznie powoduje utworzenie dziennika zmian biznesowych.
+</Accordion>
+
+<Accordion title="Czy powinienem natychmiast powtórzyć operację, która wygląda na nieudaną?">
+Najpierw sprawdź wynik operacji i rekord docelowy. Jeśli klient utracił odpowiedź, serwer mógł już przetworzyć żądanie.
+</Accordion>
+
+</AccordionGroup>
+
+<span id="continue-with" data-sixmm-canonical-anchor="continue-with" aria-hidden="true"></span>
+
+## Kontynuuj z
+
+<CardGroup cols={2}>
+
+<Card title="Zrozumienie wykonania MCP." href="/pl/customer-support/mcp-calls">
+Dowiedz się o potwierdzeniu, wynikach operacji i bezpiecznych ponownych próbach.
+</Card>
+
+<Card title="Sprawdź dostęp do konta" href="/pl/customer-support/team">
+Sprawdź, które konto i rola autoryzowały pracę.
+</Card>
+
+</CardGroup>

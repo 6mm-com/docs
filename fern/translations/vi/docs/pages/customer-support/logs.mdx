@@ -1,10 +1,21 @@
 ---
 title: "Nhật ký hoạt động"
-description: "Nhật ký hoạt động — Mở Nhật ký hoạt động. Lọc theo từ khóa, danh mục, hành động, loại tác nhân, loại mục tiêu và ngày bằng các điều khiển có sẵn. Đọc chi tiết để xác định ai đã hành động, bản ghi nào đã thay đổi và kết q"
+description: "Nhật ký hoạt động - Sử dụng nhật ký hoạt động để trả lời ai đã thay đổi nội dung gì và khi nào. Kết hợp hành động, mục tiêu và nguồn với bản ghi công việc thay vì đọc mô tả nhật ký một cách riêng biệt."
 subtitle: "6MM Hỗ trợ khách hàng AI · Hướng dẫn người thuê nhà"
 slug: customer-support/logs
 canonical-url: https://docs.6mm.com/vi/customer-support/logs
 ---
+
+Sử dụng nhật ký hoạt động để trả lời ai đã thay đổi cái gì và khi nào. Kết hợp hành động, mục tiêu và nguồn với bản ghi công việc thay vì đọc mô tả nhật ký một cách riêng biệt.
+
+<div className="sixmm-support-flow">
+
+1. **Xác định vị trí sự kiện** — Lọc theo thời gian, từ khóa và danh mục.
+2. **Đọc chi tiết** — Kiểm tra tác nhân, mục tiêu, nguồn và kết quả.
+3. **Xác minh kết quả** — Mở bản ghi bị ảnh hưởng trước khi thử lại.
+
+</div>
+
 
 <span id="trace-an-operation" data-sixmm-canonical-anchor="trace-an-operation" aria-hidden="true"></span>
 
@@ -21,3 +32,60 @@ Các thao tác MCP được hiển thị cùng với trạng thái thực thi/�
 Kết nối ứng dụng chỉ chứng minh sự ủy quyền. Một bài viết được đề xuất, một bản phê duyệt đang chờ xử lý và một bài viết đã hoàn thành là các trạng thái khác nhau. Nhật ký không phải là bản ghi đầy đủ mọi thứ được nói với AI bên ngoài và không nên coi truy vấn chỉ đọc để tạo bản ghi ghi doanh nghiệp.
 
 Khi điều tra cuộc gọi MCP không thành công, hãy giữ lại ID hoạt động, thời gian và thông báo lỗi. Truy vấn kết quả hoạt động trước khi thử lại. Nhật ký hoạt động ở chế độ chỉ đọc thông qua MCP.
+
+
+<span id="read-one-log-entry" data-sixmm-canonical-anchor="read-one-log-entry" aria-hidden="true"></span>
+
+## Đọc một mục nhật ký
+
+| Chi tiết | Tại sao nó quan trọng |
+| --- | --- |
+| Thời gian | Đặt hành động vào chuỗi các sự kiện bạn đang điều tra. |
+| Thể loại và hành động | Phân biệt cập nhật nội dung, hành động phiên hoặc hoạt động được hỗ trợ khác. |
+| Diễn viên | Xác định một tài khoản hoặc hành động của hệ thống; nó không nhất thiết phải là khách trong cuộc trò chuyện. |
+| Nguồn | Giúp phân biệt hoạt động của ứng dụng MCP với các hoạt động khác. |
+| Mục tiêu | Xác định đối tượng kinh doanh hoặc thao tác MCP được bản ghi tham chiếu. |
+| Chi tiết và kết quả | Cung cấp giải thích có sẵn và trạng thái thực hiện. Đọc lỗi trước khi quyết định thử lại. |
+
+<span id="example-an-mcp-article-change-did-not-appear" data-sixmm-canonical-anchor="example-an-mcp-article-change-did-not-appear" aria-hidden="true"></span>
+
+### Ví dụ: thay đổi bài viết MCP không xuất hiện
+
+1. Thu hẹp phạm vi ngày và tìm kiếm ứng dụng hoặc hoạt động liên quan.
+2. Kiểm tra xem thao tác đang chờ xác nhận, thất bại hay hoàn thành. Việc ủy ​​quyền không có nghĩa là thay đổi được thực hiện.
+3. Mở bài viết mục tiêu và so sánh nội dung hiện tại của nó. Nếu xung đột phiên bản được báo cáo, hãy đọc phiên bản mới nhất và chuẩn bị yêu cầu mới thay vì sử dụng lại nội dung cũ.
+4. Giữ nguyên ID hoạt động và chi tiết lỗi nếu cần điều tra thêm. Bản ghi kiểm tra kinh doanh liên quan và bản ghi thực thi MCP có thể mô tả cùng một thay đổi.
+
+Một bản chuyển giao hữu ích chứa thời gian, mã định danh mục tiêu, ID hoạt động nếu có và kết quả được quan sát. Nó không được bao gồm mật khẩu tài khoản hoặc bí mật API.
+
+<span id="common-questions" data-sixmm-canonical-anchor="common-questions" aria-hidden="true"></span>
+
+## Câu hỏi thường gặp
+
+<AccordionGroup>
+
+<Accordion title="Tại sao không có bản ghi cuộc trò chuyện AI?">
+Nhật ký hoạt động không phải là bản ghi các cuộc trò chuyện trong ứng dụng AI bên ngoài. Lệnh gọi công cụ chỉ đọc cũng không nhất thiết tạo ra nhật ký thay đổi doanh nghiệp.
+</Accordion>
+
+<Accordion title="Tôi có nên lặp lại ngay một thao tác có vẻ thất bại không?">
+Kiểm tra kết quả hoạt động và bản ghi mục tiêu trước. Nếu máy khách mất phản hồi thì máy chủ có thể đã xử lý yêu cầu.
+</Accordion>
+
+</AccordionGroup>
+
+<span id="continue-with" data-sixmm-canonical-anchor="continue-with" aria-hidden="true"></span>
+
+## Tiếp tục với
+
+<CardGroup cols={2}>
+
+<Card title="Hiểu cách thực thi MCP" href="/vi/customer-support/mcp-calls">
+Tìm hiểu xác nhận, kết quả hoạt động và thử lại an toàn.
+</Card>
+
+<Card title="Xem lại quyền truy cập tài khoản" href="/vi/customer-support/team">
+Kiểm tra tài khoản và vai trò nào đã ủy quyền công việc.
+</Card>
+
+</CardGroup>

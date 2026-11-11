@@ -20,3 +20,11 @@ English and Simplified Chinese are authored and checked against source. Other lo
 ## MCP examples
 
 JSON-RPC examples are post-initialization messages, not standalone HTTP requests. IDs, operation IDs and the 64-character preview version are placeholders. They must be replaced with the user's authorized tenant records. No real credentials or customer data are included.
+
+## Tenant-console guide expansion
+
+Eight tenant-console pages now include a three-step workflow, field or view explanations, a practical scenario, two collapsible questions and two related-guide cards. English and Simplified Chinese are authored; the remaining locales use the existing translation pipeline and structural validation.
+
+Verified against tenant-console source: Tickets.tsx (three record types and their distinct status controls); Agents.tsx (accounts, roles, quick replies, monitoring, priority and concurrent reception); SessionHistory.tsx (email precedence and date basis); Statistics.tsx (available views); Billing.tsx (usage, ledger and prices); Settings.tsx (available tabs); OperationLogs.tsx (source, target and details). No new console feature or production screenshot is claimed. The visual flow is documentation guidance, not an automated business workflow.
+
+MCP and tenant-guide tables reserve readable label widths. Workflow diagrams adapt from three columns to a vertical sequence on narrow screens, while native Fern cards and accordions retain the existing theme.

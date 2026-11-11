@@ -1,10 +1,21 @@
 ---
 title: "작업 로그"
-description: "작업 로그 — 작업 로그를 엽니다. 사용 가능한 컨트롤을 사용하여 키워드, 카테고리, 작업, 행위자 유형, 대상 유형 및 날짜별로 필터링하세요. 세부 사항을 읽고 누가 행동했는지, 어떤 기록이 변경되었는지, 그 결과를 확인하세요."
+description: "작업 로그 - 작업 로그를 사용하여 누가 무엇을 언제 변경했는지 답변합니다. 로그 설명을 따로 읽는 대신 작업, 대상 및 소스를 비즈니스 기록과 결합하세요."
 subtitle: "6MM AI 고객지원 · 입주자 안내"
 slug: customer-support/logs
 canonical-url: https://docs.6mm.com/ko/customer-support/logs
 ---
+
+작업 로그를 사용하여 누가 무엇을 언제 변경했는지 답변하세요. 로그 설명을 따로 읽는 대신 작업, 대상 및 소스를 비즈니스 기록과 결합하세요.
+
+<div className="sixmm-support-flow">
+
+1. **이벤트 찾기** — 시간, 키워드, 카테고리별로 필터링합니다.
+2. **세부 사항 읽기** — 행위자, 대상, 소스 및 결과를 확인하세요.
+3. **결과 확인** — 다시 시도하기 전에 영향을 받은 레코드를 엽니다.
+
+</div>
+
 
 <span id="trace-an-operation" data-sixmm-canonical-anchor="trace-an-operation" aria-hidden="true"></span>
 
@@ -21,3 +32,60 @@ MCP 작업은 해당 애플리케이션/소스 및 실행 상태와 함께 표�
 애플리케이션 연결은 승인만을 증명합니다. 제안된 쓰기, 승인 보류 및 완료된 쓰기는 서로 다른 상태입니다. 로그는 외부 AI에 전달된 모든 내용의 완전한 기록이 아니며, 읽기 전용 쿼리가 비즈니스 쓰기 기록을 생성한다고 가정해서는 안 됩니다.
 
 실패한 MCP 호출을 조사할 때 해당 작업 ID, 시간 및 오류 메시지를 보관하세요. 재시도하기 전에 작업 결과를 쿼리하세요. 작업 로그는 MCP을 통해 읽기 전용입니다.
+
+
+<span id="read-one-log-entry" data-sixmm-canonical-anchor="read-one-log-entry" aria-hidden="true"></span>
+
+## 하나의 로그 항목 읽기
+
+| 세부 사항 | 왜 중요한가요? |
+| --- | --- |
+| 시간 | 조사 중인 이벤트 순서에 따라 작업을 배치합니다. |
+| 카테고리 및 액션 | 콘텐츠 업데이트, 세션 작업 또는 기타 지원되는 작업을 구별합니다. |
+| 배우 | 계정 또는 시스템 작업을 식별합니다. 대화에 참여하는 사람이 반드시 방문자일 필요는 없습니다. |
+| 원천 | MCP 애플리케이션 활동을 다른 작업과 구별하는 데 도움이 됩니다. |
+| 목표 | 레코드에서 참조하는 비즈니스 객체 또는 MCP 작업을 식별합니다. |
+| 세부사항 및 결과 | 사용 가능한 설명 및 실행 상태를 제공합니다. 재시도를 결정하기 전에 오류를 읽어보세요. |
+
+<span id="example-an-mcp-article-change-did-not-appear" data-sixmm-canonical-anchor="example-an-mcp-article-change-did-not-appear" aria-hidden="true"></span>
+
+### 예: MCP 기사 변경 사항이 표시되지 않았습니다.
+
+1. 날짜 범위를 좁히고 애플리케이션 또는 관련 작업을 찾으세요.
+2. 작업이 확인 대기 중인지, 실패 또는 완료되었는지 확인하세요. 승인만으로는 변경이 실행되었음을 의미하지 않습니다.
+3. 대상 기사를 열고 현재 내용을 비교하십시오. 버전 충돌이 보고되면 오래된 콘텐츠를 재사용하는 대신 최신 버전을 읽고 새 요청을 준비하세요.
+4. 추가 조사가 필요한 경우 작업 ID와 오류 세부정보를 보존하세요. 관련 업무 감사 기록과 MCP 실행 기록은 동일한 변경 사항을 기술할 수 있습니다.
+
+유용한 핸드오프에는 시간, 대상 식별자, 작업 ID(있는 경우) 및 관찰된 결과가 포함됩니다. 계정 비밀번호나 API 비밀번호를 포함해서는 안 됩니다.
+
+<span id="common-questions" data-sixmm-canonical-anchor="common-questions" aria-hidden="true"></span>
+
+## 일반적인 질문
+
+<AccordionGroup>
+
+<Accordion title="AI 대화 기록이 왜 없나요?">
+작업 로그는 외부 AI 애플리케이션의 채팅 기록이 아닙니다. 읽기 전용 도구 호출이 반드시 비즈니스 변경 로그를 생성하는 것은 아닙니다.
+</Accordion>
+
+<Accordion title="실패해 보이는 작업을 즉시 반복해야 합니까?">
+작업 결과와 대상 기록을 먼저 확인하세요. 클라이언트가 응답을 잃은 경우 서버가 이미 요청을 처리했을 수 있습니다.
+</Accordion>
+
+</AccordionGroup>
+
+<span id="continue-with" data-sixmm-canonical-anchor="continue-with" aria-hidden="true"></span>
+
+## 계속
+
+<CardGroup cols={2}>
+
+<Card title="MCP 실행 이해" href="/ko/customer-support/mcp-calls">
+확인, 작업 결과 및 안전한 재시도에 대해 알아보세요.
+</Card>
+
+<Card title="계정 액세스 검토" href="/ko/customer-support/team">
+작업을 승인한 계정과 역할을 확인하세요.
+</Card>
+
+</CardGroup>
