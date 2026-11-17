@@ -8,7 +8,7 @@ const safari = 'Mozilla/5.0 (Macintosh) AppleWebKit/605.1.15 Version/26.6.2 Safa
 const chrome = 'Mozilla/5.0 (Macintosh) AppleWebKit/537.36 Chrome/157.0.0.0 Safari/537.36';
 const storageKey = 'sixmm:safari-hydration-reload';
 
-function fixture({ ua = safari, storage = new Map(), storageBlocked = false } = {}) {
+function fixture({ ua = safari, storage = new Map(), storageBlocked = false, registry } = {}) {
   let now = 1_000_000;
   let reloads = 0;
   let serial = 0;
@@ -39,6 +39,7 @@ function fixture({ ua = safari, storage = new Map(), storageBlocked = false } = 
   };
   const navigator = { userAgent: ua, onLine: true };
   const window = {
+    customElements: registry,
     location: { href: 'https://docs.6mm.com/zh-CN/sdk/overview?x=1#intro', reload() { reloads++; } },
     addEventListener: on,
     setTimeout(fn, delay) { const id = ++serial; timers.set(id, { fn, at: now + delay }); return id; },
@@ -188,4 +189,62 @@ test('guard is configured before interactive hydration and checked by CI', async
   const pkg = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
   assert.match(pkg.scripts.check, /npm run safari:check/);
   assert.match(pkg.scripts['safari:check'], /node --test scripts\/check-safari-hydration\.test\.mjs/);
+});
+
+function islandRegistry() {
+  const classes = new Map();
+  return { get(name) { return classes.get(name); }, define(name, constructor) { classes.set(name, constructor); } };
+}
+
+test('Safari loads the shared renderer once before parallel component imports', async () => {
+  const registry = islandRegistry();
+  const nativeDefine = registry.define;
+  let release;
+  const renderer = new Promise(resolve => { release = resolve; });
+  const events = [];
+  class Island {
+    isConnected = true;
+    getAttribute() { return '/renderer.js'; }
+    importWithRetry(url) { events.push(url); return renderer; }
+    start(value) { events.push('component:' + value); return value; }
+  }
+  const f = fixture({ registry }); f.boot();
+  class Unrelated {}
+  registry.define('other-element', Unrelated);
+  assert.equal(registry.get('other-element'), Unrelated);
+  registry.define('astro-island', Island);
+  assert.equal(registry.define, nativeDefine, 'Restore the platform registry immediately');
+  const a = new Island(), b = new Island();
+  const starts = [a.start('header'), b.start('tabs')];
+  await Promise.resolve();
+  assert.deepEqual(events, ['/renderer.js']);
+  release({ default() {} });
+  assert.deepEqual(await Promise.all(starts), ['header', 'tabs']);
+  assert.deepEqual(events, ['/renderer.js', 'component:header', 'component:tabs']);
+});
+
+test('renderer rejection does not strand Astro retry and detached pages do not start', async () => {
+  const registry = islandRegistry();
+  let imports = 0, starts = 0;
+  class Island {
+    isConnected = true;
+    getAttribute() { return '/renderer.js'; }
+    importWithRetry() { imports++; return Promise.reject(new Error('network')); }
+    start() { starts++; }
+  }
+  registry.define('astro-island', Island);
+  const f = fixture({ registry }); f.boot();
+  const a = new Island(), b = new Island(); b.isConnected = false;
+  await Promise.all([a.start(), b.start()]);
+  assert.equal(starts, 1); assert.equal(imports, 1);
+  await a.start(); assert.equal(imports, 2, 'Failed loads can be retried');
+});
+
+test('Chrome leaves custom element registration and Astro start untouched', () => {
+  const registry = islandRegistry(), define = registry.define;
+  class Island { start() {} importWithRetry() {} }
+  const start = Island.prototype.start;
+  const f = fixture({ ua: chrome, registry }); f.boot();
+  registry.define('astro-island', Island);
+  assert.equal(registry.define, define); assert.equal(Island.prototype.start, start);
 });

@@ -9,6 +9,48 @@
   if (window.__sixmmSafariHydrationGuard) return;
   window.__sixmmSafariHydrationGuard = true;
 
+  // Start the shared renderer before component imports. Safari 26 can poison
+  // the module graph when Astro imports both branches concurrently; retrying
+  // the same cached namespace afterwards cannot repair its undefined exports.
+  // Gate Astro's existing start method, retaining its props, slots and lifecycle.
+  var rendererLoads = new Map();
+  function prepareIslandClass(Island) {
+    var prototype = Island && Island.prototype;
+    if (!prototype || typeof prototype.start !== 'function' ||
+        typeof prototype.importWithRetry !== 'function') return;
+    var start = prototype.start;
+    prototype.start = function () {
+      var island = this;
+      var args = arguments;
+      var url = island.getAttribute('renderer-url');
+      if (!url) return start.apply(island, args);
+      var ready = rendererLoads.get(url);
+      if (!ready) {
+        ready = Promise.resolve().then(function () { return island.importWithRetry(url); });
+        rendererLoads.set(url, ready);
+        ready.catch(function () { rendererLoads.delete(url); });
+      }
+      return ready.catch(function () {}).then(function () {
+        if (island.isConnected) return start.apply(island, args);
+      });
+    };
+  }
+  var registry = window.customElements;
+  if (registry) {
+    var Island = registry.get('astro-island');
+    if (Island) prepareIslandClass(Island);
+    else {
+      var define = registry.define;
+      var defineIsland = function (name, constructor) {
+        if (name === 'astro-island') prepareIslandClass(constructor);
+        var result = define.apply(this, arguments);
+        if (name === 'astro-island' && registry.define === defineIsland) registry.define = define;
+        return result;
+      };
+      registry.define = defineIsland;
+    }
+  }
+
   var reloadKey = 'sixmm:safari-hydration-reload';
   var reloadCooldown = 5 * 60 * 1000;
   var timer;

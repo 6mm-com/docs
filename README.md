@@ -100,17 +100,20 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the full contribution guide.
 
 `fern/safari-hydration.js` runs before interactive scripts on Safari only. It
 handles the observed module-loading failure where Astro has a component but an
-undefined renderer, leaving header controls inert. Healthy islands and ordinary
-pending downloads are left alone; Chromium and Firefox register no recovery hooks.
+undefined renderer, leaving header controls inert. It loads the shared renderer
+before starting component imports, avoiding the concurrent module evaluation
+observed to leave cached exports undefined in Safari 26. Retrying that same cached
+module alone is insufficient. Astro still handles props, slots and hydration;
+Chromium and Firefox retain their original loading behavior and register no hooks.
 
-After page load or navigation, the guard retries affected islands through Astro's
+As a fallback after page load or navigation, the guard retries affected islands through Astro's
 loader. If a header island remains broken, it reloads the current URL at most once
 per five minutes per tab. A subsequent failure (or unavailable session storage)
 shows a native retry button instead of looping. Offline and hidden tabs do not
 automatically reload. The reload preserves the URL, query and fragment, but can
 reset in-memory page or support-widget state; successful island retries avoid it.
 
-Run `npm run safari:check` for recovery and isolation regression tests. When
+Run `npm run safari:check` for loading-order, recovery and isolation regression tests. When
 upgrading Fern, also verify navigation, language switching, themes and history in
 Safari and Chrome. This guards a hosted-renderer failure; it does not patch
 WebKit's module loader or Fern's generated bundles.
