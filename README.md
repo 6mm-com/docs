@@ -140,6 +140,10 @@ Publish with:
 npm run fern:publish
 ```
 
+Alternatively, run the **Publish docs** GitHub Actions workflow on `main`.
+It validates the documentation before publishing with the repository's
+`FERN_TOKEN` secret. The token must belong to the configured Fern organization.
+
 Cloudflare should manage DNS for `docs.6mm.com`; the documentation site itself should be published through Fern.
 
 ## Security
