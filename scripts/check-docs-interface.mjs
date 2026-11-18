@@ -4,6 +4,7 @@ import { runInNewContext } from "node:vm";
 
 const script = await readFile(new URL("../fern/docs-interface.js", import.meta.url), "utf8");
 const callbacks = [];
+const tasks = [];
 const listeners = {};
 let observerCount = 0;
 const observerCallbacks = [];
@@ -39,6 +40,7 @@ const window = {
   location: { pathname: "/ar/prediction/overview" },
   __sixmmDocsLocales: [{ code: "" }, { code: "ar" }, { code: "zh-CN" }, { code: "ja" }],
   requestAnimationFrame: (callback) => callbacks.push(callback),
+  setTimeout: (callback) => tasks.push(callback),
   addEventListener: (name, callback) => { listeners[name] = callback; },
 };
 const document = {
@@ -61,7 +63,13 @@ const sandbox = {
     observe() {} disconnect() {}
   },
 };
-function flush() { while (callbacks.length) callbacks.shift()(); }
+function flushFrames() { while (callbacks.length) callbacks.shift()(); }
+function flush() {
+  while (callbacks.length || tasks.length) {
+    flushFrames();
+    while (tasks.length) tasks.shift()();
+  }
+}
 runInNewContext(script, sandbox);
 flush();
 assert.equal(nodes[0].nodeValue, "Search", "Do not mutate text while React hydration is pending");
@@ -77,6 +85,9 @@ flush();
 assert.equal(nodes[0].nodeValue, "Search", "A child island cannot alter markup while its parent layout is still hydrating");
 layoutReady = true;
 listeners["fern:island-hydrated"]();
+flushFrames();
+assert.equal(nodes[0].nodeValue, "Search", "An outer island effect must not rewrite labels in React's current render/paint turn");
+assert.equal(attributes.get("aria-label"), "Search", "Accessibility labels also wait for the post-render task");
 flush();
 assert.equal(nodes[0].nodeValue, "بحث");
 assert.equal(nodes[1].nodeValue, "نسخ الصفحة");
@@ -101,18 +112,18 @@ assert.equal(nodes[2].nodeValue, 'Search', 'Article text is never translated by 
 window.location.pathname = '/sdk/overview';
 listeners['astro:page-load'](); flush();
 assert.equal(nodes[0].nodeValue, 'Search', 'Returning to English must restore labels');
-window.__sixmmPrepareInterfaceSwap(document,'zh-CN');
-assert.equal(nodes[0].nodeValue,'Search','Unsupported initial UI languages normalize to Fern native English before hydration');
-assert.equal(nodes[4].nodeValue,'Edit this page','Normalize the GitHub edit label before lazy footer hydration');
-nodes[4].nodeValue='在仪表板中编辑';
-window.__sixmmPrepareInterfaceSwap(document,'zh-CN');
-assert.equal(nodes[4].nodeValue,'Edit this page','Both native edit label variants share the English key');
+for (const label of ['编辑此页面', '在仪表板中编辑']) {
+  nodes[4].nodeValue = label;
+  window.location.pathname = '/sdk/overview';
+  listeners['astro:page-load'](); flush();
+  assert.equal(nodes[4].nodeValue, 'Edit this page', 'Both edit label variants remain localized after hydration');
+}
 nodes.push({ nodeValue: 'Light', parentElement: { closest: hydratedAncestor } });
 window.__sixmmDocsLocales.push({ code: 'de' }, { code: 'id' }, { code: 'uk' }, { code: 'vi' });
 window.location.pathname = '/de/sdk/overview'; listeners['astro:page-load'](); flush();
 assert.equal(nodes.at(-1).nodeValue, 'Hell', 'Hydrated theme controls use the selected locale');
-window.__sixmmPrepareInterfaceSwap(document, 'de');
-assert.equal(nodes.at(-1).nodeValue, 'Light', 'Added theme translations must normalize back to native markup before hydration');
+window.location.pathname = '/sdk/overview'; listeners['astro:page-load'](); flush();
+assert.equal(nodes.at(-1).nodeValue, 'Light', 'Returning to English restores hydrated theme labels');
 for (const [lang, expected] of [['id', 'Asisten'], ['uk', 'Помічник'], ['vi', 'Trợ lý']]) {
   nodes[1].nodeValue = 'Assistant';
   window.location.pathname = '/' + lang + '/sdk/overview'; listeners['astro:page-load'](); flush();
