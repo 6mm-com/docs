@@ -4,14 +4,26 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { parse } from 'yaml';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const read=relative=>readFile(path.join(root,relative),'utf8');
+// Validation is read-only; share each file's text within this run.
+const contents = new Map();
+const read = relative => {
+ const file = path.join(root, relative);
+ if (!contents.has(file)) contents.set(file, readFile(file, 'utf8'));
+ return contents.get(file);
+};
 const config=parse(await read('fern/docs.yml'));
 const nav=config.navigation.find(item=>item.tab==='customerSupport');
 assert(nav, 'AI Support must have a top-level navigation entry');
 const pages=nav.layout.flatMap(group=>group.contents.map(page=>page.path));
 assert.equal(new Set(pages).size,18,'Expected 18 tenant guide pages');
 const source=await read('fern/docs/pages/customer-support/mcp-calls.mdx');
-const examples=content=>[...content.matchAll(/```json\n([\s\S]*?)```/g)].map(match=>JSON.parse(match[1]));
+// Protocol examples are read-only and normally identical across all locales.
+const parsedExamples = new Map();
+const examples=content=>Array.from(content.matchAll(/```json\n([\s\S]*?)```/g), match => {
+ const text = match[1];
+ if (!parsedExamples.has(text)) parsedExamples.set(text, JSON.parse(text));
+ return parsedExamples.get(text);
+});
 const expected=examples(source);
 assert.equal(expected.length,5,'Expected read, create, preview, delete and operation examples');
 const [readCall,create,preview,remove,status]=expected;
@@ -25,10 +37,23 @@ assert.equal(preview.params.arguments.arguments.requestId,remove.params.argument
 assert.equal(preview.params.arguments.arguments.id,remove.params.arguments.id);
 assert.equal(status.params.name,'mcp_operation');
 for(const message of expected){assert.equal(message.jsonrpc,'2.0');assert.equal(message.method,'tools/call');}
+const sourceHeadingCounts = new Map();
 for(const locale of config.translations){
  const base=locale.default?'fern':`fern/translations/${locale.lang}`;
  const prefix=locale.default?'':`/${locale.lang}`;
- for(const file of pages) { const body=await read(`${base}/${file}`); assert(body.length>200,`${locale.lang}: missing tenant guide content`); assert(!/^#{1,6}[ \t]*$/m.test(body),`${locale.lang}: empty heading in ${file}`); const source=await read(`fern/${file}`); assert.equal((body.match(/^## /gm)||[]).length,(source.match(/^## /gm)||[]).length,`${locale.lang}: missing heading in ${file}`); }
+ // Read one locale's 18 guides together; validate in the original order below.
+ // Settle failures here so a later missing file cannot mask an earlier assertion.
+ await Promise.allSettled(pages.map(file=>read(`${base}/${file}`)));
+ for(const file of pages) {
+  const body=await read(`${base}/${file}`);
+  assert(body.length>200,`${locale.lang}: missing tenant guide content`);
+  assert(!/^#{1,6}[ \t]*$/m.test(body),`${locale.lang}: empty heading in ${file}`);
+  if (!sourceHeadingCounts.has(file)) {
+   const source=await read(`fern/${file}`);
+   sourceHeadingCounts.set(file, (source.match(/^## /gm)||[]).length);
+  }
+  assert.equal((body.match(/^## /gm)||[]).length,sourceHeadingCounts.get(file),`${locale.lang}: missing heading in ${file}`);
+ }
  for (const slug of ['workbench','tickets','history','team','settings','analytics','billing','logs']) {
   const guide=await read(`${base}/docs/pages/customer-support/${slug}.mdx`);
   assert(guide.includes('className="sixmm-support-flow"'),`${locale.lang}/${slug}: missing workflow diagram`);

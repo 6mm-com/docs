@@ -55,7 +55,7 @@ const document = {
   addEventListener: (name, callback) => { listeners[name] = callback; },
 };
 const sandbox = {
-  window, document, URL, NodeFilter: { SHOW_TEXT: 4 },
+  window, document, URL, NodeFilter: { SHOW_ELEMENT: 1, SHOW_TEXT: 4, FILTER_ACCEPT: 1, FILTER_REJECT: 2, FILTER_SKIP: 3 },
   MutationObserver: class {
     constructor(callback) { observerCount++; observerCallbacks.push(callback); }
     observe() {} disconnect() {}
@@ -120,13 +120,19 @@ for (const [lang, expected] of [['id', 'Asisten'], ['uk', 'Помічник'], [
 }
 const previousWalks = fullWalks;
 nodes[0].nodeValue = 'Search';
-observerCallbacks[0]([{ target: { nodeType: 1, closest: () => uiRoot } }]); flush();
+observerCallbacks[0]([{ target: { nodeType: 1, closest: selector => selector.includes('#fern-header') ? uiRoot : null } }]); flush();
 assert.equal(fullWalks, previousWalks, 'A changed control must not trigger another whole-document lookup');
 assert.equal(nodes[0].nodeValue, 'Tìm kiếm');
+const excludedElement = { nodeType: 1, closest: selector => selector.startsWith('pre,') ? {} : uiRoot };
+observerCallbacks[0]([
+  { target: excludedElement },
+  { target: { nodeType: 3, parentElement: excludedElement } },
+]);
+assert.equal(callbacks.length, 0, 'Changes within excluded content must not schedule a UI translation pass');
 const beforeLocaleWalks = fullWalks;
 window.location.pathname = '/zh-CN/sdk/overview';
 listeners['astro:page-load']();
-observerCallbacks[0]([{ target: { nodeType: 1, closest: () => uiRoot } }]);
+observerCallbacks[0]([{ target: { nodeType: 1, closest: selector => selector.includes('#fern-header') ? uiRoot : null } }]);
 flush();
 assert.ok(fullWalks > beforeLocaleWalks, 'A control mutation cannot downgrade a pending full locale update');
 assert.equal(nodes[0].nodeValue, '搜索');

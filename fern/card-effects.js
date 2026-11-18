@@ -14,6 +14,9 @@
   var frame = 0;
   var scanFrame = 0;
   var radius = 300;
+  var observedBody = null;
+  var bodyObserver = null;
+  var measuredRects = [];
 
   function enabled() {
     return window.innerWidth > 768 && hover.matches && !reducedMotion.matches;
@@ -23,6 +26,7 @@
     if (frame) cancelAnimationFrame(frame);
     frame = 0;
     pointer = null;
+    measuredRects.length = 0;
     if (activeGroup) {
       (groups.get(activeGroup) || []).forEach(function (card) {
         card.style.setProperty("--sixmm-card-intensity", "0");
@@ -35,7 +39,8 @@
 
   function register(card, effectClass) {
     var group = card.closest(groupSelector) || card;
-    card.classList.add(effectClass === "sixmm-language-option-effect" ? effectClass : "sixmm-content-card");
+    var className = effectClass === "sixmm-language-option-effect" ? effectClass : "sixmm-content-card";
+    if (!card.classList.contains(className)) card.classList.add(className);
     if (!groups.has(group)) groups.set(group, []);
     var cards = groups.get(group);
     if (cards.indexOf(card) === -1) cards.push(card);
@@ -61,8 +66,13 @@
     document.querySelectorAll(
       ".sixmm-language-menu-enhanced .fern-language-dropdown-item, .sixmm-mobile-language-dialog-option"
     ).forEach(function (option) { register(option, "sixmm-language-option-effect"); });
-    groups.forEach(function (cards, group) {
-      groups.set(group, cards.filter(function (card) { return card.isConnected; }));
+    groups.forEach(function (cards) {
+      // Compact private group lists without allocating replacements on every scan.
+      var count = 0;
+      for (var index = 0; index < cards.length; index++) {
+        if (cards[index].isConnected) cards[count++] = cards[index];
+      }
+      cards.length = count;
     });
   }
 
@@ -74,8 +84,14 @@
     frame = 0;
     if (!pointer || !activeGroup || !enabled()) return;
     var glowRadius = activeGroup.matches(languageGroups) ? 160 : radius;
-    (groups.get(activeGroup) || []).forEach(function (card) {
-      var rect = card.getBoundingClientRect();
+    var cards = groups.get(activeGroup) || [];
+    // Measure the whole group before style writes can invalidate its geometry.
+    measuredRects.length = cards.length;
+    for (var index = 0; index < cards.length; index++) {
+      measuredRects[index] = cards[index].getBoundingClientRect();
+    }
+    cards.forEach(function (card, index) {
+      var rect = measuredRects[index];
       if (!rect.width || !rect.height) return;
       var distance = Math.max(0, Math.hypot(
         pointer.x - rect.left - rect.width / 2,
@@ -102,22 +118,42 @@
       hoveredCard = card;
       if (card) card.setAttribute("data-sixmm-card-hovered", "true");
     }
-    pointer = { x: event.clientX, y: event.clientY };
+    if (!pointer) pointer = {};
+    pointer.x = event.clientX;
+    pointer.y = event.clientY;
     if (!frame) frame = requestAnimationFrame(render);
+  }
+
+  function containsElement(nodes) {
+    return Array.prototype.some.call(nodes, function (node) { return node.nodeType === 1; });
+  }
+
+  function observeBody() {
+    if (observedBody === document.body) return;
+    if (bodyObserver) bodyObserver.disconnect();
+    else bodyObserver = new MutationObserver(function (records) {
+      // Text and comment changes cannot add or remove card targets.
+      if (records.some(function (record) {
+        return containsElement(record.addedNodes) || containsElement(record.removedNodes);
+      })) {
+        scheduleScan();
+      }
+    });
+    observedBody = document.body;
+    bodyObserver.observe(observedBody, { childList: true, subtree: true });
   }
 
   function start() {
     scan();
-    new MutationObserver(function (records) {
-      if (records.some(function (record) { return record.addedNodes.length || record.removedNodes.length; })) {
-        scheduleScan();
-      }
-    }).observe(document.body, { childList: true, subtree: true });
+    observeBody();
     document.addEventListener("pointermove", move, { passive: true });
     document.addEventListener("pointerleave", reset, { passive: true });
     document.addEventListener("scroll", reset, { passive: true, capture: true });
     document.addEventListener("visibilitychange", function () { if (document.hidden) reset(); });
-    document.addEventListener("astro:page-load", scheduleScan);
+    document.addEventListener("astro:page-load", function () {
+      observeBody();
+      scheduleScan();
+    });
     document.addEventListener("astro:before-swap", reset);
     window.addEventListener("blur", reset);
     window.addEventListener("resize", reset, { passive: true });

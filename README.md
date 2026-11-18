@@ -29,6 +29,7 @@ fern/
   docs/assets/                     # Logos, favicon, brand assets, and downloads
 scripts/
   generate-translations.mjs        # Translation generation and manifest refresh
+  translation-text.mjs             # Shared text extraction and placeholder protection
   polish-core-translations.mjs     # Deterministic terminology and quality fixes
   check-translations.mjs           # Locale, SEO, link, asset, and manifest validation
 ```
@@ -55,6 +56,9 @@ navigation has 158 unique pages per locale.
 
 ## Local Development
 
+Use Node.js 22 to match the publishing workflow. Node.js 20 or newer is required
+for the pinned Fern CLI and the validation tools, including browser checks.
+
 Install dependencies:
 
 ```bash
@@ -66,6 +70,10 @@ Run validation:
 ```bash
 npm run check
 ```
+
+Run checks from a Git checkout. JavaScript syntax validation automatically includes
+tracked and unignored `.js`, `.mjs`, and `.cjs` files under `fern/`, `scripts/`, and `tests/browser/`;
+it parses these files without executing their contents.
 
 Start a local Fern preview:
 
@@ -118,6 +126,36 @@ upgrading Fern, also verify navigation, language switching, themes and history i
 Safari and Chrome. This guards a hosted-renderer failure; it does not patch
 WebKit's module loader or Fern's generated bundles.
 
+The browser regression suite runs the checkout's configured custom scripts and
+CSS in Chromium and WebKit. Scripts follow their configured loading phases,
+preserving declaration order within each phase; Fern's parser, hydration and
+network timing are not reproduced. It covers all 20 locale routes, query/section
+preservation, theme synchronization, mobile keyboard focus, nested hydration and
+customer-support loading/retry behavior. Fern routing/theme state and the external
+support SDK are simulated; the suite makes no production-service requests.
+It does not test Fern's deployed renderer or replace native Safari/Chrome acceptance
+testing after platform upgrades.
+The suite also checks the Safari guard with native custom elements, dynamic module
+imports and a renderer paused at top-level `await`. Its Astro island API is simulated;
+it verifies loading order and Chrome isolation rather than reproducing Fern's bundles.
+
+Browser checks have a separate, pinned development dependency installation.
+After the root `npm ci`, set them up and run them with:
+
+```bash
+npm ci --prefix tests/browser --ignore-scripts
+npm --prefix tests/browser run install:browsers
+npm run browser:check
+```
+
+On Linux, append `-- --with-deps` to the browser installation command to install
+the required system packages. See [Playwright's CI setup](https://playwright.dev/docs/ci).
+The regular `npm run check` remains available without downloading browsers.
+The **Docs checks** workflow runs both documentation and browser checks for pull
+requests and pushes to `main`, using the same Node.js version and browser commands
+as the publication workflow. Documentation checks run first so a failure stops
+the job before browser installation.
+
 ## Customer support integration
 
 `fern/support-widget.js` loads the SaaS SDK from `https://cs.6mm.com/widget/widget.js` using the 6MM tenant's public `data-app-key`. This is a public tenant identifier, not a signing secret. If the key changes, update the loader and its assertion in `scripts/check-widget-sync.mjs` together.
@@ -143,11 +181,20 @@ Publish with:
 npm run fern:publish
 ```
 
-Alternatively, run the **Publish docs** GitHub Actions workflow on `main`.
-It validates the documentation before publishing with the repository's
-`FERN_TOKEN` secret. The token must belong to the configured Fern organization.
+This command runs the full `npm run check` suite through its npm pre-task and
+publishes only if validation succeeds. Run it through npm, rather than invoking
+`fern generate --docs` directly. Extra arguments go to Fern, not to validation.
 
-Cloudflare should manage DNS for `docs.6mm.com`; the documentation site itself should be published through Fern.
+Alternatively, run the **Publish docs** GitHub Actions workflow on `main`.
+It runs `npm run check` before installing browser dependencies, then runs the
+browser regression suite. A failure in either check stops publication. After both
+pass, it invokes the installed Fern CLI directly so validation runs only once.
+Validation and publication use the repository's `FERN_TOKEN` secret, which must
+belong to the configured Fern organization. Run `npm run browser:check` before a
+local publication as well.
+
+DNS management is separate from documentation publishing; a normal content or
+script update does not require DNS changes.
 
 ## Security
 

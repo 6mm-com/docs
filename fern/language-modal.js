@@ -118,18 +118,10 @@
 
   window.__sixmmDocsLocales = locales;
 
-  function isVisible(element) {
-    return Boolean(
-      element &&
-        element.isConnected &&
-        (element.offsetParent !== null ||
-          (typeof element.getClientRects === "function" &&
-            element.getClientRects().length > 0)),
-    );
-  }
-
   function waitFor(resolveValue, timeout) {
     return new Promise(function (resolve) {
+      var initial = resolveValue();
+      if (initial) { resolve(initial); return; }
       var finished = false;
       var observer = new MutationObserver(check);
       var timer = window.setTimeout(function () {
@@ -154,17 +146,19 @@
         childList: true,
         subtree: true,
       });
-      check();
     });
   }
 
-  function localeForPathname(pathname) {
-    var firstSegment = pathname.split("/").filter(Boolean)[0] || "";
+  function localeForSegment(firstSegment) {
     var normalized = firstSegment.toLowerCase();
     var locale = locales.find(function (item) {
       return item.code && item.code.toLowerCase() === normalized;
     });
     return locale ? locale.code : "";
+  }
+
+  function localeForPathname(pathname) {
+    return localeForSegment(pathname.split("/").find(Boolean) || "");
   }
 
   function currentDocsLocale() {
@@ -173,16 +167,12 @@
 
   function currentRoute() {
     var segments = window.location.pathname.split("/").filter(Boolean);
-    var locale = localeForPathname(window.location.pathname);
+    var locale = localeForSegment(segments[0] || "");
     if (locale) segments.shift();
     return {
       locale: locale,
       pagePath: segments.length ? "/" + segments.join("/") : "/",
     };
-  }
-
-  function currentInterfaceLabels() {
-    return interfaceLabels[currentDocsLocale()] || interfaceLabels[""];
   }
 
   function localizedPath(locale, pagePath) {
@@ -214,23 +204,28 @@
     return label === localeLabels[""] ? "" : null;
   }
 
-  function syncLocaleMenu(menu) {
+  function setMenuAttribute(element, name, value) {
+    if (element.getAttribute(name) !== value) element.setAttribute(name, value);
+  }
+
+  function syncLocaleMenu(menu, route) {
     var group = menu.querySelector(".fern-language-selector-radio-group");
     if (!group) return;
 
-    var route = currentRoute();
     var byLocale = {};
-    Array.from(group.querySelectorAll('[role="menuitemradio"]')).forEach(
+    var options = group.querySelectorAll('[role="menuitemradio"]');
+    options.forEach(
       function (option) {
         var locale = localeForOption(option);
         if (locale === null) return;
 
-        option.dataset.sixmmLocale = locale;
-        option.href = localizedPath(locale, route.pagePath);
-        option.dataset.state = route.locale === locale ? "checked" : "unchecked";
-        option.setAttribute(
+        var selected = route.locale === locale;
+        setMenuAttribute(option, "data-sixmm-locale", locale);
+        setMenuAttribute(option, "href", localizedPath(locale, route.pagePath));
+        setMenuAttribute(option, "data-state", selected ? "checked" : "unchecked");
+        setMenuAttribute(option,
           "aria-checked",
-          route.locale === locale ? "true" : "false",
+          selected ? "true" : "false",
         );
 
         var label = option.querySelector(
@@ -243,9 +238,6 @@
       },
     );
 
-    var options = Array.from(
-      group.querySelectorAll('[role="menuitemradio"]'),
-    );
     var ordered = localeOrder
       .map(function (locale) {
         return byLocale[locale];
@@ -334,6 +326,7 @@
     if (mobileLocaleDialog) return;
 
     var route = currentRoute();
+    var labels = interfaceLabels[route.locale] || interfaceLabels[""];
     var root = document.createElement("div");
     root.className = "sixmm-mobile-language-dialog";
     root.dataset.sixmmLocale = route.locale;
@@ -343,7 +336,7 @@
     backdrop.className = "sixmm-mobile-language-dialog-backdrop";
     backdrop.setAttribute(
       "aria-label",
-      currentInterfaceLabels().closeLanguage,
+      labels.closeLanguage,
     );
     backdrop.addEventListener("click", closeMobileLocaleDialog);
 
@@ -358,14 +351,14 @@
 
     var heading = document.createElement("h2");
     heading.id = "sixmm-mobile-language-title";
-    heading.textContent = currentInterfaceLabels().chooseLanguage;
+    heading.textContent = labels.chooseLanguage;
 
     var closeButton = document.createElement("button");
     closeButton.type = "button";
     closeButton.className = "sixmm-mobile-language-dialog-close";
     closeButton.setAttribute(
       "aria-label",
-      currentInterfaceLabels().closeLanguage,
+      labels.closeLanguage,
     );
     closeButton.textContent = "×";
     closeButton.addEventListener("click", closeMobileLocaleDialog);
@@ -403,9 +396,7 @@
         return;
       }
       if (event.key === "Tab") {
-        var focusable = Array.from(
-          panel.querySelectorAll('button:not([disabled])'),
-        );
+        var focusable = panel.querySelectorAll('button:not([disabled])');
         var first = focusable[0];
         var last = focusable[focusable.length - 1];
         if (!first || !last) return;
@@ -452,11 +443,8 @@
     );
   }
 
-  function enhanceLocaleMenus() {
-    var labels = currentInterfaceLabels();
-    Array.from(
-      document.querySelectorAll(".fern-language-dropdown-content"),
-    ).forEach(function (menu) {
+  function enhanceLocaleMenus(route, labels) {
+    document.querySelectorAll(".fern-language-dropdown-content").forEach(function (menu) {
       if (!menu.classList.contains("sixmm-language-menu-enhanced")) {
         menu.classList.add("sixmm-language-menu-enhanced");
         var heading = document.createElement("div");
@@ -467,31 +455,33 @@
       if (heading && heading.textContent !== labels.chooseLanguage) {
         heading.textContent = labels.chooseLanguage;
       }
-      menu.setAttribute("aria-label", labels.chooseLanguage);
+      setMenuAttribute(menu, "aria-label", labels.chooseLanguage);
       guardLocaleMenu(menu);
-      syncLocaleMenu(menu);
+      syncLocaleMenu(menu, route);
     });
   }
 
-  function enhanceSettingsControls() {
-    var route = currentRoute();
-    var currentLabel = localeLabels[route.locale] || localeLabels[""];
-    var labels = currentInterfaceLabels();
+  function ensureControlClass(element, name) {
+    if (!element.classList.contains(name)) element.classList.add(name);
+  }
 
-    Array.from(
-      document.querySelectorAll(
-        'button[aria-label="Open menu"], button[aria-label="Close menu"]',
-      ),
+  function enhanceSettingsControls(route, labels) {
+    var currentLabel = localeLabels[route.locale] || localeLabels[""];
+
+    document.querySelectorAll(
+      'button[aria-label="Open menu"], button[aria-label="Close menu"]',
     ).forEach(function (menuButton) {
       if (!isHydratedControl(menuButton)) return;
-      menuButton.classList.add("sixmm-mobile-menu-trigger");
+      if (!menuButton.classList.contains("sixmm-mobile-menu-trigger")) {
+        menuButton.classList.add("sixmm-mobile-menu-trigger");
+      }
     });
 
-    Array.from(document.querySelectorAll(".fern-language-selector")).forEach(
+    document.querySelectorAll(".fern-language-selector").forEach(
       function (selector) {
         if (!isHydratedControl(selector)) return;
         guardMobileLocaleTrigger(selector);
-        selector.setAttribute("aria-label", labels.chooseLanguage);
+        setMenuAttribute(selector, "aria-label", labels.chooseLanguage);
         selector.removeAttribute("title");
         var visibleLabel = selector.querySelector(
           ".language-dropdown-trigger .truncate",
@@ -513,15 +503,15 @@
           return;
         }
 
-        themeButton.classList.add("sixmm-theme-trigger");
+        ensureControlClass(themeButton, "sixmm-theme-trigger");
         if (
           parent.tagName === "DIV" &&
           parent.classList.contains("lg:hidden")
         ) {
-          parent.classList.add("sixmm-mobile-settings-bar");
-          themeButton.classList.add("sixmm-mobile-theme-trigger");
+          ensureControlClass(parent, "sixmm-mobile-settings-bar");
+          ensureControlClass(themeButton, "sixmm-mobile-theme-trigger");
         }
-        themeButton.setAttribute(
+        setMenuAttribute(themeButton,
           "aria-label",
           (themeButton.textContent || "").trim() || "Theme",
         );
@@ -530,8 +520,7 @@
     );
   }
 
-  function syncLocaleTabs() {
-    var route = currentRoute();
+  function syncLocaleTabs(route) {
     if (
       mobileLocaleDialog &&
       (!isMobileViewport() ||
@@ -539,8 +528,10 @@
     ) {
       closeMobileLocaleDialog(false);
     }
-    document.documentElement.dataset.sixmmDocsLocale =
-      route.locale || "en";
+    var locale = route.locale || "en";
+    if (document.documentElement.dataset.sixmmDocsLocale !== locale) {
+      document.documentElement.dataset.sixmmDocsLocale = locale;
+    }
   }
 
   function pageContentState() {
@@ -622,7 +613,7 @@
   function prepareLocaleSwap(event) {
     if (!event.from || !event.to || !event.newDocument) return;
     var routeLocale = function (url) {
-      var first = url.pathname.split("/").filter(Boolean)[0] || "";
+      var first = url.pathname.split("/").find(Boolean) || "";
       return locales.some(function (item) { return item.code && item.code === first; }) ? first : "";
     };
     if (typeof window.__sixmmPrepareInterfaceSwap === 'function') {
@@ -678,9 +669,11 @@
 
   function syncInterface() {
     syncScheduled = false;
-    enhanceSettingsControls();
-    enhanceLocaleMenus();
-    syncLocaleTabs();
+    var route = currentRoute();
+    var labels = interfaceLabels[route.locale] || interfaceLabels[""];
+    enhanceSettingsControls(route, labels);
+    enhanceLocaleMenus(route, labels);
+    syncLocaleTabs(route);
   }
   function isHydratedControl(element) {
     if (typeof element.closest !== "function") return true;
@@ -700,7 +693,7 @@
 
   // This script loads before interactive content. Set the pathname-derived
   // locale immediately so standalone navigation tabs never flash on first paint.
-  syncLocaleTabs();
+  syncLocaleTabs(currentRoute());
   document.addEventListener("DOMContentLoaded", scheduleSync);
   document.addEventListener("astro:before-swap", prepareLocaleSwap);
   document.addEventListener("fern:island-hydrated", scheduleSync);
@@ -721,7 +714,7 @@
     if (records.some(function (record) {
       var target = record.target.nodeType === 1 ? record.target : record.target.parentElement;
       if (target && target.closest(controls)) return true;
-      return Array.from(record.addedNodes).some(function (node) {
+      return Array.prototype.some.call(record.addedNodes, function (node) {
         return node.nodeType === 1 && (node.matches(controls) || node.querySelector(controls));
       });
     })) scheduleSync();

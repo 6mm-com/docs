@@ -6,28 +6,31 @@
   // Public SaaS tenant identifier, not a signing secret.
   var APP_KEY = 'app_-ofLSy2QTO0xAI4pkAiQ3Jch';
   var locales = window.__sixmmDocsLocales || [];
-  var localeRoutes = locales
-    .filter(function (locale) {
-      return locale.code;
-    })
-    .map(function (locale) {
-      return { route: locale.code, widget: locale.widget || locale.code };
-    });
+  var localeRoutes = new Map();
   var widgetLanguageRoutes = {};
   locales.forEach(function (locale) {
+    if (locale.code && !localeRoutes.has(locale.code)) {
+      localeRoutes.set(locale.code, { route: locale.code, widget: locale.widget || locale.code });
+    }
     (locale.aliases || [locale.widget || locale.code]).forEach(function (alias) {
       widgetLanguageRoutes[String(alias).toLowerCase()] = locale.code;
     });
   });
-  var lastPathname = window.location.pathname;
   var lastWidgetLanguage = null;
   var lastTheme = null;
+  var languageRetryTimer = null;
+  var languageRetryForce = false;
+  var themeRetryTimer = null;
+  var themeRetryForce = false;
   var pendingWidgetDocsLocale = null;
   var pendingWidgetDocsResolved = false;
   var pendingWidgetTheme = null;
   var widgetDocsRequestId = 0;
   var retainedWidgetNodes = [];
   var observedWidgetContainer = null;
+  var widgetContainerObserver = null;
+  var observedWidgetBody = null;
+  var widgetBodyObserver = null;
   var widgetRequested = false;
   var openWhenReady = false;
   var retainedModalStyles = null;
@@ -179,12 +182,14 @@
   function renderSupportStatus() {
     if (!supportStatus) return;
     var labels = statusLabels[currentDocsLocale() || 'en'] || statusLabels.en;
-    supportStatus.hidden = supportFrameReady;
-    supportStatus.dataset.state = supportFrameFailed ? 'error' : 'loading';
-    supportMessage.textContent = labels[supportFrameFailed ? 1 : 0];
-    supportRetry.textContent = labels[2];
-    supportRetry.hidden = !supportFrameFailed;
-    supportClose.textContent = labels[3];
+    if (supportStatus.hidden !== supportFrameReady) supportStatus.hidden = supportFrameReady;
+    var state = supportFrameFailed ? 'error' : 'loading';
+    if (supportStatus.dataset.state !== state) supportStatus.dataset.state = state;
+    var message = labels[supportFrameFailed ? 1 : 0];
+    if (supportMessage.textContent !== message) supportMessage.textContent = message;
+    if (supportRetry.textContent !== labels[2]) supportRetry.textContent = labels[2];
+    if (supportRetry.hidden !== !supportFrameFailed) supportRetry.hidden = !supportFrameFailed;
+    if (supportClose.textContent !== labels[3]) supportClose.textContent = labels[3];
   }
 
   function startSupportDeadline() {
@@ -199,6 +204,7 @@
 
   function ensureSupportStatus(container, frame) {
     if (supportFrame === frame) { renderSupportStatus(); return; }
+    if (supportStatus) supportStatus.remove();
     supportFrame = frame;
     supportFrameReady = false;
     supportFrameFailed = false;
@@ -244,12 +250,20 @@
     renderSupportStatus();
   }
 
+  function setAttributeIfChanged(element, name, value) {
+    if (element.getAttribute(name) !== value) element.setAttribute(name, value);
+  }
+
   function syncWidgetAccessibility() {
     var bubble = document.getElementById('cs-widget-bubble');
     var container = document.getElementById('cs-widget-container');
     var launcher = document.getElementById('sixmm-support-launcher');
-    if (launcher) launcher.setAttribute('aria-label', supportLabels[currentDocsLocale() || 'en'] || supportLabels.en);
-    if (!bubble || !container) return;
+    if (launcher) setAttributeIfChanged(launcher, 'aria-label', supportLabels[currentDocsLocale() || 'en'] || supportLabels.en);
+    if (!bubble || !container) {
+      if (widgetContainerObserver) widgetContainerObserver.disconnect();
+      observedWidgetContainer = null;
+      return;
+    }
     var frame = container.querySelector('iframe');
     if (frame) ensureSupportStatus(container, frame);
     if (launcher) launcher.remove();
@@ -259,12 +273,12 @@
     }
     var open = container.style.display !== 'none';
     var label = supportLabels[currentDocsLocale() || 'en'] || supportLabels.en;
-    bubble.setAttribute('role', 'button');
-    bubble.setAttribute('tabindex', open ? '-1' : '0');
-    bubble.setAttribute('aria-label', label);
-    bubble.setAttribute('aria-controls', 'cs-widget-container');
-    bubble.setAttribute('aria-expanded', open ? 'true' : 'false');
-    if (frame) frame.setAttribute('title', label);
+    setAttributeIfChanged(bubble, 'role', 'button');
+    setAttributeIfChanged(bubble, 'tabindex', open ? '-1' : '0');
+    setAttributeIfChanged(bubble, 'aria-label', label);
+    setAttributeIfChanged(bubble, 'aria-controls', 'cs-widget-container');
+    setAttributeIfChanged(bubble, 'aria-expanded', open ? 'true' : 'false');
+    if (frame) setAttributeIfChanged(frame, 'title', label);
     if (bubble.dataset.sixmmKeyboardSupport !== 'true') {
       bubble.dataset.sixmmKeyboardSupport = 'true';
       bubble.addEventListener('keydown', function (event) {
@@ -274,11 +288,21 @@
       });
     }
     if (observedWidgetContainer !== container) {
+      if (widgetContainerObserver) widgetContainerObserver.disconnect();
+      else widgetContainerObserver = new MutationObserver(syncWidgetAccessibility);
       observedWidgetContainer = container;
-      new MutationObserver(syncWidgetAccessibility).observe(container, {
+      widgetContainerObserver.observe(container, {
         attributes: true, attributeFilter: ['style']
       });
     }
+  }
+
+  function observeWidgetBody() {
+    if (observedWidgetBody === document.body) return;
+    if (widgetBodyObserver) widgetBodyObserver.disconnect();
+    else widgetBodyObserver = new MutationObserver(syncWidgetAccessibility);
+    observedWidgetBody = document.body;
+    widgetBodyObserver.observe(observedWidgetBody, { childList: true });
   }
 
   function prepareWidgetSwap(event) {
@@ -334,12 +358,15 @@
   }
 
   function restoreWidgetAfterSwap() {
+    observeWidgetBody();
     retainedWidgetNodes.forEach(function (entry) {
       if (entry.node.isConnected) return;
       // Fallback for hosts that did not preserve the marked nodes during a swap.
       var target = entry.inHead ? document.head : document.body;
       target.appendChild(entry.node);
     });
+    // These references belong only to the completed swap, not later SDK mounts.
+    retainedWidgetNodes = [];
     if (retainedModalStyles) {
       ['body', 'documentElement'].forEach(function (part) {
         applyModalStyles(document[part], retainedModalStyles[part]);
@@ -363,19 +390,18 @@
       : '';
   }
 
+  function currentLocaleRoute() {
+    var firstSegment = window.location.pathname.split('/').find(Boolean) || '';
+    return localeRoutes.get(firstSegment);
+  }
+
   function currentDocsLocale() {
-    var firstSegment = window.location.pathname.split('/').filter(Boolean)[0] || '';
-    var locale = localeRoutes.find(function (item) {
-      return item.route === firstSegment;
-    });
+    var locale = currentLocaleRoute();
     return locale ? locale.route : '';
   }
 
   function currentLang() {
-    var docsLocale = currentDocsLocale();
-    var locale = localeRoutes.find(function (item) {
-      return item.route === docsLocale;
-    });
+    var locale = currentLocaleRoute();
     return locale ? locale.widget : 'en';
   }
 
@@ -399,6 +425,10 @@
   }
 
   function syncWidgetLanguageFromHost(retries, force) {
+    force = force || languageRetryForce;
+    if (languageRetryTimer !== null) window.clearTimeout(languageRetryTimer);
+    languageRetryTimer = null;
+    languageRetryForce = false;
     var language = currentLang();
     if (!force && language === lastWidgetLanguage) return;
     if (callWidget('setLang', language)) {
@@ -406,13 +436,19 @@
       return;
     }
     if (retries > 0) {
-      window.setTimeout(function () {
+      languageRetryForce = force;
+      languageRetryTimer = window.setTimeout(function () {
+        languageRetryTimer = null;
         syncWidgetLanguageFromHost(retries - 1, force);
       }, 100);
     }
   }
 
   function syncWidgetThemeFromHost(retries, force) {
+    force = force || themeRetryForce;
+    if (themeRetryTimer !== null) window.clearTimeout(themeRetryTimer);
+    themeRetryTimer = null;
+    themeRetryForce = false;
     var theme = currentTheme();
     if (pendingWidgetTheme === theme) {
       pendingWidgetTheme = null;
@@ -424,7 +460,9 @@
       if (callWidget('setTheme', theme)) {
         lastTheme = theme;
       } else if (retries > 0) {
-        window.setTimeout(function () {
+        themeRetryForce = force;
+        themeRetryTimer = window.setTimeout(function () {
+          themeRetryTimer = null;
           syncWidgetThemeFromHost(retries - 1, force);
         }, 100);
       }
@@ -441,7 +479,6 @@
   function clearPendingWidgetDocsNavigation() {
     pendingWidgetDocsLocale = null;
     pendingWidgetDocsResolved = false;
-    lastPathname = window.location.pathname;
   }
 
   function confirmPendingWidgetDocsNavigation() {
@@ -459,9 +496,7 @@
   function switchHostLanguage(lang) {
     var route = routeForWidgetLanguage(lang);
     var requestId = ++widgetDocsRequestId;
-    var locale = localeRoutes.find(function (item) {
-      return item.route === route;
-    });
+    var locale = localeRoutes.get(route);
 
     if (locale) lastWidgetLanguage = locale.widget;
     pendingWidgetDocsLocale = route;
@@ -592,7 +627,6 @@
   }
 
   function syncHostNavigation() {
-    lastPathname = window.location.pathname;
     if (!widgetRequested) { syncWidgetAccessibility(); return; }
     if (pendingWidgetDocsLocale !== null) { confirmPendingWidgetDocsNavigation(); return; }
     syncWidgetLanguageFromHost(20, false);
@@ -609,9 +643,7 @@
     window.addEventListener('popstate', syncHostNavigation);
     window.addEventListener('pageshow', syncHostNavigation);
     // The SDK mounts the controls asynchronously as direct body children.
-    new MutationObserver(syncWidgetAccessibility).observe(document.body, {
-      childList: true
-    });
+    observeWidgetBody();
     // Initialize in the background on every fresh page load, so the iframe can
     // mount before the user opens support. Astro navigation retains this SDK.
     widgetRequested = true;

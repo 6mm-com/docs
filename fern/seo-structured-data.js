@@ -1,4 +1,7 @@
 (function () {
+  if (window.__sixmmSeoStructuredData) return;
+  window.__sixmmSeoStructuredData = true;
+
   var siteUrl = "https://docs.6mm.com";
   var fallbackLocales = [
     { code: "", htmlLang: "en" },
@@ -26,18 +29,12 @@
     window.__sixmmDocsLocales && window.__sixmmDocsLocales.length
       ? window.__sixmmDocsLocales
       : fallbackLocales;
-  var publicLocales = configuredLocales.map(function (locale) {
+  var localeRoutes = new Map();
+  configuredLocales.forEach(function (locale) {
     var route = locale.code || "";
-    return {
-      route: route,
-      code: route || "en",
-    };
+    var key = route.toLowerCase();
+    if (!localeRoutes.has(key)) localeRoutes.set(key, route);
   });
-  var localeCodes = publicLocales
-    .map(function (locale) {
-      return locale.route;
-    })
-    .filter(Boolean);
   var homeNames = {
     en: "Home",
     ja: "ホーム",
@@ -217,17 +214,9 @@
     return normalized || "/";
   }
 
-  function localeDefinition(code) {
-    var normalized = String(code || "").toLowerCase();
-    return publicLocales.find(function (locale) {
-      return locale.route.toLowerCase() === normalized;
-    });
-  }
-
   function localeForPathname(pathname) {
-    var firstSegment = pathname.split("/").filter(Boolean)[0] || "";
-    var definition = localeDefinition(firstSegment);
-    var route = definition ? definition.route : "";
+    var firstSegment = pathname.split("/").find(Boolean) || "";
+    var route = localeRoutes.get(firstSegment.toLowerCase()) || "";
     return {
       code: route || "en",
       route: route,
@@ -238,9 +227,7 @@
   function pagePathForPathname(pathname) {
     var segments = normalizedPathname(pathname).split("/").filter(Boolean);
 
-    while (segments.length > 0 && localeCodes.some(function (code) {
-      return code.toLowerCase() === segments[0].toLowerCase();
-    })) {
+    while (segments.length > 0 && localeRoutes.has(segments[0].toLowerCase())) {
       segments.shift();
     }
 
@@ -282,25 +269,26 @@
     return document.title.replace(/\s*\|\s*6MM Docs\s*$/i, "").trim();
   }
 
+  var breadcrumbLevels = [
+    ["solutions", "solutions", "/solutions/overview"],
+    ["trading", "trading", "/trading/overview"],
+    ["developer-api", "developerApi", "/developer-api/overview"],
+    ["developer-api/rest-api", "restApi", "/developer-api/rest-api"],
+    ["developer-api/websocket", "websocket", "/developer-api/websocket"],
+    ["sdk", "sdk", "/sdk/overview"],
+    ["sdk/trading-widget", "tradingWidget", "/sdk/trading-widget/overview"],
+    ["sdk/agent-sdk", "agentSdk", "/sdk/agent-sdk/overview"],
+    ["sdk/agent-sdk/java", "javaSdk", "/sdk/agent-sdk/java/overview"],
+    ["sdk/agent-sdk/php", "phpSdk", "/sdk/agent-sdk/php/overview"],
+    ["security-compliance", "security", "/security-compliance/overview"],
+    ["resources", "resources", "/resources/overview"],
+  ];
+
   function addBreadcrumbs(pagePath, locale, canonicalUrl) {
     var route = pagePath.replace(/^\//, "");
     var localePrefix = locale.prefix;
     var labels =
       breadcrumbLabelsByLocale[locale.code] || breadcrumbLabelsByLocale.en;
-    var levels = [
-      ["solutions", labels.solutions, "/solutions/overview"],
-      ["trading", labels.trading, "/trading/overview"],
-      ["developer-api", labels.developerApi, "/developer-api/overview"],
-      ["developer-api/rest-api", labels.restApi, "/developer-api/rest-api"],
-      ["developer-api/websocket", labels.websocket, "/developer-api/websocket"],
-      ["sdk", labels.sdk, "/sdk/overview"],
-      ["sdk/trading-widget", labels.tradingWidget, "/sdk/trading-widget/overview"],
-      ["sdk/agent-sdk", labels.agentSdk, "/sdk/agent-sdk/overview"],
-      ["sdk/agent-sdk/java", labels.javaSdk, "/sdk/agent-sdk/java/overview"],
-      ["sdk/agent-sdk/php", labels.phpSdk, "/sdk/agent-sdk/php/overview"],
-      ["security-compliance", labels.security, "/security-compliance/overview"],
-      ["resources", labels.resources, "/resources/overview"],
-    ];
     var items = [
       {
         name: homeNames[locale.code] || "Home",
@@ -308,12 +296,12 @@
       },
     ];
 
-    levels.forEach(function (level) {
+    breadcrumbLevels.forEach(function (level) {
       var prefix = level[0];
 
       if (route === prefix || route.indexOf(prefix + "/") === 0) {
         items.push({
-          name: level[1],
+          name: labels[level[1]],
           item: siteUrl + localePrefix + level[2],
         });
       }

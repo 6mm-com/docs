@@ -1,9 +1,12 @@
 import { readFile } from "node:fs/promises";
+import { realpathSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "yaml";
 
-const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const scriptPath = realpathSync(fileURLToPath(import.meta.url));
+const projectRoot = path.resolve(path.dirname(scriptPath), "..");
+const iconFamilies = new Set(["fa-duotone", "fa-brands", "fa-solid", "fa-regular", "fa-light", "fa-thin"]);
 
 // Translation overlays inherit icons by position, just as they inherit paths.
 // Reject shape changes rather than silently dropping or misaligning pages.
@@ -48,8 +51,7 @@ export function inspectNavigationIcons(navigation) {
           pageCount++;
           const label = [tab, ...sectionPath, node.page].join(" / ");
           const classes = typeof node.icon === "string" ? node.icon.trim().split(/\s+/) : [];
-          const families = new Set(["fa-duotone", "fa-brands", "fa-solid", "fa-regular", "fa-light", "fa-thin"]);
-          if (classes.length !== 2 || !families.has(classes[0]) || !/^fa-[a-z0-9-]+$/.test(classes[1])) {
+          if (classes.length !== 2 || !iconFamilies.has(classes[0]) || !/^fa-[a-z0-9-]+$/.test(classes[1])) {
             errors.push(`${label}: missing or invalid Font Awesome icon; use a family and one glyph, e.g. fa-duotone fa-book-open`);
           } else {
             // Compare the glyph, not the complete CSS class string: a different
@@ -99,6 +101,12 @@ async function main() {
   console.log(`Navigation icons verified: ${summary.tabCount} top-level tabs, ${summary.pageCount} sidebar entries per locale, ${checked} locales. Glyphs are unique within each tab across all sections; reuse across different tabs is allowed.`);
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  await main();
+let isMain = false;
+if (process.argv[1]) {
+  try {
+    isMain = realpathSync(process.argv[1]) === scriptPath;
+  } catch {
+    // Imports from stdin or eval may have no executable file to resolve.
+  }
 }
+if (isMain) await main();

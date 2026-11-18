@@ -13,6 +13,7 @@ import {
   widgetLocaleAliases,
 } from "./locale-config.mjs";
 import { findTranslationQualityIssues } from "./polish-core-translations.mjs";
+import { frontmatter, internalDestinations } from "./documentation-text.mjs";
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const fernRoot = path.join(projectRoot, "fern");
@@ -27,10 +28,20 @@ const generatedLocaleTargetLanguages = Object.fromEntries(
   ]),
 );
 const nativeLocales = nativeLocaleCodes;
-const requestedLocaleArg = process.argv.find((argument) => argument.startsWith("--locales="));
+const args = [...new Set(process.argv.slice(2))];
+if (args.some((argument) => !argument.startsWith("--locales="))) {
+  throw new Error("Unknown argument; use --locales=ja,fr or omit it for the full check");
+}
+if (args.length > 1) {
+  throw new Error("Specify --locales once with comma-separated codes");
+}
+const requestedLocaleArg = args[0];
 const requestedLocales = requestedLocaleArg
   ? new Set(requestedLocaleArg.slice("--locales=".length).split(",").filter(Boolean))
   : null;
+if (requestedLocales?.size === 0) {
+  throw new Error("At least one locale is required in --locales; omit the option for the full check");
+}
 if (requestedLocales && [...requestedLocales].some((locale) => !expectedLocales.includes(locale))) {
   throw new Error("Unknown locale in --locales; use the configured Docs locale codes");
 }
@@ -48,50 +59,44 @@ function loadYamlAsJson(filePath) {
   return parseYaml(readFileSync(filePath, "utf8"));
 }
 
-function frontmatter(content) {
-  const match = content.match(/^---\n([\s\S]*?)\n---/);
-  if (!match) return {};
-  const result = {};
-  for (const line of match[1].split("\n")) {
-    const field = line.match(/^([a-z][\w-]*):\s*(.*)$/i);
-    if (field) result[field[1]] = field[2].replace(/^["']|["']$/g, "");
-  }
-  return result;
+function splitCodeBlocks(content) {
+  const blocks = [];
+  const prose = content.replace(/```[^\n]*\n[\s\S]*?```/g, block => {
+    blocks.push(block);
+    return "";
+  });
+  return { blocks, prose };
 }
 
-function codeBlocks(content) {
-  return [...content.matchAll(/```[^\n]*\n([\s\S]*?)```/g)].map((match) => match[0]);
-}
-
-function inlineCode(content) {
-  const withoutBlocks = content.replace(/```[^\n]*\n[\s\S]*?```/g, "");
-  return [...withoutBlocks.matchAll(/`([^`\n]+)`/g)].map((match) => match[1]).sort();
+function inlineCode(prose) {
+  const tokens = [];
+  for (const match of prose.matchAll(/`([^`\n]+)`/g)) tokens.push(match[1]);
+  return tokens.sort();
 }
 
 function imageSources(content) {
-  return [
-    ...[...content.matchAll(/!\[[^\]]*\]\(([^)\s]+)[^)]*\)/g)].map((match) => match[1]),
-    ...[...content.matchAll(/\bsrc=["']([^"']+)["']/g)].map((match) => match[1]),
-  ].sort();
-}
-
-function internalDestinations(content) {
-  return [
-    ...[...content.matchAll(/\bhref=["'](\/[^"']+)["']/g)].map((match) => match[1]),
-    ...[...content.matchAll(/\]\((\/[^)\s]+)[^)]*\)/g)].map((match) => match[1]),
-  ];
+  if (!content.includes("![") && !content.includes("src=")) return [];
+  const sources = [];
+  for (const match of content.matchAll(/!\[[^\]]*\]\(([^)\s]+)[^)]*\)/g)) sources.push(match[1]);
+  for (const match of content.matchAll(/\bsrc=["']([^"']+)["']/g)) sources.push(match[1]);
+  return sources.sort();
 }
 
 function tableSignatures(content) {
-  return content
-    .split("\n")
-    .filter((line) => line.trim().startsWith("|"))
-    .map((line) => (line.match(/(?<!\\)\|/g) ?? []).length);
+  if (!content.includes("|")) return [];
+  const signatures = [];
+  for (const [line] of content.matchAll(/(?:^|\n)[^\S\n]*\|[^\n]*/g)) {
+    signatures.push((line.match(/(?<!\\)\|/g) ?? []).length);
+  }
+  return signatures;
 }
 
-function blockquoteSignatures(content) {
-  return content.replace(/```[^\n]*\n[\s\S]*?```/g, "").split("\n")
-    .filter(line => /^\s*>/.test(line)).map(line => line.match(/^\s*(?:>\s*)+/)[0].replace(/\s/g, ""));
+function blockquoteSignatures(prose) {
+  const signatures = [];
+  for (const [prefix] of prose.matchAll(/(?:^|\n)[^\S\n]*(?:>[^\S\n]*)+/g)) {
+    signatures.push(prefix.replace(/\s/g, ""));
+  }
+  return signatures;
 }
 
 function sameArray(left, right) {
@@ -102,13 +107,21 @@ function sha256(value) {
   return createHash("sha256").update(value).digest("hex");
 }
 
+const repositoryAssets = new Map();
 async function validateRepositoryAssetUrls(content, context) {
   const rawAssetPattern =
     /https:\/\/raw\.githubusercontent\.com\/6mm-com\/docs\/main\/(fern\/[^)\s"']+)/g;
   for (const match of content.matchAll(rawAssetPattern)) {
-    try {
-      await stat(path.join(projectRoot, match[1]));
-    } catch {
+    const asset = match[1];
+    if (!repositoryAssets.has(asset)) {
+      try {
+        await stat(path.join(projectRoot, asset));
+        repositoryAssets.set(asset, true);
+      } catch {
+        repositoryAssets.set(asset, false);
+      }
+    }
+    if (!repositoryAssets.get(asset)) {
       pushError(`[${context}] missing repository asset ${match[1]}`);
     }
   }
@@ -179,12 +192,22 @@ if (config.logo?.href !== "/") {
   pushError("The Docs logo must link to the canonical root homepage");
 }
 
+// Reuse English input across SEO, manifest and per-locale comparisons.
+// This cache belongs only to this read-only validation run.
+const sourceDocuments = new Map();
+async function readSource(relativePagePath) {
+  if (!sourceDocuments.has(relativePagePath)) {
+    const content = await readFile(path.join(fernRoot, relativePagePath), "utf8");
+    sourceDocuments.set(relativePagePath, { content, metadata: frontmatter(content) });
+  }
+  return sourceDocuments.get(relativePagePath).content;
+}
 const sourceTitles = new Map();
 const sourceDescriptions = new Map();
 const sourceSlugs = new Map();
 for (const relativePagePath of activePages) {
-  const source = await readFile(path.join(fernRoot, relativePagePath), "utf8");
-  const meta = frontmatter(source);
+  const source = await readSource(relativePagePath);
+  const meta = sourceDocuments.get(relativePagePath).metadata;
   const description = meta.description || meta.subtitle;
   if (!meta.title || !description || !meta.slug) {
     pushError(`[en] incomplete SEO frontmatter in ${relativePagePath}`);
@@ -215,10 +238,7 @@ const sitelinkTargets = [
   ["Security & Compliance", "docs/pages/security-compliance/overview.mdx", "/security-compliance/overview"],
   ["Integration & Support", "docs/pages/resources/overview.mdx", "/resources/overview"],
 ];
-const sourceHome = await readFile(
-  path.join(fernRoot, "docs/pages/home.mdx"),
-  "utf8",
-);
+const sourceHome = await readSource("docs/pages/home.mdx");
 // Homepage architecture: product, solution, integration, and launch groups.
 for (const locale of ["en", ...translatedLocales]) {
   const homePath = locale === "en" ? path.join(fernRoot, "docs/pages/home.mdx") : path.join(translationsRoot, locale, "docs/pages/home.mdx");
@@ -240,8 +260,8 @@ for (const [label, relativePagePath, href] of sitelinkTargets) {
   ) {
     pushError(`[en] homepage is missing the ${label} sitelink to ${href}`);
   }
-  const source = await readFile(path.join(fernRoot, relativePagePath), "utf8");
-  const meta = frontmatter(source);
+  await readSource(relativePagePath);
+  const meta = sourceDocuments.get(relativePagePath).metadata;
   if (!meta.headline || meta.headline.length < 45 || meta.headline.length > 60) {
     pushError(
       `[en] ${relativePagePath} headline should be 45-60 characters; found ${meta.headline?.length ?? 0}`,
@@ -254,7 +274,7 @@ for (const [label, relativePagePath, href] of sitelinkTargets) {
     );
   }
 }
-const homeMeta = frontmatter(sourceHome);
+const homeMeta = sourceDocuments.get("docs/pages/home.mdx").metadata;
 if (
   !homeMeta.headline ||
   homeMeta.headline.length < 45 ||
@@ -335,7 +355,7 @@ for (const locale of generatedLocales.filter((locale) => !requestedLocales || re
     );
   }
   for (const relativePagePath of activePages) {
-    const source = await readFile(path.join(fernRoot, relativePagePath), "utf8");
+    const source = await readSource(relativePagePath);
     const expectedHash = sha256(
       `${generatorVersion}\0${locale}\0${generatedLocaleTargetLanguages[locale]}\0${source}`,
     );
@@ -347,9 +367,10 @@ for (const locale of generatedLocales.filter((locale) => !requestedLocales || re
 
 const translationDirectories = (
   await Promise.all(
-    (await readdir(translationsRoot)).map(async (entry) => {
-      const entryPath = path.join(translationsRoot, entry);
-      return (await stat(entryPath)).isDirectory() ? entry : null;
+    (await readdir(translationsRoot, { withFileTypes: true })).map(async (entry) => {
+      const directory = entry.isDirectory() ||
+        (entry.isSymbolicLink() && (await stat(path.join(translationsRoot, entry.name))).isDirectory());
+      return directory ? entry.name : null;
     }),
   )
 )
@@ -369,7 +390,7 @@ const baseNavigationCount = (config.navigation ?? []).length;
 for (const locale of translatedLocales) {
   const overlayPath = path.join(localizedRoot(locale), "docs.yml");
   const overlayContent = await readFile(overlayPath, "utf8");
-  const overlay = loadYamlAsJson(overlayPath);
+  const overlay = parseYaml(overlayContent);
   if (Object.keys(overlay.tabs ?? {}).length !== baseTabCount) {
     pushError(`[${locale}] navigation tab count does not match the English source`);
   }
@@ -385,29 +406,37 @@ for (const locale of translatedLocales) {
   }
 }
 
+const translatedMetadata = new Map(translatedLocales.map(locale => [locale, new Map()]));
 for (const relativePagePath of activePages) {
-  const sourcePath = path.join(fernRoot, relativePagePath);
-  const source = await readFile(sourcePath, "utf8");
-  const sourceMeta = frontmatter(source);
-  const sourceBlocks = codeBlocks(source);
-  const sourceInlineCode = inlineCode(source);
+  const source = await readSource(relativePagePath);
+  const sourceMeta = sourceDocuments.get(relativePagePath).metadata;
+  const sourceCode = splitCodeBlocks(source);
+  const sourceInlineCode = inlineCode(sourceCode.prose);
   const sourceImages = imageSources(source);
   const sourceTables = tableSignatures(source);
+  const sourceBlockquotes = blockquoteSignatures(sourceCode.prose);
   const sourceDestinations = internalDestinations(source);
   await validateRepositoryAssetUrls(source, `en:${relativePagePath}`);
 
-  for (const locale of translatedLocales) {
-    const translatedPath = path.join(localizedRoot(locale), relativePagePath);
-    let translated;
+  // Limit concurrent reads to one page's locales; diagnostics retain locale order.
+  const translatedContents = await Promise.all(translatedLocales.map(async (locale) => {
     try {
-      translated = await readFile(translatedPath, "utf8");
+      return await readFile(path.join(localizedRoot(locale), relativePagePath), "utf8");
     } catch {
+      return null;
+    }
+  }));
+  for (const [localeIndex, locale] of translatedLocales.entries()) {
+    const translated = translatedContents[localeIndex];
+    if (translated === null) {
       pushError(`[${locale}] missing ${relativePagePath}`);
       continue;
     }
     await validateRepositoryAssetUrls(translated, `${locale}:${relativePagePath}`);
 
     const meta = frontmatter(translated);
+    translatedMetadata.get(locale).set(relativePagePath, meta);
+    const translatedDestinations = internalDestinations(translated);
     if (!meta.title || !(meta.description || meta.subtitle) || !meta.slug) {
       pushError(`[${locale}] incomplete SEO frontmatter in ${relativePagePath}`);
     }
@@ -438,15 +467,15 @@ for (const relativePagePath of activePages) {
       );
     }
 
-    if (generatedLocales.includes(locale) && !sameArray(blockquoteSignatures(translated), blockquoteSignatures(source))) {
-      pushError(`[${locale}] Markdown blockquote structure changed in ${relativePagePath}`);
-    }
-
     if (generatedLocales.includes(locale)) {
-      if (!sameArray(codeBlocks(translated), sourceBlocks)) {
+      const translatedCode = splitCodeBlocks(translated);
+      if (!sameArray(blockquoteSignatures(translatedCode.prose), sourceBlockquotes)) {
+        pushError(`[${locale}] Markdown blockquote structure changed in ${relativePagePath}`);
+      }
+      if (!sameArray(translatedCode.blocks, sourceCode.blocks)) {
         pushError(`[${locale}] fenced code changed in ${relativePagePath}`);
       }
-      if (!sameArray(inlineCode(translated), sourceInlineCode)) {
+      if (!sameArray(inlineCode(translatedCode.prose), sourceInlineCode)) {
         pushError(`[${locale}] inline code changed in ${relativePagePath}`);
       }
       if (!sameArray(imageSources(translated), sourceImages)) {
@@ -460,7 +489,7 @@ for (const relativePagePath of activePages) {
           sourceDestinations.map((destination) => localizedDestination(destination, locale)),
         ),
       ].sort();
-      const actualDestinations = [...new Set(internalDestinations(translated))].sort();
+      const actualDestinations = [...new Set(translatedDestinations)].sort();
       if (!sameArray(actualDestinations, expectedDestinations)) {
         const missing = expectedDestinations.filter(
           (destination) => !actualDestinations.includes(destination),
@@ -474,7 +503,7 @@ for (const relativePagePath of activePages) {
       }
     }
 
-    for (const destination of internalDestinations(translated)) {
+    for (const destination of translatedDestinations) {
       if (
         !destination.startsWith(`/${locale}/`) &&
         !destination.startsWith("/docs/") &&
@@ -490,13 +519,8 @@ for (const locale of translatedLocales) {
   const titles = new Map();
   const descriptions = new Map();
   for (const relativePagePath of activePages) {
-    let content;
-    try {
-      content = await readFile(path.join(localizedRoot(locale), relativePagePath), "utf8");
-    } catch {
-      continue; // The completeness pass above already reports a missing page.
-    }
-    const meta = frontmatter(content);
+    const meta = translatedMetadata.get(locale).get(relativePagePath);
+    if (!meta) continue; // The completeness pass above already reports a missing page.
     for (const [field, value, collection] of [
       ["title", meta.title, titles],
       ["description", meta.description || meta.subtitle, descriptions],

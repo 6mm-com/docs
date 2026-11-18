@@ -187,6 +187,7 @@ class SandboxMutationObserver {
     observers.push(this);
   }
   observe(target) { this.target = target; }
+  disconnect() { this.target = null; }
 }
 
 runInNewContext(supportScript, {
@@ -215,6 +216,58 @@ assert.deepEqual(widgetCalls, [
   ["lang", "en"],
   ["theme", "light"],
 ]);
+widgetCalls.length = 0;
+
+// A delayed SDK must not accumulate independent retry chains for every event.
+const originalSupportTimeout = sandboxWindow.setTimeout;
+const originalSupportClearTimeout = sandboxWindow.clearTimeout;
+const readyWidget = sandboxWindow.CSWidget;
+const pendingSyncTimers = new Map();
+let syncTimerId = 0;
+sandboxWindow.setTimeout = (callback, delay) => {
+  assert.equal(delay, 100, 'Keep the SDK synchronization retry interval');
+  const id = ++syncTimerId;
+  pendingSyncTimers.set(id, callback);
+  return id;
+};
+sandboxWindow.clearTimeout = id => pendingSyncTimers.delete(id);
+function runSyncTimers() {
+  const timers = [...pendingSyncTimers];
+  for (const [id, callback] of timers) {
+    if (!pendingSyncTimers.delete(id)) continue;
+    callback();
+  }
+}
+sandboxWindow.CSWidget = undefined;
+appendedWidgetScript.onload();
+for (let event = 0; event < 20; event++) documentListeners['astro:page-load']();
+assert.equal(pendingSyncTimers.size, 2);
+sandboxWindow.CSWidget = readyWidget;
+runSyncTimers();
+assert.equal(pendingSyncTimers.size, 0);
+assert.deepEqual([...widgetCalls].sort(), [['lang', 'en'], ['theme', 'light']], 'SDK load must still force synchronization of unchanged values');
+widgetCalls.length = 0;
+sandboxWindow.CSWidget = undefined;
+sandboxWindow.location.pathname = '/ja/home';
+rootClasses.delete('light'); rootClasses.add('dark');
+for (let event = 0; event < 50; event++) documentListeners['astro:page-load']();
+assert.equal(pendingSyncTimers.size, 2, 'At most one retry per synchronization direction should remain pending');
+for (let attempt = 0; attempt < 19; attempt++) {
+  runSyncTimers();
+  assert.equal(pendingSyncTimers.size, 2);
+}
+runSyncTimers();
+assert.equal(pendingSyncTimers.size, 0, 'Stop after the existing 20 retries');
+documentListeners['astro:page-load']();
+sandboxWindow.CSWidget = readyWidget;
+runSyncTimers();
+assert.equal(pendingSyncTimers.size, 0);
+assert.deepEqual([...widgetCalls].sort(), [['lang', 'ja'], ['theme', 'dark']]);
+sandboxWindow.setTimeout = originalSupportTimeout;
+sandboxWindow.clearTimeout = originalSupportClearTimeout;
+sandboxWindow.location.pathname = '/home';
+rootClasses.delete('dark'); rootClasses.add('light');
+documentListeners['astro:page-load']();
 widgetCalls.length = 0;
 
 function emitWidgetLanguage(lang) {
@@ -339,7 +392,10 @@ bubble.id = "cs-widget-bubble";
 const container = widgetNode("div");
 container.id = "cs-widget-container";
 container.style.display = "none";
-container.iframe = { conversation: "active", draft: "unfinished", src:'https://csadmin.6mm.com/widget/?app_id=6mm-docs', contentWindow:{}, setAttribute() {}, addEventListener() {} };
+container.iframe = Object.assign(widgetNode("iframe"), {
+  conversation: "active", draft: "unfinished",
+  src: 'https://csadmin.6mm.com/widget/?app_id=6mm-docs', contentWindow: {},
+});
 const widgetStyle = widgetNode("style");
 widgetStyle.id = "cs-bubble-style";
 sandboxDocument.body.appendChild(bubble);
@@ -452,6 +508,42 @@ runInNewContext(supportScript, {
 assert.equal(intervals.length, 0, 'Navigation synchronization must not poll the pathname');
 assert.equal(observers.length, observersBeforeReload, "Re-executing the loader must not add accessibility observers");
 
+const containerObserverCount = observers.length;
+const bodyObserver = observers.find(observer => observer.target === sandboxDocument.body);
+const replacementContainer = widgetNode('div');
+replacementContainer.id = container.id;
+replacementContainer.iframe = container.iframe;
+replacementContainer.style.display = 'none';
+for (let cycle = 0; cycle < 5; cycle++) {
+  for (const next of [replacementContainer, container]) {
+    const index = widgetBodyNodes.findIndex(node => node.id === container.id);
+    widgetBodyNodes[index] = next;
+    bodyObserver.listener();
+    assert.equal(observers.filter(observer => observer.target === container || observer.target === replacementContainer).length, 1,
+      'Only the current widget container should remain observed');
+    assert.equal(observers.filter(observer => observer.target === next).length, 1);
+  }
+}
+assert.equal(observers.length, containerObserverCount, 'Container replacements must reuse the existing style observer');
+const containerIndex = widgetBodyNodes.indexOf(container);
+widgetBodyNodes.splice(containerIndex, 1);
+bodyObserver.listener();
+assert.equal(observers.filter(observer => observer.target === container || observer.target === replacementContainer).length, 0,
+  'A removed widget container should no longer be observed');
+widgetBodyNodes.splice(containerIndex, 0, container);
+bodyObserver.listener();
+assert.equal(observers.filter(observer => observer.target === container).length, 1);
+assert.equal(observers.length, containerObserverCount);
+
+for (let swap = 0; swap < 3; swap++) {
+  const oldBody = sandboxDocument.body;
+  sandboxDocument.body = widgetParent(widgetBodyNodes);
+  documentListeners['astro:page-load']();
+  assert.equal(bodyObserver.target, sandboxDocument.body, 'Observe the current body after navigation');
+  assert.equal(observers.some(observer => observer.target === oldBody), false, 'Release the previous body');
+  assert.equal(observers.length, containerObserverCount, 'Body replacements must reuse the existing observers');
+}
+
 // Fern adapter: navigate through standard links without a React/Next router.
 let activeMenu = null;
 let activeThemeIcon = "light";
@@ -461,6 +553,8 @@ const adapterArticle = { textContent: "English page" };
 const adapterRootClasses = new Set(["light"]);
 const adapterStorage = new Map([["theme", "light"]]);
 const adapterStorageEvents = [];
+const adapterTimers = new Map();
+let adapterTimerId = 0;
 const adapterRoot = {
   dataset: { theme: "light" },
   classList: {
@@ -497,8 +591,8 @@ const adapterWindow = {
   requestAnimationFrame(listener) {
     listener();
   },
-  setTimeout,
-  clearTimeout,
+  setTimeout(listener, delay) { const id = ++adapterTimerId; adapterTimers.set(id, { listener, delay }); return id; },
+  clearTimeout(id) { adapterTimers.delete(id); },
 };
 function makeClassList() {
   const values = new Set();
@@ -659,9 +753,11 @@ const adapterDocument = {
     return [];
   },
 };
+const adapterObservers = [];
 class AdapterMutationObserver {
-  observe() {}
-  disconnect() {}
+  constructor(listener) { this.listener = listener; adapterObservers.push(this); }
+  observe() { this.active = true; }
+  disconnect() { this.active = false; }
 }
 const adapterSandbox = {
   window: adapterWindow,
@@ -677,6 +773,7 @@ const adapterSandbox = {
   Promise,
 };
 runInNewContext(languageScript, adapterSandbox);
+const initialAdapterObservers = adapterObservers.length;
 const incomingIslandAttributes = new Map([
   ["client", "load"],
   ["opts", JSON.stringify({ name: "PageHeaderIsland", value: true })],
@@ -793,5 +890,57 @@ assert.equal(
   null,
   "Widget theme navigation must update Fern state without opening a menu",
 );
+
+assert.equal(adapterObservers.length, initialAdapterObservers, 'Completed switches must not create temporary observers');
+assert.equal(adapterTimerId, 0, 'Completed switches must not create timeout timers');
+const originalDispatch = adapterWindow.dispatchEvent;
+adapterWindow.dispatchEvent = () => true;
+const delayedTheme = adapterWindow.__sixmmNavigateDocsTheme('light');
+assert.equal(adapterTimers.size, 1, 'An unfinished switch still needs a deadline');
+const pendingObserver = adapterObservers.at(-1);
+adapterRootClasses.clear();
+adapterRootClasses.add('light');
+pendingObserver.listener();
+assert.equal(await delayedTheme, true);
+assert.equal(pendingObserver.active, false);
+assert.equal(adapterTimers.size, 0);
+const timedOutTheme = adapterWindow.__sixmmNavigateDocsTheme('dark');
+const [deadline] = adapterTimers.values();
+assert.equal(deadline.delay, 2500, 'Preserve the existing theme timeout');
+deadline.listener();
+assert.equal(await timedOutTheme, false);
+assert.equal(adapterObservers.at(-1).active, false);
+assert.equal(adapterTimers.size, 0);
+adapterWindow.dispatchEvent = originalDispatch;
+const originalCreateElement = adapterDocument.createElement;
+adapterDocument.createElement = function (tag) {
+  const node = originalCreateElement.call(this, tag);
+  if (tag === 'a') {
+    const click = node.click;
+    node.click = function () {
+      const previousText = adapterArticle.textContent;
+      click.call(this);
+      adapterArticle.textContent = previousText;
+    };
+  }
+  return node;
+};
+const delayedLocale = adapterWindow.__sixmmNavigateDocsLocale('fr');
+assert.equal(adapterTimers.size, 1);
+assert.equal([...adapterTimers.values()][0].delay, 15000);
+const localeObserver = adapterObservers.at(-1);
+localeObserver.listener();
+assert.equal(adapterTimers.size, 1, 'A new URL alone must not count as loaded page content');
+adapterArticle.textContent = 'French page loaded';
+localeObserver.listener();
+assert.equal(await delayedLocale, true);
+assert.equal(localeObserver.active, false);
+assert.equal(adapterTimers.size, 0);
+const timedOutLocale = adapterWindow.__sixmmNavigateDocsLocale('de');
+[...adapterTimers.values()][0].listener();
+assert.equal(await timedOutLocale, false);
+assert.equal(adapterObservers.at(-1).active, false);
+assert.equal(adapterTimers.size, 0);
+adapterDocument.createElement = originalCreateElement;
 
 console.log("Widget sync checks passed: language and theme are bidirectional without echo.");

@@ -1,12 +1,23 @@
 import { fileURLToPath } from "node:url";
-import { readFile, readdir, writeFile } from "node:fs/promises";
+import { realpathSync } from "node:fs";
+import { readFile, readdir } from "node:fs/promises";
+import { writeGeneratedFile } from "./write-generated-file.mjs";
+import { orderedBatches } from "./ordered-batches.mjs";
 import path from "node:path";
 import { locales } from "./locale-config.mjs";
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const isMain =
-  Boolean(process.argv[1]) &&
-  path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+let isMain = false;
+if (process.argv[1]) {
+  try {
+    isMain = realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url));
+  } catch {
+    // Imports from stdin or eval may have no executable file to resolve.
+  }
+}
+if (isMain && process.argv.length > 2) {
+  throw new Error("Unknown argument; terminology polishing accepts no options and processes all translated locales");
+}
 
 const tradingApiPaths =
   /^(?:docs\.yml|docs\/pages\/(?:trading|getting-started|developer-api|sdk|solutions\/(?:matching-engine|operations-console))\/?)/;
@@ -19,50 +30,42 @@ const tradingWidgetOverviewPath =
   /^docs\/pages\/sdk\/trading-widget\/overview\.mdx$/;
 const severeWebhookTerminologyPaths =
   /^(?:docs\.yml|docs\/pages\/(?:security-compliance\/security-architecture|sdk\/security\/(?:troubleshooting|secrets-signing)|sdk\/agent-sdk\/(?:overview|php\/quick-start|java\/quick-start))\.mdx)$/;
-const allowedUrlJoinsByLocale = {
-  ja: [/^URL\p{L}+$/u],
-  "zh-CN": [/^URL\p{L}+$/u],
-  "zh-TW": [/^URL\p{L}+$/u],
-};
+const localesWithJoinedUrlWords = new Set(["ja", "zh-CN", "zh-TW"]);
+const joinedUrlWord = /URL\p{L}/u;
 
 function shouldCheckUrlJoins(locale, relativePath) {
   return relativePath === "docs.yml" || relativePath.endsWith(".mdx");
 }
 
-function isAllowedUrlJoin(token, locale) {
-  return (
-    token === "URLs" ||
-    (allowedUrlJoinsByLocale[locale] ?? []).some((pattern) =>
-      pattern.test(token),
-    )
-  );
+function splitProtectedMdx(content) {
+  const protectedSyntax =
+    /(```[\s\S]*?```|`[^`\n]*`|\]\([^)\n]*\)|(?:href|src)=["'][^"']*["']|https?:\/\/[^\s)"']+)/g;
+  return content.split(protectedSyntax);
 }
 
 function mapOutsideProtectedMdx(content, transform) {
-  const protectedSyntax =
-    /(```[\s\S]*?```|`[^`\n]*`|\]\([^)\n]*\)|(?:href|src)=["'][^"']*["']|https?:\/\/[^\s)"']+)/g;
-  return content
-    .split(protectedSyntax)
+  return splitProtectedMdx(content)
     .map((segment, index) => (index % 2 === 1 ? segment : transform(segment)))
     .join("");
 }
 
 function unexpectedUrlJoins(content, locale) {
-  const tokens = [];
-  mapOutsideProtectedMdx(content, (segment) => {
-    for (const match of segment.matchAll(/URL\p{L}+/gu)) {
-      if (!isAllowedUrlJoin(match[0], locale)) tokens.push(match[0]);
+  if (!content.includes("URL") || localesWithJoinedUrlWords.has(locale) || !joinedUrlWord.test(content)) return [];
+  const tokens = new Set();
+  const segments = splitProtectedMdx(content);
+  for (let index = 0; index < segments.length; index += 2) {
+    for (const match of segments[index].matchAll(/URL\p{L}+/gu)) {
+      if (match[0] !== "URLs") tokens.add(match[0]);
     }
-    return segment;
-  });
-  return [...new Set(tokens)];
+  }
+  return [...tokens];
 }
 
 function polishUnexpectedUrlJoins(content, locale, relativePath) {
-  if (!shouldCheckUrlJoins(locale, relativePath)) return content;
+  if (!shouldCheckUrlJoins(locale, relativePath) || !content.includes("URL") || localesWithJoinedUrlWords.has(locale) || !joinedUrlWord.test(content)) return content;
   return mapOutsideProtectedMdx(content, (segment) =>
     segment.replace(/URL\p{L}+/gu, (token) =>
-      isAllowedUrlJoin(token, locale) ? token : `URL ${token.slice(3)}`,
+      token === "URLs" ? token : `URL ${token.slice(3)}`,
     ),
   );
 }
@@ -856,7 +859,7 @@ function applyApprovedCoreCopy(content, locale, relativePath) {
   const replacements =
     coreTextReplacementsByLocale[locale]?.[relativePath] ?? [];
   for (const [from, to] of replacements) {
-    output = output.split(from).join(to);
+    output = output.replaceAll(from, () => to);
   }
   const agentIntro = approvedAgentOverviewIntroByLocale[locale];
   if (agentIntro && agentSdkOverviewPath.test(relativePath)) {
@@ -869,11 +872,8 @@ function applyApprovedCoreCopy(content, locale, relativePath) {
   return output;
 }
 
-function polishPredictionCopy(content, locale, relativePath) {
-  if (!relativePath.startsWith("docs/pages/prediction/")) return content;
-  let output = content.replace(/^(#{1,6})(?=[^#\s])/gm, "$1 ")
-    .replace(/^(\d+\.)(?=\S)/gm, "$1 ");
-  const glossary = {
+const predictionGlossaryEntries = Object.fromEntries(
+  Object.entries({
     ja: {
       "精度と沈み込み": "精度と決済", "細胞成分": "セルの構成", "返品": "払戻金",
       "永久アカウント": "無期限契約アカウント", "永久取引": "無期限契約取引",
@@ -904,12 +904,17 @@ function polishPredictionCopy(content, locale, relativePath) {
       "승률 경계": "배당률 한도", "말뚝": "베팅 금액", "시장평균가": "마크 가격",
       "구성에서는 Up 견적을 1에 목표 수익률 계수를 Down 풀에 곱하고 Up 풀에 제안된 스테이크로 나눈 값으로 설명합니다. Down의 경우 두 개의 풀을 교환합니다. 구성된 하한 및 상한은 결과를 제한합니다.": "상승(Up) 배당률은 1 + 목표 환급 계수 × 하락 풀 ÷ (상승 풀 + 신규 베팅 금액)으로 계산합니다. 하락(Down)은 두 풀을 서로 바꿉니다. 계산 결과에는 설정된 최솟값과 최댓값이 적용됩니다.",
     },
+  }).map(([locale, glossary]) => [locale, Object.entries(glossary)]),
+);
 
-
-
-  }[locale] ?? {};
+function polishPredictionCopy(content, locale, relativePath) {
+  if (!relativePath.startsWith("docs/pages/prediction/")) return content;
+  let output = content.replace(/^(#{1,6})(?=[^#\s])/gm, "$1 ")
+    .replace(/^(\d+\.)(?=\S)/gm, "$1 ");
+  const entries = predictionGlossaryEntries[locale] ?? [];
+  if (entries.length === 0) return output;
   return mapOutsideProtectedMdx(output, text => {
-    for (const [from, to] of Object.entries(glossary)) text = text.split(from).join(to);
+    for (const [from, to] of entries) text = text.replaceAll(from, () => to);
     return text;
   });
 }
@@ -922,9 +927,9 @@ export function polishMachineTranslation(content, locale, relativePath) {
     output = output.replace(rule.pattern, rule.replacement);
   }
   const directReplacements =
-    replacementsByFile[`fern/translations/${locale}/${relativePath}`] ?? {};
-  for (const [from, to] of Object.entries(directReplacements)) {
-    output = output.split(from).join(to);
+    replacementEntriesByFile[`fern/translations/${locale}/${relativePath}`] ?? [];
+  for (const [from, to] of directReplacements) {
+    output = output.replaceAll(from, () => to);
   }
   const core = coreSeoOverrides[locale];
   if (core && relativePath === "docs/pages/home.mdx") {
@@ -1114,7 +1119,7 @@ export function findTranslationQualityIssues(content, locale, relativePath) {
   return issues;
 }
 
-const replacementsByFile = {
+const replacementEntriesByFile = Object.fromEntries(Object.entries({
   "fern/translations/ja/docs.yml": {
     '"解決策"': '"ソリューション"',
     '"SDKs"': '"SDK"',
@@ -1260,14 +1265,13 @@ const replacementsByFile = {
     '<h2 id="launch-readiness">發射準備</h2>':
       '<h2 id="launch-readiness">正式上線準備</h2>',
   },
-};
+}).map(([file, replacements]) => [file, Object.entries(replacements)]));
 
-async function localizableFiles(directory) {
-  const files = [];
+async function localizableFiles(directory, files = []) {
   for (const entry of await readdir(directory, { withFileTypes: true })) {
     const entryPath = path.join(directory, entry.name);
     if (entry.isDirectory()) {
-      files.push(...(await localizableFiles(entryPath)));
+      await localizableFiles(entryPath, files);
     } else if (entry.name === "docs.yml" || entry.name.endsWith(".mdx")) {
       files.push(entryPath);
     }
@@ -1277,11 +1281,13 @@ async function localizableFiles(directory) {
 
 if (isMain) {
   let replacements = 0;
+  const updates = new Map();
 
-  for (const [relativePath, dictionary] of Object.entries(replacementsByFile)) {
+  for (const [relativePath, entries] of Object.entries(replacementEntriesByFile)) {
     const filePath = path.join(projectRoot, relativePath);
-    let content = await readFile(filePath, "utf8");
-    for (const [from, to] of Object.entries(dictionary)) {
+    const original = await readFile(filePath, "utf8");
+    let content = original;
+    for (const [from, to] of entries) {
       const nativeHeading = (value) => value.replace(
         /^<h([2-6]) id="[^"]+">([^<]+)<\/h[2-6]>$/,
         (_, level, text) => "#".repeat(Number(level)) + " " + text,
@@ -1293,7 +1299,7 @@ if (isMain) {
         content = next;
       }
     }
-    await writeFile(filePath, content, "utf8");
+    if (content !== original) updates.set(filePath, { original, output: content });
   }
 
   for (const locale of locales.filter((item) => !item.default)) {
@@ -1303,9 +1309,13 @@ if (isMain) {
       "translations",
       locale.code,
     );
-    for (const filePath of await localizableFiles(localeRoot)) {
+    const files = await localizableFiles(localeRoot);
+    for await (const [filePath, content] of orderedBatches(files, filePath => {
+      const prepared = updates.get(filePath);
+      return prepared ? prepared.output : readFile(filePath, "utf8");
+    })) {
       const relativePath = path.relative(localeRoot, filePath);
-      const content = await readFile(filePath, "utf8");
+      const prepared = updates.get(filePath);
       const polished = polishMachineTranslation(
         content,
         locale.code,
@@ -1313,9 +1323,14 @@ if (isMain) {
       );
       if (polished !== content) {
         replacements += 1;
-        await writeFile(filePath, polished, "utf8");
+        updates.set(filePath, { original: prepared ? prepared.original : content, output: polished });
       }
     }
+  }
+
+  // Finish reading and transforming every locale before replacing any document.
+  for (const [filePath, { original, output }] of updates) {
+    if (output !== original) await writeGeneratedFile(filePath, output);
   }
 
   console.log(

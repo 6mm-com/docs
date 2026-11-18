@@ -29,12 +29,25 @@ samples, and locale configuration.
 
 ## Validation
 
-Run Fern validation before opening a pull request:
+Use Node.js 22 to match CI (Node.js 20+ is required). Run validation before opening
+a pull request:
 
 ```bash
 npm ci
 npm run check
 ```
+
+For changes to scripts, styles, or navigation, also run the browser regression
+suite. CI runs this suite for every pull request:
+
+```bash
+npm ci --prefix tests/browser --ignore-scripts
+npm --prefix tests/browser run install:browsers
+npm run browser:check
+```
+
+The suite tests the custom UI in Chromium and WebKit with simulated Fern routing
+and customer-support services. It does not publish or send production requests.
 
 ## Content Standards
 

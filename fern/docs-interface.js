@@ -7,7 +7,11 @@
   var interfaceAliases = [["Im Dashboard bearbeiten","Edit this page"],["Fragen Sie nach dieser Seite","Ask questions about this page"],["Επεξεργασία στο Dashboard","Edit this page"],["Ζητήστε ερωτήσεις για αυτήν τη σελίδα","Ask questions about this page"],["Editar en el Dashboard","Edit this page"],["Modifier dans le Dashboard","Edit this page"],["Copier cette page comme Markdown pour LLMs","Copy this page as Markdown for LLMs"],["Modifica nel Dashboard","Edit this page"],["Copia questa pagina come Markdown per LLMs","Copy this page as Markdown for LLMs"],["ダッシュボードで編集","Edit this page"],["대시보드에서 편집","Edit this page"],["이 페이지를 LLM용 Markdown으로 복사","Copy this page as Markdown for LLMs"],["Edytuj w Dashboard","Edit this page"],["Kopiuj tę stronę jako Markdown dla LLMs","Copy this page as Markdown for LLMs"],["Zadaj pytania o tę stronę","Ask questions about this page"],["Editar no Dashboard","Edit this page"],["Редактировать в Dashboard","Edit this page"],["Скопировать эту страницу как Markdown для LLMs","Copy this page as Markdown for LLMs"],["Dashboard'da düzenle","Edit this page"],["Bu sayfaya sorular sor","Ask questions about this page"],["在仪表板中编辑","Edit this page"],["将此页面复制为 Markdown 用于 LLMs","Copy this page as Markdown for LLMs"],["询问此页面","Ask questions about this page"]];
   var initialLanguage = document.documentElement.lang || 'en';
   // Additional controls are localized after hydration; retain Fern native SSR dictionaries.
-  var nativeDictionaries = JSON.parse(JSON.stringify(interfaceDictionaries));
+  // Each dictionary contains only string labels; copy its entries independently.
+  var nativeDictionaries = {};
+  Object.keys(interfaceDictionaries).forEach(function (lang) {
+    nativeDictionaries[lang] = Object.assign({}, interfaceDictionaries[lang]);
+  });
   var themeLabels = {"en":["Light","Dark","System"],"de":["Hell","Dunkel","System"],"el":["Φωτεινό","Σκοτεινό","Σύστημα"],"es":["Claro","Oscuro","Sistema"],"fr":["Clair","Sombre","Système"],"it":["Chiaro","Scuro","Sistema"],"ja":["ライト","ダーク","システム"],"ko":["라이트","다크","시스템"],"pl":["Jasny","Ciemny","Systemowy"],"pt":["Claro","Escuro","Sistema"],"ru":["Светлая","Тёмная","Системная"],"tr":["Açık","Koyu","Sistem"],"zh-CN":["浅色","深色","跟随系统"],"zh-TW":["淺色","深色","跟隨系統"],"ar":["فاتح","داكن","النظام"],"id":["Terang","Gelap","Sistem"],"uk":["Світла","Темна","Системна"],"vi":["Sáng","Tối","Hệ thống"]};
   Object.keys(themeLabels).forEach(function (lang) {
     var target = interfaceDictionaries[lang] || interfaceDictionaries[lang.split('-')[0]];
@@ -28,6 +32,7 @@
   var uiObserver;
   var dirtyRoots = new Set();
   var fullSyncRequested = false;
+  var translatedAttributes = ['aria-label','title','placeholder'];
   function locale() {
     var first = window.location.pathname.split('/').filter(Boolean)[0] || '';
     return (window.__sixmmDocsLocales || []).some(function (entry) { return entry.code === first && first; }) ? first : 'en';
@@ -35,9 +40,8 @@
   function dictionary(lang) {
     return interfaceDictionaries[lang] || interfaceDictionaries[lang.split('-')[0]] || interfaceDictionaries.en;
   }
-  function translate(value, lang, beforeHydration) {
+  function translate(value, selected, beforeHydration) {
     var text = value.trim(), suffix = text.endsWith(':') ? ':' : '', key = reverseLabels.get(suffix ? text.slice(0,-1) : text);
-    var selected = beforeHydration ? (nativeDictionaries[lang] || nativeDictionaries[lang.split("-")[0]] || nativeDictionaries.en) : dictionary(lang);
     var replacement = key && (selected[key] || (beforeHydration ? key : undefined));
     return replacement ? value.replace(text, replacement + suffix) : value;
   }
@@ -55,27 +59,45 @@
     return beforeHydration || isHydrated(element);
   }
   function syncLabels(rootDocument, lang, beforeHydration, roots) {
+    var selected = beforeHydration ? (nativeDictionaries[lang] || nativeDictionaries[lang.split("-")[0]] || nativeDictionaries.en) : dictionary(lang);
+    var processedRoots = new WeakSet();
     (roots || rootDocument.querySelectorAll(uiSelector)).forEach(function (root) {
       if (!beforeHydration && !roots && !observedRoots.has(root)) {
         observedRoots.add(root);
         uiObserver.observe(root, { childList:true, subtree:true, characterData:true, attributes:true, attributeFilter:['aria-label','title','placeholder','data-fern-hydrated'] });
       }
-      var walker = rootDocument.createTreeWalker(root, NodeFilter.SHOW_TEXT), node;
+      // Keep observing pending islands so they are synchronized when ready.
+      if (root.closest(excludedSelector) || (!beforeHydration && !isHydrated(root))) return;
+      for (var parent = root.parentElement; parent; parent = parent.parentElement) {
+        if (processedRoots.has(parent)) return;
+      }
+      processedRoots.add(root);
+      var walker = rootDocument.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
+        acceptNode: function (node) {
+          if (node.nodeType !== 1) return NodeFilter.FILTER_ACCEPT;
+          if (node.matches(excludedSelector) || (!beforeHydration && node.matches('astro-island:not([data-fern-hydrated])'))) {
+            return NodeFilter.FILTER_REJECT;
+          }
+          return NodeFilter.FILTER_SKIP;
+        }
+      }), node;
       while ((node = walker.nextNode())) {
         if (!eligible(node.parentElement, beforeHydration)) continue;
-        var next = translate(node.nodeValue, lang, beforeHydration);
+        var next = translate(node.nodeValue, selected, beforeHydration);
         if (next !== node.nodeValue) node.nodeValue = next;
       }
-      var elements = [root].concat(Array.from(root.querySelectorAll('[aria-label], [title], [placeholder]')));
-      elements.forEach(function (element) {
+      var elements = root.querySelectorAll('[aria-label], [title], [placeholder]');
+      function syncAttributes(element) {
         if (!eligible(element, beforeHydration) || (beforeHydration && element.classList.contains('sixmm-theme-trigger'))) return;
-        ['aria-label','title','placeholder'].forEach(function (name) {
+        translatedAttributes.forEach(function (name) {
           var value = element.getAttribute(name);
           if (value === null) return;
-          var next = translate(value, lang, beforeHydration);
+          var next = translate(value, selected, beforeHydration);
           if (next !== value) element.setAttribute(name, next);
         });
-      });
+      }
+      syncAttributes(root);
+      elements.forEach(syncAttributes);
     });
   }
   // Fern loads only the initial language dictionary into its module cache.
@@ -102,7 +124,8 @@
     if (document.readyState !== 'complete' || (ai && ai.getAttribute('aria-disabled') === 'true')) return;
     var lang = locale();
     if (!fullSyncRequested && dirtyRoots.size) {
-      var changed = Array.from(dirtyRoots).filter(function (root) { return root.isConnected; });
+      var changed = [];
+      dirtyRoots.forEach(function (root) { if (root.isConnected) changed.push(root); });
       dirtyRoots.clear();
       syncLabels(document, lang, false, changed);
       return;
@@ -130,7 +153,8 @@
   uiObserver = new MutationObserver(function (records) {
     records.forEach(function (record) {
       var element = record.target.nodeType === 1 ? record.target : record.target.parentElement;
-      var root = element && element.closest(uiSelector);
+      if (!element || element.closest(excludedSelector)) return;
+      var root = element.closest(uiSelector);
       if (root) dirtyRoots.add(root);
     });
     if (dirtyRoots.size) queueSync();
@@ -139,7 +163,8 @@
   // another whole-document text walk or repeated observers.
   new MutationObserver(function (records) {
     if (records.some(function (record) {
-      return Array.from(record.addedNodes).some(function (node) {
+      if (record.target && record.target.nodeType === 1 && record.target.closest(excludedSelector)) return false;
+      return Array.prototype.some.call(record.addedNodes, function (node) {
         return node.nodeType === 1 && (node.matches(uiSelector) || node.querySelector(uiSelector));
       });
     })) schedule();

@@ -3,6 +3,7 @@
   window.__sixmmLocaleDirection = true;
   var lastPathname;
   var lastLocaleSignature;
+  var localeHtmlLanguages;
 
   function syncLocale() {
     var locales = window.__sixmmDocsLocales || [];
@@ -18,17 +19,19 @@
       return;
     }
     lastPathname = window.location.pathname;
-    lastLocaleSignature = localeSignature;
-
-    var localeHtmlLanguages = {};
-    locales.forEach(function (locale) {
-      localeHtmlLanguages[locale.code] =
-        locale.htmlLang || locale.code || "en";
-    });
-    var firstSegment = lastPathname.split("/").filter(Boolean)[0];
+    if (localeSignature !== lastLocaleSignature) {
+      localeHtmlLanguages = {};
+      locales.forEach(function (locale) {
+        localeHtmlLanguages[locale.code] =
+          locale.htmlLang || locale.code || "en";
+      });
+      lastLocaleSignature = localeSignature;
+    }
+    var firstSegment = lastPathname.split("/").find(Boolean);
     var locale = localeHtmlLanguages[firstSegment] || localeHtmlLanguages[""] || "en";
-    document.documentElement.lang = locale;
-    document.documentElement.dir = locale === "ar" ? "rtl" : "ltr";
+    var direction = locale === "ar" ? "rtl" : "ltr";
+    if (document.documentElement.lang !== locale) document.documentElement.lang = locale;
+    if (document.documentElement.dir !== direction) document.documentElement.dir = direction;
   }
 
   syncLocale();

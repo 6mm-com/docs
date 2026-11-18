@@ -16,7 +16,7 @@ concurrency:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
 
     steps:
       - name: Check out repository
@@ -27,6 +27,9 @@ jobs:
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            tests/browser/package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -35,3 +38,13 @@ jobs:
         run: npm run check
         env:
           FERN_TOKEN: ${{ secrets.FERN_TOKEN }}
+
+      - name: Install browser regression dependencies
+        run: npm ci --prefix tests/browser --ignore-scripts
+
+      - name: Install regression browsers
+        working-directory: tests/browser
+        run: npm run install:browsers -- --with-deps
+
+      - name: Verify browser interactions
+        run: npm run browser:check

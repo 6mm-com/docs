@@ -2,7 +2,7 @@ import { fileURLToPath } from "node:url";
 import { readFileSync } from "node:fs";
 import { parse as parseYaml } from "yaml";
 import { createHash } from "node:crypto";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 import {
@@ -10,22 +10,38 @@ import {
   generatorVersion,
 } from "./locale-config.mjs";
 import { polishMachineTranslation } from "./polish-core-translations.mjs";
+import { protectText, extractDocumentRecords } from "./translation-text.mjs";
+import { writeGeneratedFile } from "./write-generated-file.mjs";
+import { orderedBatches } from "./ordered-batches.mjs";
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const fernRoot = path.join(projectRoot, "fern");
-const sourceRoot = path.join(fernRoot, "docs");
 const translationsRoot = path.join(fernRoot, "translations");
 const docsConfigPath = path.join(fernRoot, "docs.yml");
 const manifestPath = path.join(translationsRoot, ".translation-manifest.json");
 
 const args = new Set(process.argv.slice(2));
+const supportedFlags = new Set(["--force", "--labels-only", "--refresh-manifest"]);
+const unknownArguments = [...args].filter(
+  (argument) => !supportedFlags.has(argument) && !argument.startsWith("--locales="),
+);
+if (unknownArguments.length) {
+  throw new Error(`Unknown argument(s): ${unknownArguments.join(", ")}. Supported options: --force, --labels-only, --refresh-manifest, --locales=ja,fr`);
+}
 const force = args.has("--force");
 const labelsOnly = args.has("--labels-only");
 const refreshManifestOnly = args.has("--refresh-manifest");
-const requestedLocaleArgument = process.argv.find((argument) => argument.startsWith("--locales="));
+const requestedLocaleArguments = [...args].filter((argument) => argument.startsWith("--locales="));
+if (requestedLocaleArguments.length > 1) {
+  throw new Error("Specify --locales once with comma-separated codes, for example --locales=ja,fr");
+}
+const requestedLocaleArgument = requestedLocaleArguments[0];
 const requestedLocales = requestedLocaleArgument
   ? new Set(requestedLocaleArgument.slice("--locales=".length).split(",").filter(Boolean))
   : null;
+if (requestedLocales?.size === 0) {
+  throw new Error("At least one locale is required in --locales; omit the option to generate all locales");
+}
 const selectedLocales = localeSpecs.filter(
   (locale) => requestedLocales == null || requestedLocales.has(locale.code),
 );
@@ -44,6 +60,15 @@ function loadYamlAsJson(filePath) {
   return parseYaml(readFileSync(filePath, "utf8"));
 }
 
+// Every locale in this run uses the same source text; no cache survives the run.
+const sourceDocuments = new Map();
+async function readSource(relativePagePath) {
+  if (!sourceDocuments.has(relativePagePath)) {
+    sourceDocuments.set(relativePagePath, await readFile(path.join(fernRoot, relativePagePath), "utf8"));
+  }
+  return sourceDocuments.get(relativePagePath);
+}
+
 function yamlQuote(value) {
   return JSON.stringify(String(value));
 }
@@ -56,6 +81,7 @@ function sleep(milliseconds) {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
+const configuredLocalePrefixes = ["zh-CN", ...localeSpecs.map((item) => item.code)];
 function localizedPath(value, locale) {
   if (!value || !value.startsWith("/") || value.startsWith("//")) {
     return value;
@@ -69,7 +95,6 @@ function localizedPath(value, locale) {
   ) {
     return value;
   }
-  const configuredLocalePrefixes = ["zh-CN", ...localeSpecs.map((item) => item.code)];
   if (configuredLocalePrefixes.some((prefix) => value === `/${prefix}` || value.startsWith(`/${prefix}/`))) {
     return value;
   }
@@ -112,278 +137,39 @@ function canonicalForLocale(content, locale) {
   );
 }
 
-function protectText(value) {
-  const protectedValues = [];
-  let text = value;
-  const protect = (match) => {
-    const token = `[[[ph${String(protectedValues.length).padStart(6, "0")}]]]`;
-    protectedValues.push(match);
-    return token;
-  };
-
-  text = text.replace(/`[^`\n]+`/g, protect);
-  text = text.replace(/\{[^{}\n]*\}/g, protect);
-  text = text.replace(/(?<=\]\()\/[^)\s]+(?=\))/g, protect);
-  text = text.replace(/https?:\/\/[^\s)>"']+/g, protect);
-  text = text.replace(/\b[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}\b/g, protect);
-  text = text.replace(/\|/g, protect);
-  text = text.replace(/<[^>\n]+>/g, protect);
-
-  const protectedTerms = [
-    "Orange Bit Technologies Limited",
-    "Embedded API / SDK",
-    "Developer API",
-    "Trading Widget SDK",
-    "Trading Widget",
-    "6MM Docs",
-    "Agent Java SDK",
-    "Agent PHP SDK",
-    "Agent SDKs",
-    "Agent SDK",
-    "6 Market Maker",
-    "API Key",
-    "REST API",
-    "WebSocket",
-    "Webhooks",
-    "Webhook",
-    "webhooks",
-    "webhook",
-    "Java",
-    "PHP",
-    "OAuth",
-    "OpenAPI",
-    "Postman",
-    "JWT",
-    "HMAC",
-    "SHA-256",
-    "SDKs",
-    "SDK",
-    "APIs",
-    "API",
-    "6MM",
-    "USDT",
-    "KYC",
-    "AML",
-    "IP",
-    "JSON",
-    "HTTP",
-    "HTTPS",
-    "GET",
-    "POST",
-    "PUT",
-    "DELETE",
-    "PATCH",
-    "OPTIONS",
-    "listenKey",
-  ];
-  const termPattern = new RegExp(
-    `\\b(?:${protectedTerms
-      .sort((left, right) => right.length - left.length)
-      .map((term) => term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
-      .join("|")})\\b`,
-    "g",
-  );
-  text = text.replace(termPattern, protect);
-  text = text.replace(/\b[a-z]+[A-Z][A-Za-z0-9]*\b/g, protect);
-  text = text.replace(/\b[A-Z][A-Z0-9_-]{2,}\b/g, protect);
-
-  return {
-    text,
-    restore(translated) {
-      let restored = translated;
-      protectedValues
-        .map((original, index) => ({ original, index }))
-        .reverse()
-        .forEach(({ original, index }) => {
-          const token = `[[[ph${String(index).padStart(6, "0")}]]]`;
-          const escaped = token.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-          const flexibleToken = new RegExp(escaped.replace(/\\ /g, "\\s*"), "g");
-          restored = restored.replace(flexibleToken, original);
-        });
-      if (/\[\[\[ph\d+\]\]\]/.test(restored)) {
-        throw new Error(`Unrestored placeholder in translated text: ${restored}`);
-      }
-      return restored;
-    },
-  };
-}
-
-function shouldTranslateLine(line) {
-  if (!line.trim()) return false;
-  if (/^\s*(?:---|\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)+\|?)\s*$/.test(line)) {
-    return false;
-  }
-  if (/^\s*(?:slug|layout|icon|canonical-url|hide-[\w-]+):/.test(line)) {
-    return false;
-  }
-  return /[A-Za-z]/.test(line);
-}
-
-function extractDocumentRecords(content) {
-  const lines = content.split("\n");
-  const records = [];
-  let attributeSequence = 0;
-  let inFence = false;
-  let inFrontmatter = false;
-  let frontmatterClosed = false;
-
-  function translationToken(value, index) {
-    const token = `[[[attr${String(attributeSequence).padStart(6, "0")}]]]`;
-    attributeSequence += 1;
-    records.push({
-      kind: "attribute",
-      index,
-      token,
-      ...protectText(value),
-    });
-    return token;
-  }
-
-  function tokenizeTextFragment(fragment, index) {
-    if (!/[A-Za-z]/.test(fragment)) return fragment;
-    const leading = fragment.match(/^\s*/)?.[0] ?? "";
-    const trailing = fragment.match(/\s*$/)?.[0] ?? "";
-    const core = fragment.slice(leading.length, fragment.length - trailing.length || undefined);
-    if (!core) return fragment;
-    return `${leading}${translationToken(core, index)}${trailing}`;
-  }
-
-  function tokenizeMarkdownLinks(value, index) {
-    const linkPattern = /(!?)\[([^\]]+)\]\(([^)]+)\)/g;
-    const matches = [...value.matchAll(linkPattern)];
-    if (matches.length === 0) return null;
-    let cursor = 0;
-    let output = "";
-    for (const match of matches) {
-      output += tokenizeTextFragment(value.slice(cursor, match.index), index);
-      output += `${match[1]}[${translationToken(match[2], index)}](${match[3]})`;
-      cursor = match.index + match[0].length;
-    }
-    output += tokenizeTextFragment(value.slice(cursor), index);
-    return output;
-  }
-
-  for (let index = 0; index < lines.length; index += 1) {
-    const line = lines[index];
-
-    if (index === 0 && line.trim() === "---") {
-      inFrontmatter = true;
-      continue;
-    }
-    if (inFrontmatter && line.trim() === "---") {
-      inFrontmatter = false;
-      frontmatterClosed = true;
-      continue;
-    }
-    if (!inFrontmatter && /^```/.test(line.trim())) {
-      inFence = !inFence;
-      continue;
-    }
-    if (inFence) continue;
-
-    if (inFrontmatter) {
-      const frontmatterMatch = line.match(
-        /^(\s*(?:title|headline|subtitle|description):\s*)(["']?)(.*?)(\2)\s*$/,
-      );
-      if (frontmatterMatch && frontmatterMatch[3]) {
-        const protectedRecord = protectText(frontmatterMatch[3]);
-        records.push({
-          kind: "line",
-          index,
-          prefix: `${frontmatterMatch[1]}${frontmatterMatch[2]}`,
-          suffix: frontmatterMatch[4],
-          ...protectedRecord,
-        });
-      }
-      continue;
-    }
-
-    if (!frontmatterClosed || !shouldTranslateLine(line)) continue;
-
-    const attributeRecords = [];
-    const lineWithAttributeTokens = line.replace(
-      /\b(title|alt|aria-label|label|placeholder)="([^"]+)"/g,
-      (match, attribute, value) => {
-        if (!/[A-Za-z]/.test(value)) return match;
-        const token = `[[[attr${String(attributeSequence).padStart(6, "0")}]]]`;
-        attributeSequence += 1;
-        attributeRecords.push({ kind: "attribute", index, token, ...protectText(value) });
-        return `${attribute}="${token}"`;
-      },
-    );
-    lines[index] = lineWithAttributeTokens;
-    records.push(...attributeRecords);
-
-    if (/^\s*\|.*\|\s*$/.test(lineWithAttributeTokens)) {
-      const cells = lineWithAttributeTokens.split("|");
-      const rebuilt = cells.map((cell) => {
-        if (!/[A-Za-z]/.test(cell)) return cell;
-        const leading = cell.match(/^\s*/)?.[0] ?? "";
-        const trailing = cell.match(/\s*$/)?.[0] ?? "";
-        const core = cell.slice(leading.length, cell.length - trailing.length || undefined);
-        if (!core || /^:?-+:?$/.test(core)) return cell;
-        if (
-          /^(?:string|bool|boolean|int32|int64|float|double|integer|number|object|array|null)$/i.test(
-            core,
-          )
-        ) {
-          return cell;
-        }
-        const linked = tokenizeMarkdownLinks(core, index);
-        return `${leading}${linked ?? translationToken(core, index)}${trailing}`;
-      });
-      lines[index] = rebuilt.join("|");
-      continue;
-    }
-
-    if (
-      /^\s*<\/?(?:h[1-6]|div|span|p|Card|CardGroup|Button|Frame|Tabs|Tab|Accordion|AccordionGroup|Note|Warning|Tip|Info|img)\b/i.test(
-        lineWithAttributeTokens,
-      )
-    ) {
-      const parts = lineWithAttributeTokens.split(/(<[^>\n]+>)/g);
-      const rebuilt = parts.map((part) => {
-        if (!part || /^<[^>\n]+>$/.test(part) || !/[A-Za-z]/.test(part)) return part;
-        return tokenizeTextFragment(part, index);
-      });
-      lines[index] = rebuilt.join("");
-      continue;
-    }
-
-    const blockPrefix = lineWithAttributeTokens.match(/^(\s*(?:(?:>\s*)+|#{1,6}\s+|\d+\.\s+|[-*]\s+))/)?.[0] ?? "";
-    const linkedLine = tokenizeMarkdownLinks(lineWithAttributeTokens.slice(blockPrefix.length), index);
-    if (linkedLine != null) {
-      lines[index] = blockPrefix + linkedLine;
-      continue;
-    }
-
-    const protectedRecord = protectText(lineWithAttributeTokens.slice(blockPrefix.length));
-    if (
-      !/[A-Za-z]/.test(
-        protectedRecord.text.replace(/\[\[\[ph\d+\]\]\]/g, ""),
-      )
-    ) {
-      continue;
-    }
-    records.push({ kind: "line", index, prefix: blockPrefix, suffix: "", ...protectedRecord });
-  }
-
-  return { lines, records };
-}
-
 let edgeToken;
 let lastTranslationRequestAt = 0;
 
-async function getEdgeToken(forceRefresh = false) {
-  if (edgeToken && !forceRefresh) return edgeToken;
+async function getEdgeToken() {
+  if (edgeToken) return edgeToken;
   const response = await fetch("https://edge.microsoft.com/translate/auth", {
     signal: AbortSignal.timeout(30_000),
   });
   if (!response.ok) {
-    throw new Error(`Translation authorization returned HTTP ${response.status}`);
+    const error = new Error(`Translation authorization returned HTTP ${response.status}`);
+    error.status = response.status;
+    throw error;
   }
   edgeToken = await response.text();
   return edgeToken;
+}
+
+// Source batches are immutable; locale and authorization live outside the body.
+const edgeBodiesByTexts = new WeakMap();
+function edgeRequestBody(texts) {
+  let body = edgeBodiesByTexts.get(texts);
+  if (body === undefined) {
+    body = JSON.stringify(
+      texts.map((text) => ({
+        Text: text.replace(
+          /\[\[\[(ph\d+)\]\]\]/g,
+          '<span class="notranslate">$1</span>',
+        ),
+      })),
+    );
+    edgeBodiesByTexts.set(texts, body);
+  }
+  return body;
 }
 
 async function requestEdgeTranslations(texts, sourceLanguage, targetLanguage, attempt = 1) {
@@ -395,7 +181,7 @@ async function requestEdgeTranslations(texts, sourceLanguage, targetLanguage, at
     textType: "html",
   });
   try {
-    const token = await getEdgeToken(false);
+    const token = await getEdgeToken();
     const waitForInterval = Math.max(0, 350 - (Date.now() - lastTranslationRequestAt));
     if (waitForInterval > 0) await sleep(waitForInterval);
     lastTranslationRequestAt = Date.now();
@@ -406,14 +192,7 @@ async function requestEdgeTranslations(texts, sourceLanguage, targetLanguage, at
         "content-type": "application/json;charset=UTF-8",
         "user-agent": "6MM-Docs-Localization/1.0",
       },
-      body: JSON.stringify(
-        texts.map((text) => ({
-          Text: text.replace(
-            /\[\[\[(ph\d+)\]\]\]/g,
-            '<span class="notranslate">$1</span>',
-          ),
-        })),
-      ),
+      body: edgeRequestBody(texts),
       signal: AbortSignal.timeout(30_000),
     });
     if (!response.ok) {
@@ -427,18 +206,28 @@ async function requestEdgeTranslations(texts, sourceLanguage, targetLanguage, at
         `Translation response mismatch: expected ${texts.length}, got ${data?.length ?? 0}`,
       );
     }
-    return data.map((item) =>
-      (item.translations?.[0]?.text ?? "").replace(
+    return data.map((item, index) => {
+      const translated = item?.translations?.[0]?.text;
+      if (typeof translated !== "string" || (texts[index].trim() && !translated.trim())) {
+        throw new Error("Translation response contains missing, invalid or empty text");
+      }
+      const normalized = translated.replace(
         /<span class=["']notranslate["']>(ph\d+)<\/span>/g,
         "[[[$1]]]",
-      ),
-    );
+      );
+      const expected = (texts[index].match(/\[\[\[ph\d+\]\]\]/g) ?? []).sort().join("|");
+      const received = (normalized.match(/\[\[\[ph\d+\]\]\]/g) ?? []).sort().join("|");
+      if (expected !== received) {
+        throw new Error("Translation service lost or introduced a placeholder");
+      }
+      return normalized;
+    });
   } catch (error) {
-    if (error.status === 401) {
-      await getEdgeToken(true);
-    }
     const maximumAttempts = error.status === 429 ? 20 : 8;
-    if (attempt >= maximumAttempts) throw error;
+    if (attempt >= maximumAttempts ||
+        (error.status && ![401, 408, 429, 500, 502, 503, 504].includes(error.status))) throw error;
+    // Refresh inside the next attempt so authorization shares the retry budget.
+    if (error.status === 401) edgeToken = undefined;
     const delay =
       error.status === 429
         ? Math.min(120_000, 15_000 * attempt)
@@ -455,10 +244,11 @@ async function requestEdgeTranslations(texts, sourceLanguage, targetLanguage, at
 // This is a machine-translation aid, not a guarantee of editorial review.
 const translationProvider = process.env.DOCS_TRANSLATION_PROVIDER ?? "google";
 if (!["google", "edge"].includes(translationProvider)) throw new Error("Unknown translation provider");
+const googleTargetLanguages = { "es-MX": "es", "es-ES": "es", "pt-BR": "pt", "pt-PT": "pt-PT" };
 async function requestTranslations(texts, sourceLanguage, targetLanguage, attempt = 1) {
   if (translationProvider === "edge") return requestEdgeTranslations(texts, sourceLanguage, targetLanguage, attempt);
   const url = new URL("https://clients5.google.com/translate_a/t");
-  const target = { "es-MX": "es", "es-ES": "es", "pt-BR": "pt", "pt-PT": "pt-PT" }[targetLanguage] ?? targetLanguage;
+  const target = googleTargetLanguages[targetLanguage] ?? targetLanguage;
   url.search = new URLSearchParams({ client: "dict-chrome-ex", sl: sourceLanguage, tl: target });
   texts.forEach(text => url.searchParams.append("q", text));
   try {
@@ -471,14 +261,20 @@ async function requestTranslations(texts, sourceLanguage, targetLanguage, attemp
       throw error;
     }
     const output = await response.json();
-    if (!Array.isArray(output) || output.length !== texts.length || output.some(x => typeof x !== "string")) {
+    if (!Array.isArray(output) || output.length !== texts.length ||
+        output.some((text, index) => typeof text !== "string" || (texts[index].trim() && !text.trim()))) {
       throw new Error("Translation response shape mismatch");
     }
-    return await Promise.all(output.map(async (text, index) => {
+    const translated = [];
+    // Keep repair requests sequential so they respect the shared request interval.
+    for (const [index, text] of output.entries()) {
       const normalized = text.replace(/(?:\[\s*)+p\s*h\s*((?:\d\s*)+)(?:\s*\])+/gi, (_, digits) => `[[[ph${digits.replace(/\s/g, "")}]]]`);
       const tokens = texts[index].match(/\[\[\[ph\d+\]\]\]/g) ?? [];
       const received = normalized.match(/\[\[\[ph\d+\]\]\]/g) ?? [];
-      if ([...tokens].sort().join("|") !== [...received].sort().join("|")) {
+      if (tokens.sort().join("|") !== received.sort().join("|")) {
+        // Splitting plain text would recurse with the same input forever.
+        // Let the existing retry budget handle a fabricated placeholder.
+        if (tokens.length === 0) throw new Error("Translation service introduced an unexpected placeholder");
         // Some providers omit placeholders inside natural sentences. Translate
         // only the surrounding prose and retain every protected token verbatim.
         const parts = texts[index].split(/(\[\[\[ph\d+\]\]\])/g);
@@ -487,10 +283,12 @@ async function requestTranslations(texts, sourceLanguage, targetLanguage, attemp
         indices.forEach(({part, i}, j) => {
           parts[i] = (part.match(/^\s*/)?.[0] ?? "") + prose[j].trim() + (part.match(/\s*$/)?.[0] ?? "");
         });
-        return parts.join("");
+        translated.push(parts.join(""));
+      } else {
+        translated.push(normalized);
       }
-      return normalized;
-    }));
+    }
+    return translated;
   } catch (error) {
     if (attempt >= 4 || (error.status && ![429, 500, 502, 503, 504].includes(error.status))) throw error;
     await sleep(error.status === 429 ? 30_000 : 2_000 * attempt);
@@ -520,38 +318,46 @@ function createBatches(records, maximumCharacters = 1_800, maximumItems = 30) {
   return batches;
 }
 
-async function mapConcurrent(items, concurrency, mapper) {
-  let nextIndex = 0;
-  const results = new Array(items.length);
-  async function worker() {
-    while (nextIndex < items.length) {
-      const currentIndex = nextIndex;
-      nextIndex += 1;
-      results[currentIndex] = await mapper(items[currentIndex], currentIndex);
-    }
-  }
-  await Promise.all(Array.from({ length: Math.min(concurrency, items.length) }, () => worker()));
-  return results;
-}
-
+// Prepared document and navigation records are immutable across target locales.
+const batchesByRecords = new WeakMap();
 async function translateRecords(records, sourceLanguage, targetLanguage) {
   if (!targetLanguage || records.length === 0) {
     return records.map((record) => record.restore(record.text));
   }
-  const batches = createBatches(records);
+  let batches = batchesByRecords.get(records);
+  if (!batches) {
+    batches = createBatches(records).map((items) => ({
+      items,
+      texts: items.map((item) => item.record.text),
+    }));
+    batchesByRecords.set(records, batches);
+  }
   const translated = new Array(records.length);
-  await mapConcurrent(batches, 1, async (batch) => {
+  for (const { items, texts } of batches) {
     const output = await requestTranslations(
-      batch.map((item) => item.record.text),
+      texts,
       sourceLanguage,
       targetLanguage,
     );
-    batch.forEach((item, itemIndex) => {
+    items.forEach((item, itemIndex) => {
       translated[item.index] = records[item.index].restore(output[itemIndex].trimEnd());
     });
-  });
+  }
   return translated;
 }
+
+const brazilianPortugueseReplacements = [
+  [/\bficheiros\b/gi, "arquivos"],
+  [/\bficheiro\b/gi, "arquivo"],
+  [/\butilizadores\b/gi, "usuários"],
+  [/\butilizador\b/gi, "usuário"],
+  [/\becrãs\b/gi, "telas"],
+  [/\becrã\b/gi, "tela"],
+  [/\baplicações\b/gi, "aplicativos"],
+  [/\baplicação\b/gi, "aplicativo"],
+  [/\bequipas\b/gi, "equipes"],
+  [/\bequipa\b/gi, "equipe"],
+];
 
 function regionalize(value, locale) {
   let output = value;
@@ -562,30 +368,18 @@ function regionalize(value, locale) {
       .replace(/\bvosotros\b/gi, "ustedes");
   }
   if (locale === "pt-BR") {
-    const replacements = [
-      [/\bficheiros\b/gi, "arquivos"],
-      [/\bficheiro\b/gi, "arquivo"],
-      [/\butilizadores\b/gi, "usuários"],
-      [/\butilizador\b/gi, "usuário"],
-      [/\becrãs\b/gi, "telas"],
-      [/\becrã\b/gi, "tela"],
-      [/\baplicações\b/gi, "aplicativos"],
-      [/\baplicação\b/gi, "aplicativo"],
-      [/\bequipas\b/gi, "equipes"],
-      [/\bequipa\b/gi, "equipe"],
-    ];
-    replacements.forEach(([pattern, replacement]) => {
+    brazilianPortugueseReplacements.forEach(([pattern, replacement]) => {
       output = output.replace(pattern, replacement);
     });
   }
   return output;
 }
 
-async function translateDocument(content, locale, relativePagePath) {
-  const route = locale.route ?? locale.code;
-  if (!locale.targetLanguage) {
-    return canonicalForLocale(localizeInternalLinks(content, route), route);
-  }
+// Source text is fixed for this run. Keep parsed records shared, but never
+// share the mutable output lines between locales.
+const preparedDocuments = new Map();
+function prepareDocument(content, relativePagePath) {
+  if (preparedDocuments.has(relativePagePath)) return preparedDocuments.get(relativePagePath);
   const document = extractDocumentRecords(content);
   if (relativePagePath.startsWith("docs/pages/prediction/")) {
     for (const record of document.records) {
@@ -596,6 +390,17 @@ async function translateDocument(content, locale, relativePagePath) {
         .replace(/\brecorded odds\b/gi, "recorded payout multiplier");
     }
   }
+  preparedDocuments.set(relativePagePath, document);
+  return document;
+}
+
+async function translateDocument(content, locale, relativePagePath) {
+  const route = locale.route ?? locale.code;
+  if (!locale.targetLanguage) {
+    return canonicalForLocale(localizeInternalLinks(content, route), route);
+  }
+  const document = prepareDocument(content, relativePagePath);
+  const lines = [...document.lines];
   const translated = await translateRecords(
     document.records,
     locale.sourceLanguage,
@@ -603,18 +408,18 @@ async function translateDocument(content, locale, relativePagePath) {
   );
   document.records.forEach((record, index) => {
     if (record.kind !== "attribute") {
-      document.lines[record.index] = `${record.prefix}${regionalize(translated[index], locale.code)}${record.suffix}`;
+      lines[record.index] = `${record.prefix}${regionalize(translated[index], locale.code)}${record.suffix}`;
     }
   });
   document.records.forEach((record, index) => {
     if (record.kind === "attribute") {
-      document.lines[record.index] = document.lines[record.index].replace(
+      lines[record.index] = lines[record.index].replace(
         record.token,
-        regionalize(translated[index], locale.code),
+        () => regionalize(translated[index], locale.code),
       );
     }
   });
-  let output = document.lines.join("\n");
+  let output = lines.join("\n");
   output = localizeInternalLinks(output, route);
   output = canonicalForLocale(output, route);
   if (locale.code === "vi" && /^slug:\s*legal\/privacy-policy\s*$/m.test(output)) {
@@ -639,12 +444,15 @@ function collectNavigationLabels(config) {
   return values;
 }
 
-async function translatedLabelMap(config, locale) {
-  const labels = [...new Set(collectNavigationLabels(config))];
+// Navigation comes from the same configuration for every locale in this run.
+let navigationLabels;
+let navigationRecords;
+async function translatedLabelMap(locale) {
+  const labels = navigationLabels ??= [...new Set(collectNavigationLabels(config))];
   if (!locale.targetLanguage) {
     return new Map(labels.map((label) => [label, label]));
   }
-  const records = labels.map((label) => protectText(label));
+  const records = navigationRecords ??= labels.map((label) => protectText(label));
   const translated = await translateRecords(records, locale.sourceLanguage, locale.targetLanguage);
   return new Map(
     labels.map((label, index) => [
@@ -683,12 +491,30 @@ function renderNavigationOverlay(config, translations) {
   return `${lines.join("\n")}\n`;
 }
 
+function isRecord(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
 async function loadManifest() {
   try {
     return JSON.parse(await readFile(manifestPath, "utf8"));
-  } catch {
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
     return { version: generatorVersion, locales: {} };
   }
+}
+
+async function saveTextFile(destination, content) {
+  try {
+    if (await readFile(destination, "utf8") === content) return;
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+  }
+  await writeGeneratedFile(destination, content);
+}
+
+async function saveManifest(manifest) {
+  await saveTextFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
 }
 
 const config = loadYamlAsJson(docsConfigPath);
@@ -709,14 +535,28 @@ if (activePages.length !== 158) {
 }
 
 const manifest = await loadManifest();
+if (!isRecord(manifest)) throw new Error("Invalid translation manifest: root must be an object");
+if (manifest.locales !== undefined && !isRecord(manifest.locales)) {
+  throw new Error("Invalid translation manifest: locales must be an object");
+}
 manifest.version = generatorVersion;
 manifest.locales ??= {};
 const generatedLocaleCodes = new Set(localeSpecs.map((locale) => locale.code));
 Object.keys(manifest.locales).forEach((locale) => {
   if (!generatedLocaleCodes.has(locale)) {
     delete manifest.locales[locale];
+  } else if (!isRecord(manifest.locales[locale]) || !isRecord(manifest.locales[locale].pages)) {
+    throw new Error(`Invalid translation manifest: ${locale} must contain a pages object`);
+  } else if (Object.values(manifest.locales[locale].pages).some(hash => typeof hash !== "string")) {
+    throw new Error(`Invalid translation manifest: ${locale} page hashes must be strings`);
   }
 });
+
+// Load the source snapshot before requesting translations or replacing files.
+// Later page generation reuses these reads through the per-run source cache.
+if (!labelsOnly && !refreshManifestOnly && selectedLocales.length) {
+  for (const relativePagePath of activePages) await readSource(relativePagePath);
+}
 
 console.log(`Generating ${activePages.length} active pages for ${selectedLocales.length} locale(s).`);
 
@@ -727,25 +567,26 @@ for (const locale of selectedLocales) {
 
   if (refreshManifestOnly) {
     localeManifest.pages = {};
-    for (const relativePagePath of activePages) {
-      const source = await readFile(path.join(fernRoot, relativePagePath), "utf8");
+    for await (const [relativePagePath, hash] of orderedBatches(activePages, async relativePagePath => {
+      const source = await readSource(relativePagePath);
       await readFile(path.join(localeRoot, relativePagePath), "utf8");
-      localeManifest.pages[relativePagePath] = sha256(
+      return sha256(
         `${generatorVersion}\0${locale.code}\0${locale.targetLanguage ?? "copy"}\0${source}`,
       );
+    })) {
+      localeManifest.pages[relativePagePath] = hash;
     }
     localeManifest.manifestRefreshedAt = new Date().toISOString();
     localeManifest.label = locale.label;
-    await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
+    await saveManifest(manifest);
     console.log(`[${locale.code}] ${locale.label}: manifest refreshed`);
     continue;
   }
 
-  const labels = await translatedLabelMap(config, locale);
-  await writeFile(
+  const labels = await translatedLabelMap(locale);
+  await saveTextFile(
     path.join(localeRoot, "docs.yml"),
     renderNavigationOverlay(config, labels),
-    "utf8",
   );
   if (labelsOnly) {
     console.log(`[${locale.code}] ${locale.label}: navigation labels generated`);
@@ -754,31 +595,43 @@ for (const locale of selectedLocales) {
 
   let generatedCount = 0;
   let skippedCount = 0;
-  await mapConcurrent(activePages, 1, async (relativePagePath) => {
-    const sourcePath = path.join(fernRoot, relativePagePath);
+  const preparedDirectories = new Set();
+  for (const relativePagePath of activePages) {
     const outputPath = path.join(localeRoot, relativePagePath);
-    const source = await readFile(sourcePath, "utf8");
+    const source = await readSource(relativePagePath);
     const sourceHash = sha256(
       `${generatorVersion}\0${locale.code}\0${locale.targetLanguage ?? "copy"}\0${source}`,
     );
     if (!force && localeManifest.pages[relativePagePath] === sourceHash) {
-      skippedCount += 1;
-      return;
+      try {
+        if (!(await stat(outputPath)).isFile()) {
+          throw new Error(`Translation output is not a file: ${outputPath}`);
+        }
+        skippedCount += 1;
+        continue;
+      } catch (error) {
+        if (error.code !== "ENOENT") throw error;
+        // The manifest is only a cache: a missing output still needs generation.
+      }
     }
     const translated = await translateDocument(
       source,
       locale,
       relativePagePath,
     );
-    await mkdir(path.dirname(outputPath), { recursive: true });
-    await writeFile(outputPath, translated, "utf8");
+    const outputDirectory = path.dirname(outputPath);
+    if (!preparedDirectories.has(outputDirectory)) {
+      await mkdir(outputDirectory, { recursive: true });
+      preparedDirectories.add(outputDirectory);
+    }
+    await saveTextFile(outputPath, translated);
     localeManifest.pages[relativePagePath] = sourceHash;
     generatedCount += 1;
-  });
+  }
 
   localeManifest.generatedAt = new Date().toISOString();
   localeManifest.label = locale.label;
-  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
+  await saveManifest(manifest);
   console.log(
     `[${locale.code}] ${locale.label}: ${generatedCount} generated, ${skippedCount} unchanged`,
   );
