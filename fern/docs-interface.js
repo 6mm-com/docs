@@ -113,20 +113,25 @@
           return NodeFilter.FILTER_SKIP;
         }
       }), node;
+      // Most navigation and article labels are already in the right language.
+      // Check React ownership only before a write, when it can affect behavior.
       while ((node = walker.nextNode())) {
-        if (!eligible(node.parentElement)) continue;
         var next = translate(node.nodeValue, selected);
-        if (next !== node.nodeValue) node.nodeValue = next;
+        if (next !== node.nodeValue && eligible(node.parentElement)) node.nodeValue = next;
       }
       var elements = root.querySelectorAll('[aria-label], [title], [placeholder]');
       function syncAttributes(element) {
-        if (!eligible(element)) return;
-        translatedAttributes.forEach(function (name) {
+        var canWrite = false;
+        for (var index = 0; index < translatedAttributes.length; index++) {
+          var name = translatedAttributes[index];
           var value = element.getAttribute(name);
-          if (value === null) return;
+          if (value === null) continue;
           var next = translate(value, selected);
-          if (next !== value) element.setAttribute(name, next);
-        });
+          if (next === value) continue;
+          if (!canWrite && !eligible(element)) return;
+          canWrite = true;
+          element.setAttribute(name, next);
+        }
       }
       syncAttributes(root);
       elements.forEach(syncAttributes);

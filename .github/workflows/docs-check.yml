@@ -22,29 +22,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v5
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v6
+      - name: Validate docs and browser interactions
+        uses: ./.github/actions/validate-docs
         with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: |
-            package-lock.json
-            tests/browser/package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Validate documentation
-        run: npm run check
-        env:
-          FERN_TOKEN: ${{ secrets.FERN_TOKEN }}
-
-      - name: Install browser regression dependencies
-        run: npm ci --prefix tests/browser --ignore-scripts
-
-      - name: Install regression browsers
-        working-directory: tests/browser
-        run: npm run install:browsers -- --with-deps
-
-      - name: Verify browser interactions
-        run: npm run browser:check
+          fern-token: ${{ secrets.FERN_TOKEN }}

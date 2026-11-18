@@ -1,0 +1,42 @@
+name: Validate docs
+description: Run documentation and browser checks on the checked-out revision.
+inputs:
+  fern-token:
+    description: Fern token for authenticated checks, when available.
+    required: false
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Node.js
+      uses: actions/setup-node@v6
+      with:
+        node-version: 22
+        cache: npm
+        cache-dependency-path: |
+          package-lock.json
+          tests/browser/package-lock.json
+
+    - name: Install dependencies
+      shell: bash
+      run: npm ci
+
+    - name: Validate documentation
+      shell: bash
+      run: npm run check
+      env:
+        FERN_TOKEN: ${{ inputs.fern-token }}
+
+    - name: Install browser regression dependencies
+      shell: bash
+      run: npm ci --prefix tests/browser --ignore-scripts
+
+    - name: Install regression browsers
+      shell: bash
+      working-directory: tests/browser
+      # CI launches Chromium headlessly without a channel. WebKit is still installed.
+      run: npm run install:browsers -- --with-deps --only-shell
+
+    - name: Verify browser interactions
+      shell: bash
+      run: npm run browser:check

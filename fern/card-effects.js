@@ -5,6 +5,12 @@
   var languageGroups = ".sixmm-language-menu-enhanced .fern-language-selector-radio-group, .sixmm-mobile-language-dialog-options";
   var groupSelector = ".fern-card-group, .sixmm-stat-grid, .fern-layout-footer .fern-footer-nav, " + languageGroups;
   var cardSelector = ".fern-card, .sixmm-stat-grid > div";
+  var footerCardSelector = ".fern-layout-footer .fern-footer-nav > a";
+  var languageOptionSelector = ".sixmm-language-menu-enhanced .fern-language-dropdown-item, .sixmm-mobile-language-dialog-option";
+  // Native menus acquire their enhanced class in the language script's next
+  // frame, so discover their insertion before that class is present as well.
+  var addedTargetSelector = "article .fern-card, article .sixmm-stat-grid > div, " + footerCardSelector + ", " + languageOptionSelector + ", .fern-language-dropdown-content";
+  var registeredTargetSelector = ".sixmm-content-card, .sixmm-language-option-effect";
   var groups = new Map();
   var hover = window.matchMedia("(hover: hover) and (pointer: fine)");
   var reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -62,10 +68,8 @@
       });
     });
     // Only the footer's page-switching cards opt in; feedback and edit controls do not.
-    document.querySelectorAll(".fern-layout-footer .fern-footer-nav > a").forEach(register);
-    document.querySelectorAll(
-      ".sixmm-language-menu-enhanced .fern-language-dropdown-item, .sixmm-mobile-language-dialog-option"
-    ).forEach(function (option) { register(option, "sixmm-language-option-effect"); });
+    document.querySelectorAll(footerCardSelector).forEach(register);
+    document.querySelectorAll(languageOptionSelector).forEach(function (option) { register(option, "sixmm-language-option-effect"); });
     groups.forEach(function (cards) {
       // Compact private group lists without allocating replacements on every scan.
       var count = 0;
@@ -109,7 +113,7 @@
   function move(event) {
     if (!enabled() || event.pointerType === "touch") { reset(); return; }
     var target = event.target instanceof Element ? event.target : null;
-    var card = target && target.closest(".sixmm-content-card, .sixmm-language-option-effect");
+    var card = target && target.closest(registeredTargetSelector);
     var group = target && (target.closest(groupSelector) || card);
     if (!group || !groups.has(group)) { reset(); return; }
     if (activeGroup !== group) { reset(); activeGroup = group; }
@@ -124,17 +128,23 @@
     if (!frame) frame = requestAnimationFrame(render);
   }
 
-  function containsElement(nodes) {
-    return Array.prototype.some.call(nodes, function (node) { return node.nodeType === 1; });
+  function containsTarget(nodes, selector) {
+    return Array.prototype.some.call(nodes, function (node) {
+      return node.nodeType === 1 && (node.matches(selector) || node.querySelector(selector));
+    });
   }
 
   function observeBody() {
     if (observedBody === document.body) return;
     if (bodyObserver) bodyObserver.disconnect();
     else bodyObserver = new MutationObserver(function (records) {
-      // Text and comment changes cannot add or remove card targets.
+      // Search results, support messages and ordinary article markup do not
+      // change effect targets. Inspect only changed subtrees before scheduling
+      // a full scan. Removed targets retain their effect class even after losing
+      // the article/group ancestors needed by the discovery selectors.
       if (records.some(function (record) {
-        return containsElement(record.addedNodes) || containsElement(record.removedNodes);
+        return containsTarget(record.addedNodes, addedTargetSelector) ||
+          containsTarget(record.removedNodes, registeredTargetSelector);
       })) {
         scheduleScan();
       }

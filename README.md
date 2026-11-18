@@ -51,8 +51,8 @@ The public Trading Widget `v1` runtime was checked at version `1.8.0` on
 
 English and Simplified Chinese are reviewed together. The other 18 locales use
 machine-assisted translation with code, links, identifiers and structure checks;
-these checks do not substitute for native-language editorial review. The current
-navigation has 158 unique pages per locale.
+these checks do not substitute for native-language editorial review. The English
+navigation defines the page list for all locales.
 
 ## Local Development
 
@@ -160,9 +160,9 @@ On Linux, append `-- --with-deps` to the browser installation command to install
 the required system packages. See [Playwright's CI setup](https://playwright.dev/docs/ci).
 The regular `npm run check` remains available without downloading browsers.
 The **Docs checks** workflow runs both documentation and browser checks for pull
-requests and pushes to `main`, using the same Node.js version and browser commands
-as the publication workflow. Documentation checks run first so a failure stops
-the job before browser installation.
+requests and pushes to `main`. It shares the [validation action](.github/actions/validate-docs/action.yml)
+with the publication workflow. Documentation checks run first so a failure stops
+the job before browser installation. CI installs Chromium Headless Shell and WebKit.
 
 ## Customer support integration
 

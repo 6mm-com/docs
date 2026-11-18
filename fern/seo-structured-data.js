@@ -243,7 +243,7 @@
 
   function upsertStructuredData(key, value) {
     var selector = 'script[data-sixmm-schema="' + key + '"]';
-    var script = document.querySelector(selector);
+    var script = document.head.querySelector(selector);
 
     if (!value) {
       if (script) {
@@ -331,9 +331,9 @@
   }
 
   function syncStructuredData() {
-    var pathname = normalizedPathname(window.location.pathname);
+    lastStructuredPath = window.location.pathname;
+    var pathname = normalizedPathname(lastStructuredPath);
     var pagePath = pagePathForPathname(pathname);
-    lastStructuredPath = pathname;
     var locale = localeForPathname(pathname);
     var isHome = pagePath === "/";
     var canonicalUrl = localizedUrl(locale.route, pagePath);
@@ -378,25 +378,28 @@
   }
 
   var lastStructuredPath;
+  var observedHead;
   var observer;
   var scheduled = false;
   var syncing = false;
 
   function observeChanges() {
-    if (!observer) return;
-    observer.observe(document.documentElement, {
-      childList: true,
-      subtree: true,
-    });
+    observedHead = document.head;
+    // Watch the root for replacement of the head. Astro notifies us directly
+    // when navigation finishes, so body content need not be observed.
+    observer.observe(document.documentElement, { childList: true });
+    if (observedHead) {
+      observer.observe(observedHead, { childList: true, subtree: true, characterData: true });
+    }
   }
 
   function runSync() {
     if (syncing) return;
     syncing = true;
     scheduled = false;
-    if (observer) observer.disconnect();
+    observer.disconnect();
     try {
-      syncStructuredData();
+      if (document.head) syncStructuredData();
     } finally {
       observeChanges();
       syncing = false;
@@ -409,43 +412,20 @@
     window.requestAnimationFrame(runSync);
   }
 
-  function containsManagedSeoNode(node) {
-    if (!node || node.nodeType !== 1) return false;
-
-    if (
-      node.hasAttribute("data-sixmm-schema")
-    ) {
-      return true;
-    }
-
-    return Boolean(
-      node.querySelector &&
-        node.querySelector(
-          'script[data-sixmm-schema]',
-        ),
-    );
+  function isTitle(node) {
+    return node && node.nodeName === "TITLE";
   }
 
   function shouldResync(mutations) {
-    var pathname = normalizedPathname(window.location.pathname);
-    if (pathname !== lastStructuredPath) return true;
+    if (document.head !== observedHead || window.location.pathname !== lastStructuredPath) return true;
 
     return mutations.some(function (mutation) {
-      var target = mutation.target;
-      if (target && target.nodeName === "TITLE") return true;
-
-      var titleAdded = Array.prototype.some.call(
-        mutation.addedNodes || [],
-        function (node) {
-          return node && node.nodeName === "TITLE";
-        },
-      );
-      if (titleAdded) return true;
-
-      return Array.prototype.some.call(
-        mutation.removedNodes || [],
-        containsManagedSeoNode,
-      );
+      var target = mutation.type === "characterData" ? mutation.target.parentNode : mutation.target;
+      return isTitle(target) ||
+        Array.prototype.some.call(mutation.addedNodes, isTitle) ||
+        Array.prototype.some.call(mutation.removedNodes, function (node) {
+          return node.nodeType === 1 && node.matches("title, script[data-sixmm-schema]");
+        });
     });
   }
 
@@ -456,4 +436,5 @@
   window.addEventListener("popstate", scheduleSync);
   window.addEventListener("pageshow", scheduleSync);
   document.addEventListener("DOMContentLoaded", scheduleSync);
+  document.addEventListener("astro:page-load", scheduleSync);
 })();

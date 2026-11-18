@@ -13,6 +13,7 @@ import { polishMachineTranslation } from "./polish-core-translations.mjs";
 import { protectText, extractDocumentRecords } from "./translation-text.mjs";
 import { writeGeneratedFile } from "./write-generated-file.mjs";
 import { orderedBatches } from "./ordered-batches.mjs";
+import { activeDocumentationPages, assertSourcePagesListed } from "./documentation-pages.mjs";
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const fernRoot = path.join(projectRoot, "fern");
@@ -517,22 +518,22 @@ async function saveManifest(manifest) {
   await saveTextFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
 }
 
-const config = loadYamlAsJson(docsConfigPath);
-const activePages = [
-  ...new Set(
-    (config.navigation ?? []).flatMap((navigationItem) =>
-      (navigationItem.layout ?? []).flatMap((section) =>
-        (section.contents ?? [])
-          .map((content) => content.path)
-          .filter((contentPath) => contentPath?.startsWith("docs/pages/")),
-      ),
-    ),
-  ),
-];
-
-if (activePages.length !== 158) {
-  throw new Error(`Expected 158 active pages, found ${activePages.length}`);
+async function hasTranslationOutput(outputPath) {
+  try {
+    if (!(await stat(outputPath)).isFile()) {
+      throw new Error(`Translation output is not a file: ${outputPath}`);
+    }
+    return true;
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+    return false;
+  }
 }
+
+const config = loadYamlAsJson(docsConfigPath);
+const navigationSource = JSON.stringify([config.tabs ?? {}, config.navigation ?? []]);
+const activePages = activeDocumentationPages(config);
+const activePageSet = new Set(activePages);
 
 const manifest = await loadManifest();
 if (!isRecord(manifest)) throw new Error("Invalid translation manifest: root must be an object");
@@ -557,6 +558,7 @@ Object.keys(manifest.locales).forEach((locale) => {
 if (!labelsOnly && !refreshManifestOnly && selectedLocales.length) {
   for (const relativePagePath of activePages) await readSource(relativePagePath);
 }
+if (!labelsOnly && selectedLocales.length) await assertSourcePagesListed(fernRoot, activePages);
 
 console.log(`Generating ${activePages.length} active pages for ${selectedLocales.length} locale(s).`);
 
@@ -583,11 +585,19 @@ for (const locale of selectedLocales) {
     continue;
   }
 
-  const labels = await translatedLabelMap(locale);
-  await saveTextFile(
-    path.join(localeRoot, "docs.yml"),
-    renderNavigationOverlay(config, labels),
+  const navigationPath = path.join(localeRoot, "docs.yml");
+  const navigationHash = sha256(
+    `${generatorVersion}\0${locale.code}\0${locale.sourceLanguage ?? ""}\0${locale.targetLanguage ?? "copy"}\0${navigationSource}`,
   );
+  // Reuse the existing overlay, including edits made after generation. A
+  // missing output must be rebuilt even when its input hash still matches.
+  const reuseNavigation = !force && !labelsOnly &&
+    localeManifest.navigationHash === navigationHash && await hasTranslationOutput(navigationPath);
+  if (!reuseNavigation) {
+    const labels = await translatedLabelMap(locale);
+    await saveTextFile(navigationPath, renderNavigationOverlay(config, labels));
+    localeManifest.navigationHash = navigationHash;
+  }
   if (labelsOnly) {
     console.log(`[${locale.code}] ${locale.label}: navigation labels generated`);
     continue;
@@ -602,17 +612,10 @@ for (const locale of selectedLocales) {
     const sourceHash = sha256(
       `${generatorVersion}\0${locale.code}\0${locale.targetLanguage ?? "copy"}\0${source}`,
     );
-    if (!force && localeManifest.pages[relativePagePath] === sourceHash) {
-      try {
-        if (!(await stat(outputPath)).isFile()) {
-          throw new Error(`Translation output is not a file: ${outputPath}`);
-        }
-        skippedCount += 1;
-        continue;
-      } catch (error) {
-        if (error.code !== "ENOENT") throw error;
-        // The manifest is only a cache: a missing output still needs generation.
-      }
+    if (!force && localeManifest.pages[relativePagePath] === sourceHash &&
+        await hasTranslationOutput(outputPath)) {
+      skippedCount += 1;
+      continue;
     }
     const translated = await translateDocument(
       source,
@@ -629,9 +632,13 @@ for (const locale of selectedLocales) {
     generatedCount += 1;
   }
 
-  localeManifest.generatedAt = new Date().toISOString();
-  localeManifest.label = locale.label;
-  await saveManifest(manifest);
+  const retiredPages = Object.keys(localeManifest.pages).filter(page => !activePageSet.has(page));
+  for (const page of retiredPages) delete localeManifest.pages[page];
+  if (!reuseNavigation || generatedCount > 0 || retiredPages.length > 0) {
+    localeManifest.generatedAt = new Date().toISOString();
+    localeManifest.label = locale.label;
+    await saveManifest(manifest);
+  }
   console.log(
     `[${locale.code}] ${locale.label}: ${generatedCount} generated, ${skippedCount} unchanged`,
   );

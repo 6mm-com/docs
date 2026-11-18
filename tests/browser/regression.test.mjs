@@ -55,6 +55,109 @@ for (const [name, engine] of Object.entries({ chromium, webkit })) {
         });
       });
 
+      await t.test('structured data ignores body churn and follows navigation and metadata changes', async () => {
+        const page = await browser.newPage();
+        try {
+          await page.route(origin + '/**', route => route.fulfill({
+            contentType: 'text/html',
+            body: '<!doctype html><html><head><title>Guide | 6MM Docs</title></head><body><main></main></body></html>',
+          }));
+          await page.goto(origin + '/guide');
+          await page.evaluate(() => {
+            window.seoMutationCount = 0;
+            const NativeObserver = window.MutationObserver;
+            window.MutationObserver = class extends NativeObserver {
+              constructor(callback) {
+                super((records, observer) => {
+                  seoMutationCount += records.length;
+                  callback(records, observer);
+                });
+              }
+            };
+          });
+          await page.addScriptTag({ content: await readFile(new URL('../../fern/seo-structured-data.js', import.meta.url), 'utf8') });
+          await flush(page);
+          const schema = async () => JSON.parse(await page.locator('head script[data-sixmm-schema="webpage"]').textContent());
+          assert.equal((await schema()).name, 'Guide');
+          await page.evaluate(() => {
+            seoMutationCount = 0;
+            const main = document.querySelector('main');
+            for (let i = 0; i < 300; i++) {
+              const result = document.createElement('div');
+              result.innerHTML = '<span>Search result</span>';
+              main.appendChild(result);
+              result.remove();
+            }
+          });
+          await flush(page);
+          assert.equal(await page.evaluate(() => seoMutationCount), 0);
+
+          // Astro navigation can keep both the head and title unchanged.
+          await page.evaluate(() => {
+            history.pushState({}, '', '/ar/sdk/overview');
+            document.dispatchEvent(new Event('astro:page-load'));
+          });
+          await flush(page);
+          assert.equal((await schema()).url, 'https://docs.6mm.com/ar/sdk/overview');
+          assert.equal((await schema()).inLanguage, 'ar');
+
+          await page.evaluate(() => {
+            const nextHead = document.createElement('head');
+            nextHead.innerHTML = '<title>Replaced | 6MM Docs</title>';
+            document.head.replaceWith(nextHead);
+          });
+          await flush(page);
+          assert.equal((await schema()).name, 'Replaced');
+          await page.evaluate(() => { document.querySelector('title').firstChild.data = 'Updated | 6MM Docs'; });
+          await flush(page);
+          assert.equal((await schema()).name, 'Updated');
+          await page.evaluate(() => {
+            document.querySelector('head script[data-sixmm-schema="webpage"]').remove();
+          });
+          await flush(page);
+          assert.equal((await schema()).name, 'Updated');
+        } finally {
+          await page.close();
+        }
+      });
+
+      await t.test('static sidebar links use intent-based prefetch before initial and swapped markup is scanned', async () => {
+        const source = await readFile(new URL('../../fern/language-modal.js', import.meta.url), 'utf8');
+        const markup = `<aside id="fern-sidebar-static">
+          <a id="visible" href="/relative" data-astro-prefetch="viewport">Link</a>
+          <a id="eager" href="/eager" data-astro-prefetch="load">Link</a>
+          <a id="disabled" href="/disabled" data-astro-prefetch="false">Link</a>
+          <astro-island><a id="react" href="/react" data-astro-prefetch="viewport">React link</a></astro-island>
+        </aside>
+        <main><a id="outside" href="/outside" data-astro-prefetch="viewport">Outside sidebar</a></main>`;
+        const page = await browser.newPage();
+        try {
+          await page.route(origin + '/**', route => route.fulfill({
+            contentType: 'text/html',
+            body: `<!doctype html><head><script>
+              document.addEventListener('DOMContentLoaded', () => {
+                window.initialSidebarStrategy = document.getElementById('visible').dataset.astroPrefetch;
+              });
+            </script><script>${source}</script></head><body>${markup}</body>`,
+          }));
+          await page.goto(origin + '/guide');
+          assert.equal(await page.evaluate(() => initialSidebarStrategy), 'hover');
+          assert.equal(await page.locator('#eager').getAttribute('data-astro-prefetch'), 'hover');
+          assert.equal(await page.locator('#disabled').getAttribute('data-astro-prefetch'), 'false');
+          assert.equal(await page.locator('#react').getAttribute('data-astro-prefetch'), 'viewport');
+          assert.equal(await page.locator('#outside').getAttribute('data-astro-prefetch'), 'viewport');
+          assert.equal(await page.locator('#visible').getAttribute('href'), '/relative');
+          const swapped = await page.evaluate(markup => {
+            const event = new Event('astro:before-swap');
+            event.newDocument = new DOMParser().parseFromString(markup, 'text/html');
+            document.dispatchEvent(event);
+            return ['visible', 'eager', 'disabled', 'react', 'outside'].map(id =>
+              event.newDocument.getElementById(id).dataset.astroPrefetch);
+          }, markup);
+          assert.deepEqual(swapped, ['hover', 'hover', 'false', 'viewport', 'viewport']);
+        } finally { await page.close(); }
+      });
+
       await t.test('all locales retain the page, query, section and support frame', async () => {
         await withPage(browser, {}, async page => {
           for (const locale of locales) {
@@ -229,6 +332,63 @@ for (const [name, engine] of Object.entries({ chromium, webkit })) {
           await page.waitForFunction(() => document.getElementById('deferred-label').textContent === 'Пошук');
           assert.equal(await label.getAttribute('aria-label'), 'Пошук');
           await label.evaluate(node => node.closest('astro-island').remove());
+        });
+      });
+
+      await t.test('unrelated element updates do not rescan cards', async () => {
+        await withPage(browser, {}, async page => {
+          await flush(page);
+          await page.evaluate(() => {
+            window.cardScans = 0;
+            const query = document.querySelectorAll.bind(document);
+            document.querySelectorAll = (selector, ...args) => {
+              if (selector === 'article') cardScans++;
+              return query(selector, ...args);
+            };
+          });
+          // Separate frames model repeated search results, support messages and
+          // article content updates rather than a single coalesced mutation.
+          for (let update = 0; update < 12; update++) {
+            await page.evaluate(() => {
+              for (const root of [document.querySelector('article'), document.querySelector('#cs-widget-container'), document.body]) {
+                const content = document.createElement('div');
+                content.innerHTML = '<p>Updated content <span>with nested markup</span></p>';
+                root.appendChild(content);
+                content.remove();
+              }
+            });
+            await flush(page);
+          }
+          assert.equal(await page.evaluate(() => cardScans), 0);
+          // New targets still register, including direct children whose target
+          // selector depends on an ancestor outside the added subtree.
+          for (const [container, child, effect] of [
+            ['<article><div class="fern-card-group"></div></article>', '<a class="fern-card">Card</a>', 'sixmm-content-card'],
+            ['<article><div class="sixmm-stat-grid"></div></article>', '<div>Statistic</div>', 'sixmm-content-card'],
+            ['<footer class="fern-layout-footer"><nav class="fern-footer-nav"></nav></footer>', '<a>Next page</a>', 'sixmm-content-card'],
+            ['<div class="sixmm-language-menu-enhanced"><div class="fern-language-selector-radio-group"></div></div>', '<a class="fern-language-dropdown-item">Language</a>', 'sixmm-language-option-effect'],
+            ['<div class="fern-language-dropdown-content"><div class="fern-language-selector-radio-group"></div></div>', '<a class="fern-language-dropdown-item" role="menuitemradio" href="/guide"><span class="fern-language-dropdown-item-label">English</span></a>', 'sixmm-language-option-effect'],
+            ['<div class="sixmm-mobile-language-dialog-options"></div>', '<button class="sixmm-mobile-language-dialog-option">Language</button>', 'sixmm-language-option-effect'],
+          ]) {
+            await page.evaluate(({ container, child }) => {
+              const wrapper = document.createElement('section');
+              wrapper.id = 'dynamic-effect-fixture';
+              wrapper.innerHTML = container;
+              document.body.appendChild(wrapper);
+              let parent = wrapper;
+              while (parent.firstElementChild) parent = parent.firstElementChild;
+              parent.insertAdjacentHTML('beforeend', child);
+              window.dynamicEffectTarget = parent.lastElementChild;
+            }, { container, child });
+            await flush(page);
+            assert.equal(await page.evaluate(effect => dynamicEffectTarget.classList.contains(effect), effect), true);
+            const beforeRemoval = await page.evaluate(() => cardScans);
+            await page.evaluate(() => dynamicEffectTarget.remove());
+            await flush(page);
+            assert.equal(await page.evaluate(() => cardScans), beforeRemoval + 1, 'Detached targets must trigger group cleanup');
+            await page.locator('#dynamic-effect-fixture').evaluate(node => node.remove());
+            await flush(page);
+          }
         });
       });
 
