@@ -784,29 +784,25 @@ const incomingIsland = {
   setAttribute: (name, value) => incomingIslandAttributes.set(name, value),
 };
 function prepareIncomingLocale(from, to) {
-  adapterDocumentListeners["astro:before-swap"]({
+  adapterDocumentListeners["astro:before-swap"]?.({
     from: new URL(from, adapterWindow.location.origin),
     to: new URL(to, adapterWindow.location.origin),
     newDocument: { querySelectorAll: () => [incomingIsland] },
   });
 }
-prepareIncomingLocale("/zh-CN/sdk/overview", "/zh-CN/trading/overview");
-assert.equal(incomingIslandAttributes.get("client"), "load", "Ordinary page navigation must keep normal SSR hydration");
-prepareIncomingLocale("/sdk/overview", "/zh-CN/sdk/overview");
-assert.equal(incomingIslandAttributes.get("client"), "only", "Cross-locale navigation must not hydrate against stale-locale state");
-assert.equal(JSON.parse(incomingIslandAttributes.get("opts")).value, "react");
-assert.equal(incomingIsland.innerHTML, "<astro-slot>Localized article content</astro-slot>", "Locale remounting must preserve article slots");
-incomingIslandAttributes.set("client", "load");
-incomingIslandAttributes.set("opts", JSON.stringify({ name: "PageHeaderIsland", value: true }));
-prepareIncomingLocale("/zh-CN/sdk/overview", "/zh-CN/developer-api/overview");
-assert.equal(incomingIslandAttributes.get("client"), "load", "Ordinary navigation keeps the original loading strategy");
-assert.equal(incomingIsland.innerHTML, "<astro-slot>Localized article content</astro-slot>", "Subsequent navigation must preserve article slots");
-let bridgeCalls=0;
-adapterWindow.__sixmmPrepareInterfaceSwap=()=>{bridgeCalls++;};
-incomingIslandAttributes.set('client','lazy');
-prepareIncomingLocale('/sdk/overview','/zh-CN/sdk/overview');
-assert.equal(incomingIslandAttributes.get('client'),'lazy','A ready interface bridge preserves deferred and lazy hydration');
-assert.equal(bridgeCalls,1);
+for (const strategy of ['load', 'idle', 'visible', 'lazy', 'only']) {
+  incomingIslandAttributes.set('client', strategy);
+  const before = [...incomingIslandAttributes];
+  for (const [from, to] of [
+    ['/zh-CN/sdk/overview', '/zh-CN/trading/overview'],
+    ['/sdk/overview', '/zh-CN/sdk/overview'],
+    ['/zh-CN/sdk/overview', '/ja/sdk/overview'],
+  ]) {
+    prepareIncomingLocale(from, to);
+    assert.deepEqual([...incomingIslandAttributes], before, 'Navigation must preserve Fern SSR hydration options');
+    assert.equal(incomingIsland.innerHTML, '<astro-slot>Localized article content</astro-slot>', 'Navigation must preserve incoming content');
+  }
+}
 assert.equal(
   adapterRoot.dataset.sixmmDocsLocale,
   "en",

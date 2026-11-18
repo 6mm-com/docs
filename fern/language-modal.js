@@ -610,30 +610,6 @@
     if (root.classList.contains("light")) return "light";
     return root.dataset.theme === "dark" ? "dark" : "light";
   }
-  function prepareLocaleSwap(event) {
-    if (!event.from || !event.to || !event.newDocument) return;
-    var routeLocale = function (url) {
-      var first = url.pathname.split("/").find(Boolean) || "";
-      return locales.some(function (item) { return item.code && item.code === first; }) ? first : "";
-    };
-    if (typeof window.__sixmmPrepareInterfaceSwap === 'function') {
-      window.__sixmmPrepareInterfaceSwap(event.newDocument, routeLocale(event.to) || 'en');
-      return;
-    }
-    if (routeLocale(event.from) === routeLocale(event.to)) return;
-    // A fast navigation before the interface bridge loads only remounts the
-    // small UI roots. Article/sidebar content keeps its original lazy strategy.
-    event.newDocument.querySelectorAll('astro-island[client]:not([client="only"])').forEach(function (island) {
-      var options;
-      try { options = JSON.parse(island.getAttribute("opts") || "{}"); }
-      catch (error) { return; }
-      if (!/^(HeaderContentIsland|PageHeaderIsland|TableOfContentsIsland|FooterIsland)$/.test(options.name)) return;
-      options.value = "react";
-      island.setAttribute("opts", JSON.stringify(options));
-      island.setAttribute("client", "only");
-    });
-  }
-
   async function navigateDocsTheme(theme) {
     if (theme !== "light" && theme !== "dark") return false;
     if (currentTheme() === theme) return true;
@@ -695,7 +671,6 @@
   // locale immediately so standalone navigation tabs never flash on first paint.
   syncLocaleTabs(currentRoute());
   document.addEventListener("DOMContentLoaded", scheduleSync);
-  document.addEventListener("astro:before-swap", prepareLocaleSwap);
   document.addEventListener("fern:island-hydrated", scheduleSync);
   document.addEventListener("astro:page-load", scheduleSync);
   window.addEventListener("pageshow", function () {

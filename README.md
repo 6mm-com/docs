@@ -126,6 +126,14 @@ upgrading Fern, also verify navigation, language switching, themes and history i
 Safari and Chrome. This guards a hosted-renderer failure; it does not patch
 WebKit's module loader or Fern's generated bundles.
 
+The interface localization bridge preserves incoming server-rendered labels and
+Fern's hydration strategies during language changes. It updates labels only after
+island readiness and a post-render task. Within React-owned islands, read-only
+React DOM binding markers also keep deferred Suspense content untouched until
+React adopts each target. Only waiting targets are retried; disconnected nodes
+are discarded. Verify these markers against the hosted renderer after Fern/React
+upgrades. Do not normalize incoming labels to English.
+
 The browser regression suite runs the checkout's configured custom scripts and
 CSS in Chromium and WebKit. Scripts follow their configured loading phases,
 preserving declaration order within each phase; Fern's parser, hydration and

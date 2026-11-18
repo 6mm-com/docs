@@ -134,6 +134,42 @@ for (const [name, engine] of Object.entries({ chromium, webkit })) {
         });
       });
 
+      await t.test('locale swaps preserve incoming SSR labels and hydration strategies at every loading phase', async () => {
+        const page = await browser.newPage();
+        const errors = [];
+        page.on('pageerror', error => errors.push(error.message));
+        try {
+          await page.route('**/*', route => route.fulfill({ contentType: 'text/html', body: '<!doctype html><html lang="en"><body></body></html>' }));
+          await page.goto(origin);
+          for (const script of ['language-modal.js', 'docs-interface.js']) {
+            await page.addScriptTag({ content: await readFile(new URL('../../fern/' + script, import.meta.url), 'utf8') });
+            const results = await page.evaluate(locales => {
+              return locales.flatMap(locale => {
+                const target = locale.default ? '' : '/' + locale.code;
+                return [target, '', '/ja', '/ar'].map(source => {
+                  const incoming = new DOMParser().parseFromString('<!doctype html><html><body></body></html>', 'text/html');
+                  incoming.documentElement.lang = locale.code;
+                  incoming.body.innerHTML = ['load', 'idle', 'visible', 'lazy', 'only'].map((strategy, index) =>
+                    `<astro-island client="${strategy}" opts='{"name":"PageHeaderIsland","value":true}'>
+                      <header id="${index ? 'header-' + index : 'fern-header'}"><button aria-label="搜索">搜索</button></header>
+                      <div class="fern-page-actions"><button title="Copy page">Copy page</button><button>编辑此页面</button></div>
+                      <p>${locale.label}</p><astro-slot>Localized content</astro-slot>
+                    </astro-island>`).join('');
+                  const before = incoming.documentElement.outerHTML;
+                  const event = new Event('astro:before-swap');
+                  Object.assign(event, { from: new URL(source + '/guide', location.origin), to: new URL(target + '/guide', location.origin), newDocument: incoming });
+                  document.dispatchEvent(event);
+                  return { locale: locale.code, source, preserved: incoming.documentElement.outerHTML === before };
+                });
+              });
+            }, locales);
+            assert.equal(results.length, locales.length * 4);
+            assert.deepEqual(results.filter(result => !result.preserved), [], `${script}: incoming text, attributes and loading strategies must survive until native hydration`);
+          }
+          assert.deepEqual(errors, []);
+        } finally { await page.close(); }
+      });
+
       await t.test('nested hydration and excluded content preserve server text', async () => {
         const markup = `<astro-island id="layout"><astro-island id="header-island"><header id="fern-header"><button id="search">Search</button></header></astro-island></astro-island>
           <div id="fern-ask-ai-panel"><pre><code>${'<span>Search</span>'.repeat(100)}</code></pre>
@@ -165,6 +201,34 @@ for (const [name, engine] of Object.entries({ chromium, webkit })) {
           });
           await flush(page);
           assert.equal(await page.locator('#late-search').textContent(), 'Search');
+        });
+      });
+
+      await t.test('outer readiness does not translate React content before deferred host bindings attach', async () => {
+        await withPage(browser, { pathname: '/uk/guide' }, async page => {
+          await page.evaluate(() => {
+            const island = document.createElement('astro-island');
+            island.setAttribute('data-fern-hydrated', '');
+            island.__reactContainer$fixture = {};
+            island.setAttribute('component-url', '/FooterIsland.fixture.js');
+            island.innerHTML = '<div id="fern-search-panel"><button id="deferred-label" aria-label="Search">Search</button></div>';
+            island.firstElementChild.__reactProps$fixture = {};
+            const outer = document.createElement('astro-island');
+            outer.setAttribute('data-fern-hydrated', '');
+            outer.__reactContainer$outer = {};
+            outer.appendChild(island);
+            document.body.appendChild(outer);
+            document.dispatchEvent(new Event('fern:island-hydrated'));
+          });
+          await page.waitForTimeout(120);
+          const label = page.locator('#deferred-label');
+          assert.equal(await label.textContent(), 'Search');
+          assert.equal(await label.getAttribute('aria-label'), 'Search');
+          // React attaches host bindings without changing matching server markup.
+          await label.evaluate(node => { node.__reactProps$fixture = {}; });
+          await page.waitForFunction(() => document.getElementById('deferred-label').textContent === 'Пошук');
+          assert.equal(await label.getAttribute('aria-label'), 'Пошук');
+          await label.evaluate(node => node.closest('astro-island').remove());
         });
       });
 
