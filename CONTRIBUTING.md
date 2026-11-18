@@ -35,6 +35,22 @@ After translation generation, run `npm run translations:polish`. The repository
 checks verify all 20 public locales, canonical URLs, internal links, code
 samples, and locale configuration.
 
+### Front-end assets
+
+Edit the numbered CSS sections in `fern/asset-source/css/`, the host and menu
+sources in `fern/asset-source/js/`, and the customer-support sources in
+`fern/asset-source/support/`. Language codes, display names, and widget aliases
+are defined in `scripts/locale-config.mjs`.
+
+Run `npm run assets:build` and include the resulting changes to `fern/styles.css`,
+`fern/language-modal.js`, and `fern/support-widget.js`. Do not edit those
+generated files directly. `npm run check` verifies that the artifacts match their
+sources, and `npm run fern:dev` rebuilds them before starting the preview.
+
+CSS files are concatenated in numeric order to preserve the existing cascade.
+The JavaScript sources are built into the existing host and support scripts, so
+the browser loads the same stylesheet and scripts in the same order.
+
 ## Validation
 
 Use Node.js 22 to match CI (Node.js 20+ is required). Run validation before opening
@@ -56,6 +72,12 @@ npm run browser:check
 
 The suite tests the custom UI in Chromium and WebKit with simulated Fern routing
 and customer-support services. It does not publish or send production requests.
+
+For changes tied to Fern's renderer, start `npm run fern:dev -- --port=3010`
+and run `node tests/browser/preview-smoke.mjs` separately. It exercises real
+preview routing, scrolling, a TOC jump and the theme control. The separate
+`load-performance.mjs` and `scroll-performance.mjs --probe-toc-scope` scripts
+sample public pages on demand; they are not required in CI.
 
 ## Content Standards
 

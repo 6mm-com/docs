@@ -114,6 +114,7 @@ const documentElement = {
 const sandboxWindow = {
   location: { pathname: "/home" },
   __sixmmDocsLocales: browserLocales,
+  __sixmmDocsHost: localeSandbox.window.__sixmmDocsHost,
   CSWidget: {
     open() { widgetOpenCalls++; },
     setLang(value) {
@@ -414,7 +415,7 @@ expiredCallback();
 assert.equal(status.dataset.state,'error','A stalled frame shows a recoverable loading failure');
 const retry=status.children.find(node=>node.tagName==='BUTTON');
 assert.equal(retry.hidden,false);
-const localizedStatuses = JSON.parse(supportScript.match(/var statusLabels = (\{[\s\S]*?\n\});/)[1]);
+const localizedStatuses = JSON.parse(supportScript.match(/var statusLabels = (\{[\s\S]*?\n\s*\});/)[1]);
 assert.equal(Object.keys(localizedStatuses).length, browserLocales.length);
 for (const locale of browserLocales) {
   const code = locale.code || 'en';
@@ -549,7 +550,8 @@ let activeMenu = null;
 let activeThemeIcon = "light";
 let languageTriggerClicks = 0;
 const nativeLinkNavigations = [];
-const adapterArticle = { textContent: "English page" };
+let adapterArticle = { textContent: "English page" };
+let replaceAdapterArticle = false;
 const adapterRootClasses = new Set(["light"]);
 const adapterStorage = new Map([["theme", "light"]]);
 const adapterStorageEvents = [];
@@ -712,6 +714,9 @@ const adapterDocument = {
   readyState: "loading",
   documentElement: adapterRoot,
   addEventListener(name, listener) { adapterDocumentListeners[name] = listener; },
+  removeEventListener(name, listener) {
+    if (adapterDocumentListeners[name] === listener) delete adapterDocumentListeners[name];
+  },
   body: { appendChild() {} },
   createElement(tag) {
     if (tag !== "a") return { className: "", textContent: "" };
@@ -729,7 +734,11 @@ const adapterDocument = {
         adapterWindow.location.pathname = target.pathname;
         adapterWindow.location.search = target.search;
         adapterWindow.location.hash = target.hash;
-        adapterArticle.textContent = "Page " + target.pathname;
+        if (replaceAdapterArticle) {
+          adapterArticle = { textContent: adapterArticle.textContent };
+        } else {
+          adapterArticle.textContent = "Page " + target.pathname;
+        }
       },
       remove() {},
     };
@@ -810,18 +819,19 @@ assert.equal(
 );
 assert.match(
   languageScript,
-  /next\.article !== previous\.article/,
-  "Locale navigation readiness must accept a replaced article with identical text",
-);
-assert.match(
-  languageScript,
   /\.language-dropdown-trigger \.truncate/,
   "Locale routes must synchronize the Fern trigger label",
 );
+const oldAdapterArticle = adapterArticle;
+replaceAdapterArticle = true;
 assert.equal(
   await adapterWindow.__sixmmNavigateDocsLocale("fr"),
   true,
+  "Locale navigation readiness must accept a replaced article with identical text",
 );
+replaceAdapterArticle = false;
+assert.notEqual(adapterArticle, oldAdapterArticle);
+assert.equal(adapterArticle.textContent, oldAdapterArticle.textContent);
 assert.equal(adapterWindow.location.pathname, "/fr/home");
 assert.equal(nativeLinkNavigations.at(-1), "/fr/home");
 assert.equal(

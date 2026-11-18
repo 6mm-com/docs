@@ -1,0 +1,158 @@
+/* Content-card spotlight: the homepage steps and MDX cards share one effect.
+   Layered gradients stay inside each card and never cover navigation or text. */
+.sixmm-content-card {
+  --sixmm-card-x: 50%;
+  --sixmm-card-y: 50%;
+  --sixmm-card-intensity: 0;
+  --sixmm-card-glow: 10, 204, 170;
+  --sixmm-card-surface: #ffffff;
+  --sixmm-card-blend: normal;
+  background: var(--sixmm-card-surface) !important;
+  box-shadow: none !important;
+  position: relative;
+  isolation: isolate;
+  transition: translate 0.3s ease, border-color 0.2s ease, box-shadow 0.3s ease;
+}
+
+.fern-footer-nav > a.sixmm-content-card {
+  transition: translate 0.3s ease, border-color 0.2s ease, box-shadow 0.3s ease;
+}
+
+:root.dark .sixmm-content-card {
+  --sixmm-card-surface: rgba(255, 255, 255, 0.04);
+  --sixmm-card-blend: screen;
+}
+
+.sixmm-content-card::before,
+.sixmm-content-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: var(--sixmm-card-intensity);
+  transition: opacity 0.3s ease;
+}
+
+.sixmm-content-card::before {
+  z-index: -1;
+  mix-blend-mode: var(--sixmm-card-blend);
+  background: radial-gradient(400px circle at var(--sixmm-card-x) var(--sixmm-card-y),
+    rgba(var(--sixmm-card-glow), 0.12) 0%, rgba(var(--sixmm-card-glow), 0.064) 15%,
+    rgba(var(--sixmm-card-glow), 0.032) 25%, rgba(var(--sixmm-card-glow), 0.016) 40%,
+    rgba(var(--sixmm-card-glow), 0.008) 65%, transparent 70%);
+}
+
+.sixmm-content-card::after {
+  inset: -1px;
+  z-index: 1;
+  padding: 2px;
+  background: radial-gradient(300px circle at var(--sixmm-card-x) var(--sixmm-card-y),
+    rgba(var(--sixmm-card-glow), 0.8), rgba(var(--sixmm-card-glow), 0.4) 30%, transparent 60%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+.fern-card.interactive.sixmm-content-card:hover:not(:focus-visible):not([data-sixmm-card-hovered="true"]) {
+  border-color: var(--sixmm-home-border) !important;
+  background: var(--sixmm-card-surface) !important;
+  box-shadow: none !important;
+}
+
+.sixmm-stat-grid > .sixmm-content-card:hover:not([data-sixmm-card-hovered="true"]) {
+  border-color: var(--sixmm-home-border);
+  background: var(--sixmm-card-surface);
+}
+
+/* Both themes share the hovered brand border without an inset glow. */
+@media (min-width: 769px) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .fern-card.sixmm-content-card[data-sixmm-card-hovered="true"],
+  .fern-footer-nav > a.sixmm-content-card[data-sixmm-card-hovered="true"],
+  .sixmm-stat-grid > .sixmm-content-card[data-sixmm-card-hovered="true"] {
+    border-color: #0accaa !important;
+    background: var(--sixmm-card-surface) !important;
+    box-shadow: none !important;
+  }
+}
+
+@media (min-width: 769px) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .sixmm-content-card[data-sixmm-card-hovered="true"] {
+    translate: 0 -2px;
+  }
+}
+
+@media (max-width: 768px), (hover: none), (pointer: coarse), (prefers-reduced-motion: reduce) {
+  .sixmm-content-card::before,
+  .sixmm-content-card::after {
+    display: none;
+  }
+  .sixmm-content-card,
+  .fern-footer-nav > a.sixmm-content-card {
+    transition: none;
+  }
+}
+
+/* Language options reuse the pointer glow without card surfaces or movement. */
+.sixmm-language-option-effect {
+  --sixmm-card-x: 50%;
+  --sixmm-card-y: 50%;
+  --sixmm-card-intensity: 0;
+  position: relative;
+  isolation: isolate;
+  box-shadow: none !important;
+  transition: border-color 0.2s ease;
+}
+
+/* Replace the native link focus outline with the existing single option border. */
+.sixmm-language-menu-enhanced .sixmm-language-option-effect,
+.sixmm-mobile-language-dialog-option.sixmm-language-option-effect {
+  outline: none !important;
+}
+
+.sixmm-language-option-effect::before,
+.sixmm-language-option-effect::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: var(--sixmm-card-intensity);
+  transition: opacity 0.3s ease;
+}
+
+.sixmm-language-option-effect::before {
+  z-index: -1;
+  background: radial-gradient(180px circle at var(--sixmm-card-x) var(--sixmm-card-y),
+    rgba(10, 204, 170, 0.08), rgba(10, 204, 170, 0.02) 40%, transparent 70%);
+}
+
+.sixmm-language-option-effect::after {
+  inset: -1px;
+  z-index: 1;
+  padding: 1px;
+  background: radial-gradient(160px circle at var(--sixmm-card-x) var(--sixmm-card-y),
+    rgba(10, 204, 170, 0.8), rgba(10, 204, 170, 0.4) 30%, transparent 60%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+.sixmm-language-menu-enhanced .fern-language-dropdown-item.sixmm-language-option-effect:not([data-state="checked"]):is(:hover, :focus-visible, [data-highlighted]),
+.sixmm-mobile-language-dialog-option.sixmm-language-option-effect:not([data-state="checked"]):is(:hover, :focus-visible) {
+  border-color: #0accaa !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+@media (max-width: 768px), (hover: none), (pointer: coarse), (prefers-reduced-motion: reduce) {
+  .sixmm-language-option-effect::before,
+  .sixmm-language-option-effect::after {
+    display: none;
+  }
+  .sixmm-language-option-effect {
+    transition: none;
+  }
+}

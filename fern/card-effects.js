@@ -23,6 +23,8 @@
   var observedBody = null;
   var bodyObserver = null;
   var measuredRects = [];
+  var lastIntensity = new WeakMap();
+  var darkIntensity = "0.000";
 
   function enabled() {
     return window.innerWidth > 768 && hover.matches && !reducedMotion.matches;
@@ -35,7 +37,10 @@
     measuredRects.length = 0;
     if (activeGroup) {
       (groups.get(activeGroup) || []).forEach(function (card) {
-        card.style.setProperty("--sixmm-card-intensity", "0");
+        var intensity = lastIntensity.get(card);
+        if (intensity === undefined || intensity === darkIntensity) return;
+        card.style.setProperty("--sixmm-card-intensity", darkIntensity);
+        lastIntensity.set(card, darkIntensity);
       });
     }
     if (hoveredCard) hoveredCard.removeAttribute("data-sixmm-card-hovered");
@@ -103,10 +108,18 @@
       ) - Math.max(rect.width, rect.height) / 2);
       var near = glowRadius * 0.5;
       var far = glowRadius * 0.75;
-      var intensity = distance <= near ? 1 : Math.max(0, (far - distance) / (far - near));
-      card.style.setProperty("--sixmm-card-x", (pointer.x - rect.left) + "px");
-      card.style.setProperty("--sixmm-card-y", (pointer.y - rect.top) + "px");
-      card.style.setProperty("--sixmm-card-intensity", intensity.toFixed(3));
+      var intensity = (distance <= near ? 1 : Math.max(0, (far - distance) / (far - near))).toFixed(3);
+      var previous = lastIntensity.get(card);
+      // An untouched card is already transparent in CSS. Previously lit cards
+      // still follow the pointer at zero target opacity while their glow fades.
+      if (previous === undefined && intensity === darkIntensity) return;
+      var style = card.style;
+      style.setProperty("--sixmm-card-x", (pointer.x - rect.left) + "px");
+      style.setProperty("--sixmm-card-y", (pointer.y - rect.top) + "px");
+      if (previous !== intensity) {
+        style.setProperty("--sixmm-card-intensity", intensity);
+        lastIntensity.set(card, intensity);
+      }
     });
   }
 
