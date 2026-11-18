@@ -667,10 +667,29 @@
     window.requestAnimationFrame(syncInterface);
   }
 
+  function tuneStaticSidebarPrefetch(root) {
+    var sidebar = root && root.getElementById && root.getElementById("fern-sidebar-static");
+    if (!sidebar) return;
+    sidebar.querySelectorAll('a[data-astro-prefetch="viewport"], a[data-astro-prefetch="load"]').forEach(function (link) {
+      // Fern scans the static sidebar before the afterInteractive script runs.
+      // Leave React-owned links to the existing post-hydration bridge.
+      if (!link.closest("astro-island")) link.setAttribute("data-astro-prefetch", "hover");
+    });
+  }
+
   // This script loads before interactive content. Set the pathname-derived
   // locale immediately so standalone navigation tabs never flash on first paint.
   syncLocaleTabs(currentRoute());
-  document.addEventListener("DOMContentLoaded", scheduleSync);
+  var parsingSidebar = document.readyState === "loading";
+  tuneStaticSidebarPrefetch(document);
+  document.addEventListener("DOMContentLoaded", function () {
+    parsingSidebar = false;
+    tuneStaticSidebarPrefetch(document);
+    scheduleSync();
+  });
+  document.addEventListener("astro:before-swap", function (event) {
+    tuneStaticSidebarPrefetch(event.newDocument);
+  });
   document.addEventListener("fern:island-hydrated", scheduleSync);
   document.addEventListener("astro:page-load", scheduleSync);
   window.addEventListener("pageshow", function () {
@@ -685,6 +704,7 @@
     if (!isMobileViewport()) closeMobileLocaleDialog(false);
   });
   new MutationObserver(function (records) {
+    if (parsingSidebar) tuneStaticSidebarPrefetch(document);
     var controls = '.fern-language-selector, .fern-language-dropdown-content, .sixmm-theme-trigger, .fern-header-mobile-menu-button';
     if (records.some(function (record) {
       var target = record.target.nodeType === 1 ? record.target : record.target.parentElement;

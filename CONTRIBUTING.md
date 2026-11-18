@@ -18,10 +18,18 @@ Documentation source files live under:
 - `fern/docs.yml` for English navigation, tabs, redirects, and site configuration
 - `fern/translations/<locale>/` for locales handled by Fern's native localization
 
+List every English source page in `fern/docs.yml` navigation. Generation and
+validation use that list directly when pages are added or retired.
+
 English is the source of truth. If an English page changes, regenerate the affected
 locales with `npm run translations:generate -- --locales=<locale>`. For a deliberate
 manual translation, refresh its source hash with
 `npm run translations:refresh-manifest -- --locales=<locale>`.
+
+Incremental generation reuses an existing navigation overlay once its English
+navigation has been cached. Review navigation changes when the English tabs or
+sidebar change, or run `npm run translations:generate -- --labels-only --locales=<locale>`
+to regenerate navigation labels explicitly.
 
 After translation generation, run `npm run translations:polish`. The repository
 checks verify all 20 public locales, canonical URLs, internal links, code

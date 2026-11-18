@@ -20,11 +20,10 @@ const backendPort = portArgument("backend-port", 3011);
 if (port === backendPort) throw new Error("Preview and backend ports must differ");
 console.log(`Local prediction review: http://127.0.0.1:${port}/zh-CN/prediction/overview`);
 console.log("Uses all configured languages and Fern's normal renderer. This command does not publish.");
-const executable = path.join(root, "node_modules/.bin", process.platform === "win32" ? "fern.cmd" : "fern");
-const child = spawn(executable, ["docs", "dev", "--port", String(port), "--backend-port", String(backendPort)], {
+const executable = path.join(root, "node_modules/fern-api/cli.cjs");
+const child = spawn(process.execPath, [executable, "docs", "dev", "--port", String(port), "--backend-port", String(backendPort)], {
   cwd: root,
   stdio: "inherit",
-  shell: process.platform === "win32",
 });
 for (const signal of ["SIGINT", "SIGTERM"]) process.on(signal, () => child.kill(signal));
 child.on("error", (error) => { console.error(error.message); process.exitCode = 1; });

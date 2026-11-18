@@ -7,6 +7,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { parse } from 'yaml';
 import { locales, generatedLocaleSpecs } from './locale-config.mjs';
+import { linkDirectory, linkFixtureDependencies } from './test-fixture-paths.mjs';
 
 const pkg = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
 test('ordered batches enforce their concurrency limit and preserve input order', async () => {
@@ -91,8 +92,10 @@ test('support guide prefetch preserves validation order when later reads fail', 
   const root = await mkdtemp(path.join(tmpdir(), 'sixmm-support-order-'));
   try {
     await mkdir(path.join(root, 'scripts'));
-    await copyFile(new URL('./check-customer-support.mjs', import.meta.url), path.join(root, 'scripts/check-customer-support.mjs'));
-    await symlink(fileURLToPath(new URL('../node_modules', import.meta.url)), path.join(root, 'node_modules'), 'dir');
+    for (const file of ['check-customer-support.mjs', 'documentation-pages.mjs']) {
+      await copyFile(new URL(file, import.meta.url), path.join(root, 'scripts', file));
+    }
+    await linkFixtureDependencies(root);
     const config = parse(await readFile(new URL('../fern/docs.yml', import.meta.url), 'utf8'));
     config.translations = config.translations.filter(locale => locale.default || locale.lang === 'ja');
     const pages = config.navigation.find(item => item.tab === 'customerSupport').layout.flatMap(group => group.contents.map(page => page.path));
@@ -125,44 +128,79 @@ test('support guide prefetch preserves validation order when later reads fail', 
     result = run();
     assert.equal(result.status, 0, result.stderr);
     assert.match(result.stdout, /Customer support docs verified/);
+
+    const addedGuide = 'docs/pages/customer-support/new-guide.mdx';
+    await writeFile(path.join(root, 'fern', addedGuide), await readFile(path.join(root, 'fern', pages[0]), 'utf8'));
+    result = run();
+    assert.equal(result.status, 1);
+    assert.ok(result.stderr.includes(addedGuide), result.stderr);
+    assert.match(result.stderr, /missing from navigation/);
+    const supportTab = config.navigation.find(item => item.tab === 'customerSupport');
+    supportTab.layout[0].contents.push({ page: 'New guide', path: addedGuide });
+    await writeFile(path.join(root, 'fern/docs.yml'), JSON.stringify(config));
+    await writeFile(path.join(root, 'fern/translations/ja', addedGuide), firstBody);
+    result = run();
+    assert.equal(result.status, 0, result.stderr);
+    assert.ok(result.stdout.includes(`verified: ${pages.length + 1} pages`));
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
-for (const [file, jobName] of [['docs-check.yml', 'validate'], ['docs-publish.yml', 'publish']]) {
-test(`${file} runs documentation validation before browser setup and requires both gates`, async () => {
-  const workflow = parse(await readFile(new URL(`../.github/workflows/${file}`, import.meta.url), 'utf8'));
-  const job = workflow.jobs[jobName];
-  const validationIndex = job.steps.findIndex(step => step.run === 'npm run check');
-  const browserInstallIndex = job.steps.findIndex(step => step.run === 'npm ci --prefix tests/browser --ignore-scripts');
-  const browserSetupIndex = job.steps.findIndex(step => step.run === 'npm run install:browsers -- --with-deps');
-  const browserIndex = job.steps.findIndex(step => step.run === 'npm run browser:check');
-  const publishIndex = job.steps.findIndex(step => step.run === './node_modules/.bin/fern generate --docs --no-prompt');
-  assert.ok(validationIndex >= 0 && browserInstallIndex > validationIndex);
-  assert.ok(browserSetupIndex > browserInstallIndex && browserIndex > browserSetupIndex);
-  assert.equal(job.steps[browserSetupIndex]['working-directory'], 'tests/browser');
-  assert.equal(job.steps.filter(step => step.run === 'npm run check').length, 1);
-  assert.equal(job.steps[validationIndex].env.FERN_TOKEN, '${{ secrets.FERN_TOKEN }}');
-  const setup = job.steps.find(step => step.uses?.startsWith('actions/setup-node@')).with;
+const docsValidationAction = './.github/actions/validate-docs';
+
+test('shared docs validation runs both gates and installs only the required browsers', async () => {
+  const action = parse(await readFile(new URL(`../${docsValidationAction}/action.yml`, import.meta.url), 'utf8'));
+  assert.equal(action.runs.using, 'composite');
+  assert.equal(action.inputs['fern-token'].required, false);
+  const [node, ...steps] = action.runs.steps;
+  assert.match(node.uses, /^actions\/setup-node@/);
+  const setup = node.with;
   assert.equal(setup['node-version'], 22);
   assert.equal(setup.cache, 'npm');
   assert.deepEqual(setup['cache-dependency-path'].trim().split(/\s+/), ['package-lock.json', 'tests/browser/package-lock.json']);
-  for (const target of [job, ...job.steps.slice(validationIndex, browserIndex + 1)]) {
-    assert.ok(target['continue-on-error'] === undefined || target['continue-on-error'] === false);
-  }
-  for (const step of job.steps.slice(validationIndex, browserIndex + 1)) {
-    assert.equal(step.if, undefined, 'Do not skip validation or run after a failed prerequisite');
-  }
-  if (jobName === 'publish') {
-    assert.ok(publishIndex > browserIndex);
-    assert.equal(job.steps[publishIndex].if, undefined, 'Do not publish after a failed gate');
-  } else {
-    assert.equal(publishIndex, -1);
-    assert.ok(Object.hasOwn(workflow.on, 'pull_request'));
-    assert.deepEqual(workflow.on.push.branches, ['main']);
-    assert.equal(job.if, undefined);
-    assert.deepEqual(workflow.permissions, { contents: 'read' });
+  assert.deepEqual(steps.map(step => step.run), [
+    'npm ci',
+    'npm run check',
+    'npm ci --prefix tests/browser --ignore-scripts',
+    'npm run install:browsers -- --with-deps --only-shell',
+    'npm run browser:check',
+  ]);
+  assert.equal(steps[3]['working-directory'], 'tests/browser');
+  assert.equal(steps[1].env.FERN_TOKEN, '${{ inputs.fern-token }}');
+  for (const step of [node, ...steps]) {
+    assert.equal(step.if, undefined);
+    assert.ok(!step['continue-on-error']);
+    if (step.run) assert.equal(step.shell, 'bash');
+    if (step.run !== 'npm run check') assert.equal(step.env?.FERN_TOKEN, undefined);
   }
 });
+
+for (const [file, jobName] of [['docs-check.yml', 'validate'], ['docs-publish.yml', 'publish']]) {
+  test(`${file} requires the shared validation action`, async () => {
+    const workflow = parse(await readFile(new URL(`../.github/workflows/${file}`, import.meta.url), 'utf8'));
+    const job = workflow.jobs[jobName];
+    const [checkout, validate, ...remaining] = job.steps;
+    assert.match(checkout.uses, /^actions\/checkout@/);
+    assert.equal(validate.uses, docsValidationAction);
+    assert.equal(validate.with['fern-token'], '${{ secrets.FERN_TOKEN }}');
+    assert.deepEqual(workflow.permissions, { contents: 'read' });
+    for (const step of [checkout, validate, ...remaining]) {
+      assert.equal(step.if, undefined, 'A failed prerequisite must stop the job');
+      assert.ok(!step['continue-on-error']);
+    }
+    assert.ok(!job['continue-on-error']);
+    if (jobName === 'publish') {
+      assert.equal(job.if, "github.ref == 'refs/heads/main'");
+      assert.deepEqual(Object.keys(workflow.on), ['workflow_dispatch']);
+      assert.equal(remaining.length, 1);
+      assert.equal(remaining[0].run, './node_modules/.bin/fern generate --docs --no-prompt');
+      assert.equal(remaining[0].env.FERN_TOKEN, '${{ secrets.FERN_TOKEN }}');
+    } else {
+      assert.equal(remaining.length, 0);
+      assert.ok(Object.hasOwn(workflow.on, 'pull_request'));
+      assert.deepEqual(workflow.on.push.branches, ['main']);
+      assert.equal(job.if, undefined);
+    }
+  });
 }
 
 async function fixture(run) {
@@ -179,9 +217,16 @@ if(process.env.FAIL_STEP===name)process.exit(7);
       await writeFile(path.join(root, 'scripts', name), probe);
     }
     await writeFile(path.join(root, 'node_modules/.bin/fern'), '#!/usr/bin/env node\n' + probe.replace("import fs from 'node:fs';", "const fs=require('node:fs');"), { mode: 0o755 });
+    if (process.platform === 'win32') {
+      await writeFile(path.join(root, 'node_modules/.bin/fern.cmd'), '@node "%~dp0fern" %*\r\n');
+    }
     await writeFile(path.join(root, 'package.json'), JSON.stringify({ type: 'module', scripts: { ...pkg.scripts, check: 'node scripts/check.mjs' } }));
     await run((command, args = [], fail = '') => {
-      const result = spawnSync('npm', ['run', command, '--', ...args], {
+      // npm run provides its JS entry point, so no shell is needed for npm.cmd.
+      const npm = process.env.npm_execpath;
+      const npmCommand = npm ? process.execPath : 'npm';
+      const npmArgs = npm ? [npm] : [];
+      const result = spawnSync(npmCommand, [...npmArgs, 'run', command, '--', ...args], {
         cwd: root, encoding: 'utf8', env: { ...process.env, FAIL_STEP: fail, npm_config_ignore_scripts: 'false' }
       });
       return result;
@@ -247,7 +292,7 @@ test('maintenance commands reject unsupported options before rewriting documents
     for (const name of ['stabilize-heading-anchors.mjs', 'repair-translation-links.mjs', 'polish-core-translations.mjs', 'locale-config.mjs', 'documentation-text.mjs', 'write-generated-file.mjs', 'ordered-batches.mjs']) {
       await copyFile(new URL(name, import.meta.url), path.join(root, 'scripts', name));
     }
-    await symlink(fileURLToPath(new URL('../node_modules', import.meta.url)), path.join(root, 'node_modules'), 'dir');
+    await linkFixtureDependencies(root);
     await mkdir(path.join(root, 'fern/docs/pages'), { recursive: true });
     const documentPath = path.join(root, 'fern/docs/pages/home.mdx');
     const original = '## Existing heading\n';
@@ -279,7 +324,7 @@ test('anchor validation preserves error order and avoids partial writes when a l
     for (const name of ['stabilize-heading-anchors.mjs', 'write-generated-file.mjs']) {
       await copyFile(new URL(name, import.meta.url), path.join(root, 'scripts', name));
     }
-    await symlink(fileURLToPath(new URL('../node_modules', import.meta.url)), path.join(root, 'node_modules'), 'dir');
+    await linkFixtureDependencies(root);
     const relative = 'docs/pages/example.mdx';
     const source = path.join(root, 'fern', relative);
     const japanese = path.join(root, 'fern/translations/ja', relative);
@@ -322,7 +367,7 @@ for (const failure of ['missing-source', 'missing-later-translation', 'multiple-
       for (const name of ['repair-translation-links.mjs', 'stabilize-heading-anchors.mjs', 'locale-config.mjs', 'documentation-text.mjs', 'write-generated-file.mjs', 'ordered-batches.mjs']) {
         await copyFile(new URL(name, import.meta.url), path.join(root, 'scripts', name));
       }
-      await symlink(fileURLToPath(new URL('../node_modules', import.meta.url)), path.join(root, 'node_modules'), 'dir');
+      await linkFixtureDependencies(root);
       await mkdir(path.join(root, 'fern/docs/pages'), { recursive: true });
       const paths = ['docs/pages/first.mdx', 'docs/pages/second.mdx'];
       await writeFile(path.join(root, 'fern/docs.yml'), JSON.stringify({
@@ -401,8 +446,9 @@ for (const failure of ['missing-source', 'missing-later-translation', 'multiple-
   });
 }
 
-for (const failure of ['missing-direct-file', 'missing-locale', 'unreadable-local-files']) {
-  test(`polishing ${failure} leaves earlier documents unchanged`, async () => {
+for (const failure of ['missing-direct-file', 'missing-locale', 'unreadable-local-files', null]) {
+  const label = failure ? `${failure} leaves earlier documents unchanged` : 'applies page-specific rules to nested files';
+  test(`polishing ${label}`, async () => {
     const root = await mkdtemp(path.join(tmpdir(), 'sixmm-polish-preflight-'));
     try {
       await mkdir(path.join(root, 'scripts'));
@@ -428,12 +474,27 @@ for (const failure of ['missing-direct-file', 'missing-locale', 'unreadable-loca
         originals.delete(file);
       } else if (failure === 'missing-locale') {
         await rm(path.join(root, 'fern/translations/ar'), { recursive: true });
-      } else {
+      } else if (failure === 'unreadable-local-files') {
         for (const name of ['000-first.mdx', '001-second.mdx']) {
-          await symlink(`missing-${name}`, path.join(root, 'fern/translations/ja', name));
+          const destination = path.join(root, 'fern/translations/ja', name);
+          if (process.platform === 'win32') {
+            await linkDirectory(path.join(root, `missing-${name}`), destination);
+          } else {
+            await symlink(`missing-${name}`, path.join(root, 'fern/translations/ja', name), 'file');
+          }
         }
       }
+      const orderPage = path.join(root, 'fern/translations/de/docs/pages/trading/order-types.mdx');
+      if (!failure) {
+        await mkdir(path.dirname(orderPage), { recursive: true });
+        await writeFile(orderPage, 'Ordnungstypen\n');
+      }
       const result = spawnSync(process.execPath, ['scripts/polish-core-translations.mjs'], { cwd: root, encoding: 'utf8', timeout: 10_000 });
+      if (!failure) {
+        assert.equal(result.status, 0, result.stderr);
+        assert.equal(await readFile(orderPage, 'utf8'), 'Ordertypen\n');
+        return;
+      }
       assert.equal(result.status, 1, result.stderr);
       assert.match(result.stderr, /ENOENT/);
       if (failure === 'unreadable-local-files') {
@@ -452,12 +513,18 @@ test('polishing recognizes path aliases while library imports stay read-only', a
     for (const name of ['polish-core-translations.mjs', 'locale-config.mjs', 'write-generated-file.mjs', 'ordered-batches.mjs']) {
       await copyFile(new URL(name, import.meta.url), path.join(root, 'scripts', name));
     }
-    await symlink('polish-core-translations.mjs', path.join(root, 'scripts/linked-polish.mjs'), 'file');
+    const script = 'scripts/polish-core-translations.mjs';
+    const alias = process.platform === 'win32' ? 'linked-scripts/polish-core-translations.mjs' : 'scripts/linked-polish.mjs';
+    if (process.platform === 'win32') {
+      await linkDirectory(path.join(root, 'scripts'), path.join(root, 'linked-scripts'));
+    } else {
+      await symlink('polish-core-translations.mjs', path.join(root, alias), 'file');
+    }
     for (const entry of [
-      ['scripts/polish-core-translations.mjs'],
-      [path.join(root, 'scripts/polish-core-translations.mjs')],
-      ['scripts/linked-polish.mjs'],
-      ['--preserve-symlinks-main', 'scripts/linked-polish.mjs'],
+      [script],
+      [path.join(root, script)],
+      [alias],
+      ['--preserve-symlinks-main', alias],
     ]) {
       const result = spawnSync(process.execPath, [...entry, '--check'], { cwd: root, encoding: 'utf8', timeout: 10_000 });
       assert.equal(result.status, 1, `${entry.join(' ')}: ${result.stderr}`);
@@ -474,19 +541,20 @@ test('polishing recognizes path aliases while library imports stay read-only', a
       assert.equal(result.status, 0, result.stderr);
       assert.equal(result.stdout.trim(), 'function');
     }
-    assert.deepEqual((await readdir(root)).sort(), ['consumer.mjs', 'scripts']);
+    const expected = ['consumer.mjs', 'scripts'];
+    if (process.platform === 'win32') expected.splice(1, 0, 'linked-scripts');
+    assert.deepEqual((await readdir(root)).sort(), expected);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
 async function previewFixture(run) {
-  const root = await mkdtemp(path.join(tmpdir(), 'sixmm-preview-options-'));
+  const root = await mkdtemp(path.join(tmpdir(), 'sixmm preview options-'));
   try {
     await mkdir(path.join(root, 'scripts'));
-    await mkdir(path.join(root, 'node_modules/.bin'), { recursive: true });
+    await mkdir(path.join(root, 'node_modules/fern-api'), { recursive: true });
     await copyFile(new URL('./preview-prediction.mjs', import.meta.url), path.join(root, 'scripts/preview-prediction.mjs'));
-    const executable = path.join(root, 'node_modules/.bin/fern');
-    await writeFile(executable, `#!/usr/bin/env node
-require('node:fs').writeFileSync('launch.json', JSON.stringify(process.argv.slice(2)));
+    const executable = path.join(root, 'node_modules/fern-api/cli.cjs');
+    await writeFile(executable, `require('node:fs').writeFileSync('launch.json', JSON.stringify(process.argv.slice(2)));
 if (process.env.SIXMM_PREVIEW_SIGNAL) process.kill(process.pid, process.env.SIXMM_PREVIEW_SIGNAL);
 else process.exit(Number(process.env.SIXMM_PREVIEW_EXIT || 0));
 `, { mode: 0o755 });
@@ -533,17 +601,22 @@ test('invalid preview options fail before starting Fern', async () => {
     }
   });
 });
-test('preview propagates child failures and signal termination', async () => {
+test('preview propagates child failures and reports a missing Fern installation', async () => {
   await previewFixture(async (run, executable) => {
     assert.equal((await run([], { SIXMM_PREVIEW_EXIT: '7' })).status, 7);
-    for (const [signal, status] of [['SIGINT', 130], ['SIGTERM', 143], ['SIGKILL', 137]]) {
-      assert.equal((await run([], { SIXMM_PREVIEW_SIGNAL: signal })).status, status);
-    }
     await rm(executable);
     const missing = await run();
     assert.equal(missing.status, 1);
-    assert.match(missing.stderr, /ENOENT/);
+    assert.match(missing.stderr, /Cannot find module/);
     assert.equal(missing.launch, null);
+  });
+});
+
+test('preview reports POSIX signal termination', { skip: process.platform === 'win32' }, async () => {
+  await previewFixture(async run => {
+    for (const [signal, status] of [['SIGINT', 130], ['SIGTERM', 143], ['SIGKILL', 137]]) {
+      assert.equal((await run([], { SIXMM_PREVIEW_SIGNAL: signal })).status, status);
+    }
   });
 });
 

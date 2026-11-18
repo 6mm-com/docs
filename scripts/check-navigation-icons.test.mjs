@@ -3,9 +3,9 @@ import test from "node:test";
 import { mkdtemp, mkdir, copyFile, symlink, writeFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import { inspectNavigationIcons, mergeNavigationOverlay } from "./check-navigation-icons.mjs";
+import { linkDirectory, linkFixtureDependencies } from "./test-fixture-paths.mjs";
 
 const page = (name, glyph, family = "fa-duotone") => ({ page: name, icon: `${family} ${glyph}` });
 const section = (name, contents) => ({ section: name, contents });
@@ -82,13 +82,19 @@ test("CLI path aliases execute validation while imports remain side-effect free"
     await mkdir(path.join(root, "scripts"));
     await mkdir(path.join(root, "fern"));
     await copyFile(new URL("./check-navigation-icons.mjs", import.meta.url), path.join(root, "scripts/check.mjs"));
-    await symlink("check.mjs", path.join(root, "scripts/linked-check.mjs"));
-    await symlink("scripts/check.mjs", path.join(root, "linked-check.mjs"));
-    await symlink(fileURLToPath(new URL("../node_modules", import.meta.url)), path.join(root, "node_modules"), "dir");
+    await linkFixtureDependencies(root);
+    const aliases = [];
+    if (process.platform === "win32") {
+      await linkDirectory(path.join(root, "scripts"), path.join(root, "linked-scripts"));
+      aliases.push("linked-scripts/check.mjs");
+    } else {
+      await symlink("check.mjs", path.join(root, "scripts/linked-check.mjs"));
+      await symlink("scripts/check.mjs", path.join(root, "linked-check.mjs"));
+      aliases.push("scripts/linked-check.mjs", "linked-check.mjs");
+    }
     const entries = [
       ["scripts/check.mjs"], [path.join(root, "scripts/check.mjs")],
-      ["scripts/linked-check.mjs"], ["--preserve-symlinks-main", "scripts/linked-check.mjs"],
-      ["linked-check.mjs"], ["--preserve-symlinks-main", "linked-check.mjs"],
+      ...aliases.flatMap(alias => [[alias], ["--preserve-symlinks-main", alias]]),
     ];
     for (const valid of [true, false]) {
       await writeFile(path.join(root, "fern/docs.yml"), JSON.stringify({

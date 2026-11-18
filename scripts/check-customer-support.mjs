@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { parse } from 'yaml';
+import { assertSourcePagesListed } from './documentation-pages.mjs';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 // Validation is read-only; share each file's text within this run.
 const contents = new Map();
@@ -15,7 +16,10 @@ const config=parse(await read('fern/docs.yml'));
 const nav=config.navigation.find(item=>item.tab==='customerSupport');
 assert(nav, 'AI Support must have a top-level navigation entry');
 const pages=nav.layout.flatMap(group=>group.contents.map(page=>page.path));
-assert.equal(new Set(pages).size,18,'Expected 18 tenant guide pages');
+const supportDirectory = 'docs/pages/customer-support';
+assert(pages.length && pages.every(page => page?.startsWith(supportDirectory + '/')), 'AI Support navigation must point to tenant guide pages');
+assert.equal(new Set(pages).size, pages.length, 'Duplicate tenant guide page in AI Support navigation');
+await assertSourcePagesListed(path.join(root, 'fern'), pages, supportDirectory);
 const source=await read('fern/docs/pages/customer-support/mcp-calls.mdx');
 // Protocol examples are read-only and normally identical across all locales.
 const parsedExamples = new Map();
@@ -41,7 +45,7 @@ const sourceHeadingCounts = new Map();
 for(const locale of config.translations){
  const base=locale.default?'fern':`fern/translations/${locale.lang}`;
  const prefix=locale.default?'':`/${locale.lang}`;
- // Read one locale's 18 guides together; validate in the original order below.
+ // Read one locale's guides together; validate in the original order below.
  // Settle failures here so a later missing file cannot mask an earlier assertion.
  await Promise.allSettled(pages.map(file=>read(`${base}/${file}`)));
  for(const file of pages) {
@@ -70,4 +74,4 @@ for(const locale of config.translations){
   assert(entry.includes(`href="${prefix}/customer-support/mcp-connect"`),`${locale.lang}: missing MCP entry`);
  }
 }
-console.log(`Customer support docs verified: 18 pages, ${config.translations.length} locales, tenant entry points and valid MCP examples.`);
+console.log(`Customer support docs verified: ${pages.length} pages, ${config.translations.length} locales, tenant entry points and valid MCP examples.`);

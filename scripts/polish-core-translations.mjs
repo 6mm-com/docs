@@ -1314,7 +1314,7 @@ if (isMain) {
       const prepared = updates.get(filePath);
       return prepared ? prepared.output : readFile(filePath, "utf8");
     })) {
-      const relativePath = path.relative(localeRoot, filePath);
+      const relativePath = path.relative(localeRoot, filePath).split(path.sep).join("/");
       const prepared = updates.get(filePath);
       const polished = polishMachineTranslation(
         content,

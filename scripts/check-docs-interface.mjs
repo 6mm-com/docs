@@ -147,4 +147,18 @@ observerCallbacks[0]([{ target: { nodeType: 1, closest: selector => selector.inc
 flush();
 assert.ok(fullWalks > beforeLocaleWalks, 'A control mutation cannot downgrade a pending full locale update');
 assert.equal(nodes[0].nodeValue, '搜索');
+let unrelatedOwnershipChecks = 0;
+nodes.push({
+  nodeValue: 'Untranslated navigation heading',
+  parentElement: {
+    closest(selector) {
+      if (selector === 'astro-island') unrelatedOwnershipChecks++;
+      return hydratedAncestor(selector);
+    },
+  },
+});
+listeners['astro:page-load']();
+flush();
+assert.equal(nodes.at(-1).nodeValue, 'Untranslated navigation heading');
+assert.equal(unrelatedOwnershipChecks, 0, 'Unchanged labels must not visit React ownership');
 console.log("Docs interface regression checks passed: locale edit links, reversible labels, hydration guard and scoped singleton lifecycle.");

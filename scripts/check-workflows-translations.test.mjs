@@ -1,14 +1,17 @@
 import assert from 'node:assert/strict';
-import { test } from 'node:test';
-import { mkdtemp, mkdir, readFile, readdir, writeFile, rm, copyFile, symlink } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { describe, test } from 'node:test';
+import { mkdtemp, mkdir, readFile, readdir, writeFile, rm, copyFile } from 'node:fs/promises';
+import { availableParallelism, tmpdir } from 'node:os';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { execFile } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { generatorVersion } from './locale-config.mjs';
+import { linkFixtureDependencies } from './test-fixture-paths.mjs';
 
-async function translationRequestFixture(scenario, label, manifestState, extraArgs = [], cachedPageState, sourceBody = 'Example content.\n') {
+const fixturePageCount = 3;
+
+async function translationRequestFixture(scenario, label, manifestState, extraArgs = [], cachedPageState, sourceBody = 'Example content.\n', exercise) {
   const root = await mkdtemp(path.join(tmpdir(), 'sixmm-translation-request-'));
   const projectRoot = fileURLToPath(new URL('../', import.meta.url));
   const manifestContent = manifestState?.content ?? '{';
@@ -16,15 +19,15 @@ async function translationRequestFixture(scenario, label, manifestState, extraAr
     await mkdir(path.join(root, 'scripts'));
     // Copy the generator's modules, not unrelated maintenance scripts or tests.
     // Real copies keep import.meta.url rooted in this disposable workspace.
-    for (const name of ['generate-translations.mjs', 'locale-config.mjs', 'polish-core-translations.mjs', 'translation-text.mjs', 'write-generated-file.mjs', 'ordered-batches.mjs']) {
+    for (const name of ['generate-translations.mjs', 'locale-config.mjs', 'polish-core-translations.mjs', 'translation-text.mjs', 'write-generated-file.mjs', 'ordered-batches.mjs', 'documentation-pages.mjs']) {
       await copyFile(path.join(projectRoot, 'scripts', name), path.join(root, 'scripts', name));
     }
-    await symlink(path.join(projectRoot, 'node_modules'), path.join(root, 'node_modules'), 'dir');
+    await linkFixtureDependencies(root);
     await mkdir(path.join(root, 'fern'));
     await writeFile(path.join(root, 'fern/docs.yml'), JSON.stringify({
       tabs: { home: { 'display-name': label } },
       navigation: [{ tab: 'home', layout: [{ section: label, contents:
-        Array.from({ length: 158 }, (_, i) => ({ page: label, path: `docs/pages/page-${i}.mdx` }))
+        Array.from({ length: fixturePageCount }, (_, i) => ({ page: label, path: `docs/pages/page-${i}.mdx` }))
       }] }]
     }));
     if (manifestState) {
@@ -38,12 +41,13 @@ async function translationRequestFixture(scenario, label, manifestState, extraAr
       const pages = {};
       await mkdir(path.join(root, 'fern/docs/pages'), { recursive: true });
       await mkdir(path.join(root, 'fern/translations/ja/docs/pages'), { recursive: true });
-      for (let i = 0; i < 158; i++) {
+      for (let i = 0; i < fixturePageCount; i++) {
         const relative = `docs/pages/page-${i}.mdx`;
         const source = `---\ntitle: Example\nslug: page-${i}\n---\n\n${sourceBody}`;
         const sourcePath = path.join(root, 'fern', relative);
-        if (i === 157 && cachedPageState === 'source-directory') await mkdir(sourcePath);
-        else if (!(i === 157 && cachedPageState === 'source-missing')) await writeFile(sourcePath, source);
+        const lastPage = i === fixturePageCount - 1;
+        if (lastPage && cachedPageState === 'source-directory') await mkdir(sourcePath);
+        else if (!(lastPage && cachedPageState === 'source-missing')) await writeFile(sourcePath, source);
         pages[relative] = createHash('sha256').update(`${generatorVersion}\0ja\0ja\0${source}`).digest('hex');
         const destination = path.join(root, 'fern/translations/ja', relative);
         if (i === 0 && cachedPageState === 'missing') continue;
@@ -54,6 +58,11 @@ async function translationRequestFixture(scenario, label, manifestState, extraAr
       }
       await writeFile(path.join(root, 'fern/translations/.translation-manifest.json'),
         JSON.stringify({ version: generatorVersion, locales: { ja: { pages } } }));
+      if (cachedPageState === 'source-unlisted') {
+        const extraPage = path.join(root, 'fern/docs/pages/nested/unlisted.mdx');
+        await mkdir(path.dirname(extraPage));
+        await writeFile(extraPage, 'Unlisted source page\n');
+      }
     }
     const originalManifest = cachedPageState
       ? await readFile(path.join(root, 'fern/translations/.translation-manifest.json'), 'utf8') : null;
@@ -142,13 +151,20 @@ globalThis.fetch = async (input, options) => {
   }) };
 };
 `);
-    const localeArgs = extraArgs.some(argument => argument.startsWith('--locales=')) ? [] : ['--locales=ja'];
-    const result = spawnSync(process.execPath, ['--require', preload,
-      'scripts/generate-translations.mjs', ...(cachedPageState ? [] : ['--labels-only']), ...localeArgs, ...extraArgs], {
-      cwd: root, encoding: 'utf8', timeout: 10000,
-      env: { ...process.env, DOCS_TRANSLATION_PROVIDER: scenario.startsWith('edge-') ? 'edge' : 'google', SIXMM_TRANSLATION_CASE: scenario }
+    const runGenerator = args => new Promise((resolve, reject) => {
+      execFile(process.execPath, ['--require', preload, 'scripts/generate-translations.mjs', ...args], {
+        cwd: root, encoding: 'utf8', timeout: 10000,
+        env: { ...process.env, DOCS_TRANSLATION_PROVIDER: scenario.startsWith('edge-') ? 'edge' : 'google', SIXMM_TRANSLATION_CASE: scenario }
+      }, (error, stdout, stderr) => {
+        if (error && typeof error.code !== 'number') {
+          reject(error);
+          return;
+        }
+        resolve({ status: error?.code ?? 0, stdout, stderr });
+      });
     });
-    assert.equal(result.signal, null, result.error?.message);
+    const localeArgs = extraArgs.some(argument => argument.startsWith('--locales=')) ? [] : ['--locales=ja'];
+    const result = await runGenerator([...(cachedPageState ? [] : ['--labels-only']), ...localeArgs, ...extraArgs]);
     const log = await readFile(path.join(root, 'requests.jsonl'), 'utf8').catch(error => {
       if (error.code !== 'ENOENT') throw error;
       return '';
@@ -179,230 +195,316 @@ globalThis.fetch = async (input, options) => {
     const temporaryWrites = cachedPageState
       ? (await Promise.all(['', 'ja', 'ja/docs/pages'].map(directory => readdir(path.join(root, 'fern/translations', directory)))))
         .flat().filter(name => name.startsWith('.translation-manifest-') || name.startsWith('.translation-write-')) : [];
+    if (exercise) await exercise({ root, runGenerator, result, requests });
     return { ...result, requests, requestEvents, authRequests, output, recoveredPage, preservedManifest, temporaryWrites };
   } finally { await rm(root, { recursive: true, force: true }); }
 }
 
-for (const state of ['source-missing', 'source-directory', 'missing', 'directory']) {
-  test(`manifest refresh preserves the cache when input is ${state}`, async () => {
-    const result = await translationRequestFixture('normal', 'Example', undefined, ['--refresh-manifest'], state);
-    assert.equal(result.status, 1, result.stderr);
-    assert.match(result.stderr, state.includes('directory') ? /EISDIR/ : /ENOENT/);
-    assert.equal(result.requests.length, 0);
-    assert.equal(result.output, null);
-    assert.equal(result.preservedManifest, true);
-    assert.deepEqual(result.temporaryWrites, []);
-  });
-}
-
-test('multiple placeholder repairs finish in order without overlapping provider requests', async () => {
-  const body = 'First SDK\nSecond API\n';
-  const result = await translationRequestFixture('multi-missing', 'Example', undefined, [], 'missing', body);
-  assert.equal(result.status, 0, result.stderr);
-  assert.equal(result.requests.length, 4);
-  assert.ok(result.recoveredPage?.endsWith(body));
-  assert.deepEqual(result.requestEvents, [1, 2, 3, 4].flatMap(id => [['start', id], ['finish', id]]));
-});
-
-for (const [scenario, requests, authRequests] of [
-  ['edge-http-400', 1, 1], ['edge-http-403', 1, 1], ['edge-http-404', 1, 1],
-  ['edge-http-408', 8, 1], ['edge-http-429', 20, 1], ['edge-http-503', 8, 1], ['edge-http-401', 8, 8],
-  ['edge-auth-forbidden', 0, 1],
-]) {
-  test(`${scenario} stops at the appropriate retry limit without writing`, async () => {
-    const result = await translationRequestFixture(scenario, 'Example');
-    assert.equal(result.status, 1, result.stderr);
-    assert.equal(result.requests.length, requests);
-    assert.equal(result.authRequests, authRequests);
-    assert.equal(result.output, null);
-    assert.match(result.stderr, /returned HTTP/);
-  });
-}
-for (const [scenario, authRequests] of [['edge-http-401-once', 2], ['edge-refresh-transient', 3]]) {
-  test(`${scenario} recovers through the bounded token refresh flow`, async () => {
-    const result = await translationRequestFixture(scenario, 'SDK Example');
-    assert.equal(result.status, 0, result.stderr);
-    assert.equal(result.requests.length, 2);
-    assert.equal(result.authRequests, authRequests);
-    assert.ok(result.output?.includes('display-name: "SDK Example"'));
-  });
-}
-
-for (const scenario of ['edge-missing-text', 'edge-null-item', 'edge-number-text', 'edge-empty-text', 'edge-missing-placeholder', 'edge-extra-placeholder', 'empty-text']) {
-  test(`${scenario} exhausts retries without writing incomplete translations`, async () => {
-    const result = await translationRequestFixture(scenario, 'SDK Example');
-    assert.equal(result.status, 1, result.stderr);
-    assert.equal(result.requests.length, scenario.startsWith('edge-') ? 8 : 4);
-    assert.equal(result.output, null);
-    assert.match(result.stderr, /Translation response|Translation service.*placeholder/);
-  });
-}
-for (const scenario of ['edge-valid', 'edge-transient']) {
-  test(`${scenario} restores protected terms and preserves navigation labels`, async () => {
-    const result = await translationRequestFixture(scenario, 'SDK Example');
-    assert.equal(result.status, 0, result.stderr);
-    assert.equal(result.requests.length, scenario === 'edge-transient' ? 2 : 1);
-    assert.ok(result.output?.includes('display-name: "SDK Example"'));
-    assert.doesNotMatch(result.output, /notranslate|\[\[\[ph/);
-  });
-}
-
-test('generation preserves literal dollar sequences in protected code and translated attributes', async () => {
-  const body = [
-    "Literal `$$` and `$&` and `$'`.",
-    '<Card title="Cost $$ and $&" href="/sdk/overview">Use $$ literally.</Card>',
-    '[Guide $$ and $&](/sdk/overview)',
-    '<b data-value="$`">API</b>',
-    'Visit https://example.com/$$',
-  ].join('\n') + '\n';
-  const result = await translationRequestFixture('normal', 'Example', undefined, [], 'missing', body);
-  assert.equal(result.status, 0, result.stderr);
-  assert.ok(result.recoveredPage?.endsWith(body.replaceAll('/sdk/overview', '/ja/sdk/overview')), result.recoveredPage);
-  assert.doesNotMatch(result.recoveredPage, /\[\[\[(?:ph|attr)\d+\]\]\]/);
-});
-
-for (const state of ['source-missing', 'source-directory']) {
-  test(`${state} stops full generation before translation requests or writes`, async () => {
-    const result = await translationRequestFixture('normal', 'Example', undefined, [], state);
-    assert.equal(result.status, 1, result.stderr);
-    assert.equal(result.requests.length, 0);
-    assert.equal(result.output, null);
-    assert.equal(result.preservedManifest, true);
-    assert.match(result.stderr, state === 'source-missing' ? /ENOENT/ : /EISDIR/);
-  });
-}
-test('labels-only generation does not require article sources', async () => {
-  const result = await translationRequestFixture('normal', 'Example', undefined, ['--labels-only'], 'source-missing');
-  assert.equal(result.status, 0, result.stderr);
-  assert.equal(result.requests.length, 1);
-  assert.ok(result.output?.includes('display-name: "Example"'));
-  assert.equal(result.preservedManifest, true);
-});
-
-for (const target of ['page', 'navigation']) {
-  for (const operation of ['write', 'rename']) {
-    test(`${target}-${operation}-failure preserves existing output and cache`, async () => {
-      const result = await translationRequestFixture(`${target}-${operation}-failure`, 'Example', undefined, ['--force'], 'present');
+// Each case owns a temporary workspace and a simulated provider.
+describe("translation generation", { concurrency: Math.min(4, availableParallelism()) }, () => {
+  for (const state of ['source-missing', 'source-directory', 'missing', 'directory']) {
+    test(`manifest refresh preserves the cache when input is ${state}`, async () => {
+      const result = await translationRequestFixture('normal', 'Example', undefined, ['--refresh-manifest'], state);
       assert.equal(result.status, 1, result.stderr);
-      assert.match(result.stderr, /Simulated (partial output write|output rename failure)/);
-      assert.equal(result.requests.length, target === 'page' ? 2 : 1);
+      assert.match(result.stderr, state.includes('directory') ? /EISDIR/ : /ENOENT/);
+      assert.equal(result.requests.length, 0);
+      assert.equal(result.output, null);
       assert.equal(result.preservedManifest, true);
       assert.deepEqual(result.temporaryWrites, []);
-      if (target === 'navigation') assert.equal(result.output, 'Preserved navigation\n');
     });
   }
-}
 
-for (const scenario of ['manifest-write-failure', 'manifest-rename-failure']) {
-  for (const args of [[], ['--refresh-manifest']]) {
-    test(`${scenario} preserves the previous manifest during ${args.length ? 'refresh' : 'generation'}`, async () => {
-      const result = await translationRequestFixture(scenario, 'Example', undefined, args, 'present');
+  test('multiple placeholder repairs finish in order without overlapping provider requests', async () => {
+    const body = 'First SDK\nSecond API\n';
+    const result = await translationRequestFixture('multi-missing', 'Example', undefined, [], 'missing', body);
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.requests.length, 4);
+    assert.ok(result.recoveredPage?.endsWith(body));
+    assert.deepEqual(result.requestEvents, [1, 2, 3, 4].flatMap(id => [['start', id], ['finish', id]]));
+  });
+
+  for (const [scenario, requests, authRequests] of [
+    ['edge-http-400', 1, 1], ['edge-http-403', 1, 1], ['edge-http-404', 1, 1],
+    ['edge-http-408', 8, 1], ['edge-http-429', 20, 1], ['edge-http-503', 8, 1], ['edge-http-401', 8, 8],
+    ['edge-auth-forbidden', 0, 1],
+  ]) {
+    test(`${scenario} stops at the appropriate retry limit without writing`, async () => {
+      const result = await translationRequestFixture(scenario, 'Example');
       assert.equal(result.status, 1, result.stderr);
-      assert.match(result.stderr, /Simulated (partial manifest write|manifest rename failure)/);
-      assert.equal(result.preservedManifest, true, 'A failed save must not damage the previous manifest');
-      assert.deepEqual(result.temporaryWrites, [], 'Temporary files must be cleaned up after failure');
+      assert.equal(result.requests.length, requests);
+      assert.equal(result.authRequests, authRequests);
+      assert.equal(result.output, null);
+      assert.match(result.stderr, /returned HTTP/);
     });
   }
-}
+  for (const [scenario, authRequests] of [['edge-http-401-once', 2], ['edge-refresh-transient', 3]]) {
+    test(`${scenario} recovers through the bounded token refresh flow`, async () => {
+      const result = await translationRequestFixture(scenario, 'SDK Example');
+      assert.equal(result.status, 0, result.stderr);
+      assert.equal(result.requests.length, 2);
+      assert.equal(result.authRequests, authRequests);
+      assert.ok(result.output?.includes('display-name: "SDK Example"'));
+    });
+  }
 
-for (const state of ['present', 'missing', 'directory']) {
-  test(`cached translation output ${state}: preserve existing files and recover only missing pages`, async () => {
-    const result = await translationRequestFixture('normal', 'Example', undefined, [], state);
-    assert.equal(result.status, state === 'directory' ? 1 : 0, result.stderr);
-    assert.equal(result.requests.length, state === 'missing' ? 2 : 1);
-    if (state === 'missing') {
-      assert.ok(result.recoveredPage?.includes('canonical-url: https://docs.6mm.com/ja/page-0'));
-      assert.match(result.stdout, /1 generated, 157 unchanged/);
-    } else if (state === 'present') {
-      assert.match(result.stdout, /0 generated, 158 unchanged/);
-    } else {
-      assert.match(result.stderr, /Translation output is not a file/);
-    }
-  });
-}
+  for (const scenario of ['edge-missing-text', 'edge-null-item', 'edge-number-text', 'edge-empty-text', 'edge-missing-placeholder', 'edge-extra-placeholder', 'empty-text']) {
+    test(`${scenario} exhausts retries without writing incomplete translations`, async () => {
+      const result = await translationRequestFixture(scenario, 'SDK Example');
+      assert.equal(result.status, 1, result.stderr);
+      assert.equal(result.requests.length, scenario.startsWith('edge-') ? 8 : 4);
+      assert.equal(result.output, null);
+      assert.match(result.stderr, /Translation response|Translation service.*placeholder/);
+    });
+  }
+  for (const scenario of ['edge-valid', 'edge-transient']) {
+    test(`${scenario} restores protected terms and preserves navigation labels`, async () => {
+      const result = await translationRequestFixture(scenario, 'SDK Example');
+      assert.equal(result.status, 0, result.stderr);
+      assert.equal(result.requests.length, scenario === 'edge-transient' ? 2 : 1);
+      assert.ok(result.output?.includes('display-name: "SDK Example"'));
+      assert.doesNotMatch(result.output, /notranslate|\[\[\[ph/);
+    });
+  }
 
-for (const args of [['--locales='], ['--locales=,,'], ['--locales=ja', '--locales=fr']]) {
-  test(`invalid locale selection ${args.join(' ')} stops without requests or writes`, async () => {
-    const result = await translationRequestFixture('normal', 'Example', undefined, args);
-    assert.equal(result.status, 1, result.stderr);
-    assert.equal(result.requests.length, 0);
-    assert.equal(result.output, null);
-    assert.match(result.stderr, /At least one locale|Specify --locales once/);
+  test('generation preserves literal dollar sequences in protected code and translated attributes', async () => {
+    const body = [
+      "Literal `$$` and `$&` and `$'`.",
+      '<Card title="Cost $$ and $&" href="/sdk/overview">Use $$ literally.</Card>',
+      '[Guide $$ and $&](/sdk/overview)',
+      '<b data-value="$`">API</b>',
+      'Visit https://example.com/$$',
+    ].join('\n') + '\n';
+    const result = await translationRequestFixture('normal', 'Example', undefined, [], 'missing', body);
+    assert.equal(result.status, 0, result.stderr);
+    assert.ok(result.recoveredPage?.endsWith(body.replaceAll('/sdk/overview', '/ja/sdk/overview')), result.recoveredPage);
+    assert.doesNotMatch(result.recoveredPage, /\[\[\[(?:ph|attr)\d+\]\]\]/);
   });
-}
-for (const args of [['--locales=ja', '--locales=ja'], ['--locales=ja,ja,']]) {
-  test(`equivalent locale selection ${args.join(' ')} still generates only once`, async () => {
-    const result = await translationRequestFixture('normal', 'Example', undefined, args);
+
+  for (const state of ['source-missing', 'source-directory']) {
+    test(`${state} stops full generation before translation requests or writes`, async () => {
+      const result = await translationRequestFixture('normal', 'Example', undefined, [], state);
+      assert.equal(result.status, 1, result.stderr);
+      assert.equal(result.requests.length, 0);
+      assert.equal(result.output, null);
+      assert.equal(result.preservedManifest, true);
+      assert.match(result.stderr, state === 'source-missing' ? /ENOENT/ : /EISDIR/);
+    });
+  }
+  test('labels-only generation does not require article sources', async () => {
+    const result = await translationRequestFixture('normal', 'Example', undefined, ['--labels-only'], 'source-missing');
     assert.equal(result.status, 0, result.stderr);
     assert.equal(result.requests.length, 1);
     assert.ok(result.output?.includes('display-name: "Example"'));
+    assert.equal(result.preservedManifest, true);
   });
-}
 
-for (const argument of ['--locale=fr', '--froce', '--labels_only', '--refresh-manifset', 'fr']) {
-  test(`unrecognized translation argument ${argument} stops before requests or writes`, async () => {
-    const result = await translationRequestFixture('normal', 'Example', undefined, [argument]);
-    assert.equal(result.requests.length, 0, 'Invalid arguments must not invoke the provider');
-    assert.equal(result.output, null, 'Invalid arguments must not overwrite navigation');
-    assert.equal(result.status, 1, result.stderr);
-    assert.match(result.stderr, /Unknown argument/);
-    assert.ok(result.stderr.includes(argument));
-  });
-}
-
-for (const manifestState of ['malformed', 'directory']) {
-  test(`unreadable translation manifest (${manifestState}) stops before requesting or writing labels`, async () => {
-    const result = await translationRequestFixture('normal', 'Example', manifestState);
-    assert.equal(result.status, 1, result.stderr);
-    assert.equal(result.requests.length, 0);
-    assert.equal(result.output, null);
-    assert.match(result.stderr, manifestState === 'directory' ? /EISDIR/ : /SyntaxError/);
-  });
-}
-
-for (const [name, manifest] of [
-  ['root array', []],
-  ['null root', null],
-  ['locale map array', { locales: [] }],
-  ['locale record array', { locales: { ja: [] } }],
-  ['page map array', { locales: { ja: { pages: [] } } }],
-  ['missing page map', { locales: { ja: {} } }],
-  ['non-string page hash', { locales: { ja: { pages: { 'docs/pages/page-0.mdx': null } } } }],
-]) {
-  test(`invalid manifest shape (${name}) stops before any translation request`, async () => {
-    const result = await translationRequestFixture('normal', 'Example', { content: JSON.stringify(manifest) });
-    assert.equal(result.status, 1, result.stderr);
-    assert.equal(result.requests.length, 0);
-    assert.equal(result.output, null);
-    assert.match(result.stderr, /Invalid translation manifest/);
-  });
-}
-
-for (const manifest of [{}, { version: 3, locales: { ja: { pages: { 'docs/pages/page-0.mdx': 'older-source-hash' } } } }]) {
-  test(`valid empty or earlier-version manifest remains usable: ${JSON.stringify(manifest)}`, async () => {
-    const result = await translationRequestFixture('normal', 'Example', { content: JSON.stringify(manifest) });
-    assert.equal(result.status, 0, result.stderr);
-    assert.equal(result.requests.length, 1);
-    assert.ok(result.output?.includes('display-name: "Example"'));
-  });
-}
-
-for (const [scenario, label, requests] of [
-  ['poison', 'Example', 4],
-  ['poison', 'Example SDK', 20],
-  ['transient', 'Example', 2],
-  ['missing', 'Example SDK', 2],
-  ['normal', 'Example SDK', 1],
-]) {
-  test(`translation provider ${scenario} (${label}): bounded requests and preserved labels`, async () => {
-    const result = await translationRequestFixture(scenario, label);
-    assert.equal(result.requests.length, requests);
-    assert.equal(result.status, scenario === 'poison' ? 1 : 0, result.stderr);
-    if (scenario === 'poison') {
-      assert.equal(result.output, null, 'Rejected responses must not write navigation labels');
-      assert.match(result.stderr, /Translation service introduced an unexpected placeholder/);
-    } else {
-      assert.ok(result.output?.includes(`display-name: ${JSON.stringify(label)}`));
+  test('unlisted English pages stop generation and manifest refresh before requests or writes', async () => {
+    for (const args of [[], ['--refresh-manifest']]) {
+      const result = await translationRequestFixture('normal', 'Example', undefined, args, 'source-unlisted');
+      assert.equal(result.status, 1, result.stderr);
+      assert.match(result.stderr, /English documentation pages missing from navigation/);
+      assert.match(result.stderr, /docs\/pages\/nested\/unlisted\.mdx/);
+      assert.equal(result.requests.length, 0);
+      assert.equal(result.output, null);
+      assert.equal(result.preservedManifest, true);
     }
   });
-}
+
+  for (const target of ['page', 'navigation']) {
+    for (const operation of ['write', 'rename']) {
+      test(`${target}-${operation}-failure preserves existing output and cache`, async () => {
+        const result = await translationRequestFixture(`${target}-${operation}-failure`, 'Example', undefined, ['--force'], 'present');
+        assert.equal(result.status, 1, result.stderr);
+        assert.match(result.stderr, /Simulated (partial output write|output rename failure)/);
+        assert.equal(result.requests.length, target === 'page' ? 2 : 1);
+        assert.equal(result.preservedManifest, true);
+        assert.deepEqual(result.temporaryWrites, []);
+        if (target === 'navigation') assert.equal(result.output, 'Preserved navigation\n');
+      });
+    }
+  }
+
+  for (const scenario of ['manifest-write-failure', 'manifest-rename-failure']) {
+    for (const args of [[], ['--refresh-manifest']]) {
+      test(`${scenario} preserves the previous manifest during ${args.length ? 'refresh' : 'generation'}`, async () => {
+        const result = await translationRequestFixture(scenario, 'Example', undefined, args, 'present');
+        assert.equal(result.status, 1, result.stderr);
+        assert.match(result.stderr, /Simulated (partial manifest write|manifest rename failure)/);
+        assert.equal(result.preservedManifest, true, 'A failed save must not damage the previous manifest');
+        assert.deepEqual(result.temporaryWrites, [], 'Temporary files must be cleaned up after failure');
+      });
+    }
+  }
+
+  for (const state of ['present', 'missing', 'directory']) {
+    test(`cached translation output ${state}: preserve existing files and recover only missing pages`, async () => {
+      const result = await translationRequestFixture('normal', 'Example', undefined, [], state);
+      assert.equal(result.status, state === 'directory' ? 1 : 0, result.stderr);
+      assert.equal(result.requests.length, state === 'missing' ? 2 : 1);
+      if (state === 'missing') {
+        assert.ok(result.recoveredPage?.includes('canonical-url: https://docs.6mm.com/ja/page-0'));
+        assert.ok(result.stdout.includes(`1 generated, ${fixturePageCount - 1} unchanged`));
+      } else if (state === 'present') {
+        assert.ok(result.stdout.includes(`0 generated, ${fixturePageCount} unchanged`));
+      } else {
+        assert.match(result.stderr, /Translation output is not a file/);
+      }
+    });
+  }
+
+  test('incremental generation preserves reviewed navigation and only requests changed or missing output', async () => {
+    await translationRequestFixture('normal', 'Example', undefined, [], 'present', undefined,
+      async ({ root, runGenerator, result, requests }) => {
+        assert.equal(result.status, 0, result.stderr);
+        assert.equal(requests.length, 1, 'Legacy manifests generate navigation once to populate the cache');
+        const manifestPath = path.join(root, 'fern/translations/.translation-manifest.json');
+        const sourceConfig = path.join(root, 'fern/docs.yml');
+        const overlayPath = path.join(root, 'fern/translations/ja/docs.yml');
+        const requestLog = path.join(root, 'requests.jsonl');
+        const originalManifest = await readFile(manifestPath, 'utf8');
+        const originalOverlay = await readFile(overlayPath, 'utf8');
+        const reviewedOverlay = originalOverlay.replace('display-name: "Example"', 'display-name: "Reviewed navigation"');
+        assert.notEqual(reviewedOverlay, originalOverlay);
+        await writeFile(overlayPath, reviewedOverlay);
+        const config = JSON.parse(await readFile(sourceConfig, 'utf8'));
+        config.title = 'Unrelated site title';
+        await writeFile(sourceConfig, JSON.stringify(config));
+
+        async function run(expectedRequests, args = []) {
+          const next = await runGenerator(['--locales=ja', ...args]);
+          assert.equal(next.status, 0, next.stderr);
+          const calls = (await readFile(requestLog, 'utf8')).trim().split('\n').map(JSON.parse);
+          assert.equal(calls.length, expectedRequests);
+          return calls.at(-1);
+        }
+
+        await run(1);
+        assert.equal(await readFile(overlayPath, 'utf8'), reviewedOverlay);
+        assert.equal(await readFile(manifestPath, 'utf8'), originalManifest);
+
+        const page = path.join(root, 'fern/docs/pages/page-0.mdx');
+        const article = await readFile(page, 'utf8');
+        await writeFile(page, article.replace('Example content.', 'Updated page content.'));
+        assert.ok((await run(2)).includes('Updated page content.'));
+        assert.equal(await readFile(overlayPath, 'utf8'), reviewedOverlay);
+
+        config.tabs.home['display-name'] = 'Updated navigation';
+        await writeFile(sourceConfig, JSON.stringify(config));
+        assert.ok((await run(3)).includes('Updated navigation'));
+        const updatedOverlay = await readFile(overlayPath, 'utf8');
+        assert.match(updatedOverlay, /display-name: "Updated navigation"/);
+
+        await rm(overlayPath);
+        await run(4);
+        assert.equal(await readFile(overlayPath, 'utf8'), updatedOverlay);
+        const updatedManifest = await readFile(manifestPath, 'utf8');
+        await run(5, ['--labels-only']);
+        assert.equal(await readFile(manifestPath, 'utf8'), updatedManifest);
+
+        const entries = config.navigation[0].layout[0].contents;
+        const retired = entries.pop().path;
+        await rm(path.join(root, 'fern', retired));
+        await writeFile(sourceConfig, JSON.stringify(config));
+        await run(6);
+        let manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+        assert.equal(manifest.locales.ja.pages[retired], undefined);
+        assert.ok((await readFile(path.join(root, 'fern/translations/ja', retired), 'utf8')).includes('Preserved manually reviewed translation'));
+
+        const added = 'docs/pages/new.mdx';
+        entries.push({ page: 'New document', path: added });
+        await writeFile(sourceConfig, JSON.stringify(config));
+        await writeFile(path.join(root, 'fern', added), article.replace('slug: page-0', 'slug: new'));
+        await run(8);
+        manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+        assert.equal(Object.keys(manifest.locales.ja.pages).length, fixturePageCount);
+        assert.equal(typeof manifest.locales.ja.pages[added], 'string');
+        assert.match(await readFile(path.join(root, 'fern/translations/ja', added), 'utf8'), /canonical-url: https:\/\/docs\.6mm\.com\/ja\/new/);
+      });
+  });
+
+  for (const args of [['--locales='], ['--locales=,,'], ['--locales=ja', '--locales=fr']]) {
+    test(`invalid locale selection ${args.join(' ')} stops without requests or writes`, async () => {
+      const result = await translationRequestFixture('normal', 'Example', undefined, args);
+      assert.equal(result.status, 1, result.stderr);
+      assert.equal(result.requests.length, 0);
+      assert.equal(result.output, null);
+      assert.match(result.stderr, /At least one locale|Specify --locales once/);
+    });
+  }
+  for (const args of [['--locales=ja', '--locales=ja'], ['--locales=ja,ja,']]) {
+    test(`equivalent locale selection ${args.join(' ')} still generates only once`, async () => {
+      const result = await translationRequestFixture('normal', 'Example', undefined, args);
+      assert.equal(result.status, 0, result.stderr);
+      assert.equal(result.requests.length, 1);
+      assert.ok(result.output?.includes('display-name: "Example"'));
+    });
+  }
+
+  for (const argument of ['--locale=fr', '--froce', '--labels_only', '--refresh-manifset', 'fr']) {
+    test(`unrecognized translation argument ${argument} stops before requests or writes`, async () => {
+      const result = await translationRequestFixture('normal', 'Example', undefined, [argument]);
+      assert.equal(result.requests.length, 0, 'Invalid arguments must not invoke the provider');
+      assert.equal(result.output, null, 'Invalid arguments must not overwrite navigation');
+      assert.equal(result.status, 1, result.stderr);
+      assert.match(result.stderr, /Unknown argument/);
+      assert.ok(result.stderr.includes(argument));
+    });
+  }
+
+  for (const manifestState of ['malformed', 'directory']) {
+    test(`unreadable translation manifest (${manifestState}) stops before requesting or writing labels`, async () => {
+      const result = await translationRequestFixture('normal', 'Example', manifestState);
+      assert.equal(result.status, 1, result.stderr);
+      assert.equal(result.requests.length, 0);
+      assert.equal(result.output, null);
+      assert.match(result.stderr, manifestState === 'directory' ? /EISDIR/ : /SyntaxError/);
+    });
+  }
+
+  for (const [name, manifest] of [
+    ['root array', []],
+    ['null root', null],
+    ['locale map array', { locales: [] }],
+    ['locale record array', { locales: { ja: [] } }],
+    ['page map array', { locales: { ja: { pages: [] } } }],
+    ['missing page map', { locales: { ja: {} } }],
+    ['non-string page hash', { locales: { ja: { pages: { 'docs/pages/page-0.mdx': null } } } }],
+  ]) {
+    test(`invalid manifest shape (${name}) stops before any translation request`, async () => {
+      const result = await translationRequestFixture('normal', 'Example', { content: JSON.stringify(manifest) });
+      assert.equal(result.status, 1, result.stderr);
+      assert.equal(result.requests.length, 0);
+      assert.equal(result.output, null);
+      assert.match(result.stderr, /Invalid translation manifest/);
+    });
+  }
+
+  for (const manifest of [{}, { version: 3, locales: { ja: { pages: { 'docs/pages/page-0.mdx': 'older-source-hash' } } } }]) {
+    test(`valid empty or earlier-version manifest remains usable: ${JSON.stringify(manifest)}`, async () => {
+      const result = await translationRequestFixture('normal', 'Example', { content: JSON.stringify(manifest) });
+      assert.equal(result.status, 0, result.stderr);
+      assert.equal(result.requests.length, 1);
+      assert.ok(result.output?.includes('display-name: "Example"'));
+    });
+  }
+
+  for (const [scenario, label, requests] of [
+    ['poison', 'Example', 4],
+    ['poison', 'Example SDK', 20],
+    ['transient', 'Example', 2],
+    ['missing', 'Example SDK', 2],
+    ['normal', 'Example SDK', 1],
+  ]) {
+    test(`translation provider ${scenario} (${label}): bounded requests and preserved labels`, async () => {
+      const result = await translationRequestFixture(scenario, label);
+      assert.equal(result.requests.length, requests);
+      assert.equal(result.status, scenario === 'poison' ? 1 : 0, result.stderr);
+      if (scenario === 'poison') {
+        assert.equal(result.output, null, 'Rejected responses must not write navigation labels');
+        assert.match(result.stderr, /Translation service introduced an unexpected placeholder/);
+      } else {
+        assert.ok(result.output?.includes(`display-name: ${JSON.stringify(label)}`));
+      }
+    });
+  }
+});

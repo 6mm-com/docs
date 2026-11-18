@@ -14,6 +14,7 @@ import {
 } from "./locale-config.mjs";
 import { findTranslationQualityIssues } from "./polish-core-translations.mjs";
 import { frontmatter, internalDestinations } from "./documentation-text.mjs";
+import { activeDocumentationPages, assertSourcePagesListed } from "./documentation-pages.mjs";
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const fernRoot = path.join(projectRoot, "fern");
@@ -146,20 +147,8 @@ if (!sameArray(configuredLocales, nativeLocales)) {
   );
 }
 
-const activePages = [
-  ...new Set(
-    (config.navigation ?? []).flatMap((navigationItem) =>
-      (navigationItem.layout ?? []).flatMap((section) =>
-        (section.contents ?? [])
-          .map((content) => content.path)
-          .filter((contentPath) => contentPath?.startsWith("docs/pages/")),
-      ),
-    ),
-  ),
-];
-if (activePages.length !== 158) {
-  pushError(`Expected 158 active pages, found ${activePages.length}`);
-}
+const activePages = activeDocumentationPages(config);
+await assertSourcePagesListed(fernRoot, activePages);
 
 if (config.title !== "6MM Docs") {
   pushError(`Site title must remain "6MM Docs"; found ${config.title ?? "missing"}`);
