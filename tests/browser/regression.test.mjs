@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { chromium, webkit } from 'playwright';
 import { flush, locales, origin, withPage } from './fixture.mjs';
 import { verifyNativeHydration } from './hydration.mjs';
+import { readScopedTocCss, sampleTocMotion } from './toc.mjs';
 
 for (const [name, engine] of Object.entries({ chromium, webkit })) {
   test(`${name}: documentation interactions`, { timeout: 120_000 }, async t => {
@@ -13,6 +14,54 @@ for (const [name, engine] of Object.entries({ chromium, webkit })) {
         await t.test(`native module loading with island registration ${registration} the guard`, () =>
           verifyNativeHydration(browser, { registration, safari: name === 'webkit' }));
       }
+
+      await t.test('TOC fill and nested connectors keep native motion and reduced-motion behavior', async () => {
+        const page = await browser.newPage();
+        const scopedCss = await readScopedTocCss();
+        const fixture = `<style>
+          @property --toc-fill-top { syntax:"<length>"; inherits:true; initial-value:0px; }
+          @property --toc-fill-bottom { syntax:"<length>"; inherits:true; initial-value:0px; }
+          @media (prefers-reduced-motion: no-preference) {
+            .toc-root[data-toc-measured] { transition: --toc-fill-top 250ms ease-out, --toc-fill-bottom 250ms ease-out; }
+          }
+          .toc-fill {
+            clip-path: inset(clamp(-2px, var(--toc-fill-top) - var(--toc-li-top) - var(--toc-track-top), 100%) 0
+              clamp(-2px, var(--toc-li-top) + var(--toc-li-h) - var(--toc-track-bottom) - var(--toc-fill-bottom), 100%) 0 round 1px);
+          }
+          .toc-connector-fill {
+            clip-path: inset(clamp(0px, var(--toc-fill-top) - (var(--toc-li-top) + var(--toc-li-h) - 12px), 100%) 0
+              clamp(0px, var(--toc-li-top) + var(--toc-li-h) + 4px - var(--toc-fill-bottom), 100%) 0);
+          }
+          .toc-item { --toc-li-h: 28px; --toc-track-top: 4px; --toc-track-bottom: 0px; }
+        </style><aside id="fern-toc">
+          <ul class="toc-root" data-toc-measured style="--toc-fill-top:0px;--toc-fill-bottom:20px">
+            <li class="toc-item" style="--toc-li-top:0px"><span class="toc-fill"></span><a href="#one">First</a></li>
+            <li class="toc-item" style="--toc-li-top:28px"><span class="toc-connector-fill"></span><span class="toc-fill"></span><a href="#two">Nested</a></li>
+            <li class="toc-item" style="--toc-li-top:56px"><span class="toc-fill"></span><a href="#three">Last</a></li>
+          </ul>
+        </aside>`;
+        try {
+          for (const reducedMotion of ['no-preference', 'reduce']) {
+            await page.emulateMedia({ reducedMotion });
+            await page.setContent(fixture);
+            await flush(page);
+            const live = await sampleTocMotion(page);
+            await page.addStyleTag({ content: scopedCss });
+            await flush(page);
+            const scoped = await sampleTocMotion(page);
+            assert.deepEqual(scoped.frames, live.frames);
+            assert.notDeepEqual(scoped.frames[0], scoped.frames.at(-1));
+            if (reducedMotion === 'no-preference') {
+              assert.equal(scoped.frames.length, 5);
+              assert.deepEqual(live.owners, ['toc-root']);
+              assert.deepEqual(scoped.owners, ['toc-connector-fill', 'toc-fill']);
+            } else {
+              assert.equal(scoped.frames.length, 2);
+              assert.deepEqual(scoped.owners, []);
+            }
+          }
+        } finally { await page.close(); }
+      });
 
       await t.test('reloaded SEO scripts reuse initialization and keep metadata updates working', async () => {
         const source = await readFile(new URL('../../fern/seo-structured-data.js', import.meta.url), 'utf8');
@@ -138,9 +187,45 @@ for (const [name, engine] of Object.entries({ chromium, webkit })) {
               document.addEventListener('DOMContentLoaded', () => {
                 window.initialSidebarStrategy = document.getElementById('visible').dataset.astroPrefetch;
               });
-            </script><script>${source}</script></head><body>${markup}</body>`,
+            </script><script>${source}</script></head><body>${markup}<script>
+              (async () => {
+                // Let the initial insertion settle, then measure separate
+                // mutation batches while the document is still being parsed.
+                await Promise.resolve();
+                const sidebar = document.getElementById('fern-sidebar-static');
+                let fullScans = 0;
+                const query = sidebar.querySelectorAll.bind(sidebar);
+                sidebar.querySelectorAll = selector => {
+                  fullScans++;
+                  return query(selector);
+                };
+                const main = document.querySelector('main');
+                for (let index = 0; index < 24; index++) {
+                  main.appendChild(document.createElement('p'));
+                  await Promise.resolve();
+                }
+                const nested = document.createElement('div');
+                sidebar.appendChild(nested);
+                nested.innerHTML = '<a id="late-nested" href="/nested" data-astro-prefetch="load">Nested</a>';
+                const direct = document.createElement('a');
+                direct.href = '/direct';
+                direct.dataset.astroPrefetch = 'viewport';
+                sidebar.appendChild(direct);
+                await Promise.resolve();
+                window.prefetchDuringParsing = {
+                  state: document.readyState,
+                  fullScans,
+                  nested: document.getElementById('late-nested').dataset.astroPrefetch,
+                  direct: direct.dataset.astroPrefetch,
+                };
+                delete sidebar.querySelectorAll;
+              })();
+            </script></body>`,
           }));
           await page.goto(origin + '/guide');
+          assert.deepEqual(await page.evaluate(() => window.prefetchDuringParsing), {
+            state: 'loading', fullScans: 0, nested: 'hover', direct: 'hover',
+          });
           assert.equal(await page.evaluate(() => initialSidebarStrategy), 'hover');
           assert.equal(await page.locator('#eager').getAttribute('data-astro-prefetch'), 'hover');
           assert.equal(await page.locator('#disabled').getAttribute('data-astro-prefetch'), 'false');
@@ -155,6 +240,50 @@ for (const [name, engine] of Object.entries({ chromium, webkit })) {
               event.newDocument.getElementById(id).dataset.astroPrefetch);
           }, markup);
           assert.deepEqual(swapped, ['hover', 'hover', 'false', 'viewport', 'viewport']);
+        } finally { await page.close(); }
+      });
+
+      await t.test('theme confirmation ignores unrelated document changes', async () => {
+        const source = await readFile(new URL('../../fern/language-modal.js', import.meta.url), 'utf8');
+        const page = await browser.newPage();
+        try {
+          await page.route(origin + '/**', route => route.fulfill({
+            contentType: 'text/html',
+            body: '<!doctype html><html><head><title>Theme</title></head><body><main></main></body></html>',
+          }));
+          await page.goto(origin + '/guide');
+          await page.addScriptTag({ content: source });
+          const result = await page.evaluate(async () => {
+            const native = window.MutationObserver;
+            let checks = 0;
+            window.MutationObserver = class extends native {
+              constructor(callback) {
+                super((...args) => { checks++; callback(...args); });
+              }
+            };
+            try {
+              const dark = window.__sixmmNavigateDocsTheme('dark');
+              const root = document.documentElement;
+              const main = document.querySelector('main');
+              for (let index = 0; index < 24; index++) {
+                main.appendChild(document.createElement('p')).className = 'new';
+                root.dataset.unrelated = index;
+                await Promise.resolve();
+              }
+              const unrelatedChecks = checks;
+              root.dataset.theme = 'dark';
+              const darkConfirmed = await dark;
+              const light = window.__sixmmNavigateDocsTheme('light');
+              root.classList.add('light');
+              const lightConfirmed = await light;
+              root.classList.remove('light');
+              await Promise.resolve();
+              return { unrelatedChecks, darkConfirmed, lightConfirmed, checks };
+            } finally {
+              window.MutationObserver = native;
+            }
+          });
+          assert.deepEqual(result, { unrelatedChecks: 0, darkConfirmed: true, lightConfirmed: true, checks: 2 });
         } finally { await page.close(); }
       });
 
@@ -186,6 +315,93 @@ for (const [name, engine] of Object.entries({ chromium, webkit })) {
           assert.equal(new URL(page.url()).pathname, '/ar/guide');
           assert.equal(await page.locator('html').getAttribute('dir'), 'rtl');
         });
+      });
+
+      await t.test('locale navigation reads incoming article text only when the element is reused', async () => {
+        const source = await readFile(new URL('../../fern/language-modal.js', import.meta.url), 'utf8');
+        const page = await browser.newPage();
+        try {
+          await page.route(origin + '/**', route => route.fulfill({
+            contentType: 'text/html',
+            body: '<!doctype html><html><body><main><article>English content</article></main></body></html>',
+          }));
+          await page.goto(origin + '/guide?source=test#section');
+          await page.addScriptTag({ content: source });
+          const result = await page.evaluate(async () => {
+            let articleReads = 0;
+            let replaceArticle = true;
+            const getText = Object.getOwnPropertyDescriptor(Node.prototype, 'textContent').get;
+            document.addEventListener('click', event => {
+              const link = event.target.closest('a[hidden]');
+              if (!link) return;
+              event.preventDefault();
+              history.pushState({}, '', link.href);
+              const current = document.querySelector('article');
+              if (replaceArticle) {
+                const incoming = document.createElement('article');
+                incoming.textContent = current.textContent;
+                Object.defineProperty(incoming, 'textContent', { get() { articleReads++; return getText.call(this); } });
+                current.replaceWith(incoming);
+                replaceArticle = false;
+              } else {
+                current.firstChild.data = 'Reused article';
+              }
+            });
+            const replaced = await window.__sixmmNavigateDocsLocale('ja');
+            const replacementReads = articleReads;
+            const reused = await window.__sixmmNavigateDocsLocale('ko');
+            return { replaced, replacementReads, reused, reuseReads: articleReads - replacementReads,
+              url: location.pathname + location.search + location.hash };
+          });
+          assert.deepEqual(result, {
+            replaced: true, replacementReads: 0, reused: true, reuseReads: 2, url: '/ko/guide?source=test#section',
+          });
+        } finally { await page.close(); }
+      });
+
+      await t.test('locale wait sees asynchronous text edits and cancels a superseded wait', async () => {
+        const source = await readFile(new URL('../../fern/language-modal.js', import.meta.url), 'utf8');
+        const page = await browser.newPage();
+        try {
+          await page.route(origin + '/**', route => route.fulfill({
+            contentType: 'text/html',
+            body: '<!doctype html><aside><div></div></aside><main><article>English</article></main>',
+          }));
+          await page.goto(origin + '/guide');
+          await page.addScriptTag({ content: source });
+          const result = await page.evaluate(async () => {
+            const title = document.querySelector('main article').firstChild;
+            const deadlines = new Set();
+            const startTimer = window.setTimeout.bind(window);
+            const clearTimer = window.clearTimeout.bind(window);
+            window.setTimeout = (cb, delay, ...args) => {
+              const timer = startTimer(cb, delay, ...args);
+              if (delay === 15000) deadlines.add(timer);
+              return timer;
+            };
+            window.clearTimeout = timer => {
+              deadlines.delete(timer);
+              clearTimer(timer);
+            };
+            document.addEventListener('click', event => {
+              const link = event.target.closest('a[hidden]');
+              if (!link) return;
+              event.preventDefault();
+              history.pushState({}, '', link.href);
+            });
+            const old = window.__sixmmNavigateDocsLocale('ja');
+            const current = window.__sixmmNavigateDocsLocale('ko');
+            const liveWaits = deadlines.size;
+            const superseded = await old;
+            document.querySelector('aside div').textContent = 'Unrelated update';
+            await Promise.resolve();
+            const stillWaiting = deadlines.size;
+            title.data = '한국어';
+            const confirmed = await current;
+            return { liveWaits, superseded, stillWaiting, confirmed, remaining: deadlines.size };
+          });
+          assert.deepEqual(result, { liveWaits: 1, superseded: false, stillWaiting: 1, confirmed: true, remaining: 0 });
+        } finally { await page.close(); }
       });
 
       await t.test('language direction follows updated definitions without a route change', async () => {
@@ -314,7 +530,8 @@ for (const [name, engine] of Object.entries({ chromium, webkit })) {
             island.setAttribute('data-fern-hydrated', '');
             island.__reactContainer$fixture = {};
             island.setAttribute('component-url', '/FooterIsland.fixture.js');
-            island.innerHTML = '<div id="fern-search-panel"><button id="deferred-label" aria-label="Search">Search</button></div>';
+            island.innerHTML = '<div id="fern-search-panel"><button id="deferred-label" aria-label="Search">Search</button></div>' +
+              '<a id="deferred-edit" href="https://github.com/6mm-com/docs/blob/main/fern/docs/pages/guide.mdx?plain=1" data-astro-prefetch="load">Edit</a>';
             island.firstElementChild.__reactProps$fixture = {};
             const outer = document.createElement('astro-island');
             outer.setAttribute('data-fern-hydrated', '');
@@ -325,12 +542,29 @@ for (const [name, engine] of Object.entries({ chromium, webkit })) {
           });
           await page.waitForTimeout(120);
           const label = page.locator('#deferred-label');
+          const edit = page.locator('#deferred-edit');
           assert.equal(await label.textContent(), 'Search');
           assert.equal(await label.getAttribute('aria-label'), 'Search');
+          assert.equal(await edit.getAttribute('data-astro-prefetch'), 'load');
+          assert.match(await edit.getAttribute('href'), /\/fern\/docs\//);
+          await page.evaluate(() => {
+            window.deferredFullScans = 0;
+            const query = document.querySelectorAll.bind(document);
+            document.querySelectorAll = (selector, ...args) => {
+              if (selector.startsWith('#fern-header,') || selector.startsWith('a[href^="https://github.com/6mm-com/docs/') ||
+                  selector.startsWith('a[data-astro-prefetch="viewport"]')) window.deferredFullScans++;
+              return query(selector, ...args);
+            };
+          });
           // React attaches host bindings without changing matching server markup.
           await label.evaluate(node => { node.__reactProps$fixture = {}; });
           await page.waitForFunction(() => document.getElementById('deferred-label').textContent === 'Пошук');
           assert.equal(await label.getAttribute('aria-label'), 'Пошук');
+          assert.equal(await edit.getAttribute('data-astro-prefetch'), 'load', 'Other deferred controls must stay untouched');
+          await edit.evaluate(node => { node.__reactProps$fixture = {}; });
+          await page.waitForFunction(() => document.getElementById('deferred-edit').dataset.astroPrefetch === 'hover');
+          assert.equal(await edit.getAttribute('href'), 'https://github.com/6mm-com/docs/blob/main/fern/translations/uk/docs/pages/guide.mdx?plain=1');
+          assert.equal(await page.evaluate(() => window.deferredFullScans), 0, 'Ready bindings must not cause document-wide scans');
           await label.evaluate(node => node.closest('astro-island').remove());
         });
       });
@@ -389,6 +623,89 @@ for (const [name, engine] of Object.entries({ chromium, webkit })) {
             await page.locator('#dynamic-effect-fixture').evaluate(node => node.remove());
             await flush(page);
           }
+        });
+      });
+
+      await t.test('nested UI controls share the parent observer and are rediscovered after a move', async () => {
+        await withPage(browser, { pathname: '/uk/guide', markup: `
+          <header id="fern-header">
+            <button class="fern-copy-button" id="nested-control">Search</button>
+            ${'<button class="fern-copy-button">Search</button>'.repeat(23)}
+          </header>
+          <main><article>Guide</article></main>` }, async page => {
+          const control = page.locator('#nested-control');
+          assert.equal(await control.textContent(), 'Пошук');
+          await page.evaluate(() => {
+            const observe = MutationObserver.prototype.observe;
+            window.observedLabels = [];
+            MutationObserver.prototype.observe = function (target, options) {
+              if (options?.attributeFilter?.includes('data-fern-hydrated')) window.observedLabels.push(target.id);
+              observe.call(this, target, options);
+            };
+            document.dispatchEvent(new Event('astro:page-load'));
+          });
+          await flush(page);
+          assert.deepEqual(await page.evaluate(() => observedLabels), ['fern-header']);
+          await control.evaluate(node => { node.textContent = 'Search'; });
+          await page.waitForFunction(() => document.getElementById('nested-control').textContent === 'Пошук');
+          await control.evaluate(node => document.body.appendChild(node));
+          await page.waitForFunction(() => observedLabels.includes('nested-control'));
+          await control.evaluate(node => { node.textContent = 'Search'; });
+          await page.waitForFunction(() => document.getElementById('nested-control').textContent === 'Пошук');
+        });
+      });
+
+      await t.test('card glow skips invisible and unchanged values without changing the fade', async () => {
+        await withPage(browser, { markup: `<main><article>
+          <div class="fern-card-group" style="display:flex;justify-content:space-between;width:900px">
+            <a class="fern-card" id="near-card" style="display:block;width:120px;height:96px" href="#near">Near</a>
+            <a class="fern-card" id="far-card" style="display:block;width:120px;height:96px" href="#far">Far</a>
+          </div></article></main>` }, async page => {
+          const result = await page.evaluate(async () => {
+            const near = document.getElementById('near-card');
+            const far = document.getElementById('far-card');
+            const intensity = '--sixmm-card-intensity';
+            const x = '--sixmm-card-x';
+            const writes = { near: 0, far: 0 };
+            for (const [key, card] of Object.entries({ near, far })) {
+              const write = card.style.setProperty.bind(card.style);
+              card.style.setProperty = (name, value) => {
+                if (name === intensity) writes[key]++;
+                return write(name, value);
+              };
+            }
+            async function move(card, offset) {
+              const { left, top } = card.getBoundingClientRect();
+              card.dispatchEvent(new PointerEvent('pointermove', {
+                pointerType: 'mouse', bubbles: true, clientX: left + offset, clientY: top + 40,
+              }));
+              await new Promise(requestAnimationFrame);
+            }
+            await move(near, 25);
+            const first = {
+              near: near.style.getPropertyValue(intensity),
+              far: getComputedStyle(far, '::before').opacity,
+              farX: far.style.getPropertyValue(x),
+            };
+            await move(near, 35);
+            const steady = { x: near.style.getPropertyValue(x), writes: { ...writes } };
+            await move(far, 30);
+            const fading = {
+              near: near.style.getPropertyValue(intensity),
+              nearX: parseFloat(near.style.getPropertyValue(x)),
+              far: far.style.getPropertyValue(intensity),
+            };
+            document.dispatchEvent(new Event('scroll'));
+            return { first, steady, fading, reset: far.style.getPropertyValue(intensity),
+              hovered: far.hasAttribute('data-sixmm-card-hovered') };
+          });
+          assert.deepEqual(result.first, { near: '1.000', far: '0', farX: '' });
+          assert.deepEqual(result.steady, { x: '35px', writes: { near: 1, far: 0 } });
+          assert.equal(result.fading.near, '0.000');
+          assert.ok(result.fading.nearX > 700, 'A fading gradient must keep following the pointer');
+          assert.equal(result.fading.far, '1.000');
+          assert.equal(result.reset, '0.000');
+          assert.equal(result.hovered, false);
         });
       });
 

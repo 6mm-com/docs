@@ -10,16 +10,23 @@
     var target = interfaceDictionaries[lang] || interfaceDictionaries[lang.split('-')[0]];
     ["Light", "Dark", "System"].forEach(function (key, index) { target[key] = themeLabels[lang][index]; });
   });
-  var reverseLabels = new Map();
-  Object.keys(interfaceDictionaries).forEach(function (lang) {
-    Object.keys(interfaceDictionaries[lang]).forEach(function (key) {
-      reverseLabels.set(interfaceDictionaries[lang][key], key);
-      reverseLabels.set(key, key);
+  var reverseLabels;
+  function labelIndex() {
+    if (reverseLabels) return reverseLabels;
+    reverseLabels = new Map();
+    Object.keys(interfaceDictionaries).forEach(function (lang) {
+      Object.keys(interfaceDictionaries[lang]).forEach(function (key) {
+        reverseLabels.set(interfaceDictionaries[lang][key], key);
+        reverseLabels.set(key, key);
+      });
     });
-  });
-  interfaceAliases.forEach(function (entry) { reverseLabels.set(entry[0], entry[1]); });
+    interfaceAliases.forEach(function (entry) { reverseLabels.set(entry[0], entry[1]); });
+    return reverseLabels;
+  }
   var uiSelector = '#fern-header, #fern-toc, .fern-page-actions, #fern-footer, astro-island[component-url*="/FooterIsland."], #fern-search-dialog, #fern-search-panel, #fern-ask-ai-panel, [data-radix-popper-content-wrapper], .fern-code-block button, .fern-copy-button, #fern-sidebar button, .sixmm-mobile-menu-trigger, button[aria-label="Open menu"], button[aria-label="Close menu"]';
   var excludedSelector = 'pre, code, script, style, textarea, .fern-language-selector, .fern-language-dropdown-content, .sixmm-mobile-language-dialog, #cs-widget-container, .sixmm-header-links';
+  var editLinkSelector = 'a[href^="https://github.com/6mm-com/docs/blob/main/fern/"]';
+  var eagerPrefetchSelector = 'a[data-astro-prefetch="viewport"], a[data-astro-prefetch="load"]';
   var scheduled = false;
   var observedRoots = new WeakSet();
   var uiObserver;
@@ -27,17 +34,20 @@
   var fullSyncRequested = false;
   var reactBindingKeys = new WeakMap();
   var pendingBindings = new Set();
+  var readyBindings = new Set();
   var bindingRetry = 0;
   var translatedAttributes = ['aria-label','title','placeholder'];
   function locale() {
-    var first = window.location.pathname.split('/').filter(Boolean)[0] || '';
+    var first = window.__sixmmDocsHost.firstPathSegment(window.location.pathname);
     return (window.__sixmmDocsLocales || []).some(function (entry) { return entry.code === first && first; }) ? first : 'en';
   }
   function dictionary(lang) {
     return interfaceDictionaries[lang] || interfaceDictionaries[lang.split('-')[0]] || interfaceDictionaries.en;
   }
   function translate(value, selected) {
-    var text = value.trim(), suffix = text.endsWith(':') ? ':' : '', key = reverseLabels.get(suffix ? text.slice(0,-1) : text);
+    var text = value.trim();
+    if (!text) return value;
+    var suffix = text.endsWith(':') ? ':' : '', key = labelIndex().get(suffix ? text.slice(0,-1) : text);
     var replacement = key && selected[key];
     return replacement ? value.replace(text, replacement + suffix) : value;
   }
@@ -48,8 +58,9 @@
       var pending = Array.from(pendingBindings);
       pendingBindings.clear();
       pending.forEach(function (element) {
-        if (element.isConnected && isHydrated(element)) schedule();
+        if (element.isConnected && isHydrated(element)) readyBindings.add(element);
       });
+      if (readyBindings.size) queueSync();
     }, 50);
   }
   function isHydrated(element) {
@@ -94,15 +105,23 @@
     var selected = dictionary(lang);
     var processedRoots = new WeakSet();
     (roots || rootDocument.querySelectorAll(uiSelector)).forEach(function (root) {
-      if (!roots && !observedRoots.has(root)) {
+      var alreadyObserved = !roots && observedRoots.has(root);
+      var alreadyProcessed = false;
+      for (var parent = root.parentElement; parent; parent = parent.parentElement) {
+        if (!roots && observedRoots.has(parent)) alreadyObserved = true;
+        if (processedRoots.has(parent)) {
+          alreadyProcessed = true;
+          if (roots || alreadyObserved) break;
+        }
+      }
+      // Full discovery returns roots in DOM order. A parent's subtree
+      // observation already delivers the same records for nested controls.
+      if (!roots && !alreadyObserved) {
         observedRoots.add(root);
         uiObserver.observe(root, { childList:true, subtree:true, characterData:true, attributes:true, attributeFilter:['aria-label','title','placeholder','data-fern-hydrated'] });
       }
       // Keep observing pending islands so they are synchronized when ready.
-      if (root.closest(excludedSelector) || !isHydrated(root)) return;
-      for (var parent = root.parentElement; parent; parent = parent.parentElement) {
-        if (processedRoots.has(parent)) return;
-      }
+      if (root.closest(excludedSelector) || !isHydrated(root) || alreadyProcessed) return;
       processedRoots.add(root);
       var walker = rootDocument.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
         acceptNode: function (node) {
@@ -137,35 +156,48 @@
       elements.forEach(syncAttributes);
     });
   }
-  function syncEditLinks(lang) {
-    document.querySelectorAll('a[href^="https://github.com/6mm-com/docs/blob/main/fern/"]').forEach(function (link) {
-      if (!isHydrated(link)) return;
-      var url = new URL(link.href);
-      url.pathname = url.pathname.replace(/\/fern\/(?:translations\/[^/]+\/)?docs\//, '/fern/' + (lang !== 'en' ? 'translations/' + lang + '/' : '') + 'docs/');
-      if (link.href !== url.href) link.href = url.href;
-    });
+  function syncEditLink(link, lang) {
+    if (!isHydrated(link)) return;
+    var url = new URL(link.href);
+    url.pathname = url.pathname.replace(/\/fern\/(?:translations\/[^/]+\/)?docs\//, '/fern/' + (lang !== 'en' ? 'translations/' + lang + '/' : '') + 'docs/');
+    if (link.href !== url.href) link.href = url.href;
+  }
+  function syncPrefetchLink(link) {
+    if (isHydrated(link)) link.setAttribute('data-astro-prefetch','hover');
   }
   function sync() {
     scheduled = false;
     var ai = document.getElementById('fern-ask-ai-button');
     if (document.readyState !== 'complete' || (ai && ai.getAttribute('aria-disabled') === 'true')) return;
     var lang = locale();
-    if (!fullSyncRequested && dirtyRoots.size) {
+    if (!fullSyncRequested && (dirtyRoots.size || readyBindings.size)) {
+      // React can attach bindings without any DOM mutation. Retry only those
+      // controls and links; a page or locale change still takes the full path.
+      readyBindings.forEach(function (element) {
+        if (!element.isConnected) return;
+        var root = element.closest(uiSelector);
+        if (root) dirtyRoots.add(root);
+      });
       var changed = [];
       dirtyRoots.forEach(function (root) { if (root.isConnected) changed.push(root); });
       dirtyRoots.clear();
       syncLabels(document, lang, changed);
+      readyBindings.forEach(function (element) {
+        if (!element.isConnected) return;
+        if (element.matches(editLinkSelector)) syncEditLink(element, lang);
+        if (element.matches(eagerPrefetchSelector)) syncPrefetchLink(element);
+      });
+      readyBindings.clear();
       return;
     }
     fullSyncRequested = false;
     dirtyRoots.clear();
+    readyBindings.clear();
     uiObserver.disconnect();
     observedRoots = new WeakSet();
     syncLabels(document, lang);
-    syncEditLinks(lang);
-    document.querySelectorAll('a[data-astro-prefetch="viewport"], a[data-astro-prefetch="load"]').forEach(function (link) {
-      if (isHydrated(link)) link.setAttribute('data-astro-prefetch','hover');
-    });
+    document.querySelectorAll(editLinkSelector).forEach(function (link) { syncEditLink(link, lang); });
+    document.querySelectorAll(eagerPrefetchSelector).forEach(syncPrefetchLink);
   }
   function schedule() {
     fullSyncRequested = true;

@@ -1,28 +1,282 @@
+/* Generated from fern/asset-source/js by npm run assets:build. */
 (function () {
   if (window.__sixmmLanguageModalInitialized) return;
   window.__sixmmLanguageModalInitialized = true;
+
+  function firstPathSegment(pathname) {
+    return pathname.split("/").find(Boolean) || "";
+  }
+
+  function readTheme(root) {
+    if (root.classList.contains("dark")) return "dark";
+    if (root.classList.contains("light")) return "light";
+    return root.dataset.theme === "dark" ? "dark" : "light";
+  }
+
+  // Other assets keep their own locale policy (for example, widget aliases).
+  // Only the host state readers are shared across the loading phases.
+  window.__sixmmDocsHost = { firstPathSegment, readTheme };
+
+  function createHostNavigation(locales) {
+    var cancelLocaleWait = null;
+    var themeNavigationId = 0;
+
+    function waitForTheme(resolveValue) {
+      return new Promise(function (resolve) {
+        var initial = resolveValue();
+        if (initial) { resolve(initial); return; }
+        var finished = false;
+        var observer = new MutationObserver(check);
+        var timer = window.setTimeout(function () {
+          finish(null);
+        }, 2500);
+
+        function finish(value) {
+          if (finished) return;
+          finished = true;
+          observer.disconnect();
+          window.clearTimeout(timer);
+          resolve(value);
+        }
+
+        function check() {
+          var value = resolveValue();
+          if (value) finish(value);
+        }
+
+        observer.observe(document.documentElement, { attributeFilter: ["class", "data-theme"] });
+      });
+    }
+
+    function localeForSegment(firstSegment) {
+      var normalized = firstSegment.toLowerCase();
+      var locale = locales.find(function (item) {
+        return item.code && item.code.toLowerCase() === normalized;
+      });
+      return locale ? locale.code : "";
+    }
+
+    function localeForPathname(pathname) {
+      return localeForSegment(firstPathSegment(pathname));
+    }
+
+    function currentDocsLocale() {
+      return localeForPathname(window.location.pathname);
+    }
+
+    function currentRoute() {
+      var segments = window.location.pathname.split("/").filter(Boolean);
+      var locale = localeForSegment(segments[0] || "");
+      if (locale) segments.shift();
+      return {
+        locale: locale,
+        pagePath: segments.length ? "/" + segments.join("/") : "/",
+      };
+    }
+
+    function localizedPath(locale, pagePath) {
+      if (pagePath === "/") return locale ? "/" + locale : "/";
+      return (locale ? "/" + locale : "") + pagePath;
+    }
+
+    function currentArticle() {
+      return typeof document.querySelector === "function" ? document.querySelector("main article") : null;
+    }
+
+    function pageContentChanged(previousArticle, previousText) {
+      if (!previousArticle) return true;
+      var article = currentArticle();
+      // Swapping the article already proves the page changed. Only read the
+      // whole text when Fern reuses the original article element.
+      return article !== previousArticle || article.textContent !== previousText;
+    }
+
+    function waitForLocale(pathname, previousArticle, previousText) {
+      return new Promise(function (resolve) {
+        function arrived() {
+          return window.location.pathname === pathname && pageContentChanged(previousArticle, previousText);
+        }
+        if (arrived()) { resolve(true); return; }
+
+        var observer = new MutationObserver(check);
+        var timer = window.setTimeout(cancel, 15000);
+        cancelLocaleWait = cancel;
+        document.addEventListener("astro:page-load", check);
+        // The native router normally signals the commit. The fallback watches
+        // in-place text edits and direct replacements along the article's path,
+        // not unrelated changes in the sidebar, widget or page attributes.
+        if (previousArticle) {
+          observer.observe(previousArticle, { childList: true, characterData: true, subtree: true });
+          for (var ancestor = previousArticle.parentElement; ancestor; ancestor = ancestor.parentElement) {
+            observer.observe(ancestor, { childList: true });
+          }
+        } else {
+          observer.observe(document.documentElement, { childList: true, subtree: true });
+        }
+
+        function check() {
+          if (arrived()) finish(true);
+        }
+        function cancel() { finish(false); }
+        function finish(result) {
+          if (cancelLocaleWait !== cancel) return;
+          cancelLocaleWait = null;
+          observer.disconnect();
+          window.clearTimeout(timer);
+          document.removeEventListener("astro:page-load", check);
+          resolve(result);
+        }
+      });
+    }
+
+    async function navigateDocsLocale(locale) {
+      if (
+        !locales.some(function (item) {
+          return item.code === locale;
+        })
+      ) {
+        return false;
+      }
+      if (currentDocsLocale() === locale) return true;
+
+      if (cancelLocaleWait) cancelLocaleWait();
+      var route = currentRoute();
+      var hash = window.location.hash;
+      // Old shared links can still point at a translated alias. Navigate to the
+      // canonical section so changing languages preserves that chapter.
+      if (hash && typeof document.getElementById === "function") {
+        try {
+          var anchor = document.getElementById(decodeURIComponent(hash.slice(1)));
+          var canonical = anchor && (anchor.dataset.sixmmAnchorTarget || anchor.dataset.sixmmCanonicalAnchor);
+          if (!canonical && anchor && anchor.previousElementSibling) {
+            canonical = anchor.previousElementSibling.dataset.sixmmCanonicalAnchor;
+          }
+          if (canonical) hash = "#" + canonical;
+        } catch (error) { /* Preserve malformed incoming fragments verbatim. */ }
+      }
+      var targetUrl =
+        localizedPath(locale, route.pagePath) +
+        window.location.search + hash;
+      var pathname = new URL(targetUrl, window.location.origin).pathname;
+      var previousArticle = currentArticle();
+      var previousText = previousArticle ? previousArticle.textContent : "";
+
+      // Use Fern's Astro router so the retained support iframe and its current
+      // conversation survive a locale change. Hydration guards below keep our
+      // UI enhancements from altering incoming server markup before React mounts.
+      var link = document.createElement("a");
+      link.href = targetUrl;
+      link.hidden = true;
+      document.body.appendChild(link);
+      try {
+        link.click();
+      } finally {
+        link.remove();
+      }
+      return waitForLocale(pathname, previousArticle, previousText);
+    }
+
+    async function navigateDocsTheme(theme) {
+      if (theme !== "light" && theme !== "dark") return false;
+      if (readTheme(document.documentElement) === theme) return true;
+
+      var navigationId = ++themeNavigationId;
+      var previousTheme;
+      try {
+        previousTheme = window.localStorage.getItem("theme");
+        window.localStorage.setItem("theme", theme);
+        // Fern uses next-themes with its default "theme" storage key. Its
+        // Provider listens for this cross-context event and applies the theme
+        // through React state, independent of responsive menus or DOM controls.
+        window.dispatchEvent(
+          new StorageEvent("storage", {
+            key: "theme",
+            oldValue: previousTheme,
+            newValue: theme,
+            url: window.location.href,
+          }),
+        );
+      } catch (error) {
+        return false;
+      }
+
+      var changed = await waitForTheme(function () {
+        return readTheme(document.documentElement) === theme ? true : null;
+      });
+      return navigationId === themeNavigationId && Boolean(changed);
+    }
+
+    return { currentRoute, localizedPath, localeForPathname, navigateDocsLocale, navigateDocsTheme };
+  }
+
+  function createSidebarPrefetch() {
+    var staticSidebarId = "fern-sidebar-static";
+    var earlyPrefetchSelector = 'a[data-astro-prefetch="viewport"], a[data-astro-prefetch="load"]';
+
+    function tunePrefetchLink(link) {
+      // Fern scans the static sidebar before the afterInteractive script runs.
+      // Leave React-owned links to the existing post-hydration bridge.
+      if (!link.closest("astro-island")) link.setAttribute("data-astro-prefetch", "hover");
+    }
+
+    function tuneStaticSidebarPrefetch(root) {
+      var sidebar = root && root.getElementById && root.getElementById(staticSidebarId);
+      if (sidebar) sidebar.querySelectorAll(earlyPrefetchSelector).forEach(tunePrefetchLink);
+    }
+
+    function tuneAddedSidebarLinks(records) {
+      var sidebar = document.getElementById(staticSidebarId);
+      if (!sidebar) return;
+      var added = new Set();
+      for (var index = 0; index < records.length; index++) {
+        var nodes = records[index].addedNodes;
+        for (var offset = 0; offset < nodes.length; offset++) {
+          var node = nodes[offset];
+          if (node.nodeType !== 1) continue;
+          // The parser may attach the entire sidebar (or a wrapper) in one batch.
+          if (node === sidebar || node.contains(sidebar)) {
+            sidebar.querySelectorAll(earlyPrefetchSelector).forEach(tunePrefetchLink);
+            return;
+          }
+          if (sidebar.contains(node)) added.add(node);
+        }
+      }
+      added.forEach(function (node) {
+        // The same batch may report both a new branch and individual children.
+        for (var parent = node.parentElement; parent !== sidebar; parent = parent.parentElement) {
+          if (added.has(parent)) return;
+        }
+        if (node.matches(earlyPrefetchSelector)) tunePrefetchLink(node);
+        node.querySelectorAll(earlyPrefetchSelector).forEach(tunePrefetchLink);
+      });
+    }
+
+    return { tuneStaticSidebarPrefetch, tuneAddedSidebarLinks };
+  }
+
   var locales = [
-    { code: "", label: "English", htmlLang: "en", widget: "en", aliases: ["en", "en-us", "en-gb", "en-asia", "en-sg"] },
-    { code: "ja", label: "日本語", widget: "ja", aliases: ["ja", "ja-jp"] },
-    { code: "ru", label: "Русский", widget: "ru", aliases: ["ru", "ru-ru"] },
-    { code: "es-419", label: "Español (Latinoamérica)", widget: "es-419", aliases: ["es-419", "es-ar"] },
-    { code: "it", label: "Italiano", widget: "it", aliases: ["it", "it-it"] },
-    { code: "fr", label: "Français", widget: "fr", aliases: ["fr", "fr-fr"] },
-    { code: "de", label: "Deutsch", widget: "de", aliases: ["de", "de-de"] },
-    { code: "zh-CN", label: "简体中文", widget: "zh-CN", aliases: ["zh", "zh-cn", "zh-hans"] },
-    { code: "zh-TW", label: "繁體中文", widget: "zh-TW", aliases: ["zh-tw", "zh-hant"] },
-    { code: "pt-BR", label: "Português (Brasil)", widget: "pt-BR", aliases: ["pt-br"] },
-    { code: "id", label: "Bahasa Indonesia", widget: "id", aliases: ["id", "id-id"] },
-    { code: "pl", label: "Polski", widget: "pl", aliases: ["pl", "pl-pl"] },
-    { code: "vi", label: "Tiếng Việt", widget: "vi", aliases: ["vi", "vi-vn"] },
-    { code: "uk", label: "Українська", widget: "uk", aliases: ["uk", "uk-ua"] },
-    { code: "pt-PT", label: "Português (Internacional)", widget: "pt", aliases: ["pt", "pt-pt"] },
-    { code: "es-ES", label: "Español (Internacional)", widget: "es", aliases: ["es", "es-es"] },
-    { code: "tr", label: "Türkçe", widget: "en", widgetFallback: true, aliases: ["tr", "tr-tr"] },
-    { code: "ko", label: "한국어", widget: "en", widgetFallback: true, aliases: ["ko", "ko-kr"] },
-    { code: "el", label: "Ελληνικά", widget: "en", widgetFallback: true, aliases: ["el", "el-gr"] },
-    { code: "ar", label: "العربية", widget: "ar", aliases: ["ar", "ar-sa"] },
+    {"code":"","label":"English","htmlLang":"en","widget":"en","aliases":["en","en-us","en-gb","en-asia","en-sg"]},
+    {"code":"ja","label":"日本語","widget":"ja","aliases":["ja","ja-jp"]},
+    {"code":"ru","label":"Русский","widget":"ru","aliases":["ru","ru-ru"]},
+    {"code":"es-419","label":"Español (Latinoamérica)","widget":"es-419","aliases":["es-419","es-ar"]},
+    {"code":"it","label":"Italiano","widget":"it","aliases":["it","it-it"]},
+    {"code":"fr","label":"Français","widget":"fr","aliases":["fr","fr-fr"]},
+    {"code":"de","label":"Deutsch","widget":"de","aliases":["de","de-de"]},
+    {"code":"zh-CN","label":"简体中文","widget":"zh-CN","aliases":["zh","zh-cn","zh-hans"]},
+    {"code":"zh-TW","label":"繁體中文","widget":"zh-TW","aliases":["zh-tw","zh-hant"]},
+    {"code":"pt-BR","label":"Português (Brasil)","widget":"pt-BR","aliases":["pt-br"]},
+    {"code":"id","label":"Bahasa Indonesia","widget":"id","aliases":["id","id-id"]},
+    {"code":"pl","label":"Polski","widget":"pl","aliases":["pl","pl-pl"]},
+    {"code":"vi","label":"Tiếng Việt","widget":"vi","aliases":["vi","vi-vn"]},
+    {"code":"uk","label":"Українська","widget":"uk","aliases":["uk","uk-ua"]},
+    {"code":"pt-PT","label":"Português (Internacional)","widget":"pt","aliases":["pt","pt-pt"]},
+    {"code":"es-ES","label":"Español (Internacional)","widget":"es","aliases":["es","es-es"]},
+    {"code":"tr","label":"Türkçe","widget":"en","widgetFallback":true,"aliases":["tr","tr-tr"]},
+    {"code":"ko","label":"한국어","widget":"en","widgetFallback":true,"aliases":["ko","ko-kr"]},
+    {"code":"el","label":"Ελληνικά","widget":"en","widgetFallback":true,"aliases":["el","el-gr"]},
+    {"code":"ar","label":"العربية","widget":"ar","aliases":["ar","ar-sa"]},
   ];
+
   var localeLabels = {};
   var interfaceLabels = {
     "": {
@@ -110,75 +364,14 @@
     localeLabels[locale.code] = locale.label;
     return locale.code;
   });
-  var localeNavigationId = 0;
-  var themeNavigationId = 0;
   var syncScheduled = false;
   var mobileLocaleDialog = null;
   var mobileLocaleTrigger = null;
 
   window.__sixmmDocsLocales = locales;
-
-  function waitFor(resolveValue, timeout) {
-    return new Promise(function (resolve) {
-      var initial = resolveValue();
-      if (initial) { resolve(initial); return; }
-      var finished = false;
-      var observer = new MutationObserver(check);
-      var timer = window.setTimeout(function () {
-        finish(null);
-      }, timeout);
-
-      function finish(value) {
-        if (finished) return;
-        finished = true;
-        observer.disconnect();
-        window.clearTimeout(timer);
-        resolve(value);
-      }
-
-      function check() {
-        var value = resolveValue();
-        if (value) finish(value);
-      }
-
-      observer.observe(document.documentElement, {
-        attributes: true,
-        childList: true,
-        subtree: true,
-      });
-    });
-  }
-
-  function localeForSegment(firstSegment) {
-    var normalized = firstSegment.toLowerCase();
-    var locale = locales.find(function (item) {
-      return item.code && item.code.toLowerCase() === normalized;
-    });
-    return locale ? locale.code : "";
-  }
-
-  function localeForPathname(pathname) {
-    return localeForSegment(pathname.split("/").find(Boolean) || "");
-  }
-
-  function currentDocsLocale() {
-    return localeForPathname(window.location.pathname);
-  }
-
-  function currentRoute() {
-    var segments = window.location.pathname.split("/").filter(Boolean);
-    var locale = localeForSegment(segments[0] || "");
-    if (locale) segments.shift();
-    return {
-      locale: locale,
-      pagePath: segments.length ? "/" + segments.join("/") : "/",
-    };
-  }
-
-  function localizedPath(locale, pagePath) {
-    if (pagePath === "/") return locale ? "/" + locale : "/";
-    return (locale ? "/" + locale : "") + pagePath;
-  }
+  var { currentRoute, localizedPath, localeForPathname, navigateDocsLocale, navigateDocsTheme } =
+    createHostNavigation(locales);
+  var { tuneStaticSidebarPrefetch, tuneAddedSidebarLinks } = createSidebarPrefetch();
 
   function localeForOption(option) {
     if (option.dataset.sixmmLocale !== undefined) {
@@ -534,112 +727,6 @@
     }
   }
 
-  function pageContentState() {
-    if (typeof document.querySelector !== "function") {
-      return { article: null, text: "" };
-    }
-    var article = document.querySelector("main article");
-    return {
-      article: article,
-      text: article ? article.textContent : "",
-    };
-  }
-
-  function pageContentChanged(previous) {
-    var next = pageContentState();
-    return (
-      !previous.article ||
-      next.article !== previous.article ||
-      next.text !== previous.text
-    );
-  }
-
-  async function navigateDocsLocale(locale) {
-    if (
-      !locales.some(function (item) {
-        return item.code === locale;
-      })
-    ) {
-      return false;
-    }
-    if (currentDocsLocale() === locale) return true;
-
-    var navigationId = ++localeNavigationId;
-    var route = currentRoute();
-    var hash = window.location.hash;
-    // Old shared links can still point at a translated alias. Navigate to the
-    // canonical section so changing languages preserves that chapter.
-    if (hash && typeof document.getElementById === "function") {
-      try {
-        var anchor = document.getElementById(decodeURIComponent(hash.slice(1)));
-        var canonical = anchor && (anchor.dataset.sixmmAnchorTarget || anchor.dataset.sixmmCanonicalAnchor);
-        if (!canonical && anchor && anchor.previousElementSibling) {
-          canonical = anchor.previousElementSibling.dataset.sixmmCanonicalAnchor;
-        }
-        if (canonical) hash = "#" + canonical;
-      } catch (error) { /* Preserve malformed incoming fragments verbatim. */ }
-    }
-    var targetUrl =
-      localizedPath(locale, route.pagePath) +
-      window.location.search + hash;
-    var pathname = new URL(targetUrl, window.location.origin).pathname;
-    var previousContent = pageContentState();
-
-    // Use Fern's Astro router so the retained support iframe and its current
-    // conversation survive a locale change. Hydration guards below keep our
-    // UI enhancements from altering incoming server markup before React mounts.
-    var link = document.createElement("a");
-    link.href = targetUrl;
-    link.hidden = true;
-    document.body.appendChild(link);
-    try {
-      link.click();
-    } finally {
-      link.remove();
-    }
-    var changed = await waitFor(function () {
-      if (window.location.pathname !== pathname) return null;
-      return pageContentChanged(previousContent) ? true : null;
-    }, 15000);
-    return navigationId === localeNavigationId && Boolean(changed);
-  }
-
-  function currentTheme() {
-    var root = document.documentElement;
-    if (root.classList.contains("dark")) return "dark";
-    if (root.classList.contains("light")) return "light";
-    return root.dataset.theme === "dark" ? "dark" : "light";
-  }
-  async function navigateDocsTheme(theme) {
-    if (theme !== "light" && theme !== "dark") return false;
-    if (currentTheme() === theme) return true;
-
-    var navigationId = ++themeNavigationId;
-    var previousTheme;
-    try {
-      previousTheme = window.localStorage.getItem("theme");
-      window.localStorage.setItem("theme", theme);
-      // Fern uses next-themes with its default "theme" storage key. Its
-      // Provider listens for this cross-context event and applies the theme
-      // through React state, independent of responsive menus or DOM controls.
-      window.dispatchEvent(
-        new StorageEvent("storage", {
-          key: "theme",
-          oldValue: previousTheme,
-          newValue: theme,
-          url: window.location.href,
-        }),
-      );
-    } catch (error) {
-      return false;
-    }
-
-    var changed = await waitFor(function () {
-      return currentTheme() === theme ? true : null;
-    }, 2500);
-    return navigationId === themeNavigationId && Boolean(changed);
-  }
-
   window.__sixmmNavigateDocsLocale = navigateDocsLocale;
   window.__sixmmNavigateDocsTheme = navigateDocsTheme;
 
@@ -665,16 +752,6 @@
     if (syncScheduled) return;
     syncScheduled = true;
     window.requestAnimationFrame(syncInterface);
-  }
-
-  function tuneStaticSidebarPrefetch(root) {
-    var sidebar = root && root.getElementById && root.getElementById("fern-sidebar-static");
-    if (!sidebar) return;
-    sidebar.querySelectorAll('a[data-astro-prefetch="viewport"], a[data-astro-prefetch="load"]').forEach(function (link) {
-      // Fern scans the static sidebar before the afterInteractive script runs.
-      // Leave React-owned links to the existing post-hydration bridge.
-      if (!link.closest("astro-island")) link.setAttribute("data-astro-prefetch", "hover");
-    });
   }
 
   // This script loads before interactive content. Set the pathname-derived
@@ -704,7 +781,7 @@
     if (!isMobileViewport()) closeMobileLocaleDialog(false);
   });
   new MutationObserver(function (records) {
-    if (parsingSidebar) tuneStaticSidebarPrefetch(document);
+    if (parsingSidebar) tuneAddedSidebarLinks(records);
     var controls = '.fern-language-selector, .fern-language-dropdown-content, .sixmm-theme-trigger, .fern-header-mobile-menu-button';
     if (records.some(function (record) {
       var target = record.target.nodeType === 1 ? record.target : record.target.parentElement;

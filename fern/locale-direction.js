@@ -27,7 +27,7 @@
       });
       lastLocaleSignature = localeSignature;
     }
-    var firstSegment = lastPathname.split("/").find(Boolean);
+    var firstSegment = window.__sixmmDocsHost.firstPathSegment(lastPathname);
     var locale = localeHtmlLanguages[firstSegment] || localeHtmlLanguages[""] || "en";
     var direction = locale === "ar" ? "rtl" : "ltr";
     if (document.documentElement.lang !== locale) document.documentElement.lang = locale;

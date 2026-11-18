@@ -1,0 +1,71 @@
+#fern-sidebar-scroll-area {
+  scrollbar-color: var(--sixmm-accent) transparent !important;
+}
+
+#fern-sidebar-scroll-area::-webkit-scrollbar-thumb {
+  background: var(--sixmm-accent) !important;
+  background-color: var(--sixmm-accent) !important;
+  border-color: transparent !important;
+  border-radius: 999px;
+}
+
+#fern-sidebar-scroll-area::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+a,
+button,
+[role="button"] {
+  text-underline-offset: 0.18em;
+}
+
+a:focus-visible,
+button:focus-visible,
+[role="button"]:focus-visible {
+  /* Inset focus keeps a single edge instead of adding a second outer frame. */
+  outline: 2px solid var(--sixmm-accent) !important;
+  outline-offset: -2px !important;
+}
+
+:is(header, nav, aside) :is(a, button, [role="button"]) {
+  transition: color 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+:is(header, nav, aside) :is(a, button, [role="button"]):hover,
+:is(header, nav, aside) :is(a, button, [role="button"]):focus-visible {
+  color: var(--sixmm-accent-strong) !important;
+}
+
+:is(header, nav, aside) :is(a, button, [role="button"]):hover svg,
+:is(header, nav, aside) :is(a, button, [role="button"]):focus-visible svg {
+  color: var(--sixmm-accent) !important;
+}
+
+/* Fill the header in both legacy Fern and current Astro layouts so short
+ * locale labels stay centered and long translations can scroll horizontally. */
+.fern-header-tabs > div:has(> [role="tablist"]),
+.fern-header-tabs > astro-island > div:has(> [role="tablist"]) {
+  min-width: 0;
+  flex: 1 1 auto;
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--sixmm-accent-strong) transparent;
+}
+
+.fern-header-tabs > div:has(> [role="tablist"])::-webkit-scrollbar,
+.fern-header-tabs > astro-island > div:has(> [role="tablist"])::-webkit-scrollbar {
+  height: 5px;
+}
+
+.fern-header-tabs > div:has(> [role="tablist"])::-webkit-scrollbar-thumb,
+.fern-header-tabs > astro-island > div:has(> [role="tablist"])::-webkit-scrollbar-thumb {
+  background: var(--sixmm-accent-strong);
+  border-radius: 5px;
+}
+
+.fern-header-tabs [role="tablist"] {
+  width: max-content;
+  margin-inline: auto;
+}

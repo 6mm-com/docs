@@ -1,3 +1,4 @@
+/* Generated from fern/asset-source/support by npm run assets:build. */
 (function () {
   if (window.__sixmmSupportWidgetLoader) return;
   window.__sixmmSupportWidgetLoader = true;
@@ -6,6 +7,7 @@
   // Public SaaS tenant identifier, not a signing secret.
   var APP_KEY = 'app_-ofLSy2QTO0xAI4pkAiQ3Jch';
   var locales = window.__sixmmDocsLocales || [];
+  var host = window.__sixmmDocsHost;
   var localeRoutes = new Map();
   var widgetLanguageRoutes = {};
   locales.forEach(function (locale) {
@@ -43,6 +45,7 @@
   var supportFrameFailed = false;
   var supportDeadline = null;
   var modalProperties = ['overflow', 'position', 'top', 'left', 'right', 'width', 'background', 'padding-right'];
+
   var supportLabels = {
     en: 'Open customer support', ja: 'カスタマーサポートを開く',
     ru: 'Открыть поддержку', 'es-419': 'Abrir atención al cliente',
@@ -177,7 +180,7 @@
     "إعادة المحاولة",
     "إغلاق"
   ]
-};
+  };
 
   function renderSupportStatus() {
     if (!supportStatus) return;
@@ -391,8 +394,7 @@
   }
 
   function currentLocaleRoute() {
-    var firstSegment = window.location.pathname.split('/').find(Boolean) || '';
-    return localeRoutes.get(firstSegment);
+    return localeRoutes.get(host.firstPathSegment(window.location.pathname));
   }
 
   function currentDocsLocale() {
@@ -406,11 +408,7 @@
   }
 
   function currentTheme() {
-    var root = document.documentElement;
-    if (root.classList.contains('dark')) return 'dark';
-    if (root.classList.contains('light')) return 'light';
-    if (root.dataset.theme === 'dark') return 'dark';
-    return 'light';
+    return host.readTheme(document.documentElement);
   }
 
   function currentAccentColor() {

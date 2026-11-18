@@ -3,12 +3,14 @@ import { readFile } from "node:fs/promises";
 import { runInNewContext } from "node:vm";
 
 const script = await readFile(new URL("../fern/docs-interface.js", import.meta.url), "utf8");
+const hostState = await readFile(new URL("../fern/asset-source/js/host-state.js", import.meta.url), "utf8");
 const callbacks = [];
 const tasks = [];
 const listeners = {};
 let observerCount = 0;
 const observerCallbacks = [];
 let fullWalks = 0;
+let labelIndexWrites = 0;
 let islandReady = false;
 let layoutReady = false;
 const layoutIsland = { hasAttribute: () => layoutReady };
@@ -58,6 +60,9 @@ const document = {
 };
 const sandbox = {
   window, document, URL, NodeFilter: { SHOW_ELEMENT: 1, SHOW_TEXT: 4, FILTER_ACCEPT: 1, FILTER_REJECT: 2, FILTER_SKIP: 3 },
+  Map: class extends Map {
+    set(key, value) { labelIndexWrites++; return super.set(key, value); }
+  },
   MutationObserver: class {
     constructor(callback) { observerCount++; observerCallbacks.push(callback); }
     observe() {} disconnect() {}
@@ -70,8 +75,10 @@ function flush() {
     while (tasks.length) tasks.shift()();
   }
 }
+runInNewContext(hostState, sandbox);
 runInNewContext(script, sandbox);
 flush();
+assert.equal(labelIndexWrites, 0, "Do not index all languages on the initial, not-ready pass");
 assert.equal(nodes[0].nodeValue, "Search", "Do not mutate text while React hydration is pending");
 disabled = "false";
 listeners.load();
@@ -90,6 +97,8 @@ assert.equal(nodes[0].nodeValue, "Search", "An outer island effect must not rewr
 assert.equal(attributes.get("aria-label"), "Search", "Accessibility labels also wait for the post-render task");
 flush();
 assert.equal(nodes[0].nodeValue, "بحث");
+const initialIndexWrites = labelIndexWrites;
+assert.ok(initialIndexWrites > 0, "The first eligible pass builds the label index");
 assert.equal(nodes[1].nodeValue, "نسخ الصفحة");
 assert.equal(nodes[2].nodeValue, "Search", "Article, code and embedded applications must remain unchanged");
 assert.equal(nodes[3].nodeValue, "نسخ إلى الحافظة", "Code toolbar controls inside articles must be localized");
@@ -161,4 +170,5 @@ listeners['astro:page-load']();
 flush();
 assert.equal(nodes.at(-1).nodeValue, 'Untranslated navigation heading');
 assert.equal(unrelatedOwnershipChecks, 0, 'Unchanged labels must not visit React ownership');
-console.log("Docs interface regression checks passed: locale edit links, reversible labels, hydration guard and scoped singleton lifecycle.");
+assert.equal(labelIndexWrites, initialIndexWrites, "Navigation and late controls reuse one label index");
+console.log(`Docs interface regression checks passed: hydration, scoped synchronization and label index reuse (0 startup writes; ${initialIndexWrites} deferred writes).`);

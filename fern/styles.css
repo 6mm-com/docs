@@ -1508,3 +1508,28 @@ div[class~="lg:hidden"]
     gap: 1rem;
   }
 }
+
+/* toc-motion-scope:start
+   Fern registers the fill coordinates as inherited lengths and sets their
+   targets on the measured TOC root. Preserve its clip paths and easing, but
+   interpolate the lengths on the fill spans, not on every TOC descendant. */
+@media (prefers-reduced-motion: no-preference) {
+  #fern-toc .toc-root {
+    --sixmm-toc-target-top: var(--toc-fill-top);
+    --sixmm-toc-target-bottom: var(--toc-fill-bottom);
+  }
+
+  #fern-toc .toc-root[data-toc-measured] {
+    transition-property: none;
+  }
+
+  #fern-toc .toc-root :is(.toc-fill, .toc-connector-fill) {
+    --toc-fill-top: var(--sixmm-toc-target-top);
+    --toc-fill-bottom: var(--sixmm-toc-target-bottom);
+  }
+
+  #fern-toc .toc-root[data-toc-measured] :is(.toc-fill, .toc-connector-fill) {
+    transition: --toc-fill-top 0.25s ease-out, --toc-fill-bottom 0.25s ease-out;
+  }
+}
+/* toc-motion-scope:end */
