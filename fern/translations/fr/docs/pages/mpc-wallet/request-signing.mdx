@@ -1,0 +1,74 @@
+---
+title: "MPC · Demande de signature"
+description: "Distinguer l'authentification de demande API de l'autorisation de retrait client et la signature de MPC"
+slug: mpc-wallet/request-signing
+canonical-url: https://docs.6mm.com/fr/mpc-wallet/request-signing
+---
+
+Il existe trois problèmes de signature distincts : authentifier la demande HTTP, autoriser un retrait spécifique et produire la signature blockchain avec les participants MPC. La réussite du premier contrôle ne remplace pas les deux autres.
+
+<span id="authenticate-an-api-request" data-sixmm-canonical-anchor="authenticate-an-api-request" aria-hidden="true"></span>
+
+## Authentifier une requête API
+
+Le API actuel utilise HMAC-SHA256 avec un identifiant de clé et un secret API. Sa requête canonique contient cinq lignes, séparées par une nouvelle ligne, sans nouvelle ligne finale :
+
+```text
+METHOD
+PATH
+SORTED_QUERY
+BODY_SHA256_HEX
+UNIX_TIMESTAMP_SECONDS
+```
+
+Utilisez la méthode HTTP majuscule et demandez le chemin sans l'hôte. Triez les clés de requête, conservez l'ordre des valeurs répétées et appliquez le codage du formulaire URL, y compris `+` pour les espaces. La ligne de requête est vide lorsqu'aucune requête n'existe. Hachez les octets exacts du corps en utilisant SHA-256, y compris le corps vide pour une requête sans corps.
+
+Calculez HMAC-SHA256 en utilisant le secret fourni sous forme de UTF-8 octets ; ne le décodez pas en hexadécimal simplement parce qu'il semble hexadécimal. Encodez le résultat en hexadécimal minuscule. Les champs d'en-tête sont séparés par des espaces :
+
+```text
+Authorization: HMAC-SHA256 keyId=<KEY_ID> signature=<HEX_SIGNATURE> timestamp=<UNIX_SECONDS>
+```
+
+<span id="read-only-signing-example" data-sixmm-canonical-anchor="read-only-signing-example" aria-hidden="true"></span>
+
+## Exemple de signature en lecture seule
+
+Cet assistant de bibliothèque standard construit des en-têtes pour une requête de dépôt ; il n'envoie pas de demande. Chargez les informations d'identification en toute sécurité dans votre application et envoyez le chemin renvoyé inchangé à la base URL fournie pour votre environnement.
+
+```python
+import hashlib
+import hmac
+import time
+from urllib.parse import urlencode
+
+
+def signed_read_headers(key_id, secret, timestamp=None):
+    method = "GET"
+    path = "/api/v1/deposits"
+    query = urlencode(sorted([("page", "1"), ("page_size", "20")]))
+    body = b""
+    ts = str(int(time.time()) if timestamp is None else timestamp)
+    canonical = "\n".join([
+        method, path, query, hashlib.sha256(body).hexdigest(), ts
+    ])
+    signature = hmac.new(
+        secret.encode("utf-8"), canonical.encode("utf-8"), hashlib.sha256
+    ).hexdigest()
+    return path + "?" + query, {
+        "Authorization": (
+            f"HMAC-SHA256 keyId={key_id} signature={signature} timestamp={ts}"
+        )
+    }
+```
+
+Gardez les horloges synchronisées. Un proxy qui modifie le chemin, la requête ou le corps après la signature peut invalider l'authentification. En cas d'échec d'authentification, inspectez le motif de la réponse et l'identifiant de la demande avant de réessayer ; ne consignez jamais l’en-tête secret ou d’autorisation complète.
+
+<span id="authorize-an-api-withdrawal" data-sixmm-canonical-anchor="authorize-an-api-withdrawal" aria-hidden="true"></span>
+
+## Autoriser un retrait de API
+
+Le flux de retrait actuel de l'entreprise API nécessite également une autorisation client Ed25519 en `client_authorization`. Il lie le contexte de transaction prévu, y compris l'identifiant de la demande, la destination, l'actif et le montant. Son enregistrement de clé publique ou sa configuration de confiance dépend de l'accord de garde.
+
+Utilisez le package d'intégration correspondant pour produire la charge utile canonique, la signature et la clé publique. Cette clé d'autorisation est distincte du secret HMAC et des partages MPC. Conserver sa clé privée sous le contrôle du client. Confirmez la version de la charge utile et les règles de validité lors de l'intégration au lieu de créer un format personnalisé à partir de cette présentation.
+
+Une fois la demande acceptée, les contrôles et approbations commerciaux peuvent toujours s'appliquer, suivis d'une signature MPC et d'une confirmation en chaîne. Voir [transactions et tentatives](/fr/mpc-wallet/transactions).

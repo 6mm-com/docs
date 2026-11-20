@@ -1,0 +1,54 @@
+---
+title: "トランザクションと再試行"
+description: "引き出し識別子、非同期結果、再試行、認可の更新を処理します。"
+slug: mpc-wallet/transactions
+canonical-url: https://docs.6mm.com/ja/mpc-wallet/transactions
+---
+
+引き出しは非同期のビジネス操作です。 HTTP 応答が成功した場合は、リクエストが処理されたことを意味します。資金がオンチェーンで到着したことを証明するものではありません。
+
+<span id="persist-one-business-identifier" data-sixmm-canonical-anchor="persist-one-business-identifier" aria-hidden="true"></span>
+
+## 1 つのビジネス ID を保持する
+
+出金を送信する前に `client_request_id` を生成して保存します。プロセスの再起動後など、同じ目的の操作を再試行する場合にこれを再利用します。トランザクションのフィールドの一貫性を保ちます。現在の実装では、ビジネス パラメータが競合する繰り返し識別子は拒否されます。
+
+`Idempotency-Key` ヘッダーだけに依存しないでください。提供された SDK はそのヘッダーを追加できますが、現在の出金重複排除コントラクトは本文フィールド `client_request_id` に基づいています。
+
+<span id="understand-request-data" data-sixmm-canonical-anchor="understand-request-data" aria-hidden="true"></span>
+
+## リクエストデータを理解する
+
+| 分野 | 意味 |
+| --- | --- |
+| `chain_id`、`asset_id` | 合意された環境における識別子 |
+| `to_address`、`amount` | 宛先と文字列として表される正の 10 進数の金額 |
+| `client_request_id` | 安定したビジネスリクエスト識別子 |
+| `dest_memo_type`、`dest_memo` | ネットワークで必要な宛先メモの詳細 |
+| `client_authorization` | API キーで開始された引き出しに対する顧客のトランザクション承認 |
+| `end_user_id` | エンタープライズ API フロー内のオプションのビジネス ユーザー ID |
+
+この表は、完全なリクエスト スキーマではなく、コア フィールドを強調表示しています。統合バージョンに対してプレビュー、料金の確認、保管固有の要件を確認します。バイナリ浮動小数点数を避け、環境間でサンプル チェーンやアセット番号をコピーしないでください。
+
+<span id="follow-the-result" data-sixmm-canonical-anchor="follow-the-result" aria-hidden="true"></span>
+
+## 結果に従ってください
+
+| 状態の例 | 解釈 |
+| --- | --- |
+| `pending_approval`、`pending_platform_review` | ビジネスの承認またはレビューが未処理である |
+| `approved`、`pending_sign` | 承認と署名は別の段階です |
+| `broadcasting`、`pending_chain` | ブロードキャストまたはチェーン確認中です |
+| `broadcast_unverified`、`recovering` | 結果はまだ不確実です。別の転送を作成しないでください |
+| `awaiting_reauthorization` | 同じリクエストに対して新たな顧客の承認が必要になる場合があります |
+| `confirmed` | システムはチェーン確認を記録しました |
+
+このリストは例示的なものであり、変更される可能性があります。未知の状態を成功または失敗にマッピングするのではなく、調査のために保存します。ラベルが失敗または拒否されただけでは、何も署名またはブロードキャストされなかったことを示す十分な証拠にはなりません。
+
+<span id="recover-after-a-timeout" data-sixmm-canonical-anchor="recover-after-a-timeout" aria-hidden="true"></span>
+
+## タイムアウト後に回復する
+
+元の `client_request_id` クエリ パラメーターを使用して `GET /api/v1/withdrawals/by-request` をクエリします。結果が不確かな間は、元の操作のポーリングまたはリコンシルを続けます。認可の更新が必要な場合は、同じ識別子と合意された更新手順を使用してください。
+
+キャンセルは、実際の署名段階とサーバーのチェックによって異なります。元の事業が譲渡されておらず、譲渡できないことが確立された後にのみ、代替事業活動を開始してください。イベントを受信する [webhooks](/ja/mpc-wallet/webhooks-and-sdks)、API クエリを調整パスとして保持します。

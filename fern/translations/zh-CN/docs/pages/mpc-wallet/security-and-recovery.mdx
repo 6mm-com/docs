@@ -1,0 +1,46 @@
+---
+title: "安全与恢复"
+description: "规划 MPC 钱包的人员权限、签名设备与备份恢复责任。"
+slug: mpc-wallet/security-and-recovery
+canonical-url: https://docs.6mm.com/zh-CN/mpc-wallet/security-and-recovery
+---
+
+安全准备应围绕选定的保管方式展开。账户保护、交易审批、MPC 签名参与和恢复材料各自承担不同作用。
+
+<span id="assign-responsibilities" data-sixmm-canonical-anchor="assign-responsibilities" aria-hidden="true"></span>
+
+## 分配职责
+
+在产品允许的范围内，区分日常查看、转账发起、审批、成员管理和开发凭证管理权限。应在目标空间中核对权限，拥有某个空间的访问权，不代表能够操作其他空间。
+
+企业流程应明确谁负责审查收款地址变更和转出申请。参与设备签名时，应先核对页面展示的网络、资产、金额、目标地址和上下文，再作出确认，不能把设备确认当作无需阅读的弹窗。
+
+<span id="keep-credentials-distinct" data-sixmm-canonical-anchor="keep-credentials-distinct" aria-hidden="true"></span>
+
+## 区分不同凭证
+
+| 材料 | 用途 |
+| --- | --- |
+| 账户认证信息 | 登录用户应用 |
+| API 密钥与 Secret | 验证业务后端的 API 请求 |
+| 客户授权签名密钥 | 在要求授权的 API 提现中，确认具体提现内容 |
+| MPC 密钥分片 | 参与钱包的分布式签名 |
+| 备份与恢复材料 | 恢复参与能力，或执行受支持的恢复流程 |
+
+按各自职责保存这些材料。API 密钥不是 MPC 分片，重置账户密码也不等于恢复钱包。登记时只通过相应流程提交公钥，不提交对应的私钥。
+
+<span id="prepare-recovery-before-use" data-sixmm-canonical-anchor="prepare-recovery-before-use" aria-hidden="true"></span>
+
+## 使用前准备恢复方案
+
+开通时记录所需参与方、备份负责人和恢复步骤。将备份妥善保存在不同位置，并在受控环境中验证受支持的恢复过程，同时考虑设备丢失和平台服务不可用两种情况。
+
+自托管不意味着平台能够重新生成客户遗失的分片。如果剩余可用参与方与备份不足以满足钱包要求，资产可能无法再被操作。联合托管同样需要明确恢复安排，不能认为平台参与就一定可以恢复。
+
+<span id="handle-an-unavailable-participant" data-sixmm-canonical-anchor="handle-an-unavailable-participant" aria-hidden="true"></span>
+
+## 处理参与方不可用
+
+先区分临时连接问题、设备离线和签名材料丢失，查看会话与设备状态，再按受支持的恢复或更换流程处理。在核对恢复要求前，不要擦除设备、改变其应用签名身份，或假设分片可以直接搬迁。
+
+备份存在不代表恢复测试已经通过。依赖某项恢复能力前，应确认所用版本交付的流程和工具。

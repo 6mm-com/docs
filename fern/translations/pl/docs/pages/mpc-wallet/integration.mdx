@@ -1,0 +1,50 @@
+---
+title: "MPC · Przegląd integracji"
+description: "Przygotuj integrację portfela korporacyjnego API, weryfikację i uzgadnianie adresów."
+slug: mpc-wallet/integration
+canonical-url: https://docs.6mm.com/pl/mpc-wallet/integration
+---
+
+Przewodniki dla programistów opisują obecną powierzchnię integracji portfela korporacyjnego. MPC Portfel nie został uruchomiony: przykłady punktów końcowych to odniesienia do implementacji, a nie obietnica publicznie dostępnej usługi lub zamrożona umowa API.
+
+<span id="obtain-integration-information" data-sixmm-canonical-anchor="obtain-integration-information" aria-hidden="true"></span>
+
+## Uzyskaj informacje o integracji
+
+Potwierdź bazę testową URL, wersję API, tożsamość obszaru roboczego, model opieki, włączone sieci i zasoby, API uprawnienia, wymagania dotyczące autoryzacji klienta i webhook konfigurację. Identyfikatory sieci i zasobów pochodzą z uzgodnionego środowiska; nie zakładaj, że są one równe identyfikatorom łańcucha publicznego.
+
+Trzymaj dane uwierzytelniające integrację portfela oddzielnie od danych uwierzytelniających handel API. Udostępniona witryna dokumentacji nie zapewnia wymienności usług ani modeli kont.
+
+<span id="connect-the-business-flow" data-sixmm-canonical-anchor="connect-the-business-flow" aria-hidden="true"></span>
+
+## Połącz przepływ biznesowy
+
+1. Utwórz klucz o najniższych uprawnieniach API dla zamierzonego korporacyjnego obszaru roboczego i zachowaj jego tajemnicę na swoim zapleczu.
+2. Przed wprowadzeniem przelewów zweryfikuj podpisane żądanie tylko do odczytu i obsługę błędów.
+3. Przydziel adres odbiorczy dla stabilnego identyfikatora użytkownika biznesowego, a następnie zweryfikuj zwrócony adres i wszelkie notatki.
+4. Otrzymuj zdarzenia depozytowe i uzgadniaj je z zapytaniami API oraz własnymi zapisami.
+5. Dodaj autoryzację wypłaty, stabilne identyfikatory żądań biznesowych i śledzenie wyników.
+
+<span id="core-api-areas" data-sixmm-canonical-anchor="core-api-areas" aria-hidden="true"></span>
+
+## Podstawowe API obszary
+
+| Obszar | Aktualne przykłady tras | Zamiar |
+| --- | --- | --- |
+| Odbiór adresów | `POST /api/v1/addresses`, `GET /api/v1/addresses` | Przydzielaj i wysyłaj zapytania o adresy |
+| Depozyty | `GET /api/v1/deposits`, `GET /api/v1/deposits/{id}` | Śledź przychodzące przelewy |
+| Wypłaty | `POST /api/v1/withdrawals`, `GET /api/v1/withdrawals/{id}` | Złóż wniosek i zapytaj o jego wynik |
+| Poproś o wyszukiwanie | `GET /api/v1/withdrawals/by-request` | Uzgodnij prośbę po niepewnej odpowiedzi |
+| Salda | `GET /api/v1/balances` | Zapytaj o salda biznesowe w autoryzowanym zakresie |
+
+Rejestracja trasy nie oznacza, że ​​każdy klawisz API może wywołać każdą operację. Dostęp do produktu, uprawnienia do obszaru roboczego, tryb nadzoru i inicjalizacja mogą mieć wpływ na dostępność. Interfejsy urządzeń administracyjnych i osobistych wykraczają poza ten proces szybkiego startu w przedsiębiorstwie.
+
+<span id="verify-receiving-addresses" data-sixmm-canonical-anchor="verify-receiving-addresses" aria-hidden="true"></span>
+
+## Sprawdź adresy odbiorcze
+
+Dostarczona implementacja SDK obsługuje certyfikaty podpisanych adresów. Skonfiguruj zaufanych członków lub materiał zaufania określony w pakiecie integracyjnym i niezależnie podaj oczekiwane informacje o obszarze roboczym, łańcuchu i grupie kluczy, jeśli jest to wymagane. Nie czerp wszystkich oczekiwań dotyczących zaufania z tej samej odpowiedzi, którą sprawdzasz.
+
+W przypadku w pełni zarządzanych adresów pul poświadczenie może identyfikować adres należący do platformy, podczas gdy jego przypisanie do klienta pozostaje oświadczeniem po stronie serwera. Nie opisuj tego przypisania jako kryptograficznego dowodu własności klienta.
+
+Kontynuuj z [poproś o podpisanie](/pl/mpc-wallet/request-signing), [transakcje](/pl/mpc-wallet/transactions) I [webhooks i SDKs](/pl/mpc-wallet/webhooks-and-sdks).

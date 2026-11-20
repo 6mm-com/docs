@@ -1,0 +1,48 @@
+---
+title: "Webhooks et SDKs"
+description: "Préparez la vérification de webhook, la gestion des doublons et l'intégration de SDK correspondant à la version."
+slug: mpc-wallet/webhooks-and-sdks
+canonical-url: https://docs.6mm.com/fr/mpc-wallet/webhooks-and-sdks
+---
+
+Webhooks informez votre backend des événements professionnels. Utilisez-les avec les requêtes API afin qu'une livraison retardée ou manquante ne laisse pas vos enregistrements sans solution.
+
+<span id="verify-before-processing" data-sixmm-canonical-anchor="verify-before-processing" aria-hidden="true"></span>
+
+## Vérifier avant de traiter
+
+La livraison actuelle comprend `X-Webhook-Signature` et `X-Webhook-Timestamp`. La signature utilise HMAC-SHA256 sur le texte d'en-tête d'horodatage, un point et le corps brut exact de la requête. Sa valeur d'en-tête a la forme `sha256=<HEX_SIGNATURE>`.
+
+1. Conservez le corps brut avant d'analyser JSON.
+2. Validez l'horodatage en utilisant la tolérance d'horloge convenue.
+3. Vérifiez la signature avec le secret webhook à l'aide d'une comparaison à temps constant.
+4. Ensuite seulement, interprétez la charge utile et mettez à jour les enregistrements commerciaux.
+
+Le reformatage analysé JSON avant la vérification modifie les octets signés. La vérification Webhook utilise le secret webhook, et non le secret de demande API ou la clé d'autorisation du client.
+
+<span id="store-and-deduplicate" data-sixmm-canonical-anchor="store-and-deduplicate" aria-hidden="true"></span>
+
+## Stocker et dédupliquer
+
+L'enveloppe comprend `event_id`, `event_type`, `created_at`, `tenant_id` et `data`. Pour les diffusions d'événements normales, utilisez l'identité d'événement vérifiée avec le contexte de votre point de terminaison ou de votre espace de travail pour empêcher une application répétée. Conservez cette décision de manière atomique avec la mise à jour commerciale qui en résulte, ou mettez durablement l'événement vérifié en file d'attente avant de le reconnaître.
+
+`X-Webhook-Idempotency-Key` est également fourni pour les livraisons normales en boîte d'envoi. Il s'agit de métadonnées de livraison, et non d'un champ de charge utile signé indépendamment. Ne laissez pas un en-tête modifié entraîner le même événement vérifié à déplacer de l'argent deux fois. Les livraisons de tests et les opérations manuelles peuvent avoir des identifiants différents ou omettre cet en-tête.
+
+Renvoie une réponse réussie après avoir accepté l'événement de manière durable. Conception pour les doublons et les événements retardés ou hors service. L’horodatage de livraison ne constitue pas une heure d’occurrence garantie. Interrogez la ressource sous-jacente lorsqu’un événement entre en conflit avec un résultat connu ultérieur.
+
+<span id="choose-the-integration-package" data-sixmm-canonical-anchor="choose-the-integration-package" aria-hidden="true"></span>
+
+## Choisissez le package d'intégration
+
+| Famille de forfaits | Portée actuelle de la mise en œuvre |
+| --- | --- |
+| Allez et Python API SDKs | Adresse, ressources de dépôt et de retrait, signature de demande et aides associées |
+| Go, les assistants Node.js et Python webhook | Webhook assistants de vérification de signature et d'intégration de framework |
+
+Il s’agit de portées d’implémentation source, et non de confirmation de la disponibilité du registre des packages ou de la version générale. Obtenez un package correspondant à la version et ses instructions d’installation lors de l’intégration. D'autres ressources peuvent nécessiter des appels directs API ; ne déduisez pas un client API complet de la présence d'un package webhook.
+
+<span id="test-the-receiving-path" data-sixmm-canonical-anchor="test-the-receiving-path" aria-hidden="true"></span>
+
+## Tester le chemin de réception
+
+Testez une livraison valide, un corps modifié, une signature invalide, un horodatage obsolète, un événement en double et un redémarrage du récepteur. Confirmez les modalités de nouvelle tentative et de relecture avec l'environnement d'intégration. Les rappels manquants devraient déclencher un rapprochement, et non une deuxième demande de retrait.

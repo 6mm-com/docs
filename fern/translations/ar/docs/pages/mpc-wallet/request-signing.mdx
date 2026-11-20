@@ -1,0 +1,74 @@
+---
+title: "MPC · توقيع الطلب"
+description: "قم بتمييز API طلب المصادقة عن ترخيص سحب العميل وتوقيع MPC."
+slug: mpc-wallet/request-signing
+canonical-url: https://docs.6mm.com/ar/mpc-wallet/request-signing
+---
+
+هناك ثلاثة مخاوف منفصلة تتعلق بالتوقيع: مصادقة طلب HTTP، والتفويض بسحب محدد، وإنتاج توقيع blockchain مع المشاركين MPC. اجتياز الشيك الأول لا يحل محل الشيكين الآخرين.
+
+<span id="authenticate-an-api-request" data-sixmm-canonical-anchor="authenticate-an-api-request" aria-hidden="true"></span>
+
+## مصادقة طلب API
+
+يستخدم API الحالي HMAC-SHA256 مع معرف المفتاح والسر API. يحتوي الطلب الأساسي على خمسة أسطر، مفصولة بسطر جديد، بدون سطر جديد لاحق:
+
+```text
+METHOD
+PATH
+SORTED_QUERY
+BODY_SHA256_HEX
+UNIX_TIMESTAMP_SECONDS
+```
+
+استخدم الطريقة الكبيرة HTTP واطلب المسار بدون المضيف. فرز مفاتيح الاستعلام، والاحتفاظ بترتيب القيم المتكررة وتطبيق ترميز النموذج URL، بما في ذلك `+` للمسافات. سطر الاستعلام فارغ في حالة عدم وجود استعلام. قم بتجزئة بايتات النص الدقيقة باستخدام SHA-256، بما في ذلك النص الفارغ للطلب بدون نص.
+
+حساب HMAC-SHA256 باستخدام السر المقدم كـ UTF-8 بايت؛ لا تقم بفك تشفيره لمجرد أنه يبدو سداسيًا عشريًا. قم بتشفير النتيجة على هيئة أحرف صغيرة. حقول الرأس مفصولة بمسافات:
+
+```text
+Authorization: HMAC-SHA256 keyId=<KEY_ID> signature=<HEX_SIGNATURE> timestamp=<UNIX_SECONDS>
+```
+
+<span id="read-only-signing-example" data-sixmm-canonical-anchor="read-only-signing-example" aria-hidden="true"></span>
+
+## مثال للتوقيع للقراءة فقط
+
+يقوم مساعد المكتبة القياسية هذا بإنشاء رؤوس لاستعلام الإيداع؛ لا يرسل طلبا. قم بتحميل بيانات الاعتماد بشكل آمن في التطبيق الخاص بك وأرسل المسار الذي تم إرجاعه دون تغيير إلى القاعدة URL المتوفرة لبيئتك.
+
+```python
+import hashlib
+import hmac
+import time
+from urllib.parse import urlencode
+
+
+def signed_read_headers(key_id, secret, timestamp=None):
+    method = "GET"
+    path = "/api/v1/deposits"
+    query = urlencode(sorted([("page", "1"), ("page_size", "20")]))
+    body = b""
+    ts = str(int(time.time()) if timestamp is None else timestamp)
+    canonical = "\n".join([
+        method, path, query, hashlib.sha256(body).hexdigest(), ts
+    ])
+    signature = hmac.new(
+        secret.encode("utf-8"), canonical.encode("utf-8"), hashlib.sha256
+    ).hexdigest()
+    return path + "?" + query, {
+        "Authorization": (
+            f"HMAC-SHA256 keyId={key_id} signature={signature} timestamp={ts}"
+        )
+    }
+```
+
+حافظ على مزامنة الساعات. يمكن للوكيل الذي يغير المسار أو الاستعلام أو النص بعد التوقيع أن يبطل المصادقة. بالنسبة لفشل المصادقة، افحص سبب الاستجابة ومعرف الطلب قبل إعادة المحاولة؛ لا تقم مطلقًا بتسجيل رأس التفويض السري أو الكامل.
+
+<span id="authorize-an-api-withdrawal" data-sixmm-canonical-anchor="authorize-an-api-withdrawal" aria-hidden="true"></span>
+
+## تفويض API بالانسحاب
+
+يتطلب تدفق السحب الحالي للمؤسسة API أيضًا تصريح عميل Ed25519 في `client_authorization`. فهو يربط سياق المعاملة المقصودة، بما في ذلك معرف الطلب والوجهة والأصل والمبلغ. يعتمد تسجيل المفتاح العام أو تكوين الثقة على ترتيبات الحفظ المفاتيح.
+
+استخدم حزمة التكامل المطابقة لإنتاج الحمولة الأساسية والتوقيع والمفتاح العام. مفتاح التفويض هذا منفصل عن سر HMAC ومشاركات MPC. الاحتفاظ بمفتاحه الخاص تحت سيطرة العميل. قم بتأكيد إصدار الحمولة وقواعد الصلاحية أثناء التكامل بدلاً من إنشاء تنسيق مخصص من هذه النظرة العامة.
+
+بعد قبول الطلب، لا يزال من الممكن تطبيق فحوصات الأعمال والموافقات، متبوعة بتوقيع MPC وتأكيد السلسلة. يرى [المعاملات وإعادة المحاولة](/ar/mpc-wallet/transactions).

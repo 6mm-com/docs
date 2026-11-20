@@ -1,0 +1,48 @@
+---
+title: "Webhooks và SDKs"
+description: "Chuẩn bị xác minh webhook, xử lý trùng lặp và tích hợp SDK phù hợp với phiên bản."
+slug: mpc-wallet/webhooks-and-sdks
+canonical-url: https://docs.6mm.com/vi/mpc-wallet/webhooks-and-sdks
+---
+
+Webhooks thông báo cho bộ phận phụ trợ của bạn về các sự kiện kinh doanh. Hãy sử dụng chúng cùng với các truy vấn API để việc giao hàng bị trì hoãn hoặc thiếu sót không khiến hồ sơ của bạn không được giải quyết.
+
+<span id="verify-before-processing" data-sixmm-canonical-anchor="verify-before-processing" aria-hidden="true"></span>
+
+## Xác minh trước khi xử lý
+
+Việc phân phối hiện tại bao gồm `X-Webhook-Signature` và `X-Webhook-Timestamp`. Chữ ký sử dụng HMAC-SHA256 trên văn bản tiêu đề dấu thời gian, dấu chấm và nội dung yêu cầu thô chính xác. Giá trị tiêu đề của nó có dạng `sha256=<HEX_SIGNATURE>`.
+
+1. Giữ lại phần thân thô trước khi phân tích cú pháp JSON.
+2. Xác thực dấu thời gian bằng cách sử dụng dung sai đồng hồ đã thỏa thuận.
+3. Xác minh chữ ký bằng bí mật webhook bằng cách sử dụng so sánh theo thời gian không đổi.
+4. Chỉ sau đó mới diễn giải tải trọng và cập nhật hồ sơ kinh doanh.
+
+Định dạng lại được phân tích cú pháp JSON trước khi xác minh thay đổi byte đã ký. Việc xác minh Webhook sử dụng bí mật webhook, không phải bí mật yêu cầu API hoặc khóa ủy quyền khách hàng.
+
+<span id="store-and-deduplicate" data-sixmm-canonical-anchor="store-and-deduplicate" aria-hidden="true"></span>
+
+## Lưu trữ và loại bỏ trùng lặp
+
+Phong bì bao gồm `event_id`, `event_type`, `created_at`, `tenant_id` và `data`. Đối với việc phân phối sự kiện thông thường, hãy sử dụng danh tính sự kiện đã xác minh với bối cảnh điểm cuối hoặc không gian làm việc của bạn để ngăn chặn việc áp dụng lặp lại. Kiên trì quyết định đó một cách nguyên tử với bản cập nhật kinh doanh thu được hoặc xếp sự kiện đã được xác minh vào hàng đợi lâu dài trước khi thừa nhận nó.
+
+`X-Webhook-Idempotency-Key` cũng được cung cấp cho các chuyến hàng gửi đi thông thường. Đây là siêu dữ liệu phân phối chứ không phải trường tải trọng được ký độc lập. Đừng để tiêu đề đã thay đổi khiến cùng một sự kiện đã được xác minh chuyển tiền hai lần. Việc giao thử nghiệm và thao tác thủ công có thể có số nhận dạng khác nhau hoặc bỏ qua tiêu đề này.
+
+Trả về phản hồi thành công sau khi chấp nhận sự kiện một cách lâu dài. Thiết kế cho các sự kiện trùng lặp và bị trì hoãn hoặc không theo thứ tự. Dấu thời gian giao hàng không phải là thời gian đảm bảo cho hoạt động kinh doanh. Truy vấn tài nguyên cơ bản khi một sự kiện xung đột với kết quả đã biết sau đó.
+
+<span id="choose-the-integration-package" data-sixmm-canonical-anchor="choose-the-integration-package" aria-hidden="true"></span>
+
+## Chọn gói tích hợp
+
+| Gia đình trọn gói | Phạm vi thực hiện hiện tại |
+| --- | --- |
+| Đi và Python API SDKs | Địa chỉ, nguồn tiền gửi và rút tiền, ký yêu cầu và những người trợ giúp liên quan |
+| Go, những người trợ giúp Node.js và Python webhook | Webhook người trợ giúp xác minh chữ ký và tích hợp khung |
+
+Đây là phạm vi triển khai nguồn, không phải xác nhận tính khả dụng của sổ đăng ký gói hoặc bản phát hành chung. Nhận gói phù hợp với phiên bản và hướng dẫn cài đặt gói đó trong quá trình cài đặt. Các tài nguyên khác có thể yêu cầu các cuộc gọi API trực tiếp; không suy ra một máy khách API đầy đủ từ sự hiện diện của gói webhook.
+
+<span id="test-the-receiving-path" data-sixmm-canonical-anchor="test-the-receiving-path" aria-hidden="true"></span>
+
+## Kiểm tra đường dẫn nhận
+
+Kiểm tra việc gửi hợp lệ, nội dung đã sửa đổi, chữ ký không hợp lệ, dấu thời gian cũ, sự kiện trùng lặp và khởi động lại người nhận. Xác nhận việc thử lại và sắp xếp lại với môi trường tích hợp. Việc thiếu lệnh gọi lại sẽ kích hoạt sự đối chiếu chứ không phải yêu cầu rút tiền thứ hai.

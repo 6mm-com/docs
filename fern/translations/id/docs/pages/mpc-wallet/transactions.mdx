@@ -1,0 +1,54 @@
+---
+title: "Transaksi dan Percobaan Ulang"
+description: "Menangani pengidentifikasi penarikan, hasil asinkron, percobaan ulang, dan pembaruan otorisasi."
+slug: mpc-wallet/transactions
+canonical-url: https://docs.6mm.com/id/mpc-wallet/transactions
+---
+
+Penarikan adalah operasi bisnis yang tidak sinkron. Respons HTTP yang berhasil berarti permintaan telah ditangani; itu tidak menetapkan bahwa dana tiba secara on-chain.
+
+<span id="persist-one-business-identifier" data-sixmm-canonical-anchor="persist-one-business-identifier" aria-hidden="true"></span>
+
+## Pertahankan satu pengenal bisnis
+
+Hasilkan dan simpan `client_request_id` sebelum mengirim penarikan. Gunakan kembali untuk mencoba ulang operasi yang sama, termasuk setelah proses dimulai ulang. Jaga konsistensi bidang transaksi; implementasi saat ini menolak pengidentifikasi berulang dengan parameter bisnis yang bertentangan.
+
+Jangan hanya mengandalkan header `Idempotency-Key` saja. SDK yang disediakan dapat menambahkan header tersebut, tetapi kontrak deduplikasi penarikan saat ini didasarkan pada kolom isi `client_request_id`.
+
+<span id="understand-request-data" data-sixmm-canonical-anchor="understand-request-data" aria-hidden="true"></span>
+
+## Memahami data permintaan
+
+| Bidang | Arti |
+| --- | --- |
+| `chain_id`, `asset_id` | Pengidentifikasi di lingkungan yang disepakati |
+| `to_address`, `amount` | Tujuan dan jumlah desimal positif direpresentasikan sebagai string |
+| `client_request_id` | Pengidentifikasi permintaan bisnis yang stabil |
+| `dest_memo_type`, `dest_memo` | Detail memo tujuan di mana jaringan memerlukannya |
+| `client_authorization` | Otorisasi transaksi pelanggan untuk API-penarikan yang dimulai dengan kunci |
+| `end_user_id` | Pengidentifikasi pengguna bisnis opsional di aliran API perusahaan |
+
+Tabel ini menyoroti bidang inti, bukan skema permintaan lengkap. Konfirmasikan pratinjau, konfirmasi biaya, dan persyaratan khusus penyimpanan kunci terhadap versi integrasi. Hindari jumlah floating-point biner dan jangan menyalin contoh rantai atau nomor aset antar lingkungan.
+
+<span id="follow-the-result" data-sixmm-canonical-anchor="follow-the-result" aria-hidden="true"></span>
+
+## Ikuti hasilnya
+
+| Nyatakan contohnya | Interpretasi |
+| --- | --- |
+| `pending_approval`, `pending_platform_review` | Persetujuan atau peninjauan bisnis masih luar biasa |
+| `approved`, `pending_sign` | Persetujuan dan penandatanganan merupakan tahapan yang terpisah |
+| `broadcasting`, `pending_chain` | Penyiaran atau konfirmasi berantai sedang berlangsung |
+| `broadcast_unverified`, `recovering` | Hasilnya masih belum pasti; jangan membuat transfer lain |
+| `awaiting_reauthorization` | Otorisasi pelanggan baru mungkin diperlukan untuk permintaan yang sama |
+| `confirmed` | Sistem telah mencatat konfirmasi berantai |
+
+Daftar ini bersifat ilustratif dan dapat berkembang. Pertahankan keadaan yang tidak diketahui untuk diselidiki alih-alih memetakannya menuju keberhasilan atau kegagalan. Label yang gagal atau ditolak saja tidak cukup sebagai bukti bahwa tidak ada yang ditandatangani atau disiarkan.
+
+<span id="recover-after-a-timeout" data-sixmm-canonical-anchor="recover-after-a-timeout" aria-hidden="true"></span>
+
+## Pulihkan setelah batas waktu
+
+Kueri `GET /api/v1/withdrawals/by-request` menggunakan parameter kueri `client_request_id` asli. Tetap melakukan polling atau merekonsiliasi operasi awal selama hasilnya tidak pasti. Jika pembaruan otorisasi diperlukan, gunakan pengidentifikasi yang sama dan prosedur pembaruan yang disepakati.
+
+Pembatalan tergantung pada tahap penandatanganan sebenarnya dan pemeriksaan server. Hanya memulai operasi bisnis pengganti setelah yang asli ditetapkan sebagai tidak ditransfer dan tidak dapat ditransfer. Terima acara melalui [webhooks](/id/mpc-wallet/webhooks-and-sdks), dan pertahankan kueri API sebagai jalur rekonsiliasi.

@@ -1,0 +1,48 @@
+---
+title: "Webhooks und SDKs"
+description: "Bereiten Sie die webhook-Verifizierung, die Handhabung von Duplikaten und die versionierte SDK-Integration vor."
+slug: mpc-wallet/webhooks-and-sdks
+canonical-url: https://docs.6mm.com/de/mpc-wallet/webhooks-and-sdks
+---
+
+Webhooks Benachrichtigen Sie Ihr Backend über Geschäftsereignisse. Verwenden Sie sie zusammen mit API-Abfragen, damit eine verspätete oder ausbleibende Zustellung nicht dazu führt, dass Ihre Unterlagen ungelöst bleiben.
+
+<span id="verify-before-processing" data-sixmm-canonical-anchor="verify-before-processing" aria-hidden="true"></span>
+
+## Vor der Verarbeitung prüfen
+
+Die aktuelle Lieferung umfasst `X-Webhook-Signature` und `X-Webhook-Timestamp`. Die Signatur verwendet HMAC-SHA256 über dem Zeitstempel-Headertext, einen Punkt und den genauen rohen Anforderungstext. Sein Header-Wert hat die Form `sha256=<HEX_SIGNATURE>`.
+
+1. Behalten Sie den Rohkörper vor dem Parsen von JSON.
+2. Validieren Sie den Zeitstempel anhand der vereinbarten Uhrtoleranz.
+3. Überprüfen Sie die Signatur mit dem webhook-Geheimnis mithilfe eines Zeitkonstantenvergleichs.
+4. Interpretieren Sie erst dann die Nutzlast und aktualisieren Sie die Geschäftsunterlagen.
+
+Durch die Neuformatierung des geparsten JSON vor der Überprüfung werden die signierten Bytes geändert. Die Webhook-Verifizierung verwendet das webhook-Geheimnis, nicht das API-Anfragegeheimnis oder den Kundenautorisierungsschlüssel.
+
+<span id="store-and-deduplicate" data-sixmm-canonical-anchor="store-and-deduplicate" aria-hidden="true"></span>
+
+## Speichern und deduplizieren
+
+Der Umschlag enthält `event_id`, `event_type`, `created_at`, `tenant_id` und `data`. Verwenden Sie für normale Ereigniszustellungen die verifizierte Ereignisidentität mit Ihrem Endpunkt- oder Arbeitsbereichskontext, um eine wiederholte Anwendung zu verhindern. Behalten Sie diese Entscheidung atomar mit der resultierenden Geschäftsaktualisierung bei oder stellen Sie das verifizierte Ereignis dauerhaft in die Warteschlange, bevor Sie es bestätigen.
+
+`X-Webhook-Idempotency-Key` wird auch für normale Postausgangslieferungen bereitgestellt. Es handelt sich um Liefermetadaten, nicht um ein unabhängig signiertes Nutzlastfeld. Lassen Sie nicht zu, dass ein geänderter Header dazu führt, dass dasselbe verifizierte Ereignis zweimal Geld bewegt. Testlieferungen und manuelle Vorgänge können unterschiedliche Kennungen haben oder diesen Header weglassen.
+
+Geben Sie eine erfolgreiche Antwort zurück, nachdem Sie das Ereignis dauerhaft angenommen haben. Entwerfen Sie für Duplikate und verzögerte oder nicht in der Reihenfolge liegende Ereignisse. Der Zeitstempel der Lieferung ist kein garantierter Zeitpunkt des Geschäftseintritts. Fragen Sie die zugrunde liegende Ressource ab, wenn ein Ereignis mit einem später bekannten Ergebnis in Konflikt steht.
+
+<span id="choose-the-integration-package" data-sixmm-canonical-anchor="choose-the-integration-package" aria-hidden="true"></span>
+
+## Wählen Sie das Integrationspaket
+
+| Paketfamilie | Aktueller Implementierungsumfang |
+| --- | --- |
+| Go und Python API SDKs | Adress-, Ein- und Auszahlungsressourcen, Unterzeichnung von Anfragen und zugehörige Helfer |
+| Go, Node.js und Python webhook-Helfer | Webhook Signaturüberprüfung und Framework-Integrationshilfen |
+
+Hierbei handelt es sich um Quellimplementierungsbereiche, nicht um eine Bestätigung der Verfügbarkeit der Paketregistrierung oder einer allgemeinen Veröffentlichung. Besorgen Sie sich beim Onboarding ein auf die Version abgestimmtes Paket und die zugehörigen Installationsanweisungen. Für andere Ressourcen sind möglicherweise direkte API-Anrufe erforderlich. Schließen Sie nicht auf einen vollständigen API-Client aus der Anwesenheit eines webhook-Pakets.
+
+<span id="test-the-receiving-path" data-sixmm-canonical-anchor="test-the-receiving-path" aria-hidden="true"></span>
+
+## Testen Sie den Empfangspfad
+
+Testen Sie eine gültige Zustellung, einen geänderten Text, eine ungültige Signatur, einen veralteten Zeitstempel, ein doppeltes Ereignis und einen Neustart des Empfängers. Bestätigen Sie die Wiederholungs- und Wiederholungsvereinbarungen mit der Integrationsumgebung. Fehlende Rückrufe sollten eine Versöhnung auslösen, nicht eine zweite Auszahlungsanfrage.

@@ -1,0 +1,48 @@
+---
+title: "Webhook 與 SDK"
+description: "準備 Webhook 驗籤、重複事件處理，以及與接入版本配套的 SDK。"
+slug: mpc-wallet/webhooks-and-sdks
+canonical-url: https://docs.6mm.com/zh-TW/mpc-wallet/webhooks-and-sdks
+---
+
+Webhook 用於向業務後端通知事件。將回調與 API 查詢結合使用，避免投遞延遲或缺失時，業務記錄一直無法核實。
+
+<span id="verify-before-processing" data-sixmm-canonical-anchor="verify-before-processing" aria-hidden="true"></span>
+
+## 先驗籤再處理
+
+當前投遞包含 `X-Webhook-Signature` 與 `X-Webhook-Timestamp`。簽名使用 HMAC-SHA256，輸入為時間戳請求頭原文、一個英文句點和原始請求體字節。簽名頭格式為 `sha256=<HEX_SIGNATURE>`。
+
+1. 解析 JSON 前保留原始請求體。
+2. 按約定的時鐘容差驗證時間戳。
+3. 使用 Webhook Secret 驗籤，並採用恆定時間比較。
+4. 驗證通過後才解釋載荷、更新業務記錄。
+
+解析後重新格式化 JSON 會改變簽名字節。Webhook 使用自己的 Secret ，不使用 API 請求 Secret 或客戶授權簽名密鑰。
+
+<span id="store-and-deduplicate" data-sixmm-canonical-anchor="store-and-deduplicate" aria-hidden="true"></span>
+
+## 保存並去重
+
+事件封裝包含 `event_id`、`event_type`、`created_at`、`tenant_id` 和 `data`。普通事件投遞應結合已驗證的事件標識與端點或空間上下文去重。將去重決定與業務更新原子保存，或先將驗證通過的事件可靠入隊，再確認接收。
+
+普通 outbox 事件投遞還提供 `X-Webhook-Idempotency-Key`。它是投遞元數據，不是獨立簽名的載荷字段。不要讓請求頭變化導致同一個已驗證事件重複改變資金。測試投遞與人工操作可能使用不同標識，或不提供這個請求頭。
+
+可靠接收後再返回成功響應。接收端應能夠處理重複、延遲和亂序事件。投遞時間不保證等於業務實際發生時間；事件與已知的較新結果衝突時，應查詢對應資源核對。
+
+<span id="choose-the-integration-package" data-sixmm-canonical-anchor="choose-the-integration-package" aria-hidden="true"></span>
+
+## 選擇接入包
+
+| 接入包類別 | 當前實現範圍 |
+| --- | --- |
+| Go 與 Python API SDK | 地址、充值、提現資源，請求籤名及相關輔助能力 |
+| Go、Node.js 與 Python Webhook 工具 | 回調簽名驗證及框架接入輔助能力 |
+
+這些說明的是源碼實現範圍，不代表已經發布到包倉庫或正式開放。開通時獲取與環境版本配套的接入包和安裝說明。其他資源可能需要直接調用 API；存在 Webhook 工具包，也不意味著該語言已有完整 API 客戶端。
+
+<span id="test-the-receiving-path" data-sixmm-canonical-anchor="test-the-receiving-path" aria-hidden="true"></span>
+
+## 測試接收鏈路
+
+覆蓋有效投遞、請求體被修改、錯誤簽名、過期時間戳、重複事件和接收端重啟等情況。按接入環境確認重試與重放安排。回調缺失應觸發對賬，而不是重新創建一筆提現。

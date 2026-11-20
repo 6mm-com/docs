@@ -1,0 +1,50 @@
+---
+title: "MPC · Integration Overview"
+description: "Prepare enterprise wallet API integration, address verification and reconciliation."
+slug: mpc-wallet/integration
+canonical-url: https://docs.6mm.com/mpc-wallet/integration
+---
+
+The developer guides describe the current enterprise wallet integration surface. MPC Wallet has not launched: endpoint examples are implementation references, not a promise of a publicly available service or a frozen API contract.
+
+<span data-sixmm-canonical-anchor="obtain-integration-information" aria-hidden="true"></span>
+
+## Obtain integration information
+
+Confirm the test base URL, API version, workspace identity, custody model, enabled networks and assets, API permissions, customer authorization requirements and webhook setup. Network and asset identifiers come from the agreed environment; do not assume they equal public chain identifiers.
+
+Keep wallet integration credentials separate from trading API credentials. A shared documentation site does not make the services or account models interchangeable.
+
+<span data-sixmm-canonical-anchor="connect-the-business-flow" aria-hidden="true"></span>
+
+## Connect the business flow
+
+1. Create a least-privilege API key for the intended enterprise workspace and keep its secret on your backend.
+2. Validate a read-only signed request and error handling before introducing transfers.
+3. Allocate a receiving address for a stable business user identifier, then verify the returned address and any memo.
+4. Receive deposit events and reconcile them with API queries and your own records.
+5. Add withdrawal authorization, stable business request identifiers and result tracking.
+
+<span data-sixmm-canonical-anchor="core-api-areas" aria-hidden="true"></span>
+
+## Core API areas
+
+| Area | Current route examples | Purpose |
+| --- | --- | --- |
+| Receiving addresses | `POST /api/v1/addresses`, `GET /api/v1/addresses` | Allocate and query addresses |
+| Deposits | `GET /api/v1/deposits`, `GET /api/v1/deposits/{id}` | Follow incoming transfers |
+| Withdrawals | `POST /api/v1/withdrawals`, `GET /api/v1/withdrawals/{id}` | Submit a request and query its result |
+| Request lookup | `GET /api/v1/withdrawals/by-request` | Reconcile a request after an uncertain response |
+| Balances | `GET /api/v1/balances` | Query business balances in the authorized scope |
+
+Route registration does not imply every API key can call every operation. Product access, workspace permissions, custody mode and initialization can all affect availability. Administrative and personal device interfaces are outside this enterprise quick-start flow.
+
+<span data-sixmm-canonical-anchor="verify-receiving-addresses" aria-hidden="true"></span>
+
+## Verify receiving addresses
+
+The supplied SDK implementation supports signed address attestations. Configure trusted members or the trust material specified by the integration package, and independently supply the expected workspace, chain and key-group information where required. Do not derive every trust expectation from the same response you are checking.
+
+For fully managed pool addresses, an attestation can identify a platform-owned address while its assignment to a customer remains a server-side statement. Do not describe that assignment as a cryptographic proof of customer ownership.
+
+Continue with [request signing](/mpc-wallet/request-signing), [transactions](/mpc-wallet/transactions) and [webhooks and SDKs](/mpc-wallet/webhooks-and-sdks).

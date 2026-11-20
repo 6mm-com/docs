@@ -1,0 +1,48 @@
+---
+title: "Webhooks and SDKs"
+description: "Prepare webhook verification, duplicate handling and version-matched SDK integration."
+slug: mpc-wallet/webhooks-and-sdks
+canonical-url: https://docs.6mm.com/mpc-wallet/webhooks-and-sdks
+---
+
+Webhooks notify your backend about business events. Use them together with API queries so that delayed or missing delivery does not leave your records unresolved.
+
+<span data-sixmm-canonical-anchor="verify-before-processing" aria-hidden="true"></span>
+
+## Verify before processing
+
+The current delivery includes `X-Webhook-Signature` and `X-Webhook-Timestamp`. The signature uses HMAC-SHA256 over the timestamp header text, a dot and the exact raw request body. Its header value has the form `sha256=<HEX_SIGNATURE>`.
+
+1. Retain the raw body before parsing JSON.
+2. Validate the timestamp using the agreed clock tolerance.
+3. Verify the signature with the webhook secret using a constant-time comparison.
+4. Only then interpret the payload and update business records.
+
+Reformatting parsed JSON before verification changes the signed bytes. Webhook verification uses the webhook secret, not the API request secret or customer authorization key.
+
+<span data-sixmm-canonical-anchor="store-and-deduplicate" aria-hidden="true"></span>
+
+## Store and deduplicate
+
+The envelope includes `event_id`, `event_type`, `created_at`, `tenant_id` and `data`. For normal event deliveries, use the verified event identity with your endpoint or workspace context to prevent repeated application. Persist that decision atomically with the resulting business update, or durably enqueue the verified event before acknowledging it.
+
+`X-Webhook-Idempotency-Key` is also provided for normal outbox deliveries. It is delivery metadata, not an independently signed payload field. Do not let a changed header cause the same verified event to move money twice. Test deliveries and manual operations may have different identifiers or omit this header.
+
+Return a successful response after accepting the event durably. Design for duplicates and delayed or out-of-order events. The delivery timestamp is not a guaranteed business occurrence time. Query the underlying resource when an event conflicts with a later known result.
+
+<span data-sixmm-canonical-anchor="choose-the-integration-package" aria-hidden="true"></span>
+
+## Choose the integration package
+
+| Package family | Current implementation scope |
+| --- | --- |
+| Go and Python API SDKs | Address, deposit and withdrawal resources, request signing and related helpers |
+| Go, Node.js and Python webhook helpers | Webhook signature verification and framework integration helpers |
+
+These are source implementation scopes, not confirmation of package registry availability or general release. Obtain a version-matched package and its installation instructions during onboarding. Other resources may require direct API calls; do not infer a full API client from the presence of a webhook package.
+
+<span data-sixmm-canonical-anchor="test-the-receiving-path" aria-hidden="true"></span>
+
+## Test the receiving path
+
+Test a valid delivery, modified body, invalid signature, stale timestamp, duplicate event and receiver restart. Confirm retry and replay arrangements with the integration environment. Missing callbacks should trigger reconciliation, not a second withdrawal request.

@@ -1,0 +1,54 @@
+---
+title: "Transaktionen und Wiederholungsversuche"
+description: "Behandeln Sie Auszahlungskennungen, asynchrone Ergebnisse, Wiederholungsversuche und Autorisierungserneuerungen."
+slug: mpc-wallet/transactions
+canonical-url: https://docs.6mm.com/de/mpc-wallet/transactions
+---
+
+Eine Auszahlung ist ein asynchroner Geschäftsvorgang. Eine erfolgreiche HTTP-Antwort bedeutet, dass die Anfrage bearbeitet wurde; Es wird nicht nachgewiesen, dass die Gelder in der Kette angekommen sind.
+
+<span id="persist-one-business-identifier" data-sixmm-canonical-anchor="persist-one-business-identifier" aria-hidden="true"></span>
+
+## Behalten Sie eine Geschäftskennung bei
+
+Generieren und speichern Sie `client_request_id`, bevor Sie eine Auszahlung senden. Verwenden Sie es für Wiederholungsversuche desselben beabsichtigten Vorgangs, auch nach einem Prozessneustart. Halten Sie die Felder der Transaktion konsistent. Die aktuelle Implementierung lehnt einen wiederholten Bezeichner mit widersprüchlichen Geschäftsparametern ab.
+
+Verlassen Sie sich nicht nur auf einen `Idempotency-Key`-Header. Der bereitgestellte SDK kann diesen Header hinzufügen, aber der aktuelle Auszahlungs-Deduplizierungsvertrag basiert auf dem Textfeld `client_request_id`.
+
+<span id="understand-request-data" data-sixmm-canonical-anchor="understand-request-data" aria-hidden="true"></span>
+
+## Anforderungsdaten verstehen
+
+| Feld | Bedeutung |
+| --- | --- |
+| `chain_id`, `asset_id` | Bezeichner in der vereinbarten Umgebung |
+| `to_address`, `amount` | Ziel und ein positiver Dezimalbetrag, dargestellt als Zeichenfolge |
+| `client_request_id` | Stabile Kennung der Geschäftsanfrage |
+| `dest_memo_type`, `dest_memo` | Zielmemodetails, sofern das Netzwerk sie benötigt |
+| `client_authorization` | Autorisierung von Kundentransaktionen für mit dem API-Schlüssel initiierte Abhebungen |
+| `end_user_id` | Optionaler Geschäftsbenutzerbezeichner im Unternehmensablauf API. |
+
+In dieser Tabelle werden Kernfelder hervorgehoben, kein vollständiges Anforderungsschema. Überprüfen Sie Vorschau, Gebührenbestätigung und verwahrungsspezifische Anforderungen anhand der Integrationsversion. Vermeiden Sie binäre Gleitkommabeträge und kopieren Sie keine Beispielketten- oder Asset-Nummern zwischen Umgebungen.
+
+<span id="follow-the-result" data-sixmm-canonical-anchor="follow-the-result" aria-hidden="true"></span>
+
+## Verfolgen Sie das Ergebnis
+
+| Staatliche Beispiele | Interpretation |
+| --- | --- |
+| `pending_approval`, `pending_platform_review` | Eine geschäftliche Genehmigung oder Bewertung steht noch aus |
+| `approved`, `pending_sign` | Genehmigung und Unterzeichnung sind separate Schritte |
+| `broadcasting`, `pending_chain` | Die Übertragung oder Kettenbestätigung wird ausgeführt |
+| `broadcast_unverified`, `recovering` | Der Ausgang ist noch ungewiss; Erstellen Sie keine weitere Übertragung |
+| `awaiting_reauthorization` | Für dieselbe Anfrage ist möglicherweise eine erneute Kundenautorisierung erforderlich |
+| `confirmed` | Das System hat die Kettenbestätigung erfasst |
+
+Die Liste dient der Veranschaulichung und kann sich weiterentwickeln. Bewahren Sie unbekannte Zustände zur Untersuchung auf, anstatt sie auf Erfolg oder Misserfolg zurückzuführen. Ein fehlgeschlagenes oder abgelehntes Etikett allein ist kein ausreichender Beweis dafür, dass nichts unterzeichnet oder ausgestrahlt wurde.
+
+<span id="recover-after-a-timeout" data-sixmm-canonical-anchor="recover-after-a-timeout" aria-hidden="true"></span>
+
+## Wiederherstellung nach einer Zeitüberschreitung
+
+Fragen Sie `GET /api/v1/withdrawals/by-request` mit dem ursprünglichen Abfrageparameter `client_request_id` ab. Führen Sie weiterhin eine Abfrage oder einen Abgleich des ursprünglichen Vorgangs durch, solange das Ergebnis ungewiss ist. Wenn eine Erneuerung der Autorisierung erforderlich ist, verwenden Sie dieselbe Kennung und das vereinbarte Erneuerungsverfahren.
+
+Die Stornierung hängt von der tatsächlichen Signierphase und den Prüfungen des Servers ab. Starten Sie einen Ersatzgeschäftsbetrieb erst, wenn festgestellt wurde, dass der ursprüngliche Geschäftsbetrieb nicht übertragen wurde und nicht übertragen werden kann. Erhalten Sie Ereignisse über [webhooks](/de/mpc-wallet/webhooks-and-sdks)und behalten Sie API-Abfragen als Abgleichspfad bei.

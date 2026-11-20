@@ -1,0 +1,54 @@
+---
+title: "交易状态与重试"
+description: "处理提现请求编号、异步结果、重试与授权续期，避免重复转账。"
+slug: mpc-wallet/transactions
+canonical-url: https://docs.6mm.com/zh-CN/mpc-wallet/transactions
+---
+
+提现是一项异步业务操作。HTTP 响应成功表示请求得到了处理，并不能证明资金已经在链上到账。
+
+<span id="persist-one-business-identifier" data-sixmm-canonical-anchor="persist-one-business-identifier" aria-hidden="true"></span>
+
+## 持久化一个业务编号
+
+发送提现前生成并保存 `client_request_id`。同一笔预期操作的重试，包括进程重启后的重试，都应复用它，并保持交易字段一致。当前实现会拒绝同一编号下业务参数冲突的重复请求。
+
+不要只依赖 `Idempotency-Key` 请求头。配套 SDK 可以添加该头，但当前提现去重契约以请求体中的 `client_request_id` 为依据。
+
+<span id="understand-request-data" data-sixmm-canonical-anchor="understand-request-data" aria-hidden="true"></span>
+
+## 理解请求数据
+
+| 字段 | 含义 |
+| --- | --- |
+| `chain_id`、`asset_id` | 约定环境中的网络与资产编号 |
+| `to_address`、`amount` | 目标地址，以及用字符串表示的正十进制金额 |
+| `client_request_id` | 稳定的业务请求编号 |
+| `dest_memo_type`、`dest_memo` | 网络要求的目标备注信息 |
+| `client_authorization` | 通过 API 密钥发起提现时的客户交易授权 |
+| `end_user_id` | 企业 API 流程中可选的业务用户编号 |
+
+此表说明核心字段，不是完整请求结构。预览、费用确认和不同托管方式的要求，需要按接入版本核对。避免使用二进制浮点数表示金额，也不要跨环境照搬示例中的链或资产编号。
+
+<span id="follow-the-result" data-sixmm-canonical-anchor="follow-the-result" aria-hidden="true"></span>
+
+## 跟踪处理结果
+
+| 状态示例 | 含义 |
+| --- | --- |
+| `pending_approval`、`pending_platform_review` | 等待业务审批或复核 |
+| `approved`、`pending_sign` | 审批与签名处于不同阶段 |
+| `broadcasting`、`pending_chain` | 正在广播或等待链上确认 |
+| `broadcast_unverified`、`recovering` | 结果仍不确定，不应另发一笔 |
+| `awaiting_reauthorization` | 可能需要为原请求重新提供客户授权 |
+| `confirmed` | 系统已记录链上确认结果 |
+
+以上为示例，状态集合可能继续演进。遇到未知状态应保留原值并跟进，不能直接当作成功或失败。仅凭“失败”或“驳回”标签，也不足以证明交易从未签名或广播。
+
+<span id="recover-after-a-timeout" data-sixmm-canonical-anchor="recover-after-a-timeout" aria-hidden="true"></span>
+
+## 超时后的处理
+
+通过 `GET /api/v1/withdrawals/by-request` 查询，在查询参数中传入原来的 `client_request_id`。结果不明确时，继续查询或对账原操作。如果需要更新授权，仍使用同一编号，并按约定流程续期。
+
+是否允许取消取决于真实签名阶段和服务端检查。只有确认原交易未转出、且之后也不可能转出时，才发起替代的业务操作。通过 [Webhook](/zh-CN/mpc-wallet/webhooks-and-sdks) 接收事件，同时保留 API 查询作为对账途径。

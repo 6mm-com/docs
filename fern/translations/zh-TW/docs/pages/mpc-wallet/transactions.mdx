@@ -1,0 +1,54 @@
+---
+title: "交易狀態與重試"
+description: "處理提現請求編號、異步結果、重試與授權續期，避免重複轉賬。"
+slug: mpc-wallet/transactions
+canonical-url: https://docs.6mm.com/zh-TW/mpc-wallet/transactions
+---
+
+提現是一項異步業務操作。HTTP 響應成功表示請求得到了處理，並不能證明資金已經在鏈上到賬。
+
+<span id="persist-one-business-identifier" data-sixmm-canonical-anchor="persist-one-business-identifier" aria-hidden="true"></span>
+
+## 持久化一個業務編號
+
+發送提現前生成並保存 `client_request_id`。同一筆預期操作的重試，包括進程重啟後的重試，都應複用它，並保持交易字段一致。當前實現會拒絕同一編號下業務參數衝突的重複請求。
+
+不要只依賴 `Idempotency-Key` 請求頭。配套 SDK 可以添加該頭，但當前提現去重契約以請求體中的 `client_request_id` 為依據。
+
+<span id="understand-request-data" data-sixmm-canonical-anchor="understand-request-data" aria-hidden="true"></span>
+
+## 理解請求數據
+
+| 字段 | 含義 |
+| --- | --- |
+| `chain_id`、`asset_id` | 約定環境中的網絡與資產編號 |
+| `to_address`、`amount` | 目標地址，以及用字符串表示的正十進制金額 |
+| `client_request_id` | 穩定的業務請求編號 |
+| `dest_memo_type`、`dest_memo` | 網絡要求的目標備註信息 |
+| `client_authorization` | 通過 API 密鑰發起提現時的客戶交易授權 |
+| `end_user_id` | 企業 API 流程中可選的業務用戶編號 |
+
+此表說明核心字段，不是完整請求結構。預覽、費用確認和不同託管方式的要求，需要按接入版本核對。避免使用二進制浮點數表示金額，也不要跨環境照搬示例中的鏈或資產編號。
+
+<span id="follow-the-result" data-sixmm-canonical-anchor="follow-the-result" aria-hidden="true"></span>
+
+## 跟蹤處理結果
+
+| 狀態示例 | 含義 |
+| --- | --- |
+| `pending_approval`、`pending_platform_review` | 等待業務審批或複核 |
+| `approved`、`pending_sign` | 審批與簽名處於不同階段 |
+| `broadcasting`、`pending_chain` | 正在廣播或等待鏈上確認 |
+| `broadcast_unverified`、`recovering` | 結果仍不確定，不應另發一筆 |
+| `awaiting_reauthorization` | 可能需要為原請求重新提供客戶授權 |
+| `confirmed` | 系統已記錄鏈上確認結果 |
+
+以上為示例，狀態集合可能繼續演進。遇到未知狀態應保留原值並跟進，不能直接當作成功或失敗。僅憑“失敗”或“駁回”標籤，也不足以證明交易從未簽名或廣播。
+
+<span id="recover-after-a-timeout" data-sixmm-canonical-anchor="recover-after-a-timeout" aria-hidden="true"></span>
+
+## 超時後的處理
+
+通過 `GET /api/v1/withdrawals/by-request` 查詢，在查詢參數中傳入原來的 `client_request_id`。結果不明確時，繼續查詢或對賬原操作。如果需要更新授權，仍使用同一編號，並按約定流程續期。
+
+是否允許取消取決於真實簽名階段和服務端檢查。只有確認原交易未轉出、且之後也不可能轉出時，才發起替代的業務操作。通過 [Webhook](/zh-TW/mpc-wallet/webhooks-and-sdks) 接收事件，同時保留 API 查詢作為對賬途徑。

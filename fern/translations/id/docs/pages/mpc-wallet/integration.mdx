@@ -1,0 +1,50 @@
+---
+title: "MPC · Ikhtisar Integrasi"
+description: "Mempersiapkan integrasi dompet perusahaan API, verifikasi alamat dan rekonsiliasi."
+slug: mpc-wallet/integration
+canonical-url: https://docs.6mm.com/id/mpc-wallet/integration
+---
+
+Panduan pengembang menjelaskan permukaan integrasi dompet perusahaan saat ini. MPC Dompet belum diluncurkan: contoh titik akhir adalah referensi implementasi, bukan janji layanan yang tersedia untuk umum atau kontrak API yang dibekukan.
+
+<span id="obtain-integration-information" data-sixmm-canonical-anchor="obtain-integration-information" aria-hidden="true"></span>
+
+## Dapatkan informasi integrasi
+
+Konfirmasikan versi URL, API basis pengujian, identitas ruang kerja, model penyimpanan, jaringan dan aset yang diaktifkan, izin API, persyaratan otorisasi pelanggan, dan penyiapan webhook. Pengidentifikasi jaringan dan aset berasal dari lingkungan yang disepakati; jangan berasumsi bahwa keduanya sama dengan pengidentifikasi rantai publik.
+
+Pisahkan kredensial integrasi dompet dari kredensial perdagangan API. Situs dokumentasi bersama tidak membuat layanan atau model akun dapat dipertukarkan.
+
+<span id="connect-the-business-flow" data-sixmm-canonical-anchor="connect-the-business-flow" aria-hidden="true"></span>
+
+## Hubungkan alur bisnis
+
+1. Buat kunci API dengan hak istimewa paling rendah untuk ruang kerja perusahaan yang dimaksud dan jaga rahasianya di backend Anda.
+2. Validasi permintaan yang ditandatangani hanya-baca dan penanganan kesalahan sebelum melakukan transfer.
+3. Alokasikan alamat penerima untuk pengidentifikasi pengguna bisnis yang stabil, lalu verifikasi alamat pengirim dan memo apa pun.
+4. Terima peristiwa setoran dan rekonsiliasi dengan pertanyaan API dan catatan Anda sendiri.
+5. Tambahkan otorisasi penarikan, pengidentifikasi permintaan bisnis yang stabil, dan pelacakan hasil.
+
+<span id="core-api-areas" data-sixmm-canonical-anchor="core-api-areas" aria-hidden="true"></span>
+
+## Area inti API
+
+| Daerah | Contoh rute saat ini | Tujuan |
+| --- | --- | --- |
+| Menerima alamat | `POST /api/v1/addresses`, `GET /api/v1/addresses` | Alokasikan dan tanyakan alamat |
+| Deposito | `GET /api/v1/deposits`, `GET /api/v1/deposits/{id}` | Ikuti transfer masuk |
+| Penarikan | `POST /api/v1/withdrawals`, `GET /api/v1/withdrawals/{id}` | Kirimkan permintaan dan tanyakan hasilnya |
+| Minta pencarian | `GET /api/v1/withdrawals/by-request` | Rekonsiliasi permintaan setelah tanggapan yang tidak pasti |
+| Saldo | `GET /api/v1/balances` | Permintaan saldo bisnis dalam lingkup resmi |
+
+Pendaftaran rute tidak berarti setiap kunci API dapat memanggil setiap operasi. Akses produk, izin ruang kerja, mode penyimpanan, dan inisialisasi semuanya dapat memengaruhi ketersediaan. Antarmuka perangkat administratif dan pribadi berada di luar alur mulai cepat perusahaan ini.
+
+<span id="verify-receiving-addresses" data-sixmm-canonical-anchor="verify-receiving-addresses" aria-hidden="true"></span>
+
+## Verifikasi alamat penerima
+
+Implementasi SDK yang disediakan mendukung pengesahan alamat yang ditandatangani. Konfigurasikan anggota tepercaya atau materi kepercayaan yang ditentukan oleh paket integrasi, dan secara mandiri berikan informasi ruang kerja, rantai, dan grup kunci yang diharapkan jika diperlukan. Jangan memperoleh setiap ekspektasi kepercayaan dari respons yang sama dengan yang Anda periksa.
+
+Untuk alamat kumpulan yang dikelola sepenuhnya, pengesahan dapat mengidentifikasi alamat milik platform sementara penetapannya ke pelanggan tetap merupakan pernyataan sisi server. Jangan menggambarkan penugasan tersebut sebagai bukti kriptografi kepemilikan pelanggan.
+
+Lanjutkan dengan [penandatanganan permintaan](/id/mpc-wallet/request-signing), [transaksi](/id/mpc-wallet/transactions) Dan [webhooks dan SDKs](/id/mpc-wallet/webhooks-and-sdks).

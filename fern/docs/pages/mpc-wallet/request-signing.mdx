@@ -1,0 +1,74 @@
+---
+title: "MPC · Request Signing"
+description: "Distinguish API request authentication from customer withdrawal authorization and MPC signing."
+slug: mpc-wallet/request-signing
+canonical-url: https://docs.6mm.com/mpc-wallet/request-signing
+---
+
+There are three separate signing concerns: authenticating the HTTP request, authorizing a specific withdrawal, and producing the blockchain signature with MPC participants. Passing the first check does not replace the other two.
+
+<span data-sixmm-canonical-anchor="authenticate-an-api-request" aria-hidden="true"></span>
+
+## Authenticate an API request
+
+The current API uses HMAC-SHA256 with an API key identifier and secret. Its canonical request contains five lines, separated by a newline, with no trailing newline:
+
+```text
+METHOD
+PATH
+SORTED_QUERY
+BODY_SHA256_HEX
+UNIX_TIMESTAMP_SECONDS
+```
+
+Use the uppercase HTTP method and request path without the host. Sort query keys, retain the order of repeated values and apply form URL encoding, including `+` for spaces. The query line is empty when no query exists. Hash the exact body bytes using SHA-256, including the empty body for a bodyless request.
+
+Compute HMAC-SHA256 using the supplied secret as UTF-8 bytes; do not hex-decode it merely because it looks hexadecimal. Encode the result as lowercase hex. The header fields are space-separated:
+
+```text
+Authorization: HMAC-SHA256 keyId=<KEY_ID> signature=<HEX_SIGNATURE> timestamp=<UNIX_SECONDS>
+```
+
+<span data-sixmm-canonical-anchor="read-only-signing-example" aria-hidden="true"></span>
+
+## Read-only signing example
+
+This standard-library helper constructs headers for a deposit query; it does not send a request. Load credentials securely in your application and send the returned path unchanged to the base URL supplied for your environment.
+
+```python
+import hashlib
+import hmac
+import time
+from urllib.parse import urlencode
+
+
+def signed_read_headers(key_id, secret, timestamp=None):
+    method = "GET"
+    path = "/api/v1/deposits"
+    query = urlencode(sorted([("page", "1"), ("page_size", "20")]))
+    body = b""
+    ts = str(int(time.time()) if timestamp is None else timestamp)
+    canonical = "\n".join([
+        method, path, query, hashlib.sha256(body).hexdigest(), ts
+    ])
+    signature = hmac.new(
+        secret.encode("utf-8"), canonical.encode("utf-8"), hashlib.sha256
+    ).hexdigest()
+    return path + "?" + query, {
+        "Authorization": (
+            f"HMAC-SHA256 keyId={key_id} signature={signature} timestamp={ts}"
+        )
+    }
+```
+
+Keep clocks synchronized. A proxy that changes the path, query or body after signing can invalidate authentication. For authentication failures, inspect the response reason and request identifier before retrying; never log the secret or full authorization header.
+
+<span data-sixmm-canonical-anchor="authorize-an-api-withdrawal" aria-hidden="true"></span>
+
+## Authorize an API withdrawal
+
+The current enterprise API withdrawal flow also requires an Ed25519 customer authorization in `client_authorization`. It binds the intended transaction context, including the request identifier, destination, asset and amount. Its public-key registration or trust configuration depends on the custody arrangement.
+
+Use the matching integration package to produce the canonical payload, signature and public key. This authorization key is separate from the HMAC secret and MPC shares. Preserve its private key under customer control. Confirm the payload version and validity rules during integration instead of building a custom format from this overview.
+
+After the request is accepted, business checks and approvals can still apply, followed by MPC signing and chain confirmation. See [transactions and retries](/mpc-wallet/transactions).

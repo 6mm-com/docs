@@ -1,0 +1,74 @@
+---
+title: "MPC · Signieren anfordern"
+description: "Unterscheiden Sie die API-Anforderungsauthentifizierung von der Kundenabhebungsautorisierung und der MPC-Signierung."
+slug: mpc-wallet/request-signing
+canonical-url: https://docs.6mm.com/de/mpc-wallet/request-signing
+---
+
+Es gibt drei verschiedene Signaturprobleme: die Authentifizierung der HTTP-Anfrage, die Autorisierung einer bestimmten Auszahlung und die Erstellung der Blockchain-Signatur mit MPC-Teilnehmern. Das Bestehen der ersten Prüfung ersetzt nicht die beiden anderen.
+
+<span id="authenticate-an-api-request" data-sixmm-canonical-anchor="authenticate-an-api-request" aria-hidden="true"></span>
+
+## Authentifizieren Sie eine API-Anfrage
+
+Der aktuelle API verwendet HMAC-SHA256 mit einer API Schlüsselkennung und einem Geheimnis. Seine kanonische Anfrage enthält fünf Zeilen, getrennt durch eine neue Zeile, ohne abschließende neue Zeile:
+
+```text
+METHOD
+PATH
+SORTED_QUERY
+BODY_SHA256_HEX
+UNIX_TIMESTAMP_SECONDS
+```
+
+Verwenden Sie die Methode HTTP in Großbuchstaben und den Anforderungspfad ohne den Host. Sortieren Sie Abfrageschlüssel, behalten Sie die Reihenfolge der wiederholten Werte bei und wenden Sie die Kodierung im Format URL an, einschließlich `+` für Leerzeichen. Die Abfragezeile ist leer, wenn keine Abfrage vorhanden ist. Hashen Sie die genauen Body-Bytes mit SHA-256, einschließlich des leeren Bodys für eine Bodyless-Anfrage.
+
+Berechnen Sie HMAC-SHA256 unter Verwendung des bereitgestellten Geheimnisses als UTF-8 Bytes; Dekodieren Sie es nicht hexadezimal, nur weil es hexadezimal aussieht. Kodieren Sie das Ergebnis als Kleinbuchstaben-Hexadezimalbuchstabe. Die Header-Felder sind durch Leerzeichen getrennt:
+
+```text
+Authorization: HMAC-SHA256 keyId=<KEY_ID> signature=<HEX_SIGNATURE> timestamp=<UNIX_SECONDS>
+```
+
+<span id="read-only-signing-example" data-sixmm-canonical-anchor="read-only-signing-example" aria-hidden="true"></span>
+
+## Beispiel für schreibgeschütztes Signieren
+
+Dieser Standardbibliothekshelfer erstellt Header für eine Einzahlungsabfrage. Es wird keine Anfrage gesendet. Laden Sie Anmeldeinformationen sicher in Ihre Anwendung und senden Sie den zurückgegebenen Pfad unverändert an die für Ihre Umgebung bereitgestellte Basis URL.
+
+```python
+import hashlib
+import hmac
+import time
+from urllib.parse import urlencode
+
+
+def signed_read_headers(key_id, secret, timestamp=None):
+    method = "GET"
+    path = "/api/v1/deposits"
+    query = urlencode(sorted([("page", "1"), ("page_size", "20")]))
+    body = b""
+    ts = str(int(time.time()) if timestamp is None else timestamp)
+    canonical = "\n".join([
+        method, path, query, hashlib.sha256(body).hexdigest(), ts
+    ])
+    signature = hmac.new(
+        secret.encode("utf-8"), canonical.encode("utf-8"), hashlib.sha256
+    ).hexdigest()
+    return path + "?" + query, {
+        "Authorization": (
+            f"HMAC-SHA256 keyId={key_id} signature={signature} timestamp={ts}"
+        )
+    }
+```
+
+Halten Sie die Uhren synchron. Ein Proxy, der den Pfad, die Abfrage oder den Text nach dem Signieren ändert, kann die Authentifizierung ungültig machen. Überprüfen Sie bei Authentifizierungsfehlern den Antwortgrund und die Anforderungskennung, bevor Sie es erneut versuchen. Protokollieren Sie niemals den geheimen oder vollständigen Autorisierungsheader.
+
+<span id="authorize-an-api-withdrawal" data-sixmm-canonical-anchor="authorize-an-api-withdrawal" aria-hidden="true"></span>
+
+## Autorisieren Sie eine Auszahlung von API.
+
+Der aktuelle Auszahlungsablauf für Unternehmen API erfordert außerdem eine Ed25519-Kundenautorisierung in `client_authorization`. Es bindet den beabsichtigten Transaktionskontext, einschließlich der Anforderungskennung, des Ziels, des Vermögenswerts und des Betrags. Die Registrierung des öffentlichen Schlüssels oder die Vertrauenskonfiguration hängen von der Verwahrungsvereinbarung ab.
+
+Verwenden Sie das passende Integrationspaket, um die kanonische Nutzlast, Signatur und den öffentlichen Schlüssel zu erstellen. Dieser Autorisierungsschlüssel ist vom HMAC-Geheimnis und den MPC-Freigaben getrennt. Bewahren Sie den privaten Schlüssel unter der Kontrolle des Kunden auf. Bestätigen Sie die Payload-Version und die Gültigkeitsregeln während der Integration, anstatt anhand dieser Übersicht ein benutzerdefiniertes Format zu erstellen.
+
+Nachdem die Anfrage angenommen wurde, können weiterhin geschäftliche Prüfungen und Genehmigungen durchgeführt werden, gefolgt von einer MPC-Signatur und einer Kettenbestätigung. Sehen [Transaktionen und Wiederholungsversuche](/de/mpc-wallet/transactions).

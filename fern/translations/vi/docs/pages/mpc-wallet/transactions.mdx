@@ -1,0 +1,54 @@
+---
+title: "Giao dịch và thử lại"
+description: "Xử lý số nhận dạng rút tiền, kết quả không đồng bộ, thử lại và gia hạn ủy quyền."
+slug: mpc-wallet/transactions
+canonical-url: https://docs.6mm.com/vi/mpc-wallet/transactions
+---
+
+Rút tiền là một hoạt động kinh doanh không đồng bộ. Phản hồi HTTP thành công có nghĩa là yêu cầu đã được xử lý; nó không chứng minh rằng tiền đã đến trên chuỗi.
+
+<span id="persist-one-business-identifier" data-sixmm-canonical-anchor="persist-one-business-identifier" aria-hidden="true"></span>
+
+## Duy trì một mã định danh doanh nghiệp
+
+Tạo và lưu trữ `client_request_id` trước khi gửi yêu cầu rút tiền. Sử dụng lại nó để thử lại thao tác dự định tương tự, kể cả sau khi khởi động lại quá trình. Giữ các trường của giao dịch nhất quán; việc triển khai hiện tại từ chối một mã định danh lặp lại có các thông số kinh doanh xung đột.
+
+Đừng chỉ dựa vào tiêu đề `Idempotency-Key`. SDK được cung cấp có thể thêm tiêu đề đó, nhưng hợp đồng rút tiền trùng lặp hiện tại dựa trên trường nội dung `client_request_id`.
+
+<span id="understand-request-data" data-sixmm-canonical-anchor="understand-request-data" aria-hidden="true"></span>
+
+## Hiểu dữ liệu yêu cầu
+
+| Cánh đồng | Nghĩa |
+| --- | --- |
+| `chain_id`, `asset_id` | Giá trị nhận dạng trong môi trường đã thỏa thuận |
+| `to_address`, `amount` | Đích và số thập phân dương được biểu thị dưới dạng chuỗi |
+| `client_request_id` | Định danh yêu cầu kinh doanh ổn định |
+| `dest_memo_type`, `dest_memo` | Chi tiết bản ghi nhớ đích nơi mạng yêu cầu chúng |
+| `client_authorization` | Ủy quyền giao dịch của khách hàng đối với việc rút tiền được thực hiện bằng API |
+| `end_user_id` | Mã định danh người dùng doanh nghiệp tùy chọn trong luồng API doanh nghiệp |
+
+Bảng này nêu bật các trường cốt lõi chứ không phải lược đồ yêu cầu hoàn chỉnh. Xác nhận xem trước, xác nhận phí và các yêu cầu cụ thể về quyền lưu ký đối với phiên bản tích hợp. Tránh số lượng dấu phẩy động nhị phân và không sao chép chuỗi ví dụ hoặc số nội dung giữa các môi trường.
+
+<span id="follow-the-result" data-sixmm-canonical-anchor="follow-the-result" aria-hidden="true"></span>
+
+## Theo dõi kết quả
+
+| Ví dụ trạng thái | Phiên dịch |
+| --- | --- |
+| `pending_approval`, `pending_platform_review` | Phê duyệt hoặc đánh giá của doanh nghiệp chưa được xử lý |
+| `approved`, `pending_sign` | Phê duyệt và ký là các giai đoạn riêng biệt |
+| `broadcasting`, `pending_chain` | Việc phát sóng hoặc xác nhận chuỗi đang được tiến hành |
+| `broadcast_unverified`, `recovering` | Kết quả vẫn chưa chắc chắn; không tạo chuyển khoản khác |
+| `awaiting_reauthorization` | Có thể cần phải có ủy quyền khách hàng mới cho cùng một yêu cầu |
+| `confirmed` | Hệ thống đã ghi nhận xác nhận chuỗi |
+
+Danh sách này mang tính minh họa và có thể phát triển. Giữ lại các trạng thái chưa biết để điều tra thay vì ánh xạ chúng tới thành công hay thất bại. Chỉ một nhãn hiệu bị lỗi hoặc bị từ chối thôi thì chưa đủ bằng chứng cho thấy không có gì được ký kết hoặc phát sóng.
+
+<span id="recover-after-a-timeout" data-sixmm-canonical-anchor="recover-after-a-timeout" aria-hidden="true"></span>
+
+## Khôi phục sau một thời gian chờ
+
+Truy vấn `GET /api/v1/withdrawals/by-request` bằng cách sử dụng tham số truy vấn `client_request_id` ban đầu. Tiếp tục bỏ phiếu hoặc đối chiếu hoạt động ban đầu trong khi kết quả của nó không chắc chắn. Nếu cần gia hạn ủy quyền, hãy sử dụng cùng một mã định danh và quy trình gia hạn đã thỏa thuận.
+
+Việc hủy tùy thuộc vào giai đoạn ký thực tế và việc kiểm tra của máy chủ. Chỉ bắt đầu hoạt động kinh doanh thay thế sau khi doanh nghiệp ban đầu được xác định là không được chuyển nhượng và không thể chuyển nhượng. Nhận sự kiện thông qua [webhooks](/vi/mpc-wallet/webhooks-and-sdks)và giữ lại các truy vấn API dưới dạng đường dẫn đối chiếu.

@@ -1,0 +1,48 @@
+---
+title: "Webhooks e SDKs"
+description: "Preparare la verifica webhook, la gestione dei duplicati e l'integrazione di SDK con corrispondenza della versione."
+slug: mpc-wallet/webhooks-and-sdks
+canonical-url: https://docs.6mm.com/it/mpc-wallet/webhooks-and-sdks
+---
+
+Webhooks notifica al tuo backend gli eventi aziendali. Usali insieme alle query API in modo che la consegna ritardata o mancata non lasci i tuoi record irrisolti.
+
+<span id="verify-before-processing" data-sixmm-canonical-anchor="verify-before-processing" aria-hidden="true"></span>
+
+## Verificare prima dell'elaborazione
+
+La consegna attuale include `X-Webhook-Signature` e `X-Webhook-Timestamp`. La firma utilizza HMAC-SHA256 sul testo dell'intestazione del timestamp, un punto e l'esatto corpo della richiesta non elaborata. Il valore dell'intestazione ha la forma `sha256=<HEX_SIGNATURE>`.
+
+1. Conserva il corpo grezzo prima di analizzare JSON.
+2. Convalidare il timestamp utilizzando la tolleranza dell'orologio concordata.
+3. Verifica la firma con il segreto webhook utilizzando un confronto a tempo costante.
+4. Solo allora interpretare il carico utile e aggiornare i registri aziendali.
+
+La riformattazione analizzata JSON prima della verifica modifica i byte firmati. La verifica Webhook utilizza il segreto webhook, non il segreto della richiesta API o la chiave di autorizzazione del cliente.
+
+<span id="store-and-deduplicate" data-sixmm-canonical-anchor="store-and-deduplicate" aria-hidden="true"></span>
+
+## Archivia e deduplica
+
+La busta include `event_id`, `event_type`, `created_at`, `tenant_id` e `data`. Per le normali consegne di eventi, utilizza l'identità dell'evento verificata con il contesto dell'endpoint o dell'area di lavoro per evitare applicazioni ripetute. Mantieni tale decisione in modo atomico con l'aggiornamento aziendale risultante o accoda in modo duraturo l'evento verificato prima di riconoscerlo.
+
+`X-Webhook-Idempotency-Key` è previsto anche per le normali consegne in uscita. Si tratta di metadati di consegna, non di un campo di payload firmato in modo indipendente. Non lasciare che un'intestazione modificata faccia sì che lo stesso evento verificato sposti denaro due volte. Le consegne di prova e le operazioni manuali possono avere identificatori diversi o omettere questa intestazione.
+
+Restituisce una risposta positiva dopo aver accettato l'evento in modo duraturo. Progettare per duplicati ed eventi ritardati o fuori ordine. Il timestamp di consegna non è un orario di occorrenza aziendale garantito. Interroga la risorsa sottostante quando un evento è in conflitto con un risultato noto successivo.
+
+<span id="choose-the-integration-package" data-sixmm-canonical-anchor="choose-the-integration-package" aria-hidden="true"></span>
+
+## Scegli il pacchetto di integrazione
+
+| Famiglia di pacchetti | Ambito di implementazione attuale |
+| --- | --- |
+| Vai e Python API SDKs | Indirizzo, risorse di deposito e prelievo, firma delle richieste e relativi aiutanti |
+| Vai, aiutanti di Node.js e Python webhook. | Webhook verifica della firma e assistenti per l'integrazione del framework |
+
+Si tratta degli ambiti di implementazione dell'origine, non della conferma della disponibilità del registro dei pacchetti o del rilascio generale. Ottieni un pacchetto con versione corrispondente e le relative istruzioni di installazione durante l'onboarding. Altre risorse potrebbero richiedere chiamate dirette API; non dedurre un client API completo dalla presenza di un pacchetto webhook.
+
+<span id="test-the-receiving-path" data-sixmm-canonical-anchor="test-the-receiving-path" aria-hidden="true"></span>
+
+## Testare il percorso di ricezione
+
+Testare una consegna valida, un corpo modificato, una firma non valida, un timestamp obsoleto, un evento duplicato e il riavvio del ricevitore. Confermare le modalità per riprovare e riprodurre con l'ambiente di integrazione. Le richiamate mancanti dovrebbero attivare la riconciliazione, non una seconda richiesta di prelievo.

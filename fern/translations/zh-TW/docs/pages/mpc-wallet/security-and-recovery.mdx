@@ -1,0 +1,46 @@
+---
+title: "安全與恢復"
+description: "規劃 MPC 錢包的人員權限、簽名設備與備份恢復責任。"
+slug: mpc-wallet/security-and-recovery
+canonical-url: https://docs.6mm.com/zh-TW/mpc-wallet/security-and-recovery
+---
+
+安全準備應圍繞選定的保管方式展開。賬戶保護、交易審批、MPC 簽名參與和恢復材料各自承擔不同作用。
+
+<span id="assign-responsibilities" data-sixmm-canonical-anchor="assign-responsibilities" aria-hidden="true"></span>
+
+## 分配職責
+
+在產品允許的範圍內，區分日常查看、轉賬發起、審批、成員管理和開發憑證管理權限。應在目標空間中核對權限，擁有某個空間的訪問權，不代表能夠操作其他空間。
+
+企業流程應明確誰負責審查收款地址變更和轉出申請。參與設備簽名時，應先核對頁面展示的網絡、資產、金額、目標地址和上下文，再作出確認，不能把設備確認當作無需閱讀的彈窗。
+
+<span id="keep-credentials-distinct" data-sixmm-canonical-anchor="keep-credentials-distinct" aria-hidden="true"></span>
+
+## 區分不同憑證
+
+| 材料 | 用途 |
+| --- | --- |
+| 賬戶認證信息 | 登錄用戶應用 |
+| API 密鑰與 Secret | 驗證業務後端的 API 請求 |
+| 客戶授權簽名密鑰 | 在要求授權的 API 提現中，確認具體提現內容 |
+| MPC 密鑰分片 | 參與錢包的分佈式簽名 |
+| 備份與恢復材料 | 恢復參與能力，或執行受支持的恢復流程 |
+
+按各自職責保存這些材料。API 密鑰不是 MPC 分片，重置賬戶密碼也不等於恢復錢包。登記時只通過相應流程提交公鑰，不提交對應的私鑰。
+
+<span id="prepare-recovery-before-use" data-sixmm-canonical-anchor="prepare-recovery-before-use" aria-hidden="true"></span>
+
+## 使用前準備恢復方案
+
+開通時記錄所需參與方、備份負責人和恢復步驟。將備份妥善保存在不同位置，並在受控環境中驗證受支持的恢復過程，同時考慮設備丟失和平臺服務不可用兩種情況。
+
+自託管不意味著平臺能夠重新生成客戶遺失的分片。如果剩餘可用參與方與備份不足以滿足錢包要求，資產可能無法再被操作。聯合託管同樣需要明確恢復安排，不能認為平臺參與就一定可以恢復。
+
+<span id="handle-an-unavailable-participant" data-sixmm-canonical-anchor="handle-an-unavailable-participant" aria-hidden="true"></span>
+
+## 處理參與方不可用
+
+先區分臨時連接問題、設備離線和簽名材料丟失，查看會話與設備狀態，再按受支持的恢復或更換流程處理。在核對恢復要求前，不要擦除設備、改變其應用簽名身份，或假設分片可以直接搬遷。
+
+備份存在不代表恢復測試已經通過。依賴某項恢復能力前，應確認所用版本交付的流程和工具。

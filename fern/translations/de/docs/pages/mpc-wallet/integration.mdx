@@ -1,0 +1,50 @@
+---
+title: "MPC · Integrationsübersicht"
+description: "Bereiten Sie die Integration von Enterprise Wallet API, die Adressüberprüfung und den Abgleich vor."
+slug: mpc-wallet/integration
+canonical-url: https://docs.6mm.com/de/mpc-wallet/integration
+---
+
+Die Entwicklerhandbücher beschreiben die aktuelle Enterprise-Wallet-Integrationsoberfläche. MPC Wallet wurde nicht gestartet: Endpunktbeispiele sind Implementierungsreferenzen, kein Versprechen eines öffentlich verfügbaren Dienstes oder eines eingefrorenen API-Vertrags.
+
+<span id="obtain-integration-information" data-sixmm-canonical-anchor="obtain-integration-information" aria-hidden="true"></span>
+
+## Erhalten Sie Integrationsinformationen
+
+Bestätigen Sie die Testbasis URL, die API-Version, die Workspace-Identität, das Verwahrungsmodell, die aktivierten Netzwerke und Assets, die API-Berechtigungen, die Kundenautorisierungsanforderungen und die webhook-Einrichtung. Netzwerk- und Asset-Identifikatoren stammen aus der vereinbarten Umgebung; Gehen Sie nicht davon aus, dass sie den Bezeichnern der öffentlichen Kette entsprechen.
+
+Halten Sie die Anmeldeinformationen für die Wallet-Integration getrennt von den Anmeldeinformationen für den Handel API. Eine gemeinsame Dokumentationsseite macht die Dienste oder Kontomodelle nicht austauschbar.
+
+<span id="connect-the-business-flow" data-sixmm-canonical-anchor="connect-the-business-flow" aria-hidden="true"></span>
+
+## Verbinden Sie den Geschäftsfluss
+
+1. Erstellen Sie einen Schlüssel mit den geringsten Rechten API für den vorgesehenen Unternehmensarbeitsbereich und bewahren Sie ihn geheim in Ihrem Backend auf.
+2. Validieren Sie eine schreibgeschützte signierte Anfrage und Fehlerbehandlung, bevor Sie Übertragungen einleiten.
+3. Weisen Sie einer stabilen Geschäftsbenutzerkennung eine Empfangsadresse zu und überprüfen Sie dann die zurückgegebene Adresse und etwaige Notizen.
+4. Empfangen Sie Einzahlungsereignisse und gleichen Sie diese mit API-Abfragen und Ihren eigenen Datensätzen ab.
+5. Fügen Sie Auszahlungsautorisierung, stabile Geschäftsanfrage-IDs und Ergebnisverfolgung hinzu.
+
+<span id="core-api-areas" data-sixmm-canonical-anchor="core-api-areas" aria-hidden="true"></span>
+
+## Kernbereiche API.
+
+| Bereich | Aktuelle Routenbeispiele | Zweck |
+| --- | --- | --- |
+| Empfangsadressen | `POST /api/v1/addresses`, `GET /api/v1/addresses` | Adressen vergeben und abfragen |
+| Einlagen | `GET /api/v1/deposits`, `GET /api/v1/deposits/{id}` | Verfolgen Sie eingehende Überweisungen |
+| Auszahlungen | `POST /api/v1/withdrawals`, `GET /api/v1/withdrawals/{id}` | Senden Sie eine Anfrage und fragen Sie das Ergebnis ab |
+| Nachschlagen anfordern | `GET /api/v1/withdrawals/by-request` | Eine Anfrage nach einer unsicheren Antwort abgleichen |
+| Salden | `GET /api/v1/balances` | Geschäftssalden im autorisierten Umfang abfragen |
+
+Die Routenregistrierung bedeutet nicht, dass jede API-Taste jeden Vorgang aufrufen kann. Produktzugriff, Arbeitsbereichsberechtigungen, Verwahrungsmodus und Initialisierung können sich alle auf die Verfügbarkeit auswirken. Administrative und persönliche Geräteschnittstellen liegen nicht in diesem Schnellstartablauf für Unternehmen.
+
+<span id="verify-receiving-addresses" data-sixmm-canonical-anchor="verify-receiving-addresses" aria-hidden="true"></span>
+
+## Überprüfen Sie die Empfangsadressen
+
+Die bereitgestellte SDK-Implementierung unterstützt signierte Adressbescheinigungen. Konfigurieren Sie vertrauenswürdige Mitglieder oder das vom Integrationspaket angegebene Vertrauensmaterial und stellen Sie bei Bedarf unabhängig die erwarteten Arbeitsbereichs-, Ketten- und Schlüsselgruppeninformationen bereit. Leiten Sie nicht jede Vertrauenserwartung aus derselben Antwort ab, die Sie überprüfen.
+
+Bei vollständig verwalteten Pooladressen kann eine Attestierung eine plattformeigene Adresse identifizieren, während ihre Zuordnung zu einem Kunden eine serverseitige Aussage bleibt. Beschreiben Sie diese Abtretung nicht als kryptografischen Beweis des Kundeneigentums.
+
+Weiter mit [Unterzeichnung beantragen](/de/mpc-wallet/request-signing), [Transaktionen](/de/mpc-wallet/transactions) Und [webhooks und SDKs](/de/mpc-wallet/webhooks-and-sdks).

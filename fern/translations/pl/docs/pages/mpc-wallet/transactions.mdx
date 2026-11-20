@@ -1,0 +1,54 @@
+---
+title: "Transakcje i ponowne próby"
+description: "Obsługuj identyfikatory wypłat, wyniki asynchroniczne, ponowne próby i odnawianie autoryzacji."
+slug: mpc-wallet/transactions
+canonical-url: https://docs.6mm.com/pl/mpc-wallet/transactions
+---
+
+Wypłata jest asynchroniczną operacją biznesową. Pomyślna odpowiedź HTTP oznacza, że ​​żądanie zostało obsłużone; nie ustala, czy środki dotarły w ramach łańcucha dostaw.
+
+<span id="persist-one-business-identifier" data-sixmm-canonical-anchor="persist-one-business-identifier" aria-hidden="true"></span>
+
+## Zachowaj jeden identyfikator firmy
+
+Wygeneruj i zapisz `client_request_id` przed wysłaniem wypłaty. Użyj go ponownie do ponownych prób tej samej zamierzonej operacji, w tym po ponownym uruchomieniu procesu. Zachowaj spójność pól transakcji; obecna implementacja odrzuca powtarzający się identyfikator ze sprzecznymi parametrami biznesowymi.
+
+Nie polegaj wyłącznie na nagłówku `Idempotency-Key`. Dostarczony SDK może dodać ten nagłówek, ale bieżąca umowa deduplikacji wypłat opiera się na polu treści `client_request_id`.
+
+<span id="understand-request-data" data-sixmm-canonical-anchor="understand-request-data" aria-hidden="true"></span>
+
+## Zrozumienie danych żądania
+
+| Pole | Oznaczający |
+| --- | --- |
+| `chain_id`, `asset_id` | Identyfikatory w uzgodnionym środowisku |
+| `to_address`, `amount` | Miejsce docelowe i dodatnia liczba dziesiętna reprezentowana jako ciąg znaków |
+| `client_request_id` | Stabilny identyfikator żądania biznesowego |
+| `dest_memo_type`, `dest_memo` | Szczegóły notatki miejsca docelowego, jeśli wymaga tego sieć |
+| `client_authorization` | Autoryzacja transakcji klienta dla wypłat inicjowanych kluczem API. |
+| `end_user_id` | Opcjonalny identyfikator użytkownika biznesowego w przepływie przedsiębiorstwa API. |
+
+W tej tabeli wyróżniono podstawowe pola, a nie kompletny schemat żądania. Potwierdź podgląd, potwierdzenie opłat i wymagania dotyczące opieki w porównaniu z wersją integracyjną. Unikaj binarnych kwot zmiennoprzecinkowych i nie kopiuj przykładowych numerów łańcuchów lub zasobów między środowiskami.
+
+<span id="follow-the-result" data-sixmm-canonical-anchor="follow-the-result" aria-hidden="true"></span>
+
+## Śledź wynik
+
+| Podaj przykłady | Interpretacja |
+| --- | --- |
+| `pending_approval`, `pending_platform_review` | Zatwierdzenie lub recenzja firmy nie została jeszcze zatwierdzona |
+| `approved`, `pending_sign` | Zatwierdzenie i podpisanie to oddzielne etapy |
+| `broadcasting`, `pending_chain` | Trwa nadawanie lub potwierdzanie łańcucha |
+| `broadcast_unverified`, `recovering` | Wynik jest nadal niepewny; nie twórz kolejnego przelewu |
+| `awaiting_reauthorization` | W przypadku tego samego żądania może być wymagana nowa autoryzacja klienta |
+| `confirmed` | System zarejestrował potwierdzenie łańcucha |
+
+Lista ma charakter poglądowy i może ulegać zmianom. Zachowaj nieznane stany na potrzeby badania, zamiast przypisywać je do sukcesu lub porażki. Sama nieudana lub odrzucona wytwórnia nie jest wystarczającym dowodem na to, że nic nie zostało podpisane ani wyemitowane.
+
+<span id="recover-after-a-timeout" data-sixmm-canonical-anchor="recover-after-a-timeout" aria-hidden="true"></span>
+
+## Odzyskaj siły po przekroczeniu limitu czasu
+
+Zapytanie `GET /api/v1/withdrawals/by-request` przy użyciu oryginalnego parametru zapytania `client_request_id`. Kontynuuj odpytywanie lub uzgadnianie oryginalnej operacji, gdy jej wynik jest niepewny. Jeżeli wymagane jest odnowienie autoryzacji, użyj tego samego identyfikatora i uzgodnionej procedury odnowienia.
+
+Anulowanie zależy od faktycznego etapu podpisywania umowy i kontroli serwera. Rozpocznij zastępczą działalność gospodarczą dopiero po ustaleniu, że oryginał nie został przeniesiony i nie można go przenieść. Otrzymuj wydarzenia przez [webhooks](/pl/mpc-wallet/webhooks-and-sdks)i zachowaj zapytania API jako ścieżkę uzgadniania.

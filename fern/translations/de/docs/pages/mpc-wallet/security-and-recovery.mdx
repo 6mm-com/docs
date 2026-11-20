@@ -1,0 +1,46 @@
+---
+title: "Sicherheit und Wiederherstellung"
+description: "Planen Sie Rollen, Signiergeräte und Wiederherstellungsverantwortlichkeiten für MPC-Wallets."
+slug: mpc-wallet/security-and-recovery
+canonical-url: https://docs.6mm.com/de/mpc-wallet/security-and-recovery
+---
+
+Die Sicherheitsvorbereitung beginnt mit der gewählten Verwahrungsvereinbarung. Kontoschutz, Transaktionsgenehmigung, MPC Teilnahme- und Wiederherstellungsmaterial dienen unterschiedlichen Zwecken.
+
+<span id="assign-responsibilities" data-sixmm-canonical-anchor="assign-responsibilities" aria-hidden="true"></span>
+
+## Verantwortlichkeiten zuweisen
+
+Separate Routineanzeige, Übertragungsinitiierung, Genehmigung, Mitgliederverwaltung und Entwickler-Anmeldeinformationsverwaltung, sofern das Produkt dies zulässt. Überprüfen Sie die Berechtigungen im vorgesehenen Arbeitsbereich. Der Zugriff auf einen Arbeitsbereich begründet keine Autorität über einen anderen.
+
+Vereinbaren Sie für Unternehmensworkflows, wer Zieländerungen und ausgehende Anfragen überprüft. Bei der Gerätesignierung sollte der Teilnehmer vor der Annahme das angezeigte Netzwerk, das Asset, die Menge, das Ziel und den Kontext überprüfen. Eine Gerätebestätigung sollte nicht als blinde Zustimmungsaufforderung betrachtet werden.
+
+<span id="keep-credentials-distinct" data-sixmm-canonical-anchor="keep-credentials-distinct" aria-hidden="true"></span>
+
+## Halten Sie die Anmeldeinformationen eindeutig
+
+| Material | Zweck |
+| --- | --- |
+| Kontoauthentifizierung | Greifen Sie auf die Benutzeranwendung zu |
+| API Schlüssel und Geheimnis | Backend-Anfragen API authentifizieren |
+| Kundenautorisierungsschlüssel | Genehmigen Sie bei Bedarf den Inhalt einer API-Auszahlung |
+| MPC Schlüsselanteil | Nehmen Sie am verteilten Signaturprozess des Wallets teil |
+| Sicherungs- und Wiederherstellungsmaterial | Stellen Sie die Teilnahme wieder her oder führen Sie das unterstützte Wiederherstellungsverfahren durch |
+
+Bewahren Sie diese gemäß Ihren eigenen Verantwortlichkeiten auf. Ein API-Schlüssel ist keine MPC-Freigabe; Das Zurücksetzen eines Kontopassworts ist kein Vorgang zur Wiederherstellung der Brieftasche. Laden Sie öffentliche Schlüssel nur über den entsprechenden Registrierungsvorgang hoch, niemals die entsprechenden privaten Schlüssel.
+
+<span id="prepare-recovery-before-use" data-sixmm-canonical-anchor="prepare-recovery-before-use" aria-hidden="true"></span>
+
+## Bereiten Sie die Wiederherstellung vor der Verwendung vor
+
+Notieren Sie beim Onboarding die erforderlichen Teilnehmer, Backup-Besitzer und Wiederherstellungsschritte. Bewahren Sie Backups an separaten, geeigneten Orten auf und testen Sie das unterstützte Wiederherstellungsverfahren in einer kontrollierten Umgebung. Stellen Sie sich sowohl einen Geräteverlust als auch einen Ausfall des Plattformdienstes vor.
+
+Durch die Selbstverwahrung ist es der Plattform nicht möglich, fehlende Kundenanteile wiederherzustellen. Wenn zu wenige nutzbare Teilnehmer und Backups übrig bleiben, um die Anforderungen des Wallets zu erfüllen, kann der Zugriff auf Vermögenswerte verloren gehen. Für das gemeinsame Schlüsselverwahrung ist außerdem eine dokumentierte Beitreibungsvereinbarung erforderlich; Gehen Sie nicht davon aus, dass die Teilnahme an der Plattform eine Wiederherstellung garantiert.
+
+<span id="handle-an-unavailable-participant" data-sixmm-canonical-anchor="handle-an-unavailable-participant" aria-hidden="true"></span>
+
+## Behandeln Sie einen nicht verfügbaren Teilnehmer
+
+Unterscheiden Sie zunächst ein vorübergehendes Verbindungsproblem, ein nicht verfügbares Gerät und verlorenes Signaturmaterial. Überprüfen Sie den Sitzungs- und Gerätestatus und verwenden Sie dann den unterstützten Wiederherstellungs- oder Austauschprozess. Löschen Sie ein Gerät nicht, ändern Sie nicht seine Anwendungssignaturidentität und gehen Sie nicht davon aus, dass Freigaben verschoben werden können, bevor Sie die Wiederherstellungsanforderungen überprüft haben.
+
+Die Backup-Verfügbarkeit ist kein Beweis für einen abgeschlossenen Wiederherstellungstest. Bestätigen Sie, welche Verfahren und Tools in Ihrem Release enthalten sind, bevor Sie sich darauf verlassen.

@@ -1,0 +1,50 @@
+---
+title: "MPC · Tổng quan về tích hợp"
+description: "Chuẩn bị tích hợp ví doanh nghiệp API, xác minh và đối chiếu địa chỉ."
+slug: mpc-wallet/integration
+canonical-url: https://docs.6mm.com/vi/mpc-wallet/integration
+---
+
+Hướng dẫn dành cho nhà phát triển mô tả bề mặt tích hợp ví doanh nghiệp hiện tại. MPC Ví chưa ra mắt: các ví dụ về điểm cuối là tài liệu tham khảo triển khai, không phải là lời hứa về một dịch vụ có sẵn công khai hoặc hợp đồng API bị đóng băng.
+
+<span id="obtain-integration-information" data-sixmm-canonical-anchor="obtain-integration-information" aria-hidden="true"></span>
+
+## Nhận thông tin tích hợp
+
+Xác nhận phiên bản cơ sở thử nghiệm URL, API, danh tính không gian làm việc, mô hình lưu ký, mạng và nội dung được bật, quyền API, yêu cầu ủy quyền của khách hàng và thiết lập webhook. Mã định danh mạng và tài sản đến từ môi trường đã thỏa thuận; đừng cho rằng chúng ngang bằng với các định danh chuỗi công khai.
+
+Giữ thông tin xác thực tích hợp ví tách biệt với thông tin xác thực giao dịch API. Trang web tài liệu được chia sẻ không làm cho các dịch vụ hoặc mô hình tài khoản có thể hoán đổi cho nhau.
+
+<span id="connect-the-business-flow" data-sixmm-canonical-anchor="connect-the-business-flow" aria-hidden="true"></span>
+
+## Kết nối dòng chảy kinh doanh
+
+1. Tạo khóa API có đặc quyền thấp nhất cho không gian làm việc dự kiến ​​của doanh nghiệp và giữ bí mật khóa đó trong phần phụ trợ của bạn.
+2. Xác thực yêu cầu đã ký chỉ đọc và xử lý lỗi trước khi thực hiện chuyển khoản.
+3. Phân bổ địa chỉ nhận cho số nhận dạng người dùng doanh nghiệp ổn định, sau đó xác minh địa chỉ được trả về và bất kỳ bản ghi nhớ nào.
+4. Nhận các sự kiện gửi tiền và đối chiếu chúng với các truy vấn API và hồ sơ của riêng bạn.
+5. Thêm ủy quyền rút tiền, số nhận dạng yêu cầu kinh doanh ổn định và theo dõi kết quả.
+
+<span id="core-api-areas" data-sixmm-canonical-anchor="core-api-areas" aria-hidden="true"></span>
+
+## Khu vực cốt lõi API
+
+| Khu vực | Ví dụ về tuyến đường hiện tại | Mục đích |
+| --- | --- | --- |
+| Địa chỉ nhận | `POST /api/v1/addresses`, `GET /api/v1/addresses` | Phân bổ và truy vấn địa chỉ |
+| Tiền gửi | `GET /api/v1/deposits`, `GET /api/v1/deposits/{id}` | Theo dõi chuyển khoản đến |
+| Rút tiền | `POST /api/v1/withdrawals`, `GET /api/v1/withdrawals/{id}` | Gửi yêu cầu và truy vấn kết quả của nó |
+| Yêu cầu tra cứu | `GET /api/v1/withdrawals/by-request` | Điều chỉnh yêu cầu sau khi nhận được phản hồi không chắc chắn |
+| Số dư | `GET /api/v1/balances` | Truy vấn số dư kinh doanh trong phạm vi được ủy quyền |
+
+Đăng ký tuyến đường không có nghĩa là mọi khóa API đều có thể gọi mọi thao tác. Quyền truy cập sản phẩm, quyền không gian làm việc, chế độ lưu ký và khởi tạo đều có thể ảnh hưởng đến tính khả dụng. Giao diện quản trị và thiết bị cá nhân nằm ngoài quy trình bắt đầu nhanh của doanh nghiệp này.
+
+<span id="verify-receiving-addresses" data-sixmm-canonical-anchor="verify-receiving-addresses" aria-hidden="true"></span>
+
+## Xác minh địa chỉ nhận
+
+Việc triển khai SDK được cung cấp hỗ trợ chứng thực địa chỉ đã ký. Định cấu hình các thành viên đáng tin cậy hoặc tài liệu tin cậy được chỉ định bởi gói tích hợp và cung cấp độc lập thông tin về không gian làm việc, chuỗi và nhóm khóa dự kiến ​​khi được yêu cầu. Đừng lấy mọi kỳ vọng về lòng tin từ cùng một phản hồi mà bạn đang kiểm tra.
+
+Đối với các địa chỉ nhóm được quản lý hoàn toàn, chứng thực có thể xác định địa chỉ do nền tảng sở hữu trong khi việc chỉ định địa chỉ đó cho khách hàng vẫn là tuyên bố phía máy chủ. Không mô tả nhiệm vụ đó như một bằng chứng mật mã về quyền sở hữu của khách hàng.
+
+Tiếp tục với [yêu cầu ký kết](/vi/mpc-wallet/request-signing), [giao dịch](/vi/mpc-wallet/transactions) Và [webhooks và SDKs](/vi/mpc-wallet/webhooks-and-sdks).

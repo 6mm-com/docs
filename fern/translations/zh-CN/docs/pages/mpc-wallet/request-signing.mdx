@@ -1,0 +1,74 @@
+---
+title: "MPC · 请求签名"
+description: "区分 API 请求认证、客户提现授权与 MPC 链上签名。"
+slug: mpc-wallet/request-signing
+canonical-url: https://docs.6mm.com/zh-CN/mpc-wallet/request-signing
+---
+
+这里有三种不同的签名作用：验证 HTTP 请求、授权具体提现，以及由 MPC 参与方生成链上签名。通过第一项检查，并不代替另外两项。
+
+<span id="authenticate-an-api-request" data-sixmm-canonical-anchor="authenticate-an-api-request" aria-hidden="true"></span>
+
+## 验证 API 请求
+
+当前 API 使用 API 密钥标识与 Secret 进行 HMAC-SHA256 认证。规范请求由五行组成，行间使用换行符，末尾不附加换行：
+
+```text
+METHOD
+PATH
+SORTED_QUERY
+BODY_SHA256_HEX
+UNIX_TIMESTAMP_SECONDS
+```
+
+使用大写 HTTP 方法和不含域名的请求路径。查询参数按键排序，同名参数保留原值顺序，再按表单 URL 编码规则编码，空格使用 `+`。没有查询参数时保留空行。对实际发送的请求体字节计算 SHA-256；无请求体时也要计算空字节的摘要。
+
+使用提供的 Secret 的 UTF-8 字节计算 HMAC-SHA256，不要因为它看起来像十六进制就先进行十六进制解码。结果编码为小写十六进制，认证头中的字段以空格分隔：
+
+```text
+Authorization: HMAC-SHA256 keyId=<KEY_ID> signature=<HEX_SIGNATURE> timestamp=<UNIX_SECONDS>
+```
+
+<span id="read-only-signing-example" data-sixmm-canonical-anchor="read-only-signing-example" aria-hidden="true"></span>
+
+## 只读签名示例
+
+下面的标准库函数为充值查询生成请求头，不会发送请求。应用中应安全读取凭证，并将返回的路径原样发送到接入资料指定的环境地址。
+
+```python
+import hashlib
+import hmac
+import time
+from urllib.parse import urlencode
+
+
+def signed_read_headers(key_id, secret, timestamp=None):
+    method = "GET"
+    path = "/api/v1/deposits"
+    query = urlencode(sorted([("page", "1"), ("page_size", "20")]))
+    body = b""
+    ts = str(int(time.time()) if timestamp is None else timestamp)
+    canonical = "\n".join([
+        method, path, query, hashlib.sha256(body).hexdigest(), ts
+    ])
+    signature = hmac.new(
+        secret.encode("utf-8"), canonical.encode("utf-8"), hashlib.sha256
+    ).hexdigest()
+    return path + "?" + query, {
+        "Authorization": (
+            f"HMAC-SHA256 keyId={key_id} signature={signature} timestamp={ts}"
+        )
+    }
+```
+
+保持客户端时钟同步。代理若在签名后修改路径、查询参数或请求体，可能导致认证失败。重试前先查看响应中的失败原因与请求标识，不要记录 Secret 或完整认证头。
+
+<span id="authorize-an-api-withdrawal" data-sixmm-canonical-anchor="authorize-an-api-withdrawal" aria-hidden="true"></span>
+
+## 授权 API 提现
+
+当前企业 API 提现流程还要求在 `client_authorization` 中提供 Ed25519 客户授权。它绑定预期交易上下文，包括请求编号、目标地址、资产和金额。公钥登记或信任配置方式取决于托管方案。
+
+使用配套接入包生成规范载荷、签名和公钥。这把授权签名密钥与 HMAC Secret 、MPC 分片分别管理，私钥由客户保管。接入时核对载荷版本与有效期规则，不要仅凭本概览自行拼装授权格式。
+
+请求受理后仍可能需要业务校验和审批，随后才进入 MPC 签名与链上确认。继续阅读[交易状态与重试](/zh-CN/mpc-wallet/transactions)。

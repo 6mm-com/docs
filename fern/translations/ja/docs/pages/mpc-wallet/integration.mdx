@@ -1,0 +1,50 @@
+---
+title: "MPC · 統合の概要"
+description: "エンタープライズウォレット API の統合、アドレス検証、調整を準備します。"
+slug: mpc-wallet/integration
+canonical-url: https://docs.6mm.com/ja/mpc-wallet/integration
+---
+
+開発者ガイドでは、現在のエンタープライズ ウォレット統合面について説明しています。 MPC ウォレットは開始されていません: エンドポイントの例は実装のリファレンスであり、公開サービスや凍結された API 契約を約束するものではありません。
+
+<span id="obtain-integration-information" data-sixmm-canonical-anchor="obtain-integration-information" aria-hidden="true"></span>
+
+## 統合情報の取得
+
+テストベース URL、API バージョン、ワークスペース ID、管理モデル、有効なネットワークと資産、API 権限、顧客認証要件、および webhook セットアップを確認します。ネットワークと資産の識別子は、合意された環境から取得されます。それらがパブリックチェーン識別子と等しいとは想定しないでください。
+
+ウォレット統合認証情報を取引 API 認証情報とは別にしてください。共有ドキュメント サイトでは、サービスやアカウント モデルを交換可能にすることはできません。
+
+<span id="connect-the-business-flow" data-sixmm-canonical-anchor="connect-the-business-flow" aria-hidden="true"></span>
+
+## ビジネスフローを繋ぐ
+
+1. 目的のエンタープライズ ワークスペースに対して最小権限の API キーを作成し、その秘密をバックエンドに保持します。
+2. 転送を導入する前に、読み取り専用の署名付きリクエストとエラー処理を検証します。
+3. 安定したビジネス ユーザー ID の受信アドレスを割り当て、返されたアドレスとメモを確認します。
+4. デポジット イベントを受信し、API クエリおよび自分のレコードと照合します。
+5. 出金承認、安定したビジネスリクエスト識別子、結果追跡を追加します。
+
+<span id="core-api-areas" data-sixmm-canonical-anchor="core-api-areas" aria-hidden="true"></span>
+
+## コア API エリア
+
+| エリア | 現在のルート例 | 目的 |
+| --- | --- | --- |
+| 受信アドレス | `POST /api/v1/addresses`、`GET /api/v1/addresses` | アドレスの割り当てとクエリ |
+| 預金 | `GET /api/v1/deposits`、`GET /api/v1/deposits/{id}` | 受信転送を追跡する |
+| 引き出し | `POST /api/v1/withdrawals`、`GET /api/v1/withdrawals/{id}` | リクエストを送信し、その結果をクエリする |
+| ルックアップのリクエスト | `GET /api/v1/withdrawals/by-request` | 不確実な応答の後にリクエストを調整する |
+| 残高 | `GET /api/v1/balances` | 許可された範囲でビジネス残高を照会します |
+
+ルート登録は、すべての API キーがすべての操作を呼び出せることを意味するものではありません。製品へのアクセス、ワークスペースの権限、保管モード、および初期化はすべて、可用性に影響を与える可能性があります。管理用および個人用デバイスのインターフェイスは、このエンタープライズ クイックスタート フローの外にあります。
+
+<span id="verify-receiving-addresses" data-sixmm-canonical-anchor="verify-receiving-addresses" aria-hidden="true"></span>
+
+## 受信アドレスを確認する
+
+提供されている SDK 実装は、署名されたアドレス証明書をサポートしています。信頼できるメンバーまたは統合パッケージで指定された信頼マテリアルを構成し、必要に応じて予期されるワークスペース、チェーン、キーグループ情報を個別に提供します。チェックしている同じ応答からすべての信頼性の期待を導き出さないでください。
+
+フルマネージドのプール アドレスの場合、証明書はプラットフォーム所有のアドレスを識別できますが、顧客へのアドレスの割り当てはサーバー側のステートメントのままです。その割り当てを顧客の所有権の暗号化された証明として説明しないでください。
+
+続けて [署名を要求する](/ja/mpc-wallet/request-signing), [トランザクション](/ja/mpc-wallet/transactions) そして [webhooks と SDKs](/ja/mpc-wallet/webhooks-and-sdks).

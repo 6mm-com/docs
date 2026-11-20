@@ -1,0 +1,48 @@
+---
+title: "Webhooks i SDKs"
+description: "Przygotuj weryfikację webhook, obsługę duplikatów i integrację z dopasowaną wersją SDK."
+slug: mpc-wallet/webhooks-and-sdks
+canonical-url: https://docs.6mm.com/pl/mpc-wallet/webhooks-and-sdks
+---
+
+Webhooks powiadamiaj swój backend o wydarzeniach biznesowych. Używaj ich razem z zapytaniami API, aby opóźniona lub brakująca dostawa nie pozostawiła Twoich danych bez rozwiązania.
+
+<span id="verify-before-processing" data-sixmm-canonical-anchor="verify-before-processing" aria-hidden="true"></span>
+
+## Sprawdź przed przetwarzaniem
+
+Obecna dostawa obejmuje `X-Webhook-Signature` i `X-Webhook-Timestamp`. W podpisie zastosowano HMAC-SHA256 nad tekstem nagłówka sygnatury czasowej, kropką i dokładną nieprzetworzoną treścią żądania. Wartość nagłówka ma postać `sha256=<HEX_SIGNATURE>`.
+
+1. Zachowaj surową treść przed analizą JSON.
+2. Sprawdź znacznik czasu, korzystając z uzgodnionej tolerancji zegara.
+3. Zweryfikuj podpis za pomocą sekretu webhook, korzystając z porównania w czasie stałym.
+4. Dopiero wtedy zinterpretuj ładunek i zaktualizuj zapisy biznesowe.
+
+Ponowne formatowanie zostało przeanalizowane JSON przed weryfikacją powoduje zmianę podpisanych bajtów. Weryfikacja Webhook wykorzystuje sekret webhook, a nie API sekret żądania lub klucz autoryzacji klienta.
+
+<span id="store-and-deduplicate" data-sixmm-canonical-anchor="store-and-deduplicate" aria-hidden="true"></span>
+
+## Przechowuj i deduplikuj
+
+Koperta zawiera `event_id`, `event_type`, `created_at`, `tenant_id` i `data`. W przypadku normalnego dostarczania zdarzeń użyj zweryfikowanej tożsamości zdarzenia w kontekście punktu końcowego lub obszaru roboczego, aby zapobiec ponownemu zastosowaniu. Utrzymaj tę decyzję atomowo wraz z wynikającą z niej aktualizacją biznesową lub trwale umieść zweryfikowane zdarzenie w kolejce przed jego potwierdzeniem.
+
+`X-Webhook-Idempotency-Key` jest również dostępny dla normalnych dostaw do skrzynki nadawczej. Są to metadane dostawy, a nie niezależnie podpisane pole ładunku. Nie pozwól, aby zmieniony nagłówek spowodował, że to samo zweryfikowane zdarzenie dwukrotnie przeniesie pieniądze. Dostawy testowe i operacje ręczne mogą mieć różne identyfikatory lub pomijać ten nagłówek.
+
+Zwróć pomyślną odpowiedź po trwałym zaakceptowaniu zdarzenia. Projektowanie pod kątem duplikatów oraz opóźnionych lub nietypowych wydarzeń. Znacznik czasu dostawy nie jest gwarantowanym czasem wystąpienia transakcji. Zapytaj podstawowy zasób, gdy zdarzenie koliduje z późniejszym znanym wynikiem.
+
+<span id="choose-the-integration-package" data-sixmm-canonical-anchor="choose-the-integration-package" aria-hidden="true"></span>
+
+## Wybierz pakiet integracyjny
+
+| Rodzina pakietów | Aktualny zakres realizacji |
+| --- | --- |
+| Idź i Python API SDKs | Adresy, zasoby dotyczące wpłat i wypłat, podpisywanie wniosków i powiązane pomoce |
+| Przejdź do pomocy Node.js i Pythona webhook. | Webhook pomocnicy weryfikujący podpisy i integrujący framework |
+
+Są to zakresy implementacji źródła, a nie potwierdzenie dostępności rejestru pakietów lub wydania ogólnego. Podczas wdrażania uzyskaj pakiet zgodny z wersją i instrukcje dotyczące jego instalacji. Inne zasoby mogą wymagać bezpośrednich połączeń API; nie wnioskuj o pełnym kliencie API na podstawie obecności pakietu webhook.
+
+<span id="test-the-receiving-path" data-sixmm-canonical-anchor="test-the-receiving-path" aria-hidden="true"></span>
+
+## Przetestuj ścieżkę odbiorczą
+
+Przetestuj prawidłową dostawę, zmodyfikowaną treść, nieprawidłowy podpis, nieaktualny znacznik czasu, zduplikowane zdarzenie i ponowne uruchomienie odbiorcy. Potwierdź ustalenia dotyczące ponownych prób i odtworzeń w środowisku integracji. Brakujące wywołania zwrotne powinny wywołać uzgodnienie, a nie drugą prośbę o wypłatę.

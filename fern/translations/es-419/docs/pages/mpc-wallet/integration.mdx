@@ -1,0 +1,50 @@
+---
+title: "MPC · Descripción general de la integración"
+description: "Preparar la integración, verificación y conciliación de la billetera empresarial API."
+slug: mpc-wallet/integration
+canonical-url: https://docs.6mm.com/es-419/mpc-wallet/integration
+---
+
+Las guías para desarrolladores describen la superficie de integración de billetera empresarial actual. MPC Wallet no se ha lanzado: los ejemplos de puntos finales son referencias de implementación, no una promesa de un servicio disponible públicamente o un contrato API congelado.
+
+<span id="obtain-integration-information" data-sixmm-canonical-anchor="obtain-integration-information" aria-hidden="true"></span>
+
+## Obtener información de integración
+
+Confirme la base de prueba URL, la versión de API, la identidad del espacio de trabajo, el modelo de custodia, las redes y activos habilitados, los permisos API, los requisitos de autorización del cliente y la configuración de webhook. Los identificadores de redes y activos provienen del entorno acordado; no asuma que son iguales a identificadores de cadena pública.
+
+Mantenga las credenciales de integración de billetera separadas de las credenciales comerciales API. Un sitio de documentación compartida no hace que los servicios o modelos de cuenta sean intercambiables.
+
+<span id="connect-the-business-flow" data-sixmm-canonical-anchor="connect-the-business-flow" aria-hidden="true"></span>
+
+## Conecte el flujo de negocios
+
+1. Cree una clave API de privilegios mínimos para el espacio de trabajo empresarial previsto y mantenga su secreto en su backend.
+2. Valide una solicitud firmada de solo lectura y el manejo de errores antes de introducir transferencias.
+3. Asigne una dirección de recepción para un identificador de usuario comercial estable y luego verifique la dirección devuelta y cualquier nota.
+4. Reciba eventos de depósito y concilielos con API consultas y sus propios registros.
+5. Agregue autorización de retiro, identificadores de solicitudes comerciales estables y seguimiento de resultados.
+
+<span id="core-api-areas" data-sixmm-canonical-anchor="core-api-areas" aria-hidden="true"></span>
+
+## Áreas principales API
+
+| Área | Ejemplos de rutas actuales | Objetivo |
+| --- | --- | --- |
+| Direcciones de recepción | `POST /api/v1/addresses`, `GET /api/v1/addresses` | Asignar y consultar direcciones |
+| Depósitos | `GET /api/v1/deposits`, `GET /api/v1/deposits/{id}` | Seguir transferencias entrantes |
+| Retiros | `POST /api/v1/withdrawals`, `GET /api/v1/withdrawals/{id}` | Enviar una solicitud y consultar su resultado. |
+| Solicitar búsqueda | `GET /api/v1/withdrawals/by-request` | Conciliar una solicitud después de una respuesta incierta |
+| Saldos | `GET /api/v1/balances` | Consultar saldos comerciales en el ámbito autorizado. |
+
+El registro de ruta no implica que cada tecla API pueda llamar a todas las operaciones. El acceso al producto, los permisos del espacio de trabajo, el modo de custodia y la inicialización pueden afectar la disponibilidad. Las interfaces administrativas y de dispositivos personales están fuera de este flujo de inicio rápido empresarial.
+
+<span id="verify-receiving-addresses" data-sixmm-canonical-anchor="verify-receiving-addresses" aria-hidden="true"></span>
+
+## Verificar direcciones de recepción
+
+La implementación SDK proporcionada admite certificaciones de direcciones firmadas. Configure miembros de confianza o el material de confianza especificado por el paquete de integración y proporcione de forma independiente la información esperada sobre el espacio de trabajo, la cadena y el grupo de claves cuando sea necesario. No derive todas las expectativas de confianza de la misma respuesta que está verificando.
+
+Para direcciones de grupo totalmente administradas, una atestación puede identificar una dirección propiedad de la plataforma, mientras que su asignación a un cliente sigue siendo una declaración del lado del servidor. No describa esa asignación como una prueba criptográfica de propiedad del cliente.
+
+Continuar con [solicitar firma](/es-419/mpc-wallet/request-signing), [actas](/es-419/mpc-wallet/transactions) y [webhooks y SDKs](/es-419/mpc-wallet/webhooks-and-sdks).

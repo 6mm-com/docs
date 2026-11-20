@@ -1,0 +1,54 @@
+---
+title: "İşlemler ve Yeniden Denemeler"
+description: "Para çekme tanımlayıcılarını, eşzamansız sonuçları, yeniden denemeleri ve yetkilendirme yenilemeyi yönetin."
+slug: mpc-wallet/transactions
+canonical-url: https://docs.6mm.com/tr/mpc-wallet/transactions
+---
+
+Para çekme, eşzamansız bir iş operasyonudur. Başarılı bir HTTP yanıtı, isteğin işleme alındığı anlamına gelir; fonların zincir üzerinden ulaştığını tespit etmez.
+
+<span id="persist-one-business-identifier" data-sixmm-canonical-anchor="persist-one-business-identifier" aria-hidden="true"></span>
+
+## Bir işletme tanımlayıcısını kalıcı hale getirin
+
+Para çekme işlemini göndermeden önce `client_request_id` oluşturun ve saklayın. İşlemin yeniden başlatılması da dahil olmak üzere, aynı amaçlanan işlemin yeniden denenmesi için yeniden kullanın. İşlemin alanlarını tutarlı tutun; mevcut uygulama, çelişen iş parametrelerine sahip tekrarlanan bir tanımlayıcıyı reddediyor.
+
+Yalnızca `Idempotency-Key` başlığına güvenmeyin. Sağlanan SDK bu başlığı ekleyebilir, ancak geçerli para çekme tekilleştirme sözleşmesi `client_request_id` gövde alanını temel alır.
+
+<span id="understand-request-data" data-sixmm-canonical-anchor="understand-request-data" aria-hidden="true"></span>
+
+## İstek verilerini anlayın
+
+| Alan | Anlam |
+| --- | --- |
+| `chain_id`, `asset_id` | Kararlaştırılan ortamdaki tanımlayıcılar |
+| `to_address`, `amount` | Hedef ve dize olarak temsil edilen pozitif ondalık miktar |
+| `client_request_id` | Kararlı iş isteği tanımlayıcısı |
+| `dest_memo_type`, `dest_memo` | Ağın gerektirdiği hedef notu ayrıntıları |
+| `client_authorization` | API anahtarıyla başlatılan para çekme işlemleri için müşteri işlem yetkilendirmesi |
+| `end_user_id` | Kurumsal API akışındaki isteğe bağlı iş kullanıcısı tanımlayıcısı |
+
+Bu tabloda tam bir istek şeması değil, temel alanlar vurgulanır. Entegrasyon sürümüne göre önizlemeyi, ücret onayını ve saklamaya özgü gereksinimleri onaylayın. İkili kayan nokta miktarlarından kaçının ve örnek zincir veya varlık numaralarını ortamlar arasında kopyalamayın.
+
+<span id="follow-the-result" data-sixmm-canonical-anchor="follow-the-result" aria-hidden="true"></span>
+
+## Sonucu takip edin
+
+| Durum örnekleri | Tercüme |
+| --- | --- |
+| `pending_approval`, `pending_platform_review` | İşletme onayı veya incelemesi beklemede |
+| `approved`, `pending_sign` | Onay ve imzalama ayrı aşamalardır |
+| `broadcasting`, `pending_chain` | Yayın veya zincir onayı devam ediyor |
+| `broadcast_unverified`, `recovering` | Sonuç hâlâ belirsiz; başka bir transfer oluşturmayın |
+| `awaiting_reauthorization` | Aynı istek için yeni bir müşteri yetkilendirmesi gerekebilir |
+| `confirmed` | Sistem zincir onayını kaydetti |
+
+Liste örnek niteliğindedir ve değişebilir. Bilinmeyen durumları başarı veya başarısızlıkla eşleştirmek yerine araştırma için koruyun. Başarısız veya reddedilmiş bir plak şirketi tek başına hiçbir şeyin imzalanmadığına veya yayınlanmadığına dair yeterli kanıt değildir.
+
+<span id="recover-after-a-timeout" data-sixmm-canonical-anchor="recover-after-a-timeout" aria-hidden="true"></span>
+
+## Zaman aşımından sonra kurtarma
+
+Orijinal `client_request_id` sorgu parametresini kullanarak `GET /api/v1/withdrawals/by-request` sorgusunu yapın. Sonucu belirsizken orijinal işlemi yoklamaya veya uzlaştırmaya devam edin. Yetkilendirmenin yenilenmesi gerekiyorsa aynı tanımlayıcıyı ve üzerinde anlaşılan yenileme prosedürünü kullanın.
+
+İptal, asıl imza aşamasına ve sunucunun kontrollerine bağlıdır. Yalnızca orijinalin aktarılmadığı ve aktarılamayacağı belirlendikten sonra değiştirme iş operasyonu başlatın. Etkinlikleri aracılığıyla alın [webhooks](/tr/mpc-wallet/webhooks-and-sdks)ve API sorgularını mutabakat yolu olarak saklayın.

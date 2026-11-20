@@ -1,0 +1,48 @@
+---
+title: "Webhooks y SDKs"
+description: "Prepare la verificación de webhook, el manejo de duplicados y la integración de SDK con coincidencia de versiones."
+slug: mpc-wallet/webhooks-and-sdks
+canonical-url: https://docs.6mm.com/es-ES/mpc-wallet/webhooks-and-sdks
+---
+
+Webhooks notifica a tu backend sobre eventos comerciales. Úselos junto con consultas API para que la entrega retrasada o faltante no deje sus registros sin resolver.
+
+<span id="verify-before-processing" data-sixmm-canonical-anchor="verify-before-processing" aria-hidden="true"></span>
+
+## Verificar antes de procesar
+
+La entrega actual incluye `X-Webhook-Signature` y `X-Webhook-Timestamp`. La firma utiliza HMAC-SHA256 sobre el texto del encabezado de la marca de tiempo, un punto y el cuerpo exacto de la solicitud sin formato. Su valor de encabezado tiene la forma `sha256=<HEX_SIGNATURE>`.
+
+1. Conserve el cuerpo sin formato antes de analizar JSON.
+2. Valide la marca de tiempo utilizando la tolerancia de reloj acordada.
+3. Verifique la firma con el secreto webhook mediante una comparación de tiempo constante.
+4. Solo entonces interprete la carga útil y actualice los registros comerciales.
+
+Al volver a formatear el JSON analizado antes de la verificación, se cambian los bytes firmados. La verificación de Webhook utiliza el secreto webhook, no el secreto de solicitud API ni la clave de autorización del cliente.
+
+<span id="store-and-deduplicate" data-sixmm-canonical-anchor="store-and-deduplicate" aria-hidden="true"></span>
+
+## Almacenar y deduplicar
+
+El sobre incluye `event_id`, `event_type`, `created_at`, `tenant_id` y `data`. Para entregas de eventos normales, utilice la identidad del evento verificada con su punto final o el contexto del espacio de trabajo para evitar la aplicación repetida. Continúe con esa decisión de forma atómica con la actualización empresarial resultante, o ponga en cola de forma duradera el evento verificado antes de reconocerlo.
+
+`X-Webhook-Idempotency-Key` también se proporciona para entregas normales en la bandeja de salida. Son metadatos de entrega, no un campo de carga firmado independientemente. No permita que un encabezado modificado provoque que el mismo evento verificado mueva dinero dos veces. Las entregas de prueba y las operaciones manuales pueden tener identificadores diferentes u omitir este encabezado.
+
+Devuelve una respuesta exitosa después de aceptar el evento de forma duradera. Diseño para duplicados y eventos retrasados ​​o fuera de orden. La marca de tiempo de entrega no es un tiempo de ocurrencia comercial garantizado. Consulta el recurso subyacente cuando un evento entra en conflicto con un resultado conocido posterior.
+
+<span id="choose-the-integration-package" data-sixmm-canonical-anchor="choose-the-integration-package" aria-hidden="true"></span>
+
+## Elija el paquete de integración
+
+| Familia de paquetes | Alcance de implementación actual |
+| --- | --- |
+| Ir y Python API SDKs | Dirección, recursos de depósito y retiro, firma de solicitudes y ayudas relacionadas |
+| Vaya, ayudantes de Node.js y Python webhook | Webhook ayudantes de verificación de firmas e integración de marcos |
+
+Estos son alcances de implementación de origen, no confirmación de la disponibilidad del registro del paquete o del lanzamiento general. Obtenga un paquete con la misma versión y sus instrucciones de instalación durante la incorporación. Otros recursos pueden requerir llamadas directas API; no infiera un cliente API completo a partir de la presencia de un paquete webhook.
+
+<span id="test-the-receiving-path" data-sixmm-canonical-anchor="test-the-receiving-path" aria-hidden="true"></span>
+
+## Pruebe la ruta de recepción
+
+Pruebe una entrega válida, un cuerpo modificado, una firma no válida, una marca de tiempo obsoleta, un evento duplicado y un reinicio del receptor. Confirme los acuerdos de reintento y reproducción con el entorno de integración. Las devoluciones de llamada faltantes deberían provocar una conciliación, no una segunda solicitud de retiro.
