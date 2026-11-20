@@ -1,0 +1,54 @@
+---
+title: "Transactions et tentatives"
+description: "Gérez les identifiants de retrait, les résultats asynchrones, les tentatives et le renouvellement des autorisations."
+slug: mpc-wallet/transactions
+canonical-url: https://docs.6mm.com/fr/mpc-wallet/transactions
+---
+
+Un retrait est une opération commerciale asynchrone. Une réponse HTTP réussie signifie que la demande a été traitée ; cela n'établit pas que les fonds sont arrivés en chaîne.
+
+<span id="persist-one-business-identifier" data-sixmm-canonical-anchor="persist-one-business-identifier" aria-hidden="true"></span>
+
+## Conserver un identifiant d'entreprise
+
+Générez et stockez `client_request_id` avant d'envoyer un retrait. Réutilisez-le pour les nouvelles tentatives de la même opération prévue, y compris après le redémarrage d'un processus. Gardez les champs de la transaction cohérents ; la mise en œuvre actuelle rejette un identifiant répété avec des paramètres commerciaux contradictoires.
+
+Ne vous fiez pas uniquement à un en-tête `Idempotency-Key`. Le SDK fourni peut ajouter cet en-tête, mais le contrat de déduplication de retrait actuel est basé sur le champ du corps `client_request_id`.
+
+<span id="understand-request-data" data-sixmm-canonical-anchor="understand-request-data" aria-hidden="true"></span>
+
+## Comprendre les données de la demande
+
+| Champ | Signification |
+| --- | --- |
+| `chain_id`, `asset_id` | Identifiants dans l'environnement convenu |
+| `to_address`, `amount` | Destination et un montant décimal positif représenté sous forme de chaîne |
+| `client_request_id` | Identifiant de demande commerciale stable |
+| `dest_memo_type`, `dest_memo` | Détails du mémo de destination là où le réseau les requiert |
+| `client_authorization` | Autorisation de transaction client pour les retraits initiés par la clé API |
+| `end_user_id` | Identifiant d'utilisateur professionnel facultatif dans le flux d'entreprise API |
+
+Ce tableau met en évidence les champs principaux, et non un schéma de demande complet. Confirmez l'aperçu, la confirmation des frais et les exigences spécifiques à la garde par rapport à la version d'intégration. Évitez les montants binaires à virgule flottante et ne copiez pas d’exemples de chaîne ou de numéros d’actifs entre environnements.
+
+<span id="follow-the-result" data-sixmm-canonical-anchor="follow-the-result" aria-hidden="true"></span>
+
+## Suivez le résultat
+
+| Exemples d'état | Interprétation |
+| --- | --- |
+| `pending_approval`, `pending_platform_review` | Une approbation ou un examen commercial est en attente |
+| `approved`, `pending_sign` | L'approbation et la signature sont des étapes distinctes |
+| `broadcasting`, `pending_chain` | La diffusion ou la confirmation de la chaîne est en cours |
+| `broadcast_unverified`, `recovering` | L'issue est encore incertaine ; ne pas créer un autre transfert |
+| `awaiting_reauthorization` | Une nouvelle autorisation client peut être requise pour la même demande |
+| `confirmed` | Le système a enregistré la confirmation de la chaîne |
+
+La liste est indicative et peut évoluer. Préservez les états inconnus pour l’investigation au lieu de les mapper sur le succès ou l’échec. Un label raté ou rejeté ne constitue pas à lui seul une preuve suffisante que rien n’a été signé ou diffusé.
+
+<span id="recover-after-a-timeout" data-sixmm-canonical-anchor="recover-after-a-timeout" aria-hidden="true"></span>
+
+## Récupérer après un délai d'attente
+
+Interrogez `GET /api/v1/withdrawals/by-request` à l'aide du paramètre de requête `client_request_id` d'origine. Continuez à interroger ou à rapprocher l'opération d'origine tant que son résultat est incertain. Si un renouvellement de l'autorisation est requis, utilisez le même identifiant et la procédure de renouvellement convenue.
+
+L'annulation dépend de l'étape de signature réelle et des contrôles du serveur. Ne démarrez une opération commerciale de remplacement qu’une fois que l’original est établi comme non transféré et incapable de être transféré. Recevez des événements via [webhooks](/fr/mpc-wallet/webhooks-and-sdks)et conservez les requêtes API comme chemin de réconciliation.

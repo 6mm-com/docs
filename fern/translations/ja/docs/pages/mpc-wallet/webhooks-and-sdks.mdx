@@ -1,0 +1,48 @@
+---
+title: "Webhooks と SDKs"
+description: "webhook 検証、重複処理、バージョン一致した SDK 統合を準備します。"
+slug: mpc-wallet/webhooks-and-sdks
+canonical-url: https://docs.6mm.com/ja/mpc-wallet/webhooks-and-sdks
+---
+
+Webhooks ビジネス イベントについてバックエンドに通知します。 API クエリと組み合わせて使用​​すると、配信の遅延や欠落によって記録が未解決にならないようにします。
+
+<span id="verify-before-processing" data-sixmm-canonical-anchor="verify-before-processing" aria-hidden="true"></span>
+
+## 処理前に確認する
+
+現在の配信には `X-Webhook-Signature` と `X-Webhook-Timestamp` が含まれています。署名では、タイムスタンプ ヘッダー テキスト、ドット、および正確な生のリクエスト本文に HMAC-SHA256 が使用されます。そのヘッダー値の形式は `sha256=<HEX_SIGNATURE>` です。
+
+1. JSON を解析する前に生の本体を保持します。
+2. 合意されたクロック許容値を使用してタイムスタンプを検証します。
+3. 定数時間比較を使用して、webhook シークレットを使用して署名を検証します。
+4. その後初めてペイロードを解釈し、ビジネス記録を更新します。
+
+検証前に解析された JSON を再フォーマットすると、署名付きバイトが変更されます。 Webhook 検証では、API リクエスト シークレットや顧客認証キーではなく、webhook シークレットが使用されます。
+
+<span id="store-and-deduplicate" data-sixmm-canonical-anchor="store-and-deduplicate" aria-hidden="true"></span>
+
+## 保存と重複排除
+
+エンベロープには、`event_id`、`event_type`、`created_at`、`tenant_id`、および `data` が含まれます。通常のイベント配信の場合は、検証済みのイベント ID をエンドポイントまたはワークスペースのコンテキストで使用して、繰り返し適用されることを防ぎます。その決定を結果として生じるビジネス更新とともにアトミックに保持するか、検証されたイベントを確認する前に永続的にエンキューします。
+
+`X-Webhook-Idempotency-Key` は、通常の送信ボックス配信にも提供されます。これは配信メタデータであり、独立して署名されたペイロード フィールドではありません。変更されたヘッダーによって、同じ検証済みイベントが 2 回資金を移動させないようにしてください。テスト配信と手動操作では、異なる識別子が指定されたり、このヘッダーが省略されたりする場合があります。
+
+イベントを永続的に受け入れた後、成功応答を返します。重複や遅延または順序が狂ったイベントに備えて設計します。配信タイムスタンプは、ビジネスの発生時刻を保証するものではありません。イベントがその後の既知の結果と競合する場合、基礎となるリソースをクエリします。
+
+<span id="choose-the-integration-package" data-sixmm-canonical-anchor="choose-the-integration-package" aria-hidden="true"></span>
+
+## 統合パッケージを選択してください
+
+| パッケージファミリー | 現在の実装範囲 |
+| --- | --- |
+| Go と Python API SDKs | アドレス指定、入出金リソースの指定、署名および関連ヘルパーのリクエスト |
+| Go、Node.js、Python webhook ヘルパー | Webhook 署名検証およびフレームワーク統合ヘルパー |
+
+これらはソース実装の範囲であり、パッケージ レジストリの可用性や一般リリースの確認ではありません。オンボーディング中に、バージョンが一致したパッケージとそのインストール手順を入手します。他のリソースでは、直接 API 呼び出しが必要になる場合があります。 webhook パッケージの存在から完全な API クライアントを推測しないでください。
+
+<span id="test-the-receiving-path" data-sixmm-canonical-anchor="test-the-receiving-path" aria-hidden="true"></span>
+
+## 受信パスをテストする
+
+有効な配信、変更された本文、無効な署名、古いタイムスタンプ、重複したイベント、および受信機の再起動をテストします。統合環境で再試行および再生の取り決めを確認します。コールバックが見つからない場合は、2 回目の引き出しリクエストではなく、調整がトリガーされる必要があります。

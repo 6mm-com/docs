@@ -1,0 +1,50 @@
+---
+title: "MPC · Panoramica dell'integrazione"
+description: "Preparare l'integrazione del portafoglio aziendale API, la verifica degli indirizzi e la riconciliazione."
+slug: mpc-wallet/integration
+canonical-url: https://docs.6mm.com/it/mpc-wallet/integration
+---
+
+Le guide per gli sviluppatori descrivono l'attuale superficie di integrazione del portafoglio aziendale. MPC Wallet non è stato lanciato: gli esempi di endpoint sono riferimenti di implementazione, non una promessa di un servizio disponibile al pubblico o un contratto API congelato.
+
+<span id="obtain-integration-information" data-sixmm-canonical-anchor="obtain-integration-information" aria-hidden="true"></span>
+
+## Ottenere informazioni sull'integrazione
+
+Conferma la base di test URL, la versione API, l'identità dell'area di lavoro, il modello di custodia, le reti e le risorse abilitate, le autorizzazioni API, i requisiti di autorizzazione del cliente e la configurazione webhook. Gli identificatori di rete e di risorsa provengono dall'ambiente concordato; non dare per scontato che equivalgano agli identificatori di catena pubblica.
+
+Mantieni le credenziali di integrazione del portafoglio separate dalle credenziali di trading API. Un sito di documentazione condiviso non rende i servizi o i modelli di account intercambiabili.
+
+<span id="connect-the-business-flow" data-sixmm-canonical-anchor="connect-the-business-flow" aria-hidden="true"></span>
+
+## Connetti il ​​flusso aziendale
+
+1. Crea una chiave API con privilegi minimi per lo spazio di lavoro aziendale previsto e mantieni il suo segreto nel tuo backend.
+2. Convalidare una richiesta firmata di sola lettura e la gestione degli errori prima di introdurre i trasferimenti.
+3. Assegna un indirizzo di ricezione per un identificatore utente aziendale stabile, quindi verifica l'indirizzo restituito e qualsiasi promemoria.
+4. Ricevi eventi di deposito e riconciliali con le query API e i tuoi record.
+5. Aggiungi l'autorizzazione al prelievo, identificatori stabili delle richieste commerciali e monitoraggio dei risultati.
+
+<span id="core-api-areas" data-sixmm-canonical-anchor="core-api-areas" aria-hidden="true"></span>
+
+## Aree centrali API aree
+
+| Zona | Esempi di percorsi attuali | Scopo |
+| --- | --- | --- |
+| Ricevere indirizzi | `POST /api/v1/addresses`, `GET /api/v1/addresses` | Assegnare e interrogare gli indirizzi |
+| Depositi | `GET /api/v1/deposits`, `GET /api/v1/deposits/{id}` | Segui i trasferimenti in entrata |
+| Prelievi | `POST /api/v1/withdrawals`, `GET /api/v1/withdrawals/{id}` | Invia una richiesta e interroga il suo risultato |
+| Richiedi ricerca | `GET /api/v1/withdrawals/by-request` | Riconciliare una richiesta dopo una risposta incerta |
+| Saldi | `GET /api/v1/balances` | Interrogare i saldi aziendali nell'ambito autorizzato |
+
+La registrazione del percorso non implica che ogni tasto API possa richiamare ogni operazione. L'accesso al prodotto, le autorizzazioni dell'area di lavoro, la modalità di custodia e l'inizializzazione possono influire sulla disponibilità. Le interfacce amministrative e personali dei dispositivi sono esterne a questo flusso di avvio rapido aziendale.
+
+<span id="verify-receiving-addresses" data-sixmm-canonical-anchor="verify-receiving-addresses" aria-hidden="true"></span>
+
+## Verifica gli indirizzi di ricezione
+
+L'implementazione SDK fornita supporta le attestazioni di indirizzi firmati. Configura i membri attendibili o il materiale attendibile specificato dal pacchetto di integrazione e fornisci in modo indipendente le informazioni previste sullo spazio di lavoro, sulla catena e sul gruppo di chiavi, ove richiesto. Non ricavare ogni aspettativa di fiducia dalla stessa risposta che stai controllando.
+
+Per gli indirizzi del pool completamente gestiti, un'attestazione può identificare un indirizzo di proprietà della piattaforma mentre la sua assegnazione a un cliente rimane un'istruzione lato server. Non descrivere tale assegnazione come una prova crittografica della proprietà del cliente.
+
+Continua con [richiedere la firma](/it/mpc-wallet/request-signing), [transazioni](/it/mpc-wallet/transactions) E [webhooks e SDKs](/it/mpc-wallet/webhooks-and-sdks).

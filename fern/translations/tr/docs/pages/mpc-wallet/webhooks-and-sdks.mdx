@@ -1,0 +1,48 @@
+---
+title: "Webhooks ve SDKs"
+description: "webhook doğrulamasını, kopya işlemeyi ve sürüm uyumlu SDK entegrasyonunu hazırlayın."
+slug: mpc-wallet/webhooks-and-sdks
+canonical-url: https://docs.6mm.com/tr/mpc-wallet/webhooks-and-sdks
+---
+
+Webhooks arka ucunuzu iş etkinlikleri hakkında bilgilendirin. Gecikmiş veya eksik teslimatın kayıtlarınızı çözümsüz bırakmaması için bunları API sorgularıyla birlikte kullanın.
+
+<span id="verify-before-processing" data-sixmm-canonical-anchor="verify-before-processing" aria-hidden="true"></span>
+
+## İşlemeden önce doğrulayın
+
+Mevcut dağıtım `X-Webhook-Signature` ve `X-Webhook-Timestamp`'yi içermektedir. İmza, zaman damgası başlık metni, bir nokta ve tam ham istek gövdesi üzerinde HMAC-SHA256 kullanır. Başlık değeri `sha256=<HEX_SIGNATURE>` biçimindedir.
+
+1. JSON ayrıştırmadan önce ham gövdeyi koruyun.
+2. Kararlaştırılan saat toleransını kullanarak zaman damgasını doğrulayın.
+3. Sabit zamanlı bir karşılaştırma kullanarak imzayı webhook sırrıyla doğrulayın.
+4. Ancak bundan sonra yükü yorumlayın ve iş kayıtlarını güncelleyin.
+
+Doğrulama imzalı baytları değiştirmeden önce JSON ayrıştırılan yeniden biçimlendirme. Webhook doğrulaması, API istek sırrını veya müşteri yetkilendirme anahtarını değil, webhook sırrını kullanır.
+
+<span id="store-and-deduplicate" data-sixmm-canonical-anchor="store-and-deduplicate" aria-hidden="true"></span>
+
+## Depolama ve tekilleştirme
+
+Zarf, `event_id`, `event_type`, `created_at`, `tenant_id` ve `data` içerir. Normal olay dağıtımlarında, tekrarlanan uygulamaları önlemek için doğrulanmış olay kimliğini uç noktanız veya çalışma alanı bağlamınızla birlikte kullanın. Ortaya çıkan iş güncellemesiyle bu karara atomik olarak devam edin veya doğrulanan etkinliği onaylamadan önce kalıcı olarak sıraya alın.
+
+`X-Webhook-Idempotency-Key` ayrıca normal giden kutusu teslimatları için de sağlanır. Bu, bağımsız olarak imzalanmış bir yük alanı değil, teslimat meta verileridir. Değiştirilen bir başlığın, aynı doğrulanmış olayın paranın iki kez taşınmasına neden olmasına izin vermeyin. Test teslimatları ve manuel işlemler farklı tanımlayıcılara sahip olabilir veya bu başlığı atlayabilir.
+
+Etkinliği kalıcı olarak kabul ettikten sonra başarılı bir yanıt verin. Tekrarlanan ve geciken veya sıra dışı olaylar için tasarım yapın. Teslimat zaman damgası garantili bir iş gerçekleşme zamanı değildir. Bir olay daha sonra bilinen bir sonuçla çakıştığında temel kaynağı sorgulayın.
+
+<span id="choose-the-integration-package" data-sixmm-canonical-anchor="choose-the-integration-package" aria-hidden="true"></span>
+
+## Entegrasyon paketini seçin
+
+| Paket ailesi | Mevcut uygulama kapsamı |
+| --- | --- |
+| Go ve Python API SDKs | Adres, para yatırma ve çekme kaynakları, istek imzalama ve ilgili yardımcılar |
+| Go, Node.js ve Python webhook yardımcıları | Webhook imza doğrulama ve çerçeve entegrasyon yardımcıları |
+
+Bunlar kaynak uygulama kapsamlarıdır; paket kayıt defteri kullanılabilirliğinin veya genel sürümün onayı değildir. Ekleme sırasında sürüm uyumlu bir paket ve kurulum talimatlarını edinin. Diğer kaynaklar doğrudan API çağrıları gerektirebilir; webhook paketinin varlığından tam bir API istemcisi sonucunu çıkarmayın.
+
+<span id="test-the-receiving-path" data-sixmm-canonical-anchor="test-the-receiving-path" aria-hidden="true"></span>
+
+## Alma yolunu test edin
+
+Geçerli bir teslimatı, değiştirilmiş gövdeyi, geçersiz imzayı, eski zaman damgasını, yinelenen olayı ve alıcının yeniden başlatılmasını test edin. Entegrasyon ortamıyla yeniden deneme ve yeniden oynatma düzenlemelerini onaylayın. Eksik geri aramalar, ikinci bir geri çekilme talebini değil, mutabakatı tetiklemelidir.

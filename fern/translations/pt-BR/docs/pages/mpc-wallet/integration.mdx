@@ -1,0 +1,50 @@
+---
+title: "MPC · Visão geral da integração"
+description: "Prepare a integração da carteira corporativa API, verificação de endereço e reconciliação."
+slug: mpc-wallet/integration
+canonical-url: https://docs.6mm.com/pt-BR/mpc-wallet/integration
+---
+
+Os guias do desenvolvedor descrevem a superfície atual de integração da carteira corporativa. MPC A carteira não foi lançada: exemplos de endpoint são referências de implementação, não uma promessa de um serviço disponível publicamente ou um contrato API congelado.
+
+<span id="obtain-integration-information" data-sixmm-canonical-anchor="obtain-integration-information" aria-hidden="true"></span>
+
+## Obtenha informações de integração
+
+Confirme a base de teste URL, versão API, identidade do espaço de trabalho, modelo de custódia, redes e ativos habilitados, API permissões, requisitos de autorização do cliente e configuração webhook. Os identificadores de rede e de ativos provêm do ambiente acordado; não presuma que eles sejam iguais a identificadores de cadeia pública.
+
+Mantenha as credenciais de integração da carteira separadas das credenciais de negociação API. Um site de documentação compartilhada não torna os serviços ou modelos de conta intercambiáveis.
+
+<span id="connect-the-business-flow" data-sixmm-canonical-anchor="connect-the-business-flow" aria-hidden="true"></span>
+
+## Conecte o fluxo de negócios
+
+1. Crie uma chave API de privilégio mínimo para o espaço de trabalho corporativo pretendido e mantenha seu segredo em seu back-end.
+2. Valide uma solicitação assinada somente leitura e tratamento de erros antes de introduzir transferências.
+3. Aloque um endereço de recebimento para um identificador de usuário comercial estável e, em seguida, verifique o endereço retornado e qualquer memorando.
+4. Receba eventos de depósito e reconcilie-os com consultas API e seus próprios registros.
+5. Adicione autorização de retirada, identificadores de solicitação comercial estáveis ​​e rastreamento de resultados.
+
+<span id="core-api-areas" data-sixmm-canonical-anchor="core-api-areas" aria-hidden="true"></span>
+
+## Áreas principais API
+
+| Área | Exemplos de rotas atuais | Propósito |
+| --- | --- | --- |
+| Recebendo endereços | `POST /api/v1/addresses`, `GET /api/v1/addresses` | Alocar e consultar endereços |
+| Depósitos | `GET /api/v1/deposits`, `GET /api/v1/deposits/{id}` | Acompanhe as transferências recebidas |
+| Retiradas | `POST /api/v1/withdrawals`, `GET /api/v1/withdrawals/{id}` | Envie uma solicitação e consulte seu resultado |
+| Solicitar pesquisa | `GET /api/v1/withdrawals/by-request` | Reconciliar uma solicitação após uma resposta incerta |
+| Saldos | `GET /api/v1/balances` | Consultar saldos comerciais no escopo autorizado |
+
+O registro de rota não implica que cada chave API possa chamar todas as operações. O acesso ao produto, as permissões do espaço de trabalho, o modo de custódia e a inicialização podem afetar a disponibilidade. As interfaces de dispositivos administrativos e pessoais estão fora deste fluxo de início rápido empresarial.
+
+<span id="verify-receiving-addresses" data-sixmm-canonical-anchor="verify-receiving-addresses" aria-hidden="true"></span>
+
+## Verifique os endereços de recebimento
+
+A implementação SDK fornecida suporta atestados de endereço assinados. Configure membros confiáveis ​​ou o material confiável especificado pelo pacote de integração e forneça de forma independente as informações esperadas do espaço de trabalho, da cadeia e do grupo-chave quando necessário. Não derive todas as expectativas de confiança da mesma resposta que você está verificando.
+
+Para endereços de pool totalmente gerenciados, um atestado pode identificar um endereço de propriedade da plataforma, enquanto sua atribuição a um cliente permanece uma declaração do lado do servidor. Não descreva essa atribuição como uma prova criptográfica de propriedade do cliente.
+
+Continuar com [solicitação de assinatura](/pt-BR/mpc-wallet/request-signing), [transações](/pt-BR/mpc-wallet/transactions) e [webhooks e SDKs](/pt-BR/mpc-wallet/webhooks-and-sdks).

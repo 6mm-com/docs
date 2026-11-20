@@ -1,0 +1,74 @@
+---
+title: "MPC · Permintaan Penandatanganan"
+description: "Bedakan API permintaan otentikasi dari otorisasi penarikan pelanggan dan MPC penandatanganan."
+slug: mpc-wallet/request-signing
+canonical-url: https://docs.6mm.com/id/mpc-wallet/request-signing
+---
+
+Ada tiga masalah penandatanganan yang terpisah: mengautentikasi permintaan HTTP, mengotorisasi penarikan tertentu, dan membuat tanda tangan blockchain dengan MPC peserta. Melewati pemeriksaan pertama tidak menggantikan dua pemeriksaan lainnya.
+
+<span id="authenticate-an-api-request" data-sixmm-canonical-anchor="authenticate-an-api-request" aria-hidden="true"></span>
+
+## Otentikasi permintaan API
+
+API saat ini menggunakan HMAC-SHA256 dengan pengidentifikasi kunci dan rahasia API. Permintaan kanonisnya berisi lima baris, dipisahkan oleh baris baru, tanpa baris baru di belakangnya:
+
+```text
+METHOD
+PATH
+SORTED_QUERY
+BODY_SHA256_HEX
+UNIX_TIMESTAMP_SECONDS
+```
+
+Gunakan metode huruf besar HTTP dan minta jalur tanpa host. Urutkan kunci kueri, pertahankan urutan nilai berulang dan terapkan pengkodean formulir URL, termasuk `+` untuk spasi. Baris kueri kosong jika tidak ada kueri. Hash byte isi yang tepat menggunakan SHA-256, termasuk isi kosong untuk permintaan tanpa isi.
+
+Hitung HMAC-SHA256 menggunakan rahasia yang diberikan sebagai UTF-8 byte; jangan mendekode hex hanya karena terlihat heksadesimal. Encode hasilnya sebagai hex huruf kecil. Bidang header dipisahkan oleh spasi:
+
+```text
+Authorization: HMAC-SHA256 keyId=<KEY_ID> signature=<HEX_SIGNATURE> timestamp=<UNIX_SECONDS>
+```
+
+<span id="read-only-signing-example" data-sixmm-canonical-anchor="read-only-signing-example" aria-hidden="true"></span>
+
+## Contoh penandatanganan hanya-baca
+
+Pembantu perpustakaan standar ini membuat header untuk permintaan deposit; itu tidak mengirim permintaan. Muat kredensial dengan aman di aplikasi Anda dan kirimkan jalur yang dikembalikan tanpa perubahan ke URL dasar yang disediakan untuk lingkungan Anda.
+
+```python
+import hashlib
+import hmac
+import time
+from urllib.parse import urlencode
+
+
+def signed_read_headers(key_id, secret, timestamp=None):
+    method = "GET"
+    path = "/api/v1/deposits"
+    query = urlencode(sorted([("page", "1"), ("page_size", "20")]))
+    body = b""
+    ts = str(int(time.time()) if timestamp is None else timestamp)
+    canonical = "\n".join([
+        method, path, query, hashlib.sha256(body).hexdigest(), ts
+    ])
+    signature = hmac.new(
+        secret.encode("utf-8"), canonical.encode("utf-8"), hashlib.sha256
+    ).hexdigest()
+    return path + "?" + query, {
+        "Authorization": (
+            f"HMAC-SHA256 keyId={key_id} signature={signature} timestamp={ts}"
+        )
+    }
+```
+
+Jaga agar jam tetap tersinkronisasi. Proksi yang mengubah jalur, kueri, atau isi setelah penandatanganan dapat membatalkan autentikasi. Untuk kegagalan autentikasi, periksa alasan respons dan pengenal permintaan sebelum mencoba lagi; jangan pernah mencatat header rahasia atau otorisasi penuh.
+
+<span id="authorize-an-api-withdrawal" data-sixmm-canonical-anchor="authorize-an-api-withdrawal" aria-hidden="true"></span>
+
+## Otorisasi penarikan API
+
+Alur penarikan API perusahaan saat ini juga memerlukan otorisasi pelanggan Ed25519 di `client_authorization`. Ini mengikat konteks transaksi yang dimaksudkan, termasuk pengidentifikasi permintaan, tujuan, aset, dan jumlah. Registrasi kunci publik atau konfigurasi kepercayaannya bergantung pada pengaturan penyimpanan kunci.
+
+Gunakan paket integrasi yang cocok untuk menghasilkan muatan kanonik, tanda tangan, dan kunci publik. Kunci otorisasi ini terpisah dari rahasia HMAC dan MPC yang dibagikan. Pertahankan kunci pribadinya di bawah kendali pelanggan. Konfirmasikan versi payload dan aturan validitas selama integrasi alih-alih membuat format khusus dari ikhtisar ini.
+
+Setelah permintaan diterima, pemeriksaan dan persetujuan bisnis masih dapat berlaku, diikuti dengan penandatanganan MPC dan konfirmasi berantai. Melihat [transaksi dan percobaan ulang](/id/mpc-wallet/transactions).

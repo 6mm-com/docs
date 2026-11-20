@@ -1,0 +1,50 @@
+---
+title: "MPC · Entegrasyona Genel Bakış"
+description: "Kurumsal cüzdan API entegrasyonunu, adres doğrulamasını ve mutabakatını hazırlayın."
+slug: mpc-wallet/integration
+canonical-url: https://docs.6mm.com/tr/mpc-wallet/integration
+---
+
+Geliştirici kılavuzları mevcut kurumsal cüzdan entegrasyon yüzeyini açıklamaktadır. MPC Cüzdan piyasaya sürülmedi: uç nokta örnekleri uygulama referanslarıdır, halka açık bir hizmetin veya dondurulmuş bir API sözleşmenin vaadi değildir.
+
+<span id="obtain-integration-information" data-sixmm-canonical-anchor="obtain-integration-information" aria-hidden="true"></span>
+
+## Entegrasyon bilgilerini edinin
+
+Test tabanını URL, API sürümünü, çalışma alanı kimliğini, saklama modelini, etkin ağları ve varlıkları, API izinlerini, müşteri yetkilendirme gereksinimlerini ve webhook kurulumunu onaylayın. Ağ ve varlık tanımlayıcıları üzerinde anlaşmaya varılan ortamdan gelir; bunların halka açık zincir tanımlayıcılarına eşit olduğunu varsaymayın.
+
+Cüzdan entegrasyonu kimlik bilgilerini ticari API kimlik bilgilerinden ayrı tutun. Paylaşılan bir dokümantasyon sitesi, hizmetleri veya hesap modellerini birbirinin yerine kullanılabilir hale getirmez.
+
+<span id="connect-the-business-flow" data-sixmm-canonical-anchor="connect-the-business-flow" aria-hidden="true"></span>
+
+## İş akışını bağlayın
+
+1. Amaçlanan kurumsal çalışma alanı için en az ayrıcalıklı bir API anahtarı oluşturun ve bu anahtarın sırrını arka ucunuzda saklayın.
+2. Aktarımları başlatmadan önce salt okunur imzalı bir isteği ve hata işlemeyi doğrulayın.
+3. Sabit bir iş kullanıcısı tanımlayıcısı için bir alıcı adresi tahsis edin, ardından döndürülen adresi ve herhangi bir notu doğrulayın.
+4. Para yatırma olaylarını alın ve bunları API sorguları ve kendi kayıtlarınızla uzlaştırın.
+5. Para çekme yetkisi, istikrarlı iş isteği tanımlayıcıları ve sonuç takibi ekleyin.
+
+<span id="core-api-areas" data-sixmm-canonical-anchor="core-api-areas" aria-hidden="true"></span>
+
+## Çekirdek API alanlar
+
+| Alan | Güncel rota örnekleri | Amaç |
+| --- | --- | --- |
+| Adresler alınıyor | `POST /api/v1/addresses`, `GET /api/v1/addresses` | Adresleri tahsis etme ve sorgulama |
+| Mevduat | `GET /api/v1/deposits`, `GET /api/v1/deposits/{id}` | Gelen transferleri takip edin |
+| Para Çekme | `POST /api/v1/withdrawals`, `GET /api/v1/withdrawals/{id}` | Bir istek gönderin ve sonucunu sorgulayın |
+| Arama iste | `GET /api/v1/withdrawals/by-request` | Belirsiz bir yanıttan sonra talebi uzlaştırın |
+| Bakiyeler | `GET /api/v1/balances` | Yetkili kapsamdaki iş bakiyelerini sorgulama |
+
+Rota kaydı, her API tuşunun her işlemi çağırabileceği anlamına gelmez. Ürün erişimi, çalışma alanı izinleri, saklama modu ve başlatmanın tümü kullanılabilirliği etkileyebilir. Yönetimsel ve kişisel cihaz arayüzleri bu kurumsal hızlı başlangıç ​​akışının dışındadır.
+
+<span id="verify-receiving-addresses" data-sixmm-canonical-anchor="verify-receiving-addresses" aria-hidden="true"></span>
+
+## Alıcı adresleri doğrulayın
+
+Sağlanan SDK uygulaması imzalı adres doğrulamalarını destekler. Güvenilir üyeleri veya entegrasyon paketi tarafından belirtilen güven malzemesini yapılandırın ve gerektiğinde beklenen çalışma alanı, zincir ve anahtar grubu bilgilerini bağımsız olarak sağlayın. Her güven beklentisini kontrol ettiğiniz yanıttan çıkarmayın.
+
+Tam olarak yönetilen havuz adresleri için, bir doğrulama, platforma ait bir adresi tanımlayabilir ve bu adresin müşteriye atanması, sunucu tarafında bir bildirim olarak kalır. Bu atamayı müşteri sahipliğinin kriptografik kanıtı olarak tanımlamayın.
+
+Şununla devam et: [imzalama isteği](/tr/mpc-wallet/request-signing), [işlemler](/tr/mpc-wallet/transactions) Ve [webhooks ve SDKs](/tr/mpc-wallet/webhooks-and-sdks).

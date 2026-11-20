@@ -1,0 +1,54 @@
+---
+title: "Transactions and Retries"
+description: "Handle withdrawal identifiers, asynchronous results, retries and authorization renewal."
+slug: mpc-wallet/transactions
+canonical-url: https://docs.6mm.com/mpc-wallet/transactions
+---
+
+A withdrawal is an asynchronous business operation. A successful HTTP response means the request was handled; it does not establish that funds arrived on-chain.
+
+<span data-sixmm-canonical-anchor="persist-one-business-identifier" aria-hidden="true"></span>
+
+## Persist one business identifier
+
+Generate and store `client_request_id` before sending a withdrawal. Reuse it for retries of the same intended operation, including after a process restart. Keep the transaction's fields consistent; the current implementation rejects a repeated identifier with conflicting business parameters.
+
+Do not rely only on an `Idempotency-Key` header. The supplied SDK can add that header, but the current withdrawal deduplication contract is based on the body field `client_request_id`.
+
+<span data-sixmm-canonical-anchor="understand-request-data" aria-hidden="true"></span>
+
+## Understand request data
+
+| Field | Meaning |
+| --- | --- |
+| `chain_id`, `asset_id` | Identifiers in the agreed environment |
+| `to_address`, `amount` | Destination and a positive decimal amount represented as a string |
+| `client_request_id` | Stable business request identifier |
+| `dest_memo_type`, `dest_memo` | Destination memo details where the network requires them |
+| `client_authorization` | Customer transaction authorization for API-key initiated withdrawals |
+| `end_user_id` | Optional business user identifier in the enterprise API flow |
+
+This table highlights core fields, not a complete request schema. Confirm preview, fee confirmation and custody-specific requirements against the integration version. Avoid binary floating-point amounts and do not copy example chain or asset numbers between environments.
+
+<span data-sixmm-canonical-anchor="follow-the-result" aria-hidden="true"></span>
+
+## Follow the result
+
+| State examples | Interpretation |
+| --- | --- |
+| `pending_approval`, `pending_platform_review` | A business approval or review is outstanding |
+| `approved`, `pending_sign` | Approval and signing are separate stages |
+| `broadcasting`, `pending_chain` | Broadcasting or chain confirmation is in progress |
+| `broadcast_unverified`, `recovering` | The outcome is still uncertain; do not create another transfer |
+| `awaiting_reauthorization` | A fresh customer authorization may be required for the same request |
+| `confirmed` | The system has recorded chain confirmation |
+
+The list is illustrative and may evolve. Preserve unknown states for investigation instead of mapping them to success or failure. A failed or rejected label alone is not sufficient evidence that nothing was signed or broadcast.
+
+<span data-sixmm-canonical-anchor="recover-after-a-timeout" aria-hidden="true"></span>
+
+## Recover after a timeout
+
+Query `GET /api/v1/withdrawals/by-request` using the original `client_request_id` query parameter. Keep polling or reconciling the original operation while its result is uncertain. If authorization renewal is required, use the same identifier and the agreed renewal procedure.
+
+Cancellation depends on the actual signing stage and the server's checks. Only start a replacement business operation after the original is established as not transferred and unable to transfer. Receive events through [webhooks](/mpc-wallet/webhooks-and-sdks), and retain API queries as a reconciliation path.

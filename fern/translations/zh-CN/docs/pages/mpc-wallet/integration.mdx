@@ -1,0 +1,50 @@
+---
+title: "MPC · 开发接入概览"
+description: "准备企业钱包 API 接入、地址验证与充值提现对账。"
+slug: mpc-wallet/integration
+canonical-url: https://docs.6mm.com/zh-CN/mpc-wallet/integration
+---
+
+开发指南介绍当前企业钱包的接入方式。MPC 钱包尚未上线，接口示例用于理解当前实现，不代表已经存在公开可用的服务，也不代表接口契约已经冻结。
+
+<span id="obtain-integration-information" data-sixmm-canonical-anchor="obtain-integration-information" aria-hidden="true"></span>
+
+## 获取接入资料
+
+确认测试环境地址、API 版本、空间身份、托管方式、已启用网络与资产、API 权限、客户授权要求以及 Webhook 配置。网络和资产编号来自约定的环境，不要假设它们等于公链通用编号。
+
+钱包接入凭证应与交易 API 凭证分开管理。文档位于同一个站点，不意味着两个服务或账户模型可以互换。
+
+<span id="connect-the-business-flow" data-sixmm-canonical-anchor="connect-the-business-flow" aria-hidden="true"></span>
+
+## 串联业务流程
+
+1. 为目标企业空间创建最小权限的 API 密钥，将 Secret 保存在业务后端。
+2. 先验证只读签名请求和错误处理，再接入转账操作。
+3. 使用稳定的业务用户编号分配收款地址，并验证返回的地址和备注信息。
+4. 接收充值事件，将其与 API 查询和自有业务记录对账。
+5. 接入提现授权、稳定的业务请求编号和结果跟踪。
+
+<span id="core-api-areas" data-sixmm-canonical-anchor="core-api-areas" aria-hidden="true"></span>
+
+## 核心接口范围
+
+| 范围 | 当前路由示例 | 用途 |
+| --- | --- | --- |
+| 收款地址 | `POST /api/v1/addresses`、`GET /api/v1/addresses` | 分配与查询地址 |
+| 充值 | `GET /api/v1/deposits`、`GET /api/v1/deposits/{id}` | 跟踪转入记录 |
+| 提现 | `POST /api/v1/withdrawals`、`GET /api/v1/withdrawals/{id}` | 提交请求并查询结果 |
+| 按请求查询 | `GET /api/v1/withdrawals/by-request` | 在响应不确定时核对原请求 |
+| 余额 | `GET /api/v1/balances` | 查询授权范围内的业务余额 |
+
+接口存在不代表所有 API 密钥都能调用。产品开通范围、空间权限、托管方式与初始化状态，都可能影响可用操作。平台管理接口和个人设备接口不属于这里的企业快速接入流程。
+
+<span id="verify-receiving-addresses" data-sixmm-canonical-anchor="verify-receiving-addresses" aria-hidden="true"></span>
+
+## 验证收款地址
+
+现有 SDK 实现提供地址签名凭证验证。应按接入资料配置可信成员或信任材料，并按要求独立提供期望的空间、链和密钥组信息。不要把待验证响应本身作为所有信任条件的唯一来源。
+
+对于全托管地址池，凭证可以证明地址属于平台侧，但分配给哪位客户仍可能是服务端声明。不能将这项分配关系描述为客户所有权的密码学证明。
+
+继续阅读[请求签名](/zh-CN/mpc-wallet/request-signing)、[交易状态与重试](/zh-CN/mpc-wallet/transactions)以及 [Webhook 与 SDK](/zh-CN/mpc-wallet/webhooks-and-sdks)。

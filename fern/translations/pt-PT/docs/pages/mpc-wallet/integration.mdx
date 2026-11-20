@@ -1,0 +1,50 @@
+---
+title: "MPC · Visão geral da integração"
+description: "Prepare a integração da carteira empresarial API, a verificação de endereços e a reconciliação."
+slug: mpc-wallet/integration
+canonical-url: https://docs.6mm.com/pt-PT/mpc-wallet/integration
+---
+
+Os guias do programador descrevem a superfície atual de integração da carteira corporativa. MPC A carteira não foi lançada: os exemplos de endpoint são referências de implementação, não uma promessa de um serviço disponível publicamente ou um contrato API congelado.
+
+<span id="obtain-integration-information" data-sixmm-canonical-anchor="obtain-integration-information" aria-hidden="true"></span>
+
+## Obtenha informações de integração
+
+Confirme a base de teste URL, versão API, identidade do espaço de trabalho, modelo de custódia, redes e ativos ativados, API permissões, requisitos de autorização do cliente e configuração webhook. Os identificadores de rede e de ativos provêm do ambiente acordado; não presuma que são iguais a identificadores de cadeia pública.
+
+Mantenha as credenciais de integração da carteira separadas das credenciais de negociação API. Um site de documentação partilhada não torna os serviços ou modelos de conta intercambiáveis.
+
+<span id="connect-the-business-flow" data-sixmm-canonical-anchor="connect-the-business-flow" aria-hidden="true"></span>
+
+## Ligue o fluxo de negócios
+
+1. Crie uma chave API de privilégio mínimo para o espaço de trabalho empresarial pretendido e mantenha o seu segredo no seu back-end.
+2. Valide um pedido assinado de leitura apenas e tratamento de erros antes de introduzir transferências.
+3. Atribua um endereço de receção a um identificador de utilizador comercial estável e, em seguida, verifique o endereço devolvido e qualquer memorando.
+4. Receba os eventos de depósito e reconcilie-os com as consultas API e os seus próprios registos.
+5. Adicione autorização de retirada, identificadores de pedidos comerciais estáveis ​​e rastreio de resultados.
+
+<span id="core-api-areas" data-sixmm-canonical-anchor="core-api-areas" aria-hidden="true"></span>
+
+## Áreas principais API
+
+| Área | Exemplos de rotas atuais | Finalidade |
+| --- | --- | --- |
+| Recebendo endereços | `POST /api/v1/addresses`, `GET /api/v1/addresses` | Alocar e consultar endereços |
+| Depósitos | `GET /api/v1/deposits`, `GET /api/v1/deposits/{id}` | Acompanhe as transferências recebidas |
+| Retiradas | `POST /api/v1/withdrawals`, `GET /api/v1/withdrawals/{id}` | Envie um pedido e consulte o seu resultado |
+| Solicitar pesquisa | `GET /api/v1/withdrawals/by-request` | Reconciliar um pedido após uma resposta incerta |
+| Saldos | `GET /api/v1/balances` | Consultar saldos comerciais no âmbito autorizado |
+
+O registo de rotas não implica que cada chave API possa chamar todas as operações. O acesso ao produto, as permissões do espaço de trabalho, o modo de custódia e o arranque podem afetar a disponibilidade. As interfaces de dispositivos administrativos e pessoais estão fora deste fluxo de início rápido empresarial.
+
+<span id="verify-receiving-addresses" data-sixmm-canonical-anchor="verify-receiving-addresses" aria-hidden="true"></span>
+
+## Verifique os endereços de receção
+
+A implementação SDK fornecida suporta atestados de endereço assinados. Configure membros fidedignos ou o material fidedigno especificado pelo pacote de integração e forneça de forma independente as informações esperadas do espaço de trabalho, da cadeia e do grupo-chave quando necessário. Não derive todas as expectativas de confiança da mesma resposta que está a verificar.
+
+Para endereços de pool totalmente geridos, um atestado pode identificar um endereço propriedade da plataforma, enquanto a sua atribuição a um cliente permanece uma declaração do lado do servidor. Não descreva esta atribuição como uma prova criptográfica da propriedade do cliente.
+
+Continuar com [pedido de assinatura](/pt-PT/mpc-wallet/request-signing), [transações](/pt-PT/mpc-wallet/transactions) e [webhooks e SDKs](/pt-PT/mpc-wallet/webhooks-and-sdks).

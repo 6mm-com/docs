@@ -1,0 +1,54 @@
+---
+title: "Transacciones y reintentos"
+description: "Manejar identificadores de retiro, resultados asincrónicos, reintentos y renovación de autorizaciones."
+slug: mpc-wallet/transactions
+canonical-url: https://docs.6mm.com/es-419/mpc-wallet/transactions
+---
+
+Un retiro es una operación comercial asincrónica. Una respuesta HTTP exitosa significa que la solicitud fue manejada; no establece que los fondos llegaron a la cadena.
+
+<span id="persist-one-business-identifier" data-sixmm-canonical-anchor="persist-one-business-identifier" aria-hidden="true"></span>
+
+## Conservar un identificador de empresa
+
+Genera y almacena `client_request_id` antes de enviar un retiro. Reutilícelo para reintentar la misma operación prevista, incluso después de reiniciar el proceso. Mantenga consistentes los campos de la transacción; la implementación actual rechaza un identificador repetido con parámetros comerciales contradictorios.
+
+No confíe únicamente en un encabezado `Idempotency-Key`. El SDK proporcionado puede agregar ese encabezado, pero el contrato de deduplicación de retiro actual se basa en el campo del cuerpo `client_request_id`.
+
+<span id="understand-request-data" data-sixmm-canonical-anchor="understand-request-data" aria-hidden="true"></span>
+
+## Comprender los datos de la solicitud
+
+| Campo | Significado |
+| --- | --- |
+| `chain_id`, `asset_id` | Identificadores en el entorno acordado |
+| `to_address`, `amount` | Destino y una cantidad decimal positiva representada como una cadena |
+| `client_request_id` | Identificador de solicitud comercial estable |
+| `dest_memo_type`, `dest_memo` | Detalles de la nota de destino donde la red los requiere |
+| `client_authorization` | Autorización de transacción del cliente para retiros iniciados con clave API |
+| `end_user_id` | Identificador de usuario empresarial opcional en el flujo empresarial API |
+
+Esta tabla resalta los campos principales, no un esquema de solicitud completo. Confirme la vista previa, la confirmación de tarifas y los requisitos específicos de custodia con la versión de integración. Evite cantidades binarias de punto flotante y no copie cadenas de ejemplo o números de activos entre entornos.
+
+<span id="follow-the-result" data-sixmm-canonical-anchor="follow-the-result" aria-hidden="true"></span>
+
+## Sigue el resultado
+
+| Ejemplos de estados | Interpretación |
+| --- | --- |
+| `pending_approval`, `pending_platform_review` | Una aprobación o revisión comercial está pendiente |
+| `approved`, `pending_sign` | La aprobación y la firma son etapas separadas. |
+| `broadcasting`, `pending_chain` | La transmisión o la confirmación de la cadena están en curso. |
+| `broadcast_unverified`, `recovering` | El resultado aún es incierto; no crear otra transferencia |
+| `awaiting_reauthorization` | Es posible que se requiera una nueva autorización de cliente para la misma solicitud. |
+| `confirmed` | El sistema ha registrado la confirmación en cadena. |
+
+La lista es ilustrativa y puede evolucionar. Preservar estados desconocidos para la investigación en lugar de asignarlos al éxito o al fracaso. Una etiqueta fallida o rechazada por sí sola no es prueba suficiente de que no se firmó ni se transmitió nada.
+
+<span id="recover-after-a-timeout" data-sixmm-canonical-anchor="recover-after-a-timeout" aria-hidden="true"></span>
+
+## Recuperarse después de un tiempo de espera
+
+Consulta `GET /api/v1/withdrawals/by-request` utilizando el parámetro de consulta original `client_request_id`. Continúe sondeando o conciliando la operación original mientras su resultado sea incierto. Si se requiere renovación de autorización, utilice el mismo identificador y el procedimiento de renovación acordado.
+
+La cancelación depende de la etapa de firma real y de los controles del servidor. Solo inicie una operación comercial de reemplazo después de que se establezca que el original no se transfirió y no se puede transferir. Recibe eventos a través de [webhooks](/es-419/mpc-wallet/webhooks-and-sdks)y conservar las consultas API como ruta de conciliación.

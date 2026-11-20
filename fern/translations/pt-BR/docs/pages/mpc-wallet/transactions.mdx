@@ -1,0 +1,54 @@
+---
+title: "Transações e novas tentativas"
+description: "Lide com identificadores de retirada, resultados assíncronos, novas tentativas e renovação de autorização."
+slug: mpc-wallet/transactions
+canonical-url: https://docs.6mm.com/pt-BR/mpc-wallet/transactions
+---
+
+Uma retirada é uma operação comercial assíncrona. Uma resposta HTTP bem-sucedida significa que a solicitação foi tratada; não estabelece que os fundos chegaram à rede.
+
+<span id="persist-one-business-identifier" data-sixmm-canonical-anchor="persist-one-business-identifier" aria-hidden="true"></span>
+
+## Persistir um identificador comercial
+
+Gere e armazene `client_request_id` antes de enviar um saque. Reutilize-o para novas tentativas da mesma operação pretendida, inclusive após a reinicialização do processo. Mantenha os campos da transação consistentes; a implementação atual rejeita um identificador repetido com parâmetros de negócios conflitantes.
+
+Não confie apenas em um cabeçalho `Idempotency-Key`. O SDK fornecido pode adicionar esse cabeçalho, mas o contrato de desduplicação de retirada atual é baseado no campo de corpo `client_request_id`.
+
+<span id="understand-request-data" data-sixmm-canonical-anchor="understand-request-data" aria-hidden="true"></span>
+
+## Entenda os dados da solicitação
+
+| Campo | Significado |
+| --- | --- |
+| `chain_id`, `asset_id` | Identificadores no ambiente acordado |
+| `to_address`, `amount` | Destino e um valor decimal positivo representado como uma string |
+| `client_request_id` | Identificador de solicitação comercial estável |
+| `dest_memo_type`, `dest_memo` | Detalhes do memorando de destino onde a rede os exige |
+| `client_authorization` | Autorização de transação do cliente para saques iniciados pela chave API |
+| `end_user_id` | Identificador de usuário empresarial opcional no fluxo corporativo API |
+
+Esta tabela destaca os campos principais, não um esquema de solicitação completo. Confirme a visualização, a confirmação de taxas e os requisitos específicos de custódia em relação à versão de integração. Evite valores binários de ponto flutuante e não copie exemplos de cadeias ou números de ativos entre ambientes.
+
+<span id="follow-the-result" data-sixmm-canonical-anchor="follow-the-result" aria-hidden="true"></span>
+
+## Acompanhe o resultado
+
+| Exemplos de estado | Interpretação |
+| --- | --- |
+| `pending_approval`, `pending_platform_review` | Uma aprovação ou revisão comercial está pendente |
+| `approved`, `pending_sign` | Aprovação e assinatura são etapas separadas |
+| `broadcasting`, `pending_chain` | A transmissão ou confirmação da cadeia está em andamento |
+| `broadcast_unverified`, `recovering` | O resultado ainda é incerto; não crie outra transferência |
+| `awaiting_reauthorization` | Uma nova autorização do cliente pode ser necessária para a mesma solicitação |
+| `confirmed` | O sistema registrou a confirmação da cadeia |
+
+A lista é ilustrativa e pode evoluir. Preserve estados desconhecidos para investigação em vez de mapeá-los para sucesso ou fracasso. Uma etiqueta falhada ou rejeitada por si só não é prova suficiente de que nada foi assinado ou transmitido.
+
+<span id="recover-after-a-timeout" data-sixmm-canonical-anchor="recover-after-a-timeout" aria-hidden="true"></span>
+
+## Recuperar após um tempo limite
+
+Consulte `GET /api/v1/withdrawals/by-request` usando o parâmetro de consulta original `client_request_id`. Continue sondando ou reconciliando a operação original enquanto seu resultado for incerto. Se for necessária a renovação da autorização, utilize o mesmo identificador e o procedimento de renovação acordado.
+
+O cancelamento depende do estágio real de assinatura e das verificações do servidor. Somente inicie uma operação comercial de substituição depois que o original for estabelecido como não transferido e incapaz de ser transferido. Receba eventos através [webhooks](/pt-BR/mpc-wallet/webhooks-and-sdks)e reter consultas API como um caminho de reconciliação.

@@ -1,0 +1,74 @@
+---
+title: "MPC · İmza İsteği"
+description: "API istek kimlik doğrulamasını müşteri geri çekme yetkisinden ve MPC imzalamadan ayırın."
+slug: mpc-wallet/request-signing
+canonical-url: https://docs.6mm.com/tr/mpc-wallet/request-signing
+---
+
+Üç ayrı imzalama endişesi vardır: HTTP isteğinin doğrulanması, belirli bir para çekme işleminin yetkilendirilmesi ve MPC katılımcılarıyla blockchain imzasının üretilmesi. İlk kontrolü geçmek diğer ikisinin yerini almaz.
+
+<span id="authenticate-an-api-request" data-sixmm-canonical-anchor="authenticate-an-api-request" aria-hidden="true"></span>
+
+## Bir API isteğinin kimliğini doğrulayın
+
+Geçerli API, API anahtar tanımlayıcısı ve sırrı ile HMAC-SHA256 kullanır. Kurallı isteği, yeni satırla ayrılmış ve sonunda yeni satır olmayan beş satır içerir:
+
+```text
+METHOD
+PATH
+SORTED_QUERY
+BODY_SHA256_HEX
+UNIX_TIMESTAMP_SECONDS
+```
+
+Büyük harf HTTP yöntemini kullanın ve ana makine olmadan istek yolunu kullanın. Sorgu anahtarlarını sıralayın, tekrarlanan değerlerin sırasını koruyun ve boşluklar için `+` dahil olmak üzere URL biçimi kodlamasını uygulayın. Sorgu olmadığında sorgu satırı boştur. Gövdesiz bir istek için boş gövde de dahil olmak üzere, SHA-256 kullanarak tam gövde baytlarının karma işlemini yapın.
+
+Sağlanan sırrı UTF-8 bayt olarak kullanarak HMAC-SHA256 hesaplayın; Yalnızca onaltılı göründüğü için onaltılık kodunu çözmeyin. Sonucu küçük harf onaltılı olarak kodlayın. Başlık alanları boşlukla ayrılmıştır:
+
+```text
+Authorization: HMAC-SHA256 keyId=<KEY_ID> signature=<HEX_SIGNATURE> timestamp=<UNIX_SECONDS>
+```
+
+<span id="read-only-signing-example" data-sixmm-canonical-anchor="read-only-signing-example" aria-hidden="true"></span>
+
+## Salt okunur imzalama örneği
+
+Bu standart kütüphane yardımcısı, para yatırma sorgusu için başlıklar oluşturur; bir istek göndermez. Kimlik bilgilerini uygulamanıza güvenli bir şekilde yükleyin ve döndürülen yolu, ortamınız için sağlanan URL tabanına değişmeden gönderin.
+
+```python
+import hashlib
+import hmac
+import time
+from urllib.parse import urlencode
+
+
+def signed_read_headers(key_id, secret, timestamp=None):
+    method = "GET"
+    path = "/api/v1/deposits"
+    query = urlencode(sorted([("page", "1"), ("page_size", "20")]))
+    body = b""
+    ts = str(int(time.time()) if timestamp is None else timestamp)
+    canonical = "\n".join([
+        method, path, query, hashlib.sha256(body).hexdigest(), ts
+    ])
+    signature = hmac.new(
+        secret.encode("utf-8"), canonical.encode("utf-8"), hashlib.sha256
+    ).hexdigest()
+    return path + "?" + query, {
+        "Authorization": (
+            f"HMAC-SHA256 keyId={key_id} signature={signature} timestamp={ts}"
+        )
+    }
+```
+
+Saatleri senkronize tutun. İmzalamanın ardından yolu, sorguyu veya gövdeyi değiştiren bir proxy, kimlik doğrulamayı geçersiz kılabilir. Kimlik doğrulama hataları durumunda, yeniden denemeden önce yanıt nedenini ve istek tanımlayıcısını inceleyin; asla gizli veya tam yetkilendirme başlığını kaydetmeyin.
+
+<span id="authorize-an-api-withdrawal" data-sixmm-canonical-anchor="authorize-an-api-withdrawal" aria-hidden="true"></span>
+
+## API para çekme işlemine izin verin
+
+Mevcut kurumsal API para çekme akışı ayrıca `client_authorization` içinde bir Ed25519 müşteri yetkilendirmesi gerektirir. İstek tanımlayıcısı, hedef, varlık ve tutar dahil olmak üzere amaçlanan işlem bağlamını bağlar. Açık anahtar kaydı veya güven yapılandırması, saklama düzenlemesine bağlıdır.
+
+Kurallı veriyi, imzayı ve genel anahtarı oluşturmak için eşleşen entegrasyon paketini kullanın. Bu yetkilendirme anahtarı, HMAC sırrından ve MPC paylaşımlarından ayrıdır. Özel anahtarını müşteri kontrolü altında saklayın. Bu genel bakıştan özel bir format oluşturmak yerine, entegrasyon sırasında veri yükü sürümünü ve geçerlilik kurallarını onaylayın.
+
+Talep kabul edildikten sonra iş kontrolleri ve onayları hâlâ geçerli olabilir, ardından MPC imza ve zincir onayı gelebilir. Görmek [işlemler ve yeniden denemeler](/tr/mpc-wallet/transactions).

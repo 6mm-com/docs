@@ -1,0 +1,50 @@
+---
+title: "MPC · Présentation de l'intégration"
+description: "Préparer l'intégration du portefeuille d'entreprise API, la vérification de l'adresse et le rapprochement."
+slug: mpc-wallet/integration
+canonical-url: https://docs.6mm.com/fr/mpc-wallet/integration
+---
+
+Les guides du développeur décrivent la surface d'intégration actuelle du portefeuille d'entreprise. MPC Wallet n'a pas été lancé : les exemples de points de terminaison sont des références d'implémentation, et non une promesse d'un service accessible au public ou un contrat API gelé.
+
+<span id="obtain-integration-information" data-sixmm-canonical-anchor="obtain-integration-information" aria-hidden="true"></span>
+
+## Obtenir des informations d'intégration
+
+Confirmez la base de test URL, la version API, l'identité de l'espace de travail, le modèle de garde, les réseaux et actifs activés, les autorisations API, les exigences d'autorisation du client et la configuration de webhook. Les identifiants de réseau et d'actifs proviennent de l'environnement convenu ; ne supposez pas qu’ils correspondent à des identifiants de chaîne publique.
+
+Gardez les informations d'identification d'intégration du portefeuille séparées des informations d'identification d'échange API. Un site de documentation partagée ne rend pas les services ou les modèles de compte interchangeables.
+
+<span id="connect-the-business-flow" data-sixmm-canonical-anchor="connect-the-business-flow" aria-hidden="true"></span>
+
+## Connectez le flux commercial
+
+1. Créez une clé de moindre privilège API pour l'espace de travail d'entreprise prévu et gardez-la secrète sur votre backend.
+2. Validez une demande signée en lecture seule et la gestion des erreurs avant d'introduire des transferts.
+3. Attribuez une adresse de réception pour un identifiant d'utilisateur professionnel stable, puis vérifiez l'adresse renvoyée et tout mémo.
+4. Recevez des événements de dépôt et rapprochez-les avec les requêtes API et vos propres enregistrements.
+5. Ajoutez une autorisation de retrait, des identifiants de demandes commerciales stables et un suivi des résultats.
+
+<span id="core-api-areas" data-sixmm-canonical-anchor="core-api-areas" aria-hidden="true"></span>
+
+## Zones principales API
+
+| Zone | Exemples d'itinéraires actuels | But |
+| --- | --- | --- |
+| Adresses de réception | `POST /api/v1/addresses`, `GET /api/v1/addresses` | Attribuer et interroger des adresses |
+| Dépôts | `GET /api/v1/deposits`, `GET /api/v1/deposits/{id}` | Suivre les transferts entrants |
+| Retraits | `POST /api/v1/withdrawals`, `GET /api/v1/withdrawals/{id}` | Soumettre une requête et interroger son résultat |
+| Demander une recherche | `GET /api/v1/withdrawals/by-request` | Réconcilier une demande après une réponse incertaine |
+| Soldes | `GET /api/v1/balances` | Interroger les soldes commerciaux dans le périmètre autorisé |
+
+L'enregistrement de l'itinéraire n'implique pas que chaque touche API peut appeler chaque opération. L'accès au produit, les autorisations de l'espace de travail, le mode de garde et l'initialisation peuvent tous affecter la disponibilité. Les interfaces d’administration et des appareils personnels ne font pas partie de ce flux de démarrage rapide d’entreprise.
+
+<span id="verify-receiving-addresses" data-sixmm-canonical-anchor="verify-receiving-addresses" aria-hidden="true"></span>
+
+## Vérifier les adresses de réception
+
+L'implémentation SDK fournie prend en charge les attestations d'adresse signées. Configurez les membres de confiance ou le matériel de confiance spécifié par le package d'intégration et fournissez indépendamment les informations attendues sur l'espace de travail, la chaîne et le groupe de clés, si nécessaire. Ne dérivez pas toutes les attentes de confiance de la même réponse que vous vérifiez.
+
+Pour les adresses de pool entièrement gérées, une attestation peut identifier une adresse appartenant à la plateforme tandis que son attribution à un client reste une déclaration côté serveur. Ne décrivez pas cette cession comme une preuve cryptographique de propriété du client.
+
+Continuez avec [demande de signature](/fr/mpc-wallet/request-signing), [transactions](/fr/mpc-wallet/transactions) et [webhooks et SDKs](/fr/mpc-wallet/webhooks-and-sdks).

@@ -1,0 +1,48 @@
+---
+title: "Webhooks dan SDKs"
+description: "Siapkan verifikasi webhook, penanganan duplikat, dan integrasi SDK yang sesuai versi."
+slug: mpc-wallet/webhooks-and-sdks
+canonical-url: https://docs.6mm.com/id/mpc-wallet/webhooks-and-sdks
+---
+
+Webhooks beri tahu backend Anda tentang acara bisnis. Gunakan data tersebut bersama dengan kueri API sehingga pengiriman yang tertunda atau hilang tidak menyebabkan catatan Anda tidak terselesaikan.
+
+<span id="verify-before-processing" data-sixmm-canonical-anchor="verify-before-processing" aria-hidden="true"></span>
+
+## Verifikasi sebelum diproses
+
+Pengiriman saat ini mencakup `X-Webhook-Signature` dan `X-Webhook-Timestamp`. Tanda tangan menggunakan HMAC-SHA256 di atas teks header stempel waktu, titik, dan isi permintaan mentah yang tepat. Nilai headernya berbentuk `sha256=<HEX_SIGNATURE>`.
+
+1. Pertahankan isi mentah sebelum diurai JSON.
+2. Validasi stempel waktu menggunakan toleransi jam yang disepakati.
+3. Verifikasi tanda tangan dengan rahasia webhook menggunakan perbandingan waktu konstan.
+4. Baru kemudian tafsirkan payload dan perbarui catatan bisnis.
+
+Memformat ulang JSON yang diurai sebelum verifikasi mengubah byte yang ditandatangani. Verifikasi Webhook menggunakan rahasia webhook, bukan rahasia permintaan API atau kunci otorisasi pelanggan.
+
+<span id="store-and-deduplicate" data-sixmm-canonical-anchor="store-and-deduplicate" aria-hidden="true"></span>
+
+## Simpan dan hapus duplikatnya
+
+Amplop berisi `event_id`, `event_type`, `created_at`, `tenant_id` dan `data`. Untuk pengiriman peristiwa normal, gunakan identitas peristiwa terverifikasi dengan titik akhir atau konteks ruang kerja Anda untuk mencegah penerapan berulang. Pertahankan keputusan tersebut secara atomik dengan pembaruan bisnis yang dihasilkan, atau antrikan peristiwa terverifikasi secara tahan lama sebelum mengonfirmasinya.
+
+`X-Webhook-Idempotency-Key` juga disediakan untuk pengiriman kotak keluar normal. Ini adalah metadata pengiriman, bukan bidang muatan yang ditandatangani secara independen. Jangan biarkan perubahan tajuk menyebabkan peristiwa terverifikasi yang sama memindahkan uang dua kali. Pengiriman pengujian dan operasi manual mungkin memiliki pengidentifikasi berbeda atau menghilangkan header ini.
+
+Kembalikan respons yang berhasil setelah menerima acara tersebut dalam jangka waktu lama. Desain untuk duplikat dan acara yang tertunda atau rusak. Stempel waktu pengiriman bukan merupakan jaminan waktu terjadinya bisnis. Kueri sumber daya yang mendasarinya ketika suatu peristiwa bertentangan dengan hasil yang diketahui kemudian.
+
+<span id="choose-the-integration-package" data-sixmm-canonical-anchor="choose-the-integration-package" aria-hidden="true"></span>
+
+## Pilih paket integrasi
+
+| Paket keluarga | Ruang lingkup implementasi saat ini |
+| --- | --- |
+| Pergi dan Python API SDKs | Alamat, sumber daya penyetoran dan penarikan, penandatanganan permintaan dan pembantu terkait |
+| Buka, pembantu Node.js dan Python webhook | Webhook verifikasi tanda tangan dan pembantu integrasi kerangka kerja |
+
+Ini adalah cakupan implementasi sumber, bukan konfirmasi ketersediaan registri paket atau rilis umum. Dapatkan paket yang sesuai versi dan instruksi instalasinya selama orientasi. Sumber daya lain mungkin memerlukan panggilan langsung API; jangan menyimpulkan klien API penuh dari keberadaan paket webhook.
+
+<span id="test-the-receiving-path" data-sixmm-canonical-anchor="test-the-receiving-path" aria-hidden="true"></span>
+
+## Uji jalur penerimaan
+
+Uji pengiriman yang valid, isi yang dimodifikasi, tanda tangan tidak valid, stempel waktu basi, peristiwa duplikat, dan restart penerima. Konfirmasikan pengaturan percobaan ulang dan pemutaran ulang dengan lingkungan integrasi. Callback yang hilang seharusnya memicu rekonsiliasi, bukan permintaan penarikan kedua.

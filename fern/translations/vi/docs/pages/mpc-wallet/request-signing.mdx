@@ -1,0 +1,74 @@
+---
+title: "MPC · Yêu cầu ký"
+description: "Phân biệt xác thực yêu cầu API với ủy quyền rút tiền của khách hàng và ký MPC."
+slug: mpc-wallet/request-signing
+canonical-url: https://docs.6mm.com/vi/mpc-wallet/request-signing
+---
+
+Có ba mối quan tâm ký riêng biệt: xác thực yêu cầu HTTP, cho phép rút tiền cụ thể và tạo chữ ký blockchain với những người tham gia MPC. Việc vượt qua lần kiểm tra đầu tiên không thay thế được hai lần kiểm tra còn lại.
+
+<span id="authenticate-an-api-request" data-sixmm-canonical-anchor="authenticate-an-api-request" aria-hidden="true"></span>
+
+## Xác thực yêu cầu API
+
+API hiện tại sử dụng HMAC-SHA256 với mã định danh và bí mật khóa API . Yêu cầu chuẩn của nó chứa năm dòng, được phân tách bằng một dòng mới, không có dòng mới ở cuối:
+
+```text
+METHOD
+PATH
+SORTED_QUERY
+BODY_SHA256_HEX
+UNIX_TIMESTAMP_SECONDS
+```
+
+Sử dụng phương thức viết hoa HTTP và yêu cầu đường dẫn mà không cần máy chủ. Sắp xếp các khóa truy vấn, giữ lại thứ tự của các giá trị lặp lại và áp dụng mã hóa dạng URL, bao gồm `+` cho khoảng trắng. Dòng truy vấn trống khi không có truy vấn nào tồn tại. Băm các byte nội dung chính xác bằng cách sử dụng SHA-256, bao gồm cả phần nội dung trống cho một yêu cầu không có nội dung.
+
+Tính toán HMAC-SHA256 bằng cách sử dụng bí mật được cung cấp dưới dạng UTF-8 byte; không giải mã hệ thập lục phân chỉ vì nó trông giống hệ thập lục phân. Mã hóa kết quả dưới dạng hex chữ thường. Các trường tiêu đề được phân tách bằng dấu cách:
+
+```text
+Authorization: HMAC-SHA256 keyId=<KEY_ID> signature=<HEX_SIGNATURE> timestamp=<UNIX_SECONDS>
+```
+
+<span id="read-only-signing-example" data-sixmm-canonical-anchor="read-only-signing-example" aria-hidden="true"></span>
+
+## Ví dụ ký chỉ đọc
+
+Trình trợ giúp thư viện tiêu chuẩn này xây dựng các tiêu đề cho truy vấn ký gửi; nó không gửi yêu cầu. Tải thông tin xác thực một cách an toàn trong ứng dụng của bạn và gửi đường dẫn trả về không thay đổi đến cơ sở URL được cung cấp cho môi trường của bạn.
+
+```python
+import hashlib
+import hmac
+import time
+from urllib.parse import urlencode
+
+
+def signed_read_headers(key_id, secret, timestamp=None):
+    method = "GET"
+    path = "/api/v1/deposits"
+    query = urlencode(sorted([("page", "1"), ("page_size", "20")]))
+    body = b""
+    ts = str(int(time.time()) if timestamp is None else timestamp)
+    canonical = "\n".join([
+        method, path, query, hashlib.sha256(body).hexdigest(), ts
+    ])
+    signature = hmac.new(
+        secret.encode("utf-8"), canonical.encode("utf-8"), hashlib.sha256
+    ).hexdigest()
+    return path + "?" + query, {
+        "Authorization": (
+            f"HMAC-SHA256 keyId={key_id} signature={signature} timestamp={ts}"
+        )
+    }
+```
+
+Giữ đồng hồ đồng bộ. Proxy thay đổi đường dẫn, truy vấn hoặc nội dung sau khi ký có thể làm mất hiệu lực xác thực. Đối với lỗi xác thực, hãy kiểm tra lý do phản hồi và mã định danh yêu cầu trước khi thử lại; không bao giờ đăng nhập tiêu đề bí mật hoặc ủy quyền đầy đủ.
+
+<span id="authorize-an-api-withdrawal" data-sixmm-canonical-anchor="authorize-an-api-withdrawal" aria-hidden="true"></span>
+
+## Cho phép rút tiền API
+
+Luồng rút tiền của doanh nghiệp API hiện tại cũng yêu cầu ủy quyền khách hàng Ed25519 trong `client_authorization`. Nó liên kết bối cảnh giao dịch dự định, bao gồm mã định danh yêu cầu, đích đến, nội dung và số tiền. Việc đăng ký khóa công khai hoặc cấu hình ủy thác của nó phụ thuộc vào sự sắp xếp quyền giám sát.
+
+Sử dụng gói tích hợp phù hợp để tạo tải trọng chuẩn, chữ ký và khóa chung. Khóa ủy quyền này tách biệt với bí mật HMAC và chia sẻ MPC. Bảo quản khóa riêng của nó dưới sự kiểm soát của khách hàng. Xác nhận phiên bản tải trọng và quy tắc hợp lệ trong quá trình tích hợp thay vì xây dựng định dạng tùy chỉnh từ phần tổng quan này.
+
+Sau khi yêu cầu được chấp nhận, việc kiểm tra và phê duyệt kinh doanh vẫn có thể được áp dụng, tiếp theo là ký MPC và xác nhận chuỗi. Nhìn thấy [giao dịch và thử lại](/vi/mpc-wallet/transactions).

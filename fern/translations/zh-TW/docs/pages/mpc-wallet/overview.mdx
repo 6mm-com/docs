@@ -1,0 +1,70 @@
+---
+title: "MPC 錢包"
+description: "瞭解 bitMPC 錢包面向個人、家庭、團隊和企業的產品方案，以及託管、收款、轉賬和對賬能力。"
+slug: mpc-wallet/overview
+canonical-url: https://docs.6mm.com/zh-TW/mpc-wallet/overview
+---
+
+bitMPC 錢包是一款面向個人、家庭、團隊和企業的數字資產錢包。個人可以查看資產、收款並通過設備參與簽名。家庭和團隊可以安排多人共同管理。企業可以在錢包工作空間裡處理充值、資金調撥和提現，並通過角色權限、審批規則和交易記錄管理日常資金操作。
+
+<Note>
+MPC 錢包目前處於上線前階段。本頁介紹當前實現中的產品能力，具體開放方案、支持網絡和操作規則將在開通時確認。
+</Note>
+
+<span id="product-scope" data-sixmm-canonical-anchor="product-scope" aria-hidden="true"></span>
+
+## 哪些人適合使用
+
+| 錢包產品 | 適用場景 |
+| --- | --- |
+| [個人錢包](/zh-TW/mpc-wallet/personal-wallet) | 在同一個空間查看自己的資產和收款信息，管理簽名設備，跟蹤轉賬進度。 |
+| [家庭或團隊錢包](/zh-TW/mpc-wallet/family-team-wallet) | 多人共管一組資產，明確各自的職責，由約定的參與方對交易簽名。 |
+| [自持節點的企業錢包](/zh-TW/mpc-wallet/enterprise-wallet) | 企業參與節點運維，管理收款地址，按用途安排運營資金和儲備資金，並由團隊複核轉出。 |
+| [企業全託管錢包](/zh-TW/mpc-wallet/managed-wallet) | 平臺負責簽名基礎設施，企業團隊通過工作臺管理餘額、發起付款、處理審批和核對賬目。 |
+
+實際可見頁面和操作取決於當前錢包產品及成員權限。個人和團隊空間側重查看設備簽名進度。企業空間還為具備對應權限的成員提供提現審批待辦。
+
+<span id="what-mpc-changes" data-sixmm-canonical-anchor="what-mpc-changes" aria-hidden="true"></span>
+
+## MPC 帶來的變化
+
+MPC 是多方計算。參與設備或節點各自使用手中的密鑰分片，在正常簽名流程中無需拼合完整私鑰，即可共同生成有效簽名。哪些參與方持片、需要多少方參與，由錢包的簽名配置和門限決定。
+
+以企業付款為例，財務操作員可以發起申請，有權限的成員按規則審批，再由簽名參與方生成鏈上簽名。業務審批決定申請能否繼續，簽名負責授權鏈上交易，最終結果還要等鏈上確認。
+
+<span id="choose-how-to-hold-signing-keys" data-sixmm-canonical-anchor="choose-how-to-hold-signing-keys" aria-hidden="true"></span>
+
+## 如何選擇託管方式
+
+- **全託管**由平臺運行簽名基礎設施。企業在工作空間中管理成員、審批和日常資金操作。
+- **聯合託管**由平臺和客戶分別保管部分簽名材料。開通時可核對雙方各自需要參與哪些操作、承擔哪些備份責任。
+- **自託管**由客戶保管錢包的密鑰分片。客戶需要準備簽名設備、備份和恢復流程，以便設備更換或不可用時按約定處理。
+
+不同錢包產品提供的選項有所區別。完成初始化前，可先確認錢包需要哪些參與方，以及備份和恢復由誰負責。詳見[託管方式](/zh-TW/mpc-wallet/custody-models)。
+
+<span id="what-you-can-do-with-the-wallet" data-sixmm-canonical-anchor="what-you-can-do-with-the-wallet" aria-hidden="true"></span>
+
+## 錢包可以用來做什麼
+
+- **收款和跟蹤充值。** 按目標網絡獲取收款信息。企業分配地址時可關聯業務用戶編號。網絡需要備註或標籤時，將其與地址一併提供給付款方，再查看充值進度。
+- **按用途組織企業資金。** 充值錢包用於接收資金，熱錢包用於日常轉出，中轉錢包連接運營資金與儲備資金，儲備錢包用於資產保管。歸集流程可按適用策略把收款地址上的資金匯入指定錢包。
+- **審批和跟蹤轉出。** 提交前核對網絡、資產、金額、收款地址和手續費。需要審批時，企業成員可在待辦中處理申請。提交後繼續跟蹤簽名、廣播及鏈上確認。
+- **管理風險與核對賬目。** 企業空間按角色提供地址名單、審批規則、審計日誌等能力。財務可結合餘額、充值與提現記錄、鏈上流水核對自己的業務賬目。
+- **管理簽名設備並準備恢復。** 負責運維的客戶可在對應的設備或節點視圖中管理參與方。開通時應確認備份負責人和適用於當前託管方案的恢復流程。
+
+<span id="example-an-enterprise-payment" data-sixmm-canonical-anchor="example-an-enterprise-payment" aria-hidden="true"></span>
+
+## 場景示例：企業收款後向供應商付款
+
+財務團隊先將客戶的充值記錄與業務賬目核對，再按錢包安排準備付款資金。操作員填寫供應商地址並提交轉賬。需要審批時，審批人檢查收款地址、資產和金額後處理申請。簽名參與方完成簽名後，團隊跟蹤鏈上確認，並用交易記錄完成付款對賬。
+
+如果廣播結果仍在核對中，團隊可以繼續查詢原記錄，等結果明確後再決定下一步。這樣一筆供應商付款可以始終對應同一個業務請求。
+
+<span id="find-your-starting-point" data-sixmm-canonical-anchor="find-your-starting-point" aria-hidden="true"></span>
+
+## 繼續瞭解
+
+- [託管方式](/zh-TW/mpc-wallet/custody-models)：對比分片控制權與恢復責任。
+- [開始使用](/zh-TW/mpc-wallet/getting-started)：準備工作空間，在取得測試環境後驗證小額交易。
+- [錢包操作](/zh-TW/mpc-wallet/wallet-operations)：瞭解收款、轉出和對賬流程。
+- [安全與恢復](/zh-TW/mpc-wallet/security-and-recovery)：規劃權限、簽名設備和備份。

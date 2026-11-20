@@ -1,0 +1,74 @@
+---
+title: "MPC · Poproś o podpisanie"
+description: "Rozróżnij API uwierzytelnienie żądania od autoryzacji wypłaty klienta i podpisania MPC."
+slug: mpc-wallet/request-signing
+canonical-url: https://docs.6mm.com/pl/mpc-wallet/request-signing
+---
+
+Istnieją trzy odrębne kwestie związane z podpisywaniem: uwierzytelnienie żądania HTTP, autoryzacja konkretnej wypłaty i wygenerowanie podpisu blockchain z uczestnikami MPC. Zaliczenie pierwszego testu nie zastępuje dwóch pozostałych.
+
+<span id="authenticate-an-api-request" data-sixmm-canonical-anchor="authenticate-an-api-request" aria-hidden="true"></span>
+
+## Uwierzytelnij żądanie API.
+
+Obecny API używa HMAC-SHA256 z identyfikatorem klucza i sekretem API. Jego żądanie kanoniczne zawiera pięć linii oddzielonych znakiem nowej linii, bez końcowego znaku nowej linii:
+
+```text
+METHOD
+PATH
+SORTED_QUERY
+BODY_SHA256_HEX
+UNIX_TIMESTAMP_SECONDS
+```
+
+Użyj metody wielkich liter HTTP i zażądaj ścieżki bez hosta. Sortuj klucze zapytań, zachowaj kolejność powtarzających się wartości i zastosuj kodowanie w formie URL, włączając `+` dla spacji. Wiersz zapytania jest pusty, gdy nie istnieje żadne zapytanie. Zaszyfruj dokładne bajty treści za pomocą SHA-256, łącznie z pustą treścią dla żądania bez treści.
+
+Oblicz HMAC-SHA256 używając podanego sekretu jako UTF-8 bajtów; nie dekoduj go szesnastkowo tylko dlatego, że wygląda szesnastkowo. Zakoduj wynik jako małe litery szesnastkowe. Pola nagłówka są oddzielone spacjami:
+
+```text
+Authorization: HMAC-SHA256 keyId=<KEY_ID> signature=<HEX_SIGNATURE> timestamp=<UNIX_SECONDS>
+```
+
+<span id="read-only-signing-example" data-sixmm-canonical-anchor="read-only-signing-example" aria-hidden="true"></span>
+
+## Przykład podpisu tylko do odczytu
+
+Ten pomocnik biblioteki standardowej tworzy nagłówki dla zapytania o wpłatę; nie wysyła żądania. Bezpiecznie załaduj poświadczenia do swojej aplikacji i wyślij zwróconą ścieżkę bez zmian do podstawowego URL dostarczonego dla Twojego środowiska.
+
+```python
+import hashlib
+import hmac
+import time
+from urllib.parse import urlencode
+
+
+def signed_read_headers(key_id, secret, timestamp=None):
+    method = "GET"
+    path = "/api/v1/deposits"
+    query = urlencode(sorted([("page", "1"), ("page_size", "20")]))
+    body = b""
+    ts = str(int(time.time()) if timestamp is None else timestamp)
+    canonical = "\n".join([
+        method, path, query, hashlib.sha256(body).hexdigest(), ts
+    ])
+    signature = hmac.new(
+        secret.encode("utf-8"), canonical.encode("utf-8"), hashlib.sha256
+    ).hexdigest()
+    return path + "?" + query, {
+        "Authorization": (
+            f"HMAC-SHA256 keyId={key_id} signature={signature} timestamp={ts}"
+        )
+    }
+```
+
+Synchronizuj zegary. Serwer proxy, który po podpisaniu zmienia ścieżkę, zapytanie lub treść, może unieważnić uwierzytelnienie. W przypadku niepowodzeń uwierzytelnienia sprawdź przyczynę odpowiedzi i identyfikator żądania przed ponowną próbą; nigdy nie loguj tajnego lub pełnego nagłówka autoryzacji.
+
+<span id="authorize-an-api-withdrawal" data-sixmm-canonical-anchor="authorize-an-api-withdrawal" aria-hidden="true"></span>
+
+## Autoryzuj wypłatę API.
+
+Obecny przepływ wypłat w przedsiębiorstwie API wymaga również autoryzacji klienta Ed25519 w `client_authorization`. Wiąże zamierzony kontekst transakcji, w tym identyfikator żądania, miejsce docelowe, aktywa i kwotę. Jego rejestracja klucza publicznego lub konfiguracja zaufania zależy od ustaleń dotyczących przechowywania.
+
+Użyj odpowiedniego pakietu integracyjnego, aby utworzyć kanoniczny ładunek, podpis i klucz publiczny. Ten klucz autoryzacyjny jest odrębny od sekretu HMAC i udziałów MPC. Zachowaj swój klucz prywatny pod kontrolą klienta. Potwierdź wersję ładunku i reguły ważności podczas integracji, zamiast tworzyć niestandardowy format na podstawie tego przeglądu.
+
+Po zaakceptowaniu wniosku nadal mogą obowiązywać kontrole biznesowe i zatwierdzenia, po których następuje podpisanie MPC i potwierdzenie łańcucha. Widzieć [transakcji i ponownych prób](/pl/mpc-wallet/transactions).

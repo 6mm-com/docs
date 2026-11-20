@@ -1,0 +1,54 @@
+---
+title: "Transazioni e tentativi"
+description: "Gestire identificatori di ritiro, risultati asincroni, tentativi e rinnovo dell'autorizzazione."
+slug: mpc-wallet/transactions
+canonical-url: https://docs.6mm.com/it/mpc-wallet/transactions
+---
+
+Un prelievo è un'operazione commerciale asincrona. Una risposta HTTP riuscita significa che la richiesta è stata gestita; non stabilisce che i fondi siano arrivati ​​​​on-chain.
+
+<span id="persist-one-business-identifier" data-sixmm-canonical-anchor="persist-one-business-identifier" aria-hidden="true"></span>
+
+## Mantieni un identificatore aziendale
+
+Genera e archivia `client_request_id` prima di inviare un prelievo. Riutilizzarlo per nuovi tentativi della stessa operazione prevista, anche dopo il riavvio del processo. Mantieni coerenti i campi della transazione; l'attuale implementazione rifiuta un identificatore ripetuto con parametri aziendali contrastanti.
+
+Non fare affidamento solo su un'intestazione `Idempotency-Key`. Il SDK fornito può aggiungere quell'intestazione, ma l'attuale contratto di deduplicazione del ritiro è basato sul campo del corpo `client_request_id`.
+
+<span id="understand-request-data" data-sixmm-canonical-anchor="understand-request-data" aria-hidden="true"></span>
+
+## Comprendere i dati della richiesta
+
+| Campo | Senso |
+| --- | --- |
+| `chain_id`, `asset_id` | Identificatori nell'ambiente concordato |
+| `to_address`, `amount` | Destinazione e un importo decimale positivo rappresentato come una stringa |
+| `client_request_id` | Identificatore di richiesta aziendale stabile |
+| `dest_memo_type`, `dest_memo` | Dettagli del promemoria di destinazione laddove la rete li richiede |
+| `client_authorization` | Autorizzazione della transazione del cliente per i prelievi avviati dalla chiave API. |
+| `end_user_id` | Identificatore utente aziendale facoltativo nel flusso aziendale API. |
+
+Questa tabella evidenzia i campi principali, non uno schema di richiesta completo. Conferma l'anteprima, la conferma delle commissioni e i requisiti specifici della custodia rispetto alla versione di integrazione. Evitare importi binari in virgola mobile e non copiare catene di esempio o numeri di asset tra ambienti.
+
+<span id="follow-the-result" data-sixmm-canonical-anchor="follow-the-result" aria-hidden="true"></span>
+
+## Segui il risultato
+
+| Esempi statali | Interpretazione |
+| --- | --- |
+| `pending_approval`, `pending_platform_review` | Un'approvazione o una revisione aziendale è in sospeso |
+| `approved`, `pending_sign` | L'approvazione e la firma sono fasi separate |
+| `broadcasting`, `pending_chain` | La trasmissione o la conferma della catena è in corso |
+| `broadcast_unverified`, `recovering` | L'esito è ancora incerto; non creare un altro trasferimento |
+| `awaiting_reauthorization` | Per la stessa richiesta potrebbe essere necessaria una nuova autorizzazione del cliente |
+| `confirmed` | Il sistema ha registrato la conferma della catena |
+
+L'elenco è illustrativo e può evolvere. Conserva gli stati sconosciuti per le indagini invece di mapparli in base al successo o al fallimento. Un'etichetta fallita o rifiutata da sola non è una prova sufficiente che nulla sia stato firmato o trasmesso.
+
+<span id="recover-after-a-timeout" data-sixmm-canonical-anchor="recover-after-a-timeout" aria-hidden="true"></span>
+
+## Recupera dopo un timeout
+
+Interroga `GET /api/v1/withdrawals/by-request` utilizzando il parametro di query originale `client_request_id`. Continua a eseguire il polling o a riconciliare l'operazione originale mentre il suo risultato è incerto. Se è necessario il rinnovo dell'autorizzazione, utilizzare lo stesso identificativo e la procedura di rinnovo concordata.
+
+La cancellazione dipende dall'effettiva fase di firma e dai controlli del server. Avviare un'operazione commerciale sostitutiva solo dopo che l'originale è stato stabilito come non trasferito e non trasferibile. Ricevi eventi tramite [webhooks](/it/mpc-wallet/webhooks-and-sdks)e conservare le query API come percorso di riconciliazione.

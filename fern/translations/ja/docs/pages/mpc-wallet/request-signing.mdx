@@ -1,0 +1,74 @@
+---
+title: "MPC · 署名のリクエスト"
+description: "API リクエストの認証と、顧客の出金承認および MPC の署名を区別してください。"
+slug: mpc-wallet/request-signing
+canonical-url: https://docs.6mm.com/ja/mpc-wallet/request-signing
+---
+
+署名には、HTTP リクエストの認証、特定の出金の承認、MPC 参加者によるブロックチェーン署名の生成という 3 つの個別の懸念事項があります。最初のチェックに合格しても、他の 2 つのチェックは置き換えられません。
+
+<span id="authenticate-an-api-request" data-sixmm-canonical-anchor="authenticate-an-api-request" aria-hidden="true"></span>
+
+## API リクエストを認証する
+
+現在の API は、HMAC-SHA256 を API のキー識別子とシークレットとともに使用します。その正規リクエストには、改行で区切られた 5 行が含まれており、末尾に改行はありません。
+
+```text
+METHOD
+PATH
+SORTED_QUERY
+BODY_SHA256_HEX
+UNIX_TIMESTAMP_SECONDS
+```
+
+大文字の HTTP メソッドを使用し、ホストなしでパスを要求します。クエリ キーを並べ替え、繰り返される値の順序を保持し、スペースの `+` を含む形式 URL エンコーディングを適用します。クエリが存在しない場合、クエリ行は空になります。 SHA-256 を使用して、本体のないリクエストの空の本体を含む正確な本体バイトをハッシュします。
+
+指定されたシークレットを UTF-8 バイトとして使用して HMAC-SHA256 を計算します。 16 進数に見えるからといって、16 進数デコードしないでください。結果を小文字の 16 進数としてエンコードします。ヘッダー フィールドはスペースで区切られています。
+
+```text
+Authorization: HMAC-SHA256 keyId=<KEY_ID> signature=<HEX_SIGNATURE> timestamp=<UNIX_SECONDS>
+```
+
+<span id="read-only-signing-example" data-sixmm-canonical-anchor="read-only-signing-example" aria-hidden="true"></span>
+
+## 読み取り専用署名の例
+
+この標準ライブラリ ヘルパーは、デポジット クエリのヘッダーを構築します。リクエストは送信されません。認証情報をアプリケーションに安全にロードし、返されたパスを変更せずに環境に提供されているベース URL に送信します。
+
+```python
+import hashlib
+import hmac
+import time
+from urllib.parse import urlencode
+
+
+def signed_read_headers(key_id, secret, timestamp=None):
+    method = "GET"
+    path = "/api/v1/deposits"
+    query = urlencode(sorted([("page", "1"), ("page_size", "20")]))
+    body = b""
+    ts = str(int(time.time()) if timestamp is None else timestamp)
+    canonical = "\n".join([
+        method, path, query, hashlib.sha256(body).hexdigest(), ts
+    ])
+    signature = hmac.new(
+        secret.encode("utf-8"), canonical.encode("utf-8"), hashlib.sha256
+    ).hexdigest()
+    return path + "?" + query, {
+        "Authorization": (
+            f"HMAC-SHA256 keyId={key_id} signature={signature} timestamp={ts}"
+        )
+    }
+```
+
+時計を同期させてください。署名後にパス、クエリ、または本文を変更するプロキシは、認証を無効にする可能性があります。認証が失敗した場合は、再試行する前に応答理由と要求識別子を検査します。シークレットまたは完全な認証ヘッダーをログに記録しないでください。
+
+<span id="authorize-an-api-withdrawal" data-sixmm-canonical-anchor="authorize-an-api-withdrawal" aria-hidden="true"></span>
+
+## API の出金を承認する
+
+現在の企業 API の出金フローには、`client_authorization` の Ed25519 顧客承認も必要です。これは、リクエスト識別子、宛先、資産、金額など、目的のトランザクション コンテキストをバインドします。その公開キーの登録または信頼構成は、保管の取り決めによって異なります。
+
+一致する統合パッケージを使用して、正規のペイロード、署名、および公開キーを生成します。この認証キーは、HMAC シークレットおよび MPC 共有とは別のものです。秘密キーは顧客の管理下で保存してください。この概要からカスタム形式を構築するのではなく、統合中にペイロードのバージョンと有効性ルールを確認してください。
+
+リクエストが受け入れられた後も、ビジネスチェックと承認を適用でき、その後、MPC の署名とチェーン確認が続きます。見る [トランザクションと再試行](/ja/mpc-wallet/transactions).
